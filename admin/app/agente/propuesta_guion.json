@@ -16,56 +16,69 @@
      "cifras": [
       {
        "v": "22.429",
-       "l": "habitantes en 2026; 47 % vive en el campo"
+       "l": "habitantes en 2026; 47 % vive en el campo",
+       "fuente": "DANE, proyecciones 2018–2042"
       },
       {
        "v": "46,3 %",
-       "l": "de pobreza multidimensional: más del doble que Antioquia (21,6 %)"
+       "l": "de pobreza multidimensional: más del doble que Antioquia (21,6 %)",
+       "fuente": "DANE, IPM censal 2018"
       },
       {
        "v": "139",
-       "l": "iniciativas PDET; 25 respaldan los módulos de esta propuesta"
+       "l": "iniciativas PDET; 25 respaldan los módulos de esta propuesta",
+       "fuente": "ART, iniciativas PDET (sep-2026)"
       },
       {
        "v": "10.599",
-       "l": "barriles diarios de petróleo en 2025; eran 23.120 en 2012"
+       "l": "barriles diarios de petróleo en 2025; eran 23.120 en 2012",
+       "fuente": "ANH, producción fiscalizada"
       },
       {
        "v": "42,2 GWh",
-       "l": "al año produce la granja solar La Iguana en Yondó, pero va a la refinería"
+       "l": "al año produce la granja solar La Iguana en Yondó, pero va a la refinería",
+       "fuente": "Forbes Colombia (dic-2025)"
       },
       {
        "v": "917 m",
-       "l": "de puente, única vía a Barrancabermeja, cerrado del 16 al 20-mar-2026 por socavación"
+       "l": "de puente, única vía a Barrancabermeja, cerrado del 16 al 20-mar-2026 por socavación",
+       "fuente": "Vanguardia (jun-2026)"
       }
      ],
      "modulos": [
       {
        "nombre": "Vivienda",
+       "lema": "Terminar lo pagado y dar vivienda digna a 1.300 hogares",
        "inversion": "$75 – 140 mil M"
       },
       {
        "nombre": "Urbanismo",
+       "lema": "Una ciudadela deportiva verde y una puerta al río",
        "inversion": "$17 – 40 mil M"
       },
       {
        "nombre": "Agroindustria",
+       "lema": "Ganado, grano y pescado salen de Yondó ya transformados",
        "inversion": "$60 – 110 mil M"
       },
       {
        "nombre": "Salud",
+       "lema": "De una sede a una red de salud rural",
        "inversion": "$35 – 66 mil M"
       },
       {
        "nombre": "Aguas",
+       "lema": "De 9 a 24 horas de agua en el casco",
        "inversion": "$8,3 – 18 mil M"
       },
       {
        "nombre": "Aseo y saneamiento",
+       "lema": "Primera PTAR del casco, relleno nuevo y parque en el viejo",
        "inversion": "$48 – 110 mil M"
       },
       {
        "nombre": "Infraestructura TIC",
+       "lema": "Fibra, wifi gratis y una granja solar para lo público",
        "inversion": "$5,5 – 9,1 mil M"
       }
      ],
@@ -104,19 +117,23 @@
      "cifras": [
       {
        "v": "61,9 %",
-       "l": "de los hogares tenía déficit de vivienda en 2018 (3.383)"
+       "l": "de los hogares tenía déficit de vivienda en 2018 (3.383)",
+       "fuente": "DANE, déficit habitacional CNPV 2018"
       },
       {
        "v": "2.066",
-       "l": "hogares en casas por reponer: 37,8 %, frente a 6,6 % en Antioquia"
+       "l": "hogares en casas por reponer: 37,8 %, frente a 6,6 % en Antioquia",
+       "fuente": "DANE, déficit habitacional CNPV 2018"
       },
       {
        "v": "88 %",
-       "l": "pagado de 100 casas rurales (BPIN 2022003050034) con 9 % de obra"
+       "l": "pagado de 100 casas rurales (BPIN 2022003050034) con 9 % de obra",
+       "fuente": "GESPROY (DNP), en el repositorio"
       },
       {
        "v": "800",
-       "l": "hogares sin título de su predio, requisito para subsidio y crédito"
+       "l": "hogares sin título de su predio, requisito para subsidio y crédito",
+       "fuente": "Plan de Desarrollo de Yondó 2024–2027"
       }
      ],
      "propuesta": "Primero, terminar las tres obras inconclusas y titular 800 predios. Luego, 300 viviendas urbanas en dos lotes reales, uno en el casco y otro en su borde occidental: 200 VIP en 10 bloques de 5 pisos sobre el terraplén que ya existe en el predio José Domingo Oliveros y 100 casas VIS de 2 pisos en el lote occidental. Además, 200 casas rurales en el lote de cada familia y 800 mejoramientos, 400 urbanos y 400 rurales.",
@@ -181,17 +198,20 @@
      "cifras": [
       {
        "v": "$6.291 M",
-       "l": "ejecutados a ene-2025, casi todo en terraplén (oct-2026: 69 % de obra)"
+       "l": "ejecutados a ene-2025, casi todo en terraplén (oct-2026: 69 % de obra)",
+       "fuente": "Balance del BPIN 2023058930018 (Gobernación de Antioquia, 2025) y GESPROY (oct-2026)"
       },
       {
        "v": "+400",
-       "l": "familias en zonas de alto riesgo por inundación, por reubicar"
+       "l": "familias en zonas de alto riesgo por inundación, por reubicar",
+       "fuente": "Certificado del alcalde, BPIN 2023058930018 (2025)"
       }
      ],
      "componente": {
       "nombre": "Urbanización VIP/VIS urbana (Lote 1 y Lote 2)",
       "resumen": "200 VIP en 10 bloques (Lote 1) y 100 casas VIS de 2 pisos (Lote 2)",
       "costo": "$35 – 57 mil M",
+      "base_costo": "Precio por unidad para las 300: mínimo $115 M (56 m² a unos $1,8 M/m² más 15 % de redes y urbanismo, cálculo propio con un rango de mercado), central el tope VIP de 90 SMMLV ($157,6 M) y máximo 20 % más ($189,1 M) por relleno o elevación sobre la cota de inundación y vías completas; como una VIP no puede valer más de 90 SMMLV, en el Lote 1 ese sobrecosto se financiaría aparte, como urbanismo y obras de mitigación. Es el mismo valor para apartamentos y casas y no incluye el lote.",
       "plazo": "2028–2031 (diseño y licencias en 2028, obra en 2029–2031)",
       "especificaciones": [
        "Lote 1 · José Domingo Oliveros: 1,71 ha de terraplén · 10 bloques de 10 × 22 m",
@@ -229,17 +249,20 @@
      "cifras": [
       {
        "v": "314",
-       "l": "viviendas urbanas en déficit cualitativo (encuesta de Antioquia, 2021)"
+       "l": "viviendas urbanas en déficit cualitativo (encuesta de Antioquia, 2021)",
+       "fuente": "Plan de Desarrollo de Yondó 2024–2027 (ECV 2021)"
       },
       {
        "v": "0",
-       "l": "cupos para Yondó en el convenio Fonvivienda–VIVA de $18.915 M (2024)"
+       "l": "cupos para Yondó en el convenio Fonvivienda–VIVA de $18.915 M (2024)",
+       "fuente": "Fonvivienda, resoluciones 0093 y 0776 de 2026"
       }
      ],
      "componente": {
       "nombre": "Mejoramiento de vivienda urbana",
       "resumen": "400 casas del casco con pisos, baño, cocina, cubierta o una habitación más",
       "costo": "$5,2 – 13 mil M",
+      "base_costo": "Valor por hogar para los 400: mínimo, lo que asignó Fonvivienda en Antioquia en 2026 ($13,0 M, Res. 0093 y 0776); central, el tope de 12 SMMLV del esquema asociativo con el salario de 2026 ($21,0 M, Circular 0003 de 2024); máximo, 18 SMMLV ($31,5 M), el tope del art. 2.1.1.7.10 del Decreto 1077 de 2015 que cita la Res. 0093 de 2026 para las intervenciones locativas.",
       "plazo": "2028–2031 (unos 100 por año)",
       "especificaciones": [
        "Qué incluye: Pisos, baño, cocina, cubierta, redes internas y habitación",
@@ -274,17 +297,20 @@
      "cifras": [
       {
        "v": "1.997",
-       "l": "hogares con paredes de madera burda o tabla (censo de 2018)"
+       "l": "hogares con paredes de madera burda o tabla (censo de 2018)",
+       "fuente": "DANE, déficit habitacional CNPV 2018"
       },
       {
        "v": "$89,8 M",
-       "l": "por casa rural en Yondó: valor aprobado en 2022, en pesos de 2026"
+       "l": "por casa rural en Yondó: valor aprobado en 2022, en pesos de 2026",
+       "fuente": "BPIN 2022003050034 ($6.801 M por 100 casas), indexado con el IPC"
       }
      ],
      "componente": {
       "nombre": "Vivienda rural nueva en sitio propio",
       "resumen": "200 casas VIP en el lote de cada familia para reponer casas de madera o tabla",
       "costo": "$18 – 32 mil M",
+      "base_costo": "Precio por casa para las 200: mínimo, el valor aprobado en Yondó en 2022 indexado con el IPC ($89,8 M, BPIN 2022003050034); central, el punto medio ($123,7 M); máximo, el tope del subsidio en especie de 90 SMMLV ($157,6 M, Decreto 0584 de 2025).",
       "plazo": "2029–2031",
       "especificaciones": [
        "Prototipo de VIVA: 50 o 60,46 m² · 3 alcobas, sala-comedor, cocina, baño y zona de ropas",
@@ -316,28 +342,40 @@
      "id": "financiacion",
      "tipo": "financiacion",
      "titulo": "El 70 % no depende del presupuesto nacional",
-     "texto": "A la Nación se le piden $31.900 M en líneas que ya existen (mejoramiento, vivienda rural en especie y titulación) y en Casa Milagro para las 200 VIP; ese programa reemplaza a Mi Casa Ya, aún no está reglamentado y, tras el terremoto del 10 de agosto, atenderá primero las zonas afectadas. No encontramos un proyecto tipo vigente del DNP para construir vivienda, así que se usan los…",
+     "texto": "A la Nación se le piden $31.900 M en líneas que ya existen (mejoramiento, vivienda rural en especie y titulación) y en Casa Milagro para las 200 VIP; ese programa reemplaza a Mi Casa Ya, aún no está reglamentado y, tras el terremoto del 10 de agosto, atenderá primero las zonas afectadas. No encontramos un proyecto tipo vigente del DNP para construir vivienda, así que se usan los prototipos de VIVA y las reglas de Fonvivienda; para la energía solar de las casas rurales aisladas sirve el proyecto tipo «Celdas solares uso residencial».",
      "mezcla": [
       {
        "fuente": "SGR",
+       "mecanismo": "Regalías directas e inversión local de Yondó, inversión regional de Antioquia y OCAD Paz (vivienda rural PDET)",
        "monto": "$26 – 48 mil M"
       },
       {
        "fuente": "Nación",
+       "mecanismo": "MinVivienda y Fonvivienda: mejoramiento urbano y rural, vivienda rural en especie, titulación y Casa Milagro (aún sin reglamentar)",
        "monto": "$23 – 41 mil M"
       },
       {
        "fuente": "Gobernación",
+       "mecanismo": "VIVA: subsidio VIVA Mi Casa (20 % de la VIP y 10 % de la VIS), prototipos y convenios de mejoramiento",
        "monto": "$11 – 21 mil M"
       },
       {
        "fuente": "Privados",
+       "mecanismo": "Hogares VIS (ahorro y crédito del FNA o la banca) y subsidio de las cajas de compensación",
        "monto": "$9 – 17 mil M"
       },
       {
        "fuente": "Municipio",
+       "mecanismo": "Recursos propios: urbanismo, licencias, catastro, titulación y contrapartidas",
        "monto": "$6 – 11 mil M"
       }
+     ],
+     "proyectos_tipo": [
+      "Prototipos rurales de VIVA, 50 y 60,46 m² (BPIN 2022003050034)",
+      "Pliego de referencia de vivienda rural (Colombia Compra, 2015)",
+      "Proyecto tipo DNP: Celdas solares uso residencial (viviendas rurales aisladas)",
+      "Modalidades de mejoramiento (Decreto 1077 de 2015)",
+      "Cesión gratuita de predios fiscales (Decreto 523 de 2021)"
      ],
      "madurez": "Perfil",
      "madurez_nota": "Hay lotes reales, cantidades y costos de referencia, y el Lote 1 ya tiene terraplén y diseños de redes (2022); para pasar a prefactibilidad faltan estudios de suelos y amenaza, el esquema de los bloques y verificar la propiedad del Lote 2.",
@@ -381,19 +419,23 @@
      "cifras": [
       {
        "v": "4,8 ha",
-       "l": "de ciudadela deportiva sin tocar una sola manzana de vivienda"
+       "l": "de ciudadela deportiva sin tocar una sola manzana de vivienda",
+       "fuente": "Cálculo propio sobre OpenStreetMap e imagen satelital"
       },
       {
        "v": "$13.004 M",
-       "l": "en proyectos de canalización de caños devueltos a la MGA (2019–2021)"
+       "l": "en proyectos de canalización de caños devueltos a la MGA (2019–2021)",
+       "fuente": "GESPROY/SGR (repositorio)"
       },
       {
        "v": "70 %",
-       "l": "aporta Indeportes a adecuaciones en categoría 6 (convocatoria 2025–2027)"
+       "l": "aporta Indeportes a adecuaciones en categoría 6 (convocatoria 2025–2027)",
+       "fuente": "Indeportes Antioquia, Circular 2025000013"
       },
       {
        "v": "$9.303 M",
-       "l": "puso MinDeporte en una cancha de sóftbol municipal (Planeta Rica, 2025)"
+       "l": "puso MinDeporte en una cancha de sóftbol municipal (Planeta Rica, 2025)",
+       "fuente": "SECOP II, CO1.NTC.9080794"
       }
      ],
      "propuesta": "Unir esos equipamientos en una ciudadela deportiva de 4,8 ha y extenderla por el caño hasta la explanada del CIC: renovar la Cancha de Sóftbol Casabe con medidas reglamentarias y luz LED, convertir 530 m del caño en un parque lineal con laguna de retención, bosque inundable, sendero y ciclorruta, enlazar todo con una alameda de 483 m por calles existentes y sumar canchas cubiertas en la explanada. Junto al puente, a unos 8 km del casco, el Mirador Puerta del Magdalena protege 283 m de orilla y crea una plaza, un mirador y un muelle formal.",
@@ -464,6 +506,7 @@
       "nombre": "Cancha de Sóftbol Casabe",
       "resumen": "Estadio renovado: campo reglamentario, graderías cubiertas, luz LED y servicios",
       "costo": "$3,5 – 7 mil M",
+      "base_costo": "Estimación propia por partidas con AIU, interventoría y diseños, entre una adecuación grande (estadios de sóftbol de Montería y Momil y de béisbol de San Antero: $448 M a $1.400 M, 2023–2026) y un escenario nuevo (Clemencia $5.245 M en 2021; Planeta Rica $9.303 M en 2025). La iluminación LED es el renglón más incierto.",
       "plazo": "Diseños y licencia en 2028; obra en 2029 (8 a 10 meses)",
       "especificaciones": [
        "Lote: 109 × 102,9 m (11.216 m²) dentro del cerramiento actual de 12.333 m²",
@@ -503,6 +546,7 @@
       "nombre": "Parque lineal del Caño Colector Shell, fase 1",
       "resumen": "530 m de caño convertidos en parque: laguna, bosque, sendero, ciclorruta y puentes",
       "costo": "$4,8 – 9,5 mil M",
+      "base_costo": "≈11.500 m² a $0,30–0,55 M/m² (parque La Primavera de MinVivienda ≈$0,42 M/m², 2024; unidad recreodeportiva de Moñitos ≈$0,76 M/m², 2025), más tres puentes peatonales y obras de drenaje sostenible (estimación). Queda por debajo de los parques lineales de Yopal (≈$16.000–23.000 M por km) porque el cauce ya está canalizado.",
       "plazo": "Estudios hidráulico y de calidad del agua y diseños en 2028–2029; obra en 2031, cuando opere la PTAR y el caño deje de recibir vertimientos (módulo de Saneamiento)",
       "especificaciones": [
        "Tramo: ≈530 m del eje, del bosque del sur a la Calle 55",
@@ -540,6 +584,7 @@
       "nombre": "Alameda de la ciudadela deportiva",
       "resumen": "Eje peatonal arborizado de 483 m del estadio al parque principal",
       "costo": "$1,3 – 3 mil M",
+      "base_costo": "3.300 a 4.500 m² de espacio público a $0,35–0,65 M/m² con iluminación y redes, más AIU e interventoría (estimación). Referencia local: la vía peatonal de la Calle 49 y el parqueadero del coliseo costaron $642 M con regalías (2014–2019).",
       "plazo": "Diseño en 2028; obra en 2029, junto con la cancha de sóftbol",
       "especificaciones": [
        "Recorrido: Calle 50 → Carrera 54 → carriles del coliseo → Calle 49 peatonal → parque principal",
@@ -569,6 +614,7 @@
       "nombre": "Nuevas instalaciones deportivas",
       "resumen": "Cubierta para dos canchas múltiples y skatepark o gimnasio en la explanada del CIC",
       "costo": "$3 – 7 mil M",
+      "base_costo": "Cancha sintética de Segovia aprobada en el OCAD de Antioquia por $3.044,9 M (2019) y unidad recreodeportiva de Moñitos a ≈$0,76 M/m² (2025); el resto es estimación propia. Falta contrastarlo con los costos de referencia de los proyectos tipo del DNP.",
       "plazo": "2030–2031",
       "especificaciones": [
        "Sitio: explanada al sur del CIC, ≈4.100 m²",
@@ -606,13 +652,15 @@
       },
       {
        "v": "5 días",
-       "l": "de cierre total del puente por socavación en marzo de 2026"
+       "l": "de cierre total del puente por socavación en marzo de 2026",
+       "fuente": "Vanguardia (jun-2026)"
       }
      ],
      "componente": {
       "nombre": "Mirador Puerta del Magdalena · zona B: plaza, mirador y muelle",
       "resumen": "Plaza con letras YONDÓ, deck curvo, mirador elevado y muelle flotante",
       "costo": "$3,5 – 8,5 mil M",
+      "base_costo": "Partidas de plaza ($0,6–1,0 M/m²), deck y mirador sobre pilotes ($4–7 M/m²) y muelle flotante (≈$530–900 M), contrastadas con FONTUR: mirador de Arboletes $2.788,6 M (2024) y embarcaderos flotantes a ≈$531,7 M cada uno ($46.791 M entre 88). Pavimentar los 4.588 m² al precio del malecón de Puerto Triunfo (≈$2,31 M/m² de 2026, BPIN 2021055910045) costaría del orden de $10.600 M (cálculo propio).",
       "plazo": "Estudio de mercado de FONTUR y diseños en 2028–2029; obra en 2030, después de la zona A",
       "especificaciones": [
        "Plaza: área de 4.588 m² (≈86 × 53 m) detrás de la ronda: ≈2.500 m² de plaza dura y el resto verde",
@@ -649,32 +697,45 @@
      "mezcla": [
       {
        "fuente": "SGR",
+       "mecanismo": "Inversión local y Asignación para la Paz (PDET): parque lineal, alameda e instalaciones",
        "monto": "$5,4 – 12 mil M"
       },
       {
        "fuente": "Fondos",
+       "mecanismo": "FONTUR (plaza, deck y muelle), Cormagdalena (0,5 % del SGR para municipios ribereños) y UNGRD (protección de orilla)",
        "monto": "$4,3 – 10 mil M"
       },
       {
        "fuente": "Nación",
+       "mecanismo": "MinDeporte: convenio de cofinanciación de la cancha de sóftbol y las nuevas instalaciones",
        "monto": "$3,1 – 7,1 mil M"
       },
       {
        "fuente": "Gobernación",
+       "mecanismo": "Indeportes Antioquia: 70 % de la renovación del estadio existente, por convenio específico (la convocatoria 2025–2027 favorece proyectos de 1 a 125 SMMLV y la de 2028–2031 depende del nuevo plan departamental)",
        "monto": "$2,3 – 5,3 mil M"
       },
       {
        "fuente": "OxI",
+       "mecanismo": "Obras por impuestos con las iniciativas PDET 1305893152283 (protección contra inundaciones) y 1305893153497 (cauces)",
        "monto": "$1,3 – 3 mil M"
       },
       {
        "fuente": "Municipio",
+       "mecanismo": "Recursos propios: predios, topografía y contrapartida de diseños",
        "monto": "$0,5 – 1,1 mil M"
       },
       {
        "fuente": "Corantioquia",
+       "mecanismo": "Componente ambiental y drenaje sostenible del parque lineal",
        "monto": "$330 – 760 M"
       }
+     ],
+     "proyectos_tipo": [
+      "DNP: placa polideportiva cubierta",
+      "DNP: parque recreodeportivo",
+      "DNP: cancha en grama sintética",
+      "FONTUR: ficha de infraestructura turística (obras tipo 2.3)"
      ],
      "madurez": "Perfil",
      "madurez_nota": "Hay ubicación real, medidas y costos de referencia. Para pasar a prefactibilidad faltan topografía, estudio de títulos, acotamiento de la ronda del caño con Corantioquia, inventario de descargas al caño y estudio hidráulico y de socavación frente al puente.",
@@ -713,22 +774,26 @@
      "cifras": [
       {
        "v": "138.599",
-       "l": "bovinos y búfalos, sin planta de beneficio: el ganado sale en pie"
+       "l": "bovinos y búfalos, sin planta de beneficio: el ganado sale en pie",
+       "fuente": "ICA, Censo Pecuario Nacional 2026"
       },
       {
        "v": "11.400",
-       "l": "cerdos (79 % comerciales); el documento base usaba 1.085"
+       "l": "cerdos (79 % comerciales); el documento base usaba 1.085",
+       "fuente": "ICA, Censo Pecuario Nacional 2026"
       },
       {
        "v": "2.404 t",
-       "l": "de arroz paddy en 2025, sin secado ni trilla en el municipio"
+       "l": "de arroz paddy en 2025, sin secado ni trilla en el municipio",
+       "fuente": "UPRA-EVA en TerriData (DNP), 2025"
       },
       {
        "v": "2",
-       "l": "iniciativas PDET ya piden la planta de beneficio y el centro de acopio"
+       "l": "iniciativas PDET ya piden la planta de beneficio y el centro de acopio",
+       "fuente": "ART, iniciativas PDET (sep-2026)"
       }
      ],
-     "propuesta": "Un parque agroindustrial de propiedad pública y operación asociativa, con seis componentes productivos que comparten predio, frío y tratamiento de residuos (matadero y frigorífico, planta de pescado, concentrados, trilladora, acopio de leche y banco de maquinaria), más un acopio satélite en Puerto Matilde. Va en un lote de 8,31 ha al suroriente de la vía del puente, a más de 300 m del río, con muelle de carga 140 m aguas arriba del puente: el documento base lo ponía sobre la orilla, que se socava y donde las plataformas de pozos del campo Casabe (una cada ~200 m) no dejan un lote de ese…",
+     "propuesta": "Un parque agroindustrial de propiedad pública y operación asociativa, con seis componentes productivos que comparten predio, frío y tratamiento de residuos (matadero y frigorífico, planta de pescado, concentrados, trilladora, acopio de leche y banco de maquinaria), más un acopio satélite en Puerto Matilde. Va en un lote de 8,31 ha al suroriente de la vía del puente, a más de 300 m del río, con muelle de carga 140 m aguas arriba del puente: el documento base lo ponía sobre la orilla, que se socava y donde las plataformas de pozos del campo Casabe (una cada ~200 m) no dejan un lote de ese tamaño; el elegido también está en el campo, con dos pozos adentro. Lo opera una empresa de economía mixta en la que gana participación la cooperativa de los 14 núcleos productivos.",
      "inversion": "$60 – 110 mil M",
      "metas": [
       "Reses y cerdos beneficiados en planta local: 0 (2026) → 7.500 reses y 10.000 cerdos al año (2031)",
@@ -819,17 +884,20 @@
      "cifras": [
       {
        "v": "7.500",
-       "l": "reses al año en 2031: exige planta de categoría nacional"
+       "l": "reses al año en 2031: exige planta de categoría nacional",
+       "fuente": "Documento base del parque"
       },
       {
        "v": "1.700",
-       "l": "reses al año: lo que vendería una planta de autoconsumo (estimado)"
+       "l": "reses al año: lo que vendería una planta de autoconsumo (estimado)",
+       "fuente": "Estimación propia sobre el consumo de Yondó"
       }
      ],
      "componente": {
       "nombre": "Matadero y frigorífico municipal",
       "resumen": "30 bovinos y 40 cerdos por turno, con frigorífico y autorización sanitaria del INVIMA",
       "costo": "$16 – 27 mil M",
+      "base_costo": "Valor del documento base; por analogía con Cañasgordas (≈$16.300 M) y La Jagua de Ibirico (≈$27.200 M), plantas de categoría nacional en pesos de 2026, el contraste da ≈$20.000 M; una planta de autoconsumo costaría de $2.000 M a $6.200 M, pero solo podría vender en Yondó.",
       "plazo": "2029–2030 (diseños en 2028; operación en 2031)",
       "especificaciones": [
        "Capacidad: 30 bovinos y 40 porcinos por turno",
@@ -881,48 +949,61 @@
      "id": "financiacion",
      "tipo": "financiacion",
      "titulo": "Regalías y obras por impuestos ponen la mitad",
-     "texto": "El SGR aporta $27.400 M (Asignación para la Paz por el OCAD Paz y asignaciones directas) y las obras por impuestos $12.000 M; los socios y…",
+     "texto": "El SGR aporta $27.400 M (Asignación para la Paz por el OCAD Paz y asignaciones directas) y las obras por impuestos $12.000 M; los socios y el crédito Finagro, $13.000 M. El municipio pone el aporte al predio y la mitad del banco de maquinaria ($6.400 M), y la Gobernación, la otra mitad ($4.400 M).",
      "mezcla": [
       {
        "fuente": "SGR",
+       "mecanismo": "OCAD Paz · Asignación para la Paz (PDET Sur de Bolívar, iniciativas 1305893153585 y 1305893153592) y asignaciones directas de Yondó",
        "monto": "$21 – 38 mil M"
       },
       {
        "fuente": "Privados",
+       "mecanismo": "Socios privados de la empresa mixta en concentrados y trilladora, y crédito Finagro/Banco Agrario (LEC) para el capital de trabajo",
        "monto": "$10 – 18 mil M"
       },
       {
        "fuente": "OxI",
+       "mecanismo": "Obras por impuestos ZOMAC/PDET para las plantas, con Ecopetrol, Parex y otros contribuyentes del campo Casabe",
        "monto": "$9,4 – 17 mil M"
       },
       {
        "fuente": "Municipio",
+       "mecanismo": "Recursos propios: aporte al predio ($2.000 M) y 50 % del banco de maquinaria ($4.400 M)",
        "monto": "$5 – 8,8 mil M"
       },
       {
        "fuente": "Findeter",
+       "mecanismo": "Crédito para el matadero y las redes del parque, línea por confirmar (Reactiva Colombia no cubre el sector agropecuario y no se halló tasa compensada para él), dentro de la capacidad prudente de endeudamiento del municipio ($5.141 M a $10.281 M, compartida con salud, saneamiento y TIC)",
        "monto": "$4,7 – 8,3 mil M"
       },
       {
        "fuente": "Nación",
+       "mecanismo": "MinAgricultura · ADR (PIDAR, de $1.000 a $4.000 M por proyecto regional) para el acopio de leche y la trilladora",
        "monto": "$4,3 – 7,6 mil M"
       },
       {
        "fuente": "Gobernación",
+       "mecanismo": "50 % del banco de maquinaria, replicando el esquema 50/50 de maquinaria amarilla ya usado en 54 municipios",
        "monto": "$3,4 – 6,1 mil M"
       },
       {
        "fuente": "Corantioquia",
+       "mecanismo": "Inversión ambiental y tasa retributiva para la planta de tratamiento, el biodigestor y el compostaje",
        "monto": "$1,2 – 2,1 mil M"
       },
       {
        "fuente": "Cooperación",
+       "mecanismo": "Cooperación internacional y responsabilidad social de Ecopetrol y Parex (acuerdo Casabe 2026–2031) para Puerto Matilde",
        "monto": "$0,6 – 1,1 mil M"
       }
      ],
+     "proyectos_tipo": [
+      "Infraestructura Logística Agrícola (ILA), DNP y MinAgricultura (2025): acopio, clasificación, almacenamiento, empaque y despacho de granos y yuca (el secado se agrega aparte)",
+      "Planta de Beneficio Animal Categoría Autoconsumo (DNP): solo si el matadero es de autoconsumo"
+     ],
      "madurez": "Perfil",
-     "madurez_nota": "Hay perfil con capacidades, costos indicativos, lote identificado y modelo de gestión; para pasar a prefactibilidad, donde los costos…",
-     "pedido": "Que el OCAD Paz priorice el parque en la Asignación para la Paz, amarrado a las iniciativas PDET 1305893153585 (planta de beneficio animal)…",
+     "madurez_nota": "Hay perfil con capacidades, costos indicativos, lote identificado y modelo de gestión; para pasar a prefactibilidad, donde los costos pueden variar entre 30 % y 50 %, faltan el concepto de Ecopetrol sobre los pozos, el estudio hidráulico, el uso del suelo, la categoría del matadero y las líneas base de leche y pesca.",
+     "pedido": "Que el OCAD Paz priorice el parque en la Asignación para la Paz, amarrado a las iniciativas PDET 1305893153585 (planta de beneficio animal) y 1305893153592 (centro de acopio), para sumar con las asignaciones directas $27.400 M de regalías, empezando en 2028 por la fase de arranque. Que la ART y los contribuyentes del campo Casabe tomen las plantas por obras por impuestos ($12.000 M), la ADR cofinancie el acopio de leche y la trilladora ($5.500 M), Findeter preste $6.000 M (línea por confirmar) y la Gobernación ponga la mitad del banco de maquinaria ($4.400 M).",
      "a_quien": [
       "DNP · OCAD Paz (Asignación para la Paz) y apoyo a la estructuración",
       "ART · banco de proyectos de obras por impuestos e iniciativas PDET Sur de Bolívar",
@@ -931,16 +1012,16 @@
       "Findeter · crédito de $6.000 M para el matadero y las redes del parque (línea por confirmar)",
       "Gobernación de Antioquia · Secretarías de Agricultura (plantas de beneficio) e Infraestructura (maquinaria 50/50)",
       "INVIMA e ICA · categoría sanitaria del matadero y registro de las plantas",
-      "Aerocivil · autorización previa por peligro aviario del matadero y frigorífico y de las demás plantas que atraigan aves, a ≈11,6 km del…",
+      "Aerocivil · autorización previa por peligro aviario del matadero y frigorífico y de las demás plantas que atraigan aves, a ≈11,6 km del aeropuerto Yariguíes (RAC 14)",
       "ANI, Ruta del Cacao, Cormagdalena y Corantioquia · accesos, muelle de carga, ronda y vertimientos"
      ],
      "siguientes_pasos": [
-      "Nov-2026 a may-2027: amarrar el parque a las iniciativas PDET 1305893153585 (planta de beneficio animal) y 1305893153592 (centro de acopio)…",
-      "1.er semestre de 2027: concepto de Ecopetrol sobre los pozos del lote (Casabe 980 y 394) y los vecinos (1125, 997 y 207), estudio…",
-      "2027: confirmar con la Gobernación si Yondó está en el Plan de Racionalización de plantas de beneficio y definir con el INVIMA la categoría…",
-      "2027: formular la prefactibilidad en la MGA con apoyo del DNP, levantar las líneas base de leche y pesca, concertar con los productores y…",
-      "Ene-jun 2028: incluir el parque en los planes de desarrollo 2028–2031, comprar el lote y constituir la empresa mixta y la cooperativa…",
-      "Jul-2028: presentar la fase de arranque al OCAD Paz, el banco de maquinaria a la Gobernación y las plantas al banco de obras por impuestos…"
+      "Nov-2026 a may-2027: amarrar el parque a las iniciativas PDET 1305893153585 (planta de beneficio animal) y 1305893153592 (centro de acopio) e inscribirlo en el portafolio del PND 2026–2030 (bases al CNP el 15-nov-2026, radicación el 7-feb-2027 y aprobación a más tardar el 5-may-2027)",
+      "1.er semestre de 2027: concepto de Ecopetrol sobre los pozos del lote (Casabe 980 y 394) y los vecinos (1125, 997 y 207), estudio hidráulico y de socavación, uso del suelo en el EOT (mapas FR 2, FR 3 y FR 5) y títulos del predio",
+      "2027: confirmar con la Gobernación si Yondó está en el Plan de Racionalización de plantas de beneficio y definir con el INVIMA la categoría del matadero",
+      "2027: formular la prefactibilidad en la MGA con apoyo del DNP, levantar las líneas base de leche y pesca, concertar con los productores y la ACVC, y llevar el parque a los programas de gobierno (elecciones del 31-oct-2027)",
+      "Ene-jun 2028: incluir el parque en los planes de desarrollo 2028–2031, comprar el lote y constituir la empresa mixta y la cooperativa (condición de paso: estudios y predio aprobados)",
+      "Jul-2028: presentar la fase de arranque al OCAD Paz, el banco de maquinaria a la Gobernación y las plantas al banco de obras por impuestos de la ART"
      ]
     }
    ]
@@ -960,19 +1041,23 @@
      "cifras": [
       {
        "v": "1",
-       "l": "sede pública de salud habilitada (la E.S.E.); ningún puesto rural"
+       "l": "sede pública de salud habilitada (la E.S.E.); ningún puesto rural",
+       "fuente": "REPS, corte 12-mar-2026"
       },
       {
        "v": "93,4 %",
-       "l": "de los subsidiados está en Savia Salud, una EPS intervenida"
+       "l": "de los subsidiados está en Savia Salud, una EPS intervenida",
+       "fuente": "ADRES, BDUA, 3-oct-2026 (cálculo propio)"
       },
       {
        "v": "9,52 %",
-       "l": "de los nacidos vivos con bajo peso en 2024; promedio 2014–2018: 5,9 %"
+       "l": "de los nacidos vivos con bajo peso en 2024; promedio 2014–2018: 5,9 %",
+       "fuente": "TerriData (DNP), 2024; promedio: cálculo propio"
       },
       {
        "v": "$1.537 M",
-       "l": "contrató la E.S.E. en 2025 para Equipos Básicos de Salud (MinSalud)"
+       "l": "contrató la E.S.E. en 2025 para Equipos Básicos de Salud (MinSalud)",
+       "fuente": "SECOP I, 83 contratos (cálculo propio)"
       }
      ],
      "propuesta": "Cinco componentes por $48.679 M ($42.199 M de inversión y $6.480 M de operación de los EBS en 4 años): una torre de primer nivel junto al hospital, en la cabecera; telesalud hasta 5 puntos rurales; Equipos Básicos de Salud en la zona rural; un puesto nuevo en San Miguel del Tigre y 4 puestos satélite en San Luis Beltrán, San Francisco, La Soledad y La Punta, y dos ambulancias. Con ellos la red pasa de 1 a 6 sedes habilitadas y la torre abre hacia abril de 2030.",
@@ -1031,17 +1116,20 @@
      "cifras": [
       {
        "v": "15",
-       "l": "camas (9 en el REPS de 2022) y laboratorio propio de 24 horas"
+       "l": "camas (9 en el REPS de 2022) y laboratorio propio de 24 horas",
+       "fuente": "docs/11 del repositorio"
       },
       {
        "v": "18 meses",
-       "l": "de obra desde agosto de 2028; apertura hacia abril de 2030"
+       "l": "de obra desde agosto de 2028; apertura hacia abril de 2030",
+       "fuente": "docs/11 del repositorio"
       }
      ],
      "componente": {
       "nombre": "Torre de servicios de primer nivel del Hospital Héctor Abad Gómez",
       "resumen": "4 pisos con urgencias, partos, 15 camas y laboratorio 24 h; abre hacia abril de 2030",
       "costo": "$27 – 51 mil M",
+      "base_costo": "Presupuesto por capítulos con APU propios (docs/11, corte 25-oct-2026): $7,24 M de obra por m² ($5,46 M sin equipos ni solar, cerca de Monguí 2025 con $5,26 M y del tipo DNP con $5,42 M); falta sumar el ajuste del prediseño estructural ($1.742 M a $1.848 M con AIU) y recalcular el P7 de energía ($1.734 M), porque sus paneles pasan a la granja solar centralizada.",
       "plazo": "2027–2030 (diseños en 2027, obra de 18 meses desde agosto de 2028)",
       "especificaciones": [
        "Área: 3.369,6 m² en 4 pisos, a 5,3 m del hospital actual",
@@ -1083,17 +1171,20 @@
      "cifras": [
       {
        "v": "5",
-       "l": "puntos rurales con estación de telemedicina y enlace"
+       "l": "puntos rurales con estación de telemedicina y enlace",
+       "fuente": "Diseño de la propuesta (estimación propia)"
       },
       {
        "v": "10",
-       "l": "tablets con historia clínica para los EBS"
+       "l": "tablets con historia clínica para los EBS",
+       "fuente": "Diseño de la propuesta (estimación propia)"
       }
      ],
      "componente": {
       "nombre": "Telesalud rural en red",
       "resumen": "Telemedicina en 5 puntos rurales y tablets para los EBS, con nodo en el hospital",
       "costo": "$300 – 850 M",
+      "base_costo": "Estimación propia con precios de mercado 2026 del repositorio y de la red de fibra (docs/13): equipos $130 M, tablets $25 M, conectividad con 2 años de servicio $125 M, UPS $50 M, plataforma $120 M e implementación $50 M; el máximo suma ecógrafos portátiles.",
       "plazo": "2028–2030 (nodo y tablets de los EBS desde 2028; estaciones en cada puesto al terminar su adecuación, 2029–2030)",
       "especificaciones": [
        "Puntos rurales: 5, con estación de telemedicina, periféricos y monitor clínico",
@@ -1127,17 +1218,20 @@
      "cifras": [
       {
        "v": "0",
-       "l": "puestos rurales habilitados hoy"
+       "l": "puestos rurales habilitados hoy",
+       "fuente": "REPS, corte 12-mar-2026"
       },
       {
        "v": "$29,6 M",
-       "l": "al mes cuesta operar un puesto completo, según el tipo DNP (2026)"
+       "l": "al mes cuesta operar un puesto completo, según el tipo DNP (2026)",
+       "fuente": "Proyecto tipo DNP (cálculo propio)"
       }
      ],
      "componente": {
       "nombre": "Red de puestos de salud rurales",
       "resumen": "Puesto nuevo en San Miguel del Tigre y 4 puestos satélite adecuados y habilitados",
       "costo": "$2,4 – 5,1 mil M",
+      "base_costo": "Cálculo propio: el proyecto tipo DNP de 2018 llevado a pesos de 2026 da $1.770 M para San Miguel del Tigre (obra con interventoría $1.572 M y dotación $198 M) y las 4 adecuaciones suman $1.842 M con el referente de MinSalud en Coyaima (≈ $460 M por puesto, 2026).",
       "plazo": "Estudios y diseños en 2028; obras 2029–2030",
       "especificaciones": [
        "Puesto nuevo: San Miguel del Tigre: unos 320 m² con los 59 ítems de dotación del tipo",
@@ -1168,44 +1262,58 @@
      "id": "financiacion",
      "tipo": "financiacion",
      "titulo": "Regalías y MinSalud ponen el 72 %",
-     "texto": "Las regalías (directas de Yondó, Asignación para la Paz del OCAD Paz, inversión local y regional) y MinSalud ponen el 72 %; las obras por impuestos pagan…",
+     "texto": "Las regalías (directas de Yondó, Asignación para la Paz del OCAD Paz, inversión local y regional) y MinSalud ponen el 72 %; las obras por impuestos pagan dotación y ambulancias. MinSalud es la fuente más incierta: en el proyecto de presupuesto 2027 su inversión propia baja de $2,6 a $1,6 billones.",
      "mezcla": [
       {
        "fuente": "SGR",
+       "mecanismo": "Directas de Yondó $7.337 M, Asignación para la Paz por convocatoria del OCAD Paz (PDET) $8.300 M (torre y puestos), inversión local $1.200 M y regional $1.500 M",
        "monto": "$13 – 25 mil M"
       },
       {
        "fuente": "Nación",
+       "mecanismo": "MinSalud: $12.000 M para la obra y el equipamiento fijo de la torre con concepto de viabilidad (Res. 485 de 2025) y $4.800 M de EBS en 4 años; MinTIC: $400 M para la telemedicina y la conectividad de la torre (P6)",
        "monto": "$12 – 23 mil M"
       },
       {
        "fuente": "OxI",
+       "mecanismo": "ZOMAC/PDET: dotación de torre y puestos y 2 ambulancias, como la dotación PDET en ejecución (BPIN 20250214000061)",
        "monto": "$2,7 – 5,1 mil M"
       },
       {
        "fuente": "Municipio",
+       "mecanismo": "Contrapartida del municipio y la E.S.E. en la torre ($1.400 M), PIC con estrategia APS y SGP para los EBS ($1.680 M) y telesalud ($200 M)",
        "monto": "$2,3 – 4,4 mil M"
       },
       {
        "fuente": "Gobernación",
+       "mecanismo": "Secretaría Seccional de Salud: torre ($2.300 M) y puestos ($512 M), con registro en el PMIDS de 2028",
        "monto": "$2 – 3,8 mil M"
       },
       {
        "fuente": "Findeter",
+       "mecanismo": "Crédito del municipio con tasa compensada para salud (Res. 2316 de 2025) o Reactiva Colombia, para cerrar la obra de la torre; usa parte de la capacidad prudente de endeudamiento ($5.141 M a $10.281 M), que comparten salud, saneamiento, TIC y agroindustria",
        "monto": "$1,1 – 2 mil M"
       },
       {
        "fuente": "Fondos",
+       "mecanismo": "FENOGE (Con Energía): baterías y gestión energética de la torre ($1.000 M); Fondo Único de TIC: conectividad rural ($300 M)",
        "monto": "$0,9 – 1,8 mil M"
       },
       {
        "fuente": "Cooperación",
+       "mecanismo": "Inversión social de Ecopetrol en los campos Casabe y Llanito ($300 M) y cooperación internacional como la OPS ($200 M)",
        "monto": "$360 – 670 M"
       }
      ],
+     "proyectos_tipo": [
+      "Proyecto tipo DNP: Construcción y dotación de infraestructura básica en salud (v1.0, 2018)",
+      "Proyecto tipo DNP: Dotación de ambulancias, transporte asistencial básico y medicalizado (v2.0, 2018)",
+      "Proyecto tipo DNP: Fortalecimiento de la cadena de frío (v1.0, 2016)",
+      "MinSalud: Puesto de salud tipo (2017)"
+     ],
      "madurez": "Prefactibilidad",
-     "madurez_nota": "La torre (76 % del módulo) está en prefactibilidad, con programa, prediseño estructural, presupuesto con APU y modelo BIM, y le faltan los estudios y diseños…",
-     "pedido": "A MinSalud, $12.000 M para la torre (concepto técnico de viabilidad, Res. 485 de 2025) y sostener la asignación de los EBS en al menos $1.200 M al año ($4.800 M…",
+     "madurez_nota": "La torre (76 % del módulo) está en prefactibilidad, con programa, prediseño estructural, presupuesto con APU y modelo BIM, y le faltan los estudios y diseños (P1, $1.832 M); telesalud, puestos y ambulancias están en perfil, y los EBS operaron en 2024 y 2025 (en SECOP I no hay contratos de 2026).",
+     "pedido": "A MinSalud, $12.000 M para la torre (concepto técnico de viabilidad, Res. 485 de 2025) y sostener la asignación de los EBS en al menos $1.200 M al año ($4.800 M en 4 años; en 2025 la E.S.E. contrató $1.537 M); a MinTIC, $400 M para la telemedicina y la conectividad de la torre; al OCAD Paz, $8.300 M de la Asignación para la Paz con destino a la torre y los puestos rurales. A la ART, inscribir $3.750 M de dotación y ambulancias en el banco de obras por impuestos, y a la Gobernación, $2.812 M con registro en el PMIDS de 2028.",
      "a_quien": [
       "MinSalud · concepto técnico de viabilidad (Res. 485) y Subdirección de Prestación de Servicios (Documento de Capacidad Instalada)",
       "MinSalud · Dirección de Promoción y Prevención (asignación anual de los EBS)",
@@ -1218,12 +1326,12 @@
       "Ecopetrol · inversión social y obras por impuestos (campos Casabe y Llanito)"
      ],
      "siguientes_pasos": [
-      "Nov-2026 a feb-2027: aprobar los estudios y diseños de la torre (P1, $1.832 M) con el saldo de asignaciones directas 2025–2026 (≈ $7.297 M sin aprobar al…",
-      "Nov-2026 a mar-2027: publicar el estudio de vulnerabilidad sísmica de 2024, aclarar quién es dueño del lote y pedir a la Secretaría Seccional el ajuste del…",
+      "Nov-2026 a feb-2027: aprobar los estudios y diseños de la torre (P1, $1.832 M) con el saldo de asignaciones directas 2025–2026 (≈ $7.297 M sin aprobar al 27-oct-2026).",
+      "Nov-2026 a mar-2027: publicar el estudio de vulnerabilidad sísmica de 2024, aclarar quién es dueño del lote y pedir a la Secretaría Seccional el ajuste del PMIDS para registrar la torre.",
       "Antes de may-2027: decidir el uso del art. 156 de la Ley 2294 (condonación invertida en la E.S.E.) y gestionar con CISA la cartera de Savia Salud y Nueva EPS.",
-      "Abr–sep-2027: concertar el Documento de Capacidad Instalada con MinSalud y verificar la iniciativa PDET de salud rural del PATR Sur de Bolívar para postular la…",
-      "Nov-2027 a abr-2028: radicar la torre ante MinSalud (concepto de viabilidad y control especial de oferta), cerrar la financiación e inscribir la dotación y las…",
-      "Ene–jun-2028: registrar los puestos (y la torre, si no entró con el ajuste de 2027) en la actualización del PMIDS; antes del 31-mar-2028, el gerente que designe…"
+      "Abr–sep-2027: concertar el Documento de Capacidad Instalada con MinSalud y verificar la iniciativa PDET de salud rural del PATR Sur de Bolívar para postular la torre y los puestos a la Asignación para la Paz en las convocatorias del OCAD Paz 2027–2028.",
+      "Nov-2027 a abr-2028: radicar la torre ante MinSalud (concepto de viabilidad y control especial de oferta), cerrar la financiación e inscribir la dotación y las ambulancias en el banco de la ART.",
+      "Ene–jun-2028: registrar los puestos (y la torre, si no entró con el ajuste de 2027) en la actualización del PMIDS; antes del 31-mar-2028, el gerente que designe el nuevo alcalde firma metas de EBS, telesalud y puestos."
      ]
     }
    ]
@@ -1243,19 +1351,23 @@
      "cifras": [
       {
        "v": "15 h",
-       "l": "al día sin agua en la red urbana: solo llega de 4:00 a 13:00"
+       "l": "al día sin agua en la red urbana: solo llega de 4:00 a 13:00",
+       "fuente": "Diagnóstico técnico del acueducto, 2025–2026 (diseños de 2019 frente a la operación actual)"
       },
       {
        "v": "106,7 L/s",
-       "l": "en la red en esas 9 h: 28,5 % más que el máximo horario de diseño"
+       "l": "en la red en esas 9 h: 28,5 % más que el máximo horario de diseño",
+       "fuente": "Diagnóstico técnico del acueducto; cálculo propio"
       },
       {
        "v": "35 %",
-       "l": "de agua no contabilizada según el prestador (Superservicios, 2020)"
+       "l": "de agua no contabilizada según el prestador (Superservicios, 2020)",
+       "fuente": "Superservicios, Evaluación integral (2020)"
       },
       {
        "v": "$14.961 M",
-       "l": "ya invertidos en la Fase 1: pozos y tanques (2020–2021, pesos de 2026)"
+       "l": "ya invertidos en la Fase 1: pozos y tanques (2020–2021, pesos de 2026)",
+       "fuente": "DNP, datos abiertos de regalías · BPIN 2019058930084"
       }
      ],
      "propuesta": "Hacer la Fase 2 de la optimización, «agua 24 horas»: dividir la red del casco en 6 sectores con entrada medida y presión controlada, medir la producción y a cada suscriptor (3.700 medidores), bajar las pérdidas a 25 % y operar con telemetría, para pasar de 9 a 24 horas en 2030 con el agua que ya se produce. Después, entre 2030 y 2032 y según la demanda medida, ampliar la PTAP de 40 a 60 L/s en su predio de la vereda Las Américas.",
@@ -1298,11 +1410,13 @@
      "cifras": [
       {
        "v": "88,2 %",
-       "l": "de suscriptores con medidor funcionando (dic-2019)"
+       "l": "de suscriptores con medidor funcionando (dic-2019)",
+       "fuente": "Superservicios, Evaluación integral (2020)"
       },
       {
        "v": "25 %",
-       "l": "tope de agua no contabilizada en 2030 (más de 30 % en 2019–2020)"
+       "l": "tope de agua no contabilizada en 2030 (más de 30 % en 2019–2020)",
+       "fuente": "Meta de la propuesta; base: Superservicios (2020)"
       }
      ],
      "antes": "Hoy: 9 horas, toda la red a la vez · La red entera se abre de 4:00 a 13:00 y queda vacía el resto del día. No hay medición por zonas: no se sabe dónde se pierde el agua ni dónde falta presión.",
@@ -1322,17 +1436,20 @@
      "cifras": [
       {
        "v": "59,32 L/s",
-       "l": "demanda máxima diaria de diseño en 2044"
+       "l": "demanda máxima diaria de diseño en 2044",
+       "fuente": "Estudios de optimización (2019), citados en el diagnóstico técnico"
       },
       {
        "v": "40 L/s",
-       "l": "capacidad de la PTAP actual, construida en 2003"
+       "l": "capacidad de la PTAP actual, construida en 2003",
+       "fuente": "Superservicios, Evaluación integral (2020)"
       }
      ],
      "componente": {
       "nombre": "Ampliación modular de la PTAP de 40 a 60 L/s",
       "resumen": "Módulo de tratamiento de 20 L/s junto a la PTAP de 2003, con pozo adicional y concesión",
       "costo": "$3,2 – 7,5 mil M",
+      "base_costo": "PTAP regional Baranoa–Polonuevo (Atlántico): 100 L/s más por $22.910 M (prensa, sin fecha), unos $229 M por L/s, que dan unos $4.580 M por 20 L/s; con el pozo (unos $217 M de 2026, contrato de Yondó de 2018) y los diseños (unos $250 M, estimado) serían unos $5.050 M, y se toman $4.800 M porque el referente incluye una captación nueva y aquí se reutilizan el terreno y la captación actual (cálculo propio; confianza baja).",
       "plazo": "Diseño 2029; obra 2030–2032",
       "especificaciones": [
        "Capacidad: De 40 a 60 L/s (módulo de 20 L/s)",
@@ -1365,32 +1482,38 @@
      "mezcla": [
       {
        "fuente": "SGR",
+       "mecanismo": "Asignaciones directas e inversión local (las aprueba la alcaldía) y OCAD Paz si se amarra al PATR (Plan de Acción para la Transformación Regional del PDET): PTAP y telemetría",
        "monto": "$3,4 – 7,2 mil M"
       },
       {
        "fuente": "Municipio",
+       "mecanismo": "SGP Agua Potable ($3.233 M en 2026) y aporte de los usuarios (Ley 142, art. 144) para los medidores; SGP y tarifa para la impulsión y las contrapartidas",
        "monto": "$1,8 – 3,9 mil M"
       },
       {
        "fuente": "Nación",
+       "mecanismo": "MinVivienda · apoyo financiero de la Nación con concepto de viabilidad (Res. 0467 de 2026): sectorización y pérdidas",
        "monto": "$1,7 – 3,7 mil M"
       },
       {
        "fuente": "OxI",
+       "mecanismo": "Obras por impuestos, modalidad ordinaria ZOMAC/PDET (convenio o fiducia), con Ecopetrol u otro contribuyente: macro y micromedición",
        "monto": "$1 – 2,2 mil M"
       },
       {
        "fuente": "Gobernación",
+       "mecanismo": "Plan Departamental de Agua de Antioquia (Gerencia de Servicios Públicos, fondo fiduciario FIA del PDA): línea base y pérdidas",
        "monto": "$210 – 460 M"
       },
       {
        "fuente": "Fondos",
+       "mecanismo": "Fondo Único de TIC (MinTIC) · cofinanciación de territorios inteligentes: equipos IoT y nube de la telemetría",
        "monto": "$100 – 220 M"
       }
      ],
      "madurez": "Perfil",
      "madurez_nota": "Hay diagnóstico técnico y diseños de 2019 sin actualizar, y no se pudo confirmar si hay proyecto tipo del DNP (el portal no respondió en oct-2026); para pedir la viabilidad de MinVivienda falta medir la línea base, terminar el Plan Maestro y ajustar los diseños a la Res. 0330 de 2017.",
-     "pedido": "A MinVivienda: concepto de viabilidad y $2.500 M de apoyo financiero de la Nación (Res. 0467 de 2026, que prioriza el rezago en continuidad) para sectorizar y bajar pérdidas. A la ART, aprobar en su banco de obras por impuestos el proyecto de medición ($1.500 M), para que lo pague un contribuyente (Ecopetrol u otro); a la Gobernación (PDA), $307 M, y a MinTIC, $150 M del Fondo Único de TIC. El municipio pone $2.643 M de…",
+     "pedido": "A MinVivienda: concepto de viabilidad y $2.500 M de apoyo financiero de la Nación (Res. 0467 de 2026, que prioriza el rezago en continuidad) para sectorizar y bajar pérdidas. A la ART, aprobar en su banco de obras por impuestos el proyecto de medición ($1.500 M), para que lo pague un contribuyente (Ecopetrol u otro); a la Gobernación (PDA), $307 M, y a MinTIC, $150 M del Fondo Único de TIC. El municipio pone $2.643 M de contrapartida, y los $4.850 M de regalías salen de sus asignaciones directas e inversión local o del OCAD Paz.",
      "a_quien": [
       "MinVivienda · Viceministerio de Agua y Saneamiento Básico: concepto de viabilidad y Comité de Apoyo Financiero (Res. 0467 de 2026)",
       "ART · banco de proyectos de obras por impuestos, con Ecopetrol u otro contribuyente",
@@ -1430,22 +1553,26 @@
      "cifras": [
       {
        "v": "0 %",
-       "l": "de las aguas residuales del casco urbano recibe tratamiento"
+       "l": "de las aguas residuales del casco urbano recibe tratamiento",
+       "fuente": "Superservicios, evaluación integral 2020 (datos de 2019)"
       },
       {
        "v": "55,34 L/s",
-       "l": "de aguas residuales vertidos sin tratar a dos caños (2019)"
+       "l": "de aguas residuales vertidos sin tratar a dos caños (2019)",
+       "fuente": "Superservicios, evaluación integral 2020"
       },
       {
        "v": "78.000 t",
-       "l": "de basura en el relleno Las Américas, con licencia vencida desde 2023"
+       "l": "de basura en el relleno Las Américas, con licencia vencida desde 2023",
+       "fuente": "Repositorio, docs/12 (estimación)"
       },
       {
        "v": "50 L/s",
-       "l": "de capacidad de la PTAR propuesta, para ≈20.000 habitantes en 2056"
+       "l": "de capacidad de la PTAR propuesta, para ≈20.000 habitantes en 2056",
+       "fuente": "Cálculo propio con la Res. 0330 de 2017 (RAS)"
       }
      ],
-     "propuesta": "Terminar el Plan Maestro con un PSMV nuevo, recoger lo que hoy se vierte con dos interceptores (≈3,8 km) que siguen los dos caños hasta su unión, al norte del casco, y construir allí, aguas abajo de la unión, la primera PTAR del casco (UASB + filtro percolador, 50 L/s); el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo. En aseo, construir un relleno sanitario nuevo en la vereda Kilómetro Cinco, en el sitio que ya reserva el EOT, con la ECA de 10 t/día y la planta de compostaje en el mismo predio; cerrar Las Américas por partes desde 2028 y del todo…",
+     "propuesta": "Terminar el Plan Maestro con un PSMV nuevo, recoger lo que hoy se vierte con dos interceptores (≈3,8 km) que siguen los dos caños hasta su unión, al norte del casco, y construir allí, aguas abajo de la unión, la primera PTAR del casco (UASB + filtro percolador, 50 L/s); el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo. En aseo, construir un relleno sanitario nuevo en la vereda Kilómetro Cinco, en el sitio que ya reserva el EOT, con la ECA de 10 t/día y la planta de compostaje en el mismo predio; cerrar Las Américas por partes desde 2028 y del todo entre 2030 y 2031, y volverlo parque ecotecnológico con granja solar. El relleno viejo deja de recibir basura en 2030, cuando abre el nuevo.",
      "inversion": "$48 – 110 mil M",
      "metas": [
       "Aguas residuales del casco tratadas en PTAR: 0 % (2019) → 100 % del caudal de tiempo seco (2031)",
@@ -1469,17 +1596,20 @@
      "cifras": [
       {
        "v": "3,8 km",
-       "l": "de interceptores: occidental de ≈1,6 km y oriental de ≈2,1 km"
+       "l": "de interceptores: occidental de ≈1,6 km y oriental de ≈2,1 km",
+       "fuente": "Cálculo propio sobre el plano del casco (trazado indicativo)"
       },
       {
        "v": "≈50 m",
-       "l": "de impulsión, de la estación de llegada a la planta (el sitio B, hacia el río, exigía 911 m)"
+       "l": "de impulsión, de la estación de llegada a la planta (el sitio B, hacia el río, exigía 911 m)",
+       "fuente": "Cálculo propio sobre el plano del casco"
       }
      ],
      "componente": {
       "nombre": "Interceptores y estación de bombeo de llegada",
       "resumen": "≈3,8 km de interceptores por los corredores de los caños: cero vertimientos en tiempo seco",
       "costo": "$8 – 18 mil M",
+      "base_costo": "Estimación por componentes: unos 3,8 km de tubería (interceptores, ramal e impulsión) a cerca de $2,0 M por metro con excavación de 3–4 m, entibado, pozos y AIU, más la estación de llegada, con referencia en la EBAR La Playa de Turbo, primera etapa ($3.271 M, SECOP, ago-2025), y la rehabilitación de las 4 EBAR. El rango (−33 % / +50 %) refleja la incertidumbre de un perfil.",
       "plazo": "2029–2030 (antes del parque lineal); el caño deja de recibir vertimientos cuando opere la PTAR, en 2031",
       "especificaciones": [
        "Interceptor occidental: ≈1,6 km por la Carrera 57, junto al Caño Colector Shell (El Prado y El Paraíso; trazado indicativo)",
@@ -1515,17 +1645,20 @@
      "cifras": [
       {
        "v": "≈700 m",
-       "l": "a la edificación mapeada más cercana; un UASB exige 200 m"
+       "l": "a la edificación mapeada más cercana; un UASB exige 200 m",
+       "fuente": "Cálculo propio; Res. 0330 de 2017, tabla 28"
       },
       {
        "v": "≈120 m",
-       "l": "de descarga al Caño Colector Shell; desde el sitio B, hacia el río, eran 1,7 km de impulsión y emisario"
+       "l": "de descarga al Caño Colector Shell; desde el sitio B, hacia el río, eran 1,7 km de impulsión y emisario",
+       "fuente": "Cálculo propio sobre el plano del casco"
       }
      ],
      "componente": {
       "nombre": "PTAR central del casco urbano (UASB + filtro percolador, 50 L/s)",
       "resumen": "UASB + filtro percolador de 50 L/s aguas abajo de la unión de los caños, al norte del casco",
       "costo": "$15 – 30 mil M",
+      "base_costo": "Promedio de dos métodos: por habitante, $1.156.350 × 20.000 = $23.127 M (mediana del repositorio); por caudal, la PTAR de Tenjo indexada da $338 M por L/s × 55 L/s (caudal medido en 2019) = $18.600 M. El mínimo usa 45 L/s y el máximo es el tope del repositorio para una PTAR de 12.000 habitantes ($30.176 M); la PTAR de Turbo ($33.711 M, 2025) confirma el orden de magnitud. No incluye interceptores ni la descarga.",
       "plazo": "2029–2031 (licitación en 2029, operación en 2031)",
       "especificaciones": [
        "Tecnología: UASB + filtro percolador de alta tasa",
@@ -1547,7 +1680,7 @@
        "Referente: PTAR de Tenjo, 40 L/s para 12.000 habitantes ($9.300 M de 2021)",
        "Referente: PTAR distrital de Turbo, Antioquia ($33.711 M, 2025)"
       ],
-      "ubicacion": "Al norte del casco, aguas abajo de la unión del Caño Colector Shell con el canal oriental, en el costado oriental del caño y de la Carrera 57 (≈7,0213 N, 73,9121 O). Le llegan los dos interceptores, que siguen la pendiente natural de los caños, y el agua tratada vuelve al mismo caño, más abajo. Se prefiere al sitio B, hacia el río, que exigía bombear 911 m y un emisario de 825 m al Magdalena, y a la reserva del EOT pegada al casco, aguas arriba de la unión. Por estar junto a los caños va sobre una plataforma por encima de la creciente de 100 años; el EOT deja que Corantioquia apruebe el…"
+      "ubicacion": "Al norte del casco, aguas abajo de la unión del Caño Colector Shell con el canal oriental, en el costado oriental del caño y de la Carrera 57 (≈7,0213 N, 73,9121 O). Le llegan los dos interceptores, que siguen la pendiente natural de los caños, y el agua tratada vuelve al mismo caño, más abajo. Se prefiere al sitio B, hacia el río, que exigía bombear 911 m y un emisario de 825 m al Magdalena, y a la reserva del EOT pegada al casco, aguas arriba de la unión. Por estar junto a los caños va sobre una plataforma por encima de la creciente de 100 años; el EOT deja que Corantioquia apruebe el sitio definitivo con el PSMV."
      },
      "leyenda": [
       "PTAR central, aguas abajo de la unión de los caños (4,2 ha)",
@@ -1559,35 +1692,39 @@
      "id": "relleno_nuevo",
      "tipo": "componente",
      "titulo": "Un relleno nuevo en Yondó, en el sitio que ya reserva el EOT",
-     "texto": "Las Américas tiene la licencia vencida desde 2023 y ya no tiene vida útil, y llevar la basura a…",
+     "texto": "Las Américas tiene la licencia vencida desde 2023 y ya no tiene vida útil, y llevar la basura a Barrancabermeja la dejaría a 40 km, detrás de un puente que la socavación cerró en marzo de 2026 y bajo otra autoridad ambiental. El relleno nuevo va en la vereda Kilómetro Cinco, en el sitio que el EOT reservó en 2022, como pide la Nación para cofinanciar: fuera del radio de 13 km del aeropuerto, a 4,2 km del casco y lejos de los pozos del acueducto. Se compararon otros tres sitios.",
      "cifras": [
       {
        "v": "7,6 km",
-       "l": "por vía desde el parque principal; San Silvestre, en Barrancabermeja, queda a 40 km, al otro…"
+       "l": "por vía desde el parque principal; San Silvestre, en Barrancabermeja, queda a 40 km, al otro lado del puente",
+       "fuente": "Cálculo propio con OSRM sobre OpenStreetMap (oct-2026)"
       },
       {
        "v": "16,2 km",
-       "l": "del aeropuerto Yariguíes: fuera del radio de 13 km en que la Aerocivil debe autorizar un relleno"
+       "l": "del aeropuerto Yariguíes: fuera del radio de 13 km en que la Aerocivil debe autorizar un relleno",
+       "fuente": "Cálculo propio; RAC 14 (Res. Aerocivil 04072 de 2010)"
       }
      ],
      "componente": {
       "nombre": "Relleno sanitario nuevo en la vereda Kilómetro Cinco",
-      "resumen": "Relleno municipal en el sitio que ya reserva el EOT, con celdas para 25 años o más; abre en…",
+      "resumen": "Relleno municipal en el sitio que ya reserva el EOT, con celdas para 25 años o más; abre en 2030 y entonces Las Américas deja de recibir basura",
       "costo": "$6 – 18 mil M",
+      "base_costo": "Suma de partidas de perfil, en pesos de 2026: compra de la reserva del EOT (16,4 ha a $12–35 M/ha, más 5 % de avalúo, títulos y escritura), $340 M (de $210 M a $600 M); estudios, EIA y licencia, $650 M; celda de la fase 1, $1.750 M; lixiviados, $750 M; mejora de ≈2,7 km de vía, $1.770 M; cerramiento, báscula, edificaciones, drenajes, energía y pozos de monitoreo, $2.200 M; buldócer y volqueta, $1.810 M, e interventoría, $550 M. Referentes: celda de 55 × 100 m de Olaya Herrera ($1.805 M en 2025, $1.902 M de 2026), cierre y celda nueva de Acandí con apoyo de la Nación ($6.437 M en 2025, $6.785 M de 2026) y Vera II de Segovia ($4.707 M en 2023, $5.562 M de 2026). El máximo cubre placa huella en el tramo en afirmado y el arreglo del resto del camino, por si lo que parece placa huella no lo es. No incluye la ECA ni el compostaje, que son componentes aparte, ni las celdas de las fases siguientes, que se pagan con la tarifa o con nuevos aportes; si la celda de la fase 1 se agranda, cada 1.000 m² impermeabilizados suman $104–114 M.",
       "plazo": "2027–2030: cruce con las zonas de recarga antes de comprar, predio y estudios en 2027–2028, licencia en 2028–2029, obra de la fase 1 en 2029 y operación desde 2030",
       "especificaciones": [
        "Categoría: I: menos de 50 t/día; Yondó dispuso 3.763 t en 2024, unas 10,3 t/día (Superservicios)",
-       "Sitio: Reserva del EOT en Kilómetro Cinco (≈16 ha); predio útil de ≈8,8 ha, a 44 m o más del…",
-       "Norma: El EOT ya delimita esta área para el relleno nuevo y la nombra área de contingencia…",
-       "Celdas: ≈3 ha en cinco celdas: ≈266.000–287.000 m³ con 12–15 m de altura. Dan 25 años o más…",
-       "Fase 1: ≈0,6 ha y hasta ≈36.000 m³ con taludes 3H:1V: de 5 a 7 años desde 2030 sin aprovechar…",
+       "Sitio: Reserva del EOT en Kilómetro Cinco (≈16 ha); predio útil de ≈8,8 ha, a 44 m o más del eje de la vía a Puerto Berrío, la lectura más exigente del retiro en el EOT",
+       "Norma: El EOT ya delimita esta área para el relleno nuevo y la nombra área de contingencia (art. 17.4 y Tabla 35), como pide la Nación para cofinanciar (Decreto 1077 de 2015, arts. 2.3.2.3.7 y 2.3.2.3.9). Cumple los descartes de la Res. 938 de 2019 (art. 1) que se pudieron revisar: a 4,2 km del suelo urbano y de expansión, a 2,0 km del centro poblado más cercano, fuera de la reserva forestal de Ley 2.ª y fuera del radio de 13 km y del cono de aproximación del aeropuerto",
+       "Celdas: ≈3 ha en cinco celdas: ≈266.000–287.000 m³ con 12–15 m de altura. Dan 25 años o más aun sin aprovechar nada (la norma pide 25) y 30 con la ECA y el compostaje; sin las dos celdas en bosque (≈200.000–213.000 m³), los 25 años dependen de aprovechar el 15–20 %",
+       "Fase 1: ≈0,6 ha y hasta ≈36.000 m³ con taludes 3H:1V: de 5 a 7 años desde 2030 sin aprovechar y de 6 a 8 con el 15 %",
        "Fondo: Suelo de 10⁻⁷ cm/s, arcilla compactada de 0,45 m y geomembrana de PEAD",
-       "Lixiviados: Dos lagunas de 28 × 24 m: igualación con recirculación a la celda y humedal de…",
-       "Operación: Mecanizada: compactación a 0,85 t/m³ o más, cobertura diaria y frente abierto de…",
-       "Distancias: 4,2 km del perímetro urbano, 4,3 km de los pozos del acueducto, 3,6 km del Caño…",
-       "Acceso: 7,6 km por vía desde el parque principal; ≈2,7 km en afirmado por mejorar y una…",
-       "Vecinos: 3 casas y una caseta a 165–178 m del lindero, al otro lado de la vía; las celdas, a…",
-       "Áreas protegidas: Fuera de la Reserva Forestal del Río Magdalena (Ley 2.ª de 1959), en la zona…"
+       "Lixiviados: Dos lagunas de 28 × 24 m: igualación con recirculación a la celda y humedal de pulimento antes del vertimiento",
+       "Operación: Mecanizada: compactación a 0,85 t/m³ o más, cobertura diaria y frente abierto de 500 m² o menos",
+       "Distancias: 4,2 km del perímetro urbano, 4,3 km de los pozos del acueducto, 3,6 km del Caño Colector Shell, 6,4 km de la PTAR del casco y 16,2 km del aeropuerto, fuera del radio de 13 km",
+       "Acceso: 7,6 km por vía desde el parque principal; ≈2,7 km en afirmado por mejorar y una entrada nueva de ≈63 m",
+       "Vecinos: 3 casas y una caseta a 165–178 m del lindero, al otro lado de la vía; las celdas, a 260 m o más. Al occidente, la planta de tratamiento y disposición de lodos del EOT (Tabla 34) tiene una nave a ≈90 m del lindero y a ≈105 m de la zona de celdas",
+       "Áreas protegidas: Fuera de la Reserva Forestal del Río Magdalena (Ley 2.ª de 1959), en la zona sustraída SDL2_303; el área protegida más cercana del RUNAP está a 11,2 km",
+       "Por confirmar: Cruce con las zonas de recarga de acuíferos (mapa FR_1_2) y con el riesgo no mitigable del EOT, cota de la creciente de 100 años en el borde sur y permiso de aprovechamiento forestal para las celdas en bosque"
       ],
       "fuentes": [
        "Nación",
@@ -1598,12 +1735,12 @@
        "Municipio"
       ],
       "proyectos_tipo": [
-       "Referente: cierre del relleno y celda nueva de Acandí, Chocó, con apoyo de la Nación ($6.437…",
+       "Referente: cierre del relleno y celda nueva de Acandí, Chocó, con apoyo de la Nación ($6.437 M, 2025)",
        "Referente: relleno Vera II de Segovia, Antioquia, fase I ($4.707 M, 2023)",
        "Referente: celda de 55 × 100 m de Olaya Herrera, Nariño ($1.805 M, 2025)",
-       "Proyecto tipo DNP: Recuperación de cobertura vegetal en áreas disturbadas (franja de…"
+       "Proyecto tipo DNP: Recuperación de cobertura vegetal en áreas disturbadas (franja de aislamiento)"
       ],
-      "ubicacion": "Vereda Kilómetro Cinco, en la reserva del EOT para el relleno nuevo (Tabla 35), junto a la vía…"
+      "ubicacion": "Vereda Kilómetro Cinco, en la reserva del EOT para el relleno nuevo (Tabla 35), junto a la vía a Puerto Berrío: 7,6 km por vía desde el parque principal, unos 9 minutos (portería en ≈6,9706 N, 73,9438 O). Son lomas de 83 a 113 m que drenan directo al Magdalena, a 4,3 km de los pozos y la PTAP, a 3,6 km del Caño Colector Shell y a 6,4 km de la PTAR del casco. El borde sur del predio queda apenas 4 a 6 m sobre la lámina del río en el modelo de elevación: las celdas y las lagunas van por encima de la creciente de 100 años. Al occidente está la planta de tratamiento y disposición de lodos del EOT (Tabla 34)."
      },
      "leyenda": [
       "Recomendado: Kilómetro Cinco, en la reserva del EOT (8,8 ha)",
@@ -1621,17 +1758,20 @@
      "cifras": [
       {
        "v": "3.763 t",
-       "l": "de residuos dispuestos en 2024, unas 10,3 t por día"
+       "l": "de residuos dispuestos en 2024, unas 10,3 t por día",
+       "fuente": "Superservicios, Informe Nacional de Disposición Final 2024 (dic-2025)"
       },
       {
        "v": "15–20 %",
-       "l": "de los residuos del casco aprovechados, meta a fijar en el PGIRS"
+       "l": "de los residuos del casco aprovechados, meta a fijar en el PGIRS",
+       "fuente": "Meta propuesta (2031)"
       }
      ],
      "componente": {
       "nombre": "Estación de clasificación y aprovechamiento (ECA) de 10 t/día",
       "resumen": "Clasificación de reciclables con recicladores formalizados; proyecto tipo DNP",
       "costo": "$2,9 – 5,7 mil M",
+      "base_costo": "Málaga (Santander) contrató en 2026 una «ECA tipo del DNP» de 10 t/día por $5.041 M (SECOP); el mínimo es la etapa 1 de La Pintada ($2.911 M, 2025) y el máximo, Málaga con interventoría ($5.690 M). En el predio del relleno no paga lote, vía de acceso, cerramiento ni báscula de camiones, que van en el componente del relleno nuevo; ese ahorro se precisa con el diseño.",
       "plazo": "2029–2030 (con las obras del relleno nuevo)",
       "especificaciones": [
        "Capacidad: 10 t/día",
@@ -1666,21 +1806,24 @@
      "id": "relleno",
      "tipo": "componente",
      "titulo": "Del relleno vencido a un parque con granja solar",
-     "texto": "El relleno Las Américas opera con la licencia vencida desde 2023 y ya no tiene vida útil. Desde 2028 se cubren sus celdas viejas y la basura va solo al frente activo. En 2030 abre el relleno nuevo y Las Américas deja de recibir basura; el frente activo se…",
+     "texto": "El relleno Las Américas opera con la licencia vencida desde 2023 y ya no tiene vida útil. Desde 2028 se cubren sus celdas viejas y la basura va solo al frente activo. En 2030 abre el relleno nuevo y Las Américas deja de recibir basura; el frente activo se cierra entre 2030 y 2031. La granja solar de 997 kWp se monta por partes, cuando la cobertura asienta, desde 2031, con un parque alrededor.",
      "cifras": [
       {
        "v": "997 kWp",
-       "l": "de granja solar sobre las celdas, 1,34 GWh al año"
+       "l": "de granja solar sobre las celdas, 1,34 GWh al año",
+       "fuente": "Repositorio, docs/12 (cálculo propio)"
       },
       {
        "v": "2.236",
-       "l": "hogares de estratos 1 y 2 con un bloque solar de 50 kWh al mes"
+       "l": "hogares de estratos 1 y 2 con un bloque solar de 50 kWh al mes",
+       "fuente": "Repositorio, docs/12 (cálculo propio)"
       }
      ],
      "componente": {
       "nombre": "Clausura del relleno Las Américas y parque ecotecnológico",
       "resumen": "Cierre por partes desde 2028 y total cuando abra el relleno nuevo, granja solar de 997 kWp y parque con coworking (docs/12)",
       "costo": "$11 – 25 mil M",
+      "base_costo": "Presupuesto de prefactibilidad de docs/12 (clase 4: −30 % / +50 %): $4.194 M de estudios y clausura, $5.603 M de granja solar y conexión a EPM y $6.620 M de parque. Se calculó para cerrar todo en 2027–2028: la basura que llegue hasta 2030 y el cierre por partes pueden subir el costo de la clausura.",
       "plazo": "2028–2031 (cierre de las celdas viejas desde 2028 y del frente activo en 2030–2031; parque y primera parte de la granja solar en 2031; el resto de la granja hacia 2033–2034; posclausura hasta ≈2051)",
       "especificaciones": [
        "Residuos acumulados: ≈78.000 t a 2026 (estimación) y ≈12.000–17.000 t más entre 2027 y 2030 (cálculo propio)",
@@ -1707,7 +1850,7 @@
        "Proyecto tipo DNP: Ciclo-infraestructura y servicios complementarios",
        "Proyecto tipo DNP: Recuperación de cobertura vegetal en áreas disturbadas"
       ],
-      "ubicacion": "Vereda Las Américas, a 3,9 km del parque principal por vía (7,0140 N, 73,9342 O; ubicación inferida por satélite, confianza media). El EOT (Tabla 32) delimita el polígono del relleno unos 830 m al suroriente, junto al de la planta municipal: hay que…"
+      "ubicacion": "Vereda Las Américas, a 3,9 km del parque principal por vía (7,0140 N, 73,9342 O; ubicación inferida por satélite, confianza media). El EOT (Tabla 32) delimita el polígono del relleno unos 830 m al suroriente, junto al de la planta municipal: hay que conciliarlo con el catastro (lote 893-000-033-00210)."
      },
      "leyenda": [
       "Granja solar de 997 kWp sobre las celdas clausuradas",
@@ -1718,70 +1861,86 @@
      "id": "financiacion",
      "tipo": "financiacion",
      "titulo": "Nación, regalías y Gobernación ponen el 67 %",
-     "texto": "La Nación, las regalías y la Gobernación suman $47.577 M de los $70.537 M del módulo. La…",
+     "texto": "La Nación, las regalías y la Gobernación suman $47.577 M de los $70.537 M del módulo. La PTAR y la celda del relleno nuevo se radican ante MinVivienda con la Res. 0467 de 2026, la vía al relleno va a obras por impuestos y la granja solar de Las Américas ($1.747 M) va al Incentivo a la Producción del SGR en la convocatoria de 2029–2030, para montarla en 2031; la granja municipal de TIC va en la de 2027–2028: un proyecto por convocatoria, dentro del tope.",
      "mezcla": [
       {
        "fuente": "Nación",
+       "mecanismo": "MinVivienda, Viceministerio de Agua: viabilidad y apoyo financiero de la Nación (Res. 0467 de 2026) para la PTAR, el Plan Maestro, la ECA (Programa Basura Cero) y la celda de la fase 1 del relleno nuevo ($1.750 M), que se sustenta con los criterios del art. 27 de esa resolución (Yondó es PDET y ZOMAC, y el relleno nuevo permite cerrar un sitio que opera sin licencia) y con el análisis de regionalización que exige el Decreto 1077 de 2015 (art. 2.3.2.3.7); MinDeporte, MinTIC y MinCultura, $1.324 M del parque de Las Américas",
        "monto": "$12 – 27 mil M"
       },
       {
        "fuente": "SGR",
+       "mecanismo": "OCAD Paz (Asignación para la Paz, iniciativa PDET) para los interceptores; asignaciones directas para el Plan Maestro, la ECA, el compostaje y los estudios, la interventoría y parte de las obras del relleno nuevo ($1.900 M, reformulando el BPIN 2025058930015, que pedía ampliar Las Américas); $7.451 M de Las Américas, radicados en el bienio 2029–2030: clausura $2.394 M, parque $3.310 M y granja solar $1.747 M del Incentivo a la Producción (es el único proyecto del municipio en esa convocatoria, porque la granja municipal de TIC va en la de 2027–2028; el tope es de 2 proyectos y $8.000 M por municipio)",
        "monto": "$11 – 25 mil M"
       },
       {
        "fuente": "Gobernación",
+       "mecanismo": "Plan Departamental de Aguas de Antioquia, por convenio como en Sonsón, El Peñol y San Rafael: PTAR, interceptores, compostaje, $1.200 M de la clausura de Las Américas (SGP y PDA) y $1.250 M de las obras complementarias del relleno nuevo; y $905 M, la mitad de la maquinaria del relleno nuevo, por la línea de maquinaria 50/50",
        "monto": "$8,9 – 19 mil M"
       },
       {
        "fuente": "OxI",
+       "mecanismo": "Obras por impuestos, modalidad ordinaria ZOMAC y PDET, con Ecopetrol (opera el campo Casabe): una etapa de los interceptores con viabilidad propia y la vía de acceso al relleno nuevo ($1.770 M) como vía terciaria de la iniciativa PDET 1305893152122",
        "monto": "$4,3 – 9,4 mil M"
       },
       {
        "fuente": "Corantioquia",
+       "mecanismo": "Tasa retributiva y convocatorias de saneamiento: PTAR y ECA (precedentes: ECA de La Pintada, $2.854 M; PTAR de Guachucal con Corponariño); y un convenio para el tratamiento de lixiviados y los pozos de monitoreo del relleno nuevo ($1.000 M), como los que firmó en 2025 con Yalí, Campamento y Anorí",
        "monto": "$3,8 – 8,2 mil M"
       },
       {
        "fuente": "Fondos",
+       "mecanismo": "Colombia Solar o FENOGE, $2.911 M de la granja solar de Las Américas; Cormagdalena (0,5 % del SGR para municipios ribereños), $1.089 M de la laguna de pulimento y la descarga al Caño Colector Shell",
        "monto": "$2,7 – 6 mil M"
       },
       {
        "fuente": "Municipio",
+       "mecanismo": "Tarifa de aseo y provisión de clausura ($600 M), recursos propios del parque de Las Américas ($993 M), compra de la reserva del EOT para el relleno nuevo ($340 M, que la Nación no financia) y la otra mitad de su maquinaria ($905 M), y SGP de agua y saneamiento para el Plan Maestro, la laguna de pulimento y la descarga",
        "monto": "$2,6 – 5,6 mil M"
       },
       {
        "fuente": "Cooperación",
+       "mecanismo": "Ecopetrol (inversión social) y cooperación, $993 M del parque de Las Américas; cooperación o banca multilateral, por un programa nacional o departamental, para el arranque de la PTAR",
        "monto": "$1,7 – 3,7 mil M"
       },
       {
        "fuente": "Findeter",
+       "mecanismo": "Crédito «Municipios Territorios Energéticos» de Findeter y MinEnergía (tasa compensada, IBR + 0,7 %) para la granja solar de Las Américas, dentro de la capacidad prudente de endeudamiento del municipio ($5.141 M a $10.281 M), compartida con salud, TIC y agroindustria",
        "monto": "$0,7 – 1,4 mil M"
       }
      ],
+     "proyectos_tipo": [
+      "Construcción de estación de clasificación y aprovechamiento – ECA (v1.0, 2021)",
+      "Construcción y dotación de centro TIC municipal (coworking del parque)",
+      "Construcción y dotación parque recreodeportivo",
+      "Ciclo-infraestructura y servicios complementarios",
+      "Recuperación de cobertura vegetal en áreas disturbadas"
+     ],
      "madurez": "Perfil",
-     "madurez_nota": "Hay sitio, trazados y costos estimados: el relleno Las Américas ya está en prefactibilidad…",
-     "pedido": "Pedimos a la Nación $18.122 M: $16.798 M de apoyo financiero de MinVivienda para la PTAR, el…",
+     "madurez_nota": "Hay sitio, trazados y costos estimados: el relleno Las Américas ya está en prefactibilidad (estudio del parque ecotecnológico, 2026) y el relleno nuevo tiene sitio reservado en el EOT y una distribución de perfil, pero los estudios del Plan Maestro siguen al 56 % e inactivos; faltan aforos, topografía y estudio de inundación del predio de la PTAR, el PSMV nuevo y, para el relleno nuevo, el cruce con las zonas de recarga de acuíferos, la topografía, el estudio del subsuelo, el estudio de creciente y el EIA.",
+     "pedido": "Pedimos a la Nación $18.122 M: $16.798 M de apoyo financiero de MinVivienda para la PTAR, el Plan Maestro, la ECA y la celda de la fase 1 del relleno nuevo (Res. 0467 de 2026) y $1.324 M de MinDeporte, MinTIC y MinCultura para el parque de Las Américas; a la Gobernación, $12.955 M por el Plan Departamental de Aguas y la maquinaria 50/50. En regalías se buscan $16.500 M (OCAD Paz para los interceptores y asignaciones directas para el relleno nuevo y Las Américas, con $1.747 M del Incentivo a la Producción para su granja solar en la convocatoria de 2029–2030), más $6.270 M de obras por impuestos con Ecopetrol (interceptores y vía al relleno nuevo) y $5.500 M de Corantioquia.",
      "a_quien": [
-      "MinVivienda · Viceministerio de Agua y Saneamiento Básico (viabilidad y apoyo financiero…",
+      "MinVivienda · Viceministerio de Agua y Saneamiento Básico (viabilidad y apoyo financiero, Res. 0467 de 2026; la ECA, en el Programa Basura Cero)",
       "DNP · Secretaría Técnica del OCAD Paz (Asignación para la Paz, iniciativas PDET)",
-      "Gobernación de Antioquia · Gerencia de Servicios Públicos, gestor del Plan Departamental de…",
-      "Corantioquia · PSMV, permiso de vertimiento, tasa retributiva, licencia del relleno nuevo…",
+      "Gobernación de Antioquia · Gerencia de Servicios Públicos, gestor del Plan Departamental de Aguas, y línea de maquinaria 50/50",
+      "Corantioquia · PSMV, permiso de vertimiento, tasa retributiva, licencia del relleno nuevo (con el aprovechamiento forestal) y plan de cierre de Las Américas",
       "ART · banco de proyectos de obras por impuestos, con Ecopetrol",
-      "MinInterior · Dirección de la Autoridad Nacional de Consulta Previa: determinación de…",
-      "Aerocivil · autorización previa por peligro aviario de la PTAR y su laguna, a ≈11,6 km del…",
-      "MinEnergía · Colombia Solar, FENOGE y convocatoria del Incentivo a la Producción (granja…",
+      "MinInterior · Dirección de la Autoridad Nacional de Consulta Previa: determinación de procedencia y oportunidad de la consulta previa para el relleno nuevo",
+      "Aerocivil · autorización previa por peligro aviario de la PTAR y su laguna, a ≈11,6 km del aeropuerto Yariguíes (RAC 14)",
+      "MinEnergía · Colombia Solar, FENOGE y convocatoria del Incentivo a la Producción (granja solar de Las Américas)",
       "Cormagdalena · asignación del 0,5 % del SGR para municipios ribereños"
      ],
      "siguientes_pasos": [
-      "Nov-2026 a feb-2027: pedir que la PTAR de Yondó y el relleno nuevo entren en las bases y el…",
-      "2027: reactivar los estudios del Plan Maestro (BPIN 2024058930006) y contratar aforos de 24…",
-      "2027: radicar ante Corantioquia el PSMV nuevo con la PTAR aguas abajo de la unión de los…",
-      "2027: reformular el BPIN 20201301010649 (canalización de $67.640 M corrientes) como…",
-      "2027: actualizar el PGIRS con el análisis de alternativas del relleno, incluida la opción…",
-      "2027, antes de comprar el predio de Kilómetro Cinco: cruzarlo con el mapa de recarga de…",
-      "2027–2028: topografía, estudio de creciente de 100 años y compra o servidumbre del predio de…",
-      "2028: radicar ante MinVivienda la PTAR y la celda de la fase 1 del relleno (Res. 0467 de…",
-      "2029–2030: radicar en el SGR la clausura, el parque y la granja solar de Las Américas (la…",
-      "2030–2031: cerrar el frente activo de Las Américas; en 2031, el parque y la primera parte de…"
+      "Nov-2026 a feb-2027: pedir que la PTAR de Yondó y el relleno nuevo entren en las bases y el plan plurianual del PND 2026–2030 como cierre de brechas en un municipio PDET.",
+      "2027: reactivar los estudios del Plan Maestro (BPIN 2024058930006) y contratar aforos de 24 horas en las 4 EBAR, en época seca y de lluvias.",
+      "2027: radicar ante Corantioquia el PSMV nuevo con la PTAR aguas abajo de la unión de los caños y firmar un acuerdo de pago de la tasa retributiva.",
+      "2027: reformular el BPIN 20201301010649 (canalización de $67.640 M corrientes) como interceptor enterrado más parque lineal.",
+      "2027: actualizar el PGIRS con el análisis de alternativas del relleno, incluida la opción regional de Barrancabermeja y por qué no sirve (Decreto 1077 de 2015, art. 2.3.2.3.7); acordar con Corantioquia el plan de cierre de Las Américas (desde 2028 se cubren las celdas viejas y la basura va solo al frente activo, hasta que abra el relleno nuevo), y reformular el BPIN 2025058930015 (ampliación de Las Américas, devuelto) como relleno nuevo.",
+      "2027, antes de comprar el predio de Kilómetro Cinco: cruzarlo con el mapa de recarga de acuíferos del EOT (FR_1_2), con el modelo hidrogeológico de Corantioquia y la UNAL (2017) y con el bosque protector; pedir a Planeación la sección vial de la vía a Puerto Berrío y el certificado de uso del suelo, y a la Autoridad Nacional de Consulta Previa del MinInterior la determinación de procedencia y oportunidad de la consulta previa.",
+      "2027–2028: topografía, estudio de creciente de 100 años y compra o servidumbre del predio de la PTAR, y autorización previa de la Aerocivil para la PTAR y su laguna (RAC 14); compra de la reserva del EOT en Kilómetro Cinco (≈16 ha) y topografía, estudio del subsuelo, hidrogeología, estudio de creciente de 100 años con la serie de la estación Peñas Blancas del IDEAM, EIA y diseños del relleno nuevo.",
+      "2028: radicar ante MinVivienda la PTAR y la celda de la fase 1 del relleno (Res. 0467 de 2026); ante Corantioquia, la licencia del relleno, con el aprovechamiento forestal si las celdas futuras entran en bosque; los interceptores en el OCAD Paz y en el banco de obras por impuestos, con la vía al relleno; y empezar a cubrir las celdas viejas de Las Américas con la parte de la Gobernación ($1.200 M) y la provisión de clausura ($600 M).",
+      "2029–2030: radicar en el SGR la clausura, el parque y la granja solar de Las Américas (la granja, en la convocatoria del Incentivo a la Producción) y la granja en Colombia Solar o FENOGE; construir la fase 1, la vía, las obras complementarias, la ECA y el compostaje; en 2030 abre el relleno nuevo y Las Américas deja de recibir basura.",
+      "2030–2031: cerrar el frente activo de Las Américas; en 2031, el parque y la primera parte de la granja solar sobre las celdas cubiertas desde 2028; el resto de la granja, hacia 2033–2034, y la posclausura, hasta ≈2051."
      ],
      "leyenda": [
       "Interceptor nuevo",
@@ -1807,22 +1966,26 @@
      "cifras": [
       {
        "v": "3,56",
-       "l": "accesos fijos a internet por cada 100 habitantes; Antioquia: 26,1"
+       "l": "accesos fijos a internet por cada 100 habitantes; Antioquia: 26,1",
+       "fuente": "DNP, TerriData con MinTIC (4T-2025)"
       },
       {
        "v": "0",
-       "l": "Zonas Digitales urbanas de wifi gratuito (registro de MinTIC, 2023)"
+       "l": "Zonas Digitales urbanas de wifi gratuito (registro de MinTIC, 2023)",
+       "fuente": "MinTIC, datos abiertos wg2u-d8ji"
       },
       {
        "v": "100 %",
-       "l": "del consumo eléctrico oficial a 2031 lo cubriría la granja (estimado)"
+       "l": "del consumo eléctrico oficial a 2031 lo cubriría la granja (estimado)",
+       "fuente": "Cálculo propio: 1,62–1,80 GWh frente a 1,59 GWh al año"
       },
       {
        "v": "1.394",
-       "l": "millones al año de ahorro en facturas oficiales (caso 1 CREG, estimado)"
+       "l": "millones al año de ahorro en facturas oficiales (caso 1 CREG, estimado)",
+       "fuente": "Cálculo propio con tarifas de EPM (oct-2026) y la CREG 101 072"
       }
      ],
-     "propuesta": "Un anillo de fibra de 4,6 km por las calles del casco, con el Centro de Control (CCED) en la alcaldía, une colegios, hospital, bomberos, el Centro de Integración Ciudadana (CIC), el coliseo y las 4 estaciones de bombeo de aguas residuales (EBAR); de él salen 5 Zonas Digitales y la telemetría de esas EBAR, y la estación de bombeo de llegada nueva y la PTAR reportan al CCED por 4G. Una granja solar pública de 1,2 MWp frente a la subestación de EPM, en lugar de paneles en cada sede, cubre en balance anual el consumo oficial estimado, como autogeneración colectiva de una comunidad energética de…",
+     "propuesta": "Un anillo de fibra de 4,6 km por las calles del casco, con el Centro de Control (CCED) en la alcaldía, une colegios, hospital, bomberos, el Centro de Integración Ciudadana (CIC), el coliseo y las 4 estaciones de bombeo de aguas residuales (EBAR); de él salen 5 Zonas Digitales y la telemetría de esas EBAR, y la estación de bombeo de llegada nueva y la PTAR reportan al CCED por 4G. Una granja solar pública de 1,2 MWp frente a la subestación de EPM, en lugar de paneles en cada sede, cubre en balance anual el consumo oficial estimado, como autogeneración colectiva de una comunidad energética de la alcaldía, la E.S.E. y Aguas y Aseo.",
      "inversion": "$5,5 – 9,1 mil M",
      "metas": [
       "Consumo eléctrico oficial cubierto con energía solar (balance anual): 0 % (2026) → 100 % y ≈200 t de CO₂ evitadas al año (2031)",
@@ -1843,17 +2006,20 @@
      "cifras": [
       {
        "v": "34",
-       "l": "accesos de fibra hasta el hogar en todo Yondó, de 1.062 fijos (3T-2023)"
+       "l": "accesos de fibra hasta el hogar en todo Yondó, de 1.062 fijos (3T-2023)",
+       "fuente": "MinTIC, datos abiertos n48w-gutb"
       },
       {
        "v": "7,64",
-       "l": "accesos fijos por cada 100 habitantes en 2021; en 2025 bajaron a 3,56"
+       "l": "accesos fijos por cada 100 habitantes en 2021; en 2025 bajaron a 3,56",
+       "fuente": "DNP, TerriData con MinTIC"
       }
      ],
      "componente": {
       "nombre": "Anillo de fibra óptica y Centro de Control (CCED)",
       "resumen": "Anillo de 4,6 km que une sedes, colegios, hospital y EBAR con el CCED de la alcaldía",
       "costo": "$0,6 – 1,1 mil M",
+      "base_costo": "Cifras del repositorio sin contarlas dos veces: fibra, 21 conexiones y nodo GPON, $208 M (docs/13, que costeó 10,67 km de cable de 24 hilos porque seguía toda la red de 13,2 kV con sus ramales rurales a la PTAP, los pozos y el relleno; el anillo urbano nuevo mide 4,6 km más un ramal de ≈280 m, y con cable de 48 hilos los mismos precios dan ≈$206 M, dentro del rango), gestión de energía y SCADA, $450 M, y sala del CCED, $150 M (presupuesto de la Red Energética Pública, docs/05), con el rango de prefactibilidad de esas fuentes.",
       "plazo": "2028–2029",
       "especificaciones": [
        "Trazado: anillo de 4,6 km (2.983 + 1.625 m) y ramal de ≈280 m",
@@ -1889,6 +2055,7 @@
       "nombre": "Telemetría de las EBAR y la PTAR en el CCED",
       "resumen": "Unidades remotas en las EBAR y la PTAR que reportan al CCED nivel, bombas y caudal",
       "costo": "$300 – 600 M",
+      "base_costo": "Estimación propia, por cotizar, con los precios unitarios de la investigación: 6 unidades remotas × $35 M = $210 M (el valor alto del rango de $20–35 M que usa el módulo de Aguas, porque miden bombas, nivel, caudal y energía), 2 macromedidores a la entrada y la salida de la PTAR × $35 M = $70 M, e integración al CCED y puesta en marcha, $120 M.",
       "plazo": "2028–2031, por etapas",
       "especificaciones": [
        "Puntos: 6: 4 EBAR del casco, estación de llegada nueva y PTAR",
@@ -1921,11 +2088,13 @@
      "cifras": [
       {
        "v": "48 %",
-       "l": "del consumo oficial cubrirían los paneles en las sedes (modelo anterior)"
+       "l": "del consumo oficial cubrirían los paneles en las sedes (modelo anterior)",
+       "fuente": "Cálculo propio sobre el estudio de la Red Energética Pública (2026)"
       },
       {
        "v": "100 %",
-       "l": "del consumo oficial a 2031 cubre la granja de 1,2 MWp (estimado)"
+       "l": "del consumo oficial a 2031 cubre la granja de 1,2 MWp (estimado)",
+       "fuente": "Cálculo propio con 1.450 kWh/kWp al año"
       }
      ],
      "antes": "Paneles en cada sede · Los 469 kWp del modelo anterior producirían ≈0,63 GWh al año: el 48 % del consumo oficial de 1,31 GWh que se estimaba entonces. Se calcularon con 1.346 kWh/kWp, un rendimiento prudente para techos, y exigirían inspección y refuerzo de cubiertas ($300 M con obras eléctricas y RETIE).",
@@ -1943,17 +2112,20 @@
      "cifras": [
       {
        "v": "1,0 MW",
-       "l": "máximo en CA del caso 1 (crédito 1:1): por eso 1,2 MWp y no 1,5"
+       "l": "máximo en CA del caso 1 (crédito 1:1): por eso 1,2 MWp y no 1,5",
+       "fuente": "CREG 101 072 de 2025 (mod. 101 087) y CREG 174 de 2021"
       },
       {
        "v": "3,4 años",
-       "l": "de retorno simple con $1.394 M al año, sin predio ni operación (caso 2: 7,4)"
+       "l": "de retorno simple con $1.394 M al año, sin predio ni operación (caso 2: 7,4)",
+       "fuente": "Cálculo propio con tarifas de EPM (oct-2026)"
       }
      ],
      "componente": {
       "nombre": "Granja solar pública centralizada (1,2 MWp)",
       "resumen": "1,2 MWp en suelo frente a la subestación de EPM para todas las cuentas oficiales",
       "costo": "$4,1 – 6,4 mil M",
+      "base_costo": "Cálculo propio: 1.200 kWp a $2,7 M/kWp (el precio del estudio de la granja de Las Américas) = $3.240 M, más transformador, protecciones y medida ($280 M), cerramiento, vías, caseta, cámaras y monitoreo ($350 M), estudios, diseños, estudio de conexión y RETIE ($150 M) y conexión a EPM ($62 M: se conserva el valor de una derivación de 0,6 km, que con solo 40 m de línea alcanza para la celda o el reconectador de la subestación), con 17 % de interventoría e imprevistos: $4.776 M ($3,98 M/kWp), sin el predio; el rango de la investigación usa sistemas de $2,4 a $3,5 M/kWp, y la granja de UNIPAZ (Barrancabermeja), en estructuración, anuncia ≈$7.000 M por 1,1 MWp (≈$6,4 M/kWp).",
       "plazo": "Estructuración 2028; obra 2029–2030",
       "especificaciones": [
        "Potencia: ≈1.200 kWp con inversores de 1.000 kW CA",
@@ -1990,17 +2162,19 @@
      "cifras": [
       {
        "v": "877 $/kWh",
-       "l": "vale cada kWh repartido si se cumplen las condiciones del caso 1"
+       "l": "vale cada kWh repartido si se cumplen las condiciones del caso 1",
+       "fuente": "CREG 101 072 de 2025 (mod. 101 087), art. 20; tarifas de EPM (oct-2026)"
       },
       {
        "v": "404 $/kWh",
-       "l": "si una cuenta recibe el 10 % o más o pasa de 100 kW (caso 2)"
+       "l": "si una cuenta recibe el 10 % o más o pasa de 100 kW (caso 2)",
+       "fuente": "CREG 101 072 de 2025 (mod. 101 087), art. 20"
       }
      ],
      "lista": [
       "Dueños: la alcaldía, la E.S.E. Hospital Héctor Abad Gómez y Aguas y Aseo, unidas por un convenio asociativo e inscritas en el registro de comunidades energéticas de MinEnergía.",
       "Quién recibe la energía: 11 a 20 cuentas oficiales (sedes, alumbrado, pozos, impulsión, EBAR y PTAR), cada una con un porcentaje fijo; las cargas grandes se parten en varias fronteras.",
-      "Tope: 1,0 MW en corriente alterna, la suma de los inversores, para quedar en el caso 1 (por encima, la energía se vende en el mercado mayorista); por eso la granja es de 1,2 MWp y no de 1,5. Cada cuenta recibe menos del 10 % y no más de…",
+      "Tope: 1,0 MW en corriente alterna, la suma de los inversores, para quedar en el caso 1 (por encima, la energía se vende en el mercado mayorista); por eso la granja es de 1,2 MWp y no de 1,5. Cada cuenta recibe menos del 10 % y no más de 100 kW.",
       "Ahorros: cada cuenta descuenta de su factura la energía de su porcentaje y cada kWh le ahorra ≈877 $ (la tarifa oficial menos el cargo de comercialización, Cv): ≈$1.394 M al año entre todas.",
       "Operación: el representante de la comunidad (la alcaldía, en esta propuesta) declara los porcentajes ante EPM y contrata un operador técnico; el CCED vigila la producción en línea.",
       "Aparte: la granja de Las Américas (997 kWp) es otra comunidad, de hogares de estratos 1 y 2, con su propia frontera; las dos no se mezclan."
@@ -2011,24 +2185,32 @@
      "id": "financiacion",
      "tipo": "financiacion",
      "titulo": "Regalías, fondos y un crédito pagado con ahorro",
-     "texto": "La granja va a la convocatoria del Incentivo a la Producción del SGR, que Yondó casi no ha usado: del bienio 2025–2026 tiene $14.025 M y solo ha aprobado $331 M, así que quedan $13.694 M sin aprobar (oct-2026); la granja de Las Américas (Saneamiento, $1.747 M) va en la convocatoria de 2029–2030, así que en cada una el municipio pide un solo proyecto de energía, dentro del tope de 2025 (2 proyectos y…",
+     "texto": "La granja va a la convocatoria del Incentivo a la Producción del SGR, que Yondó casi no ha usado: del bienio 2025–2026 tiene $14.025 M y solo ha aprobado $331 M, así que quedan $13.694 M sin aprobar (oct-2026); la granja de Las Américas (Saneamiento, $1.747 M) va en la convocatoria de 2029–2030, así que en cada una el municipio pide un solo proyecto de energía, dentro del tope de 2025 (2 proyectos y $8.000 M por municipio). FENOGE, Findeter y el Fondo Único de TIC completan la mezcla, y el municipio aporta $1.208 M de regalías directas y recursos propios.",
      "mezcla": [
       {
        "fuente": "SGR",
+       "mecanismo": "Incentivo a la Producción (convocatoria de MinEnergía, aprobación del OCAD Paz), «Territorios energéticos», para la granja ($2.799 M, en la convocatoria de 2027–2028; la de Las Américas, de Saneamiento, va en la de 2029–2030: un proyecto por convocatoria, dentro del tope) y asignaciones directas para el anillo y la telemetría ($1.008 M)",
        "monto": "$3,1 – 5,1 mil M"
       },
       {
        "fuente": "Fondos",
+       "mecanismo": "FENOGE, modelo Territorio Energético, para la granja ($977 M) y MinTIC · Fondo Único de TIC, proyecto tipo de Zonas Digitales ($749 M)",
        "monto": "$1,4 – 2,3 mil M"
       },
       {
        "fuente": "Findeter",
+       "mecanismo": "Crédito directo con tasa compensada para la granja (línea «Municipios Territorios Energéticos» de Findeter y MinEnergía, Decreto 1223 de 2025), pagado con el ahorro en las facturas; usa parte de la capacidad prudente de endeudamiento del municipio ($5.141 M a $10.281 M), que comparten salud, saneamiento, TIC y agroindustria",
        "monto": "$0,8 – 1,3 mil M"
       },
       {
        "fuente": "Municipio",
+       "mecanismo": "Recursos propios: contrapartida del anillo, el CCED y la telemetría",
        "monto": "$160 – 270 M"
       }
+     ],
+     "proyectos_tipo": [
+      "Zonas Digitales de Acceso Público Gratuito (proyecto tipo DNP–MinTIC)",
+      "Ciudades y territorios inteligentes (lineamiento MinTIC con MGA, tipología 6)"
      ],
      "madurez": "Perfil",
      "madurez_nota": "La fibra y el CCED tienen costos de prefactibilidad (estudios de la red de distribución y de la Red Energética Pública, 2026) y la granja está en perfil: para llegar a fase III faltan el aval de conexión de EPM, el predio y la topografía del bloque A y 12 facturas por cada cuenta oficial.",
@@ -2046,7 +2228,7 @@
       "Ene–jun 2027: 12 facturas de cada cuenta oficial (número de cuenta en EPM, NIU) y placas de las bombas para fijar la demanda y los porcentajes de reparto.",
       "2027: convenio asociativo de la comunidad energética (alcaldía, E.S.E. y Aguas y Aseo), consulta a la CREG sobre el reparto y gestión del predio del bloque A.",
       "2027: estudio de conexión simplificado y topografía; MGA de la granja (sin proyecto tipo del DNP: referente Arroyohondo) y de las Zonas Digitales (proyecto tipo DNP–MinTIC).",
-      "2028: radicar la granja en fase III en la primera convocatoria del Incentivo a la Producción (la granja de Las Américas va en la de 2029–2030, cuando asiente la cobertura de sus celdas viejas), y en paralelo ante FENOGE y Findeter…"
+      "2028: radicar la granja en fase III en la primera convocatoria del Incentivo a la Producción (la granja de Las Américas va en la de 2029–2030, cuando asiente la cobertura de sus celdas viejas), y en paralelo ante FENOGE y Findeter; contratar el anillo, el CCED y las Zonas Digitales."
      ],
      "leyenda": [
       "Anillo de fibra y ramal a La Victoria",
@@ -2069,60 +2251,74 @@
      "cifras": [
       {
        "v": "$48.128 M",
-       "l": "de regalías propias aprobó Yondó en 2025–2026 (de $71.418 M)"
+       "l": "de regalías propias aprobó Yondó en 2025–2026 (de $71.418 M)",
+       "fuente": "MinHacienda, ejecución de regalías"
       },
       {
        "v": "$36.228 M",
-       "l": "le aprobó el OCAD Paz en 7 proyectos (2025–2026)"
+       "l": "le aprobó el OCAD Paz en 7 proyectos (2025–2026)",
+       "fuente": "MinHacienda, ejecución de regalías"
       },
       {
        "v": "$13.694 M",
-       "l": "del Incentivo a la Producción sin aprobar (oct-2026); se piden $4.546 M"
+       "l": "del Incentivo a la Producción sin aprobar (oct-2026); se piden $4.546 M",
+       "fuente": "Cálculo propio con datos de MinHacienda"
       },
       {
        "v": "−11 %",
-       "l": "baja el presupuesto del SGR en 2027–2028 ($27,54 billones)"
+       "l": "baja el presupuesto del SGR en 2027–2028 ($27,54 billones)",
+       "fuente": "Portafolio (oct-2026)"
       }
      ],
      "por_fuente": [
       {
        "fuente": "SGR",
+       "entidad": "Alcaldía, OCAD Paz (DNP), MinEnergía y Gobernación de Antioquia",
        "monto": "$84 – 160 mil M"
       },
       {
        "fuente": "Nación",
+       "entidad": "MinVivienda, MinSalud, MinDeporte, MinTIC, MinCultura, MinAgricultura y ADR",
        "monto": "$56 – 110 mil M"
       },
       {
        "fuente": "Gobernación",
+       "entidad": "Gobernación, VIVA, Indeportes, Secretarías de Salud y de Agricultura, Plan Departamental de Aguas e IDEA",
        "monto": "$28 – 56 mil M"
       },
       {
        "fuente": "Privados",
+       "entidad": "Hogares, cajas de compensación, productores, socios de la empresa mixta y banca (Finagro, Banco Agrario)",
        "monto": "$19 – 34 mil M"
       },
       {
        "fuente": "OxI",
+       "entidad": "ART, DNP y empresas contribuyentes (Ecopetrol, Parex y otras)",
        "monto": "$19 – 36 mil M"
       },
       {
        "fuente": "Municipio",
+       "entidad": "Alcaldía de Yondó",
        "monto": "$18 – 35 mil M"
       },
       {
        "fuente": "Fondos",
+       "entidad": "FONTUR, Cormagdalena, UNGRD, FENOGE y Fondo Único de TIC",
        "monto": "$9,5 – 20 mil M"
       },
       {
        "fuente": "Findeter",
+       "entidad": "Findeter, con MinEnergía y MinSalud en las líneas de tasa compensada",
        "monto": "$7,2 – 13 mil M"
       },
       {
        "fuente": "Corantioquia",
+       "entidad": "Corporación Autónoma Regional del Centro de Antioquia",
        "monto": "$5,3 – 11 mil M"
       },
       {
        "fuente": "Cooperación",
+       "entidad": "Cooperación internacional y responsabilidad social de Ecopetrol y los operadores del campo Casabe",
        "monto": "$2,7 – 5,5 mil M"
       }
      ],
@@ -2139,81 +2335,81 @@
      "id": "fuentes",
      "tipo": "fuentes",
      "titulo": "Las diez fuentes, una por una",
-     "texto": "Qué financia cada una y el requisito que más pesa a la hora de…",
+     "texto": "Qué financia cada una y el requisito que más pesa a la hora de radicar.",
      "fuentes": [
       {
        "nombre": "Sistema General de Regalías",
        "corto": "SGR",
        "tipo": "No reembolsable",
-       "que_financia": "Asignaciones directas e inversión local (las aprueba la…",
-       "requisito": "Proyecto completo en MGA y SUIFP-SGR con los requisitos del…"
+       "que_financia": "Asignaciones directas e inversión local (las aprueba la alcaldía), Asignación para la Paz (OCAD Paz), Incentivo a la Producción (convocatoria de MinEnergía para transición energética, que aprueba el OCAD Paz) e inversión regional (Gobernación y OCAD Eje Cafetero).",
+       "requisito": "Proyecto completo en MGA y SUIFP-SGR con los requisitos del sector; en 2027 solo se podrá aprobar hasta el 60 % de los ingresos del bienio."
       },
       {
        "nombre": "Presupuesto General de la Nación",
        "corto": "Nación",
        "tipo": "No reembolsable (cofinanciación)",
-       "que_financia": "Vivienda (Fonvivienda), agua y saneamiento con viabilidad de…",
-       "requisito": "Viabilidad del ministerio, contrapartida y diseños; el PGN…"
+       "que_financia": "Vivienda (Fonvivienda), agua y saneamiento con viabilidad de MinVivienda, infraestructura en salud con concepto de viabilidad de MinSalud (el proyecto debe estar en el PMIDS del departamento), equipos básicos de salud, escenarios deportivos, telemedicina, cultura y desarrollo rural (ADR).",
+       "requisito": "Viabilidad del ministerio, contrapartida y diseños; el PGN 2027 obliga a recortar 3 % en todas las entidades."
       },
       {
        "nombre": "Obras por impuestos",
        "corto": "OxI",
        "tipo": "Impuesto de renta pagado en obras",
-       "que_financia": "Agua, energía, salud, educación, deporte, TIC, vías e…",
-       "requisito": "Proyecto viable en el banco de la ART y una empresa que lo…"
+       "que_financia": "Agua, energía, salud, educación, deporte, TIC, vías e infraestructura productiva en municipios ZOMAC y PDET. Desde septiembre de 2026, la modalidad de reconstrucción del D.L. 1389, para daños del terremoto, compite por el mismo cupo.",
+       "requisito": "Proyecto viable en el banco de la ART y una empresa que lo escoja; cortes anuales (cupo nacional de $1,14 billones en 2026)."
       },
       {
        "nombre": "Gobernación de Antioquia",
        "corto": "Gobernación",
        "tipo": "Cofinanciación",
-       "que_financia": "Vivienda (VIVA), adecuación de escenarios existentes…",
-       "requisito": "Estar en el plan de desarrollo departamental 2028–2031 y en la…"
+       "que_financia": "Vivienda (VIVA), adecuación de escenarios existentes (Indeportes: 70 % en categorías 5 y 6), salud (con registro en el PMIDS), agua y saneamiento (PDA) y maquinaria 50/50 (hasta hoy, maquinaria amarilla). Además aprueba el 60 % de la inversión regional del SGR, que aquí se cuenta como regalías.",
+       "requisito": "Estar en el plan de desarrollo departamental 2028–2031 y en la priorización de la Gobernación."
       },
       {
        "nombre": "Findeter",
        "corto": "Findeter",
        "tipo": "Crédito con tasa compensada",
-       "que_financia": "Reactiva Colombia (IBR + 0 %), Reactiva Agua (IBR + 0,30 %)…",
-       "requisito": "Capacidad de endeudamiento (la prudente de Yondó está entre…"
+       "que_financia": "Reactiva Colombia (IBR + 0 %), Reactiva Agua (IBR + 0,30 %), Territorios Energéticos para granjas solares (IBR + 0,7 %) y salud con tasa compensada; para el parque agroindustrial la línea está por confirmar.",
+       "requisito": "Capacidad de endeudamiento (la prudente de Yondó está entre $5.141 M y $10.281 M), viabilidad del sector y autorización del Concejo."
       },
       {
        "nombre": "Recursos del municipio",
        "corto": "Municipio",
        "tipo": "Propios, SGP y tarifas",
-       "que_financia": "Predios, diseños, contrapartidas, SGP de agua potable y de…",
-       "requisito": "Plan de inversiones y marco fiscal de mediano plazo; Yondó ya…"
+       "que_financia": "Predios, diseños, contrapartidas, SGP de agua potable y de salud, y tarifas de los servicios públicos.",
+       "requisito": "Plan de inversiones y marco fiscal de mediano plazo; Yondó ya paga $1.718,5 M de deuda en 2026."
       },
       {
        "nombre": "Fondos y agencias nacionales",
        "corto": "Fondos",
        "tipo": "No reembolsable (por convocatoria o ficha)",
-       "que_financia": "Turismo (FONTUR), río y orillas (Cormagdalena, 0,5 % del SGR…",
-       "requisito": "Ficha y manual de cada fondo; estudios de mercado, hidráulicos…"
+       "que_financia": "Turismo (FONTUR), río y orillas (Cormagdalena, 0,5 % del SGR para municipios ribereños), gestión del riesgo (UNGRD), energía y eficiencia (FENOGE y Colombia Solar) y conectividad (Fondo Único de TIC, de MinTIC).",
+       "requisito": "Ficha y manual de cada fondo; estudios de mercado, hidráulicos o de conexión según el caso."
       },
       {
        "nombre": "Corantioquia",
        "corto": "Corantioquia",
        "tipo": "Cofinanciación ambiental",
-       "que_financia": "Tratamiento de aguas residuales (tasa retributiva), drenaje…",
-       "requisito": "Proyecto en el plan de acción de la corporación; permisos de…"
+       "que_financia": "Tratamiento de aguas residuales (tasa retributiva), drenaje sostenible, rondas hídricas y residuos sólidos.",
+       "requisito": "Proyecto en el plan de acción de la corporación; permisos de vertimiento y de ocupación de cauce."
       },
       {
        "nombre": "Cooperación y responsabilidad social",
        "corto": "Cooperación",
        "tipo": "No reembolsable",
-       "que_financia": "Estudios, dotación, telesalud, agua y proyectos productivos con…",
+       "que_financia": "Estudios, dotación, telesalud, agua y proyectos productivos con enfoque de paz.",
        "requisito": "Contrapartida, operador con capacidad y alineación con el PDET."
       },
       {
        "nombre": "Privados y comunidad",
        "corto": "Privados",
        "tipo": "Aportes, ahorro y crédito",
-       "que_financia": "Ahorro y crédito de los hogares VIS y subsidio de las cajas…",
-       "requisito": "Cierre financiero de cada hogar y empresa mixta con gobierno…"
+       "que_financia": "Ahorro y crédito de los hogares VIS y subsidio de las cajas, capital de los socios de la empresa mixta (concentrados y trilladora) y crédito Finagro para el capital de trabajo del parque agroindustrial.",
+       "requisito": "Cierre financiero de cada hogar y empresa mixta con gobierno corporativo y paridad."
       }
      ],
      "leyenda": [
-      "Una columna por módulo: el alto es la inversión y cada franja…",
+      "Una columna por módulo: el alto es la inversión y cada franja, una fuente",
       "Regalías (SGR)",
       "Nación",
       "Gobernación de Antioquia"
@@ -2270,7 +2466,7 @@
       "2028–2029: Convocatorias del OCAD Paz y cortes de obras por impuestos con proyectos completos"
      ],
      "lista": [
-      "Primera ola: sectorización y medición del acueducto, Cancha de Sóftbol Casabe y alameda, torre del hospital, fibra y granja solar, rescate de las viviendas inconclusas, banco de maquinaria y acopios del parque agroindustrial, la fase 1…",
+      "Primera ola: sectorización y medición del acueducto, Cancha de Sóftbol Casabe y alameda, torre del hospital, fibra y granja solar, rescate de las viviendas inconclusas, banco de maquinaria y acopios del parque agroindustrial, la fase 1 del relleno nuevo con su vía y la cobertura de las celdas viejas de Las Américas.",
       "Segunda ola: interceptores y PTAR, parque lineal del caño, mirador del Magdalena, plantas del parque agroindustrial, urbanizaciones nuevas y el cierre de Las Américas con su parque y la primera parte de su granja solar."
      ]
     }
@@ -2285,12 +2481,12 @@
      "id": "pedidos",
      "tipo": "pedidos",
      "titulo": "Lo que pedimos, entidad por entidad",
-     "texto": "Un pedido por ventanilla, con su monto y los módulos que mueve. Los montos son la parte de cada fuente…",
+     "texto": "Un pedido por ventanilla, con su monto y los módulos que mueve. Los montos son la parte de cada fuente en la mezcla propuesta.",
      "entidades": [
       {
        "entidad": "DNP · OCAD Paz y regalías",
        "monto": "≈ $120,0 mil M",
-       "pedido": "Priorizar en las convocatorias 2027–2028 las iniciativas PDET de la propuesta: vivienda rural nueva y…",
+       "pedido": "Priorizar en las convocatorias 2027–2028 las iniciativas PDET de la propuesta: vivienda rural nueva y mejoramiento rural (1305893152262 y 1305893152246), parque agroindustrial (1305893153585 y 1305893153592), interceptores de saneamiento, torre y puestos de salud y parque lineal del caño; y las dos granjas solares en la convocatoria del Incentivo a la Producción de MinEnergía: la municipal ($2.799 M) en la de 2027–2028 y la de Las Américas ($1.747 M) en la de 2029–2030, cuando la cobertura de sus celdas viejas haya asentado. El monto es todo el SGR de la mezcla, con las regalías directas (entre ellas, los estudios y la interventoría del relleno nuevo de Kilómetro Cinco) y la inversión regional.",
        "modulos": [
         "Vivienda",
         "Agroindustria",
@@ -2304,7 +2500,7 @@
       {
        "entidad": "MinVivienda · Fonvivienda y Viceministerio de Agua",
        "monto": "≈ $51,0 mil M",
-       "pedido": "Vivienda ($31.900 M): cupos de mejoramiento urbano y rural (800 casas), vivienda rural en especie (200)…",
+       "pedido": "Vivienda ($31.900 M): cupos de mejoramiento urbano y rural (800 casas), vivienda rural en especie (200), apoyo a la titulación y que Casa Milagro cofinancie las 200 VIP del Lote 1. Agua y saneamiento ($19.298 M): viabilidad y apoyo financiero (Res. 0467 de 2026) para la PTAR, el Plan Maestro, la ECA (Programa Basura Cero) y la celda de la fase 1 del relleno nuevo, y para la sectorización y las pérdidas del acueducto.",
        "modulos": [
         "Vivienda",
         "Aseo y saneamiento",
@@ -2314,7 +2510,7 @@
       {
        "entidad": "Gobernación de Antioquia",
        "monto": "≈ $40,0 mil M",
-       "pedido": "VIVA para vivienda; Plan Departamental de Aguas para la PTAR, los interceptores, el compostaje, la…",
+       "pedido": "VIVA para vivienda; Plan Departamental de Aguas para la PTAR, los interceptores, el compostaje, la clausura de Las Américas y las obras complementarias del relleno nuevo, y para la línea base y las pérdidas del acueducto; la mitad del banco de maquinaria y de la maquinaria del relleno nuevo (línea 50/50); Indeportes para renovar el estadio existente, y la Secretaría Seccional de Salud para la torre y los puestos, con registro en el PMIDS de 2028. Además, revisar si Yondó entra en el Plan de Racionalización de plantas de beneficio, por si el matadero es de autoconsumo.",
        "modulos": [
         "Vivienda",
         "Aseo y saneamiento",
@@ -2327,7 +2523,7 @@
       {
        "entidad": "ART y empresas contribuyentes",
        "monto": "≈ $26,0 mil M",
-       "pedido": "Inscribir en el banco de obras por impuestos las plantas del parque agroindustrial, una etapa de los…",
+       "pedido": "Inscribir en el banco de obras por impuestos las plantas del parque agroindustrial, una etapa de los interceptores de saneamiento y la vía al relleno nuevo (vía terciaria de la iniciativa PDET 1305893152122), la dotación de la torre y de los puestos de salud, más dos ambulancias, la protección de la orilla del mirador y el parque lineal del caño, y la macro y micromedición del acueducto; y buscar empresa con Ecopetrol, Parex y los demás contribuyentes del campo Casabe.",
        "modulos": [
         "Agroindustria",
         "Aseo y saneamiento",
@@ -2339,7 +2535,7 @@
       {
        "entidad": "MinSalud",
        "monto": "≈ $17,0 mil M",
-       "pedido": "Concepto técnico de viabilidad de la torre (Res. 485 de 2025) con $12.000 M para su obra y equipamiento…",
+       "pedido": "Concepto técnico de viabilidad de la torre (Res. 485 de 2025) con $12.000 M para su obra y equipamiento fijo, y $4.800 M para sostener los equipos básicos de salud rurales entre 2028 y 2031.",
        "modulos": [
         "Salud"
        ]
@@ -2347,7 +2543,7 @@
       {
        "entidad": "FONTUR, Cormagdalena, UNGRD, FENOGE y Fondo Único de TIC",
        "monto": "≈ $14,0 mil M",
-       "pedido": "Mirador Puerta del Magdalena (FONTUR, Cormagdalena y UNGRD: turismo, orilla y riesgo) y la laguna y la…",
+       "pedido": "Mirador Puerta del Magdalena (FONTUR, Cormagdalena y UNGRD: turismo, orilla y riesgo) y la laguna y la descarga de la PTAR (Cormagdalena); energía de las dos granjas solares y de la torre (FENOGE y Colombia Solar), y conectividad de las Zonas Digitales, la salud rural y la telemetría del acueducto (Fondo Único de TIC).",
        "modulos": [
         "Urbanismo",
         "Aseo y saneamiento",
@@ -2359,7 +2555,7 @@
       {
        "entidad": "Findeter",
        "monto": "≈ $9,4 mil M",
-       "pedido": "Crédito para las dos granjas solares con la tasa compensada de Territorios Energéticos ($1.000 M la…",
+       "pedido": "Crédito para las dos granjas solares con la tasa compensada de Territorios Energéticos ($1.000 M la municipal y $945 M la de Las Américas), para cerrar la obra de la torre con la tasa compensada de salud o Reactiva Colombia ($1.500 M) y para el matadero y las redes del parque agroindustrial ($6.000 M, línea por confirmar). Suma $9.445 M, cerca del techo de la capacidad prudente del municipio ($5.141 M a $10.281 M).",
        "modulos": [
         "Agroindustria",
         "Salud",
@@ -2370,7 +2566,7 @@
       {
        "entidad": "MinDeporte, MinTIC y MinCultura",
        "monto": "≈ $6,4 mil M",
-       "pedido": "MinDeporte, por convenio de cofinanciación de infraestructura deportiva: Cancha de Sóftbol Casabe y…",
+       "pedido": "MinDeporte, por convenio de cofinanciación de infraestructura deportiva: Cancha de Sóftbol Casabe y canchas cubiertas junto al CIC ($4.700 M). MinTIC: telemedicina y conectividad de la torre ($400 M). Entre deporte, TIC y cultura, $1.324 M para el parque ecotecnológico de Las Américas.",
        "modulos": [
         "Urbanismo",
         "Aseo y saneamiento",
@@ -2380,21 +2576,21 @@
       {
        "entidad": "MinAgricultura y ADR",
        "monto": "≈ $5,5 mil M",
-       "pedido": "Cofinanciar con PIDAR (de $1.000 M a $4.000 M por proyecto regional) el acopio de leche y la trilladora…",
+       "pedido": "Cofinanciar con PIDAR (de $1.000 M a $4.000 M por proyecto regional) el acopio de leche y la trilladora del parque agroindustrial.",
        "modulos": [
         "Agroindustria"
        ]
       },
       {
        "entidad": "ANI y concesión Ruta del Cacao",
-       "pedido": "Diseñar la solución definitiva del estribo de Yondó junto con la protección de la orilla del mirador y…",
+       "pedido": "Diseñar la solución definitiva del estribo de Yondó junto con la protección de la orilla del mirador y el muelle de carga.",
        "modulos": [
         "Urbanismo",
         "Agroindustria"
        ]
       }
      ],
-     "nota": "La ANI y la concesión no ponen plata en esta propuesta: se les pide coordinar el estribo con la…"
+     "nota": "La ANI y la concesión no ponen plata en esta propuesta: se les pide coordinar el estribo con la protección de la orilla. Los ministerios forman la fuente «Nación» ($79.922 M); el Fondo Único de TIC va con los fondos. No se listan los aportes del municipio ($25.468 M), de hogares y socios privados ($25.771 M), de Corantioquia ($7.500 M) ni de la cooperación ($3.800 M)."
     }
    ]
   }

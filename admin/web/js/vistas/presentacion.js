@@ -9,14 +9,17 @@
 //   presentación avisa que cargó (`listo`): lo que el asistente pidió antes espera en la cola del puente.
 // * /presentacion?pantalla=1 es el modo proyector: sin menú ni asistente, la presentación ocupa toda la ventana y la
 //   ventana se anuncia al resto de las pestañas (el puente): el asistente de la pestaña del chat la maneja desde ahí.
+//   Mientras viva, manda ella: la barra de la pestaña del chat muestra su paso, sus botones le mandan la orden solo a
+//   ella y el iframe de aquí la sigue (también cuando el paso cambia allá, con el teclado o el control remoto); lo que
+//   se haga en el iframe de aquí (su control, su índice) va allá.
 //   Se abre con un enlace (`target="_blank"`), no con window.open: con COOP same-origin la ventana no se podría manejar
 //   y no hace falta, porque el canal es por origen.
 // * Los estilos (css/presentacion.css) los carga la vista, como agente.js los suyos.
 import { api } from '../api.js';
 import { BASE, url } from '../base.js';
 import { $, html, icono, montar } from '../ui.js';
-import { CANAL, VERSION, accionPresentacion, accionesPresentacion, avisarEstado, estadoValido, presentacionNoDisponible,
-  proyectorVivo, registrarPresentacion } from '../agente-presentacion.js';
+import { CANAL, VERSION, accionPresentacion, accionesPresentacion, avisarEstado, estadoPresentacion, estadoValido,
+  presentacionNoDisponible, proyectorVivo, registrarPresentacion } from '../agente-presentacion.js';
 
 const ESPERA_LISTO_MS = 45000;   // la presentación carga sus datos y la maqueta 3D: si en esto no avisó, se dice
 const ESPERA_ORDEN_MS = 12000;   // un cambio de capítulo con su telón y la maqueta del módulo tarda unos segundos
@@ -71,7 +74,7 @@ export async function vistaPresentacion(el, { q } = {}) {
           <a class="btn" id="pres-otra" href="${url('/presentacion?pantalla=1')}" target="_blank" rel="noopener" aria-label="Abrir en otra pantalla (proyector)" title="Abre la presentación en otra ventana para el proyector: el asistente la sigue manejando desde aquí">${icono('proyector')}<span>Abrir en otra pantalla</span></a>
         </div>
       </div>
-      <p class="pres-remoto" id="pres-remoto" role="status" hidden>${icono('proyector')}<span>La presentación se está mostrando en otra pantalla: el asistente y estos botones la manejan allá.</span></p>
+      <p class="pres-remoto" id="pres-remoto" role="status" hidden>${icono('proyector')}<span>La presentación se está mostrando en otra pantalla: el asistente, estos botones y la presentación de aquí la manejan allá.</span></p>
       <div class="pres-marco" id="pres-marco"></div>
       ${proyector && conPantalla ? html`<button type="button" class="btn oscuro pres-completa" id="pres-completa">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
     </section>`);
@@ -101,10 +104,20 @@ export async function vistaPresentacion(el, { q } = {}) {
     presentacionNoDisponible(titulo);
   }
 
+  // Lo que ve la sala: con una ventana de proyector viva, su estado (el paso también cambia allá, con el control remoto
+  // o el teclado, y el iframe de aquí lo sigue con un momento de retraso); si no, el de este iframe
   function pintarEstado() {
-    if (!estado) return;
-    capituloEl.textContent = estado.nombre || estado.capitulo;
-    pasoEl.textContent = `Paso ${estado.paso} de ${estado.total}${estado.titulo ? ` · ${estado.titulo}` : ''}`;
+    const e = (!proyector && estadoPresentacion()) || estado;
+    if (!e) return;
+    capituloEl.textContent = e.nombre || e.capitulo;
+    pasoEl.textContent = `Paso ${e.paso} de ${e.total}${e.titulo ? ` · ${e.titulo}` : ''}`;
+  }
+  // Y en la pestaña del chat, el aviso de que se está mostrando en otra pantalla: en el acto cuando el puente avisa que
+  // cambió algo del proyector (`cambio`) y cada poco, porque uno que se cerró sin avisar solo deja de contar al vencer
+  // su latido (y entonces la barra vuelve a la de aquí)
+  function mirar() {
+    if (!proyector) remoto.hidden = !proyectorVivo();
+    pintarEstado();
   }
 
   function orden(o) {
@@ -168,7 +181,8 @@ export async function vistaPresentacion(el, { q } = {}) {
       clearTimeout(tListo);
       clearTimeout(tPedir);
       anterior.disabled = siguiente.disabled = false;
-      quitarRegistro ||= registrarPresentacion({ aplicar, estado: () => estado, ...(proyector ? { proyector: true } : {}) });
+      quitarRegistro ||= registrarPresentacion({ aplicar, estado: () => estado, cambio: mirar,
+        ...(proyector ? { proyector: true } : {}) });
       if (proyector) iframe.focus({ preventScroll: true });   // las flechas del teclado van a la presentación
     }
     if (nuevo) avisarEstado();
@@ -188,6 +202,8 @@ export async function vistaPresentacion(el, { q } = {}) {
     pedirEstado();
   });
 
+  // Con un proyector vivo, el paso lo da él (el puente le manda la orden solo a él y este iframe lo sigue): así los
+  // botones llevan a las dos pantallas al mismo paso aunque el de allá haya cambiado sin pasar por aquí
   const mover = (op) => {
     accionesPresentacion([{ tipo: 'presentacion', op }]).catch(() => {});
   };
@@ -206,9 +222,9 @@ export async function vistaPresentacion(el, { q } = {}) {
     limpiezas.push(() => document.removeEventListener('fullscreenchange', alCambiar));
   }
 
-  // En la pestaña del chat: si hay una ventana de proyector viva, se dice (los botones y el asistente la manejan allá)
+  // En la pestaña del chat: si hay una ventana de proyector viva, se dice (los botones y el asistente la manejan allá) y
+  // la barra muestra su paso
   if (!proyector) {
-    const mirar = () => { remoto.hidden = !proyectorVivo(); };
     mirar();
     const t = setInterval(mirar, 1500);
     limpiezas.push(() => clearInterval(t));

@@ -26,13 +26,25 @@ const ORIGEN_HTTPS = /^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/i;
 // en la forma NFKC del texto (así «＠», los dígitos en superíndice o de ancho completo y los guiones de compatibilidad
 // cuentan como los comunes), una «@» o un número de 7 dígitos o más, también por grupos (TIRADA: con espacios, guiones,
 // rayas, barras, paréntesis, o pegados con punto, coma o «_»), salvo un periodo («2028-2031») o un rango de cifras de la
-// propuesta de menor a mayor («$116.294 – 210.000 M»)
+// propuesta de menor a mayor («$116.294 – 210.000 M»). Antes se quitan las fechas que existen (FECHA: «15/11/2026»,
+// «2026-11-15», de 1900 a 2099): cada una corta la tirada
 const NO_SE_VE = /[\p{Cc}\p{Cf}\p{Cs}\p{Co}\p{Cn}\p{Zl}\p{Zp}\u{34f}\u{115f}\u{1160}\u{17b4}\u{17b5}\u{2800}\u{3164}\u{ffa0}\u{180b}-\u{180f}\u{fe00}-\u{fe0f}\u{e0000}-\u{e0fff}]/u;
 const ACENTOS = /[\p{Mn}\p{Me}]{3,}/u;
 const TIRADA = /\p{Nd}+(?:(?:[.,_\u00b7(]|\) ?|\)? ?[\-\u2010-\u2015\u2212\/] ?\(?| )\p{Nd}+)*/gu;
 const PERIODO = /^((?:19|20)[0-9]{2}) ?[\-\u2010-\u2015\u2212\/] ?((?:19|20)[0-9]{2})$/u;
 const RANGO = /^([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?) ?[\-\u2010-\u2015\u2212] ?([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?)$/u;
+const FECHA = /(?<!\p{Nd})(?:([0-9]{4}) ?([.\-\u2010-\u2015\u2212\/]) ?([0-9]{1,2}) ?\2 ?([0-9]{1,2})|([0-9]{1,2}) ?([.\-\u2010-\u2015\u2212\/]) ?([0-9]{1,2}) ?\6 ?([0-9]{4}))(?!\p{Nd})/gu;
+// Un monto en pesos con su signo y sus puntos de miles («$1.156.350», el costo por habitante del guion): la tirada
+// va justo después de «$» y en grupos de tres (`_MONTO` de la herramienta)
+const MONTO = /^[0-9]{1,3}(?:\.[0-9]{3})+(?:,[0-9]{1,2})?$/u;
 const DIGITOS_MAX = 6;
+// La pantalla chica (`acomodar`): la franja mínima donde escena.js encuadra la obra (`zonaPx`), el alto mínimo de la
+// hoja inferior con el subtítulo (el de propuesta.html: el título del paso a la vista), el que no se pasa nunca (el
+// asa y el comienzo del título) y los pasos de la letra del subtítulo, de la suya a la más chica
+const FRANJA = 90;
+const HOJA_MIN = 96;
+const HOJA_PISO = 56;
+const ESCALAS = [1, 0.93, 0.86, 0.8, 0.75];
 // Claves que admite cada orden (además de canal, v, orden e id)
 const CLAVES = new Map([
   ['ir', ['capitulo', 'paso', 'explicacion']], ['avanzar', ['d', 'explicacion']], ['explicar', ['explicacion']],
@@ -41,11 +53,20 @@ const CLAVES = new Map([
 
 const cifra = (t) => Number(t.replace(/\./g, '').replace(',', '.'));
 
-/** ¿Trae `t` (en NFKC y con los espacios en uno) un número de más de DIGITOS_MAX dígitos que no es un periodo ni un rango
- * de cifras? */
+/** ¿Es la fecha de FECHA un día que existe, de 1900 a 2099? («31/02/2026» no: se mira como cualquier número) */
+function esFecha(m) {
+  const [a, mes, dia] = (m[1] ? [m[1], m[3], m[4]] : [m[8], m[7], m[5]]).map(Number);
+  const f = new Date(Date.UTC(a, mes - 1, dia));
+  return a >= 1900 && a <= 2099 && f.getUTCFullYear() === a && f.getUTCMonth() === mes - 1 && f.getUTCDate() === dia;
+}
+
+/** ¿Trae `t` (en NFKC y con los espacios en uno) un número de más de DIGITOS_MAX dígitos que no es un periodo, un rango
+ * de cifras, una fecha ni un monto en pesos? (las fechas que existen se quitan antes y cortan la tirada) */
 function numeroLargo(t) {
-  for (const [tirada] of t.matchAll(TIRADA)) {
+  t = t.replace(FECHA, (...m) => (esFecha(m) ? ' | ' : m[0]));
+  for (const { 0: tirada, index } of t.matchAll(TIRADA)) {
     if (tirada.match(/\p{Nd}/gu).length <= DIGITOS_MAX) continue;
+    if (/\$ ?$/u.test(t.slice(0, index)) && MONTO.test(tirada)) continue;
     const p = PERIODO.exec(tirada);
     if (p && Number(p[1]) <= Number(p[2])) continue;
     const r = RANGO.exec(tirada);
@@ -99,7 +120,10 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   if (!permitidos.size) return null;
   const pres = documento.querySelector('#pres'), sub = documento.querySelector('.subtitulo'), texto = sub?.querySelector('p');
   const leyenda = documento.querySelector('.leyenda3d'), panel = documento.querySelector('.panel');
+  const barra = documento.querySelector('.barra'), riel = documento.querySelector('.riel'), herr = documento.querySelector('.herr');
   const chica = ventana.matchMedia?.('(max-width: 1080px)');   // la misma frontera de propuesta.html y escena.js
+  // el celular o la tableta en horizontal: el panel va de lado (propuesta.html)
+  const deLado = ventana.matchMedia?.('(max-width: 1080px) and (orientation: landscape) and (max-height: 560px)');
   let listo = false;
   let origenPadre = null;       // el del panel que mandó la última orden válida: a él van los avisos siguientes
   let pasoDelSubtitulo = null;  // «capitulo/paso» al que corresponde la explicación en pantalla
@@ -125,8 +149,8 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
 
   // Junto a la leyenda (abajo a la derecha en pantalla grande): el subtítulo le deja su ancho o, si así no le queda
   // lugar o la explicación pasaría de tres renglones (una columna angosta y alta), se pone encima de ella, con todo el
-  // ancho. Y dice si está a la vista y cuánto mide (.con-sub, --sub-h): en el celular la hoja inferior y, en horizontal,
-  // el panel de lado le ceden ese alto (propuesta.html), así se ve entero sin taparlos
+  // ancho. Y dice si está a la vista y cuánto mide (.con-sub, --sub-h): en el celular la hoja inferior le cede ese alto
+  // (propuesta.html), así se ve entero sin taparla. En la pantalla chica, además, se acomoda (`acomodar`)
   function medir() {
     if (!pres) return;
     const conLeyenda = !!leyenda?.childElementCount && !chica?.matches;
@@ -144,8 +168,47 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     }
     pres.classList.toggle('sub-sobre-leyenda', sobre);
     pres.classList.toggle('con-sub', visible);
-    const alto = visible ? sub.getBoundingClientRect?.().height || 0 : 0;
+    if (chica?.matches) acomodar(visible);
+    else for (const v of ['--sub-esc', '--hoja-min', '--sobre-sub', '--herr-w']) pres.style.removeProperty(v);
+    const alto = visible ? sub.offsetHeight || 0 : 0;
     pres.style.setProperty('--sub-h', `${Math.ceil(alto)}px`);
+  }
+
+  // En la pantalla chica la explicación no puede tapar la franja donde escena.js encuadra la obra (`zonaPx`: bajo la
+  // barra, la fila de capítulos y la leyenda de arriba, y nunca menos de FRANJA de alto). Se le reserva esa franja
+  // encima (--sobre-sub: la hoja inferior baja lo que haga falta, propuesta.html) y, si así no cabe entera (la hoja en su
+  // mínimo o, de lado, el alto entre esa franja y el control), se achica su letra un paso cada vez (--sub-esc). Si ni
+  // con la más chica cabe, en vertical la hoja baja de su mínimo (--hoja-min): la obra y la explicación entera mandan.
+  // Las medidas son las que no dependen de transiciones ni de transformaciones (offsetTop, offsetHeight)
+  function acomodar(visible) {
+    for (const v of ['--sub-esc', '--hoja-min']) pres.style.removeProperty(v);
+    const lado = !!deLado?.matches;
+    // De lado, la leyenda plegada va en la barra, a la izquierda de las herramientas
+    pres.style.setProperty('--herr-w', lado && herr ? `${Math.ceil(herr.getBoundingClientRect().width)}px` : '0px');
+    const H = ventana.innerHeight || 0, W = ventana.innerWidth || 0;
+    const caja = (el) => el?.getBoundingClientRect?.() || null;
+    let y0 = 0;
+    const b = caja(barra);
+    if (b?.height) y0 = b.bottom + 6;
+    const l = leyenda?.childElementCount ? caja(leyenda) : null;
+    if (l?.height && l.top < H / 2) y0 = Math.max(y0, l.bottom + 6);
+    const r = caja(riel);
+    if (r?.width > W * 0.7 && r.height) y0 = Math.max(y0, r.bottom + 4);
+    // la franja, los 8 px que escena.js deja sobre el subtítulo y 4 de margen (los bordes caen en fracciones de píxel)
+    const reserva = Math.ceil(y0 + FRANJA + 12);
+    pres.style.setProperty('--sobre-sub', `${reserva}px`);
+    if (!visible) return;
+    const enHoja = !lado && !pres.classList.contains('sin-panel');
+    // el borde de abajo del subtítulo: sobre la hoja en su mínimo, o el suyo (fijo, sobre el control)
+    const piso = enHoja ? caja(panel).bottom - HOJA_MIN - 8 : sub.offsetTop + sub.offsetHeight;
+    for (const e of ESCALAS) {
+      if (e < 1) pres.style.setProperty('--sub-esc', String(e));
+      if (sub.offsetHeight <= piso - reserva) return;
+    }
+    if (enHoja) {
+      const hoja = Math.floor(caja(panel).bottom - 8 - reserva - sub.offsetHeight);
+      pres.style.setProperty('--hoja-min', `${Math.max(HOJA_PISO, hoja)}px`);
+    }
   }
   function renglones() {
     const alto = texto?.getBoundingClientRect?.().height || 0;

@@ -61,6 +61,18 @@
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 560px) {
   .presentacion:not(.proyector) .pres-barra { display: none; }
 }
+/* Desde 901 px (con el menú de lado) en una pantalla igual de baja, una sola fila, como en el celular: en dos o tres
+   filas (según la letra) la barra se llevaba de 110 a 160 px de los 412 de alto de un 915 × 412, y al panel de la
+   presentación le quedaban 119 px con la explicación a la vista */
+@media (min-width: 901px) and (orientation: landscape) and (max-height: 560px) {
+  .pres-barra { flex-wrap: nowrap; padding: 6px 10px; gap: 8px; min-height: 0; }
+  .pres-donde { flex: 1 1 auto; }
+  .pres-donde b { font-size: 16px; }
+  #pres-anterior, #pres-siguiente { display: none; }
+  .pres-botones { flex-wrap: nowrap; }
+  .pres-botones .btn { padding: 8px 10px; }
+  .pres-botones .btn span { display: none; }
+}
 
 /* Modo proyector: la ventana entera es la presentación */
 html[data-proyector] .lateral, html[data-proyector] .barra-movil, html[data-proyector] #agente { display: none; }

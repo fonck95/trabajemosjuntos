@@ -4,28 +4,30 @@ guion (app/agente/guion.py y propuesta_guion.json), el puente del panel (web/js/
 
 * El guion versionado es el que sale de web/data/propuesta.json (si alguien cambia la propuesta sin regenerarlo, falla)
   y sus capítulos son los de `caps` en main.js, con sus nombres fijos y el paso «inicio» de un capítulo vacío. Cada
-  paso trae lo que muestra (fuentes con nombre, qué financian y su requisito, a quién se pide, siguientes pasos, plazos
-  enteros, especificaciones y metas) en 3 KB a lo sumo.
+  paso trae lo que muestra (fuentes con nombre, qué financian y su requisito, a quién se pide, siguientes pasos, plazos,
+  especificaciones y metas), y cada texto que la pantalla muestra llega ENTERO, igual que en web/data/propuesta.json.
 * La herramienta: definición y esquema para la Messages API (sin `pattern` ni `format`), entradas inválidas (también
   explicaciones de más de 220 caracteres, con caracteres que no se ven, números largos escritos por grupos o «@», en su
-  forma NFKC), que las cifras y los periodos del guion sí pasan y que la herramienta, el puente y el mando deciden lo
-  mismo con cada frase, el índice compacto, la forma exacta de cada acción
-  del navegador, el destino de siguiente y anterior, los errores sin acciones (todo o nada), los roles (los cuatro) y
-  que sin el guion no se ofrece. Un turno completo por el bucle con la Messages API simulada.
+  forma NFKC), que las cifras, los periodos y las fechas que existen sí pasan y que la herramienta, el puente y el mando
+  deciden lo mismo con cada frase, el índice compacto, la forma exacta de cada acción del navegador, el destino de
+  siguiente y anterior, los errores sin acciones (todo o nada), los roles (los cuatro) y que sin el guion no se ofrece.
+  Un turno completo por el bucle con la Messages API simulada.
 * El contexto del panel: el capítulo y el paso del navegador se validan contra el guion y el nombre y el título los pone
   el servidor.
 * La CSP del panel (frame-src) y la del sitio (frame-ancestors con el origen del panel que escribe build_site.py).
 * Con Node, sin navegador: el validador de la acción (`accionPresentacion`), el puente (cola, navegación, proyector por
-  BroadcastChannel, el que se cerró sin avisar y el que se abre donde está la pestaña del chat, y mensajes del canal que
-  no cumplen) y el mando (orígenes, también con mayúsculas o «:443», órdenes y datos que rechaza, subtítulo como
-  texto).
+  BroadcastChannel, el que se cerró sin avisar, el que se abre donde está la pestaña del chat y el que manda cuando su
+  paso cambia allá, y mensajes del canal que no cumplen) y el mando (orígenes, también con mayúsculas o «:443», órdenes
+  y datos que rechaza, subtítulo como texto).
 * En Chromium, el panel de verdad con el sitio construido por build_site.py: el asistente (con su modelo simulado) manda
   `ir` y `explicar`, el iframe cambia de paso y muestra el subtítulo como texto, sin violaciones de CSP (tampoco dentro
   del iframe) y sin desborde, en 1400×900 (con el asistente abierto, el iframe le deja su ancho) y 390×844 (desde
   Habitantes: navega a la presentación y pliega el asistente). Y la explicación más larga (220 caracteres) se ve entera,
-  sin tapar el panel, la leyenda ni el control, en 1400×900, 1024×768, 820×1180, 390×844, 320×568 y 844×390 (ahí, sin
-  tapar la franja donde la cámara encuadra la obra); entre 901 y 1199 px el asistente abierto no tapa la presentación;
-  y con cambios sin guardar, las órdenes de un turno dan un solo aviso cuyo botón las aplica todas.
+  sin tapar el panel, la leyenda ni el control, en 1400×900, 1024×768, 820×1180 y en el celular, en vertical (390×844,
+  360×640, 320×568) y en horizontal (915×412, 844×390, 740×360, 667×375), donde tampoco tapa la franja en que la cámara
+  encuadra la obra y el panel conserva su alto; entre 901 y 1199 px el asistente abierto no tapa la presentación; con
+  cambios sin guardar, las órdenes de un turno dan un solo aviso cuyo botón las aplica todas; y la ventana del
+  proyector y la pestaña del chat no se desfasan cuando el paso cambia en el proyector.
 Solo datos inventados; nunca se llama a Anthropic ni a Mnemo.
 """
 from __future__ import annotations
@@ -120,25 +122,163 @@ def test_los_capitulos_son_los_de_main_js():
 
 
 def test_los_textos_del_guion_son_planos_y_acotados():
+    from app.agente.herramientas.base import MAX_CONTENIDO
     for c in G.capitulos:
         assert guion.ID.fullmatch(c["id"]) and 1 <= len(c["pasos"]) <= guion.MAX_PASOS
         for p in c["pasos"]:
             texto = json.dumps(p, ensure_ascii=False)
             assert not re.search(r"<[a-z/][^>]*>|\xa0|\U00002060|\xad", texto), (c["id"], p["id"])
-            assert p["titulo"] and len(p["texto"]) <= guion.MAX_TEXTO, (c["id"], p["id"])
-            # Lo que le llega al modelo de un paso: unos 3 KB a lo sumo (antes, el de los pedidos pasaba de 5)
-            assert guion.bytes_de(p) <= guion.MAX_BYTES_PASO <= 3072, (c["id"], p["id"], guion.bytes_de(p))
-    pesado = {"id": "a", "titulo": "A", "texto": "x" * 4000}
+            assert p["titulo"] and p["texto"], (c["id"], p["id"])
+            # Lo que le llega al modelo de un paso, entero: muy por debajo de lo que la herramienta deja pasar
+            assert guion.bytes_de(p) <= guion.MAX_BYTES_PASO <= MAX_CONTENIDO // 3, (c["id"], p["id"], guion.bytes_de(p))
+    # Un paso que no cabe no se acorta: el guion no se puede usar y build_propuesta.py --estricto lo dice
+    pesado = {"id": "a", "titulo": "A", "texto": "x" * guion.MAX_BYTES_PASO}
     assert guion.problemas({"capitulos": [{"id": "uno", "pasos": [pesado]}]}) == [
         f"uno/a: el paso pesa {guion.bytes_de(pesado)} bytes (el tope es {guion.MAX_BYTES_PASO})"]
+    with pytest.raises(ValueError):
+        guion.Guion.desde({"capitulos": [{"id": "uno", "pasos": [pesado]}]})
+
+
+def _plano(v) -> str:
+    """El texto como lo lee la persona en la pantalla, sin HTML ni espacios duros: lo que el guion debe traer entero.
+    Se calcula aquí, sin `guion.plano`, para no comparar el guion consigo mismo."""
+    import html as _html
+    if not isinstance(v, str):
+        return ""
+    t = _html.unescape(re.sub(r"<[^>]*>", "", v))
+    t = t.replace("\xa0", " ").replace("\u202f", " ").replace("\u2007", " ").replace("\u2060", "").replace("\xad", "")
+    return " ".join(t.split())
+
+
+def _en_pantalla(datos: dict, c: dict, p: dict) -> dict[str, list[str]]:
+    """Los textos que muestra el paso `p` del capítulo `c` (`RENDER` de web/js/propuesta/main.js), por campo del
+    guion, leídos de web/data/propuesta.json."""
+    tipo = p.get("tipo") or "texto"
+    x = next((k for k in c.get("componentes") or [] if k.get("id") == p.get("componente")), {}) \
+        if tipo == "componente" else {}
+    respaldo = {"portada": c.get("lema"), "portadilla": c.get("problema"), "componente": x.get("descripcion")}
+    out: dict[str, list[str]] = {"texto": [_plano(p.get("texto") or respaldo.get(tipo))], "nota": [_plano(p.get("nota"))],
+                                 "lista": [_plano(t) for t in p.get("lista") or []],
+                                 "leyenda": [_plano(l.get("texto")) for l in p.get("leyenda") or []]}
+    cifras = p.get("cifras") or (c.get("cifras") if tipo in ("portada", "portadilla") else None) or []
+    out["cifras"] = [_plano(k.get(campo)) for k in cifras for campo in ("v", "l", "fuente")]
+    if tipo == "portada":
+        out["modulos"] = [_plano(m.get(campo)) for m in datos["modulos"] for campo in ("nombre", "lema")]
+    elif tipo == "portadilla":
+        out["propuesta"] = [_plano(c.get("propuesta"))]
+        out["metas"] = [_plano(f"{m['indicador']}: {m.get('base') or '—'} → {m.get('meta') or '—'}")
+                        for m in c.get("metas") or []]
+    elif tipo == "componentes":
+        out["componentes"] = [_plano(k.get(campo)) for k in c.get("componentes") or [] for campo in ("nombre", "resumen")]
+    elif tipo == "componente":
+        out["componente"] = [_plano(x.get(campo)) for campo in ("nombre", "resumen", "plazo", "ubicacion")]
+        out["componente"] += [_plano(x.get("base_costo")) if x.get("costo") else ""]
+        out["componente"] += [_plano(f"{k}: {v}") for k, v in x.get("especificaciones") or []]
+        out["componente"] += [_plano(t.get("nombre")) for t in x.get("proyecto_tipo") or []]
+    elif tipo == "comparacion":
+        for lado in ("antes", "despues"):
+            out[lado] = [" · ".join(t for t in (_plano((p.get(lado) or {}).get("titulo")),
+                                                 _plano((p.get(lado) or {}).get("texto"))) if t)]
+    elif tipo == "financiacion":
+        g = c.get("gestion") or {}
+        out["pedido"], out["madurez_nota"] = [_plano(g.get("pedido"))], [_plano(g.get("madurez_nota"))]
+        out["a_quien"] = [_plano(t) for t in g.get("a_quien") or []]
+        out["siguientes_pasos"] = [_plano(t) for t in g.get("pasos") or []]
+        out["mezcla"] = [_plano(f.get("mecanismo")) for f in c.get("financiacion") or []]
+        out["proyectos_tipo"] = [_plano(t.get("nombre")) for t in c.get("proyectos_tipo") or []]
+    elif tipo == "fuentes":
+        out["fuentes"] = [_plano(f.get(campo)) for f in c.get("fuentes") or []
+                          for campo in ("nombre", "tipo", "que_financia", "requisito")]
+    elif tipo == "ruta":
+        out["hitos"] = [_plano(f"{h['fecha']}: {h['texto']}") for h in c.get("hitos") or []]
+        out["fases"] = [_plano(f["nombre"]) for f in c.get("fases") or []]
+    elif tipo == "pedidos":
+        out["entidades"] = [_plano(e.get(campo)) for e in c.get("entidades") or [] for campo in ("entidad", "pedido")]
+    return {k: [t for t in v if t] for k, v in out.items()}
+
+
+def _capitulos_de(datos: dict) -> list[dict]:
+    return [datos["portada"], *datos["modulos"], datos["financiacion"], datos["ruta"], datos["pedidos"]]
+
+
+@pytest.mark.skipif(not PROPUESTA_JSON.is_file(), reason="Sin web/data/propuesta.json")
+def test_el_guion_trae_enteros_los_textos_de_la_pantalla():
+    """La herramienta le dice al modelo que el guion «es lo que muestra la presentación en ese paso» y que no invente:
+    cada texto que la pantalla muestra (el texto del paso, la nota, la lista, las cifras con su rótulo y su fuente, lo
+    que se pide, la madurez, a quién tocar, los siguientes pasos, cómo se accede a cada fuente, lo que financia cada una
+    y su requisito, las especificaciones, la base del costo, dónde, el plazo, las metas, los hitos, la leyenda…) llega
+    ENTERO, igual que en web/data/propuesta.json. Antes un tope de 3 KB por paso cortaba a media frase el texto de la
+    financiación de saneamiento (de 457 a 89 caracteres), sus pedidos, los diez pedidos por entidad, la nota de los
+    pedidos y 19 de los 20 textos de las fuentes, y la prueba lo aceptaba porque solo miraba el comienzo."""
+    datos = json.loads(PROPUESTA_JSON.read_text(encoding="utf-8"))
+    revisados = 0
+    for cap, c in zip(_capitulos_de(datos), G.capitulos, strict=True):
+        pasos = [p for p in cap.get("pasos") or [] if p] or [{"id": "inicio", "tipo": "texto", "titulo": c["nombre"]}]
+        for p, g in zip(pasos, c["pasos"], strict=True):
+            assert p["id"] == g["id"], (c["id"], p["id"])
+            en_guion = set(_textos(g))
+            for campo, textos in _en_pantalla(datos, cap, p).items():
+                for t in textos:
+                    revisados += 1
+                    # La hoja de ruta pinta el nombre de cada fase sobre su barra; el guion le suma los años que abarca
+                    entero = any(s.startswith(f"{t} (") for s in en_guion) if campo == "fases" else t in en_guion
+                    assert entero, (c["id"], p["id"], campo, t)
+            # El texto principal y la nota van en su campo, tal cual
+            assert g["texto"] == _plano(p.get("texto") or {"portada": cap.get("lema"), "portadilla": cap.get("problema"),
+                                                           "componente": next((k.get("descripcion") for k in
+                                                                               cap.get("componentes") or []
+                                                                               if k.get("id") == p.get("componente")),
+                                                                              None)}.get(p.get("tipo"))), p["id"]
+            assert g.get("nota", "") == _plano(p.get("nota")), p["id"]
+            # Nada sale cortado: ningún texto del guion termina en «…» si no lo hace en la propuesta
+            propios = {_plano(t) for t in _textos(cap)}
+            assert not [t for t in en_guion if t.endswith("…") and t not in propios], (c["id"], p["id"])
+    assert revisados > 1000, revisados
+
+    def paso(cid, pid):
+        ci = G.por_id(cid)
+        return G.capitulos[ci]["pasos"][G.paso(ci, pid)]
+
+    def modulo(mid):
+        return next(m for m in datos["modulos"] if m["id"] == mid)
+
+    # Los casos del verificador, uno por uno, con su largo entero (el texto de la financiación de saneamiento llegaba
+    # con 89 caracteres; su pedido, con 93, y antes del tope de 3 KB, con 591 por el tope de 600 de cada texto)
+    san = modulo("saneamiento")
+    fin = next(p for p in san["pasos"] if p["id"] == "financiacion")
+    f = paso("saneamiento", "financiacion")
+    assert f["texto"] == _plano(fin["texto"]) and len(f["texto"]) == 457, len(f["texto"])
+    assert "PTAR" in f["texto"] and "Res. 0467" in f["texto"] and "$1.747 M" in f["texto"]
+    assert f["pedido"] == _plano(san["gestion"]["pedido"]) and len(f["pedido"]) == 681
+    assert f["a_quien"] == [_plano(t) for t in san["gestion"]["a_quien"]] and len(f["a_quien"]) == 9
+    assert f["siguientes_pasos"] == [_plano(t) for t in san["gestion"]["pasos"]] and len(f["siguientes_pasos"]) == 10
+    relleno = next(p for p in san["pasos"] if p["id"] == "relleno_nuevo")
+    comp = next(k for k in san["componentes"] if k["id"] == relleno["componente"])
+    r = paso("saneamiento", "relleno_nuevo")
+    assert r["texto"] == _plano(relleno.get("texto") or comp["descripcion"]) and len(r["texto"]) == 482
+    assert r["componente"]["ubicacion"] == _plano(comp["ubicacion"]) and len(r["componente"]["ubicacion"]) == 611
+    assert [k["l"] for k in r["cifras"]] == [_plano(k["l"]) for k in relleno["cifras"]]
+    assert max(len(k["l"]) for k in r["cifras"]) == 108
+    agro = paso("agroindustria", "financiacion")
+    assert agro["pedido"] == _plano(modulo("agroindustria")["gestion"]["pedido"]) and len(agro["pedido"]) == 566
+    assert agro["siguientes_pasos"] == [_plano(t) for t in modulo("agroindustria")["gestion"]["pasos"]]
+    pedidos = G.capitulos[G.por_id("pedidos")]["pasos"][0]
+    assert [e["pedido"] for e in pedidos["entidades"]] == [_plano(e["pedido"]) for e in datos["pedidos"]["entidades"]]
+    assert len(pedidos["entidades"]) == 10 and pedidos["nota"] == _plano(datos["pedidos"]["pasos"][0]["nota"])
+    assert len(pedidos["nota"]) == 370
+    fuentes = paso("financiacion", "fuentes")["fuentes"]
+    assert [(x["que_financia"], x["requisito"]) for x in fuentes] == [
+        (_plano(x["que_financia"]), _plano(x["requisito"])) for x in datos["financiacion"]["fuentes"]]
+    sgr = next(x for x in fuentes if x["nombre"].startswith("Sistema General de Regalías"))
+    assert len(sgr["que_financia"]) == 264 and len(sgr["requisito"]) == 139
 
 
 @pytest.mark.skipif(not PROPUESTA_JSON.is_file(), reason="Sin web/data/propuesta.json")
 def test_el_guion_trae_lo_que_muestra_cada_paso():
-    """La herramienta le dice al modelo que el guion «es lo que muestra la presentación en ese paso» y que no invente:
-    tiene que traer las fuentes de financiación con su nombre, qué financian y su requisito, a quién se pide, los
-    siguientes pasos, los plazos enteros (antes se cortaban en 80 caracteres y perdían el año de la obra), las
-    especificaciones, las fuentes de cada componente y las metas del módulo."""
+    """Lo que antes faltaba del todo: las fuentes de financiación con su nombre, qué financian y su requisito, a quién
+    se pide, los siguientes pasos, cómo se accede a cada fuente en cada módulo, los proyectos tipo, los plazos (antes se
+    cortaban en 80 caracteres y perdían el año de la obra), las especificaciones, la base del costo, las fuentes de cada
+    componente y las metas del módulo."""
     datos = json.loads(PROPUESTA_JSON.read_text(encoding="utf-8"))
     fuentes = {f["id"]: f for f in datos["financiacion"]["fuentes"]}
     fin = G.capitulos[G.por_id("financiacion")]
@@ -149,32 +289,29 @@ def test_el_guion_trae_lo_que_muestra_cada_paso():
         c = G.capitulos[G.por_id(m["id"])]
         g = m["gestion"]
         f = next(p for p in c["pasos"] if p["tipo"] == "financiacion")
-        assert len(f["a_quien"]) == min(len(g["a_quien"]), guion.MAX_LISTA), m["id"]
-        assert len(f["siguientes_pasos"]) == min(len(g["pasos"]), guion.MAX_LISTA), m["id"]
+        assert f["a_quien"] == [_plano(t) for t in g["a_quien"]], m["id"]
+        assert f["siguientes_pasos"] == [_plano(t) for t in g["pasos"]], m["id"]
         assert f["madurez"] == g["madurez"] and f["madurez_nota"] and f["pedido"] and f["mezcla"], m["id"]
-        # Cada elemento empieza como en pantalla (lo que se acorta para caber en 3 KB es el final)
-        for de_guion, de_datos in ((f["a_quien"], g["a_quien"]), (f["siguientes_pasos"], g["pasos"])):
-            for a, b in zip(de_guion, de_datos):
-                assert guion.plano(b).startswith(a.rstrip("…")), (m["id"], a)
+        assert [x.get("mecanismo", "") for x in f["mezcla"]] == [_plano(x.get("mecanismo")) for x in m["financiacion"]]
+        assert f.get("proyectos_tipo", []) == [_plano(t["nombre"]) for t in m.get("proyectos_tipo") or []], m["id"]
         portadilla = next(p for p in c["pasos"] if p["tipo"] == "portadilla")
-        assert len(portadilla["metas"]) == min(len(m["metas"]), guion.MAX_LISTA), m["id"]
-        assert portadilla["metas"][0].startswith(guion.plano(m["metas"][0]["indicador"]) + ": "), m["id"]
+        assert len(portadilla["metas"]) == len(m["metas"]), m["id"]
+        assert portadilla["metas"][0].startswith(_plano(m["metas"][0]["indicador"]) + ": "), m["id"]
         for p in c["pasos"]:
             if p["tipo"] != "componente":
                 continue
-            x = next(k for k in m["componentes"] if guion.plano(k["nombre"], guion.MAX_CORTO) == p["componente"]["nombre"])
+            x = next(k for k in m["componentes"] if _plano(k["nombre"]) == p["componente"]["nombre"])
             comp = p["componente"]
-            assert comp.get("plazo", "") == guion.plano(x.get("plazo"), guion.MAX_DETALLE), (m["id"], p["id"])
+            assert comp.get("plazo", "") == _plano(x.get("plazo")), (m["id"], p["id"])
+            assert comp.get("base_costo", "") == _plano(x.get("base_costo")), (m["id"], p["id"])
             assert comp["fuentes"] == [fuentes[i].get("corto") or fuentes[i]["nombre"] for i in x["fuentes"]], p["id"]
-            assert len(comp["especificaciones"]) == min(len(x["especificaciones"]), guion.MAX_LISTA), p["id"]
-            assert comp["especificaciones"][0].startswith(guion.plano(x["especificaciones"][0][0]) + ": "), p["id"]
+            assert comp["especificaciones"] == [_plano(f"{k}: {v}") for k, v in x["especificaciones"]], p["id"]
     # El plazo que se cortaba justo antes del año de la obra
     cano = G.capitulos[G.por_id("urbanismo")]["pasos"][G.paso(G.por_id("urbanismo"), "cano")]
     assert "obra en 2031" in cano["componente"]["plazo"]
     # Los pedidos, entidad por entidad, con los módulos que mueve cada uno
     pedidos = G.capitulos[G.por_id("pedidos")]["pasos"][0]
-    assert [e["entidad"] for e in pedidos["entidades"]] == [guion.plano(e["entidad"], 120)
-                                                            for e in datos["pedidos"]["entidades"]][:guion.MAX_LISTA]
+    assert [e["entidad"] for e in pedidos["entidades"]] == [_plano(e["entidad"]) for e in datos["pedidos"]["entidades"]]
     assert all(e.get("modulos") and e.get("pedido") for e in pedidos["entidades"])
     # El índice sigue compacto: solo ids, nombres y títulos
     assert len(json.dumps(G.indice(), ensure_ascii=False).encode("utf-8")) < 6000
@@ -190,8 +327,9 @@ def test_rangos_como_los_muestra_la_presentacion():
     assert guion.rango_de({"central": 500}) == "≈ $500 M" and guion.rango_de(None) == ""
     assert guion.millones(999.5) == "$1.000 M" and guion.millones(2_500_000) == "$2,5 billones"
     assert guion.aproximado(116_294) == "≈ $120,0 mil M" and guion.aproximado(True) == ""
-    assert guion.plano("<b>300</b>\xa0viviendas en 2028–\U00002060" + "2031  y más", 400) == "300 viviendas en 2028–2031 y más"
-    assert guion.plano("palabra " * 50, 30).endswith("…") and len(guion.plano("palabra " * 50, 30)) <= 30
+    assert guion.plano("<b>300</b>\xa0viviendas en 2028–\U00002060" + "2031  y más") == "300 viviendas en 2028–2031 y más"
+    # Nunca acorta: lo que se ve en pantalla llega entero al modelo (el peso del paso lo mira `problemas`)
+    assert guion.plano("palabra " * 2000) == ("palabra " * 2000).strip()
 
 
 def test_buscar_capitulo_y_paso():
@@ -264,6 +402,19 @@ def test_definicion_y_esquema():
     assert [h.nombre for h in herramientas.fijas()][-1] == "presentacion"
 
 
+# Fechas que existen, con barra, guion o punto (como `minimizar._FECHAS`, que tampoco las enmascara): suman 8 dígitos y
+# antes se frenaban como si fueran cédulas, con un mensaje que no decía qué hacer (las del verificador, tal cual)
+FECHAS = ("La radicación vence el 15/11/2026.", "Reunión el 07/03/2028 en el salón", "Firmado el 2026/11/07",
+          "Corte al 31/12/2027", "Del 15 / 11 / 2026", "Se radica el 2026-11-15", "El 15.11.2026 y el 2028-02-29",
+          "Del 15/11/2026 al 31/12/2027, 300 viviendas")
+FECHAS_QUE_NO = ("Vence el 31/02/2026", "Vence el 11/15/2026", "En 2027-02-29", "Del 15/11/1850",
+                 "El 15/11/2026 300 123 4567", "El 15/11/2026/3001234567", "Al 15/11-2026")
+# Un monto en pesos con su signo y sus puntos de miles (el guion trae «$1.156.350» por habitante); sin el signo, sin los
+# puntos o con otro número pegado, no
+MONTOS = ("Por habitante, $1.156.350", "Son $ 1.156.350,50 al mes")
+MONTOS_QUE_NO = ("Son 1.156.350 por habitante", "Al $3001234567", "Al $300 123 4567", "Son $1.156.350 300 viviendas")
+
+
 @pytest.mark.parametrize("entrada", [
     {}, {"op": "borrar"}, {"op": "ir"}, {"op": "ir", "paso": 2}, {"op": "ir", "capitulo": "vivienda", "paso": True},
     {"op": "ir", "capitulo": "vivienda", "paso": 0}, {"op": "ir", "capitulo": "vivienda", "paso": 61},
@@ -283,7 +434,10 @@ def test_definicion_y_esquema():
         "Al 300\u2011123\u20114567", "Al 300/123/4567", "Al (604) 832 12 34", "Cédula de Ana: 1,023,456,789",
         "Código 71_234_567", "ana.perez\uff20gmail.com", "ana.perez\ufe6bgmail.com",
         "Al \u00b3\u2070\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077", "Al \uff13\uff10\uff10\uff11\uff12\uff13\uff14\uff15\uff16\uff17",
-        "BPIN 2022003050034", "Periodo al revés 2031-2028", "En 2028 300 viviendas", "CC 71.234-567")),
+        "BPIN 2022003050034", "Periodo al revés 2031-2028", "En 2028 300 viviendas", "CC 71.234-567",
+        # Lo que parece una fecha y no lo es (no existe, mes y día al revés, fuera de 1900–2099), o un número pegado a
+        # una fecha de verdad: se mira como cualquier número. Lo mismo con lo que parece un monto en pesos
+        *FECHAS_QUE_NO, *MONTOS_QUE_NO)),
     {"op": "anterior", "paso": 2}, ["ir"], "ir",
 ])
 def test_entradas_invalidas(entrada):
@@ -298,13 +452,16 @@ def test_entradas_validas_y_normalizadas():
     # Periodos con guion, raya o barra, rangos de cifras de la propuesta y «m²» (se devuelve sin NFKC: no pasa a «m2»)
     for t in ("La propuesta 2028-2031 tiene siete módulos.", "Fases 2026-2027 y 2028-2031.", "Del 2028/2031",
               "En 2028 – 2031", "Cuesta $116.294 – 210.000 M", "Rango 1.346–1.500 kWh/kWp", "Desde 2018 (3.383)",
-              "En 2028, 300 viviendas", "Casas de 50 m² en 2028–2031", "x" * 220):
+              "En 2028, 300 viviendas", "Casas de 50 m² en 2028–2031", "x" * 220, *FECHAS, *MONTOS):
         assert P.validar({"op": "explicar", "explicacion": t}).explicacion == t, t
-    # El error dice qué hacer
+    # El error dice qué hacer (también con una fecha que no existe: cómo se escribe una)
     with pytest.raises(ValidationError) as e:
         P.validar({"op": "explicar", "explicacion": "Llame al 300 - 123 - 4567"})
     msg = str(e.value)
     assert "7 o más dígitos" in msg and "«2028–2031»" in msg and "$106.271 M" in msg and "chat" in msg
+    with pytest.raises(ValidationError) as e:
+        P.validar({"op": "explicar", "explicacion": "Vence el 31/02/2026"})
+    assert "«15/11/2026»" in str(e.value) and "«2026-11-15»" in str(e.value) and "existan" in str(e.value)
     with pytest.raises(ValidationError) as e:
         P.validar({"op": "explicar", "explicacion": "ana\uff20correo.co"})
     assert "«@»" in str(e.value) and "chat" in str(e.value)
@@ -326,18 +483,22 @@ def _textos(v):
             yield from _textos(x)
 
 
-# Lo único del guion que la explicación no deja pasar: los códigos de proyecto (BPIN, PDET), el de un lote y el numeral
-# de una norma («RAC 14, num. 14.3.4.2.7.2»)
+# Lo único del guion que la explicación no deja pasar: los códigos de proyecto (BPIN, PDET), el de un lote, el numeral
+# de una norma («RAC 14, num. 14.3.4.2.7.2») y el de un proceso de SECOP («CO1.NTC.9080794», la fuente de una cifra)
 CODIGO = re.compile(r"\d{10,}|\d{3}-\d{3}-\d{3}-\d{5}|\d+(?:\.\d){5,}")
 
 
 def test_la_explicacion_deja_las_cifras_del_guion_y_frena_los_codigos():
-    """El modelo copia las cifras del guion en la explicación: los montos («$106.271 M», «$1,2 – 1,4 billones»), los
-    rangos («1.346–1.500»), los periodos y los años entre paréntesis pasan; solo se frenan los códigos de proyecto."""
+    """El modelo copia las cifras del guion en la explicación: los montos («$106.271 M», «$1,2 – 1,4 billones», y en
+    pesos con sus puntos de miles, «$1.156.350» por habitante), los rangos («1.346–1.500»), los periodos y los años entre
+    paréntesis pasan; solo se frenan los códigos. Con el guion entero (antes se cortaba a 3 KB por paso)."""
     import unicodedata
     textos = list(_textos([c["pasos"] for c in G.capitulos]))
-    frenados = {hi.numero_largo(" ".join(unicodedata.normalize("NFKC", t).split())) for t in textos} - {None}
-    assert frenados and all(CODIGO.fullmatch(x) for x in frenados), frenados
+    frenados = {(t, hi.numero_largo(" ".join(unicodedata.normalize("NFKC", t).split()))) for t in textos}
+    frenados = {(t, x) for t, x in frenados if x}
+    assert frenados and all(CODIGO.fullmatch(x) or f"CO1.NTC.{x}" in t for t, x in frenados), frenados
+    assert any("$1.156.350" in t for t in textos)
+    assert P.validar({"op": "explicar", "explicacion": "Por habitante, $1.156.350 en 2028"}).explicacion
     cifras = {x for c in G.capitulos for p in c["pasos"] for x in _cifras_de(p)}
     assert len(cifras) > 100
     for x in cifras:
@@ -740,7 +901,8 @@ FRASES = [
     "Fases 2026-2027 y 2028-2031.", "Del 2028/2031", "En 2028 – 2031", "Al revés 2031-2028", "En 2028 300 viviendas",
     "En 2028, 300 viviendas", "En 2031. 300 familias", "Desde 2018 (3.383)", "Cuesta $116.294 – 210.000 M",
     "Rango 1.346–1.500 kWh", "Casas de 50 m² en 2028–2031", "Inversión de $106.271 M en 2028–2031 ❤", "Con cariño ❤\ufe0f",
-    "Al revés \u202eodot", "a\u0301\u0301\u0301", "Dos\nrenglones", "Sin\u200bancho",
+    "Al revés \u202eodot", "a\u0301\u0301\u0301", "Dos\nrenglones", "Sin\u200bancho", *FECHAS, *FECHAS_QUE_NO,
+    *MONTOS, *MONTOS_QUE_NO,
 ]
 
 
@@ -759,6 +921,10 @@ def test_las_reglas_de_la_explicacion_son_las_mismas_en_los_tres_lados(tmp_path)
             return None
     esperado = [servidor(t) for t in frases]
     assert esperado[:4] == ["Hola", "Dos espacios", "x" * 220, None]
+    # Las fechas que existen y los montos en pesos pasan tal cual (y entonces también en el puente y en el mando); lo que
+    # solo se les parece, no
+    assert [servidor(t) for t in FECHAS + MONTOS] == list(FECHAS + MONTOS)
+    assert not any(map(servidor, FECHAS_QUE_NO + MONTOS_QUE_NO))
     assert sum(e is None for e in esperado) >= 25 and sum(e is not None for e in esperado) > 100
     (tmp_path / "pares.json").write_text(json.dumps(list(zip(frases, esperado))), encoding="utf-8")
     (tmp_path / "textos.mjs").write_text(NODE_TEXTOS, encoding="utf-8")
@@ -911,6 +1077,91 @@ await dormir(40);
 r.sincronizado_sin_explicacion = enE.slice();
 r.latidos_no_sincronizan = enC.length === 1;
 quitarC(); quitarE(); quitarA?.();
+await dormir(20);
+// 9. El proyector manda (el caso del verificador): la vista de aquí en Vivienda 3 con una explicación, el proyector se
+// abre en ese paso, «Siguiente» deja las dos en el 4; el paso cambia allá con el teclado (el 5) y la vista de aquí y su
+// barra lo siguen; «Siguiente» de aquí deja las dos en el 6. Una presentación de mentira que se mueve como mando.js
+const caps = { portada: 1, vivienda: 6, salud: 4 };
+const orden = Object.keys(caps);
+const mover = (e, a) => {
+  const antes = `${e.capitulo}/${e.paso}`;
+  if (a.op === 'ir') { e.capitulo = a.capitulo; e.paso = a.paso || 1; }
+  else if (a.op === 'siguiente' || a.op === 'anterior') {
+    let ci = orden.indexOf(e.capitulo), p = e.paso + (a.op === 'siguiente' ? 1 : -1);
+    if (p > caps[orden[ci]]) { if (ci < orden.length - 1) { ci++; p = 1; } else p = caps[orden[ci]]; }
+    if (p < 1) { if (ci > 0) { ci--; p = caps[orden[ci]]; } else p = 1; }
+    e.capitulo = orden[ci]; e.paso = p;
+  }
+  e.total = caps[e.capitulo];
+  if (a.explicacion) { e.explicacion = true; e.texto = a.explicacion; }
+  else if (a.op === 'quitar_explicacion' || `${e.capitulo}/${e.paso}` !== antes) { e.explicacion = false; e.texto = null; }
+};
+const presentacion = (e, registro, avisar) => ({ estado: () => ({ ...e, texto: undefined }),
+  aplicar: async (l) => { registro.push(l.map((a) => `${a.op}:${a.capitulo || ''}${a.paso || ''}:${a.explicacion || ''}`));
+    await dormir(3); for (const a of l) mover(e, a); avisar?.(); return l.map((a) => ({ op: a.op, ok: true })); } });
+const hasta = async (f) => { const fin = Date.now() + 5000; while (!f() && Date.now() < fin) await dormir(5); return f(); };
+const donde = (e) => `${e.capitulo}/${e.paso}${e.explicacion ? `+${e.texto}` : ''}`;
+const estadoL = { capitulo: 'portada', paso: 1, total: 1, nombre: 'Aquí', titulo: 'T', explicacion: false, texto: null };
+const enL = [], barra = [];
+const quitarL = A.registrarPresentacion({ ...presentacion(estadoL, enL),
+  cambio: () => { const e = A.estadoPresentacion(); barra.push(e ? `${e.capitulo}/${e.paso}` : null); } });
+await A.accionesPresentacion([{ tipo: 'presentacion', op: 'ir', capitulo: 'vivienda', paso: 3, explicacion: 'Las casas nuevas' }]);
+const P9 = await import(modulo + '?pestana=proyector4');
+const estadoP = { capitulo: 'portada', paso: 1, total: 1, nombre: 'Allá', titulo: 'T', explicacion: false, texto: null };
+const enP = [];
+const quitarP = P9.registrarPresentacion({ proyector: true, ...presentacion(estadoP, enP, () => P9.avisarEstado()) });
+const r9 = r.proyector_manda = {};
+r9.abre = await hasta(() => donde(estadoP) === 'vivienda/3+Las casas nuevas') && donde(estadoP);
+await dormir(30);
+r9.aqui_no_fue_a_la_portada = !enL.flat().some((x) => x.startsWith('ir:portada'));
+// «Siguiente» de los botones de aquí: la orden va solo al proyector, la vista de aquí lo sigue con un `ir`
+enL.length = 0;
+r9.siguiente = await A.accionesPresentacion([{ tipo: 'presentacion', op: 'siguiente' }]);
+r9.tras_siguiente = await hasta(() => donde(estadoL) === 'vivienda/4') && [donde(estadoP), donde(estadoL)];
+r9.aqui_sin_relativas = enL.slice();
+// El teclado (o el control remoto) en la ventana del proyector: allá pasa al 5 sin que esta pestaña mande nada
+enL.length = 0;
+barra.length = 0;
+mover(estadoP, { op: 'siguiente' });
+P9.avisarEstado();
+r9.tras_teclado = await hasta(() => donde(estadoL) === 'vivienda/5') && [donde(estadoP), donde(estadoL)];
+r9.estado_tras_teclado = A.estadoPresentacion();
+r9.barra_tras_teclado = barra.at(-1);
+r9.aqui_tras_teclado = enL.slice();
+// Y «Siguiente» de aquí otra vez: las dos en el 6
+r9.siguiente_2 = await A.accionesPresentacion([{ tipo: 'presentacion', op: 'siguiente' }]);
+r9.tras_siguiente_2 = await hasta(() => donde(estadoL) === 'vivienda/6') && [donde(estadoP), donde(estadoL)];
+r9.barra_tras_siguiente_2 = barra.at(-1);
+// La explicación que manda esta pestaña también se ve aquí; la que se pierde allá al cambiar de paso, también aquí
+await A.accionesPresentacion([{ tipo: 'presentacion', op: 'explicar', explicacion: 'Otra frase' }]);
+r9.explicada = await hasta(() => donde(estadoL) === 'vivienda/6+Otra frase') && [donde(estadoP), donde(estadoL)];
+mover(estadoP, { op: 'siguiente' });
+P9.avisarEstado();
+r9.otro_capitulo = await hasta(() => donde(estadoL) === 'salud/1') && [donde(estadoP), donde(estadoL)];
+// La persona usa la presentación de aquí (su control, su teclado, su índice): el proyector va adonde ella la llevó, con
+// una orden absoluta (si no, la de aquí volvería al paso del proyector con su latido siguiente)
+enP.length = 0;
+mover(estadoL, { op: 'anterior' });
+A.avisarEstado();
+r9.aqui_lleva = await hasta(() => donde(estadoP) === 'vivienda/6') && [donde(estadoP), donde(estadoL)];
+r9.al_proyector_absoluta = enP.slice();
+await dormir(30);
+r9.sigue_junta = [donde(estadoP), donde(estadoL)];
+// Lo que el proyector dice de antes (su latido o la respuesta a una orden anterior) se cruza con lo que se le lleva: la
+// vista de aquí no vuelve al paso viejo para después ir otra vez al nuevo (saltaba, y en un equipo lento eran segundos)
+enL.length = 0;
+mover(estadoL, { op: 'anterior' });
+A.avisarEstado();
+P9.avisarEstado();   // todavía en el 6: aplica la orden unos milisegundos después
+r9.cruce = await hasta(() => donde(estadoP) === 'vivienda/5') && [donde(estadoP), donde(estadoL)];
+await dormir(30);
+r9.cruce_sin_vuelta = enL.slice();
+r9.cruce_junta = [donde(estadoP), donde(estadoL)];
+// El proyector se cierra: la barra vuelve a la vista de aquí, que quedó en su paso
+quitarP();
+r9.tras_cerrar = await hasta(() => !A.proyectorVivo()) && A.estadoPresentacion();
+r9.barra_tras_cerrar = barra.at(-1);
+quitarL();
 r.tipos_del_canal = [...new Set(crudos.map((m) => m.tipo))].sort();
 r.nadie_manda_a_todos = crudos.every((m) => m.canal === 'yondo-presentacion' && m.v === 1);
 console.log(JSON.stringify(r));
@@ -959,6 +1210,25 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
                                    "explicacion": "Lo que dice la pantalla"}]]
     assert r["sincronizado_sin_explicacion"] == [[{"tipo": "presentacion", "op": "ir", "capitulo": "vivienda", "paso": 3}]]
     assert r["latidos_no_sincronizan"] is True
+    # El proyector manda: el paso que cambia allá (el teclado, el control remoto) lo sigue la vista de aquí y su barra, y
+    # los botones de aquí le mandan la orden solo a él (la vista de aquí no repite la relativa: va con un `ir` al paso
+    # que él dice). Antes el iframe de aquí se quedaba en el 4, la barra decía «Paso 4» y el proyector estaba en el 5
+    v = r["proyector_manda"]
+    assert v["abre"] == "vivienda/3+Las casas nuevas" and v["aqui_no_fue_a_la_portada"] is True, v
+    assert v["siguiente"] == [{"op": "siguiente", "ok": True}], v
+    assert v["tras_siguiente"] == ["vivienda/4", "vivienda/4"] and v["aqui_sin_relativas"] == [["ir:vivienda4:"]], v
+    assert v["tras_teclado"] == ["vivienda/5", "vivienda/5"] and v["aqui_tras_teclado"] == [["ir:vivienda5:"]], v
+    assert v["estado_tras_teclado"]["paso"] == 5 and v["barra_tras_teclado"] == "vivienda/5", v
+    assert v["tras_siguiente_2"] == ["vivienda/6", "vivienda/6"] and v["barra_tras_siguiente_2"] == "vivienda/6", v
+    assert v["explicada"] == ["vivienda/6+Otra frase", "vivienda/6+Otra frase"], v
+    assert v["otro_capitulo"] == ["salud/1", "salud/1"], v
+    # Y al revés: lo que la persona hace en la presentación de aquí va al proyector como un `ir`
+    assert v["aqui_lleva"] == ["vivienda/6", "vivienda/6"] and v["al_proyector_absoluta"] == [["ir:vivienda6:"]], v
+    assert v["sigue_junta"] == ["vivienda/6", "vivienda/6"], v
+    # El estado viejo del proyector que se cruza con lo que se le lleva no hace volver atrás a la vista de aquí
+    assert v["cruce"] == ["vivienda/5", "vivienda/5"] and v["cruce_sin_vuelta"] == [], v
+    assert v["cruce_junta"] == ["vivienda/5", "vivienda/5"], v
+    assert v["tras_cerrar"]["capitulo"] == "vivienda" and v["barra_tras_cerrar"] == "vivienda/5", v
     assert r["tipos_del_canal"] == ["adios", "hecho", "ordenes", "proyector", "quien", "recibido"]
     assert r["nadie_manda_a_todos"] is True
 
@@ -976,7 +1246,7 @@ function armar({ propio = 'https://sitio.example', panel = 'https://panel.exampl
   ventana.parent = enIframe ? padre : ventana;
   const p = { textContent: '' };
   const sub = { classList: clases(), querySelector: () => p, getBoundingClientRect: () => ({ height: 40 }) };
-  const pres = { classList: clases(), style: { setProperty: () => {} } };
+  const pres = { classList: clases(), style: { setProperty: () => {}, removeProperty: () => {} } };
   const enlaces = [{ target: '', rel: '' }];
   const documento = {
     querySelector: (s) => ({ '#pres': pres, '.subtitulo': sub, '.leyenda3d': { childElementCount: 0 }, '.panel': null,
@@ -1386,10 +1656,11 @@ const medirDentro = (f) => f.evaluate(() => {
   const s = caja(sub);
   if (s) y1 = Math.min(y1, s.t - 8);
   if (x1 - x0 < W * 0.25) { x0 = 0; x1 = W; }
+  const libre = y1 - y0;   // el alto que le queda a la obra antes de que escena.js lo estire a 90 (tapando lo de abajo)
   if (y1 - y0 < 90) y1 = Math.min(H, y0 + 90);
   return { w: W, h: H, texto: p.textContent, visible: sub.classList.contains('visible') && getComputedStyle(sub).visibility === 'visible',
     clamp: cs.webkitLineClamp || 'none', corte: cs.overflow === 'hidden' && p.scrollHeight > p.clientHeight + 1,
-    renglones: Math.round(p.getBoundingClientRect().height / parseFloat(cs.lineHeight)),
+    renglones: Math.round(p.getBoundingClientRect().height / parseFloat(cs.lineHeight)), letra: parseFloat(cs.fontSize), libre,
     sub: s, panel, leyenda: bl?.height ? caja(ley) : null, control: caja(document.querySelector('.control')),
     marca: caja(document.querySelector('.marca')), herr: caja(document.querySelector('.herr')),
     riel: riel && riel.r - riel.l > 0 ? riel : null, zona: { l: x0, t: y0, r: x1, b: y1 },
@@ -1408,8 +1679,12 @@ const PANTALLAS = [
   ['1024x768', { viewport: { width: 1024, height: 768 } }],
   ['820x1180', { viewport: { width: 820, height: 1180 }, isMobile: true, hasTouch: true }],
   ['390x844', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }],
+  ['360x640', { viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true }],
   ['320x568', { viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true }],
+  ['915x412', { viewport: { width: 915, height: 412 }, isMobile: true, hasTouch: true }],
   ['844x390', { viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true }],
+  ['740x360', { viewport: { width: 740, height: 360 }, isMobile: true, hasTouch: true }],
+  ['667x375', { viewport: { width: 667, height: 375 }, isMobile: true, hasTouch: true }],
 ];
 
 (async () => {
@@ -1488,10 +1763,12 @@ const PANTALLAS = [
 def test_la_explicacion_se_ve_entera_en_cada_pantalla(panel_con_sitio, cfg, tmp_path):
     """La explicación más larga (220 caracteres) se ve entera (sin recorte de renglones) y dentro de la pantalla, sin
     tapar el panel de la presentación, su leyenda, su control ni su barra, en escritorio, tableta, celular y celular en
-    horizontal; ahí, además, sin tapar la franja donde la cámara encuadra la obra. Entre 901 y 1199 px el asistente
-    abierto no tapa la presentación. Y con cambios sin guardar, el `ir` y el `explicar` de un mismo turno dan un solo
-    aviso cuyo «Abrir de todos modos» aplica los dos, en orden. Con la letra de respaldo que haya (en el CI, DejaVu
-    Sans, más ancha): las medidas se toman con el diseño quieto."""
+    horizontal. En el celular, en vertical (390×844, 360×640, 320×568) y en horizontal (915×412, 844×390, 740×360,
+    667×375), además, sin tapar la franja donde la cámara encuadra la obra, y el panel conserva su alto: de lado, al
+    menos 140 px (antes, con la explicación, quedaba en 2 px a 915×412); la hoja de abajo, al menos 56. Entre 901 y
+    1199 px el asistente abierto no tapa la presentación. Y con cambios sin guardar, el `ir` y el `explicar` de un mismo
+    turno dan un solo aviso cuyo «Abrir de todos modos» aplica los dos, en orden. Con la letra de respaldo que haya (en
+    el CI, DejaVu Sans, más ancha): las medidas se toman con el diseño quieto."""
     base, panel = panel_con_sitio
     aa.encender(panel,
                 aa.sse(aa.TU("toolu_s1", "presentacion", {"op": "ir", "capitulo": "vivienda", "paso": 2}),
@@ -1501,13 +1778,13 @@ def test_la_explicacion_se_ve_entera_en_cada_pantalla(panel_con_sitio, cfg, tmp_
     (tmp_path / "pantallas.cjs").write_text(GUION_PANTALLAS, encoding="utf-8")
     capturas = os.environ.get("CAPTURAS_AGENTE") or str(tmp_path)
     r = subprocess.run(["node", str(tmp_path / "pantallas.cjs"), base, cfg.usuario, cfg.clave,
-                        json.dumps({"larga": LARGA, "corta": CORTA}), capturas], capture_output=True, text=True, timeout=600)
+                        json.dumps({"larga": LARGA, "corta": CORTA}), capturas], capture_output=True, text=True, timeout=900)
     assert r.returncode == 0, (r.stdout[-3000:], r.stderr[-3000:])
     s = json.loads(r.stdout.strip().splitlines()[-1])
     assert s["csp"] == [] and s["errores"] == [], (s["csp"], s["errores"])
     medidas = [(n, c["dentro"]) for n, c in s["casos"].items() if "dentro" in c]
     medidas += [(f"{n} con el asistente", c["abierto"]["dentro"]) for n, c in s["casos"].items() if "abierto" in c]
-    assert len(medidas) == 8
+    assert len(medidas) == 12
     for nombre, d in medidas:
         assert d["visible"] and d["texto"] == LARGA, nombre
         # Entera: sin recorte de renglones y con toda la caja dentro de la pantalla
@@ -1516,6 +1793,25 @@ def test_la_explicacion_se_ve_entera_en_cada_pantalla(panel_con_sitio, cfg, tmp_
         assert not d["desborde"], nombre
         for otro in ("panel", "leyenda", "control", "marca", "herr", "riel"):
             assert _sin_choque(d["sub"], d[otro]), (nombre, otro, d)
+        # Y nada de lo que la rodea se pisa: la leyenda (de lado, en la barra) ni el control al pie del panel
+        for a, b in (("leyenda", "marca"), ("leyenda", "herr"), ("panel", "control")):
+            assert d[a] is None or _sin_choque(d[a], d[b]), (nombre, a, b, d)
+    # El celular, en vertical y en horizontal: el subtítulo no tapa la franja donde la cámara encuadra la obra que
+    # explica (al menos 90 px sin estirarla por debajo de él, que es lo que hace escena.js si le queda menos), y el panel
+    # de la presentación conserva un alto útil. La letra puede achicarse, pero no por debajo de lo que se lee
+    problemas = []
+    for nombre, minimo in (("390x844", 96), ("360x640", 96), ("320x568", 56), ("915x412", 140), ("844x390", 140),
+                           ("740x360", 140), ("667x375", 140)):
+        d = s["casos"][nombre]["dentro"]
+        if not _sin_choque(d["sub"], d["zona"]) or d["libre"] < 90:
+            problemas.append((nombre, "tapa la franja de la obra", {"sub": d["sub"], "zona": d["zona"], "libre": d["libre"]}))
+        if d["zona"]["r"] - d["zona"]["l"] < d["w"] * 0.4:
+            problemas.append((nombre, "franja angosta", d["zona"]))
+        if d["panel"]["b"] - d["panel"]["t"] < minimo:
+            problemas.append((nombre, f"panel de menos de {minimo} px", d["panel"]))
+        if d["letra"] < 10.5:
+            problemas.append((nombre, "letra de menos de 10,5 px", d["letra"]))
+    assert not problemas, problemas
     for nombre, c in s["casos"].items():
         if "resultado" in c:
             assert c["resultado"] == [{"op": "ir", "ok": True}], (nombre, c["resultado"])
@@ -1523,10 +1819,6 @@ def test_la_explicacion_se_ve_entera_en_cada_pantalla(panel_con_sitio, cfg, tmp_
     d = s["casos"]["1400x900"]["dentro"]
     assert d["sub"]["l"] > d["panel"]["r"], d
     assert d["renglones"] <= 3 or d["leyenda"] is None or d["sub"]["b"] <= d["leyenda"]["t"], d
-    # El celular en horizontal: el subtítulo no tapa la franja donde la cámara encuadra la obra que explica
-    d = s["casos"]["844x390"]["dentro"]
-    assert _sin_choque(d["sub"], d["zona"]), d
-    assert d["zona"]["b"] - d["zona"]["t"] >= 90 and d["zona"]["r"] - d["zona"]["l"] >= d["w"] * 0.4, d
     # Entre 901 y 1199 px, con el asistente abierto, el iframe le deja su ancho; el asistente cabe entero
     for nombre in ("1024x768", "1180x820"):
         f = s["casos"][nombre]["abierto"]["fuera"]
@@ -1538,6 +1830,135 @@ def test_la_explicacion_se_ve_entera_en_cada_pantalla(panel_con_sitio, cfg, tmp_
     assert v["ruta"] == "/panel/personas" and len(v["notas"]) == 1 and v["botones"] == 1, v
     assert v["despues"]["ruta"] == "/panel/presentacion" and v["despues"]["hash"] == "#vivienda/2", v
     assert v["despues"]["texto"] == CORTA and v["despues"]["botones"] == 0 and v["despues"]["fallas"] == [], v
+
+
+# ───────────────────────────── El proyector y la pestaña del chat ─────────────────────────────
+
+GUION_PROYECTOR = r"""// La ventana del proyector y la pestaña del chat no se desfasan. Uso: node <guion> <base del panel> <usuario> <clave>
+// <datos>
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const [base, usuario, clave, datos] = process.argv.slice(2);
+const D = JSON.parse(datos);
+const origen = new URL(base).origin;
+const pref = new URL(base).pathname.replace(/\/+$/, '');
+const espera = { timeout: 90000 };
+const salida = { pasos: {}, errores: [], csp: [] };
+const marco = (page) => page.frames().find((f) => /\/propuesta(#|$)/.test(f.url()));
+
+async function enPaso(page, hash, texto) {
+  await page.waitForFunction(() => !!document.querySelector('#pres-iframe'), null, espera);
+  let f = null;
+  const fin = Date.now() + 90000;
+  while (!(f = marco(page)) && Date.now() < fin) await page.waitForTimeout(100);
+  await f.waitForFunction(([h, t]) => location.hash === h && (t === null
+    ? !document.querySelector('.subtitulo').classList.contains('visible')
+    : document.querySelector('.subtitulo.visible p')?.textContent === t), [hash, texto], espera);
+}
+
+// Lo que ve cada pantalla y lo que dice la barra de la pestaña del chat
+async function foto(A, B) {
+  const dentro = (page) => marco(page).evaluate(() => ({ hash: location.hash,
+    sub: document.querySelector('.subtitulo').classList.contains('visible') ? document.querySelector('.subtitulo p').textContent : null }));
+  return { chat: await dentro(A), proyector: await dentro(B),
+    barra: await A.evaluate(() => document.querySelector('#pres-paso').textContent),
+    estado: await A.evaluate(() => window.__P.estadoPresentacion()),
+    aviso: await A.evaluate(() => !document.querySelector('#pres-remoto').hidden) };
+}
+
+// Las dos pantallas en `hash` y la barra del chat diciendo ese paso: se espera a que pase (sin tiempos fijos), con un
+// tope; si no pasa, la foto dice dónde quedó cada una
+async function ambos(A, B, hash) {
+  const paso = hash.split('/')[1];
+  const tope = { timeout: 60000 };
+  await Promise.all([
+    marco(B).waitForFunction((h) => location.hash === h, hash, tope),
+    marco(A).waitForFunction((h) => location.hash === h, hash, tope),
+    A.waitForFunction((p) => document.querySelector('#pres-paso').textContent.startsWith(`Paso ${p} de`), paso, tope),
+  ]).catch(() => {});
+  return foto(A, B);
+}
+
+(async () => {
+  const nav = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  try {
+    const ctx = await nav.newContext({ viewport: { width: 1400, height: 900 } });
+    await ctx.route((u) => u.origin !== origen, (r) => r.abort());
+    await ctx.exposeBinding('__csp', (_, v) => salida.csp.push(v));
+    await ctx.addInitScript(() => {
+      addEventListener('securitypolicyviolation', (e) => window.__csp(`${location.pathname} ${e.effectiveDirective} ${e.blockedURI}`), true);
+    });
+    ctx.on('page', (p) => p.on('pageerror', (e) => salida.errores.push(String(e))));
+    const A = await ctx.newPage();
+    await A.goto(base + '/', { waitUntil: 'domcontentloaded' });
+    await A.fill('#f-login [name=usuario]', usuario);
+    await A.fill('#f-login [name=clave]', clave);
+    await A.click('#f-login button[type=submit]');
+    await A.waitForSelector('#app #vista > .vista', espera);
+    await A.goto(base + '/presentacion', { waitUntil: 'domcontentloaded' });
+    await A.waitForSelector('#app #vista > .vista', espera);
+    await A.evaluate(async (p) => { window.__P = await import(p + '/static/js/agente-presentacion.js'); }, pref);
+    await A.waitForFunction(() => window.__P.presentacionLista(), null, espera);
+    // La vista del chat en Vivienda 3 con una explicación; «Abrir en otra pantalla» abre el proyector en ese paso
+    await A.evaluate((t) => window.__P.accionesPresentacion([{ tipo: 'presentacion', op: 'ir', capitulo: 'vivienda', paso: 3, explicacion: t }]), D.explicacion);
+    await enPaso(A, '#vivienda/3', D.explicacion);
+    const [B] = await Promise.all([ctx.waitForEvent('page'), A.click('#pres-otra')]);
+    await enPaso(B, '#vivienda/3', D.explicacion);
+    await A.waitForFunction(() => window.__P.proyectorVivo() && !document.querySelector('#pres-remoto').hidden, null, espera);
+    salida.pasos.abre = await foto(A, B);
+    // «Siguiente» en la pestaña del chat. Como hace una persona, la ventana que se usa pasa al frente: Chromium frena la
+    // que queda detrás (sus cuadros bajan a unos dos por segundo y cada paso de la presentación tarda segundos en ella)
+    await A.bringToFront();
+    await A.click('#pres-siguiente');
+    salida.pasos.siguiente = await ambos(A, B, '#vivienda/4');
+    // El paso cambia en la ventana del proyector (el control remoto manda PageDown; la vista enfoca el iframe para eso)
+    await B.bringToFront();
+    await B.evaluate(() => document.querySelector('#pres-iframe').focus());
+    await B.keyboard.press('PageDown');
+    salida.pasos.teclado = await ambos(A, B, '#vivienda/5');
+    // Y otra vez «Siguiente» en la pestaña del chat: las dos al 6
+    await A.bringToFront();
+    await A.click('#pres-siguiente');
+    salida.pasos.siguiente_2 = await ambos(A, B, '#vivienda/6');
+    // Y al revés: lo que se hace en la presentación de la pestaña del chat (aquí, su teclado) va al proyector
+    await A.bringToFront();
+    await A.evaluate(() => document.querySelector('#pres-iframe').focus());
+    await A.keyboard.press('PageUp');
+    salida.pasos.aqui = await ambos(A, B, '#vivienda/5');
+    await ctx.close();
+  } finally {
+    await nav.close();
+  }
+  console.log(JSON.stringify(salida));
+})().catch((e) => { console.error(e); process.exit(1); });
+"""
+
+
+@requiere_navegador
+def test_el_proyector_y_la_pestana_del_chat_no_se_desfasan(panel_con_sitio, cfg, tmp_path):
+    """El caso del verificador, en Chromium con el panel y la presentación de verdad: la vista del chat en Vivienda 3 con
+    una explicación; «Abrir en otra pantalla» abre el proyector en ese paso, con la explicación, y «Siguiente» deja las
+    dos en el 4. Entonces el paso cambia en la ventana del proyector (PageDown, lo que manda un control remoto): el
+    proyector pasa al 5 y la pestaña del chat lo refleja, en su iframe, en su barra y en el estado que le llega al
+    asistente. Y «Siguiente» en el chat lleva a las dos al 6. Antes el iframe del chat se quedaba en el 4 con la barra
+    en «Paso 4 de 6» y, con «Siguiente», el proyector iba al 6 y el chat al 5: no se reencontraban nunca. Y al revés: lo
+    que se hace en la presentación de la pestaña del chat (PageUp) también va al proyector."""
+    base, _ = panel_con_sitio
+    (tmp_path / "proyector.cjs").write_text(GUION_PROYECTOR, encoding="utf-8")
+    r = subprocess.run(["node", str(tmp_path / "proyector.cjs"), base, cfg.usuario, cfg.clave,
+                        json.dumps({"explicacion": EXPLICACION})], capture_output=True, text=True, timeout=400)
+    assert r.returncode == 0, (r.stdout[-3000:], r.stderr[-3000:])
+    s = json.loads(r.stdout.strip().splitlines()[-1])
+    assert s["csp"] == [] and s["errores"] == [], (s["csp"], s["errores"])
+    p = s["pasos"]
+    assert p["abre"]["chat"] == p["abre"]["proyector"] == {"hash": "#vivienda/3", "sub": EXPLICACION}, p["abre"]
+    assert p["abre"]["aviso"] is True and p["abre"]["barra"].startswith("Paso 3 de 6"), p["abre"]
+    for nombre, paso in (("siguiente", 4), ("teclado", 5), ("siguiente_2", 6), ("aqui", 5)):
+        f = p[nombre]
+        # Las dos pantallas en el mismo paso (sin la explicación del 3, que se quita al cambiar de paso), y la barra y el
+        # estado del chat diciendo el paso que ve la sala
+        assert f["chat"] == f["proyector"] == {"hash": f"#vivienda/{paso}", "sub": None}, (nombre, f)
+        assert f["barra"].startswith(f"Paso {paso} de 6"), (nombre, f)
+        assert f["estado"]["capitulo"] == "vivienda" and f["estado"]["paso"] == paso, (nombre, f)
 
 
 # ───────────────────────────── Una presentación que no avisa `listo` ─────────────────────────────

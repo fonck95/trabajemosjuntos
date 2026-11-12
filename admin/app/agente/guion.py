@@ -16,10 +16,14 @@ Por qué está hecho así:
 * Cada paso trae lo que su panel muestra (`RENDER` de main.js, con los mismos títulos y textos de respaldo), en texto
   plano: sin HTML y sin los espacios que no se cortan ni las uniones de palabras (U+2060) que pone build_propuesta.py
   para el panel. También lo que el modelo necesita para explicarlo sin inventar: las fuentes de financiación por su
-  nombre (con qué financia cada una y su requisito), a quién se le pide, los siguientes pasos y los hitos, los plazos
-  enteros, las especificaciones y las metas. Cada paso pesa a lo sumo `MAX_BYTES_PASO` (unos 3 KB): si no cabe, se
-  acortan primero sus textos más largos (la prosa), así los nombres, los montos y los plazos, que son cortos, llegan
-  enteros (`_encoger`).
+  nombre (con qué financia cada una, su requisito y, en cada módulo, cómo se accede a ella), a quién se le pide, los
+  siguientes pasos y los hitos, los plazos, las especificaciones, la base de cada costo, los proyectos tipo, la fuente
+  de cada cifra y las metas.
+* Nada se acorta: la herramienta le dice al modelo que explique «con esos datos (no invente otros)», y un texto cortado
+  a media frase («…suman $47.577 M de los $70.537 M del módulo. La…») es justo lo que lo obliga a adivinar. El único
+  tope es lo que pesa un paso para el modelo (`MAX_BYTES_PASO`, muy por debajo de `MAX_CONTENIDO` de la herramienta):
+  si una propuesta nueva lo pasa, `problemas` lo dice y build_propuesta.py --estricto falla, para decidir qué se saca
+  en vez de cortar en silencio.
 * Solo usa la biblioteca estándar: build_propuesta.py lo carga por su ruta, sin las dependencias del panel. El panel lo
   lee con `cargar` (con caché por la fecha del archivo; pymongo no interviene, pero es lectura de disco: desde una
   corrutina va con `run_in_threadpool`).
@@ -39,12 +43,10 @@ from typing import Any
 
 RUTA = Path(__file__).with_name("propuesta_guion.json")
 VERSION = 1
-MAX_TEXTO = 1500     # el texto principal de un paso
-MAX_DETALLE = 600    # un texto secundario (nota, antes y después, lo que se pide)
-MAX_CORTO = 240      # una línea de una lista, un rótulo de la leyenda o una cifra
-MAX_LISTA = 12       # elementos de cada lista de un paso
-MAX_BYTES_PASO = 3000  # lo que pesa a lo sumo un paso para el modelo (su JSON en UTF-8)
-MIN_RECORTE = 60     # `_encoger` no acorta un texto por debajo de esto
+# Lo que pesa a lo sumo un paso para el modelo (su JSON en UTF-8, como lo manda `Resultado.texto_para_modelo`). El más
+# pesado de la propuesta, la financiación de saneamiento (nueve fuentes con cómo se accede a cada una, a quién tocar y
+# diez pasos), pesa unos 10 KB entero: el tope le deja un margen y es menos de un tercio de `MAX_CONTENIDO` (40.000)
+MAX_BYTES_PASO = 12000
 MAX_PASOS = 60       # el tope de `paso` en la herramienta y en el navegador
 # Los capítulos que no salen de `modulos`, con los nombres que tienen fijos en web/js/propuesta/main.js (`caps`)
 FIJOS_ANTES = (("portada", "Portada", "Portada"),)
@@ -62,19 +64,12 @@ _ETIQUETA = re.compile(r"<[^>]*>")
 _ESPACIOS_DUROS = str.maketrans({"\xa0": " ", "\U0000202f": " ", "\U00002007": " ", "\U00002060": None, "\xad": None})
 
 
-def plano(v: Any, maximo: int = MAX_TEXTO) -> str:
-    """Texto de una línea sin HTML ni entidades, sin los espacios que no se cortan y acotado a `maximo` caracteres
-    (cortado en una palabra, con «…»)."""
+def plano(v: Any) -> str:
+    """Texto de una línea sin HTML ni entidades y sin los espacios que no se cortan. Entero: nunca se acorta."""
     if not isinstance(v, str):
         return ""
     t = html.unescape(_ETIQUETA.sub("", v)).translate(_ESPACIOS_DUROS)
-    t = " ".join(t.split())
-    if len(t) <= maximo:
-        return t
-    corte = t[:maximo - 1]
-    if " " in corte[maximo // 2:]:
-        corte = corte[:corte.rindex(" ")]
-    return corte.rstrip(" ,;:.") + "…"
+    return " ".join(t.split())
 
 
 def clave(v: Any) -> str:
@@ -148,22 +143,22 @@ def aproximado(v: Any) -> str:
 
 # ───────────────────────────── Del JSON de la presentación al guion ─────────────────────────────
 
-def _lista(v: Any, maximo: int = MAX_CORTO) -> list[str]:
-    out = [plano(x, maximo) for x in (v if isinstance(v, list) else [])]
-    return [x for x in out if x][:MAX_LISTA]
+def _lista(v: Any) -> list[str]:
+    return [x for x in (plano(x) for x in (v if isinstance(v, list) else [])) if x]
 
 
 def _cifras(v: Any) -> list[dict]:
+    """Las cifras grandes (`cifras` de main.js): el valor, su rótulo y, si la trae, la fuente que la respalda."""
     out = []
     for c in v if isinstance(v, list) else []:
-        if isinstance(c, dict) and plano(c.get("v"), 40):
-            out.append({"v": plano(c.get("v"), 40), "l": plano(c.get("l"), MAX_CORTO)})
-    return out[:MAX_LISTA]
+        if isinstance(c, dict) and plano(c.get("v")):
+            out.append({k: x for k, x in (("v", plano(c.get("v"))), ("l", plano(c.get("l"))),
+                                          ("fuente", plano(c.get("fuente")))) if x})
+    return out
 
 
 def _leyenda(v: Any) -> list[str]:
-    return [t for t in (plano(x.get("texto"), MAX_CORTO) for x in (v if isinstance(v, list) else [])
-                        if isinstance(x, dict)) if t][:MAX_LISTA]
+    return [t for t in (plano(x.get("texto")) for x in (v if isinstance(v, list) else []) if isinstance(x, dict)) if t]
 
 
 def _fuentes_de(datos: dict) -> dict[str, dict]:
@@ -173,7 +168,7 @@ def _fuentes_de(datos: dict) -> dict[str, dict]:
 
 def _nombre_fuente(fuentes: dict[str, dict], fid: Any) -> str:
     f = fuentes.get(fid) if isinstance(fid, str) else None
-    return plano((f or {}).get("corto") or (f or {}).get("nombre") or fid, 80)
+    return plano((f or {}).get("corto") or (f or {}).get("nombre") or fid)
 
 
 def _margen(inv: Any) -> tuple[float, float]:
@@ -187,13 +182,17 @@ def _margen(inv: Any) -> tuple[float, float]:
 
 
 def _mezcla(fin: Any, inv: Any, fuentes: dict[str, dict]) -> list[dict]:
+    """La mezcla de fuentes de un módulo (`pilaFinanciacion` de main.js): cada fuente, cómo se accede a ella en este
+    módulo y su aporte, con el margen de la inversión."""
     k0, k1 = _margen(inv)
     out = []
     for f in fin if isinstance(fin, list) else []:
         if isinstance(f, dict):
             monto = f.get("monto") or 0
-            out.append({"fuente": _nombre_fuente(fuentes, f.get("fuente")), "monto": rango(monto * k0, monto * k1)})
-    return out[:MAX_LISTA]
+            out.append({k: x for k, x in (("fuente", _nombre_fuente(fuentes, f.get("fuente"))),
+                                          ("mecanismo", plano(f.get("mecanismo"))),
+                                          ("monto", rango(monto * k0, monto * k1))) if x})
+    return out
 
 
 def _por_fuente(datos: dict, fuentes: dict[str, dict]) -> list[dict]:
@@ -207,7 +206,8 @@ def _por_fuente(datos: dict, fuentes: dict[str, dict]) -> list[dict]:
                 monto = x.get("monto") or 0
                 t[0], t[1], t[2] = t[0] + monto, t[1] + monto * k0, t[2] + monto * k1
     orden = sorted(((fid, t) for fid, t in totales.items() if t[0] > 0), key=lambda e: -e[1][0])
-    return [{"fuente": _nombre_fuente(fuentes, fid), "monto": rango(t[1], t[2])} for fid, t in orden][:MAX_LISTA]
+    return [{k: x for k, x in (("fuente", _nombre_fuente(fuentes, fid)), ("entidad", plano(fuentes[fid].get("entidad"))),
+                               ("monto", rango(t[1], t[2]))) if x} for fid, t in orden]
 
 
 def _inversion_total(datos: dict) -> str:
@@ -220,21 +220,19 @@ def _inversion_total(datos: dict) -> str:
 
 def _tipos(v: Any) -> list[str]:
     """Los nombres de los proyectos tipo y referentes (`chipsTipo` de main.js)."""
-    return [t for t in (plano(x.get("nombre"), MAX_CORTO) for x in (v if isinstance(v, list) else [])
-                        if isinstance(x, dict)) if t][:MAX_LISTA]
+    return [t for t in (plano(x.get("nombre")) for x in (v if isinstance(v, list) else []) if isinstance(x, dict)) if t]
 
 
 def _componente(x: dict, fuentes: dict[str, dict]) -> dict:
-    """El componente de un paso `componente`: lo que dice su ficha en el panel (especificaciones, costo, proyectos tipo,
-    fuentes de financiación por su nombre, dónde y el plazo entero)."""
-    specs = [plano(f"{e[0]}: {e[1]}", MAX_CORTO) for e in x.get("especificaciones") or []
+    """El componente de un paso `componente`: lo que dice su ficha en el panel (especificaciones, costo y su base,
+    proyectos tipo, fuentes de financiación por su nombre, dónde y el plazo)."""
+    specs = [plano(f"{e[0]}: {e[1]}") for e in x.get("especificaciones") or []
              if isinstance(e, (list, tuple)) and len(e) == 2]
-    out = {"nombre": plano(x.get("nombre"), MAX_CORTO), "resumen": plano(x.get("resumen"), MAX_DETALLE),
-           "costo": rango_de(x.get("costo")), "plazo": plano(x.get("plazo"), MAX_DETALLE),
-           "especificaciones": [e for e in specs if e][:MAX_LISTA],
-           "fuentes": [_nombre_fuente(fuentes, f) for f in x.get("fuentes") or []][:MAX_LISTA],
-           "proyectos_tipo": _tipos(x.get("proyecto_tipo")),
-           "ubicacion": plano(x.get("ubicacion"), MAX_DETALLE)}
+    out = {"nombre": plano(x.get("nombre")), "resumen": plano(x.get("resumen")),
+           "costo": rango_de(x.get("costo")), "base_costo": plano(x.get("base_costo")) if x.get("costo") else "",
+           "plazo": plano(x.get("plazo")), "especificaciones": [e for e in specs if e],
+           "fuentes": [_nombre_fuente(fuentes, f) for f in x.get("fuentes") or []],
+           "proyectos_tipo": _tipos(x.get("proyecto_tipo")), "ubicacion": plano(x.get("ubicacion"))}
     return {k: v for k, v in out.items() if v}
 
 
@@ -242,60 +240,12 @@ def _meta(x: Any) -> str:
     """Una meta del módulo como la escriben las fichas de main.js: «indicador: base → meta»."""
     if not isinstance(x, dict) or not x.get("indicador"):
         return ""
-    return plano(f"{x.get('indicador')}: {x.get('base') or '—'} → {x.get('meta') or '—'}", MAX_CORTO)
-
-
-# Lo que `_encoger` nunca acorta: el id, el tipo y el título (los del índice y la pantalla). Y lo que acorta solo si
-# acortar la prosa no alcanzó: los datos cortos que el modelo no debe adivinar (plazos, montos, nombres, fuentes)
-_SIN_RECORTE = frozenset({"id", "tipo", "titulo"})
-_DATOS = frozenset({"plazo", "costo", "monto", "inversion", "inversion_total", "fuente", "fuentes", "entidad", "nombre",
-                    "corto", "madurez", "modulos", "v"})
-
-
-def _salvo(k: str, x: Any, salvo: frozenset) -> bool:
-    """¿Queda `x` (el valor de la clave `k`) sin acortar? Solo un texto o una lista de textos: dentro de una lista de
-    objetos (las fuentes del paso «fuentes») se mira clave por clave."""
-    return k in salvo and (isinstance(x, str) or isinstance(x, list) and all(isinstance(i, str) for i in x))
-
-
-def _cadenas(v: Any, salvo: frozenset):
-    if isinstance(v, str):
-        yield v
-    elif isinstance(v, dict):
-        for k, x in v.items():
-            if not _salvo(k, x, salvo):
-                yield from _cadenas(x, salvo)
-    elif isinstance(v, list):
-        for x in v:
-            yield from _cadenas(x, salvo)
-
-
-def _recortar(v: Any, largo: int, salvo: frozenset) -> Any:
-    if isinstance(v, str):
-        return plano(v, largo) if len(v) > largo else v
-    if isinstance(v, dict):
-        return {k: x if _salvo(k, x, salvo) else _recortar(x, largo, salvo) for k, x in v.items()}
-    if isinstance(v, list):
-        return [_recortar(x, largo, salvo) for x in v]
-    return v
+    return plano(f"{x.get('indicador')}: {x.get('base') or '—'} → {x.get('meta') or '—'}")
 
 
 def bytes_de(paso: dict) -> int:
     """Lo que pesa un paso para el modelo: su JSON en UTF-8 (como lo manda `Resultado.texto_para_modelo`)."""
     return len(json.dumps(paso, ensure_ascii=False).encode("utf-8"))
-
-
-def _encoger(paso: dict) -> dict:
-    """El paso en `MAX_BYTES_PASO`: si pesa más, se acortan (en una palabra, con «…») los textos más largos, cada vez un
-    poco más, hasta que quepa. Primero la prosa (el texto del paso, las descripciones, los pedidos, los pasos que
-    siguen) y, solo si no alcanza, también los datos cortos (`_DATOS`): así los plazos, los montos y los nombres llegan
-    enteros. Siempre el mismo resultado para el mismo paso."""
-    for salvo in (_SIN_RECORTE | _DATOS, _SIN_RECORTE):
-        largo = max((len(t) for t in _cadenas(paso, salvo)), default=0)
-        while bytes_de(paso) > MAX_BYTES_PASO and largo > MIN_RECORTE:
-            largo = max(MIN_RECORTE, int(largo * 0.9))
-            paso = _recortar(paso, largo, salvo)
-    return paso
 
 
 # El título de un paso que no trae el suyo, según su tipo (los respaldos de `RENDER` en main.js)
@@ -311,10 +261,10 @@ def _paso(datos: dict, c: dict, p: dict, fuentes: dict[str, dict]) -> dict:
              None) if tipo == "componente" else None
     respaldo = {"portada": c.get("titulo"), "portadilla": c.get("lema"), "componente": (x or {}).get("nombre"),
                 "texto": c.get("nombre")}.get(tipo, TITULO_POR_TIPO.get(tipo))
-    titulo = plano(p.get("titulo") or respaldo, MAX_CORTO) or plano(c.get("nombre"), MAX_CORTO)
+    titulo = plano(p.get("titulo") or respaldo) or plano(c.get("nombre"))
     texto = p.get("texto") or {"portada": c.get("lema"), "portadilla": c.get("problema"),
                                "componente": (x or {}).get("descripcion")}.get(tipo)
-    out: dict[str, Any] = {"id": p.get("id"), "tipo": tipo, "titulo": titulo, "texto": plano(texto, MAX_TEXTO)}
+    out: dict[str, Any] = {"id": p.get("id"), "tipo": tipo, "titulo": titulo, "texto": plano(texto)}
     comp = _componente(x, fuentes) if x else {}
     cifras = _cifras(p.get("cifras") or (c.get("cifras") if tipo in ("portada", "portadilla") else None))
     if cifras:
@@ -322,27 +272,26 @@ def _paso(datos: dict, c: dict, p: dict, fuentes: dict[str, dict]) -> dict:
     if comp:
         out["componente"] = comp
     if tipo == "portada":
-        out["modulos"] = [{"nombre": plano(m.get("nombre"), 80), "inversion": rango_de(m.get("inversion"))}
+        out["modulos"] = [{k: v for k, v in (("nombre", plano(m.get("nombre"))), ("lema", plano(m.get("lema"))),
+                                             ("inversion", rango_de(m.get("inversion")))) if v}
                           for m in datos.get("modulos") or [] if isinstance(m, dict)]
         out["inversion_total"] = _inversion_total(datos)
     elif tipo == "portadilla":
-        out.update({k: v for k, v in (("propuesta", plano(c.get("propuesta"), MAX_DETALLE)),
+        out.update({k: v for k, v in (("propuesta", plano(c.get("propuesta"))),
                                       ("inversion", rango_de(c.get("inversion")))) if v})
-        metas = [t for t in map(_meta, c.get("metas") or []) if t][:MAX_LISTA]
+        metas = [t for t in map(_meta, c.get("metas") or []) if t]
         if metas:
             out["metas"] = metas
     elif tipo == "componentes":
-        out["componentes"] = [{k: v for k, v in (("nombre", plano(x.get("nombre"), MAX_CORTO)),
-                                                 ("costo", rango_de(x.get("costo"))),
-                                                 ("resumen", plano(x.get("resumen"), MAX_CORTO))) if v}
-                              for x in c.get("componentes") or [] if isinstance(x, dict)][:MAX_LISTA]
+        out["componentes"] = [{k: v for k, v in (("nombre", plano(x.get("nombre"))), ("costo", rango_de(x.get("costo"))),
+                                                 ("resumen", plano(x.get("resumen")))) if v}
+                              for x in c.get("componentes") or [] if isinstance(x, dict)]
         if c.get("inversion"):
             out["inversion"] = rango_de(c.get("inversion"))
     elif tipo == "comparacion":
         for lado in ("antes", "despues"):
             d = p.get(lado) if isinstance(p.get(lado), dict) else {}
-            t = plano(" · ".join(x for x in (plano(d.get("titulo"), 80), plano(d.get("texto"), MAX_DETALLE)) if x),
-                      MAX_DETALLE)
+            t = " · ".join(x for x in (plano(d.get("titulo")), plano(d.get("texto"))) if x)
             if t:
                 out[lado] = t
     elif tipo == "financiacion":
@@ -350,43 +299,42 @@ def _paso(datos: dict, c: dict, p: dict, fuentes: dict[str, dict]) -> dict:
         mezcla = _mezcla(c.get("financiacion"), c.get("inversion"), fuentes)
         if mezcla:
             out["mezcla"] = mezcla
-        out.update({k: v for k, v in (("madurez", plano(g.get("madurez"), 40)),
-                                      ("madurez_nota", plano(g.get("madurez_nota"), MAX_DETALLE)),
-                                      ("pedido", plano(g.get("pedido"), MAX_DETALLE)),
+        out.update({k: v for k, v in (("proyectos_tipo", _tipos(c.get("proyectos_tipo"))),
+                                      ("madurez", plano(g.get("madurez"))),
+                                      ("madurez_nota", plano(g.get("madurez_nota"))),
+                                      ("pedido", plano(g.get("pedido"))),
                                       ("a_quien", _lista(g.get("a_quien"))),
                                       ("siguientes_pasos", _lista(g.get("pasos")))) if v})
     elif tipo == "matriz":
         out["por_fuente"] = _por_fuente(datos, fuentes)
         out["inversion_total"] = _inversion_total(datos)
     elif tipo == "fuentes":
-        out["fuentes"] = [{k: v for k, v in (("nombre", plano(f.get("nombre"), 120)),
-                                             ("corto", plano(f.get("corto"), 40)), ("tipo", plano(f.get("tipo"), 80)),
-                                             ("que_financia", plano(f.get("que_financia"), MAX_DETALLE)),
-                                             ("requisito", plano(f.get("requisito"), MAX_DETALLE))) if v}
-                          for f in c.get("fuentes") or [] if isinstance(f, dict)][:MAX_LISTA]
+        out["fuentes"] = [{k: v for k, v in (("nombre", plano(f.get("nombre"))), ("corto", plano(f.get("corto"))),
+                                             ("tipo", plano(f.get("tipo"))), ("que_financia", plano(f.get("que_financia"))),
+                                             ("requisito", plano(f.get("requisito")))) if v}
+                          for f in c.get("fuentes") or [] if isinstance(f, dict)]
     elif tipo == "ruta":
-        out["fases"] = [plano(f"{f.get('nombre')} ({_anio(f.get('desde'))}–{_anio(f.get('hasta'))})", MAX_CORTO)
-                        for f in c.get("fases") or [] if isinstance(f, dict)][:MAX_LISTA]
-        out["hitos"] = [plano(f"{h.get('fecha')}: {h.get('texto')}", MAX_CORTO)
-                        for h in c.get("hitos") or [] if isinstance(h, dict)][:MAX_LISTA]
+        out["fases"] = [plano(f"{f.get('nombre')} ({_anio(f.get('desde'))}–{_anio(f.get('hasta'))})")
+                        for f in c.get("fases") or [] if isinstance(f, dict)]
+        out["hitos"] = [plano(f"{h.get('fecha')}: {h.get('texto')}") for h in c.get("hitos") or [] if isinstance(h, dict)]
     elif tipo == "pedidos":
-        nombres = {m.get("id"): plano(m.get("nombre"), 80) for m in datos.get("modulos") or [] if isinstance(m, dict)}
-        out["entidades"] = [{k: v for k, v in (("entidad", plano(e.get("entidad"), 120)),
+        nombres = {m.get("id"): plano(m.get("nombre")) for m in datos.get("modulos") or [] if isinstance(m, dict)}
+        out["entidades"] = [{k: v for k, v in (("entidad", plano(e.get("entidad"))),
                                                 ("monto", aproximado(e.get("monto")) if e.get("monto") else ""),
-                                                ("pedido", plano(e.get("pedido"), MAX_DETALLE)),
+                                                ("pedido", plano(e.get("pedido"))),
                                                 ("modulos", [nombres[i] for i in e.get("modulos") or []
                                                              if isinstance(i, str) and nombres.get(i)])) if v}
-                            for e in c.get("entidades") or [] if isinstance(e, dict)][:MAX_LISTA]
+                            for e in c.get("entidades") or [] if isinstance(e, dict)]
     lista = _lista(p.get("lista"))
     if lista:
         out["lista"] = lista
-    nota = plano(p.get("nota"), MAX_DETALLE)
+    nota = plano(p.get("nota"))
     if nota:
         out["nota"] = nota
     leyenda = _leyenda(p.get("leyenda"))
     if leyenda:
         out["leyenda"] = leyenda
-    return _encoger(out)
+    return out
 
 
 def _anio(v: Any) -> str:
@@ -409,9 +357,9 @@ def derivar(datos: dict) -> dict:
     for c in caps:
         pasos = [p for p in c.get("pasos") or [] if isinstance(p, dict)] or [{"id": "inicio", "tipo": "texto",
                                                                              "titulo": c.get("nombre")}]
-        cap: dict[str, Any] = {"id": c["id"], "nombre": plano(c.get("nombre"), 80),
-                               "corto": plano(c.get("corto") or c.get("nombre"), 40)}
-        lema = plano(c.get("lema") or c.get("subtitulo"), MAX_CORTO)
+        cap: dict[str, Any] = {"id": c["id"], "nombre": plano(c.get("nombre")),
+                               "corto": plano(c.get("corto") or c.get("nombre"))}
+        lema = plano(c.get("lema") or c.get("subtitulo"))
         if lema:
             cap["lema"] = lema
         inv = rango_de(c.get("inversion"))

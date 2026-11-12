@@ -3,12 +3,18 @@
 // cola, con plazo, y si hace falta se navega a /presentacion una sola vez.
 //
 // El modo proyector: la ventana /presentacion?pantalla=1 (otra pestaña del panel, a pantalla completa en el proyector) se
-// anuncia por BroadcastChannel con un latido. Mientras haya un proyector vivo, esta pestaña le manda a él las órdenes en
-// vez de abrir la vista aquí (si la vista está abierta aquí también, la sigue), y el proyector devuelve su estado. Todo
-// mensaje del canal se valida: lo manda otra pestaña del mismo origen, pero sigue siendo una entrada.
+// anuncia por BroadcastChannel con un latido y con cada cambio de paso. Mientras haya un proyector vivo, esta pestaña le
+// manda a él las órdenes, y solo a él, en vez de abrir la vista aquí, y el proyector devuelve su estado. Todo mensaje
+// del canal se valida: lo manda otra pestaña del mismo origen, pero sigue siendo una entrada.
+// * El proyector manda: lo que se ve en la sala es lo que vale, y el paso también cambia allá sin pasar por aquí (el
+//   control remoto, el teclado o un clic en esa ventana). Por eso las órdenes (también las relativas, «siguiente» de los
+//   botones o del asistente) las aplica solo él, desde su paso, y la vista de esta pestaña, si está abierta, lo sigue con
+//   órdenes absolutas (`seguir`: su capítulo, su paso y la explicación, si es la que mandó esta pestaña). Antes las
+//   órdenes relativas se repetían en las dos y, en cuanto el paso cambiaba allá, cada una avanzaba desde el suyo y no se
+//   reencontraban nunca. La barra de la vista muestra el estado del proyector (`estadoPresentacion`).
 // * Al abrirse, el proyector se anuncia como recién llegado y la pestaña que tiene la vista abierta le manda su capítulo,
 //   su paso y la explicación que muestra: las dos pantallas arrancan iguales (si no, el proyector empezaría en la
-//   Portada y los botones relativos de esta pestaña moverían cada una desde su paso).
+//   Portada). Mientras tanto la vista de aquí no lo sigue (iría a la Portada y volvería).
 // * El proyector acusa recibo de cada orden en el acto, antes de aplicarla. Una ventana que se cerró sin avisar (el
 //   «adios» de `pagehide` no siempre llega) o que se colgó no acusa: en ESPERA_ACUSE_MS se da por cerrada y la orden se
 //   aplica en esta pestaña, sin esperar el plazo entero de la respuesta.
@@ -34,12 +40,17 @@ const ID_VENTANA = /^[a-z0-9]{8,40}$/;
 // mismas reglas): se proyecta ante una sala. La «@» y los números se buscan en la forma NFKC del texto (la «＠» de
 // ancho completo, los dígitos en superíndice o de ancho completo y los guiones de compatibilidad cuentan como los
 // comunes); TIRADA son los dígitos con lo que los separa al escribir un teléfono o una cédula, y PERIODO y RANGO lo
-// único que puede pasar de 6 dígitos (un periodo y un rango de cifras de la propuesta, de menor a mayor)
+// único que puede pasar de 6 dígitos (un periodo y un rango de cifras de la propuesta, de menor a mayor). Antes se
+// quitan las fechas que existen (FECHA: «15/11/2026», «2026-11-15», de 1900 a 2099): cada una corta la tirada
 const NO_SE_VE = /[\p{Cc}\p{Cf}\p{Cs}\p{Co}\p{Cn}\p{Zl}\p{Zp}\u{34f}\u{115f}\u{1160}\u{17b4}\u{17b5}\u{2800}\u{3164}\u{ffa0}\u{180b}-\u{180f}\u{fe00}-\u{fe0f}\u{e0000}-\u{e0fff}]/u;
 const ACENTOS = /[\p{Mn}\p{Me}]{3,}/u;
 const TIRADA = /\p{Nd}+(?:(?:[.,_\u00b7(]|\) ?|\)? ?[\-\u2010-\u2015\u2212\/] ?\(?| )\p{Nd}+)*/gu;
 const PERIODO = /^((?:19|20)[0-9]{2}) ?[\-\u2010-\u2015\u2212\/] ?((?:19|20)[0-9]{2})$/u;
 const RANGO = /^([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?) ?[\-\u2010-\u2015\u2212] ?([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?)$/u;
+const FECHA = /(?<!\p{Nd})(?:([0-9]{4}) ?([.\-\u2010-\u2015\u2212\/]) ?([0-9]{1,2}) ?\2 ?([0-9]{1,2})|([0-9]{1,2}) ?([.\-\u2010-\u2015\u2212\/]) ?([0-9]{1,2}) ?\6 ?([0-9]{4}))(?!\p{Nd})/gu;
+// Un monto en pesos con su signo y sus puntos de miles («$1.156.350», el costo por habitante del guion): la tirada
+// va justo después de «$» y en grupos de tres (`_MONTO` de la herramienta)
+const MONTO = /^[0-9]{1,3}(?:\.[0-9]{3})+(?:,[0-9]{1,2})?$/u;
 const DIGITOS_MAX = 6;
 
 /** La acción `presentacion` del servidor, normalizada, o null si no tiene la forma estricta: un objeto con solo las
@@ -72,11 +83,21 @@ export function accionPresentacion(a) {
 
 const cifra = (t) => Number(t.replace(/\./g, '').replace(',', '.'));
 
-/** ¿Trae `t` (en NFKC y con los espacios en uno) un número de más de DIGITOS_MAX dígitos que no es un periodo ni un rango
- * de cifras? (`numero_largo` de la herramienta) */
+/** ¿Es la fecha de FECHA un día que existe, de 1900 a 2099? (`_es_fecha` de la herramienta: «31/02/2026» no) */
+function esFecha(m) {
+  const [a, mes, dia] = (m[1] ? [m[1], m[3], m[4]] : [m[8], m[7], m[5]]).map(Number);
+  const f = new Date(Date.UTC(a, mes - 1, dia));
+  return a >= 1900 && a <= 2099 && f.getUTCFullYear() === a && f.getUTCMonth() === mes - 1 && f.getUTCDate() === dia;
+}
+
+/** ¿Trae `t` (en NFKC y con los espacios en uno) un número de más de DIGITOS_MAX dígitos que no es un periodo, un rango
+ * de cifras, una fecha ni un monto en pesos? (`numero_largo` de la herramienta: las fechas que existen se quitan antes y
+ * cortan la tirada) */
 function numeroLargo(t) {
-  for (const [tirada] of t.matchAll(TIRADA)) {
+  t = t.replace(FECHA, (...m) => (esFecha(m) ? ' | ' : m[0]));
+  for (const { 0: tirada, index } of t.matchAll(TIRADA)) {
     if (tirada.match(/\p{Nd}/gu).length <= DIGITOS_MAX) continue;
+    if (/\$ ?$/u.test(t.slice(0, index)) && MONTO.test(tirada)) continue;
     const p = PERIODO.exec(tirada);
     if (p && Number(p[1]) <= Number(p[2])) continue;
     const r = RANGO.exec(tirada);
@@ -108,21 +129,31 @@ export function estadoValido(e) {
 // ───────── La vista de esta pestaña ─────────
 
 const cola = [];
-let control = null;   // {aplicar(lista) → Promise<resultados>, estado() → estado | null, proyector?: true}
+// {aplicar(lista) → Promise<resultados>, estado() → estado | null, proyector?: true, cambio?() (la vista repinta su
+// barra: el estado del proyector cambió)}
+let control = null;
 let cadena = Promise.resolve();
-let enPantalla = null;   // la última explicación que se mandó a la vista de esta pestaña (para pasársela al proyector)
+let enPantalla = null;   // la última explicación que esta pestaña mandó a una pantalla (la de aquí o el proyector)
+let textoLocal = null;   // la que se le mandó a la vista de esta pestaña (`seguir` no se la repite)
 
 const enPresentacion = () => {
   try { return (sinBase(location.pathname).replace(/\/+$/, '') || '/') === '/presentacion'; } catch { return false; }
 };
 
+/** Lo que va a quedar en pantalla con `lista`: la última explicación que trae (o ninguna, si la quita). */
+function anotar(lista, previa) {
+  let t = previa;
+  for (const a of lista) {
+    if (a?.explicacion) t = a.explicacion;
+    else if (a?.op === 'quitar_explicacion') t = null;
+  }
+  return t;
+}
+
 function enOrden(lista) {
   const p = cadena.then(() => {
     if (!control) throw new Error('La presentación se cerró antes de aplicar el cambio');
-    for (const a of lista) {
-      if (a?.explicacion) enPantalla = a.explicacion;
-      else if (a?.op === 'quitar_explicacion') enPantalla = null;
-    }
+    textoLocal = anotar(lista, textoLocal);
     return control.aplicar(lista);
   });
   cadena = p.catch(() => {});
@@ -158,7 +189,7 @@ globalThis.addEventListener?.('vista', (e) => {
 // ───────── El canal con el proyector ─────────
 
 const yo = idVentana();
-const proyectores = new Map();   // id → {visto, estado}
+const proyectores = new Map();   // id → {visto, estado, sincronizando?}
 const esperando = new Map();     // nro → {ok, mal, reloj}
 let nro = 0;
 let latido = 0;
@@ -186,7 +217,8 @@ function anunciar(recien = false) {
 }
 
 /** Un proyector que se acaba de abrir: si esta pestaña tiene la vista abierta, le manda su capítulo, su paso y la
- * explicación que está en pantalla (la vista de aquí la muestra si `explicacion` es true en su estado). */
+ * explicación que está en pantalla (la vista de aquí la muestra si `explicacion` es true en su estado). Hasta que
+ * responda, la vista de aquí no lo sigue ni su estado cuenta: todavía está en la Portada. */
 function sincronizar(id) {
   if (!control || control.proyector) return;
   let e = null;
@@ -194,16 +226,72 @@ function sincronizar(id) {
   if (!e) return;
   const ir = { tipo: 'presentacion', op: 'ir', capitulo: e.capitulo, paso: e.paso };
   const t = e.explicacion && enPantalla ? accionPresentacion({ ...ir, explicacion: enPantalla }) : null;
-  alProyector([t || ir], { para: id }).catch(() => {});
+  const p = proyectores.get(id);
+  if (p) p.sincronizando = true;
+  const fin = () => { if (p) p.sincronizando = false; cambio(); };
+  alProyector([t || ir], { para: id }).then(fin, fin);
+}
+
+/** Lo último que se supo de un proyector (sin perder si se está sincronizando). */
+function verProyector(id, estado) {
+  const p = proyectores.get(id) || {};
+  p.visto = Date.now();
+  p.estado = estado;
+  proyectores.set(id, p);
+}
+
+/** El proyector que manda: el vivo que se vio último, con estado y ya sincronizado; o null. */
+function guia() {
+  if (!proyectorVivo()) return null;
+  let mejor = null;
+  for (const p of proyectores.values()) if (p.estado && !p.sincronizando && (!mejor || p.visto > mejor.visto)) mejor = p;
+  return mejor;
+}
+
+/** Cambió lo que se sabe del proyector: la vista repinta su barra y sigue al proyector. */
+function cambio() {
+  try { control?.cambio?.(); } catch { /* la vista se fue */ }
+  seguir();
+}
+
+// La vista de esta pestaña sigue al proyector: si no está en su capítulo y su paso, va allá (con la explicación, si la
+// que se ve allá es la que mandó esta pestaña); si está, pone o quita la explicación como allá. Siempre con órdenes
+// absolutas: no importa desde dónde parta ni cuántos avisos se pierdan (el latido lo vuelve a decir). Una sola a la vez;
+// si mientras tanto llega otro estado, se vuelve a mirar al terminar. Mientras se le lleva al proyector un paso de aquí
+// (`llevar`), no: lo que él diga hasta confirmarlo es de antes
+let siguiendo = false;
+let otraVez = false;
+async function seguir() {
+  if (!control || control.proyector || llevando) return;
+  if (siguiendo) { otraVez = true; return; }
+  const e = guia()?.estado;
+  let local = null;
+  try { local = estadoValido(control.estado()); } catch { local = null; }
+  if (!e || !local) return;
+  const texto = e.explicacion ? enPantalla : null;   // null: allá no se ve ninguna, o no es de esta pestaña
+  let lista = null;
+  if (local.capitulo !== e.capitulo || local.paso !== e.paso) {
+    lista = [{ tipo: 'presentacion', op: 'ir', capitulo: e.capitulo, paso: e.paso, ...(texto ? { explicacion: texto } : {}) }];
+  } else if (texto && !(local.explicacion && textoLocal === texto)) {
+    lista = [{ tipo: 'presentacion', op: 'explicar', explicacion: texto }];
+  } else if (!e.explicacion && local.explicacion) {
+    lista = [{ tipo: 'presentacion', op: 'quitar_explicacion' }];
+  }
+  if (!lista) return;
+  siguiendo = true;
+  try { await enOrden(lista); } catch { /* la vista se cerró */ }
+  siguiendo = false;
+  if (otraVez) { otraVez = false; seguir(); }
 }
 
 async function alMensaje(m) {
   if (!m || typeof m !== 'object' || Array.isArray(m) || m.canal !== CANAL || m.v !== VERSION) return;
   if (m.tipo === 'proyector' && typeof m.id === 'string' && ID_VENTANA.test(m.id) && m.id !== yo) {
-    proyectores.set(m.id, { visto: Date.now(), estado: m.estado == null ? null : estadoValido(m.estado) });
+    verProyector(m.id, m.estado == null ? null : estadoValido(m.estado));
     if (m.recien === true) sincronizar(m.id);
+    cambio();
   } else if (m.tipo === 'adios' && typeof m.id === 'string') {
-    proyectores.delete(m.id);
+    if (proyectores.delete(m.id)) cambio();
   } else if (m.tipo === 'quien') {
     anunciar();
   } else if (m.tipo === 'ordenes' && control?.proyector && typeof m.de === 'string' && ID_VENTANA.test(m.de)
@@ -242,10 +330,10 @@ async function alMensaje(m) {
     const it = esperando.get(m.nro);
     esperando.delete(m.nro);
     clearTimeout(it.reloj);
-    if (typeof m.id === 'string' && ID_VENTANA.test(m.id) && proyectores.has(m.id)) {
-      proyectores.set(m.id, { visto: Date.now(), estado: estadoValido(m.estado) });
-    }
+    const suyo = typeof m.id === 'string' && ID_VENTANA.test(m.id) && proyectores.has(m.id);
+    if (suyo) verProyector(m.id, estadoValido(m.estado));
     it.ok((Array.isArray(m.resultados) ? m.resultados : []).slice(0, 20).map(resultadoValido));
+    if (suyo) cambio();
   }
 }
 
@@ -285,6 +373,7 @@ function alProyector(lista, { para } = {}) {
     it.reloj = setTimeout(() => {
       esperando.delete(n);
       for (const id of para ? [para] : [...proyectores.keys()]) proyectores.delete(id);
+      try { control?.cambio?.(); } catch { /* la vista se fue */ }   // la barra vuelve a la vista de aquí
       mal(Object.assign(new Error('La pantalla del proyector no respondió'), { sinProyector: true }));
     }, ESPERA_ACUSE_MS);
     esperando.set(n, it);
@@ -306,6 +395,7 @@ export function registrarPresentacion(c) {
     anunciar(true);   // recién abierto: la pestaña con la vista abierta le pasa dónde está
   }
   vaciar();
+  seguir();   // la vista que se abre con un proyector ya vivo va adonde está él
   return () => {
     if (control !== c) return;
     control = null;
@@ -316,8 +406,31 @@ export function registrarPresentacion(c) {
   };
 }
 
-/** La vista avisa cada cambio de estado (para el proyector: el latido sale en el acto, así el asistente lo sabe). */
-export function avisarEstado() { anunciar(); }
+/** La vista avisa cada cambio de estado. El proyector lo anuncia en el acto (así el asistente y la pestaña del chat lo
+ * saben). En la pestaña del chat, un cambio que no vino de seguir al proyector (la persona usó el control, el teclado o
+ * el índice de la presentación de aquí) se le manda a él, con una orden absoluta: si no, la vista de aquí volvería al
+ * paso del proyector con el latido siguiente. */
+export function avisarEstado() {
+  anunciar();
+  llevar();
+}
+
+// Mientras el proyector no confirma lo que se le llevó, lo que diga de antes (un latido o la respuesta a una orden
+// anterior, que pueden cruzarse con esta) no cuenta: si no, la vista de aquí volvería al paso viejo y después otra vez
+// al nuevo, y la persona la vería saltar. Un segundo cambio de la persona en ese tiempo también se le lleva
+let llevando = 0;
+let llevado = null;
+function llevar() {
+  if (!control || control.proyector || siguiendo || !proyectorVivo()) return;
+  const e = llevando ? llevado : guia()?.estado;
+  let local = null;
+  try { local = estadoValido(control.estado()); } catch { local = null; }
+  if (!e || !local || (local.capitulo === e.capitulo && local.paso === e.paso)) return;
+  llevado = { capitulo: local.capitulo, paso: local.paso };
+  llevando++;
+  const fin = () => { llevando--; cambio(); };
+  alProyector([{ tipo: 'presentacion', op: 'ir', ...llevado }]).then(fin, fin);
+}
 
 /** La vista no puede mostrar la presentación (no hay sitio en este servidor): lo que esperaba falla con ese motivo. */
 export function presentacionNoDisponible(motivo) { rechazarCola(motivo || 'La presentación no está disponible'); }
@@ -326,13 +439,12 @@ export const presentacionLista = () => !!control;
 export const accionesEnCola = () => cola.length;
 
 /** Dónde está la presentación ({capitulo, paso, total, nombre, titulo, explicacion}) o null si no hay una abierta: la
- * del proyector si hay uno vivo, si no la de esta pestaña. Nunca lanza: va en el contexto de cada mensaje. */
+ * del proyector si hay uno vivo (la que ve la sala: también la barra de la vista la muestra), si no la de esta pestaña.
+ * Nunca lanza: va en el contexto de cada mensaje. */
 export function estadoPresentacion() {
   try {
-    if (proyectorVivo()) {
-      const vivos = [...proyectores.values()].sort((a, b) => b.visto - a.visto);
-      if (vivos[0]?.estado) return vivos[0].estado;
-    }
+    const p = llevando ? null : guia();   // mientras se le lleva un paso, el que vale es el de aquí
+    if (p) return p.estado;
     return control ? estadoValido(control.estado()) : null;
   } catch {
     return null;
@@ -340,17 +452,17 @@ export function estadoPresentacion() {
 }
 
 /** Aplica `acciones` (las de `accionPresentacion`) y resuelve con un resultado por acción ({op, ok, error?}). Con un
- * proyector vivo van a él (y a la vista de esta pestaña, si está abierta); si no, a la vista, y si no está abierta se
- * navega con `navegar` a /presentacion y se aplican al quedar lista. Un proyector que no acusa recibo (se cerró sin
- * avisar) se da por cerrado y la lista va a esta pestaña, como si no hubiera habido proyector. */
+ * proyector vivo van solo a él, que las aplica desde su paso (la vista de esta pestaña, si está abierta, lo sigue); si
+ * no, a la vista, y si no está abierta se navega con `navegar` a /presentacion y se aplican al quedar lista. Un
+ * proyector que no acusa recibo (se cerró sin avisar) se da por cerrado y la lista va a esta pestaña, como si no hubiera
+ * habido proyector: la vista de aquí estaba en su paso. */
 export function accionesPresentacion(acciones, { navegar, espera = ESPERA_MS } = {}) {
   const lista = (Array.isArray(acciones) ? acciones : acciones ? [acciones] : []).slice(0, 20);
+  enPantalla = anotar(lista, enPantalla);
   if (proyectorVivo()) {
-    const aqui = control ? enOrden(lista) : null;   // la vista de aquí acompaña; lo que vale es lo del proyector
-    aqui?.catch(() => {});
     return alProyector(lista).catch((e) => {
       if (!e?.sinProyector) throw e;
-      return aqui || enLaVista(lista, { navegar, espera });
+      return enLaVista(lista, { navegar, espera });
     });
   }
   return enLaVista(lista, { navegar, espera });
