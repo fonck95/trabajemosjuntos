@@ -383,21 +383,60 @@ def _fuente_telefonos(p: dict) -> str | None:
     return None
 
 
+def ubicacion_unida(orden: list[dict]) -> tuple[dict, dict | None, list[dict]]:
+    """De qué fichas salen la ubicación y la dirección de la ficha unida, como las deja `db._pipeline_fusion` al unir en
+    estrella en ese orden (el destino primero): la ubicación de una ficha pasa en bloque, con su dirección, si su
+    `db.llave_ubicacion` supera la de lo que el destino tiene en ese momento (su ubicación y su dirección, que pudo
+    llegar de otra para llenar el vacío), y la dirección que estaba pasa a alternos; si no pasa, su dirección solo llena
+    el vacío o pasa a alternos. `georreferenciar` vuelve a ubicar la ficha unida con esa dirección y da la ubicación de
+    la ficha de la que salió. Devuelve (la ficha de la ubicación, la de la dirección o None, las fichas cuya dirección
+    pasa a alternos, en el orden en que pasan)."""
+    geo = orden[0]
+    dir_de = geo if _valor(geo, "direccion") is not None else None
+    alternos: list[dict] = []
+    for p in orden[1:]:
+        d = _valor(p, "direccion")
+        actual = _valor(dir_de, "direccion") if dir_de else None
+        pasa = bd.llave_ubicacion(bd._rango_ubicacion(p), d) > bd.llave_ubicacion(bd._rango_ubicacion(geo), actual)
+        if pasa:
+            geo = p
+        if d is None:
+            continue
+        if actual is None or pasa:
+            if actual is not None and actual != d:
+                alternos.append(dir_de)
+            dir_de = p
+        elif d != actual:
+            alternos.append(p)
+    return geo, dir_de, alternos
+
+
 def vista_previa(miembros: Iterable[dict], destino: int, lugares: dict | None = None) -> list[dict]:
     """Cómo quedaría la ficha unida, campo por campo, replicando de forma aproximada `db._pipeline_fusion` con la unión
     en estrella de `orden_union`: queda el valor del destino si lo tiene; si no, el primero que lo tenga en el orden de
     unión. `otros` son los valores distintos de las demás que pasarían a `alternos` (solo en los campos que dejan
-    alternos: el nombre del destino se conserva, la cédula no admite otra y la ubicación pasa en bloque de la ficha
-    mejor ubicada). Los teléfonos se juntan todos. Cada valor lleva su fuente (`procedencia`, o la primera de `fuentes`)
-    y la ficha de la que viene (`de`). Los valores van como texto (los teléfonos unidos con «, ») o null."""
+    alternos: el nombre del destino se conserva y la cédula no admite otra). La ubicación (el barrio o vereda) y la
+    dirección pasan juntas, en bloque, de la ficha mejor ubicada (`ubicacion_unida`): la dirección del destino puede
+    pasar a alternos. Los teléfonos se juntan todos. Cada valor lleva su fuente (`procedencia`, o la primera de
+    `fuentes`) y la ficha de la que viene (`de`). Los valores van como texto (los teléfonos unidos con «, ») o null."""
     lugares = lugares or {}
     orden = orden_union(miembros, destino)
     if not orden:
         return []
+    geo, dir_de, dir_alternos = ubicacion_unida(orden)
     salida = []
     for campo, etiqueta in CAMPOS_VISTA:
         fila: dict = {"campo": campo, "etiqueta": etiqueta, "valor": None, "fuente": None, "de": None, "otros": []}
-        if campo == "telefonos":
+        if campo == "direccion":
+            queda = _texto(_valor(dir_de, campo)) if dir_de else None
+            if queda is not None:
+                fila.update(valor=queda, fuente=_fuente(dir_de, campo), de=dir_de["_id"])
+            ya = {queda}  # la que queda no se repite en alternos
+            for p in dir_alternos:
+                if (t := _texto(_valor(p, campo))) not in ya:
+                    ya.add(t)
+                    fila["otros"].append({"valor": t, "fuente": _fuente(p, campo), "de": p["_id"]})
+        elif campo == "telefonos":
             todos: list[str] = []
             primero = None
             for p in orden:
@@ -408,13 +447,9 @@ def vista_previa(miembros: Iterable[dict], destino: int, lugares: dict | None = 
             if todos:  # el primer número es el principal de `primero`: la fuente es la suya
                 fila.update(valor=", ".join(todos), fuente=_fuente_telefonos(primero), de=primero["_id"])
         elif campo == "lugar":
-            # La ubicación pasa en bloque si la otra está mejor ubicada (`_rango_ubicacion`), como en la unión
-            mejor = orden[0]
-            for p in orden[1:]:
-                if bd._rango_ubicacion(p) > bd._rango_ubicacion(mejor):
-                    mejor = p
-            if _lugar(mejor, lugares):
-                fila.update(valor=_lugar(mejor, lugares), fuente=_fuente(mejor, campo), de=mejor["_id"])
+            # La ubicación pasa en bloque de la mejor ubicada (`ubicacion_unida`), como en la unión
+            if _lugar(geo, lugares):
+                fila.update(valor=_lugar(geo, lugares), fuente=_fuente(geo, campo), de=geo["_id"])
         else:
             vistos: set[str] = set()  # lo que ya quedó o ya pasa a alternos, comparado como la unión
             for p in orden:
@@ -448,8 +483,9 @@ def miembro(p: dict, lugares: dict) -> dict:
             "fecha_nacimiento": p.get("fecha_nacimiento") or None, "fuentes": list(p.get("fuentes") or []),
             "procedencia": prov, "tramites": len(p.get("tramites") or []), "listas": "; ".join(p.get("listas") or []),
             "completitud": p.get("completitud") or 0, "consentimiento": p.get("consentimiento"),
-            # Con él, la vista previa que la interfaz calcula al elegir otra ficha sabe de cuál pasa la ubicación en
-            # bloque (la mejor ubicada), como en la unión
+            # Con él (y la dirección: a igual rango pasa la que la tiene), la vista previa que la interfaz calcula al
+            # elegir otra ficha sabe de cuál pasan en bloque la ubicación y la dirección (`ubicacion_unida`), como en
+            # la unión
             "rango_ubicacion": bd._rango_ubicacion(p),
             # La edad de la vista previa, como la arma `vista_previa`: la unión compara la declarada tal cual (`_valor`,
             # en el mismo texto con que la compara `vista_previa`) y se muestra la declarada llevada a hoy (`_edad`).

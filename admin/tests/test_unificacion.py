@@ -228,9 +228,11 @@ def test_vista_previa():
         ("rosa@ejemplo.test", "cedulas", 2)
     assert vista["correo"]["otros"] == [{"valor": "otra@ejemplo.test", "fuente": "tramites", "de": 3}]
     # El valor del destino gana; los distintos de las otras van a alternos sin repetirse
-    assert (vista["direccion"]["valor"], vista["direccion"]["fuente"]) == ("CALLE 1", "panel")
-    assert vista["direccion"]["otros"] == [{"valor": "CALLE 2", "fuente": "cedulas", "de": 2}]
     assert vista["sexo"]["valor"] == "F" and [o["valor"] for o in vista["sexo"]["otros"]] == ["M"]
+    # Salvo la dirección, que va con la ubicación: la de la mejor ubicada queda y la del destino pasa a alternos
+    direccion = vista["direccion"]
+    assert (direccion["valor"], direccion["fuente"], direccion["de"]) == ("CALLE 2", "cedulas", 2)
+    assert vista["direccion"]["otros"] == [{"valor": "CALLE 1", "fuente": "panel", "de": 1}]
     # Los teléfonos se juntan todos (el destino primero), sin alternos
     assert vista["telefonos"]["valor"] == "3007000101, 3007000102, 3007000103"
     assert (vista["telefonos"]["fuente"], vista["telefonos"]["de"], vista["telefonos"]["otros"]) == ("panel", 1, [])
@@ -263,6 +265,145 @@ def test_vista_previa_compara_la_edad_como_la_union(sesion):
         unida = db.personas.find_one({"_id": d})
         assert [str(a["valor"]) for a in unida.get("alternos") or [] if a["campo"] == "edad"] == alternos
         assert unida["edad"] == ed and modelo.edad_efectiva(unida) == int(muestra)
+
+
+def _lo_que_promete(db, ids, destino) -> dict:
+    """La vista previa con esa ficha conservada (la del servidor si es la de por defecto; si no, la que rehace la
+    interfaz con la misma regla): {campo: fila}."""
+    fichas = un.cargar_fichas(db, ids)
+    return {f["campo"]: f for f in un.vista_previa(fichas.values(), destino, un.nombres_de_lugares(db))}
+
+
+def test_la_ubicacion_pasa_con_su_direccion_y_la_vista_previa_lo_dice(sesion):
+    """La ubicación pasa en bloque de la mejor ubicada y la unión vuelve a ubicar la ficha unida con su dirección: si la
+    dirección no pasaba con ella, una que no se ubica borraba el barrio elegido a mano de la conservada y el punto que
+    había llegado de la otra (la vista previa prometía el barrio de la otra). Con la ficha de la dirección que no se
+    ubica conservada por defecto (tiene la cédula) y elegida a mano; y una conservada sin dirección ni barrio frente a
+    otra con un barrio que no está en el catálogo (sin punto: el mismo rango): la vista previa decía «—» y quedaba ese
+    barrio."""
+    from app.pipeline.importar import georreferenciar
+    db = _db(sesion)
+    lugares = un.nombres_de_lugares(db)
+    central = db.lugares.find_one({"nombre": "CENTRAL"})["_id"]
+    prov = lambda f: {"direccion": {"fuente": f, "ts": "2026-10-01T10:00:00", "uid": 0}}  # noqa: E731
+    casos = (  # (ficha conservada, la otra, ¿se elige conservarla?)
+        ({"direccion": "CALLE 10 # 5-20", "lugar_id": central, "geo_manual": "lugar", "cedula": "90008501",
+          "procedencia": prov("planilla")},
+         {"direccion": "CL 49 # 45-12 BARRIO PUEBLO NUEVO", "procedencia": prov("tramites")}, False),
+        ({"direccion": "CALLE 10 # 5-20", "lugar_id": central, "geo_manual": "lugar", "procedencia": prov("planilla")},
+         {"direccion": "CL 49 # 45-12 BARRIO PUEBLO NUEVO", "cedula": "90008502", "procedencia": prov("tramites")},
+         True),
+        ({"cedula": "90008503"}, {"direccion": "CALLE 99 # 1-1 BARRIO LOS INVENTADOS", "procedencia": prov("tramites")},
+         False),
+    )
+    for i, (de_d, de_o, elegir) in enumerate(casos):
+        nombre = f"CASILDA INVENTADA LUGARES{'ABC'[i]}"
+        d, = insertar_personas(db, [{"nombre": nombre, **de_d}], fuente="planilla")
+        o, = insertar_personas(db, [{"nombre": nombre, **de_o}], fuente="tramites")
+        georreferenciar(db, [d, o])
+        bd.recalcular_completitud(db, [d, o])
+        otra = db.personas.find_one({"_id": o})
+        p = _par(db, o, d)
+        vista = _lo_que_promete(db, [d, o], d)
+        if not elegir:
+            g = _grupos(sesion, persona=d)["grupos"][0]
+            servidor = {f["campo"]: f for f in g["vista_previa"]}
+            assert g["destino"] == d
+            assert {c: servidor[c] for c in ("direccion", "lugar")} == {c: vista[c] for c in ("direccion", "lugar")}
+        # La de la otra queda (con su ubicación) y la dirección de la conservada pasa a alternos
+        assert (vista["direccion"]["valor"], vista["direccion"]["de"]) == (otra["direccion"], o), vista["direccion"]
+        assert vista["lugar"]["valor"] == un._lugar(otra, lugares) is not None, vista["lugar"]
+        r = _lote(sesion, {"pares": [p], "decision": "unir", **({"conservar": d} if elegir else {})})
+        assert (r["unidas"], r["resultados"][0]["conservada"]) == (1, d), r
+        unida = db.personas.find_one({"_id": d})
+        # Lo que dijo la vista previa, y la ubicación de la otra entera (su punto, si tenía)
+        assert unida["direccion"] == vista["direccion"]["valor"]
+        assert un._lugar(unida, lugares) == vista["lugar"]["valor"]
+        assert {k: unida.get(k) for k in ("lat", "lon", "geo_precision", "geo_manual", "lugar_texto")} == \
+            {k: otra.get(k) for k in ("lat", "lon", "geo_precision", "geo_manual", "lugar_texto")}
+        assert [a["valor"] for a in unida.get("alternos") or [] if a["campo"] == "direccion"] == \
+            [x["valor"] for x in vista["direccion"]["otros"]] == ([de_d["direccion"]] if de_d.get("direccion") else [])
+        if de_d.get("direccion"):
+            # La alterna lleva la fuente de la conservada; la procedencia de la dirección es la de la otra (sin ella,
+            # la conservada se quedaba con la fuente de la dirección que pasó a alternos)
+            assert next(a for a in unida["alternos"] if a["campo"] == "direccion")["fuente"] == "planilla"
+        assert unida["procedencia"]["direccion"] == otra["procedencia"]["direccion"] == prov("tramites")["direccion"]
+
+
+def test_la_vista_previa_de_la_ubicacion_es_la_de_la_union(sesion):
+    """La dirección y el barrio que promete la vista previa (`ubicacion_unida`) son los que deja la unión de verdad, con
+    cualquier ficha conservada, en pares y en tríos (la unión en estrella compara cada una con lo que la conservada ya
+    tiene, que puede venir de otra): sin ubicar, una dirección que no se ubica, un barrio elegido a mano, una placa del
+    casco, una vereda, un barrio que no está en el catálogo y un punto marcado a mano, con y sin dirección."""
+    from itertools import product
+    from app.pipeline.importar import georreferenciar
+    db = _db(sesion)
+    lugares = un.nombres_de_lugares(db)
+    central = db.lugares.find_one({"nombre": "CENTRAL"})["_id"]
+    punto = {"lat": 7.0, "lon": -73.9, "geo_precision": "manual", "geo_manual": "punto"}
+    tipos = {
+        "nada": {}, "sin_ubicar": {"direccion": "CALLE 10 # 5-20"},
+        "a_mano": {"direccion": "CALLE 11 # 5-20", "lugar_id": central, "geo_manual": "lugar"},
+        "a_mano_sin_dir": {"lugar_id": central, "geo_manual": "lugar"},
+        "placa": {"direccion": "CL 49 # 45-12 BARRIO PUEBLO NUEVO"}, "vereda": {"direccion": "VEREDA LA CONDOR"},
+        "fuera_del_catalogo": {"direccion": "CALLE 99 # 1-1 BARRIO LOS INVENTADOS"},
+        "punto": punto, "punto_con_dir": {**punto, "direccion": "CALLE 12 # 5-20"},
+    }
+    combinaciones = [c for c in product(tipos, repeat=2)]
+    combinaciones += [c for c in product(("nada", "a_mano", "placa", "fuera_del_catalogo"), repeat=3)]
+    distintas = []
+    for n, combinacion in enumerate(combinaciones):
+        nombre = f"CASILDA INVENTADA UBICACION {n}"
+        ids = insertar_personas(db, [{"nombre": nombre, **tipos[t]} for t in combinacion], fuente="planilla")
+        georreferenciar(db, ids)
+        bd.recalcular_completitud(db, ids)
+        d = ids[0]
+        pares = [_par(db, x, d) for x in ids[1:]]
+        vista = _lo_que_promete(db, ids, d)
+        assert _lote(sesion, {"pares": pares, "decision": "unir", "conservar": d})["unidas"] == len(ids) - 1
+        unida = db.personas.find_one({"_id": d})
+        queda = {"direccion": unida.get("direccion") or None, "lugar": un._lugar(unida, lugares),
+                 "alternos": [a["valor"] for a in unida.get("alternos") or [] if a["campo"] == "direccion"]}
+        promete = {"direccion": vista["direccion"]["valor"], "lugar": vista["lugar"]["valor"],
+                   "alternos": [x["valor"] for x in vista["direccion"]["otros"]]}
+        if queda != promete:
+            distintas.append((combinacion, promete, queda))
+    assert not distintas, distintas[:5]
+
+
+def test_la_union_lleva_la_edad_declarada_con_su_referencia(sesion):
+    """La conservada tiene fecha de nacimiento y no edad; la otra declaró 50 años hace diez (hoy 60). La vista previa
+    dice «60» y la unión deja esa edad con su referencia: antes `derivar` la tomaba como declarada hoy (su `nac_base` no
+    la nombraba) y quedaban 50, y una edad de una ficha sin `edad_ref` también se tomaba como de hoy (la vista previa la
+    cuenta desde que se creó la ficha). Con la de la fecha conservada por defecto y elegida a mano."""
+    from datetime import timedelta
+    from app import modelo
+    db = _db(sesion)
+    hace10 = modelo._restar_anios(modelo.hoy_local() - timedelta(days=10), 10).isoformat()
+    casos = (  # (la conservada, la otra, ¿se elige conservarla?)
+        ({"fecha_nacimiento": "1966-12-31", "cedula": "90008601"}, {"edad": 50, "edad_ref": hace10}, False),
+        ({"fecha_nacimiento": "1966-12-31"}, {"edad": 50, "edad_ref": hace10, "cedula": "90008602"}, True),
+        ({"fecha_nacimiento": "1966-12-31", "cedula": "90008603"},
+         {"edad": 50, "creado_en": f"{hace10}T15:00:00+00:00"}, False),
+    )
+    for i, (de_d, de_o, elegir) in enumerate(casos):
+        nombre = f"FILOMENA INVENTADA EDADES{'ABC'[i]}"
+        d, o = insertar_personas(db, [{"nombre": nombre, **de_d}, {"nombre": nombre, **de_o}], fuente="planilla")
+        bd.derivar(db, [d, o])
+        if "edad_ref" not in de_o:  # una ficha vieja: su edad sin referencia (cuenta desde que se creó)
+            db.personas.update_one({"_id": o}, {"$set": {"edad_ref": None, "creado_en": de_o["creado_en"]}})
+        assert db.personas.find_one({"_id": d})["nac_base"]["edad"] is None
+        edad = _lo_que_promete(db, [d, o], d)["edad"]
+        assert (edad["valor"], edad["de"]) == ("60", o), edad
+        p = _par(db, o, d)
+        r = _lote(sesion, {"pares": [p], "decision": "unir", **({"conservar": d} if elegir else {})})
+        assert (r["unidas"], r["resultados"][0]["conservada"]) == (1, d), r
+        unida = db.personas.find_one({"_id": d})
+        assert (unida["edad"], unida["edad_ref"], unida["fecha_nacimiento"]) == (50, hace10, "1966-12-31"), unida
+        assert str(un._edad(unida)) == edad["valor"] and un.miembro(unida, {})["edad_declarada_hoy"] == 60
+        # La fecha de nacimiento sigue mandando en la edad de la ficha; la declarada queda como se declaró
+        assert modelo.edad_efectiva(unida) == modelo.edad_efectiva({"fecha_nacimiento": "1966-12-31"})
+        assert unida["nac_base"] == {"edad": 50, "fecha": "1966-12-31"} and unida["nac_exacta"] is True
 
 
 def test_miembros_traen_la_fuente_de_sus_telefonos_y_de_su_barrio(sesion):

@@ -56,7 +56,11 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
   directa, o más de 6 fichas) o **bloqueado** (dos cédulas distintas o un par que una persona ya marcó como distinto,
   aunque una de las dos se haya unido después). El mismo par en los dos órdenes (el de la importación y el reporte de alguien del equipo) se
   evalúa junto: cuentan los motivos y las notas de los dos. La ficha que se conserva es la que tiene cédula (si no, la
-  más completa) y la vista previa muestra qué valor queda en cada campo y cuáles pasan a alternos. Al resolver en lote,
+  más completa) y la vista previa muestra qué valor queda en cada campo y cuáles pasan a alternos. La ubicación pasa
+  entera, con su dirección, de la ficha mejor ubicada (punto marcado a mano, placa del casco, barrio elegido a mano,
+  centro del lugar; a igual rango, la que tiene dirección): la dirección de la conservada puede pasar a alternos, porque
+  la ficha unida se vuelve a ubicar con la dirección que queda. La edad declarada llega con la fecha en que se declaró.
+  Al resolver en lote,
   cada grupo se vuelve a validar entero antes de tocarlo (pares todavía pendientes, una sola cédula, ningún rechazo
   anterior, las fichas que quedan conectadas sin las excluidas), las fichas se unen en estrella en la que se conserva,
   las marcadas como «no es la misma» quedan como personas distintas, y la ubicación se recalcula una sola vez al final.

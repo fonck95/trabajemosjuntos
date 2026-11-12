@@ -12,12 +12,14 @@ css/unificacion.css; las insignias del directorio y de la ficha).
   rótulos fijos, la barra fija abajo y blancos de 44 px), el modo oscuro y el contraste de las insignias en los dos
   temas; y, con la API real, las insignias de la ficha, el enlace «revisar» y las del directorio. También lo que la
   revisión encontró: el botón masivo respeta lo marcado en las tarjetas y el filtro de una ficha, «Siguiente» no se salta
-  grupos tras resolver, la vista previa estimada deja el lugar de la mejor ubicada, un enlace viejo o una falla dejan
+  grupos tras resolver ni mientras se resuelve uno (los botones de página quedan quietos hasta la respuesta), la vista
+  previa estimada deja el lugar de la mejor ubicada, un enlace viejo o una falla dejan
   salida, los atajos no corren fuera de la vista, «Nuevo lugar» pregunta antes de perder lo escrito y la barra de
   selección no queda bajo la franja «Llamada sin registrar». Sin violaciones de la CSP ni errores de consola.
 * En Chromium, con la unión de verdad (otro panel, con su propia base y sin `route.fulfill` para los grupos), lo que la
   segunda verificación reprodujo así: la vista previa estimada al conservar otra ficha promete lo que la unión deja en
-  la base (la edad declarada en otro año, una dirección con otras mayúsculas), los atajos no corren con el asistente
+  la base (la edad declarada en otro año, una dirección con otras mayúsculas, la ubicación que pasa en bloque con su
+  dirección y la edad declarada que llega a una ficha con fecha de nacimiento), los atajos no corren con el asistente
   abierto ni cuando él recarga la vista o lleva a ella, y la paginación tras resolver no dice «1 de 1» con «Siguiente».
 
 Las capturas quedan en CAPTURAS_UNIFICACION si se define (para mirarlas a mano). Se salta si no hay Node con
@@ -231,7 +233,8 @@ def _sembrar_reales(db) -> dict:
     estimada, cada uno con la ficha A de la base con cédula (la que se conserva por defecto) y la B de trámites:
     40 años declarados hace diez días frente a 40 declarados diez años antes (hoy 40 y 50), 40 declarados seis años antes
     frente a 46 de hoy (hoy los dos 46) y la misma dirección con otras mayúsculas. Esos tres no tienen ninguna señal
-    fuerte: no son «muy probables» y no cambian la cuenta de los 26."""
+    fuerte: no son «muy probables» y no cambian la cuenta de los 26. Y dos más de la tercera verificación (la ubicación
+    con su dirección y la edad con su referencia), con `tambien`: otra fila de la celda «Quedaría» que se mira."""
     from app import modelo
     ids = iter(range(910001, 911000))
     coinc = []
@@ -259,6 +262,24 @@ def _sembrar_reales(db) -> dict:
         a, = insertar_personas(db, [{"nombre": nombre, "cedula": str(1095000100 + i), **de_a}], fuente="cedulas")
         b, = insertar_personas(db, [{"nombre": nombre, **de_b}], fuente="tramites")
         vista.append({"clave": clave, "fila": fila, "a": a, "b": b, "par": par(b, a, 0.9), "de_b": de_b})
+    # Los de la tercera verificación: la A con una placa del casco (la mejor ubicada) y la B con el barrio elegido a
+    # mano y una dirección que no se ubica; la A con 50 años declarados hace diez (hoy 60) y la B con fecha de
+    # nacimiento y sin edad. Tampoco son «muy probables»
+    from app import db as bd
+    from app.pipeline.importar import georreferenciar
+    central = db.lugares.find_one({"nombre": "CENTRAL"})["_id"]
+    for i, (clave, fila, tambien, de_a, de_b) in enumerate((
+        ("lugar_con_su_direccion", "lugar", "direccion", {"direccion": "CL 49 # 45-12 BARRIO PUEBLO NUEVO"},
+         {"direccion": "CALLE 10 # 5-20", "lugar_id": central, "geo_manual": "lugar"}),
+        ("edad_con_fecha", "edad", None, {"edad": 50, "edad_ref": antes(10)}, {"fecha_nacimiento": "1966-12-31"}),
+    )):
+        nombre = f"CASILDA {'AB'[i]} INVENTADA VISTA PREVIA"
+        a, = insertar_personas(db, [{"nombre": nombre, "cedula": str(1095000200 + i), **de_a}], fuente="cedulas")
+        b, = insertar_personas(db, [{"nombre": nombre, **de_b}], fuente="tramites")
+        georreferenciar(db, [a, b])
+        bd.recalcular_completitud(db, [a, b])
+        vista.append({"clave": clave, "fila": fila, "tambien": tambien, "a": a, "b": b, "par": par(b, a, 0.9),
+                      "de_a": de_a, "de_b": {k: v for k, v in de_b.items() if k != "lugar_id"}})
     db.coincidencias.insert_many(coinc)
     return {"vista": vista}
 
@@ -417,6 +438,15 @@ def test_la_paginacion_tras_resolver_no_se_salta_grupos(resultados):
 
 
 @requiere_navegador
+def test_la_paginacion_queda_quieta_mientras_se_resuelve(resultados):
+    """«Siguiente» y «Anterior» se desactivan mientras se envía un grupo: el servidor ya puede haberlo unido (la
+    respuesta espera a ubicar los destinos y a la auditoría) y armar la página siguiente con la lista corrida, así que
+    el grupo que pasa a esta página no se veía nunca. Con la respuesta vuelven, y «Siguiente» completa esta misma
+    página."""
+    _revisar(resultados, "paginacion-en-curso")
+
+
+@requiere_navegador
 def test_la_vista_previa_estimada_sigue_la_mejor_ubicacion(resultados):
     _revisar(resultados, "lugar")
 
@@ -469,6 +499,8 @@ def test_la_vista_previa_estimada_promete_lo_que_la_union_deja(reales):
     casos, db, datos = reales
     caso = _revisar(casos, "edad")
     for x in datos["vista"]:
+        if x["clave"] not in VISTAS:
+            continue
         servidor, estimada, alternos = VISTAS[x["clave"]]
         c = caso["datos"]["casos"][x["clave"]]
         assert {k: c["servidor"][k] for k in servidor} == servidor, (x["clave"], c["servidor"])
@@ -483,6 +515,49 @@ def test_la_vista_previa_estimada_promete_lo_que_la_union_deja(reales):
             assert f"{modelo.edad_efectiva(unida)} años" == c["estimada"]["valor"]
         else:
             assert unida["direccion"] == c["estimada"]["valor"]
+
+
+# Los pares de la tercera verificación: lo que dice la celda «Quedaría» es igual con la A conservada (la vista previa
+# del servidor) y con la B (la del navegador), y es lo que la unión deja en la B
+VISTAS_UNION = {
+    "lugar_con_su_direccion": {
+        "lugar": {"valor": "Pueblo Nuevo", "fuente": "cedulas", "de": "A", "pasan": None},
+        "direccion": {"valor": "CL 49 # 45-12 BARRIO PUEBLO NUEVO", "fuente": "cedulas", "de": "A",
+                      "pasan": "CALLE 10 # 5-20 (Trámites, ficha B)"}},
+    "edad_con_fecha": {"edad": {"valor": "60 años", "fuente": "cedulas", "de": "A", "pasan": None}},
+}
+
+
+@requiere_navegador
+def test_la_vista_previa_estimada_promete_la_ubicacion_y_la_edad_que_deja_la_union(reales):
+    """Al conservar la B: (1) la A está mejor ubicada (una placa del casco) y la B tiene el barrio elegido a mano y una
+    dirección que no se ubica. La ubicación de la A pasa en bloque con su dirección (la de la B, a alternos): antes la
+    vista previa prometía el barrio de la A con la dirección de la B, y la unión volvía a ubicar esa dirección y dejaba
+    la ficha sin barrio ni punto. (2) La B tiene fecha de nacimiento y no edad; la A declaró 50 años hace diez: la
+    vista previa dice 60 y la unión deja esa edad con su referencia (antes, como declarada hoy: 50)."""
+    from app import unificacion as un
+    casos, db, datos = reales
+    caso = _revisar(casos, "edad")
+    lugares = un.nombres_de_lugares(db)
+    nuevos = [x for x in datos["vista"] if x["clave"] in VISTAS_UNION]
+    assert len(nuevos) == len(VISTAS_UNION)
+    for x in nuevos:
+        c = caso["datos"]["casos"][x["clave"]]
+        for fila, espera in VISTAS_UNION[x["clave"]].items():
+            for cual in ("servidor", "estimada"):
+                celda = c[cual] if fila == x["fila"] else c[f"{cual}_tambien"]
+                assert {k: celda[k] for k in espera} == espera, (x["clave"], fila, cual, celda)
+        assert c["post"] == {"grupos": [{"pares": [x["par"]], "decision": "unir", "conservar": x["b"]}]}
+        unida = db.personas.find_one({"_id": x["b"]})
+        if x["fila"] == "lugar":
+            assert unida["direccion"] == x["de_a"]["direccion"]
+            assert un._lugar(unida, lugares).title() == VISTAS_UNION[x["clave"]]["lugar"]["valor"]
+            assert (unida["geo_precision"], unida["geo_manual"]) == ("direccion", False) and unida["lat"] is not None
+            alternos = [a["valor"] for a in unida.get("alternos") or [] if a["campo"] == "direccion"]
+            assert alternos == [x["de_b"]["direccion"]]
+        else:
+            assert (unida["edad"], unida["edad_ref"]) == (x["de_a"]["edad"], x["de_a"]["edad_ref"])
+            assert f"{un._edad(unida)} años" == VISTAS_UNION[x["clave"]]["edad"]["valor"]
 
 
 @requiere_navegador
@@ -528,15 +603,32 @@ const ETIQUETAS = { nombre: 'Nombre', cedula: 'Cédula', telefonos: 'Teléfonos'
 function vistaPrevia(miembros, destino) {
   const orden = [miembros.find((m) => m.id === destino), ...miembros.filter((m) => m.id !== destino)];
   const fuente = (m, c) => m.procedencia[c] || m.fuentes[0];
+  // La ubicación pasa en bloque, con su dirección, de la mejor ubicada (`unificacion.ubicacion_unida`: el rango y, a igual
+  // rango, tener dirección, frente a lo que la conservada ya tiene); la dirección que estaba pasa a alternos
+  const llave = (m, dir) => 2 * (m.rango_ubicacion ?? 0) + (dir ? 1 : 0);
+  let geo = orden[0];
+  let dir = orden[0].direccion ? orden[0] : null;
+  const pasan = [];
+  for (const m of orden.slice(1)) {
+    const pasa = llave(m, m.direccion) > llave(geo, dir?.direccion);
+    if (pasa) geo = m;
+    if (!m.direccion) continue;
+    if (!dir || pasa) { if (dir && dir.direccion !== m.direccion) pasan.push(dir); dir = m; } else if (m.direccion !== dir.direccion) pasan.push(m);
+  }
   return Object.keys(ETIQUETAS).map((campo) => {
     if (campo === 'telefonos') {
       const nums = [...new Set(orden.flatMap((m) => m.telefonos))];
       return { campo, etiqueta: ETIQUETAS[campo], valor: nums.length ? nums.join(', ') : null, fuente: null, de: destino, otros: [] };
     }
-    // La ubicación pasa en bloque de la mejor ubicada (`rango_ubicacion`; con empate, la primera en el orden)
     if (campo === 'lugar') {
-      const mejor = orden.reduce((a, m) => ((m.rango_ubicacion ?? 0) > (a.rango_ubicacion ?? 0) ? m : a));
-      return mejor.lugar ? { campo, etiqueta: ETIQUETAS[campo], valor: mejor.lugar, fuente: fuente(mejor, campo), de: mejor.id, otros: [] }
+      return geo.lugar ? { campo, etiqueta: ETIQUETAS[campo], valor: geo.lugar, fuente: fuente(geo, campo), de: geo.id, otros: [] }
+        : { campo, etiqueta: ETIQUETAS[campo], valor: null, fuente: null, de: null, otros: [] };
+    }
+    if (campo === 'direccion') {
+      const vistos = new Set([dir?.direccion]);
+      const otros = [];
+      for (const m of pasan) if (!vistos.has(m.direccion)) { vistos.add(m.direccion); otros.push({ valor: m.direccion, fuente: fuente(m, campo), de: m.id }); }
+      return dir ? { campo, etiqueta: ETIQUETAS[campo], valor: dir.direccion, fuente: fuente(dir, campo), de: dir.id, otros }
         : { campo, etiqueta: ETIQUETAS[campo], valor: null, fuente: null, de: null, otros: [] };
     }
     const con = orden.filter((m) => m[campo] != null && m[campo] !== '');
@@ -589,8 +681,9 @@ function muchosAlta(n) {
 const ORDEN_NIVEL = { alta: 0, media: 1, baja: 2, bloqueada: 3 };
 const MOTIVOS = ['cruce_cedula', 'nombre_telefono', 'homonimo', 'variante', 'reporte', 'alta_simultanea'];
 async function servirGrupos(ctx, grupos, { fallar = {}, demora = 0 } = {}) {
-  // `fallarGet`: cuántas lecturas siguientes contestan 500 (la red o el servidor caídos)
-  const reg = { grupos: grupos.slice(), gets: [], posts: [], resueltos: new Set(), fallarGet: 0 };
+  // `fallarGet`: cuántas lecturas siguientes contestan 500 (la red o el servidor caídos). `retener`: una promesa que la
+  // respuesta del lote espera después de resolver (el servidor ya unió y la respuesta todavía no llega)
+  const reg = { grupos: grupos.slice(), gets: [], posts: [], resueltos: new Set(), fallarGet: 0, retener: null };
   const json = (d, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify(d) });
   await ctx.route((u) => u.pathname === pref + '/api/coincidencias/grupos' || u.pathname === pref + '/api/coincidencias/lote', async (route) => {
     const req = route.request();
@@ -633,6 +726,7 @@ async function servirGrupos(ctx, grupos, { fallar = {}, demora = 0 } = {}) {
           : { ok: true, decision: 'separar', conservada: null, unidas: 0, separadas: g.pares.length };
       });
       const ok = resultados.filter((r) => r.ok);
+      if (reg.retener) await reg.retener;
       return await route.fulfill(json({ resultados, unidas: ok.reduce((a, r) => a + r.unidas, 0),
         separadas: ok.reduce((a, r) => a + r.separadas, 0), errores: resultados.length - ok.length }));
     } catch { /* la página se cerró */ }
@@ -1285,6 +1379,57 @@ async function cPaginacion(nav, caso) {
   await ctx.close();
 }
 
+// ── paginacion-en-curso: mientras se resuelve un grupo, «Siguiente» y «Anterior» quedan quietos ──
+// El servidor ya unió y la respuesta no llegó: la lista que arma ya corrió hacia atrás los grupos que seguían, y
+// «Siguiente» pedía la página de después (el primero de ellos, que cae en esta, no se veía nunca)
+async function cPaginacionEnCurso(nav, caso) {
+  const { ctx, page, v, d } = await abrir(nav, caso);
+  const reg = await servirGrupos(ctx, muchosAlta(30));
+  await abrirCoincidencias(page);
+  const botones = () => page.evaluate(() => ({ texto: document.querySelector('.unificacion [data-pagina-texto]')?.textContent ?? null,
+    anterior: document.querySelector('.unificacion .paginacion [data-pagina]:not([data-siguiente])')?.disabled ?? null,
+    siguiente: document.querySelector('.unificacion [data-siguiente]')?.disabled ?? null }));
+  // «Es la misma persona» en un grupo; la respuesta se retiene hasta mirar los botones
+  const resolverRetenido = async (clave) => {
+    let soltar;
+    reg.retener = new Promise((ok) => { soltar = ok; });
+    const enviado = page.waitForRequest((r) => new URL(r.url()).pathname === pref + '/api/coincidencias/lote', espera);
+    await page.click(`.grupo-coinc[data-clave="${clave}"] [data-unir]`);
+    await enviado;
+    await page.waitForSelector(`.grupo-coinc[data-clave="${clave}"].enviando`, espera);
+    const enCurso = await botones();
+    soltar();
+    reg.retener = null;
+    await page.waitForFunction((k) => !document.querySelector(`.grupo-coinc[data-clave="${k}"]`), clave, espera);
+    return { enCurso, tras: await botones() };
+  };
+  const vistos = new Set(await tarjetas(page));
+  d.antes = await botones();
+  v.antes = vistos.size === 25 && d.antes.texto === 'Página 1 de 2' && d.antes.siguiente === false && d.antes.anterior === true;
+  // El último de la primera página, justo encima de «Siguiente»
+  const p1 = await resolverRetenido('7024');
+  d.p1 = p1;
+  v.siguiente_quieto_en_curso = p1.enCurso.siguiente === true && p1.enCurso.anterior === true;
+  v.siguiente_vuelve_con_la_respuesta = p1.tras.siguiente === false && p1.tras.texto === 'Página 1 de 2';
+  // Con la respuesta, «Siguiente» completa esta página con el que seguía, y luego lleva a la 2 sin saltarse ninguno
+  await page.click('.unificacion [data-siguiente]');
+  await page.waitForSelector('.grupo-coinc[data-clave="7025"]', espera);
+  v.completa_la_misma = reg.gets.at(-1).pagina === '1';
+  for (const k of await tarjetas(page)) vistos.add(k);
+  await page.click('.unificacion [data-siguiente]');
+  await page.waitForFunction(() => document.querySelector('.unificacion [data-pagina-texto]')?.textContent === 'Página 2 de 2', null, espera);
+  const p2 = await tarjetas(page);
+  for (const k of p2) vistos.add(k);
+  d.p2 = p2;
+  v.ninguno_saltado = p2[0] === '7026' && vistos.size === 30;
+  // En la segunda, «Anterior» también queda quieto mientras se resuelve uno
+  const p2r = await resolverRetenido(p2[0]);
+  d.p2r = p2r;
+  v.anterior_quieto_en_curso = p2r.enCurso.anterior === true && p2r.enCurso.siguiente === true;
+  v.anterior_vuelve_con_la_respuesta = p2r.tras.anterior === false;
+  await ctx.close();
+}
+
 // ── lugar: la vista previa estimada deja el barrio de la ficha mejor ubicada, como la unión ──
 async function cLugar(nav, caso) {
   const { ctx, page, v, d } = await abrir(nav, caso);
@@ -1566,13 +1711,17 @@ async function cEdad(nav, caso) {
     await ir(page, `/calidad?p=coincidencias&persona=${x.a}`);
     await page.waitForSelector('.unificacion .grupo-coinc', espera);
     const servidor = await celda(x.fila);
+    // `tambien`: otra fila del mismo par (la dirección, que pasa con la ubicación)
+    const servidorTambien = x.tambien ? await celda(x.tambien) : null;
     await page.check(`.grupo-coinc [data-conservar][value="${x.b}"]`);
     await page.waitForFunction(() => document.querySelector('.grupo-coinc thead .quedaria')?.textContent.includes('estimado con su elección'), null, espera);
     const estimada = await celda(x.fila);
+    const estimadaTambien = x.tambien ? await celda(x.tambien) : null;
     const respuesta = page.waitForResponse((r) => new URL(r.url()).pathname === pref + '/api/coincidencias/lote', espera);
     await page.click('.grupo-coinc [data-unir]');
     const r = await respuesta;
-    d.casos[x.clave] = { servidor, estimada, post: r.request().postDataJSON(), lote: await r.json() };
+    d.casos[x.clave] = { servidor, estimada, servidor_tambien: servidorTambien, estimada_tambien: estimadaTambien,
+      post: r.request().postDataJSON(), lote: await r.json() };
     v[`${x.clave}_servidor`] = servidor.cabeza.startsWith('Quedaría Se conserva la ficha A') && !servidor.cabeza.includes('estimado');
     v[`${x.clave}_estimada`] = estimada.cabeza.startsWith('Quedaría Se conserva la ficha B · estimado con su elección');
     v[`${x.clave}_unida`] = d.casos[x.clave].lote.unidas === 1;
@@ -1604,6 +1753,7 @@ async function cEdad(nav, caso) {
     await correr('marcas', (c) => cMarcas(nav, c));
     await correr('persona', (c) => cPersona(nav, c));
     await correr('paginacion', (c) => cPaginacion(nav, c));
+    await correr('paginacion-en-curso', (c) => cPaginacionEnCurso(nav, c));
     await correr('lugar', (c) => cLugar(nav, c));
     await correr('url', (c) => cUrl(nav, c));
     await correr('atajos-fuera', (c) => cAtajosFuera(nav, c));

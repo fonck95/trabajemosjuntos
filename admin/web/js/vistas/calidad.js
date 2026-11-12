@@ -90,17 +90,43 @@ function ordenUnion(ms, destino) {
   return d ? [d, ...resto] : resto;
 }
 
-/** El barrio o vereda que quedaría. La unión no lo trata como un campo más: la ubicación pasa en bloque desde la ficha
- * mejor ubicada (`db._rango_ubicacion`, que el servidor manda como `rango_ubicacion`: punto marcado a mano, dirección,
- * lugar elegido a mano, centro del lugar) y, con empate, queda la primera en el orden de unión. Sin el rango de alguna
- * ficha solo se promete el lugar si todas dicen el mismo; si no, `incierto` (la celda no nombra ningún barrio). */
+/** De qué fichas salen la ubicación y la dirección de la ficha unida (`unificacion.ubicacion_unida`), o null si alguna
+ * no trae su rango. La unión no las trata como campos sueltos: en el orden de unión, la ubicación de una ficha pasa en
+ * bloque, con su dirección, si su llave (`db.llave_ubicacion`: el rango que el servidor manda como `rango_ubicacion`
+ * —punto marcado a mano, dirección, lugar elegido a mano, centro del lugar— y, a igual rango, tener dirección) supera la
+ * de lo que la conservada tiene en ese momento; la dirección que estaba pasa a alternos. Si no pasa, su dirección solo
+ * llena el vacío o pasa a alternos. `geo`: la ficha de la ubicación; `dir`: la de la dirección (o null); `pasan`: las
+ * fichas cuya dirección pasa a alternos, en orden. */
+function ubicacionUnida(orden) {
+  if (!orden.length || !orden.every((m) => Number.isFinite(m.rango_ubicacion))) return null;
+  const llave = (m, direccion) => 2 * m.rango_ubicacion + (direccion == null ? 0 : 1);
+  let geo = orden[0];
+  let dir = valorUnion(geo, 'direccion') == null ? null : geo;
+  const pasan = [];
+  for (const m of orden.slice(1)) {
+    const d = valorUnion(m, 'direccion');
+    const actual = dir ? valorUnion(dir, 'direccion') : null;
+    const pasa = llave(m, d) > llave(geo, actual);
+    if (pasa) geo = m;
+    if (d == null) continue;
+    if (actual == null || pasa) {
+      if (actual != null && actual !== d) pasan.push(dir);
+      dir = m;
+    } else if (d !== actual) pasan.push(m);
+  }
+  return { geo, dir, pasan };
+}
+
+/** El barrio o vereda que quedaría: el de la ficha de la que pasa la ubicación (`ubicacionUnida`; la unión vuelve a
+ * ubicar la ficha unida con la dirección que pasó con ella). Sin el rango de alguna ficha solo se promete el lugar si
+ * todas dicen el mismo; si no, `incierto` (la celda no nombra ningún barrio). */
 function lugarQuedaria(orden) {
   const nada = { campo: 'lugar', valor: null, fuente: null, de: null, otros: [] };
   if (!orden.length) return nada;
-  if (orden.every((m) => Number.isFinite(m.rango_ubicacion))) {
-    const mejor = orden.reduce((a, m) => (m.rango_ubicacion > a.rango_ubicacion ? m : a));
-    return vacio(mejor.lugar) ? nada
-      : { ...nada, valor: String(mejor.lugar), fuente: fuenteDato(mejor, 'lugar'), de: mejor.id };
+  const u = ubicacionUnida(orden);
+  if (u) {
+    return vacio(u.geo.lugar) ? nada
+      : { ...nada, valor: String(u.geo.lugar), fuente: fuenteDato(u.geo, 'lugar'), de: u.geo.id };
   }
   // Todas con el mismo lugar: ese queda, venga de la ficha que venga (por eso sin fuente ni ficha de origen)
   if (new Set(orden.map((m) => (vacio(m.lugar) ? '' : comparable(m.lugar)))).size === 1) {
@@ -126,13 +152,30 @@ const valorQueda = (m, campo) => (campo === 'edad' && m.edad_declarada_hoy != nu
 /** Lo que quedaría en la ficha unida, campo por campo, con la elección hecha en la pantalla (otra ficha conservada o
  * fichas excluidas): una copia de la `vista_previa` del servidor, con su mismo criterio. Queda el valor de la
  * conservada si lo tiene y si no el primero en el orden de unión; lo distinto (comparado como la unión, `valorUnion`)
- * pasa a alternos (en los campos que los llevan); los teléfonos se juntan todos y el lugar sale de la ficha mejor
- * ubicada (`lugarQuedaria`). La tarjeta muestra esta o la del servidor según la elección: no pueden contradecirse. */
+ * pasa a alternos (en los campos que los llevan); los teléfonos se juntan todos y el lugar y la dirección salen juntos
+ * de la ficha mejor ubicada (`ubicacionUnida`). La tarjeta muestra esta o la del servidor según la elección: no pueden
+ * contradecirse. */
 function vistaPreviaLocal(ms, destino) {
   const orden = ordenUnion(ms, destino);
   const out = {};
+  const ubic = ubicacionUnida(orden);
   for (const campo of CAMPOS_VISTA) {
     if (campo === 'lugar') { out[campo] = lugarQuedaria(orden); continue; }
+    if (campo === 'direccion' && ubic) {
+      // La dirección va con la ubicación: la de la conservada puede pasar a alternos
+      const queda = ubic.dir ? valorUnion(ubic.dir, campo) : null;
+      const vistos = new Set([queda]);
+      const otros = [];
+      for (const m of ubic.pasan) {
+        const k = valorUnion(m, campo);
+        if (vistos.has(k)) continue;
+        vistos.add(k);
+        otros.push({ valor: k, fuente: fuenteDato(m, campo), de: m.id });
+      }
+      out[campo] = queda == null ? { campo, valor: null, fuente: null, de: null, otros }
+        : { campo, valor: queda, fuente: fuenteDato(ubic.dir, campo), de: ubic.dir.id, otros };
+      continue;
+    }
     if (campo === 'telefonos') {
       const numeros = [...new Set(orden.flatMap((m) => m.telefonos || []))];
       const de = orden.find((m) => (m.telefonos || []).length);
@@ -549,6 +592,7 @@ export async function vistaCalidad(el, { q }) {
 
     // ── Selección ──
     function pintarBarra() {
+      pintarPaginas(); // va y viene con `ocupado`, como los botones de la barra
       const barra = $('#barra-sel', c);
       if (!barra) return;
       const v = vivos();
@@ -582,14 +626,23 @@ export async function vistaCalidad(el, { q }) {
       // La paginación con la cuenta nueva. «Siguiente» sigue mientras quede algo después de lo que se ve, y el texto dice
       // lo mismo: con 26 grupos, resolver uno de la primera página deja 25 (una página por la cuenta), pero el que
       // seguía aún no se mostró. Queda «Página 1 de 2» con «Siguiente» (que completa esta), no «1 de 1» con «Siguiente»
-      const mas = hayMas();
       const pt = $('[data-pagina-texto]', c);
-      if (pt) pt.textContent = `Página ${num(f.pagina)} de ${num(Math.max(f.pagina + (mas ? 1 : 0), Math.ceil(d.total / porPagina)))}`;
-      const sig = $('[data-siguiente]', c);
-      if (sig) sig.disabled = !mas;
+      if (pt) pt.textContent = `Página ${num(f.pagina)} de ${num(Math.max(f.pagina + (hayMas() ? 1 : 0), Math.ceil(d.total / porPagina)))}`;
+      pintarPaginas();
     }
     // ¿Hay grupos después de los de esta página que siguen a la vista?
     const hayMas = () => d.total > (f.pagina - 1) * porPagina + vivos().length;
+    // Los botones de página. Quietos mientras se resuelve algo: el servidor ya puede haber unido o separado lo que se
+    // envió (la respuesta espera a ubicar los destinos y a la auditoría) y la lista que arma corre hacia atrás los grupos
+    // que seguían. «Siguiente» pediría la página de después y el primero de ellos, que cae en esta, no se vería nunca;
+    // con la respuesta, lo resuelto cuenta y «Siguiente» completa esta misma página
+    function pintarPaginas() {
+      const quieto = ocupado || enLote;
+      const ant = $('.paginacion [data-pagina]:not([data-siguiente])', c);
+      if (ant) ant.disabled = quieto || f.pagina <= 1;
+      const sig = $('[data-siguiente]', c);
+      if (sig) sig.disabled = quieto || !hayMas();
+    }
 
     // ── Foco y recorrido con el teclado ──
     function enfocar(t, { desplazar = true } = {}) {
@@ -767,6 +820,7 @@ export async function vistaCalidad(el, { q }) {
       if (!await confirmar(partes.join(' '), { si: n === 1 ? 'Unir' : `Unir ${num(n)} grupos` })) return;
       if (!vigente(mio)) return;
       enLote = true;
+      pintarPaginas();
       let detenido = false;
       const { el: dlg, cerrar, listo } = dialogo({ titulo: 'Uniendo las muy probables',
         cuerpo: html`<div class="progreso-lote">
@@ -843,6 +897,7 @@ export async function vistaCalidad(el, { q }) {
       } finally {
         enLote = false;
         detenerLote = null;
+        pintarPaginas();
       }
       const resumen = `${detenido ? 'Detenido' : 'Listo'}: ${plural(cuenta.unidas, 'ficha unida', 'fichas unidas')} en ${plural(cuenta.grupos, 'grupo', 'grupos')}${cuenta.errores ? `; ${plural(cuenta.errores, 'grupo quedó', 'grupos quedaron')} para revisar a mano` : ''}.`;
       if (dlg.isConnected) {
