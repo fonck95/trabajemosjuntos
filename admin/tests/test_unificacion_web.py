@@ -1488,7 +1488,7 @@ async function cAtajosRecarga(nav, caso) {
   // Como agente.js: recargar() es ir(rutaActual() + location.search, { reemplazar: true }) y navegar(), ir(ruta)
   const comoElAsistente = async (ruta, op) => {
     const n = await page.evaluate(() => window.__vistas.length);
-    await page.evaluate(async ([p, r, o]) => (await import(`${p}/static/js/app.js`)).ir(r, o), [pref, ruta, op]);
+    await page.evaluate(async ([r, o]) => (await import(new URL('app.js', document.querySelector('script[type=module]').src).href)).ir(r, o), [ruta, op]);
     await page.waitForFunction((n) => window.__vistas.length > n, n, espera);
   };
   d.pasos = {};

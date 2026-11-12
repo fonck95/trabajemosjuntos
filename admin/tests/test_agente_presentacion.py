@@ -1896,7 +1896,7 @@ async function ambos(A, B, hash) {
     await A.waitForSelector('#app #vista > .vista', espera);
     await A.goto(base + '/presentacion', { waitUntil: 'domcontentloaded' });
     await A.waitForSelector('#app #vista > .vista', espera);
-    await A.evaluate(async (p) => { window.__P = await import(p + '/static/js/agente-presentacion.js'); }, pref);
+    await A.evaluate(async () => { window.__P = await import(new URL('agente-presentacion.js', document.querySelector('script[type=module]').src).href); });
     await A.waitForFunction(() => window.__P.presentacionLista(), null, espera);
     // La vista del chat en Vivienda 3 con una explicación; «Abrir en otra pantalla» abre el proyector en ese paso
     await A.evaluate((t) => window.__P.accionesPresentacion([{ tipo: 'presentacion', op: 'ir', capitulo: 'vivienda', paso: 3, explicacion: t }]), D.explicacion);
