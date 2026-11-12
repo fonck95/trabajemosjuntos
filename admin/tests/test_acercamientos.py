@@ -165,7 +165,8 @@ def test_cedula_dictada_respuesta_unica_y_tope(sesion, como):
         tomar(c, pid)
         r = c.post(f"/api/personas/{pid}/acercamientos", json={
             **LLAMADA, "resultado": "actualizo_datos",
-            "datos_dictados": {"cedula": cedula, "cedula_confirmacion": cedula}})
+            # La cédula se dicta una vez; una pestaña abierta con la versión anterior aún manda la confirmación
+            "datos_dictados": {"cedula": cedula, **({"cedula_confirmacion": cedula} if i else {})}})
         assert r.status_code == 200, r.text
         respuestas.append(r.json())
         assert db.personas.find_one({"_id": pid})["cedula"] is None  # nunca se aplica sola
@@ -179,11 +180,12 @@ def test_cedula_dictada_respuesta_unica_y_tope(sesion, como):
     pid = contactable(db, "CASILDA INVENTADA TOPE", "3005550009")
     tomar(c, pid)
     r = c.post(f"/api/personas/{pid}/acercamientos", json={
-        **LLAMADA, "resultado": "actualizo_datos", "datos_dictados": {"cedula": "95000333", "cedula_confirmacion": "95000333"}})
+        **LLAMADA, "resultado": "actualizo_datos", "datos_dictados": {"cedula": "95000333"}})
     assert r.status_code == 429 and r.json()["detail"]["codigo"] == "volumen"
+    # Una cédula que no lo es se rechaza antes del tope
     r = c.post(f"/api/personas/{pid}/acercamientos", json={
-        **LLAMADA, "resultado": "actualizo_datos", "datos_dictados": {"cedula": "95000333", "cedula_confirmacion": "95000334"}})
-    assert r.status_code == 422
+        **LLAMADA, "resultado": "actualizo_datos", "datos_dictados": {"cedula": "95-AB"}})
+    assert r.status_code == 422 and "entre 5 y 11 dígitos" in r.text
     assert db.acercamientos.count_documents({"persona_id": pid}) == 0
     # Puesto y mesa dictados: solo si faltan, con fuente consultor y sin verificar
     puesto(db, 903, "PUESTO INVENTADO DE PRUEBA", "T-03")

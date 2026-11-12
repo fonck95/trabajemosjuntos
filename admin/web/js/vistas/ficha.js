@@ -18,14 +18,14 @@ import {
 import { dialogoAcercamiento, mensajeNoContactable } from './acercamiento.js';
 import {
   administra, camposAutorizacion, camposVotacion, chipsFaltan, cuerpoVotacion, dialogoCambiada, dialogoCompletar, elegirPunto,
-  enlazarAutorizacion, enlazarVotacion, faltanDe, formularioNuevaPersona, leerAutorizacion, opcionesLugares, textoCedula,
+  enlazarAutorizacion, enlazarEdad, enlazarVotacion, faltanDe, formularioNuevaPersona, leerAutorizacion, opcionesLugares, textoCedula,
   ubicarConGps,
 } from './comunes.js';
 
 const TIPOS_SOLICITUD = { consulta: 'Consultar sus datos', correccion: 'Corregir sus datos', supresion: 'Borrar sus datos', revocatoria: 'Revocar la autorización', otro: 'Otra' };
 // Campos numéricos y de sí o no del formulario (el resto va como texto, vacío = null)
 const NUMEROS = ['edad', 'personas_hogar', 'estrato', 'lugar_id'];
-const AUXILIARES = ['cedula_confirmacion', 'motivo_cambio_cedula', 'puesto', 'puesto_texto', 'municipio', 'mesa', 'votacion_verificada'];
+const AUXILIARES = ['motivo_cambio_cedula', 'puesto', 'puesto_texto', 'municipio', 'mesa', 'votacion_verificada'];
 
 // Menú ⋯ de cada número: [clave, texto, cuerpo del PATCH o acción, roles]
 const ACCIONES_TEL = [
@@ -168,8 +168,7 @@ export async function vistaFicha(el, { params, ir }) {
               <details class="bloque" open><summary>Identificación</summary><div class="form">
                 ${entrada('nombre', 'Nombre completo', { ancho: true, largo: 160 })}
                 ${selector('tipo_documento', 'Tipo de documento', [['', '—'], ...Object.entries(TIPOS_DOCUMENTO)])}
-                ${entrada('cedula', 'Número de documento', { modo: 'numeric', largo: 15, ayuda: p.cedula ? '' : 'Al escribirla se pide repetirla.' })}
-                <label class="campo" data-confirmacion hidden><span>Repita el número</span><input name="cedula_confirmacion" inputmode="numeric" autocomplete="off" maxlength="15"></label>
+                ${entrada('cedula', 'Número de documento', { modo: 'numeric', largo: 15 })}
                 ${adm && p.cedula ? html`<label class="campo" data-motivo-cedula hidden><span>Motivo del cambio de cédula *</span><input name="motivo_cambio_cedula" maxlength="200"></label>` : ''}
                 <label class="casilla"><input type="checkbox" name="cedula_verificada" ${p.cedula_verificada ? 'checked' : ''} ${ed('cedula_verificada') ? '' : 'disabled'}> Vi el documento</label>
                 ${noDisponible('cedula', 'No la dio')}
@@ -184,7 +183,7 @@ export async function vistaFicha(el, { params, ir }) {
               <details class="bloque" ${esMovil() ? '' : 'open'}><summary>Datos personales</summary><div class="form">
                 ${selector('sexo', 'Sexo', [['', '—'], ...Object.entries(SEXOS)])}
                 ${entrada('fecha_nacimiento', 'Fecha de nacimiento', { tipo: 'date' })}
-                ${entrada('edad', 'Edad', { tipo: 'number', min: 0, max: 120, modo: 'numeric', ayuda: p.edad != null && p.edad_ref ? `Según fuente, declarada el ${fecha(p.edad_ref)}` : p.edad_efectiva != null ? `Edad calculada: ${p.edad_efectiva}` : '' })}
+                ${entrada('edad', 'Edad', { tipo: 'number', min: 0, max: 120, modo: 'numeric', ayuda: 'Con la fecha de nacimiento se calcula sola' + (p.edad != null && p.edad_ref ? `. Sin ella, la declarada el ${fecha(p.edad_ref)}` : '') })}
                 ${selector('estado_civil', 'Estado civil', lista(ESTADOS_CIVILES))}
                 ${selector('nivel_educativo', 'Nivel educativo', lista(NIVELES))}
                 ${selector('situacion_laboral', 'Situación laboral', lista(SITUACIONES_LABORALES))}
@@ -273,6 +272,8 @@ export async function vistaFicha(el, { params, ir }) {
       </div>`);
     vigilarBarra();
     formInicial = leerForm();
+    // Después de leer el formulario: la edad calculada no cuenta como un cambio, y al borrar la fecha vuelve la guardada
+    if ($('#f-datos', el)) enlazarEdad($('#f-datos', el));
     sucio = false;
     // Un dato guardado que su campo no puede mostrar (una fecha que no existe, como 1985-02-30, o una opción que ya no
     // está en la lista) se ve vacío: se dice cuál es. Al guardar otros cambios no se borra, porque solo se envía lo cambiado
@@ -814,11 +815,9 @@ export async function vistaFicha(el, { params, ir }) {
   el.addEventListener('input', (e) => {
     if (!e.target.closest('#f-datos') || e.target.name?.startsWith('aut_')) return;
     marcarSucio();
-    // Documento nuevo: se pide repetirlo; cambiar uno existente (A y K) pide el motivo
+    // Cambiar un documento existente (A y K) pide el motivo
     if (e.target.name === 'cedula') {
       const nuevo = e.target.value.trim() !== String(p.cedula ?? '');
-      const conf = $('[data-confirmacion]', el);
-      if (conf) conf.hidden = !nuevo;
       const mot = $('[data-motivo-cedula]', el);
       if (mot) mot.hidden = !nuevo;
     }
@@ -846,6 +845,8 @@ export async function vistaFicha(el, { params, ir }) {
       base[k] = p[k] ?? null;
     }
     if (Object.keys(extra).length) cuerpo.extra = extra;
+    // Con fecha de nacimiento la edad del campo es la calculada: el servidor la saca de la fecha
+    if (ahora.fecha_nacimiento?.trim()) { delete cuerpo.edad; delete base.edad; }
     // Puesto y mesa: si cambió cualquiera de sus campos, van los cuatro como los muestra el formulario
     if (['puesto', 'puesto_texto', 'municipio', 'mesa'].some(tocado)) {
       Object.assign(cuerpo, cuerpoVotacion(f.puesto.value, { texto: f.puesto_texto?.value.trim(), municipio: f.municipio?.value.trim(), mesa: f.mesa?.value }));
@@ -854,7 +855,6 @@ export async function vistaFicha(el, { params, ir }) {
     }
     if (tocado('votacion_verificada')) cuerpo.votacion_verificada = !!ahora.votacion_verificada;
     if ('cedula' in cuerpo && cuerpo.cedula) {
-      if (!p.cedula && ahora.cedula_confirmacion?.trim() !== cuerpo.cedula) return { error: 'Los dos números del documento no coinciden' };
       if (p.cedula) {
         const motivo = ahora.motivo_cambio_cedula?.trim();
         if (!motivo) return { error: 'Escriba el motivo del cambio de cédula' };

@@ -66,8 +66,7 @@ function bloqueDictados(cat, faltan) {
   if (!campos.length) return '';
   const puestos = cat.puestos || [];
   return html`<details class="bloque-dictados"><summary>Datos que dictó</summary><div class="form">
-    ${campos.includes('cedula') ? html`<label class="campo"><span>Cédula</span><input name="d_cedula" inputmode="numeric" autocomplete="off" maxlength="15"></label>
-      <label class="campo"><span>Repita la cédula</span><input name="d_cedula_confirmacion" inputmode="numeric" autocomplete="off" maxlength="15"></label>` : ''}
+    ${campos.includes('cedula') ? html`<label class="campo"><span>Cédula</span><input name="d_cedula" inputmode="numeric" autocomplete="off" maxlength="15"></label>` : ''}
     ${campos.includes('puesto') ? html`<label class="campo"><span>Puesto de votación</span><select name="d_puesto_id"><option value="">—</option>${puestos.map((x) => html`<option value="${x.id}">${x.codigo ? x.codigo + ' · ' : ''}${titulo(x.nombre)}</option>`)}</select></label>` : ''}
     ${campos.includes('mesa') ? html`<label class="campo"><span>Mesa</span><input name="d_mesa" type="number" min="1" max="99" inputmode="numeric"></label>` : ''}
   </div></details>`;
@@ -267,7 +266,7 @@ export async function dialogoAcercamiento(p, { canal = null, indice = null, resu
     const dict = {};
     if (CON_CONTACTO.includes(resultado) && rol === 'consultor') {
       const v = (n) => f[n]?.value.trim() || '';
-      if (v('d_cedula')) { dict.cedula = v('d_cedula'); dict.cedula_confirmacion = v('d_cedula_confirmacion'); }
+      if (v('d_cedula')) dict.cedula = v('d_cedula');
       if (v('d_puesto_id')) dict.puesto_id = Number(v('d_puesto_id'));
       if (v('d_mesa')) dict.mesa = Number(v('d_mesa'));
     }
@@ -281,7 +280,6 @@ export async function dialogoAcercamiento(p, { canal = null, indice = null, resu
       if (!c.autorizacion.evidencia) return 'Escriba la evidencia de la autorización (o toque «Respondió SÍ»)';
       if (!c.autorizacion.mayor_declarado) return 'Para registrar la autorización debe declarar ser mayor de 18 años';
     }
-    if (c.datos_dictados?.cedula && c.datos_dictados.cedula !== c.datos_dictados.cedula_confirmacion) return 'Las dos cédulas no coinciden';
     if (c.resultado === 'solicitud_derechos' && !c.nota) return 'Escriba qué pidió el titular';
     if (c.resultado === 'actualizo_datos' && c.pedir_actualizacion && !c.nota) return 'Escriba qué hay que actualizar';
     return null;

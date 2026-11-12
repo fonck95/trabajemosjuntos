@@ -437,6 +437,8 @@ label.chip.opcion:has(input:checked) { background: var(--ink); color: var(--bg);
 .fila-campos input, .fila-campos select, .no-sabe select, .selector-usuario select { width: 100%; border: 1px solid var(--line); background: var(--surface);
   border-radius: 9px; padding: 8px 11px; min-height: 38px; }
 .no-sabe select { width: auto; min-height: 32px; padding: 4px 8px; font-size: 13px; color: var(--muted); }
+/* La edad calculada con la fecha de nacimiento (enlazarEdad): se ve que no se escribe */
+.fila-campos input[data-calculada], .campo input[data-calculada] { background: var(--sunken); color: var(--ink-2); border-style: dashed; }
 .opciones-radio { display: flex; flex-wrap: wrap; gap: 6px; }
 .nota-sensibles { color: var(--muted); font-size: 12px; }
 .campo small.nota, .campo .nota { color: var(--muted); font-size: 12px; }
