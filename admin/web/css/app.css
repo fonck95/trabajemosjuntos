@@ -474,6 +474,12 @@ body:has(#franja-llamada) .contenido:not(.lleno) { padding-top: 76px; }
   box-shadow: var(--sombra); font-weight: 600; max-width: calc(100vw - 32px); animation: entra .2s ease-out; }
 .barra-deshacer .btn { background: transparent; color: var(--warn); border-color: transparent; font-weight: 800; }
 @media (min-width: 901px) { .barra-deshacer { bottom: 24px; } }
+/* Con el menú abierto en el celular, la franja y «Deshacer» (fijas en document.body, sobre la vista) quedan debajo del
+   velo (29) y del menú (30), como lo demás que el velo tapa; app.js (taparConElMenu) las vuelve inertes. Al cerrarlo
+   vuelven a su capa. Los avisos no bajan: son solo texto, no atajan el toque ni se enfocan */
+@media (max-width: 900px) {
+  body:has(.app.menu-abierto) :is(.franja-pendiente, .barra-deshacer) { z-index: 28; }
+}
 
 /* Diálogo de acercamiento (7.5) */
 .acercamiento { display: flex; flex-direction: column; gap: 14px; }

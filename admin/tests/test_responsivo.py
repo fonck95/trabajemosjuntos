@@ -25,7 +25,11 @@ Railway) con personas, coincidencias y reuniones inventadas. Lo de la auditoría
   el foco; en escritorio nunca es inerte, tampoco al ensanchar la ventana (P8). Con agente.js retenido (red lenta) y el
   menú ya abierto, el asistente que se monta después también queda inerte y el tabulador no llega a su botón. Dentro
   del menú, solo en el celular, «Cerrar menú» (44 px, a la vista, sin montarse con la marca) está en el árbol de
-  accesibilidad con el menú abierto (la barra de arriba no) y lo cierra devolviendo el foco a «Menú».
+  accesibilidad con el menú abierto (la barra de arriba no) y lo cierra devolviendo el foco a «Menú». Con una llamada
+  sin registrar, la franja (fija en document.body, encima de la vista) queda debajo del velo e inerte mientras el menú
+  está abierto: no tapa «Panel» ni la marca y el tabulador no sale del menú hacia sus botones; lo mismo la barra
+  «Deshacer», y un aviso sigue a la vista sin llevarse el foco. Al cerrarlo, la franja vuelve tal cual y responde; en
+  escritorio no cambia.
 * El tema Sistema / Claro / Oscuro y la tarjeta destacada del panel visible en oscuro (P11).
 * Sin violaciones de CSP ni errores de consola en ningún caso.
 
@@ -241,6 +245,13 @@ def test_menu_se_cierra_con_su_boton(resultados):
     """Con el menú abierto la barra de arriba es inerte: «Cerrar menú», dentro del menú, es el control con nombre que
     queda para cerrarlo sin teclado (lector de pantalla táctil)."""
     _revisar(resultados, "cerrar_menu")
+
+
+@requiere_navegador
+def test_menu_abierto_tapa_la_franja_de_llamada(resultados):
+    """La franja «Llamada sin registrar» (z-index 150, en document.body) quedaba encima del menú abierto del celular,
+    tapando «Panel», y el tabulador salía del menú a sus botones."""
+    _revisar(resultados, "menu_llamada")
 
 
 @requiere_navegador
@@ -1008,6 +1019,107 @@ async function cerrarMenu(nav, caso) {
   await e.ctx.close();
 }
 
+// ── El menú abierto con una llamada sin registrar: la franja (y «Deshacer») viven en document.body, fijas encima de la
+// vista; con el menú abierto en el celular quedan debajo del velo e inertes, y al cerrarlo vuelven tal cual ──
+// Cómo está `sel`: inerte (él o su contenedor), si su botón `boton` es lo que hay en su centro (no lo tapa nada), su
+// z-index calculado y si se ve
+const mirarFijo = (page, sel, boton) => page.evaluate(([sel, boton]) => {
+  const f = document.querySelector(sel), b = f?.querySelector(boton);
+  if (!f || !b) return { falta: sel };
+  const r = b.getBoundingClientRect(), e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+  const c = f.getBoundingClientRect();
+  return { inerte: !!f.closest('[inert]'), arriba: !!e && f.contains(e), en_su_lugar: e ? `${e.tagName.toLowerCase()}#${e.id}.${e.className}` : null,
+    capa: getComputedStyle(f).zIndex, visible: f.checkVisibility(), caja: { x: Math.round(c.left), y: Math.round(c.top), d: Math.round(c.right), a: Math.round(c.bottom) } };
+}, [sel, boton]);
+const llamadaPendiente = (page) => page.evaluate((pid) => sessionStorage.setItem('yj_llamada', JSON.stringify({ pid, indice: 0, canal: 'llamada', t: Date.now() })), D.persona);
+
+async function menuLlamada(nav, caso) {
+  const v = caso.revisiones, d = caso.datos;
+  const { ctx, page } = await abrir(nav, caso, TAMANOS.w390);
+  await ingresar(page);
+  // Se tocó «Llamar» hace un momento y no se registró: la franja aparece al cargar la vista siguiente
+  await llamadaPendiente(page);
+  await ir(page, '/personas');
+  await page.waitForSelector('#franja-llamada', espera);
+  await page.waitForSelector('#agente-boton:not([hidden])', espera);
+  const franja = () => mirarFijo(page, '#franja-llamada', '[data-registrar]');
+  const antes = d.cerrado_la_franja_se_ve = await franja();
+  v.cerrado_la_franja_se_ve = antes.visible === true && antes.arriba === true && antes.inerte === false;
+  await page.tap('#abrir-menu');
+  await menuQuieto(page, true);
+  // Abierto: en el centro de «Panel», de la marca y de lo que se lee de ella está el menú, no la franja
+  d.abierto_panel_y_marca_a_la_vista = await page.evaluate(() => ['#nav a[data-nav="panel"]', '.marca', '.marca > .sello', '.marca > span:last-child'].map((s) => {
+    const r = document.querySelector(s).getBoundingClientRect(), e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return e?.closest('#menu-lateral') ? true : `${s}: ${e?.tagName.toLowerCase()}#${e?.id}.${e?.className}`;
+  }));
+  v.abierto_panel_y_marca_a_la_vista = d.abierto_panel_y_marca_a_la_vista.every((x) => x === true);
+  const abierta = d.abierto_la_franja_tapada = await franja();
+  v.abierto_la_franja_tapada = (abierta.inerte === true || abierta.visible === false) && abierta.arriba === false;
+  // «Deshacer» (10 s tras un registro de un toque, como la arma acercamiento.js) que aparece con el menú ya abierto:
+  // también queda tapada e inerte
+  await page.evaluate(() => {
+    const b = Object.assign(document.createElement('div'), { id: 'barra-deshacer', className: 'barra-deshacer' });
+    b.setAttribute('role', 'status');
+    b.innerHTML = '<span>Registro inventado guardado</span><button class="btn chico" data-deshacer>Deshacer</button>';
+    document.body.append(b);
+  });
+  await quieto(page);
+  const deshacer = d.abierto_deshacer_tapada = await mirarFijo(page, '#barra-deshacer', '[data-deshacer]');
+  v.abierto_deshacer_tapada = (deshacer.inerte === true || deshacer.visible === false) && deshacer.arriba === false;
+  // Un aviso (solo texto, no ataja el toque) sigue a la vista y anunciándose, sin llevarse el foco del menú
+  await page.evaluate(async () => (await import(new URL('ui.js', document.querySelector('script[type=module]').src).href)).aviso('Aviso de prueba inventado', 'ok', 8000));
+  await quieto(page);
+  const aviso = d.abierto_el_aviso_se_ve_sin_el_foco = await page.evaluate(() => ({ inerte: !!document.querySelector('#avisos').closest('[inert]'),
+    visible: !!document.querySelector('#avisos > .aviso')?.checkVisibility(), foco_en_el_menu: !!document.activeElement?.closest('#menu-lateral') }));
+  v.abierto_el_aviso_se_ve_sin_el_foco = aviso.inerte === false && aviso.visible === true && aviso.foco_en_el_menu === true;
+  await page.screenshot({ path: `${capturas}/responsivo-menu-llamada.png` });
+  // Desde lo último del menú, el tabulador solo recorre el menú (o sale de la página y vuelve): nunca la franja
+  const ultimo = await page.evaluate(() => {
+    const u = [...document.querySelectorAll('#menu-lateral a[href], #menu-lateral button')].filter((x) => x.checkVisibility()).pop();
+    u.focus();
+    return document.activeElement === u ? u.id || u.textContent.trim() : null;
+  });
+  const fuera = [];
+  for (let i = 0; i < 30; i++) {
+    await page.keyboard.press('Tab');
+    const f = await page.evaluate(() => {
+      const a = document.activeElement, caja = a?.parentElement?.closest('[id]:not(#raiz)');
+      return !a || a === document.body || a.closest('#menu-lateral') ? null : `${a.id || a.tagName}${caja ? ' en #' + caja.id : ''}`;
+    });
+    if (f) fuera.push(f);
+  }
+  d.abierto_tabulador_atrapado = { ultimo, fuera };
+  v.abierto_tabulador_atrapado = !!ultimo && fuera.length === 0;
+  // Cerrado con «Cerrar menú»: la franja y «Deshacer» vuelven a verse en su lugar y su capa de siempre, y responden
+  await page.tap('#cerrar-menu');
+  await menuQuieto(page, false);
+  await quieto(page);
+  const tras = d.cerrado_la_franja_vuelve_tal_cual = await franja();
+  v.cerrado_la_franja_vuelve_tal_cual = tras.visible === true && tras.arriba === true && tras.inerte === false && tras.capa === antes.capa
+    && JSON.stringify(tras.caja) === JSON.stringify(antes.caja);
+  const deshacerTras = d.cerrado_deshacer_vuelve = await mirarFijo(page, '#barra-deshacer', '[data-deshacer]');
+  v.cerrado_deshacer_vuelve = deshacerTras.arriba === true && deshacerTras.inerte === false && deshacerTras.capa === '210';
+  await page.evaluate(() => document.getElementById('barra-deshacer')?.remove());
+  await page.focus('#franja-llamada [data-registrar]');
+  const responde = d.cerrado_la_franja_responde = { foco: await page.evaluate(() => !!document.activeElement?.matches('#franja-llamada [data-registrar]')) };
+  // Tocar ✕ (Playwright comprueba que el toque le llega a él y no a lo que lo tape) la descarta
+  responde.descartada = await page.tap('#franja-llamada [data-descartar]', { timeout: 5000 })
+    .then(() => page.waitForSelector('#franja-llamada', { state: 'detached', timeout: 5000 })).then(() => true, () => false);
+  responde.olvidada = await page.evaluate(() => sessionStorage.getItem('yj_llamada') === null);
+  v.cerrado_la_franja_responde = responde.foco && responde.descartada && responde.olvidada;
+  await ctx.close();
+  // En escritorio no cambia nada: la franja a la derecha del menú, en su capa y viva
+  const e = await abrir(nav, caso, TAMANOS.w1400);
+  await ingresar(e.page);
+  await llamadaPendiente(e.page);
+  await ir(e.page, '/personas');
+  await e.page.waitForSelector('#franja-llamada', espera);
+  const escritorio = d.escritorio_igual = await mirarFijo(e.page, '#franja-llamada', '[data-registrar]');
+  escritorio.menu = await e.page.evaluate(() => Math.round(document.querySelector('#menu-lateral').getBoundingClientRect().right));
+  v.escritorio_igual = escritorio.arriba === true && escritorio.inerte === false && escritorio.capa === '150' && escritorio.caja.x >= escritorio.menu;
+  await e.ctx.close();
+}
+
 // ── Tema ──
 async function tema(nav, caso) {
   const v = caso.revisiones, d = caso.datos;
@@ -1053,6 +1165,7 @@ async function tema(nav, caso) {
     await correr('menu', (c) => menu(nav, c));
     await correr('menu_tarde', (c) => menuTarde(nav, c));
     await correr('cerrar_menu', (c) => cerrarMenu(nav, c));
+    await correr('menu_llamada', (c) => menuLlamada(nav, c));
     await correr('tema', (c) => tema(nav, c));
   } finally {
     await nav.close();
