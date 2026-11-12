@@ -11,7 +11,7 @@
 // * El subtítulo se pinta con textContent (nunca como HTML) y con las mismas reglas que pone el panel: sin caracteres que
 //   no se ven, sin números de 7 o más dígitos ni «@» (se proyecta ante una sala).
 // * Cada cambio de paso (también por el teclado o un clic) se le avisa al panel con el estado: capítulo, paso, total,
-//   nombre del capítulo y título del paso. main.js lo anuncia con el evento `propuesta:paso`.
+//   nombre del capítulo, título del paso y la explicación a la vista. main.js lo anuncia con el evento `propuesta:paso`.
 // main.js le entrega sus piezas (caps, estado, ir, vecino, abrirIndice, reencuadrar) al final del arranque: así este
 // módulo no depende de la escena 3D y se prueba con Node (admin/tests/test_agente_presentacion.py).
 export const CANAL = 'yondo-presentacion';
@@ -35,8 +35,9 @@ const PERIODO = /^((?:19|20)[0-9]{2}) ?[\-\u2010-\u2015\u2212\/] ?((?:19|20)[0-9
 const RANGO = /^([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?) ?[\-\u2010-\u2015\u2212] ?([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?)$/u;
 const FECHA = /(?<!\p{Nd})(?:([0-9]{4}) ?([.\-\u2010-\u2015\u2212\/]) ?([0-9]{1,2}) ?\2 ?([0-9]{1,2})|([0-9]{1,2}) ?([.\-\u2010-\u2015\u2212\/]) ?([0-9]{1,2}) ?\6 ?([0-9]{4}))(?!\p{Nd})/gu;
 // Un monto en pesos con su signo y sus puntos de miles («$1.156.350», el costo por habitante del guion): la tirada
-// va justo después de «$» y en grupos de tres (`_MONTO` de la herramienta)
-const MONTO = /^[0-9]{1,3}(?:\.[0-9]{3})+(?:,[0-9]{1,2})?$/u;
+// va justo después de «$», en grupos de tres y con 7 cifras enteras a lo sumo (`_MONTO` de la herramienta): una cédula
+// o un teléfono de 8 o más dígitos no pasa por llevar «$» delante
+const MONTO = /^(?:[0-9]{1,3}|[0-9]\.[0-9]{3})\.[0-9]{3}(?:,[0-9]{1,2})?$/u;
 const DIGITOS_MAX = 6;
 // La pantalla chica (`acomodar`): la franja mínima donde escena.js encuadra la obra (`zonaPx`), el alto mínimo de la
 // hoja inferior con el subtítulo (el de propuesta.html: el título del paso a la vista), el que no se pasa nunca (el
@@ -133,12 +134,15 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   for (const a of documento.querySelectorAll('.barra a[href]')) { a.target = '_blank'; a.rel = 'noopener'; }
 
   const clave = () => (caps[estado.ci] ? `${caps[estado.ci].id}/${estado.pi + 1}` : null);
+  // El estado lleva la explicación que está a la vista (`texto`, la que pintó `subtitulo`): la pestaña del chat que sigue
+  // a la ventana del proyector pone la misma, no la última que mandó ella (podía ser vieja o de otra pestaña)
   function actual() {
     const c = caps[estado.ci];
-    if (!c) return { capitulo: null, paso: null, total: null, nombre: null, titulo: null, explicacion: false };
+    if (!c) return { capitulo: null, paso: null, total: null, nombre: null, titulo: null, explicacion: false, texto: null };
     const p = c.pasos[estado.pi] || {};
+    const visible = !!sub?.classList.contains('visible');
     return { capitulo: c.id, paso: estado.pi + 1, total: c.pasos.length, nombre: limpio(c.nombre, 80),
-      titulo: limpio(p.titulo || c.nombre, 200), explicacion: !!sub?.classList.contains('visible') };
+      titulo: limpio(p.titulo || c.nombre, 200), explicacion: visible, texto: visible ? texto?.textContent ?? null : null };
   }
   function enviar(msj, origen = null) {
     const destinos = origen ? [origen] : origenPadre ? [origenPadre] : [...permitidos];

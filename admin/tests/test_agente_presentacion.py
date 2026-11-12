@@ -409,10 +409,13 @@ FECHAS = ("La radicación vence el 15/11/2026.", "Reunión el 07/03/2028 en el s
           "Del 15/11/2026 al 31/12/2027, 300 viviendas")
 FECHAS_QUE_NO = ("Vence el 31/02/2026", "Vence el 11/15/2026", "En 2027-02-29", "Del 15/11/1850",
                  "El 15/11/2026 300 123 4567", "El 15/11/2026/3001234567", "Al 15/11-2026")
-# Un monto en pesos con su signo y sus puntos de miles (el guion trae «$1.156.350» por habitante); sin el signo, sin los
-# puntos o con otro número pegado, no
-MONTOS = ("Por habitante, $1.156.350", "Son $ 1.156.350,50 al mes")
-MONTOS_QUE_NO = ("Son 1.156.350 por habitante", "Al $3001234567", "Al $300 123 4567", "Son $1.156.350 300 viviendas")
+# Un monto en pesos con su signo y sus puntos de miles (el guion trae «$1.156.350» por habitante), de 7 cifras enteras a
+# lo sumo; sin el signo, sin los puntos, con otro número pegado o más largo (una cédula o un teléfono con «$» delante),
+# no
+MONTOS = ("Por habitante, $1.156.350", "Son $ 1.156.350,50 al mes", "Son $123.456,78 al mes")
+MONTOS_QUE_NO = ("Son 1.156.350 por habitante", "Al $3001234567", "Al $300 123 4567", "Son $1.156.350 300 viviendas",
+                 "Cédula $1.023.456.789", "Llame al $3.001.234.567", "$71.234.567", "Son \uff041.023.456.789",
+                 "Son $ 1.023.456.789,00", "Son $1.000.000.000.000.000.000")
 
 
 @pytest.mark.parametrize("entrada", [
@@ -1058,9 +1061,10 @@ r.sin_acuse_ms = Date.now() - t0;
 r.sin_acuse_navego = navegadas.slice();
 r.fantasma_tras = A.proyectorVivo();
 r.aplicadas_aqui = aplicadasA.slice();
-// 8. Un proyector recién abierto arranca en el capítulo y el paso de la vista de esta pestaña, con su explicación
+// 8. Un proyector recién abierto arranca en el capítulo y el paso de la vista de esta pestaña, con la explicación que
+// ella dice tener a la vista
 await A.accionesPresentacion([{ tipo: 'presentacion', op: 'explicar', explicacion: 'Lo que dice la pantalla' }]);
-estadoA.explicacion = true;
+Object.assign(estadoA, { explicacion: true, texto: 'Lo que dice la pantalla' });
 const C = await import(modulo + '?pestana=proyector2');
 const enC = [];
 const quitarC = C.registrarPresentacion({ proyector: true, estado: () => estadoB,
@@ -1068,7 +1072,7 @@ const quitarC = C.registrarPresentacion({ proyector: true, estado: () => estadoB
 await dormir(40);
 r.sincronizado = enC.slice();
 // Sin explicación en pantalla, solo el paso; y al que ya estaba (sus latidos no son de recién abierto) no se le manda más
-estadoA.explicacion = false;
+Object.assign(estadoA, { explicacion: false, texto: null });
 const E = await import(modulo + '?pestana=proyector3');
 const enE = [];
 const quitarE = E.registrarPresentacion({ proyector: true, estado: () => estadoB,
@@ -1096,7 +1100,8 @@ const mover = (e, a) => {
   if (a.explicacion) { e.explicacion = true; e.texto = a.explicacion; }
   else if (a.op === 'quitar_explicacion' || `${e.capitulo}/${e.paso}` !== antes) { e.explicacion = false; e.texto = null; }
 };
-const presentacion = (e, registro, avisar) => ({ estado: () => ({ ...e, texto: undefined }),
+// Su estado dice la explicación que está a la vista (`texto`), como el de mando.js
+const presentacion = (e, registro, avisar) => ({ estado: () => ({ ...e }),
   aplicar: async (l) => { registro.push(l.map((a) => `${a.op}:${a.capitulo || ''}${a.paso || ''}:${a.explicacion || ''}`));
     await dormir(3); for (const a of l) mover(e, a); avisar?.(); return l.map((a) => ({ op: a.op, ok: true })); } });
 const hasta = async (f) => { const fin = Date.now() + 5000; while (!f() && Date.now() < fin) await dormir(5); return f(); };
@@ -1184,8 +1189,9 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
     assert r["resultados"] == [[{"op": "ir", "ok": True}], [{"op": "explicar", "ok": True}],
                                [{"op": "siguiente", "ok": True}]]
     # El estado sale limpio (sin claves de más ni caracteres de control) y nunca lanza
+    # (`texto`, la explicación a la vista, es null: esta presentación no la dice)
     assert r["estado"] == {"capitulo": "vivienda", "paso": 3, "total": 6, "nombre": "Vivienda", "titulo": "Paso  tres",
-                           "explicacion": True}
+                           "explicacion": True, "texto": None}
     assert r["estado_que_lanza"] is None and r["proyector_sin_nadie"] is False
     assert r["cerrada"] == "La presentación se cerró antes de aplicar el cambio"
     assert r["vencida"] == "La presentación no terminó de cargar" and r["no_navego_en_la_vista"] is True
@@ -1198,7 +1204,7 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
                                  {"op": "ir", "ok": False}]
     assert r["en_proyector"] == [["ir", "ir"]] and r["navego_con_proyector"] == []
     assert r["estado_del_proyector"] == {"capitulo": "aguas", "paso": 2, "total": 5, "nombre": "Aguas",
-                                         "titulo": "Así funciona hoy", "explicacion": False}
+                                         "titulo": "Así funciona hoy", "explicacion": False, "texto": None}
     assert r["raros_sin_efecto"] is True and r["tras_adios"] is False
     # El proyector que se cerró sin avisar: en unos segundos (no los 15 del plazo de la respuesta) la orden se aplica aquí,
     # una sola vez, abriendo la vista
@@ -1229,8 +1235,349 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
     assert v["cruce"] == ["vivienda/5", "vivienda/5"] and v["cruce_sin_vuelta"] == [], v
     assert v["cruce_junta"] == ["vivienda/5", "vivienda/5"], v
     assert v["tras_cerrar"]["capitulo"] == "vivienda" and v["barra_tras_cerrar"] == "vivienda/5", v
-    assert r["tipos_del_canal"] == ["adios", "hecho", "ordenes", "proyector", "quien", "recibido"]
+    assert r["tipos_del_canal"] == ["adios", "empieza", "hecho", "ordenes", "proyector", "quien", "recibido"]
     assert r["nadie_manda_a_todos"] is True
+
+
+GUION_PROYECTORES = r"""// El puente con proyectores que se cierran, que tardan o que son dos, y con dos pestañas del chat. Uso: node <guion>
+// <url del módulo> <escenario>. Cada «pestaña» es una instancia del módulo; el canal entrega en otra vuelta del bucle
+const [modulo, escenario] = process.argv.slice(2);
+globalThis.document = { querySelector: () => null };
+globalThis.location = { pathname: '/panel/presentacion', origin: 'https://panel.example' };
+globalThis.addEventListener = () => {};
+const canales = new Set();
+let ultimo = null;
+const vistos = [];   // lo que mandaron las pestañas, en orden (al mandarlo; `recibidos` de cada canal, al llegarle)
+// Una pestaña ocupada (`ocupadaHasta`: la que arma su maqueta 3D al abrirse) recibe lo que le llega al quedar libre, en
+// orden
+function entregar(x, c) {
+  if (x.muerto) return;
+  if (x.ocupadaHasta > Date.now() || x.fila.length) {
+    x.fila.push(c);
+    x.libre ||= setTimeout(() => { x.libre = 0; for (const m of x.fila.splice(0)) entregar(x, m); }, Math.max(1, x.ocupadaHasta - Date.now()));
+    return;
+  }
+  x.onmessage?.({ data: structuredClone(c) });
+  x.recibidos.push(c);
+}
+globalThis.BroadcastChannel = class {
+  constructor(n) { this.n = n; this.recibidos = []; this.fila = []; this.ocupadaHasta = 0; canales.add(this); ultimo = this; }
+  postMessage(d) {
+    if (this.muerto) return;   // una pestaña que se colgó o se cerró sin avisar: ni manda ni recibe
+    const c = structuredClone(d);
+    vistos.push(c);
+    for (const x of canales) if (x !== this && x.n === this.n) setTimeout(() => entregar(x, c), 1);
+  }
+  close() { canales.delete(this); }
+};
+const dormir = (ms) => new Promise((ok) => setTimeout(ok, ms));
+const hasta = async (f, ms = 10000) => { const fin = Date.now() + ms; while (!f() && Date.now() < fin) await dormir(5); return f(); };
+const canalDe = {};
+const abrir = async (nombre) => { const M = await import(`${modulo}?pestana=${nombre}`); canalDe[nombre] = ultimo; return M; };
+// Una presentación de mentira que se mueve como mando.js y cuyo estado dice la explicación a la vista (`texto`)
+const caps = { portada: 1, vivienda: 6, salud: 4 };
+const orden = Object.keys(caps);
+const mover = (e, a) => {
+  const antes = `${e.capitulo}/${e.paso}`;
+  if (a.op === 'ir') { e.capitulo = a.capitulo; e.paso = a.paso || 1; }
+  else if (a.op === 'siguiente' || a.op === 'anterior') {
+    let ci = orden.indexOf(e.capitulo), p = e.paso + (a.op === 'siguiente' ? 1 : -1);
+    if (p > caps[orden[ci]]) { if (ci < orden.length - 1) { ci++; p = 1; } else p = caps[orden[ci]]; }
+    if (p < 1) { if (ci > 0) { ci--; p = caps[orden[ci]]; } else p = 1; }
+    e.capitulo = orden[ci]; e.paso = p;
+  }
+  e.total = caps[e.capitulo];
+  if (a.explicacion) { e.explicacion = true; e.texto = a.explicacion; }
+  else if (a.op === 'quitar_explicacion' || `${e.capitulo}/${e.paso}` !== antes) { e.explicacion = false; e.texto = null; }
+};
+const nuevo = (capitulo = 'vivienda', paso = 3) => ({ capitulo, paso, total: caps[capitulo], nombre: 'N', titulo: 'T', explicacion: false, texto: null });
+const donde = (e) => `${e.capitulo}/${e.paso}${e.explicacion ? `+${e.texto}` : ''}`;
+const op = (o, extra = {}) => ({ tipo: 'presentacion', op: o, ...extra });
+// `antes(lista)` corre al recibir cada lista (puede no volver nunca: una ventana colgada); `demora` es lo que tarda en
+// empezar a moverse (un equipo lento, o la fila de la presentación detrás de un cambio de capítulo)
+function vista(M, e, { registro = [], antes, demora = () => 3, trazar } = {}) {
+  return { estado: () => ({ ...e }), cambio: () => {},
+    aplicar: async (l) => {
+      registro.push(l.map((a) => `${a.op}:${a.capitulo || ''}${a.paso || ''}:${a.explicacion || ''}`));
+      await antes?.(l);
+      await dormir(demora());
+      for (const a of l) mover(e, a);
+      trazar?.();
+      M.avisarEstado();
+      return l.map((a) => ({ op: a.op, ok: true }));
+    } };
+}
+const proyector = (M, e, opciones) => M.registrarPresentacion({ proyector: true, ...vista(M, e, opciones) });
+const comoTermina = (p) => { const t0 = Date.now(); return p.then((x) => ({ r: x, ms: Date.now() - t0 }), (e) => ({ error: e.message, ms: Date.now() - t0 })); };
+const r = {};
+
+if (escenario === 'se_cierra') {
+  // La pestaña del chat con la vista en Vivienda 3 y un proyector que se cierra con la orden del asistente en curso
+  const A = await abrir('chat');
+  const eA = nuevo(), enA = [];
+  A.registrarPresentacion(vista(A, eA, { registro: enA }));
+  // 1. Acusa recibo, la empieza y su ventana se cierra (avisa con el «adios») antes de responder: la orden se aplica aquí
+  const P = await abrir('p1');
+  const eP = nuevo('portada', 1);
+  let armado = false;
+  const qP = proyector(P, eP, { antes: () => (armado ? (qP(), new Promise(() => {})) : null) });
+  r.sincronizado = await hasta(() => donde(eP) === 'vivienda/3') && donde(eP);
+  armado = true;
+  enA.length = 0;
+  r.adios = await comoTermina(A.accionesPresentacion([op('ir', { capitulo: 'salud', paso: 2 })]));
+  r.adios_chat = donde(eA);
+  r.adios_aplicadas = enA.slice();
+  // 2. Una relativa: allá ya pasó al paso siguiente y lo anunció (y la vista de aquí lo siguió), y se cierra antes de
+  // responder. Aquí parte del paso desde el que él la empezó: no da un paso de más
+  const P2 = await abrir('p2');
+  const e2 = nuevo('portada', 1);
+  let armado2 = false;
+  const q2 = P2.registrarPresentacion({ proyector: true, estado: () => ({ ...e2 }), aplicar: async (l) => {
+    if (armado2) {
+      for (const a of l) mover(e2, a);
+      P2.avisarEstado();
+      await hasta(() => donde(eA) === donde(e2));
+      q2();
+      return new Promise(() => {});
+    }
+    for (const a of l) mover(e2, a);
+    P2.avisarEstado();
+    return l.map((a) => ({ op: a.op, ok: true }));
+  } });
+  r.sincronizado_2 = await hasta(() => donde(e2) === 'salud/2' && A.proyectorVivo()) && donde(e2);
+  armado2 = true;
+  r.relativa = await comoTermina(A.accionesPresentacion([op('siguiente')]));
+  r.relativa_proyector = donde(e2);
+  r.relativa_chat = donde(eA);
+  // 3. Acusa recibo, la empieza y se cuelga o se cierra sin avisar (ni «adios» ni latidos): en cuanto se lo da por
+  // cerrado (sin noticias en unos segundos), la orden se aplica aquí. Antes vencía a los 15 s con un error
+  const P3 = await abrir('p3');
+  const e3 = nuevo('portada', 1);
+  let armado3 = false;
+  proyector(P3, e3, { antes: () => (armado3 ? (canalDe.p3.muerto = true, new Promise(() => {})) : null) });
+  r.sincronizado_3 = await hasta(() => donde(e3) === 'salud/3' && A.proyectorVivo()) && donde(e3);
+  armado3 = true;
+  r.callado = await comoTermina(A.accionesPresentacion([op('ir', { capitulo: 'vivienda', paso: 6 })]));
+  r.callado_chat = donde(eA);
+  r.callado_vivo = A.proyectorVivo();
+}
+
+if (escenario === 'dos_pestanas') {
+  // Dos pestañas del chat con la vista abierta (A y B) y un proyector: cada una pone la explicación que se ve allá, no
+  // la última que mandó ella
+  const A = await abrir('a'), B = await abrir('b');
+  const eA = nuevo(), eB = nuevo();
+  A.registrarPresentacion(vista(A, eA));
+  B.registrarPresentacion(vista(B, eB));
+  const P = await abrir('p1');
+  const eP = nuevo('portada', 1);
+  let qP = proyector(P, eP);
+  const todas = (x) => hasta(() => donde(eP) === x && donde(eA) === x && donde(eB) === x);
+  const foto = () => ({ proyector: donde(eP), a: donde(eA), b: donde(eB) });
+  await todas('vivienda/3');
+  await B.accionesPresentacion([op('explicar', { explicacion: 'Frase de B' })]);
+  await todas('vivienda/3+Frase de B');
+  r.explica_b = foto();
+  await A.accionesPresentacion([op('explicar', { explicacion: 'Frase de A' })]);
+  await todas('vivienda/3+Frase de A');
+  r.explica_a = foto();
+  // El control remoto pasa al paso 4 (allá se quita la explicación) y A explica ese paso
+  mover(eP, op('siguiente'));
+  P.avisarEstado();
+  await todas('vivienda/4');
+  r.remoto = foto();
+  await A.accionesPresentacion([op('explicar', { explicacion: 'Lo del paso cuatro' })]);
+  await todas('vivienda/4+Lo del paso cuatro');
+  r.paso_4 = foto();
+  // Se recarga la ventana del proyector: las dos pestañas le pasan la que se veía
+  qP();
+  const P2 = await abrir('p2');
+  const e2 = nuevo('portada', 1), en2 = [];
+  qP = proyector(P2, e2, { registro: en2 });
+  await hasta(() => en2.length >= 2 && donde(e2) === 'vivienda/4+Lo del paso cuatro');
+  r.recargado = { proyector: donde(e2), a: donde(eA), b: donde(eB), ordenes: en2.slice() };
+}
+
+if (escenario === 'dos_proyectores') {
+  // Un doble clic en «Abrir en otra pantalla»: dos ventanas de proyector. Manda la que se abrió última; la otra se
+  // retira y la sigue, y la vista de aquí no salta entre las dos
+  const A = await abrir('chat');
+  const eA = nuevo(), traza = [], barra = [];
+  A.registrarPresentacion({ ...vista(A, eA, { trazar: () => traza.push(donde(eA)) }),
+    cambio: () => { const e = A.estadoPresentacion(); if (e && barra.at(-1) !== `${e.capitulo}/${e.paso}`) barra.push(`${e.capitulo}/${e.paso}`); } });
+  const P1 = await abrir('p1'), P2 = await abrir('p2');
+  const e1 = nuevo('portada', 1), e2 = nuevo('portada', 1), en1 = [], en2 = [], traza2 = [];
+  const q1 = proyector(P1, e1, { registro: en1 });
+  await dormir(2);
+  const q2 = proyector(P2, e2, { registro: en2, trazar: () => traza2.push(donde(e2)) });
+  const id1 = vistos.find((m) => m.tipo === 'proyector' && m.recien).id;
+  const id2 = vistos.find((m) => m.tipo === 'proyector' && m.recien && m.id !== id1).id;
+  const todas = (x) => hasta(() => donde(e1) === x && donde(e2) === x && donde(eA) === x);
+  r.abren = await todas('vivienda/3') && [donde(e1), donde(e2), donde(eA)];
+  // El control remoto mueve la ventana que se abrió primero (la que se llevó a la sala): lo que se hace en ella va a la
+  // que manda, y las tres quedan en el 4
+  traza.length = 0;
+  barra.splice(0, barra.length, 'vivienda/3');
+  mover(e1, op('siguiente'));
+  P1.avisarEstado();
+  r.remoto = await todas('vivienda/4') && [donde(e1), donde(e2), donde(eA)];
+  // Tres latidos más de la que manda: la vista de aquí y su barra no vuelven al 3
+  const marca = vistos.length;
+  const latidos = () => vistos.slice(marca).filter((m) => m.tipo === 'proyector' && m.id === id2).length;
+  await hasta(() => latidos() >= 3, 15000);
+  r.traza = traza.slice();
+  r.barra = barra.slice();
+  r.se_anuncian = [...new Set(vistos.slice(marca).filter((m) => m.tipo === 'proyector').map((m) => (m.id === id1 ? 'p1' : m.id === id2 ? 'p2' : '?')))].sort();
+  // «Siguiente» del asistente: va solo a la que manda (si fuera a las dos, cada una avanzaría desde su paso)
+  en1.length = 0;
+  en2.length = 0;
+  r.siguiente = await A.accionesPresentacion([op('siguiente')]);
+  r.tras_siguiente = await todas('vivienda/5') && [donde(e1), donde(e2), donde(eA)];
+  r.relativas = { p1: en1.flat().filter((x) => x.startsWith('siguiente')).length, p2: en2.flat().filter((x) => x.startsWith('siguiente')).length };
+  // Otro clic más tarde: la que mandaba (ya en su paso) se retira y no salta a la Portada de la nueva para después
+  // volver: la sigue cuando la nueva ya tomó el paso de la pestaña del chat (todas siguen en el 5)
+  traza2.length = 0;
+  const P3 = await abrir('p3');
+  const e3 = nuevo('portada', 1), en3 = [];
+  const q3 = proyector(P3, e3, { registro: en3 });
+  r.tercera = await hasta(() => donde(e3) === 'vivienda/5' && A.estadoPresentacion()?.paso === 5
+    && vistos.some((m) => m.tipo === 'adios' && m.id === id2)) && [donde(e1), donde(e2), donde(e3), donde(eA)];
+  await hasta(() => canalDe.p2.recibidos.some((m) => m.tipo === 'proyector' && m.listo && m.estado?.paso === 5 && m.id !== id1 && m.id !== id2));
+  r.traza_de_la_que_se_retira = traza2.slice();
+  // Se cierra la nueva: vuelve a mandar la más nueva de las que quedan (y la pestaña del chat se entera)
+  const marca2 = canalDe.chat.recibidos.length;
+  q3();
+  await hasta(() => canalDe.chat.recibidos.slice(marca2).some((m) => m.tipo === 'proyector' && m.id === id2 && m.listo));
+  en2.length = 0;
+  r.tras_cerrar = await A.accionesPresentacion([op('siguiente')]);
+  r.manda_la_otra = await hasta(() => [e1, e2, eA].every((e) => donde(e) === 'vivienda/6')) && [donde(e1), donde(e2), donde(eA)];
+  r.en_la_otra = en2.slice();
+  // Y se cierra también esa: vuelve a mandar la del primer clic, que hasta ahora solo había seguido a las otras. Se la
+  // sigue (ya tomó un paso) y el «Siguiente» va a ella
+  const marca3 = canalDe.chat.recibidos.length;
+  q2();
+  await hasta(() => canalDe.chat.recibidos.slice(marca3).some((m) => m.tipo === 'proyector' && m.id === id1));
+  r.primera_lista = canalDe.chat.recibidos.slice(marca3).filter((m) => m.tipo === 'proyector' && m.id === id1).map((m) => m.listo);
+  en1.length = 0;
+  r.a_la_primera = await A.accionesPresentacion([op('siguiente')]);
+  r.manda_la_primera = await hasta(() => donde(e1) === 'salud/1' && donde(eA) === 'salud/1') && [donde(e1), donde(eA), en1.slice()];
+  q1();
+}
+
+if (escenario === 'ocupado') {
+  // El proyector recién abierto está ocupado (arma su maqueta) y recibe tarde el paso que le pasa la pestaña del chat:
+  // no acusa a tiempo y se lo da por cerrado, pero su latido sigue diciendo que está en la Portada. La vista de aquí no
+  // lo sigue a la Portada: se le vuelve a pasar el paso. Antes iba a la Portada y volvía
+  const A = await abrir('chat');
+  const eA = nuevo(), traza = [];
+  A.registrarPresentacion(vista(A, eA, { trazar: () => traza.push(donde(eA)) }));
+  await A.accionesPresentacion([op('ir', { capitulo: 'vivienda', paso: 3, explicacion: 'Frase' })]);
+  traza.length = 0;
+  const P = await abrir('p1');
+  const eP = nuevo('portada', 1), enP = [];
+  canalDe.p1.ocupadaHasta = Date.now() + 5000;
+  proyector(P, eP, { registro: enP });
+  // Hasta que, ya libre, toma el paso de aquí y la pestaña del chat lo sigue otra vez
+  r.proyector = await hasta(() => donde(eP) === 'vivienda/3+Frase' && A.estadoPresentacion()?.texto === 'Frase', 20000) && donde(eP);
+  r.chat = donde(eA);
+  r.traza = traza.slice();
+}
+
+if (escenario === 'fila') {
+  // Un proyector lento (cada cambio de paso tarda 8 s en empezar) y la persona que usa dos veces la presentación de la
+  // pestaña del chat: los dos pasos van allá, en fila. El plazo de cada uno corre desde que el proyector lo empieza:
+  // antes el segundo vencía a los 15 s del acuse y la vista de aquí volvía al paso viejo del proyector
+  const A = await abrir('chat');
+  const eA = nuevo(), traza = [];
+  A.registrarPresentacion(vista(A, eA, { trazar: () => traza.push(donde(eA)) }));
+  const P = await abrir('p1');
+  const eP = nuevo('portada', 1);
+  let lento = false;
+  proyector(P, eP, { demora: () => (lento ? 8000 : 3) });
+  await hasta(() => donde(eP) === 'vivienda/3' && donde(eA) === 'vivienda/3');
+  await dormir(50);
+  lento = true;
+  traza.push(donde(eA));
+  for (let i = 0; i < 2; i++) {
+    mover(eA, op('siguiente'));
+    traza.push(donde(eA));
+    A.avisarEstado();
+  }
+  // Hasta que el proyector termina las dos (y la pestaña del chat recibe su respuesta)
+  await hasta(() => vistos.filter((m) => m.tipo === 'hecho').length >= 3, 40000);
+  await hasta(() => donde(eP) === 'vivienda/5' && donde(eA) === 'vivienda/5', 5000);
+  r.traza = traza;
+  r.final = [donde(eP), donde(eA)];
+}
+
+console.log(JSON.stringify(r));
+process.exit(0);
+"""
+
+
+@requiere_node
+@pytest.mark.parametrize("escenario", ["se_cierra", "dos_pestanas", "dos_proyectores", "ocupado", "fila"])
+def test_puente_con_proyectores_que_se_cierran_tardan_o_son_dos(tmp_path, escenario):
+    """Los casos del verificador, con el puente de verdad y una presentación de mentira por «pestaña»:
+    * se_cierra: el proyector acusa recibo de la orden del asistente y su ventana se cierra antes de responder (avisando,
+      o callada). La orden se aplica en la pestaña del chat, sin esperar el plazo entero; antes se perdía (o volvía un
+      error a los 15 s) y la vista del chat se quedaba en el paso viejo. Una relativa que allá ya movió no da un paso
+      de más aquí.
+    * dos_pestanas: dos pestañas del chat con la vista abierta ponen la explicación que se ve en la sala (viene en el
+      estado del proyector); antes cada una ponía la última que había mandado ella, y al recargar el proyector la vieja
+      de la otra pestaña llegaba a la sala.
+    * dos_proyectores: con dos ventanas de proyector manda la que se abrió última y la otra la sigue; antes la vista del
+      chat y su barra saltaban entre los pasos de las dos con cada latido y las relativas iban a las dos. La que se
+      retira no salta a la Portada de la nueva antes de que esta tome el paso, y si se cierra la que manda, vuelve a
+      mandar otra.
+    * ocupado: el proyector recién abierto, ocupado armando su maqueta, recibe tarde el paso que se le pasa y se lo da
+      por cerrado un momento; la vista del chat no lo sigue a la Portada mientras tanto.
+    * fila: con un proyector lento, el plazo de una orden en fila corre desde que él la empieza; antes la vista del
+      chat volvía al paso viejo del proyector y después otra vez al nuevo."""
+    (tmp_path / "proyectores.mjs").write_text(GUION_PROYECTORES, encoding="utf-8")
+    p = subprocess.run(["node", str(tmp_path / "proyectores.mjs"), PUENTE_JS.as_uri(), escenario], capture_output=True,
+                       text=True, timeout=120)
+    assert p.returncode == 0, p.stderr
+    r = json.loads(p.stdout.strip().splitlines()[-1])
+    if escenario == "se_cierra":
+        assert r["sincronizado"] == "vivienda/3", r
+        assert r["adios"]["r"] == [{"op": "ir", "ok": True}] and r["adios"]["ms"] < 2000, r
+        assert r["adios_chat"] == "salud/2" and r["adios_aplicadas"] == [["ir:salud2:"]], r
+        assert r["sincronizado_2"] == "salud/2", r
+        assert r["relativa"]["r"] == [{"op": "siguiente", "ok": True}] and r["relativa"]["ms"] < 2000, r
+        assert r["relativa_proyector"] == r["relativa_chat"] == "salud/3", r
+        assert r["sincronizado_3"] == "salud/3", r
+        assert r["callado"]["r"] == [{"op": "ir", "ok": True}] and r["callado"]["ms"] < 12000, r
+        assert r["callado_chat"] == "vivienda/6" and r["callado_vivo"] is False, r
+    elif escenario == "dos_pestanas":
+        assert r["explica_b"] == {"proyector": "vivienda/3+Frase de B", "a": "vivienda/3+Frase de B",
+                                  "b": "vivienda/3+Frase de B"}, r
+        assert r["explica_a"] == {"proyector": "vivienda/3+Frase de A", "a": "vivienda/3+Frase de A",
+                                  "b": "vivienda/3+Frase de A"}, r
+        assert r["remoto"] == {"proyector": "vivienda/4", "a": "vivienda/4", "b": "vivienda/4"}, r
+        assert r["paso_4"] == {"proyector": "vivienda/4+Lo del paso cuatro", "a": "vivienda/4+Lo del paso cuatro",
+                               "b": "vivienda/4+Lo del paso cuatro"}, r
+        rec = r["recargado"]
+        assert rec["proyector"] == rec["a"] == rec["b"] == "vivienda/4+Lo del paso cuatro", rec
+        assert rec["ordenes"] == [["ir:vivienda4:Lo del paso cuatro"]] * 2, rec
+    elif escenario == "dos_proyectores":
+        assert r["abren"] == ["vivienda/3"] * 3, r
+        assert r["remoto"] == ["vivienda/4"] * 3, r
+        assert r["traza"] == ["vivienda/4"] and r["barra"] == ["vivienda/3", "vivienda/4"], r
+        assert r["se_anuncian"] == ["p2"], r
+        assert r["siguiente"] == [{"op": "siguiente", "ok": True}], r
+        assert r["tras_siguiente"] == ["vivienda/5"] * 3 and r["relativas"] == {"p1": 0, "p2": 1}, r
+        assert r["tercera"] == ["vivienda/5"] * 4 and r["traza_de_la_que_se_retira"] == [], r
+        assert r["tras_cerrar"] == [{"op": "siguiente", "ok": True}], r
+        assert r["manda_la_otra"] == ["vivienda/6"] * 3 and r["en_la_otra"] == [["siguiente::"]], r
+        assert r["primera_lista"] and all(r["primera_lista"]), r
+        assert r["a_la_primera"] == [{"op": "siguiente", "ok": True}], r
+        assert r["manda_la_primera"] == ["salud/1", "salud/1", [["siguiente::"]]], r
+    elif escenario == "ocupado":
+        assert r["proyector"] == r["chat"] == "vivienda/3+Frase" and r["traza"] == [], r
+    else:
+        assert r["traza"] == ["vivienda/3", "vivienda/4", "vivienda/5"], r
+        assert r["final"] == ["vivienda/5", "vivienda/5"], r
 
 
 GUION_MANDO = r"""// El mando de la presentación sin navegador: ventana, documento y marco padre falsos. Uso: node <guion> <url de mando.js>
@@ -1301,14 +1648,15 @@ r.ir = a.map(([m, o]) => [m.tipo, o, m.id ?? null, m.capitulo, m.paso, m.titulo]
 r.idas = t.idas.slice();
 r.indice_cerrado = t.indice();
 const b = await t.mensaje(O('avanzar', { d: 1, id: 8, explicacion: '  El tercer   paso.  ' }));
-r.avanzar = b.filter(([m]) => m.id === 8).map(([m]) => [m.tipo, m.capitulo, m.paso, m.explicacion]);
+r.avanzar = b.filter(([m]) => m.id === 8).map(([m]) => [m.tipo, m.capitulo, m.paso, m.explicacion, m.texto]);
 r.subtitulo = [t.sub.classList.contains('visible'), t.p.textContent];
 await t.mensaje(O('ir', { capitulo: 'portada', id: 9 }));
 r.cambio_de_paso_quita_el_subtitulo = !t.sub.classList.contains('visible');
 const c = await t.mensaje(O('explicar', { explicacion: '<img src=x onerror="window.__xss=1"> como texto', id: 10 }));
 r.explicar = [c.map(([m]) => m.tipo), t.sub.classList.contains('visible'), t.p.textContent];
-await t.mensaje(O('quitar_explicacion', { id: 11 }));
+const q = await t.mensaje(O('quitar_explicacion', { id: 11 }));
 r.quitada = t.sub.classList.contains('visible');
+r.quitada_estado = q.map(([m]) => [m.tipo, m.explicacion, m.texto]);
 // Órdenes que no mueven nada: responden error con su id
 const idasAntes = t.idas.length;
 const malas = [O('borrar'), O('constructor'), O('__proto__'), O('ir', { capitulo: 'marte' }), O('ir', { capitulo: 'Vivienda' }),
@@ -1351,10 +1699,11 @@ def test_mando_de_la_presentacion_con_node(tmp_path):
     assert r["ir"] == [["estado", "https://panel.example", None, "vivienda", 2, "Dos casas"],
                        ["estado", "https://panel.example", 7, "vivienda", 2, "Dos casas"]]
     assert r["idas"] == [[0, 0], [1, 1]] and r["indice_cerrado"] == 1
-    assert r["avanzar"] == [["estado", "vivienda", 3, True]]
+    # El estado dice la explicación a la vista (la pestaña del chat que sigue al proyector pone esa)
+    assert r["avanzar"] == [["estado", "vivienda", 3, True, "El tercer paso."]]
     assert r["subtitulo"] == [True, "El tercer paso."] and r["cambio_de_paso_quita_el_subtitulo"] is True
     assert r["explicar"] == [["estado"], True, '<img src=x onerror="window.__xss=1"> como texto']
-    assert r["quitada"] is False
+    assert r["quitada"] is False and r["quitada_estado"] == [["estado", False, None]]
     for i, res in enumerate(r["malas"]):
         assert res == [["error", 100 + i, "https://panel.example", True]], (i, res)
     assert r["malas_no_mueven"] is True
@@ -1959,6 +2308,162 @@ def test_el_proyector_y_la_pestana_del_chat_no_se_desfasan(panel_con_sitio, cfg,
         assert f["chat"] == f["proyector"] == {"hash": f"#vivienda/{paso}", "sub": None}, (nombre, f)
         assert f["barra"].startswith(f"Paso {paso} de 6"), (nombre, f)
         assert f["estado"]["capitulo"] == "vivienda" and f["estado"]["paso"] == paso, (nombre, f)
+
+
+GUION_PROYECTOR_OCULTO = r"""// La ventana del proyector detrás de la pestaña del chat. Uso: node <guion> <base del panel> <usuario> <clave>
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const [base, usuario, clave] = process.argv.slice(2);
+const origen = new URL(base).origin;
+const espera = { timeout: 90000 };
+const tope = { timeout: 30000, polling: 100 };
+const salida = { errores: [], csp: [], fases: {} };
+const marco = (page) => page.frames().find((f) => /\/propuesta(#|$)/.test(f.url()));
+const hash = (page) => marco(page).evaluate(() => location.hash);
+
+async function enPaso(page, h) {
+  await page.waitForSelector('#pres-iframe', espera);
+  let f = null;
+  const fin = Date.now() + 90000;
+  while (!(f = marco(page)) && Date.now() < fin) await page.waitForTimeout(100);
+  await f.waitForFunction((x) => location.hash === x, h, { ...espera, polling: 100 });
+}
+// Las dos pantallas en `h` (con un tope: si no llegan, la foto dice dónde quedó cada una)
+async function ambas(A, B, h) {
+  const t0 = Date.now();
+  const ok = await Promise.all([marco(A).waitForFunction((x) => location.hash === x, h, tope),
+    marco(B).waitForFunction((x) => location.hash === x, h, tope)]).then(() => true, () => false);
+  return { ok, ms: Date.now() - t0, chat: await hash(A), proyector: await hash(B) };
+}
+// La ventana del proyector, oculta o con los cuadros parados (en ella y en su iframe)
+async function pantalla(B, { oculta, sinCuadros }) {
+  await B.evaluate(([o, s]) => { window.__oculta = o; window.__sinCuadros = s; }, [oculta, sinCuadros]);
+  for (const f of [B.mainFrame(), marco(B)]) {
+    await f.evaluate(() => { document.dispatchEvent(new Event('visibilitychange')); if (!top.__oculta && !top.__sinCuadros) window.__soltar?.(); });
+  }
+}
+
+(async () => {
+  const nav = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  try {
+    const ctx = await nav.newContext({ viewport: { width: 1400, height: 900 } });
+    await ctx.route((u) => u.origin !== origen, (r) => r.abort());
+    await ctx.exposeBinding('__csp', (_, v) => salida.csp.push(v));
+    // Lo que hace el navegador con una pestaña oculta, en la ventana del proyector y su iframe (Playwright deja visible
+    // toda página): `document.hidden` y ningún cuadro (requestAnimationFrame no corre) mientras `top.__oculta`; con
+    // `top.__sinCuadros`, visible pero sin cuadros (un equipo trabado)
+    await ctx.addInitScript(() => {
+      addEventListener('securitypolicyviolation', (e) => window.__csp?.(`${location.pathname} ${e.effectiveDirective} ${e.blockedURI}`), true);
+      let enProyector = false;
+      try { enProyector = new URL(top.location.href).searchParams.get('pantalla') === '1'; } catch { enProyector = false; }
+      if (!enProyector) return;
+      const oculta = () => { try { return !!top.__oculta; } catch { return false; } };
+      Object.defineProperty(Document.prototype, 'hidden', { configurable: true, get: oculta });
+      Object.defineProperty(Document.prototype, 'visibilityState', { configurable: true, get: () => (oculta() ? 'hidden' : 'visible') });
+      const raf = window.requestAnimationFrame.bind(window);
+      const pendientes = [];
+      window.requestAnimationFrame = (f) => {
+        let parado = false;
+        try { parado = !!(top.__oculta || top.__sinCuadros); } catch { parado = false; }
+        if (parado) { pendientes.push(f); return 0; }
+        return raf(f);
+      };
+      window.__soltar = () => { for (const f of pendientes.splice(0)) raf(f); };
+    });
+    ctx.on('page', (p) => p.on('pageerror', (e) => salida.errores.push(String(e))));
+    const A = await ctx.newPage();
+    await A.goto(base + '/', { waitUntil: 'domcontentloaded' });
+    await A.fill('#f-login [name=usuario]', usuario);
+    await A.fill('#f-login [name=clave]', clave);
+    await A.click('#f-login button[type=submit]');
+    await A.waitForSelector('#app #vista > .vista', espera);
+    await A.goto(base + '/presentacion', { waitUntil: 'domcontentloaded' });
+    await A.waitForSelector('#app #vista > .vista', espera);
+    await A.evaluate(async () => { window.__P = await import(new URL('agente-presentacion.js', document.querySelector('script[type=module]').src).href); });
+    await A.waitForFunction(() => window.__P.presentacionLista(), null, espera);
+    await A.evaluate(() => window.__P.accionesPresentacion([{ tipo: 'presentacion', op: 'ir', capitulo: 'vivienda', paso: 3 }]));
+    await enPaso(A, '#vivienda/3');
+    const [B] = await Promise.all([ctx.waitForEvent('page'), A.click('#pres-otra')]);
+    await enPaso(B, '#vivienda/3');
+    await A.waitForFunction(() => window.__P.proyectorVivo(), null, espera);
+    // Lo que pasa por el canal, visto desde la pestaña del chat: las órdenes que ella manda y las respuestas
+    await A.evaluate(() => {
+      window.__canal = { ordenes: 0, hechos: 0 };
+      const c = new BroadcastChannel('yondo-presentacion');
+      c.onmessage = (e) => { if (e.data?.tipo === 'ordenes') window.__canal.ordenes++; else if (e.data?.tipo === 'hecho') window.__canal.hechos++; };
+    });
+    const respondidas = () => A.waitForFunction(() => window.__canal.hechos >= window.__canal.ordenes, null, tope).then(() => true, () => false);
+    // La persona vuelve a la pestaña del chat: la del proyector queda detrás, oculta
+    await A.bringToFront();
+    await pantalla(B, { oculta: true, sinCuadros: false });
+    salida.oculta = await B.evaluate(() => [document.hidden, document.querySelector('#pres-iframe').contentDocument.hidden]);
+    // «Siguiente» tres veces: cada una mueve el proyector y la pestaña del chat lo sigue
+    salida.fases.botones = [];
+    for (const paso of [4, 5, 6]) {
+      await A.click('#pres-siguiente');
+      salida.fases.botones.push(await ambas(A, B, `#vivienda/${paso}`));
+    }
+    // La presentación de la pestaña del chat (su teclado), dos pasos atrás: van allá y la de aquí no vuelve atrás
+    // (main.js cambia la dirección con replaceState, sin `hashchange`: se mira cada poco)
+    await marco(A).evaluate(() => {
+      window.__traza = [location.hash];
+      setInterval(() => { if (location.hash !== window.__traza.at(-1)) window.__traza.push(location.hash); }, 20);
+    });
+    await A.evaluate(() => document.querySelector('#pres-iframe').focus());
+    for (const h of ['#vivienda/5', '#vivienda/4']) {
+      await A.keyboard.press('PageUp');
+      await marco(A).waitForFunction((x) => location.hash === x, h, tope).catch(() => {});
+    }
+    salida.fases.teclado = { ...(await ambas(A, B, '#vivienda/4')), respondidas: await respondidas(),
+      traza: await marco(A).evaluate(() => window.__traza) };
+    // El asistente va a Salud 2: la orden llega y responde bien
+    const t0 = Date.now();
+    const r = await A.evaluate(() => window.__P.accionesPresentacion([{ tipo: 'presentacion', op: 'ir', capitulo: 'salud', paso: 2 }])
+      .then((x) => x, (e) => `error: ${e.message}`));
+    salida.fases.asistente = { r, ms: Date.now() - t0, ...(await ambas(A, B, '#salud/2')),
+      contexto: await A.evaluate(() => { const e = window.__P.estadoPresentacion(); return e && `${e.capitulo}/${e.paso}`; }) };
+    // Visible pero sin cuadros (un equipo trabado): la salida del panel tiene un tope y el paso igual cambia
+    await pantalla(B, { oculta: false, sinCuadros: true });
+    await A.click('#pres-siguiente');
+    salida.fases.sin_cuadros = await ambas(A, B, '#salud/3');
+    // La ventana del proyector vuelve al frente: sigue en el paso que se ve en la pestaña del chat
+    await pantalla(B, { oculta: false, sinCuadros: false });
+    await B.bringToFront();
+    salida.fases.al_frente = { ...(await ambas(A, B, '#salud/3')), respondidas: await respondidas() };
+    await ctx.close();
+  } finally {
+    await nav.close();
+  }
+  console.log(JSON.stringify(salida));
+})().catch((e) => { console.error(e); process.exit(1); });
+"""
+
+
+@requiere_navegador
+def test_el_proyector_detras_de_la_pestana_del_chat_sigue_respondiendo(panel_con_sitio, cfg, tmp_path):
+    """El caso del verificador: «Abrir en otra pantalla» abre el proyector como pestaña nueva y la persona vuelve a la
+    del chat, así que la del proyector queda oculta y el navegador no le da cuadros (requestAnimationFrame). Antes cada
+    paso esperaba la animación de salida del panel (GSAP, que corre con los cuadros) y no terminaba nunca: el proyector
+    cambiaba de paso una vez y dejaba de responder, «Siguiente» y el asistente no movían nada («La presentación no
+    respondió») y, con el teclado del chat, la vista de aquí volvía al paso viejo. Ahora con la pestaña oculta no se anima
+    la salida y, visible pero sin cuadros, se espera con un tope: cada orden mueve las dos pantallas en el acto."""
+    base, _ = panel_con_sitio
+    (tmp_path / "oculta.cjs").write_text(GUION_PROYECTOR_OCULTO, encoding="utf-8")
+    r = subprocess.run(["node", str(tmp_path / "oculta.cjs"), base, cfg.usuario, cfg.clave], capture_output=True,
+                       text=True, timeout=500)
+    assert r.returncode == 0, (r.stdout[-3000:], r.stderr[-3000:])
+    s = json.loads(r.stdout.strip().splitlines()[-1])
+    assert s["csp"] == [] and s["errores"] == [], (s["csp"], s["errores"])
+    assert s["oculta"] == [True, True], s
+    f = s["fases"]
+    for paso, b in zip((4, 5, 6), f["botones"], strict=True):
+        assert b["ok"] and b["chat"] == b["proyector"] == f"#vivienda/{paso}", (paso, f["botones"])
+    t = f["teclado"]
+    assert t["ok"] and t["respondidas"] and t["chat"] == t["proyector"] == "#vivienda/4", t
+    assert t["traza"] == ["#vivienda/6", "#vivienda/5", "#vivienda/4"], t
+    a = f["asistente"]
+    assert a["r"] == [{"op": "ir", "ok": True}] and a["ok"] and a["contexto"] == "salud/2", a
+    assert f["sin_cuadros"]["ok"] and f["sin_cuadros"]["proyector"] == "#salud/3", f["sin_cuadros"]
+    assert f["al_frente"]["ok"] and f["al_frente"]["respondidas"], f["al_frente"]
 
 
 # ───────────────────────────── Una presentación que no avisa `listo` ─────────────────────────────

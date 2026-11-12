@@ -701,8 +701,9 @@ _RANGO = re.compile(rf"({_CIFRA}) ?[{_GUIONES}] ?({_CIFRA})")
 _FECHA = re.compile(rf"(?<!\d)(?:([0-9]{{4}}) ?([.{_GUIONES}/]) ?([0-9]{{1,2}}) ?\2 ?([0-9]{{1,2}})"
                     rf"|([0-9]{{1,2}}) ?([.{_GUIONES}/]) ?([0-9]{{1,2}}) ?\6 ?([0-9]{{4}}))(?!\d)")
 # Y un monto en pesos con su signo y sus puntos de miles («$1.156.350», el costo por habitante que trae el guion): la
-# tirada va justo después de «$» y en grupos de tres. Una cédula o un teléfono no se escriben así por descuido
-_MONTO = re.compile(r"[0-9]{1,3}(?:\.[0-9]{3})+(?:,[0-9]{1,2})?")
+# tirada va justo después de «$», en grupos de tres y con 7 cifras enteras a lo sumo, las del monto más largo del
+# guion. Sin ese tope pasaban una cédula o un teléfono escritos con «$» y puntos («$1.023.456.789», «$71.234.567»)
+_MONTO = re.compile(r"(?:[0-9]{1,3}|[0-9]\.[0-9]{3})\.[0-9]{3}(?:,[0-9]{1,2})?")
 
 
 def _cifra(t: str) -> float:

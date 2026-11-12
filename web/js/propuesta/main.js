@@ -354,10 +354,22 @@ function telonDe(c) {
     .set(telon, { autoAlpha: 0 });
 }
 
+// Una animación que el paso espera (la salida del panel viejo), con un tope de reloj: el de GSAP avanza con los cuadros
+// del navegador (requestAnimationFrame), y una pestaña oculta (la ventana del proyector detrás de la del chat, panel
+// /presentacion?pantalla=1) no recibe ninguno. Sin el tope el paso quedaba a medio cambiar hasta volver a esa pestaña:
+// mando.js no respondía la orden y las siguientes esperaban en fila. Al vencer, la animación salta a su final
+function terminar(anim, ms) {
+  return new Promise((listo) => {
+    const t = setTimeout(() => { anim.progress(1); listo(); }, ms);
+    anim.then(() => { clearTimeout(t); listo(); });
+  });
+}
+
 async function pintarPanel(c, p, dir, conTelon) {
   const r = (RENDER[p.tipo] || RENDER.texto)(c, p);
-  const salir = gsap && !reducedMotion && cab.innerHTML ? gsap.to([cab, cuerpo], { opacity: 0, y: dir > 0 ? -12 : 12, duration: 0.18, ease: 'power2.in' }) : null;
-  if (salir) await salir;
+  // con la pestaña oculta no se anima la salida: nadie la ve y no habría cuadros para ella
+  const salir = gsap && !reducedMotion && cab.innerHTML && !document.hidden ? gsap.to([cab, cuerpo], { opacity: 0, y: dir > 0 ? -12 : 12, duration: 0.18, ease: 'power2.in' }) : null;
+  if (salir) await terminar(salir, 500);
   cab.innerHTML = r.cab; cuerpo.innerHTML = r.cuerpo; cuerpo.scrollTop = 0; $('.panel').scrollTop = 0;
   // la hoja toma de una vez (sin transición) la altura del texto nuevo, antes de que el paso encuadre la maqueta
   if (hojaMQ.matches) { pres.classList.add('arrastrando'); aplicarHoja(hoja, { reencuadre: false }); void panelEl.offsetHeight; pres.classList.remove('arrastrando'); }

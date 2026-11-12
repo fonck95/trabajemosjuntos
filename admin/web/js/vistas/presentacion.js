@@ -11,7 +11,8 @@
 //   ventana se anuncia al resto de las pestañas (el puente): el asistente de la pestaña del chat la maneja desde ahí.
 //   Mientras viva, manda ella: la barra de la pestaña del chat muestra su paso, sus botones le mandan la orden solo a
 //   ella y el iframe de aquí la sigue (también cuando el paso cambia allá, con el teclado o el control remoto); lo que
-//   se haga en el iframe de aquí (su control, su índice) va allá.
+//   se haga en el iframe de aquí (su control, su índice) va allá. Con dos ventanas de proyector manda la última que se
+//   abrió y la otra la sigue como el iframe de aquí (el puente).
 //   Se abre con un enlace (`target="_blank"`), no con window.open: con COOP same-origin la ventana no se podría manejar
 //   y no hace falta, porque el canal es por origen.
 // * Los estilos (css/presentacion.css) los carga la vista, como agente.js los suyos.
