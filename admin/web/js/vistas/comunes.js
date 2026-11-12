@@ -390,17 +390,29 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     return { c, d };
   }
 
-  // «Es esta»: se completa esa ficha con lo que se escribió (solo lo que le falte) y se abre
-  async function esEsta(id) {
+  // «Es esta» (y «Completar esa ficha con lo que escribí»): se completa esa ficha con lo que se escribió (solo lo que le
+  // falte) y se abre. Es la otra forma de guardar este formulario y cuenta igual que «Guardar» como operación en curso
+  // (`enCurso`, el `ocupado` del diálogo): mientras el PATCH va al servidor, Escape y el fondo no preguntan
+  // «¿Descartar lo escrito?» (sería falso: se guarda igual y la página se va a esa ficha), y no se cruza con un «Guardar»
+  // ni con otro «Es esta». Al terminar, `cerrar` cierra sin preguntar
+  async function esEsta(id, origen) {
+    if (enCurso) return;
     const { c } = cuerpo();
     delete c.nombre; delete c.etiquetas; delete c.ficha;
     for (const k of Object.keys(c)) if (c[k] == null) delete c[k];
+    enCurso = true;
+    boton.disabled = true;
+    if (origen) origen.disabled = true;
     try {
       if (Object.keys(c).length) await api.patch(`/api/personas/${id}?modo=completar`, c, { clave: nuevaClave() });
       tocado = false;
       cerrar();
       alCrear?.({ id, existente: true });
-    } catch (e) { avisoError(e); }
+    } catch (e) { avisoError(e); } finally {
+      enCurso = false;
+      boton.disabled = false;
+      if (origen) origen.disabled = false;
+    }
   }
 
   function mostrarConflicto(e) {
@@ -422,9 +434,9 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
 
   el.addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-elegir]');
-    if (b) { esEsta(Number(b.dataset.elegir)); return; }
+    if (b) { esEsta(Number(b.dataset.elegir), b); return; }
     const o = ev.target.closest('[data-completar-otra]');
-    if (o) { esEsta(Number(o.dataset.completarOtra)); return; }
+    if (o) { esEsta(Number(o.dataset.completarOtra), o); return; }
     // «Abrir esa ficha» navega: el diálogo se cierra (el enlace lo atiende app.js)
     if (ev.target.closest('#conflicto a[data-ruta]')) { tocado = false; cerrar(); }
   });
