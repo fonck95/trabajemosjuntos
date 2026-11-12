@@ -25,9 +25,11 @@ guion (app/agente/guion.py y propuesta_guion.json), el puente del panel (web/js/
   Habitantes: navega a la presentación y pliega el asistente). Y la explicación más larga (220 caracteres) se ve entera,
   sin tapar el panel, la leyenda ni el control, en 1400×900, 1024×768, 820×1180 y en el celular, en vertical (390×844,
   360×640, 320×568) y en horizontal (915×412, 844×390, 740×360, 667×375), donde tampoco tapa la franja en que la cámara
-  encuadra la obra y el panel conserva su alto; entre 901 y 1199 px el asistente abierto no tapa la presentación; con
-  cambios sin guardar, las órdenes de un turno dan un solo aviso cuyo botón las aplica todas; y la ventana del
-  proyector y la pestaña del chat no se desfasan cuando el paso cambia en el proyector.
+  encuadra la obra y el panel conserva su alto, también cuando el celular gira con ella a la vista o se oculta y se
+  vuelve a mostrar el panel («Solo 3D»), con la letra más grande que cabe; de lado, la leyenda desplegada se lee entera
+  y el control del último paso de cada capítulo lleva entero el nombre del siguiente; entre 901 y 1199 px el asistente
+  abierto no tapa la presentación; con cambios sin guardar, las órdenes de un turno dan un solo aviso cuyo botón las
+  aplica todas; y la ventana del proyector y la pestaña del chat no se desfasan cuando el paso cambia en el proyector.
 Solo datos inventados; nunca se llama a Anthropic ni a Mnemo.
 """
 from __future__ import annotations
@@ -2179,6 +2181,192 @@ def test_la_explicacion_se_ve_entera_en_cada_pantalla(panel_con_sitio, cfg, tmp_
     assert v["ruta"] == "/panel/personas" and len(v["notas"]) == 1 and v["botones"] == 1, v
     assert v["despues"]["ruta"] == "/panel/presentacion" and v["despues"]["hash"] == "#vivienda/2", v
     assert v["despues"]["texto"] == CORTA and v["despues"]["botones"] == 0 and v["despues"]["fallas"] == [], v
+
+
+# ───────────────────────────── El celular que gira, «Solo 3D» y la presentación de lado ─────────────────────────────
+
+GUION_FORMAS = r"""// La explicación cuando el celular gira o se oculta el panel, y la presentación de lado (la leyenda
+// desplegada y el último paso de cada capítulo). Uso: node <guion> <base del panel> <usuario> <clave> <datos>
+// <capturas>
+""" + GUION_PANTALLAS[GUION_PANTALLAS.index("const { chromium }"):GUION_PANTALLAS.index("\nconst PANTALLAS = [")] + r"""
+// (arriba, las ayudas de GUION_PANTALLAS: contexto, entrar, marco, quieto, enPresentacion y medirDentro)
+
+// La letra que eligió el mando (--sub-esc) y si con el paso anterior, más grande, la explicación también cabría bajo la
+// franja de la obra (--sobre-sub). Solo donde su borde de abajo no depende de su alto: de lado o con «Solo 3D»
+const letra = (f) => f.evaluate(() => {
+  const pres = document.querySelector('#pres'), sub = document.querySelector('.subtitulo');
+  const ESC = ['', '0.93', '0.86', '0.8', '0.75'];
+  const esc = pres.style.getPropertyValue('--sub-esc'), i = ESC.indexOf(esc);
+  const r = { esc, letra: parseFloat(getComputedStyle(sub.querySelector('p')).fontSize), cabe_mayor: false };
+  if (i > 0) {
+    if (ESC[i - 1]) pres.style.setProperty('--sub-esc', ESC[i - 1]); else pres.style.removeProperty('--sub-esc');
+    r.cabe_mayor = sub.offsetTop >= parseFloat(pres.style.getPropertyValue('--sobre-sub'));
+    pres.style.setProperty('--sub-esc', esc);
+  }
+  return r;
+});
+const irA = (page, capitulo, paso, explicacion) => page.evaluate(
+  (o) => window.__P.accionesPresentacion([{ tipo: 'presentacion', op: 'ir', ...o }]),
+  explicacion ? { capitulo, paso, explicacion } : { capitulo, paso });
+async function abrir(nav, w, h) {
+  const { ctx, page } = await contexto(nav, { viewport: { width: w, height: h }, isMobile: true, hasTouch: true });
+  await entrar(page, '/presentacion');
+  await page.waitForFunction(() => window.__P.presentacionLista(), null, espera);
+  return { ctx, page };
+}
+
+(async () => {
+  const nav = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  try {
+    // 1) El giro, de 390×844 a 844×390, con la explicación larga a la vista. Su `bottom` pasa con una transición de
+    // donde estaba (sobre la hoja) al pie, y en un aparato lento el mando la mide a mitad de camino. Aquí la transición
+    // se detiene apenas empieza (en su `transitionrun`): ya entonces la letra tiene que ser la de su lugar de lado, y al
+    // terminar la transición, la misma
+    {
+      const { ctx, page } = await abrir(nav, 390, 844);
+      await irA(page, 'vivienda', 3, D.larga);
+      const f = await enPresentacion(page, '#vivienda/3', D.larga);
+      await f.evaluate(() => {
+        window.__detenidas = 0;
+        document.querySelector('.subtitulo').addEventListener('transitionrun', (e) => {
+          if (e.propertyName !== 'bottom') return;
+          for (const a of e.target.getAnimations()) if (a.transitionProperty === 'bottom') { a.pause(); window.__detenidas++; }
+        });
+      });
+      await page.setViewportSize({ width: 844, height: 390 });
+      // de lado, medido (--herr-w: el ancho de las herramientas, solo de lado) y con el subtítulo detenido en camino
+      await f.waitForFunction(() => matchMedia('(orientation: landscape)').matches
+        && parseFloat(document.querySelector('#pres').style.getPropertyValue('--herr-w')) > 0
+        && (window.__detenidas > 0 || !document.querySelector('.subtitulo').getAnimations().some((a) => a.transitionProperty === 'bottom')), null, espera);
+      const enCamino = await f.evaluate(() => document.querySelector('#pres').style.getPropertyValue('--sub-esc'));
+      await f.evaluate(() => { for (const a of document.querySelector('.subtitulo').getAnimations()) a.finish(); });
+      await quieto(f);
+      salida.giro = { detenidas: await f.evaluate(() => window.__detenidas), en_camino: enCamino, final: await letra(f), dentro: await medirDentro(f) };
+      await page.screenshot({ path: `${capturas}/giro-844x390.png` });
+      await ctx.close();
+    }
+    // 2) «Solo 3D» con la explicación larga a la vista, en el celular más chico (320×568). Con la hoja va con la letra
+    // achicada; al ocultar el panel baja hasta el control y vuelve a la más grande que quepa. Con el panel oculto llega
+    // otra explicación (medida sin la hoja) y, al mostrarlo otra vez, la hoja no puede subirla sobre la obra
+    {
+      const { ctx, page } = await abrir(nav, 320, 568);
+      await irA(page, 'vivienda', 3, D.larga);
+      let f = await enPresentacion(page, '#vivienda/3', D.larga);
+      const solo3d = async (oculto) => {
+        await f.click('[data-accion="panel"]');
+        await f.waitForFunction((v) => document.querySelector('#pres').classList.contains('sin-panel') === v, oculto, espera);
+        await quieto(f);
+      };
+      await solo3d(true);
+      salida.solo3d = { oculto: await letra(f) };
+      await irA(page, 'vivienda', 4, D.larga);
+      f = await enPresentacion(page, '#vivienda/4', D.larga);
+      await solo3d(false);
+      salida.solo3d.de_vuelta = await medirDentro(f);
+      await page.screenshot({ path: `${capturas}/solo3d-320x568.png` });
+      await ctx.close();
+    }
+    // 3) y 4) De lado, en el panel: la leyenda desplegada se lee entera y, en el último paso de cada capítulo, el botón
+    // del control lleva entero el nombre del capítulo que sigue, con su flecha
+    salida.lado = {};
+    for (const [nombre, w, h] of [['667x375', 667, 375], ['915x412', 915, 412]]) {
+      const { ctx, page } = await abrir(nav, w, h);
+      const caso = salida.lado[nombre] = { leyenda: null, ultimos: {} };
+      await irA(page, 'saneamiento', 5);
+      const f = marco(page);
+      await f.waitForFunction(() => location.hash === '#saneamiento/5' && document.querySelector('.leyenda3d').childElementCount > 1, null, espera);
+      await quieto(f);
+      await f.click('.leyenda3d');
+      await f.waitForSelector('.leyenda3d.abierta', espera);
+      await quieto(f);
+      // en cada renglón, lo que queda encima en tres puntos (la muestra, el medio y el final)
+      caso.leyenda = await f.evaluate(() => {
+        const ley = document.querySelector('.leyenda3d');
+        return [...ley.querySelectorAll('span')].map((s) => {
+          const r = s.getBoundingClientRect(), y = r.top + r.height / 2;
+          return { texto: s.textContent.trim(), encima: [r.left + 4, r.left + r.width / 2, r.right - 4].map((x) => {
+            const e = document.elementFromPoint(x, y);
+            return !e ? null : ley.contains(e) ? 'leyenda' : e.closest('.panel') ? 'panel' : `${e.tagName.toLowerCase()}.${e.className}`;
+          }) };
+        });
+      });
+      await page.screenshot({ path: `${capturas}/leyenda-${nombre}.png` });
+      await f.evaluate(() => document.querySelector('.leyenda3d.abierta')?.click());
+      for (const [cap, paso, nombreCap] of D.ultimos) {
+        const hash = paso > 1 ? `#${cap}/${paso}` : `#${cap}`;
+        await f.evaluate((x) => { location.hash = x; }, hash);
+        await f.waitForFunction(([x, n]) => location.hash === x && document.querySelector('.control .donde b').textContent === n, [hash, nombreCap], espera);
+        await f.evaluate(() => document.fonts.ready.then(() => {}));
+        caso.ultimos[hash] = await f.evaluate(() => {
+          const caja = (e) => { const b = e.getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom }; };
+          const ctl = document.querySelector('.control'), sig = ctl.querySelector('.sig'), span = sig.querySelector('span');
+          return { texto: span.textContent, control: caja(ctl), sig: caja(sig), flecha: caja(sig.querySelector('svg')),
+            desborda: sig.scrollWidth > sig.clientWidth + 1, cortado: span.scrollWidth > span.clientWidth + 1 };
+        });
+      }
+      await ctx.close();
+    }
+  } finally {
+    await nav.close();
+  }
+  console.log(JSON.stringify(salida));
+})().catch((e) => { console.error(e); process.exit(1); });
+"""
+
+
+def _dentro(a: dict, b: dict) -> bool:
+    return b["l"] - 0.5 <= a["l"] and a["r"] <= b["r"] + 0.5 and b["t"] - 0.5 <= a["t"] and a["b"] <= b["b"] + 0.5
+
+
+@requiere_navegador
+def test_la_presentacion_cuando_el_celular_gira_se_oculta_el_panel_o_va_de_lado(panel_con_sitio, cfg, tmp_path):
+    """Los cuatro casos del verificador, en Chromium con el panel y la presentación de verdad:
+
+    * El celular gira de 390×844 a 844×390 con la explicación larga a la vista. Su `bottom` pasa con una transición y el
+      mando medía la posición de ese cuadro (offsetTop): a mitad de camino le quedaba menos lugar, elegía la letra más
+      chica y, al terminar la transición, el subtítulo cambiaba de lugar pero no de tamaño y nadie volvía a medir (10,3
+      px de letra donde cabía entera, a 13,8). La transición se detiene apenas empieza: la letra ya es la de su lugar
+      final y, al terminar, es la más grande que cabe, sin tapar la franja de la obra.
+    * «Solo 3D» en 320×568 con la explicación larga: al ocultar el panel vuelve a la letra más grande que cabe (se
+      quedaba en la más chica), y con una explicación que llega con el panel oculto, al mostrarlo la hoja no la sube
+      sobre la franja de la obra (le dejaba 27 px de los 90): el mando no se enteraba de esos cambios de clase.
+    * De lado (667×375 y 915×412), la leyenda desplegada se lee entera: el panel de la presentación le tapaba la muestra
+      y el comienzo de los renglones 2 a 6.
+    * De lado, en el último paso de cada capítulo, el botón del control lleva entero el nombre del capítulo que sigue y
+      su flecha queda dentro del control (en TIC se leía «Financiació» y la flecha quedaba fuera).
+    Con la letra de respaldo que haya (en el CI, DejaVu Sans, más ancha)."""
+    base, _ = panel_con_sitio
+    ultimos = [[c["id"], len(c["pasos"]), c["nombre"]] for c in G.capitulos]
+    (tmp_path / "formas.cjs").write_text(GUION_FORMAS, encoding="utf-8")
+    capturas = os.environ.get("CAPTURAS_AGENTE") or str(tmp_path)
+    r = subprocess.run(["node", str(tmp_path / "formas.cjs"), base, cfg.usuario, cfg.clave,
+                        json.dumps({"larga": LARGA, "ultimos": ultimos}), capturas],
+                       capture_output=True, text=True, timeout=900)
+    assert r.returncode == 0, (r.stdout[-3000:], r.stderr[-3000:])
+    s = json.loads(r.stdout.strip().splitlines()[-1])
+    assert s["csp"] == [] and s["errores"] == [], (s["csp"], s["errores"])
+    # El giro: con el subtítulo en camino, la letra de su lugar final; al llegar, la más grande que cabe, sin tapar la
+    # obra
+    g = s["giro"]
+    assert g["en_camino"] == g["final"]["esc"] and not g["final"]["cabe_mayor"], g
+    d = g["dentro"]
+    assert d["visible"] and _sin_choque(d["sub"], d["zona"]) and d["libre"] >= 90 and d["letra"] >= 10.5, d
+    # «Solo 3D»: oculto, la letra más grande que cabe; de vuelta, la franja de la obra libre y la hoja con un alto útil
+    o = s["solo3d"]["oculto"]
+    assert not o["cabe_mayor"], o
+    d = s["solo3d"]["de_vuelta"]
+    assert d["visible"] and d["panel"] and _sin_choque(d["sub"], d["zona"]) and d["libre"] >= 90, d
+    assert d["panel"]["b"] - d["panel"]["t"] >= 56 and d["letra"] >= 10.5, d
+    # De lado: la leyenda desplegada encima de todo, y el botón del último paso entero, con su flecha
+    assert set(s["lado"]) == {"667x375", "915x412"}
+    for nombre, c in s["lado"].items():
+        assert len(c["leyenda"]) > 1, (nombre, c["leyenda"])
+        assert all(x["encima"] == ["leyenda"] * 3 for x in c["leyenda"]), (nombre, c["leyenda"])
+        assert len(c["ultimos"]) == len(ultimos), (nombre, c["ultimos"])
+        for paso, u in c["ultimos"].items():
+            assert not u["desborda"] and not u["cortado"], (nombre, paso, u)
+            assert u["flecha"]["r"] - u["flecha"]["l"] >= 17, (nombre, paso, u)
+            assert _dentro(u["flecha"], u["sig"]) and _dentro(u["sig"], u["control"]), (nombre, paso, u)
 
 
 # ───────────────────────────── El proyector y la pestaña del chat ─────────────────────────────

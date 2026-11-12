@@ -138,7 +138,9 @@ y sigue igual.
   el ancho, si al lado no le caben tres renglones); en el celular y la tableta en vertical, sobre la hoja inferior, que
   le cede el alto que haga falta; con el celular en horizontal, sobre la maqueta, abajo a la derecha del panel de la
   presentación (que conserva su alto, con el control a su pie). En el celular nunca tapa la franja donde la cámara
-  encuadra la obra (al menos 90 px): si no cabe, su letra se achica y, en vertical, la hoja inferior cede más. Esa frase
+  encuadra la obra (al menos 90 px): si no cabe, su letra se achica y, en vertical, la hoja inferior cede más. Se vuelve
+  a acomodar, con la letra más grande que cabe donde queda, al girar el celular, al ocultar o mostrar el panel («Solo
+  3D») y al cambiar la altura de la hoja, sin esperar a que termine de moverse. Esa frase
   se proyecta ante otras personas: nunca lleva datos de habitantes, «@» (tampoco «＠» ni «﹫») ni números de 7 o más
   dígitos, también escritos por grupos (con espacios, puntos, guiones, rayas, barras o paréntesis), ni caracteres que no
   se ven; sí un periodo («2028-2031», «2028–2031», «2028/2031»), una fecha que existe («15/11/2026», «2026-11-15») y los

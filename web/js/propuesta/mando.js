@@ -161,8 +161,9 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     const l = conLeyenda ? leyenda.getBoundingClientRect() : null;
     pres.style.setProperty('--ley-w', l ? `${Math.ceil(l.width + 12)}px` : '0px');
     pres.style.setProperty('--ley-h', l ? `${Math.ceil(l.height)}px` : '0px');
-    const p = panel && !pres.classList.contains('sin-panel') ? panel.getBoundingClientRect() : null;
-    const libre = (ventana.innerWidth || 0) - (p ? p.right + 16 : 100) - (l ? l.width + 28 : 16);
+    // el borde derecho del panel donde queda (sin el transform con que vuelve al quitar «Solo 3D»)
+    const p = panel && !pres.classList.contains('sin-panel') ? panel.offsetLeft + panel.offsetWidth : null;
+    const libre = (ventana.innerWidth || 0) - (p !== null ? p + 16 : 100) - (l ? l.width + 28 : 16);
     const visible = !!sub?.classList.contains('visible');
     let sobre = !!l && libre < 320;
     if (l && !sobre && visible) {
@@ -183,7 +184,9 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   // encima (--sobre-sub: la hoja inferior baja lo que haga falta, propuesta.html) y, si así no cabe entera (la hoja en su
   // mínimo o, de lado, el alto entre esa franja y el control), se achica su letra un paso cada vez (--sub-esc). Si ni
   // con la más chica cabe, en vertical la hoja baja de su mínimo (--hoja-min): la obra y la explicación entera mandan.
-  // Las medidas son las que no dependen de transiciones ni de transformaciones (offsetTop, offsetHeight)
+  // Las medidas son las del lugar donde quedan el panel y el subtítulo, no las de un cuadro de sus transiciones (ver
+  // `bajoPanel` y `pisoFinal`): se mide en el acto, a veces con todo en movimiento (el giro del celular, «Solo 3D»), y
+  // al terminar la transición nada cambia de tamaño, así que nadie vuelve a medir
   function acomodar(visible) {
     for (const v of ['--sub-esc', '--hoja-min']) pres.style.removeProperty(v);
     const lado = !!deLado?.matches;
@@ -203,16 +206,30 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     pres.style.setProperty('--sobre-sub', `${reserva}px`);
     if (!visible) return;
     const enHoja = !lado && !pres.classList.contains('sin-panel');
-    // el borde de abajo del subtítulo: sobre la hoja en su mínimo, o el suyo (fijo, sobre el control)
-    const piso = enHoja ? caja(panel).bottom - HOJA_MIN - 8 : sub.offsetTop + sub.offsetHeight;
+    // el borde de abajo del subtítulo: sobre la hoja en su mínimo, o el suyo (fijo, sobre el control o al pie)
+    const piso = enHoja ? bajoPanel() - HOJA_MIN - 8 : pisoFinal();
     for (const e of ESCALAS) {
       if (e < 1) pres.style.setProperty('--sub-esc', String(e));
       if (sub.offsetHeight <= piso - reserva) return;
     }
     if (enHoja) {
-      const hoja = Math.floor(caja(panel).bottom - 8 - reserva - sub.offsetHeight);
+      const hoja = Math.floor(bajoPanel() - 8 - reserva - sub.offsetHeight);
       pres.style.setProperty('--hoja-min', `${Math.max(HOJA_PISO, hoja)}px`);
     }
+  }
+  // El borde de abajo de la hoja: el de su caja sin el transform con que entra y sale («Solo 3D»), que es fijo (sobre
+  // el control) aunque su alto esté en transición. offsetTop es el de la ventana: el panel es `position: fixed`
+  function bajoPanel() { return panel ? panel.offsetTop + panel.offsetHeight : ventana.innerHeight || 0; }
+  // El borde de abajo del subtítulo cuando termine de moverse. Su `bottom` tiene transición (sigue a la hoja, baja
+  // hasta el control con «Solo 3D», pasa al pie al girar el celular) y offsetTop la sigue cuadro a cuadro: medido a
+  // mitad de camino, el piso quedaba más arriba y la letra se achicaba de más, para siempre. El destino lo dice la
+  // transición
+  function pisoFinal() {
+    const piso = sub.offsetTop + sub.offsetHeight;
+    const t = sub.getAnimations?.().find((a) => a.transitionProperty === 'bottom');
+    const k = t?.effect?.getKeyframes?.() || [];
+    const hasta = parseFloat(k[k.length - 1]?.bottom);
+    return Number.isFinite(hasta) ? piso + (parseFloat(ventana.getComputedStyle(sub).bottom) || 0) - hasta : piso;
   }
   function renglones() {
     const alto = texto?.getBoundingClientRect?.().height || 0;
@@ -296,6 +313,16 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   if (typeof ventana.ResizeObserver === 'function') {
     const ro = new ventana.ResizeObserver(() => medir());
     for (const x of [pres, leyenda, panel, sub]) if (x) ro.observe(x);
+  }
+  // «Solo 3D» y la altura de la hoja (main.js: sin-panel, hoja-mini, panel-grande) mueven el subtítulo sin cambiar el
+  // tamaño de nada observado (en vertical el panel sale y vuelve con transform): sin esto, al volver el panel la
+  // explicación medida sin él tapaba la franja de la obra, y al ocultarlo quedaba con la letra achicada. Solo esas tres
+  // clases: las que pone `medir` no lo vuelven a llamar
+  if (pres && typeof ventana.MutationObserver === 'function') {
+    const DE_MAIN = ['sin-panel', 'hoja-mini', 'panel-grande'];
+    const de = (c) => { const s = String(c ?? '').split(/\s+/); return DE_MAIN.filter((x) => s.includes(x)).join(); };
+    new ventana.MutationObserver((cambios) => { if (de(cambios[0].oldValue) !== de(pres.className)) medir(); })
+      .observe(pres, { attributes: true, attributeFilter: ['class'], attributeOldValue: true });
   }
   if (caps[estado.ci]) { listo = true; enviar({ tipo: 'listo', ...actual() }); }
   return { subtitulo, estado: actual };
