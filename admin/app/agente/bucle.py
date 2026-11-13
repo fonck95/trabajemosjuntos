@@ -682,7 +682,10 @@ class Turno:
         # La presentación abierta (capítulo y paso) se dice solo si es del guion: el capítulo, el paso y su título
         guion = (await run_in_threadpool(sistema.guion_del_contexto)
                  if isinstance(contexto, dict) and contexto.get("presentacion") else None)
-        contexto_panel = sistema.contexto_del_panel(contexto, _ahora(), etiquetas, guion)
+        # Y la pantalla en off, si hay una abierta: la dice el servidor (la maneja también un agente por MCP)
+        pantalla = (await run_in_threadpool(sistema.pantalla_del_contexto, self.db, self.quien.uid)
+                    if "presentacion" in self.herramientas else "")
+        contexto_panel = sistema.contexto_del_panel(contexto, _ahora(), etiquetas, guion, pantalla)
         bloques = conv_db.limpio(bloques + [{"type": "text", "text": contexto_panel}, {"type": "text", "text": texto}])
         await self._guardar("user", bloques, texto=texto, herramientas=ui)
         historial.append({"role": "user", "content": bloques})

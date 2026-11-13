@@ -80,6 +80,20 @@ html[data-proyector] .app { grid-template-columns: 1fr; }
 html[data-proyector] .contenido.lleno { height: 100vh; height: 100dvh; }
 .presentacion.proyector .pres-barra, .presentacion.proyector .pres-remoto { display: none; }
 .presentacion.proyector .pres-marco { background: #000; }
+/* La pantalla en off (/presentacion?off=1): su barra dice que no tiene controles; la de los botones no se ve, ni el
+   asistente (se le habla desde otro equipo o el celular) */
+.pres-barra[hidden] { display: none; }
+html[data-pres-off] #agente { display: none; }
+.pres-off-chip { display: inline-flex; align-items: center; gap: 6px; }
+.pres-off-chip svg { width: 16px; height: 16px; }
+.pres-off-aviso[hidden] { display: none; }
+/* La presentación llena la ventana (la pantalla completa del asistente y de la pantalla en off): sin el menú ni las
+   barras del panel. En la pestaña del chat el botón del asistente sigue a mano (arriba a la derecha) */
+html[data-pres-llena] .lateral, html[data-pres-llena] .barra-movil { display: none; }
+html[data-pres-llena] .app { grid-template-columns: 1fr; }
+html[data-pres-llena] .contenido.lleno { height: 100vh; height: 100dvh; }
+html[data-pres-llena] .presentacion .pres-barra, html[data-pres-llena] .presentacion .pres-remoto { display: none; }
+html[data-pres-llena] .presentacion .pres-marco { background: #000; }
 /* abajo a la izquierda: arriba están las herramientas de la presentación y abajo al centro su control */
 .pres-completa { position: fixed; z-index: 5; left: 14px; bottom: 14px; box-shadow: var(--sombra); }
 .pres-completa[hidden] { display: none; }

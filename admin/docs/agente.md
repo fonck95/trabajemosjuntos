@@ -50,7 +50,7 @@ Las herramientas del panel (`app/agente/herramientas/`):
 | `pendientes`, `mi_trabajo`, `buscar_lugar`, `catalogos` | lectura | todos | Insignias y colas, listas de trabajo, nomenclátor de barrios y veredas, catálogos no sensibles |
 | `mapa` | interfaz | A, K | Vuela a un lugar, filtra, cambia capas y mapa base, resalta personas, abre una zona |
 | `abrir_vista` | interfaz | todos | Abre una vista o una ficha que su rol puede ver |
-| `presentacion` | interfaz | todos | La presentación de la propuesta 2028–2031: el índice (capítulos y pasos), ir a un capítulo y paso (le vuelve lo que muestra ese paso para explicarlo: textos, cifras, costos, plazos, fuentes de financiación por su nombre, a quién se pide, siguientes pasos, hitos y metas, todo entero: nada se acorta, y un paso pesa a lo sumo 12 KB), siguiente y anterior, y una o dos frases en pantalla, de hasta 220 caracteres (`explicar`, `quitar_explicacion`). No toca la base |
+| `presentacion` | interfaz | todos | La presentación de la propuesta 2028–2031: el índice (capítulos y pasos), ir a un capítulo y paso (le vuelve lo que muestra ese paso para explicarlo: textos, cifras, costos, plazos, fuentes de financiación por su nombre, a quién se pide, siguientes pasos, hitos y metas, todo entero: nada se acorta, y un paso pesa a lo sumo 12 KB), siguiente y anterior, una o dos frases en pantalla, de hasta 220 caracteres (`explicar`, `quitar_explicacion`), lo que se ve sin cambiar de paso (`vista`: el panel de texto o solo la maqueta 3D, el índice, las fichas), que llene la ventana (`pantalla_completa`) y qué muestra la [pantalla en off](#pantalla-en-off-y-agentes-por-mcp) (`estado`). Solo guarda esa pantalla: ningún dato de personas. Un agente externo la usa igual [por MCP](#pantalla-en-off-y-agentes-por-mcp) |
 
 A = administrador, K = coordinador, P = planillero. Las de Mnemo (`mnemo_…`) se describen [más abajo](#conectar-con-mnemo).
 
@@ -179,6 +179,51 @@ y sigue igual.
 - **Tope diario.** El panel muestra cuántos mensajes quedan hoy. Al llegar al tope, se sigue al día siguiente (hora de
   Colombia). Aprobar o rechazar tarjetas también cuenta como un mensaje: el asistente vuelve a trabajar con lo
   decidido. Lo que queda pendiente al llegar al tope se puede aprobar al día siguiente.
+
+## Pantalla en off y agentes por MCP
+
+La **pantalla en off** es la presentación de la propuesta para una sala: se abre en el proyector o en un televisor, no
+tiene controles y **solo cambia cuando se le pide algo concreto a un agente**: al asistente del panel (desde otro equipo
+o el celular) o a un agente externo por MCP (Claude, Mnemo u otro cliente MCP). Los dos usan la misma herramienta,
+`presentacion`, y manejan la misma pantalla: la de la persona que los usa.
+
+- **Abrirla.** En la vista **Presentación**, el botón **Pantalla en off** (o la dirección `/panel/presentacion?off=1`),
+  en el navegador del proyector con la sesión de la persona. Arriba dice que no tiene controles y si está conectada;
+  **Salir del modo en off** vuelve a la vista de siempre. No hay asistente en esa ventana: se le habla desde otra.
+- **Qué hace.** Pregunta cada segundo y medio por su estado (`GET /api/pantalla?v=`) y aplica solo lo que cambió: el
+  capítulo y el paso, la explicación en pantalla, lo que se ve (el panel de texto o «Solo 3D», el índice, las fichas)
+  y la pantalla completa. La presentación queda inerte: ni clics ni teclado, y sin sus botones. Lo que se toque a mano en
+  la vista del panel no la mueve.
+- **Pantalla completa.** «Ponla en pantalla completa» hace que la presentación llene la ventana, sin el menú ni las
+  barras del panel. Escape la devuelve en esa pantalla hasta la próxima orden. La pantalla completa del navegador (sin
+  la barra de direcciones) es F11 en ese equipo, o el navegador en modo quiosco: un navegador no deja que una página la
+  pida sin que alguien toque la pantalla.
+- **El asistente del panel.** Mientras hay una pantalla en off abierta (preguntó en los últimos 10 segundos), su
+  contexto dice qué muestra, «siguiente» y «anterior» van desde su paso y la pestaña del chat no cambia de vista (la
+  persona puede estar escribiendo desde el celular). Sin pantalla abierta, todo es como antes: maneja la vista
+  Presentación de la pestaña del chat, y lo que deja queda guardado para cuando se abra la pantalla.
+- **Un agente por MCP.** En **Mi cuenta → Agentes por MCP**, **Crear clave** muestra la dirección del servidor MCP
+  (`https://<su dominio>/panel/api/mcp`) y la clave, una sola vez. En el cliente MCP se configura como servidor remoto
+  (Streamable HTTP) con la cabecera `Authorization: Bearer <clave>`; si el cliente solo acepta una dirección, la
+  segunda que muestra Cuenta lleva la clave en `?clave=` (guárdela como un secreto). Por ejemplo, con Claude Code:
+
+  ```bash
+  claude mcp add --transport http yondo-presentacion https://<su dominio>/panel/api/mcp --header "Authorization: Bearer <clave>"
+  ```
+
+  El agente ve una sola herramienta, `presentacion`, con las mismas operaciones y las mismas reglas que el asistente:
+  la frase en pantalla nunca lleva datos de habitantes, «@» ni números de 7 o más dígitos. Con esa clave no se lee ni
+  se escribe ningún dato de personas.
+- **La clave.** Una por persona: crear otra reemplaza la anterior y **Revocar la clave** la anula. En la base queda su
+  SHA-256, nunca la clave. Deja de valer sola si la persona cambia su clave del panel (o el administrador cambia su
+  credencial), si la desactivan, o si su cuenta queda pendiente (clave temporal o compromiso por aceptar). Crear y
+  revocar quedan en la auditoría. El servidor rechaza las peticiones con una cabecera `Origin` que no es la del panel
+  (un navegador no puede usarla desde otra página) y atiende hasta 120 por minuto por clave.
+- **El protocolo.** `POST /api/mcp`: Streamable HTTP sin estado, revisiones 2025-11-25, 2025-06-18, 2025-03-26 y
+  2024-11-05, un mensaje JSON-RPC por petición y la respuesta en JSON (`initialize`, `ping`, `tools/list`,
+  `tools/call`). `GET` y `DELETE` responden 405 (sin flujo SSE ni sesiones). Los errores de la herramienta vuelven como
+  `isError`, para que el agente los corrija. La ruta no usa la sesión del panel, pero sí sus protecciones: el tope del
+  cuerpo, los cupos del servicio único y el 503 mientras MongoDB no responde.
 
 ## Ajustes
 
@@ -594,8 +639,11 @@ se suba.
 | `web/js/agente-mapa.js` | El puente entre el asistente y la vista del mapa |
 | `app/agente/guion.py`, `app/agente/propuesta_guion.json` | El guion de la presentación (lo que muestra cada paso, en texto plano): lo genera `scripts/build_propuesta.py` desde `web/data/propuesta.json` y va versionado dentro de `admin/` (también lo tiene el panel desplegado aparte) |
 | `web/js/agente-presentacion.js` | El puente entre el asistente y la vista Presentación: la cola, la navegación a `/presentacion`, el validador de la acción y el canal con la ventana del proyector |
-| `web/js/vistas/presentacion.js`, `web/css/presentacion.css` | La vista Presentación: el iframe de la propuesta, su barra y el modo proyector (`?pantalla=1`) |
-| `web/js/propuesta/mando.js` (del sitio) | En la presentación: recibe las órdenes del panel, le avisa cada cambio de paso y pinta el subtítulo |
+| `web/js/vistas/presentacion.js`, `web/css/presentacion.css` | La vista Presentación: el iframe de la propuesta, su barra, el modo proyector (`?pantalla=1`), la pantalla en off (`?off=1`) y la ventana llena |
+| `web/js/propuesta/mando.js` (del sitio) | En la presentación: recibe las órdenes del panel (también `vista`), le avisa cada cambio de paso y pinta el subtítulo |
+| `app/pantalla.py`, `app/api/pantalla.py` | La pantalla en off de cada persona (su estado, `GET /api/pantalla`) y su clave MCP (`/api/pantalla/clave`) |
+| `app/api/mcp.py` | El servidor MCP de la presentación (`POST /api/mcp`): la herramienta `presentacion` para un agente externo |
+| `web/js/vistas/cuenta.js` | Mi cuenta, con **Agentes por MCP**: la dirección del servidor y la clave |
 | `web/js/api.js` (`flujo`) | Lee la respuesta NDJSON con el CSRF de la sesión |
 | `app/api/ajustes.py`, `web/js/vistas/ajustes.js` | Los ajustes del asistente y, en la vista, la conexión con Mnemo (conectar, la vuelta y desconectar) |
 

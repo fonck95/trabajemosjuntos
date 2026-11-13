@@ -440,6 +440,16 @@ label.chip.opcion { cursor: pointer; gap: 6px; padding: 4px 11px; }
 label.chip.opcion input { margin: 0; accent-color: var(--accent); }
 label.chip.opcion:has(input:checked) { background: var(--ink); color: var(--bg); }
 .fila-botones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* Mi cuenta · Agentes por MCP (vistas/cuenta.js): la dirección del servidor y la clave, que se leen y se copian enteras */
+.datos-mcp { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 10px 0 14px; }
+.datos-mcp dt { color: var(--muted); }
+.datos-mcp dd { margin: 0; overflow-wrap: anywhere; }
+.datos-mcp code, .mcp-nueva code, .mcp-nueva input { font-family: var(--f-mono); font-size: 12.5px; }
+.mcp-nueva { display: grid; gap: 10px; margin-bottom: 12px; }
+.mcp-nueva p { margin: 0; }
+.mcp-copiar { display: flex; gap: 8px; align-items: flex-end; }
+.mcp-copiar .campo { flex: 1; min-width: 0; }
+@media (max-width: 640px) { .datos-mcp { grid-template-columns: 1fr; } }
 .sub-tarjeta { font-size: 15px; margin: 22px 0 12px; }
 .una-columna { grid-template-columns: 1fr; }
 .grupo-campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }

@@ -98,6 +98,9 @@ button { font: inherit; color: inherit; }
 .panel { position: fixed; z-index: 8; left: calc(max(14px, env(safe-area-inset-left, 0px)) + var(--riel) + 10px); top: calc(var(--barra) + 18px); max-height: calc(100vh - var(--barra) - var(--control) - 36px); max-height: calc(100dvh - var(--barra) - var(--control) - 36px); width: min(452px, 36vw); display: flex; flex-direction: column; background: var(--glass); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sombra); overflow: hidden; }
 .panel::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--mc, var(--accent)); }
 .pres.sin-panel .panel { transform: translateX(calc(-100% - 120px)); opacity: 0; pointer-events: none; }
+/* la pantalla en off del panel (mando.js, vista {controles: false}): nadie la toca, así que no muestra botones; la
+   ceja del control (capítulo y pasos) sigue diciendo dónde va */
+.pres.sin-controles .herr, .pres.sin-controles .control button, .pres.sin-controles .asa { display: none; }
 .panel, .riel { transition: transform 0.45s cubic-bezier(.2,.7,.2,1), opacity 0.35s; }
 .panel-cab { padding: 20px 24px 12px 30px; }
 .panel-cuerpo { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 24px 22px 30px; scrollbar-width: thin; }

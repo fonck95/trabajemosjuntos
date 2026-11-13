@@ -10,9 +10,14 @@
 //   responden `error` y no mueven nada.
 // * El subtítulo se pinta con textContent (nunca como HTML) y con las mismas reglas que pone el panel: sin caracteres que
 //   no se ven, sin números de 7 o más dígitos ni «@» (se proyecta ante una sala).
+// * `vista` cambia lo que se ve de la presentación sin cambiar de paso: el panel de texto (o «Solo 3D»), el índice, las
+//   fichas y los botones de la presentación (la pantalla en off del panel, que nadie toca, los oculta). Sin controles
+//   tampoco atiende el teclado (la presentación enfoca el índice al abrirlo y las flechas la moverían): solo le avisa al
+//   panel de Escape (`tecla`), que allá devuelve la ventana.
 // * Cada cambio de paso (también por el teclado o un clic) se le avisa al panel con el estado: capítulo, paso, total,
 //   nombre del capítulo, título del paso y la explicación a la vista. main.js lo anuncia con el evento `propuesta:paso`.
-// main.js le entrega sus piezas (caps, estado, ir, vecino, abrirIndice, reencuadrar) al final del arranque: así este
+// main.js le entrega sus piezas (caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel, reencuadrar) al final del
+// arranque: así este
 // módulo no depende de la escena 3D y se prueba con Node (admin/tests/test_agente_presentacion.py).
 export const CANAL = 'yondo-presentacion';
 export const VERSION = 1;
@@ -49,7 +54,7 @@ const ESCALAS = [1, 0.93, 0.86, 0.8, 0.75];
 // Claves que admite cada orden (además de canal, v, orden e id)
 const CLAVES = new Map([
   ['ir', ['capitulo', 'paso', 'explicacion']], ['avanzar', ['d', 'explicacion']], ['explicar', ['explicacion']],
-  ['quitar_explicacion', []], ['estado', []],
+  ['quitar_explicacion', []], ['estado', []], ['vista', ['panel', 'indice', 'fichas', 'controles']],
 ]);
 
 const cifra = (t) => Number(t.replace(/\./g, '').replace(',', '.'));
@@ -111,8 +116,8 @@ const limpio = (t, n) => String(t ?? '').replace(/[\xa0\u{202f}]/gu, ' ').replac
 
 /** Monta el mando si la presentación está dentro de un iframe; si no, no escucha nada y devuelve null. Devuelve
  * {subtitulo(texto|null), estado()} (para las pruebas y por si main.js lo necesita). */
-export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, reencuadrar = () => {},
-  ventana = globalThis.window, documento = globalThis.document } = {}) {
+export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, abrirFichas = () => {}, verPanel = () => {},
+  reencuadrar = () => {}, ventana = globalThis.window, documento = globalThis.document } = {}) {
   if (!ventana || !documento || !Array.isArray(caps) || !estado || typeof ir !== 'function' || typeof vecino !== 'function') return null;
   let padre = null;
   try { padre = ventana.parent; } catch { return null; }
@@ -128,6 +133,7 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   let listo = false;
   let origenPadre = null;       // el del panel que mandó la última orden válida: a él van los avisos siguientes
   let pasoDelSubtitulo = null;  // «capitulo/paso» al que corresponde la explicación en pantalla
+  let sinTeclado = false;       // vista {controles: false}: la pantalla en off del panel
 
   // Dentro del panel, los enlaces de la barra (el Home, el atlas) abren otra pestaña: si no, el iframe dejaría la
   // presentación y el asistente ya no la podría manejar
@@ -264,6 +270,21 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       if (!explicacion) return fallo('La explicación no se puede mostrar tal como es');
     }
     if (m.orden === 'estado') return responder(id, 'estado', origen);
+    // Lo que se ve, sin cambiar de paso: cada parte con verdadero o falso (las que no vienen quedan como están). El índice
+    // y las fichas tapan la presentación: no se abren a la vez
+    if (m.orden === 'vista') {
+      const partes = CLAVES.get('vista').filter((k) => m[k] !== undefined);
+      if (!partes.length) return fallo('La vista no dice qué mostrar');
+      if (partes.some((k) => typeof m[k] !== 'boolean')) return fallo('Cada parte de la vista va con verdadero o falso');
+      if (m.indice === true && m.fichas === true) return fallo('El índice y las fichas no se abren a la vez');
+      if (m.indice === true) abrirFichas(false);
+      if (m.fichas === true) abrirIndice(false);
+      if (m.panel !== undefined) verPanel(m.panel);
+      if (m.indice !== undefined) abrirIndice(m.indice);
+      if (m.fichas !== undefined) abrirFichas(m.fichas);
+      if (m.controles !== undefined) { pres?.classList.toggle('sin-controles', !m.controles); sinTeclado = !m.controles; }
+      return responder(id, 'estado', origen);
+    }
     if (m.orden === 'explicar' || m.orden === 'quitar_explicacion') {
       if (m.orden === 'explicar' && !explicacion) return fallo('Falta la explicación');
       subtitulo(explicacion);
@@ -286,6 +307,7 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     // paso anterior se quita al cambiar de paso (ver `propuesta:paso`)
     if (explicacion) subtitulo(explicacion, `${caps[ci].id}/${pi + 1}`);
     abrirIndice(false);
+    abrirFichas(false);
     const dir = m.orden === 'avanzar' ? m.d : ci < estado.ci || (ci === estado.ci && pi < estado.pi) ? -1 : 1;
     await ir(ci, pi, { dir });
     return responder(id, 'estado', origen);
@@ -304,6 +326,13 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     enviar({ tipo: listo ? 'estado' : 'listo', ...actual() });
     listo = true;
   });
+  // Sin controles, ninguna tecla mueve la presentación (en captura: antes que las de main.js); Escape va al panel
+  ventana.addEventListener('keydown', (e) => {
+    if (!sinTeclado) return;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    if (e.key === 'Escape') enviar({ tipo: 'tecla', tecla: 'Escape' });
+  }, true);
   let tMedir = 0;
   ventana.addEventListener('resize', () => { clearTimeout(tMedir); tMedir = setTimeout(medir, 120); });
   // El ancho de la leyenda y del panel cambia sin `resize` (otra leyenda al cambiar de paso, el iframe que se angosta o se

@@ -47,8 +47,10 @@ const VIVO_MS = 6500;                 // sin anuncios en este tiempo, se da por 
 const ESPERA_ACUSE_MS = 2500;         // lo que se espera el acuse del proyector (llega en milisegundos si está vivo)
 const ESPERA_FILA_MS = 60000;         // lo que una orden acusada puede esperar en la fila del proyector a que la empiece
 const ESPERA_PROYECTOR_MS = 15000;    // y desde que la empieza, su respuesta, por acción (él espera 12 s a la presentación)
-const OPS = new Set(['ir', 'siguiente', 'anterior', 'explicar', 'quitar_explicacion']);
-const CLAVES = new Set(['tipo', 'op', 'capitulo', 'paso', 'explicacion']);
+const OPS = new Set(['ir', 'siguiente', 'anterior', 'explicar', 'quitar_explicacion', 'vista', 'pantalla_completa']);
+const CLAVES = new Set(['tipo', 'op', 'capitulo', 'paso', 'explicacion', 'panel', 'indice', 'fichas', 'activar']);
+// `vista`: lo que se ve sin cambiar de paso; `pantalla_completa`: la vista llena la ventana (la pone la vista, no mando)
+const PARTES_VISTA = ['panel', 'indice', 'fichas'];
 const ID = /^[a-z_]{2,40}$/;
 const ID_VENTANA = /^[a-z0-9]{8,40}$/;
 // Lo que la explicación no puede traer (`_explicacion_visible` de la herramienta, `textoVisible` de mando.js, con las
@@ -71,11 +73,26 @@ const DIGITOS_MAX = 6;
 
 /** La acción `presentacion` del servidor, normalizada, o null si no tiene la forma estricta: un objeto con solo las
  * claves conocidas, `op` de la lista, `capitulo` como id (obligatorio para `ir`), `paso` entero de 1 a 60 (solo con
- * `ir`), y `explicacion` de hasta MAX_EXPLICACION caracteres que se ve tal cual (obligatoria para `explicar`). */
+ * `ir`), y `explicacion` de hasta MAX_EXPLICACION caracteres que se ve tal cual (obligatoria para `explicar`). `vista`
+ * lleva solo `panel`, `indice` y `fichas` (al menos una, cada una verdadero o falso; el índice y las fichas no a la vez)
+ * y `pantalla_completa` solo `activar` (verdadero o falso). */
 export function accionPresentacion(a) {
   if (!a || typeof a !== 'object' || Array.isArray(a) || a.tipo !== 'presentacion') return null;
   if (Object.keys(a).some((k) => !CLAVES.has(k)) || typeof a.op !== 'string' || !OPS.has(a.op)) return null;
   const out = { tipo: 'presentacion', op: a.op };
+  if (a.op === 'vista' || a.op === 'pantalla_completa') {
+    const suyas = a.op === 'vista' ? PARTES_VISTA : ['activar'];
+    if (Object.keys(a).some((k) => k !== 'tipo' && k !== 'op' && !suyas.includes(k))) return null;
+    for (const k of suyas) {
+      if (a[k] === undefined) continue;
+      if (typeof a[k] !== 'boolean') return null;
+      out[k] = a[k];
+    }
+    if (a.op === 'vista' && (!PARTES_VISTA.some((k) => k in out) || (out.indice && out.fichas))) return null;
+    if (a.op === 'pantalla_completa' && !('activar' in out)) return null;
+    return out;
+  }
+  if ([...PARTES_VISTA, 'activar'].some((k) => a[k] !== undefined)) return null;
   if (a.op === 'ir') {
     if (typeof a.capitulo !== 'string' || !ID.test(a.capitulo)) return null;
     out.capitulo = a.capitulo;
@@ -143,6 +160,38 @@ export function estadoValido(e) {
   const explicacion = e.explicacion === true;
   return { capitulo, paso, total, nombre: corto(e.nombre, 80), titulo: corto(e.titulo, 200), explicacion,
     texto: explicacion ? explicacionVisible(e.texto) : null };
+}
+
+// ───────── La pantalla en off (vistas/presentacion.js ?off=1, app/pantalla.py) ─────────
+
+/** El estado de la pantalla en off que manda el servidor, o null si no tiene la forma exacta (lo aplica un iframe). */
+export function estadoDePantalla(e) {
+  if (!e || typeof e !== 'object' || Array.isArray(e)) return null;
+  const { v, capitulo, paso, explicacion } = e;
+  if (!Number.isInteger(v) || v < 0 || typeof capitulo !== 'string' || !ID.test(capitulo)) return null;
+  if (!Number.isInteger(paso) || paso < 1 || paso > 60) return null;
+  if (explicacion !== null && (typeof explicacion !== 'string' || !explicacion || explicacion.length > 400)) return null;
+  if (['panel', 'indice', 'fichas', 'completa'].some((k) => typeof e[k] !== 'boolean')) return null;
+  if (!Number.isSafeInteger(e.orden_completa) || e.orden_completa < 0) return null;
+  return { v, capitulo, paso, explicacion, panel: e.panel, indice: e.indice, fichas: e.fichas, completa: e.completa,
+    orden_completa: e.orden_completa };
+}
+
+/** Las órdenes para mando.js que llevan la presentación de `antes` (lo último que se aplicó, o null) a `e`. La pantalla
+ * completa no va a mando: la pone la vista. Cambiar de paso cierra allá el índice y las fichas. */
+export function ordenesHacia(antes, e) {
+  const out = [];
+  const otroPaso = !antes || antes.capitulo !== e.capitulo || antes.paso !== e.paso;
+  if (otroPaso) {
+    out.push({ orden: 'ir', capitulo: e.capitulo, paso: e.paso, ...(e.explicacion ? { explicacion: e.explicacion } : {}) });
+  } else if (antes.explicacion !== e.explicacion) {
+    out.push(e.explicacion ? { orden: 'explicar', explicacion: e.explicacion } : { orden: 'quitar_explicacion' });
+  }
+  const base = otroPaso ? { ...(antes || {}), indice: false, fichas: false, panel: antes ? antes.panel : true } : antes;
+  const vista = {};
+  for (const k of ['panel', 'indice', 'fichas']) if (base[k] !== e[k]) vista[k] = e[k];
+  if (Object.keys(vista).length) out.push({ orden: 'vista', ...vista });
+  return out;
 }
 
 // ───────── La vista de esta pestaña ─────────

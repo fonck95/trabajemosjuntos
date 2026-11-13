@@ -18,8 +18,10 @@ docs/agente.md) que el widget aplica con `accionesMapa` o con `ir`. Por qué est
 * Los permisos son los del panel: `mapa.ver` para el mapa, `zonas.gestionar` para abrir zonas, `presentacion.ver` para
   la presentación y el de cada vista (la tabla `RUTAS` de `web/js/app.js`) para navegar. Como varias acciones no
   consultan la API, se comprueban aquí con la misma tabla (`acceso.PERMISOS`).
-* La presentación es pública y no toca la base: el modelo recibe el guion del paso al que la lleva (`guion.py`, lo mismo
-  que se ve en pantalla) para explicarlo con datos reales, y el navegador, el capítulo y el paso exactos. Lo que el
+* La presentación es pública: el modelo recibe el guion del paso al que la lleva (`guion.py`, lo mismo que se ve en
+  pantalla) para explicarlo con datos reales, y el navegador, el capítulo y el paso exactos. Lo único que guarda es la
+  pantalla en off de la persona (`app/pantalla.py`: capítulo, paso, explicación y lo que se ve, sin datos de nadie), que
+  manejan este asistente y un agente por MCP (`app/api/mcp.py`) con la misma herramienta (`presentacion_en_pantalla`). Lo que el
   modelo escribe para la pantalla (`explicacion`) se proyecta ante otras personas: se rechaza con caracteres que no se
   ven o que cambian cómo se ve el resto, con números largos o con «@» (una cédula, un teléfono o un correo no llegan
   ahí ni por descuido).
@@ -27,15 +29,17 @@ docs/agente.md) que el widget aplica con `accionesMapa` o con `ir`. Por qué est
 from __future__ import annotations
 
 import re
+import time
 import unicodedata
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Annotated, Any, Literal, Union
 from urllib.parse import urlencode
 
-from pydantic import AfterValidator, BeforeValidator, Field, field_validator, model_validator
+from pydantic import AfterValidator, BeforeValidator, Field, StrictBool, field_validator, model_validator
 from starlette.concurrency import run_in_threadpool
 
+from ... import pantalla as pantalla_off
 from .. import guion as guion_presentacion
 from .base import Contexto, ErrorHerramienta, Herramienta, Resultado
 from .gestion import (FiltrosBase, Id, IdOCero, Lugar, Nomenclatura, Perezosa, TipoLugar, _Entrada, error_de_busqueda,
@@ -663,7 +667,10 @@ async def _abrir_vista(ctx: Contexto, a: AbrirVistaEntrada) -> Resultado:
 
 # ───────────────────────────── presentacion ─────────────────────────────
 
-OPS_PRESENTACION = ("indice", "ir", "siguiente", "anterior", "explicar", "quitar_explicacion")
+OPS_PRESENTACION = ("indice", "ir", "siguiente", "anterior", "explicar", "quitar_explicacion", "vista",
+                    "pantalla_completa", "estado")
+# Lo que dice cada operación del estado de la pantalla en off (las demás no lo cambian): `vista` y `pantalla_completa`
+PARTES_VISTA = ("panel", "indice", "fichas")
 # Una o dos frases cortas: lo que el subtítulo de la presentación muestra entero en cualquier pantalla, del celular al
 # proyector (web/propuesta.html no lo recorta). `MAX_EXPLICACION` de agente-presentacion.js y de mando.js: una prueba
 # los compara
@@ -793,21 +800,42 @@ class PresentacionEntrada(_Entrada):
     op: Literal[OPS_PRESENTACION] = Field(..., description=(
         "indice: los capítulos y los títulos de sus pasos; ir: a un capítulo y paso (devuelve lo que muestra ese paso); "
         "siguiente o anterior: un paso (con capitulo y paso de partida, los del contexto del panel, devuelve el paso "
-        "de destino); explicar: muestra una o dos frases cortas en pantalla; quitar_explicacion: la quita"))
+        "de destino); explicar: muestra una o dos frases cortas en pantalla; quitar_explicacion: la quita; vista: lo "
+        "que se ve sin cambiar de paso (panel, indice, fichas); pantalla_completa: la presentación llena la ventana "
+        "(activar) o vuelve a la vista con el menú; estado: qué muestra la pantalla en off y si está abierta"))
     capitulo: str | None = Field(None, min_length=2, max_length=60, description=(
         "Id o nombre del capítulo (del índice o del contexto del panel)"))
     paso: PasoNumero | PasoId | None = Field(None, description="Número del paso desde 1, o su id (del índice)")
     explicacion: Explicacion | None = Field(None, description=(
         "Una o dos frases cortas para la pantalla (se proyecta; hasta 220 caracteres): sin datos de habitantes, «@» ni "
         "números de 7 o más dígitos"))
+    panel: StrictBool | None = Field(None, description=(
+        "vista: true muestra el panel de texto del paso; false deja solo la maqueta 3D («Solo 3D»)"))
+    indice: StrictBool | None = Field(None, description="vista: true abre el índice de capítulos; false lo cierra")
+    fichas: StrictBool | None = Field(None, description=(
+        "vista: true abre las fichas de los proyectos (costos, financiación y metas de cada módulo); false las cierra"))
+    activar: StrictBool | None = Field(None, description=(
+        "pantalla_completa: true, la presentación llena la ventana, sin el menú ni las barras del panel; false, vuelve"))
 
     @model_validator(mode="after")
     def _segun_op(self):
-        sobran = {"indice": ("capitulo", "paso", "explicacion"), "quitar_explicacion": ("capitulo", "paso", "explicacion"),
-                  "explicar": ("capitulo", "paso")}.get(self.op, ())
+        vista, completa = PARTES_VISTA, ("activar",)
+        sobran = {"indice": ("capitulo", "paso", "explicacion", *vista, *completa),
+                  "quitar_explicacion": ("capitulo", "paso", "explicacion", *vista, *completa),
+                  "estado": ("capitulo", "paso", "explicacion", *vista, *completa),
+                  "explicar": ("capitulo", "paso", *vista, *completa),
+                  "vista": ("capitulo", "paso", "explicacion", *completa),
+                  "pantalla_completa": ("capitulo", "paso", "explicacion", *vista)}.get(self.op, (*vista, *completa))
         malos = [k for k in sobran if getattr(self, k) is not None]
         if malos:
             raise ValueError(f"La operación {self.op} no usa: {', '.join(malos)}")
+        if self.op == "vista":
+            if all(getattr(self, k) is None for k in PARTES_VISTA):
+                raise ValueError("Para vista, diga qué mostrar: panel, indice o fichas (true o false)")
+            if self.indice is True and self.fichas is True:
+                raise ValueError("El índice y las fichas tapan la presentación: no se abren a la vez")
+        if self.op == "pantalla_completa" and self.activar is None:
+            raise ValueError("Para pantalla_completa, diga activar: true (llenar la ventana) o false (volver)")
         if self.op == "ir" and self.capitulo is None:
             raise ValueError("Para ir, indique el capítulo (id o nombre, del índice)")
         if self.op in ("siguiente", "anterior") and (self.capitulo is None) != (self.paso is None):
@@ -853,8 +881,7 @@ def _resolver_paso(g: guion_presentacion.Guion, ci: int, paso: int | str | None)
                                                 "ids": [p["id"] for p in c["pasos"]]})
 
 
-async def _presentacion(ctx: Contexto, a: PresentacionEntrada) -> Resultado:
-    exigir_permiso(ctx, "presentacion.ver", "Su rol no abre la presentación en el panel.")
+async def cargar_guion() -> guion_presentacion.Guion:
     try:
         g = await run_in_threadpool(guion_presentacion.cargar)
     except ValueError:
@@ -862,46 +889,128 @@ async def _presentacion(ctx: Contexto, a: PresentacionEntrada) -> Resultado:
     if g is None:
         raise ErrorHerramienta("La presentación de la propuesta no está disponible en este servidor.", "no_existe",
                                estado=404)
+    return g
+
+
+def _paso_para_modelo(g: guion_presentacion.Guion, ci: int, pi: int) -> dict:
+    c = g.capitulos[ci]
+    n = len(c["pasos"])
+    return {"capitulo": _cap_para_modelo(c), "paso": pi + 1, "de": n,
+            "posicion": f"Paso {pi + 1} de {n} del capítulo {c['nombre']}", "guion": c["pasos"][pi]}
+
+
+def _estado_para_modelo(doc: dict | None, e: dict, g: guion_presentacion.Guion, abierta: bool) -> dict:
+    ci = g.por_id(e["capitulo"])
+    out = {"abierta": abierta, "muestra": pantalla_off.describir(e, g), "capitulo": e["capitulo"], "paso": e["paso"],
+           "de": len(g.capitulos[ci]["pasos"]), "explicacion": e["explicacion"], "panel": e["panel"],
+           "indice": e["indice"], "fichas": e["fichas"], "llena_la_ventana": e["completa"]}
+    if doc and doc.get("por") in pantalla_off.ORIGENES:
+        out["cambiada_por"] = "el asistente del panel" if doc["por"] == "asistente" else "un agente por MCP"
+    return out
+
+
+NOTA_PANTALLA_ABIERTA = ("Se ve en la pantalla en off de la persona (la vista Presentación en modo en off, abierta en el "
+                         "proyector o en otra pantalla).")
+NOTA_SIN_PANTALLA = ("No hay ninguna pantalla en off abierta: queda guardado y se verá cuando la persona abra la vista "
+                     "Presentación en modo en off (botón «Pantalla en off» de la vista, en el proyector o en otra "
+                     "pantalla).")
+
+
+async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, por: str) -> Resultado:
+    """La herramienta `presentacion` del asistente del panel (`por` = asistente) y del servidor MCP (`por` = mcp).
+
+    Cambia la pantalla en off de la persona (`app/pantalla.py`) y devuelve lo que el modelo necesita para explicarla. Con
+    el asistente, además, la acción para la vista Presentación de la pestaña del chat, como siempre, salvo que haya una
+    pantalla en off abierta: entonces la que cambia es esa y la pestaña del chat no se mueve (la persona puede estar
+    escribiendo desde el celular). Sin pantalla abierta, «siguiente» y «anterior» sin punto de partida los calcula la
+    vista de la pestaña del chat (no se sabe desde dónde): la pantalla en off no cambia. Con MCP, o con una pantalla
+    abierta, se calculan desde la pantalla en off."""
+    g = await cargar_guion()
     if a.op == "indice":
         return Resultado({**g.indice(), "nota": (
             "Para mostrar un paso, op ir con su capitulo (id) y paso (número desde 1). Lo que se ve en cada paso le "
             "llega al ir.")}, f"Índice de la presentación ({len(g)} capítulos)")
+    doc = await run_in_threadpool(pantalla_off.leer, db, uid)
+    e = pantalla_off.estado(doc, g)
+    abierta = pantalla_off.conectada(doc)
+    desde_pantalla = abierta or por == "mcp"
+    if a.op == "estado":
+        return Resultado({"pantalla": _estado_para_modelo(doc, e, g, abierta), "nota": (
+            NOTA_PANTALLA_ABIERTA if abierta else NOTA_SIN_PANTALLA)},
+            "La pantalla en off está abierta" if abierta else "No hay una pantalla en off abierta")
     extra = {"explicacion": a.explicacion} if a.explicacion else {}
+    accion: dict | None = None
+    cambios: dict = {}
     if a.op == "explicar":
-        return Resultado({"en_pantalla": a.explicacion, "nota": (
-            "Se muestra sobre la presentación, en el paso que esté abierto. Explique en el chat con más detalle.")},
-            "Mostré una explicación en la presentación",
-            acciones=[{"tipo": "presentacion", "op": "explicar", **extra}])
-    if a.op == "quitar_explicacion":
-        return Resultado({"nota": "Se quitó la explicación de la pantalla."}, "Quité la explicación de la presentación",
-                         acciones=[{"tipo": "presentacion", "op": "quitar_explicacion"}])
-    if a.op in ("siguiente", "anterior") and a.capitulo is None:
+        contenido: dict[str, Any] = {"en_pantalla": a.explicacion, "nota": (
+            "Se muestra sobre la presentación, en el paso que esté abierto. Explique en el chat con más detalle.")}
+        resumen = "Mostré una explicación en la presentación"
+        accion, cambios = {"tipo": "presentacion", "op": "explicar", **extra}, {"explicacion": a.explicacion}
+    elif a.op == "quitar_explicacion":
+        contenido, resumen = {"nota": "Se quitó la explicación de la pantalla."}, "Quité la explicación de la presentación"
+        accion, cambios = {"tipo": "presentacion", "op": "quitar_explicacion"}, {"explicacion": None}
+    elif a.op == "vista":
+        cambios = {k: getattr(a, k) for k in PARTES_VISTA if getattr(a, k) is not None}
+        if cambios.get("indice"):
+            cambios["fichas"] = False
+        if cambios.get("fichas"):
+            cambios["indice"] = False
+        pedido = {k: getattr(a, k) for k in PARTES_VISTA if getattr(a, k) is not None}
+        # (con false, con true)
+        nombres = {"panel": ("solo la maqueta 3D", "el panel de texto"), "indice": ("sin el índice", "el índice"),
+                   "fichas": ("sin las fichas", "las fichas")}
+        lo_que = ", ".join(nombres[k][int(v)] for k, v in pedido.items())
+        contenido = {"vista": pedido, "nota": "La presentación sigue en el mismo paso; solo cambia lo que se ve."}
+        resumen = f"La presentación muestra {lo_que}"
+        accion = {"tipo": "presentacion", "op": "vista", **pedido}
+    elif a.op == "pantalla_completa":
+        cambios = {"completa": a.activar, "orden_completa": time.time_ns() // 1_000_000}
+        contenido = {"llena_la_ventana": a.activar, "nota": (
+            "La presentación llena la ventana, sin el menú ni las barras del panel (la tecla Escape la devuelve en esa "
+            "pantalla). Para la pantalla completa del navegador, F11 en ese equipo." if a.activar else
+            "La presentación vuelve a la vista del panel, con el menú y su barra.")}
+        resumen = "La presentación llena la ventana" if a.activar else "La presentación volvió a la vista del panel"
+        accion = {"tipo": "presentacion", "op": "pantalla_completa", "activar": a.activar}
+    elif a.op in ("siguiente", "anterior") and a.capitulo is None and not desde_pantalla:
         # Sin el punto de partida la presentación calcula el paso; el modelo lo ve en el contexto del próximo mensaje
         return Resultado({"nota": (
             f"La presentación pasa al paso {'siguiente' if a.op == 'siguiente' else 'anterior'} desde donde esté. Para "
             "saber cuál es (y recibir lo que muestra), use ir o indique capitulo y paso de partida.")},
             f"Pasé al paso {'siguiente' if a.op == 'siguiente' else 'anterior'} de la presentación",
             acciones=[{"tipo": "presentacion", "op": a.op, **extra}])
-    ci = _resolver_capitulo(g, a.capitulo or "")
-    pi = _resolver_paso(g, ci, a.paso)   # sin paso, `ir` va al primero (siguiente y anterior lo traen siempre)
-    aviso = None
-    if a.op in ("siguiente", "anterior"):
-        destino = g.vecino(ci, pi, 1 if a.op == "siguiente" else -1)
-        if destino == (ci, pi):
-            aviso = ("Ya era el último paso de la presentación: queda en él." if a.op == "siguiente"
-                     else "Ya era el primer paso de la presentación: queda en él.")
-        ci, pi = destino
-    c = g.capitulos[ci]
-    n = len(c["pasos"])
-    contenido: dict[str, Any] = {
-        "capitulo": _cap_para_modelo(c), "paso": pi + 1, "de": n,
-        "posicion": f"Paso {pi + 1} de {n} del capítulo {c['nombre']}", "guion": c["pasos"][pi],
-        "nota": ("Es lo que muestra la presentación en ese paso: explíquelo en el chat con esos datos (no invente "
-                 "otros). En pantalla, si hace falta, solo una o dos frases cortas (explicar, hasta 220 caracteres).")}
-    if aviso:
-        contenido["aviso"] = aviso
-    return Resultado(contenido, f"Mostré {c['nombre']} · paso {pi + 1} de {n}",
-                     acciones=[{"tipo": "presentacion", "op": "ir", "capitulo": c["id"], "paso": pi + 1, **extra}])
+    else:
+        if a.op in ("siguiente", "anterior") and a.capitulo is None:
+            ci, pi = g.por_id(e["capitulo"]), e["paso"] - 1   # desde donde está la pantalla en off
+        else:
+            ci = _resolver_capitulo(g, a.capitulo or "")
+            pi = _resolver_paso(g, ci, a.paso)   # sin paso, `ir` va al primero (siguiente y anterior lo traen siempre)
+        aviso = None
+        if a.op in ("siguiente", "anterior"):
+            destino = g.vecino(ci, pi, 1 if a.op == "siguiente" else -1)
+            if destino == (ci, pi):
+                aviso = ("Ya era el último paso de la presentación: queda en él." if a.op == "siguiente"
+                         else "Ya era el primer paso de la presentación: queda en él.")
+            ci, pi = destino
+        c = g.capitulos[ci]
+        contenido = {**_paso_para_modelo(g, ci, pi), "nota": (
+            "Es lo que muestra la presentación en ese paso: explíquelo en el chat con esos datos (no invente otros). En "
+            "pantalla, si hace falta, solo una o dos frases cortas (explicar, hasta 220 caracteres).")}
+        if aviso:
+            contenido["aviso"] = aviso
+        resumen = f"Mostré {c['nombre']} · paso {pi + 1} de {len(c['pasos'])}"
+        accion = {"tipo": "presentacion", "op": "ir", "capitulo": c["id"], "paso": pi + 1, **extra}
+        # Cambiar de paso quita la explicación anterior y cierra el índice y las fichas (como mando.js)
+        cambios = {"capitulo": c["id"], "paso": pi + 1, "explicacion": a.explicacion or None, "indice": False,
+                   "fichas": False}
+    await run_in_threadpool(pantalla_off.guardar, db, uid, cambios, por)
+    if desde_pantalla:
+        contenido["pantalla"] = NOTA_PANTALLA_ABIERTA if abierta else NOTA_SIN_PANTALLA
+    return Resultado(contenido, resumen, acciones=[accion] if accion and not abierta and por == "asistente" else [])
+
+
+async def _presentacion(ctx: Contexto, a: PresentacionEntrada) -> Resultado:
+    exigir_permiso(ctx, "presentacion.ver", "Su rol no abre la presentación en el panel.")
+    return await presentacion_en_pantalla(ctx.db, ctx.quien.uid, a, "asistente")
 
 
 # ───────────────────────────── Catálogo de herramientas ─────────────────────────────
@@ -926,14 +1035,18 @@ D_ABRIR_VISTA = (
     "en una frase qué quedó en pantalla.")
 D_PRESENTACION = (
     "Presenta la propuesta de inversión Yondó 2028–2031 (la presentación pública: portada, siete módulos, "
-    "financiación, hoja de ruta y pedidos) en el panel de la persona o en su proyector, y la explica paso a paso. "
-    "indice devuelve los capítulos (id y nombre) y los títulos de sus pasos; ir lleva a un capítulo y paso y devuelve "
-    "lo que ese paso muestra (textos, cifras, costos, plazos y lo que se ve en la maqueta 3D) para que lo explique con "
-    "esos datos; siguiente y anterior avanzan un paso (con capitulo y paso de partida, los del contexto del panel, "
-    "también devuelven el destino); explicar muestra en pantalla una o dos frases cortas (hasta 220 caracteres) y "
-    "quitar_explicacion la quita. Si el capítulo no existe o es ambiguo, o el paso no está, no mueve nada y devuelve "
-    "los candidatos. La explicación se proyecta ante otras personas: nunca datos de habitantes, «@» ni números de 7 o "
-    "más dígitos. No toca la base de datos.")
+    "financiación, hoja de ruta y pedidos) y la explica paso a paso, en el panel de la persona o en su pantalla en off "
+    "(la vista Presentación abierta en modo en off en un proyector o un televisor: no tiene controles y solo cambia "
+    "con estas órdenes). indice devuelve los capítulos (id y nombre) y los títulos de sus pasos; ir lleva a un capítulo "
+    "y paso y devuelve lo que ese paso muestra (textos, cifras, costos, plazos y lo que se ve en la maqueta 3D) para "
+    "que lo explique con esos datos; siguiente y anterior avanzan un paso (con capitulo y paso de partida, los del "
+    "contexto del panel, o desde donde esté la pantalla en off, también devuelven el destino); explicar muestra en "
+    "pantalla una o dos frases cortas (hasta 220 caracteres) y quitar_explicacion la quita; vista cambia lo que se ve "
+    "sin cambiar de paso (panel: el panel de texto o solo la maqueta 3D; indice: el índice de capítulos; fichas: las "
+    "fichas de los proyectos); pantalla_completa hace que la presentación llene la ventana, sin el menú ni las barras "
+    "(activar false la devuelve); estado dice qué muestra la pantalla en off y si está abierta. Si el capítulo no "
+    "existe o es ambiguo, o el paso no está, no mueve nada y devuelve los candidatos. La explicación se proyecta ante "
+    "otras personas: nunca datos de habitantes, «@» ni números de 7 o más dígitos. No toca datos de personas.")
 
 HERRAMIENTAS: list[Herramienta] = [
     Herramienta("mapa", D_MAPA, MapaEntrada, "interfaz", ("mapa.ver",), "Moviendo el mapa", _mapa,
