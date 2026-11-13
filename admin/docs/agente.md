@@ -186,7 +186,11 @@ y sigue igual.
 
 La vista **Presentación**, la pantalla en off y los agentes por MCP muestran la **presentación técnica** de la propuesta
 (`web/propuesta.html?modo=tecnica`): lo que se construye, dónde, cómo funciona y cómo se mide, **sin costos ni
-financiación** (esos quedan en la propuesta para la gestión, `web/propuesta.html` sin `modo`, la del Home). Es la misma
+financiación** (esos quedan en la propuesta para la gestión, `web/propuesta.html` sin `modo`, la del Home). **Solo
+existe dentro del panel, con sesión**: la técnica se arma únicamente enmarcada (y el sitio solo deja que lo enmarque el
+propio panel, `frame-ancestors`); abierta sola en el sitio público, con o sin `?modo=tecnica`, es la propuesta pública,
+sin la capa visual ni el mando. Y solo la manejan quienes entraron: el asistente vive en el panel, la pantalla en off
+pide la sesión (`presentacion.ver`) y un agente por MCP, la clave que la persona crea en **Mi cuenta**. Es la misma
 maqueta 3D del territorio real, con lo que se agrega para presentar cada detalle visual y técnico:
 
 - **Capítulos.** La portada técnica, los siete módulos y el **cronograma de obra** (cada componente con su barra de

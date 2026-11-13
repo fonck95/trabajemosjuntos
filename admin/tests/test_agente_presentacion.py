@@ -106,7 +106,9 @@ def test_los_capitulos_son_los_de_la_presentacion_tecnica():
     js = MAIN_JS.read_text(encoding="utf-8")
     tec = TECNICA_JS.read_text(encoding="utf-8")
     assert "const caps = TECNICA ? capsTecnica(datos) : [" in js
-    assert "const TECNICA = new URLSearchParams(location.search).get('modo') === 'tecnica';" in js
+    # La técnica solo existe dentro del panel (con sesión): enmarcada; sola en el sitio público es la propuesta pública
+    assert "try { enMarco = window.parent !== window; } catch { enMarco = true; }" in js
+    assert "const TECNICA = enMarco && new URLSearchParams(location.search).get('modo') === 'tecnica';" in js
     fijos = re.findall(r"\{ (?:\.\.\.\w+, )*id: '(\w+)', nombre: '([^']+)', corto: '([^']+)'", tec)
     assert fijos == [*guion.FIJOS_ANTES, *guion.FIJOS_DESPUES]
     datos = json.loads(PROPUESTA_JSON.read_text(encoding="utf-8"))

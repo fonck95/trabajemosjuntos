@@ -10,8 +10,9 @@ o referente que aplica, una mezcla de fuentes, su grado de madurez y un pedido c
   «Propuesta 2028–2031 ↗». No comparte vistas, rutas ni estado con el atlas.
 - **Datos:** los archivos de `data/propuesta/` se juntan en `web/data/propuesta.json` con `python3 scripts/build_data.py`, que llama a `scripts/build_propuesta.py`.
 - **Corte:** 28 de octubre de 2026. Cifras en millones de pesos constantes de 2026.
-- **Versión técnica:** `propuesta.html?modo=tecnica`, la que muestran el asistente del panel y los agentes por MCP (ver
-  [Presentación técnica](#presentación-técnica)).
+- **Versión técnica:** solo dentro del panel del equipo, con sesión (la vista **Presentación** la abre como
+  `propuesta.html?modo=tecnica`): la que muestran el asistente del panel y los agentes por MCP (ver
+  [Presentación técnica](#presentación-técnica)). En el sitio público no existe.
 
 ## Cómo se recorre
 
@@ -238,9 +239,13 @@ Las obras van en dos olas:
 
 ## Presentación técnica
 
-Con `?modo=tecnica` la misma página es la **presentación técnica**: lo que se construye, dónde, cómo funciona y cómo se
-mide, sin costos ni financiación. Es la que abre la vista **Presentación** del panel y la que manejan el asistente y los
-agentes por MCP (`admin/docs/agente.md`, «La presentación técnica»).
+Dentro del panel del equipo la misma página es la **presentación técnica**: lo que se construye, dónde, cómo funciona y
+cómo se mide, sin costos ni financiación. Es la que abre la vista **Presentación** del panel (con `?modo=tecnica`) y la
+que manejan el asistente y los agentes por MCP (`admin/docs/agente.md`, «La presentación técnica»). Solo existe
+enmarcada por el panel: el sitio solo deja que lo enmarque el propio panel (`frame-ancestors` de `admin/servidor.py`), y
+abierta sola en el sitio público, con o sin `?modo=tecnica`, la página es la propuesta pública de siempre. Manejarla
+también exige estar dentro: el asistente vive en el panel, la pantalla en off pide la sesión y el MCP, la clave que la
+persona crea en su cuenta.
 
 - **Capítulos:** portada técnica, las siete áreas y el cronograma de obra (cada componente con su barra de 2027 a 2032).
   Cada área conserva sus pasos menos el de financiación, suma las inmersiones de `data/propuesta/general.json`

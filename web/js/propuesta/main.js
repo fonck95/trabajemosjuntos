@@ -16,7 +16,12 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const pres = $('#pres'), cab = $('.panel-cab'), cuerpo = $('.panel-cuerpo'), riel = $('.riel'), puntos = $('.puntos');
 const progreso = $('.progreso'), telon = $('.telon'), indice = $('.indice'), fichas = $('.fichas'), leyenda = $('.leyenda3d');
-const TECNICA = new URLSearchParams(location.search).get('modo') === 'tecnica';
+// La técnica es la de la vista Presentación del panel del equipo (con sesión), donde la manejan el asistente y los
+// agentes por MCP: solo existe dentro de su marco. El sitio solo deja que lo enmarque el propio panel (frame-ancestors de
+// admin/servidor.py); abierta sola en el sitio público, con o sin «?modo=tecnica», es la propuesta pública de siempre
+let enMarco = false;
+try { enMarco = window.parent !== window; } catch { enMarco = true; }
+const TECNICA = enMarco && new URLSearchParams(location.search).get('modo') === 'tecnica';
 if (TECNICA) {
   pres.classList.add('tecnica');
   const marca = $('.marca span');
