@@ -50,7 +50,7 @@ Las herramientas del panel (`app/agente/herramientas/`):
 | `pendientes`, `mi_trabajo`, `buscar_lugar`, `catalogos` | lectura | todos | Insignias y colas, listas de trabajo, nomenclátor de barrios y veredas, catálogos no sensibles |
 | `mapa` | interfaz | A, K | Vuela a un lugar, filtra, cambia capas y mapa base, resalta personas, abre una zona |
 | `abrir_vista` | interfaz | todos | Abre una vista o una ficha que su rol puede ver |
-| `presentacion` | interfaz | todos | La presentación de la propuesta 2028–2031: el índice (capítulos y pasos), ir a un capítulo y paso (le vuelve lo que muestra ese paso para explicarlo: textos, cifras, costos, plazos, fuentes de financiación por su nombre, a quién se pide, siguientes pasos, hitos y metas, todo entero: nada se acorta, y un paso pesa a lo sumo 12 KB), siguiente y anterior, una o dos frases en pantalla, de hasta 220 caracteres (`explicar`, `quitar_explicacion`), lo que se ve sin cambiar de paso (`vista`: el panel de texto o solo la maqueta 3D, el índice, las fichas), que llene la ventana (`pantalla_completa`) y qué muestra la [pantalla en off](#pantalla-en-off-y-agentes-por-mcp) (`estado`). Solo guarda esa pantalla: ningún dato de personas. Un agente externo la usa igual [por MCP](#pantalla-en-off-y-agentes-por-mcp) |
+| `presentacion` | interfaz | todos | La [presentación técnica](#la-presentación-técnica) de la propuesta 2028–2031 (lo que se construye, sin costos): el índice (capítulos, pasos, componentes e inmersiones), ir a un capítulo y paso (le vuelve lo que muestra ese paso para explicarlo: textos, cifras, especificaciones, referentes, sitio, plazos, metas y el modelo del atlas que muestra, todo entero y sin plata: nada se acorta, y un paso pesa a lo sumo 12 KB), siguiente y anterior, una o dos frases en pantalla, de hasta 220 caracteres (`explicar`, `quitar_explicacion`), los paneles sin cambiar de paso (`vista`: el panel de texto o solo la maqueta 3D, el índice, las fichas técnicas), lo que se ve sin cambiar de paso (`visual`: la cámara, la obra enfocada, su ficha técnica, hoy o con el proyecto, un modelo 3D del atlas y el tema, con la ficha de lo que muestra), que llene la ventana (`pantalla_completa`) y qué muestra la [pantalla en off](#pantalla-en-off-y-agentes-por-mcp) (`estado`). Solo guarda esa pantalla: ningún dato de personas. Un agente externo la usa igual [por MCP](#pantalla-en-off-y-agentes-por-mcp) |
 
 A = administrador, K = coordinador, P = planillero. Las de Mnemo (`mnemo_…`) se describen [más abajo](#conectar-con-mnemo).
 
@@ -129,10 +129,12 @@ y sigue igual.
   escritorio angosto, con el panel del asistente abierto, el panel izquierdo del mapa se pliega para que lo que muestra
   quede a la vista (vuelve con **Capas y filtros**).
 - **La presentación** (todos los roles). «Preséntame la propuesta» o «muéstrame las viviendas nuevas»: el asistente abre
-  la vista **Presentación** (la presentación pública de la propuesta 2028–2031, `web/propuesta.html`, dentro del panel),
-  va al capítulo y paso y la explica en el chat con lo que ese paso muestra (textos, cifras, costos, plazos y lo que se
-  ve en la maqueta, y también las fuentes de financiación por su nombre, a quién se le pide, los siguientes pasos, los
-  hitos y las metas, todo entero: nada se acorta), que le devuelve la herramienta; en pantalla, si hace falta, pone una
+  la vista **Presentación** (la [presentación técnica](#la-presentación-técnica) de la propuesta 2028–2031,
+  `web/propuesta.html?modo=tecnica`, dentro del panel), va al capítulo y paso y la explica en el chat con lo que ese paso
+  muestra (textos, cifras, especificaciones, referentes, sitio, plazos, metas y lo que se ve en 3D, todo entero y sin
+  plata: nada se acorta), que le devuelve la herramienta. «Acércate a la PTAR», «muéstrala como está hoy», «ábreme la
+  ficha del matadero», «vista aérea con el norte arriba», «muéstrame la torre por dentro» o «el simulador sísmico»: con
+  `visual` cambia lo que se ve sin cambiar de paso y le vuelve la ficha técnica de lo que muestra; en pantalla, si hace falta, pone una
   o dos frases cortas (hasta 220 caracteres) como subtítulo, que se quita al cambiar de paso. El subtítulo se ve siempre
   entero, sin recortes, del celular al proyector: en escritorio va abajo junto a la leyenda (o encima de ella, con todo
   el ancho, si al lado no le caben tres renglones); en el celular y la tableta en vertical, sobre la hoja inferior, que
@@ -180,6 +182,40 @@ y sigue igual.
   Colombia). Aprobar o rechazar tarjetas también cuenta como un mensaje: el asistente vuelve a trabajar con lo
   decidido. Lo que queda pendiente al llegar al tope se puede aprobar al día siguiente.
 
+## La presentación técnica
+
+La vista **Presentación**, la pantalla en off y los agentes por MCP muestran la **presentación técnica** de la propuesta
+(`web/propuesta.html?modo=tecnica`): lo que se construye, dónde, cómo funciona y cómo se mide, **sin costos ni
+financiación** (esos quedan en la propuesta para la gestión, `web/propuesta.html` sin `modo`, la del Home). Es la misma
+maqueta 3D del territorio real, con lo que se agrega para presentar cada detalle visual y técnico:
+
+- **Capítulos.** La portada técnica, los siete módulos y el **cronograma de obra** (cada componente con su barra de
+  2027 a 2032, según el plazo de su ficha). Cada módulo con sus pasos sin el de financiación, las **inmersiones** en los
+  modelos del atlas detrás del paso que dicen y un paso de **metas** (línea base y meta de cada indicador). Los arma
+  `web/js/propuesta/tecnica.js` y el guion del asistente (`app/agente/guion.py`), con las mismas reglas; una prueba con
+  Node los compara.
+- **Sin plata.** De cada texto se quita lo que tiene plata (un paréntesis con «$», la frase que la lleve y, en una
+  especificación, el tramo entre «·» o «;»); una cifra en pesos o en millones y una especificación de costo, valor,
+  precio, subsidio, tope, presupuesto, financiación, crédito, aporte o tarifa no se muestran. El guion tampoco las trae.
+- **El panel.** La hoja de especificaciones de cada obra, su proyecto tipo o referente, dónde y el plazo con su barra;
+  el render del área en la portadilla y en el telón de cada módulo; las fichas técnicas para imprimir. Arriba a la
+  derecha, la brújula y la escala (en pantalla grande) y el estado: **Con el proyecto** u **Hoy**.
+- **Inmersiones.** Un modelo del atlas en una ventana sobre la maqueta (`atlas.html?escenario=1`, `web/js/escenario.js`):
+  la torre del hospital en su sitio, el predio hoy, los pisos por servicio, el recorrido por dentro, el laboratorio, el
+  simulador sísmico y el modelo BIM, y el relleno Las Américas hoy y con el parque ecotecnológico. El catálogo está en
+  `data/propuesta/general.json` (`tecnica.inmersiones`) y build_propuesta.py revisa que cada modo exista en el atlas.
+  En ese modo la torre se muestra sin sus paneles ni la conexión a la microrred de sedes: su energía viene de la granja
+  solar centralizada. El modelo BIM todavía trae los paneles de su diseño (el ajuste está pendiente, `docs/16`).
+- **`visual`** (la orden de `mando.js` y la operación de la herramienta), sin cambiar de paso y combinable en una sola
+  llamada: `enfoque` (la cámara va a un componente: al paso que lo desarrolla, a sus sitios o trazados de `geo.json` o
+  a la réplica de una sede, según el `enfoque` que build_propuesta.py le calcula a cada componente; `paso` vuelve),
+  `detalle` (su ficha técnica a un lado; `cerrar`), `comparar` (`hoy`: el sitio como está, sin las capas del proyecto y
+  con las casas y sedes de hoy, en el mismo encuadre; `proyecto`), `camara` (`paso`, `aerea`, `oblicua`, `rasante`,
+  `cerca`, `lejos`), `rumbo` (desde dónde se mira, en grados desde el norte: 180 deja el norte arriba), `girar`,
+  `inmersion` (un modelo del catálogo; `maqueta` lo cierra en un paso de inmersión; `paso`, lo del paso) y `tema`
+  (`claro` u `oscuro`). Los componentes y las inmersiones se piden por id o por nombre y se resuelven contra el guion;
+  lo que no existe (o un componente sin lugar en la maqueta, para `enfoque`) no mueve nada y vuelve con los candidatos.
+
 ## Pantalla en off y agentes por MCP
 
 La **pantalla en off** es la presentación de la propuesta para una sala: se abre en el proyector o en un televisor, no
@@ -191,8 +227,9 @@ o el celular) o a un agente externo por MCP (Claude, Mnemo u otro cliente MCP). 
   en el navegador del proyector con la sesión de la persona. Arriba dice que no tiene controles y si está conectada;
   **Salir del modo en off** vuelve a la vista de siempre. No hay asistente en esa ventana: se le habla desde otra.
 - **Qué hace.** Pregunta cada segundo y medio por su estado (`GET /api/pantalla?v=`) y aplica solo lo que cambió: el
-  capítulo y el paso, la explicación en pantalla, lo que se ve (el panel de texto o «Solo 3D», el índice, las fichas)
-  y la pantalla completa. La presentación queda inerte: ni clics ni teclado, y sin sus botones. Lo que se toque a mano en
+  capítulo y el paso, la explicación en pantalla, lo que se ve (el panel de texto o «Solo 3D», el índice, las fichas),
+  lo visual de la presentación técnica (la cámara, la obra enfocada, la ficha técnica, hoy o con el proyecto, el modelo
+  del atlas y el tema; al cambiar de paso vuelve a lo del paso, salvo el tema) y la pantalla completa. La presentación queda inerte: ni clics ni teclado, y sin sus botones. Lo que se toque a mano en
   la vista del panel no la mueve.
 - **Pantalla completa.** «Ponla en pantalla completa» hace que la presentación llene la ventana, sin el menú ni las
   barras del panel. Escape la devuelve en esa pantalla hasta la próxima orden. La pantalla completa del navegador (sin
@@ -683,7 +720,7 @@ se suba.
 | `progreso`, `texto` | Trozos de una nota de progreso o de la respuesta |
 | `texto_ronda` | `texto`: el texto final de la ronda en curso cuando no coincide con lo que llegó por partes (con Mnemo, los trozos son un adelanto). Reemplaza el de la ronda |
 | `herramienta` | `id`, `nombre`, `etiqueta`, `estado` (`inicio`, `ok`, `error`, `pendiente`, `aprobada`, `rechazada`) y `resumen` |
-| `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias`, `mapa` (acciones del mapa) o `presentacion` (`op`: `ir` con `capitulo` y `paso` desde 1, `siguiente`, `anterior`, `explicar` o `quitar_explicacion`; `explicacion`, la frase para la pantalla, en todas salvo la última) |
+| `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias`, `mapa` (acciones del mapa) o `presentacion` (`op`: `ir` con `capitulo` y `paso` desde 1, `siguiente`, `anterior`, `explicar` o `quitar_explicacion`; `explicacion`, la frase para la pantalla, en todas salvo la última; `vista` con `panel`, `indice` o `fichas`; `visual` con `enfoque`, `camara`, `rumbo`, `girar`, `comparar`, `detalle`, `inmersion` o `tema`; `pantalla_completa` con `activar`) |
 | `confirmar` | La tarjeta de una escritura: `id`, `titulo`, `detalle` (pares etiqueta y valor, enteros: el widget no recorta nada, y si llegan más de 40 o uno de más de 4.000 caracteres no ofrece **Aprobar**) y `aviso`. Lo pendiente al abrir una conversación lleva lo mismo y, si lo guardó una versión anterior del panel, `vieja` (tampoco ofrece **Aprobar**) |
 | `descartar` | La ronda se repite tras un error pasajero: se borra lo que se pintó de ella |
 | `aviso` | `texto` y `nivel` (`info` o `alerta`): un rechazo del modelo, el paso a un modelo de respaldo |

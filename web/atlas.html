@@ -778,6 +778,16 @@ table.bim-t5d td.n, table.bim-comp td.n { white-space: nowrap; }
   .tc-tema { padding-left: 0; }
 }
 /* <<< torre-contraste */
+/* ---------- el atlas como escenario de la presentación técnica (js/escenario.js, «?escenario=1» dentro de un marco):
+   solo la escena 3D de la vista, a pantalla completa, con sus controles propios (el recorrido, el simulador, el modelo
+   BIM); sin la cabecera, las pestañas, los textos ni las tarjetas, que ya cuenta la presentación */
+html[data-escenario], html[data-escenario] body { height: 100%; overflow: hidden; background: var(--raised); }
+html[data-escenario] body::before, html[data-escenario] header.top, html[data-escenario] footer,
+html[data-escenario] .view > :not(.board), html[data-escenario] .board > :not(.stage),
+html[data-escenario] .stage-hint { display: none !important; }
+html[data-escenario] main { padding: 0; margin: 0; max-width: none; }
+html[data-escenario] .view, html[data-escenario] .board { display: block; }
+html[data-escenario] .stage { position: fixed; inset: 0; height: auto; border: 0; border-radius: 0; }
 </style>
 
 <header class="top">

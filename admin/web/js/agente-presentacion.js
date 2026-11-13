@@ -47,11 +47,28 @@ const VIVO_MS = 6500;                 // sin anuncios en este tiempo, se da por 
 const ESPERA_ACUSE_MS = 2500;         // lo que se espera el acuse del proyector (llega en milisegundos si está vivo)
 const ESPERA_FILA_MS = 60000;         // lo que una orden acusada puede esperar en la fila del proyector a que la empiece
 const ESPERA_PROYECTOR_MS = 15000;    // y desde que la empieza, su respuesta, por acción (él espera 12 s a la presentación)
-const OPS = new Set(['ir', 'siguiente', 'anterior', 'explicar', 'quitar_explicacion', 'vista', 'pantalla_completa']);
-const CLAVES = new Set(['tipo', 'op', 'capitulo', 'paso', 'explicacion', 'panel', 'indice', 'fichas', 'activar']);
+const OPS = new Set(['ir', 'siguiente', 'anterior', 'explicar', 'quitar_explicacion', 'vista', 'visual', 'pantalla_completa']);
 // `vista`: lo que se ve sin cambiar de paso; `pantalla_completa`: la vista llena la ventana (la pone la vista, no mando)
 const PARTES_VISTA = ['panel', 'indice', 'fichas'];
 const ID = /^[a-z_]{2,40}$/;
+const ID_PIEZA = /^[a-z0-9_]{1,40}$/;   // un componente o una inmersión de la propuesta
+// `visual` (la presentación técnica): cada parte con los valores que admite (`VISUAL` de mando.js, `PARTES_VISUAL` de la
+// herramienta y `VISUAL` de app/pantalla.py). null en enfoque, detalle, inmersion y rumbo es «lo del paso»
+const CAMARAS = ['paso', 'aerea', 'oblicua', 'rasante', 'cerca', 'lejos'];
+const VISUAL = {
+  enfoque: (v) => v === null || (typeof v === 'string' && ID_PIEZA.test(v)),
+  detalle: (v) => v === null || (typeof v === 'string' && ID_PIEZA.test(v)),
+  inmersion: (v) => v === null || (typeof v === 'string' && ID_PIEZA.test(v)),
+  camara: (v) => CAMARAS.includes(v),
+  rumbo: (v) => v === null || (Number.isInteger(v) && v >= 0 && v <= 359),
+  girar: (v) => typeof v === 'boolean',
+  comparar: (v) => v === 'hoy' || v === 'proyecto',
+  tema: (v) => v === 'claro' || v === 'oscuro',
+};
+const PARTES_VISUAL = Object.keys(VISUAL);
+// lo visual de cada paso (al cambiar de paso vuelve a esto; el tema no)
+const VISUAL_INICIAL = { enfoque: null, camara: 'paso', rumbo: null, girar: false, comparar: 'proyecto', detalle: null, inmersion: null };
+const CLAVES = new Set(['tipo', 'op', 'capitulo', 'paso', 'explicacion', 'panel', 'indice', 'fichas', 'activar', ...PARTES_VISUAL]);
 const ID_VENTANA = /^[a-z0-9]{8,40}$/;
 // Lo que la explicación no puede traer (`_explicacion_visible` de la herramienta, `textoVisible` de mando.js, con las
 // mismas reglas): se proyecta ante una sala. La «@» y los números se buscan en la forma NFKC del texto (la «＠» de
@@ -75,11 +92,20 @@ const DIGITOS_MAX = 6;
  * claves conocidas, `op` de la lista, `capitulo` como id (obligatorio para `ir`), `paso` entero de 1 a 60 (solo con
  * `ir`), y `explicacion` de hasta MAX_EXPLICACION caracteres que se ve tal cual (obligatoria para `explicar`). `vista`
  * lleva solo `panel`, `indice` y `fichas` (al menos una, cada una verdadero o falso; el índice y las fichas no a la vez)
- * y `pantalla_completa` solo `activar` (verdadero o falso). */
+ * y `pantalla_completa` solo `activar` (verdadero o falso). `visual` lleva solo sus partes (al menos una, cada una con
+ * un valor de su lista). */
 export function accionPresentacion(a) {
   if (!a || typeof a !== 'object' || Array.isArray(a) || a.tipo !== 'presentacion') return null;
   if (Object.keys(a).some((k) => !CLAVES.has(k)) || typeof a.op !== 'string' || !OPS.has(a.op)) return null;
   const out = { tipo: 'presentacion', op: a.op };
+  if (a.op === 'visual') {
+    if (Object.keys(a).some((k) => k !== 'tipo' && k !== 'op' && !(k in VISUAL))) return null;
+    const partes = PARTES_VISUAL.filter((k) => a[k] !== undefined);
+    if (!partes.length || partes.some((k) => !VISUAL[k](a[k]))) return null;
+    for (const k of partes) out[k] = a[k];
+    return out;
+  }
+  if (PARTES_VISUAL.some((k) => a[k] !== undefined)) return null;
   if (a.op === 'vista' || a.op === 'pantalla_completa') {
     const suyas = a.op === 'vista' ? PARTES_VISTA : ['activar'];
     if (Object.keys(a).some((k) => k !== 'tipo' && k !== 'op' && !suyas.includes(k))) return null;
@@ -173,8 +199,15 @@ export function estadoDePantalla(e) {
   if (explicacion !== null && (typeof explicacion !== 'string' || !explicacion || explicacion.length > 400)) return null;
   if (['panel', 'indice', 'fichas', 'completa'].some((k) => typeof e[k] !== 'boolean')) return null;
   if (!Number.isSafeInteger(e.orden_completa) || e.orden_completa < 0) return null;
+  // lo visual: lo que falta (un servidor de antes) es lo del paso; un valor que no cumple invalida el estado
+  const visual = { ...VISUAL_INICIAL, tema: null };
+  for (const k of PARTES_VISUAL) {
+    if (e[k] === undefined) continue;
+    if (k === 'tema' ? e[k] !== null && !VISUAL.tema(e[k]) : !VISUAL[k](e[k])) return null;
+    visual[k] = e[k];
+  }
   return { v, capitulo, paso, explicacion, panel: e.panel, indice: e.indice, fichas: e.fichas, completa: e.completa,
-    orden_completa: e.orden_completa };
+    orden_completa: e.orden_completa, ...visual };
 }
 
 /** Las órdenes para mando.js que llevan la presentación de `antes` (lo último que se aplicó, o null) a `e`. La pantalla
@@ -191,6 +224,16 @@ export function ordenesHacia(antes, e) {
   const vista = {};
   for (const k of ['panel', 'indice', 'fichas']) if (base[k] !== e[k]) vista[k] = e[k];
   if (Object.keys(vista).length) out.push({ orden: 'vista', ...vista });
+  // lo visual: al cambiar de paso la presentación lo deja como lo dice el paso (salvo el tema); se manda lo que difiere.
+  // El tema solo va cuando hay uno (null es «el del navegador»: no se manda)
+  const antesVisual = otroPaso ? { ...VISUAL_INICIAL, tema: antes?.tema ?? null } : antes;
+  const visual = {};
+  for (const k of PARTES_VISUAL) {
+    const valor = e[k] === undefined ? (k === 'tema' ? null : VISUAL_INICIAL[k]) : e[k];
+    const previo = antesVisual[k] === undefined ? (k === 'tema' ? null : VISUAL_INICIAL[k]) : antesVisual[k];
+    if (valor !== previo && !(k === 'tema' && valor === null)) visual[k] = valor;
+  }
+  if (Object.keys(visual).length) out.push({ orden: 'visual', ...visual });
   return out;
 }
 

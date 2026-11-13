@@ -2,10 +2,11 @@
 guion (app/agente/guion.py y propuesta_guion.json), el puente del panel (web/js/agente-presentacion.js), la vista
 /presentacion (web/js/vistas/presentacion.js) y el mando de la presentación (web/js/propuesta/mando.js del sitio).
 
-* El guion versionado es el que sale de web/data/propuesta.json (si alguien cambia la propuesta sin regenerarlo, falla)
-  y sus capítulos son los de `caps` en main.js, con sus nombres fijos y el paso «inicio» de un capítulo vacío. Cada
-  paso trae lo que muestra (fuentes con nombre, qué financian y su requisito, a quién se pide, siguientes pasos, plazos,
-  especificaciones y metas), y cada texto que la pantalla muestra llega ENTERO, igual que en web/data/propuesta.json.
+* El guion versionado es el de la presentación técnica (propuesta.html?modo=tecnica, la que muestran el asistente y los
+  agentes por MCP) y sale de web/data/propuesta.json (si alguien cambia la propuesta sin regenerarlo, falla); sus
+  capítulos y pasos son los de `capsTecnica` (tecnica.js), con sus nombres fijos. Cada paso trae lo que muestra
+  (especificaciones, referentes, sitio, plazos, metas, la inmersión del atlas), cada texto llega ENTERO y sin plata, y
+  las reglas que quitan la plata son las mismas en guion.py y en tecnica.js (con Node, con cada texto de la propuesta).
 * La herramienta: definición y esquema para la Messages API (sin `pattern` ni `format`), entradas inválidas (también
   explicaciones de más de 220 caracteres, con caracteres que no se ven, números largos escritos por grupos o «@», en su
   forma NFKC), que las cifras, los periodos y las fechas que existen sí pasan y que la herramienta, el puente y el mando
@@ -63,6 +64,7 @@ PROPUESTA_JSON = RAIZ / "web" / "data" / "propuesta.json"
 MAIN_JS = RAIZ / "web" / "js" / "propuesta" / "main.js"
 MANDO_JS = RAIZ / "web" / "js" / "propuesta" / "mando.js"
 PUENTE_JS = JS / "agente-presentacion.js"
+TECNICA_JS = RAIZ / "web" / "js" / "propuesta" / "tecnica.js"
 H = {h.nombre: h for h in hi.HERRAMIENTAS}
 P = H["presentacion"]
 G = guion.cargar()
@@ -97,31 +99,42 @@ def test_el_guion_versionado_es_el_que_sale_de_la_propuesta():
 
 
 @pytest.mark.skipif(not PROPUESTA_JSON.is_file(), reason="Sin web/data/propuesta.json")
-def test_los_capitulos_son_los_de_main_js():
-    """El orden, los ids y los nombres fijos de `caps` (main.js), los módulos en el orden de propuesta.json y el paso
-    «inicio» de un capítulo sin pasos: el número de paso del asistente es el de la dirección de la presentación."""
+def test_los_capitulos_son_los_de_la_presentacion_tecnica():
+    """El orden, los ids y los nombres fijos de `capsTecnica` (tecnica.js, la presentación técnica de main.js), los
+    módulos en el orden de propuesta.json y sus pasos (sin el de financiación, con las inmersiones de general.json y el
+    de metas): el número de paso del asistente es el de la dirección de la presentación."""
     js = MAIN_JS.read_text(encoding="utf-8")
-    bloque = js[js.index("const caps = ["):js.index("];", js.index("const caps = ["))]
-    fijos = re.findall(r"\{ id: '(\w+)', nombre: '([^']+)', corto: '([^']+)', \.\.\.datos\.(\w+) \}", bloque)
-    assert [(i, n, c) for i, n, c, _ in fijos] == [*guion.FIJOS_ANTES, *guion.FIJOS_DESPUES]
-    assert all(i == d for i, _, _, d in fijos)
-    assert bloque.index("'portada'") < bloque.index("...datos.modulos.map") < bloque.index("'financiacion'")
-    assert "if (!c.pasos.length) c.pasos = [{ id: 'inicio', tipo: 'texto', titulo: c.nombre }]" in js
+    tec = TECNICA_JS.read_text(encoding="utf-8")
+    assert "const caps = TECNICA ? capsTecnica(datos) : [" in js
+    assert "const TECNICA = new URLSearchParams(location.search).get('modo') === 'tecnica';" in js
+    fijos = re.findall(r"\{ (?:\.\.\.\w+, )*id: '(\w+)', nombre: '([^']+)', corto: '([^']+)'", tec)
+    assert fijos == [*guion.FIJOS_ANTES, *guion.FIJOS_DESPUES]
     datos = json.loads(PROPUESTA_JSON.read_text(encoding="utf-8"))
-    esperados = ["portada", *[m["id"] for m in datos["modulos"]], "financiacion", "ruta", "pedidos"]
-    assert [c["id"] for c in G.capitulos] == esperados
-    for c in G.capitulos:
-        fuente = next(m for m in datos["modulos"] if m["id"] == c["id"]) if c["id"] in esperados[1:-3] else \
-            datos[c["id"]]
-        pasos = [p for p in fuente.get("pasos") or [] if p] or [{"id": "inicio"}]
-        assert [p["id"] for p in c["pasos"]] == [p["id"] for p in pasos], c["id"]
+    assert [c["id"] for c in G.capitulos] == ["portada", *[m["id"] for m in datos["modulos"]], "ruta"]
+    assert [[p["id"] for p in c["pasos"]] for c in G.capitulos] == [
+        [p["id"] for p in c["pasos"]] for c in guion.capitulos_tecnicos(datos)]
+    for m in datos["modulos"]:
+        ids = [p["id"] for p in G.capitulos[G.por_id(m["id"])]["pasos"]]
+        assert ids[-1] == "metas" and "financiacion" not in ids, m["id"]
+        assert ids[:-1] == [p["id"] for p in _con_inmersiones(m, datos["tecnica"])], m["id"]
+    salud = [p["id"] for p in G.capitulos[G.por_id("salud")]["pasos"]]
+    assert salud[2:7] == ["torre", "torre_pisos", "torre_recorrido", "torre_sismo", "torre_bim"]
     # Lo de main.js que hace falta para el control remoto
     assert "import { montarMando } from './mando.js';" in js
     assert ("montarMando({ caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel: (v) => alternarPanel(!v), "
-            "reencuadrar });") in js
+            "reencuadrar,\n  visual });") in js
     assert "dispatchEvent(new CustomEvent('propuesta:paso'" in js
     assert re.search(r"function avanzar\(d\) \{\n  if \(tlTelon\?\.isActive\(\)\) \{ tlTelon\.progress\(1\); return; \}"
                      r"\n  const \[ci, pi\] = vecino\(estado\.ci, estado\.pi, d\);", js)
+
+
+def _con_inmersiones(m: dict, tec: dict) -> list[dict]:
+    """Los pasos de un módulo sin el de financiación y con sus inmersiones detrás del paso que dicen (sin el de metas):
+    calculado aquí, sin `guion.pasos_tecnicos`."""
+    pasos = [p for p in m["pasos"] if p.get("tipo") != "financiacion"]
+    for e in (tec.get("pasos") or {}).get(m["id"], []):
+        pasos.insert(next(i for i, p in enumerate(pasos) if p["id"] == e["despues_de"]) + 1, e)
+    return pasos
 
 
 def test_los_textos_del_guion_son_planos_y_acotados():
@@ -154,193 +167,207 @@ def _plano(v) -> str:
 
 
 def _en_pantalla(datos: dict, c: dict, p: dict) -> dict[str, list[str]]:
-    """Los textos que muestra el paso `p` del capítulo `c` (`RENDER` de web/js/propuesta/main.js), por campo del
-    guion, leídos de web/data/propuesta.json."""
-    tipo = p.get("tipo") or "texto"
+    """Los textos que muestra el paso `p` del capítulo `c` en la presentación técnica (`RENDER_TECNICA` de
+    web/js/propuesta/main.js), por campo del guion, leídos de web/data/propuesta.json y sin plata (las reglas de
+    tecnica.js, que `test_las_reglas_sin_plata_son_las_mismas_en_python_y_en_js` compara con las de guion.py)."""
+    sp, tipo = guion.sin_plata, p.get("tipo") or "texto"
     x = next((k for k in c.get("componentes") or [] if k.get("id") == p.get("componente")), {}) \
         if tipo == "componente" else {}
     respaldo = {"portada": c.get("lema"), "portadilla": c.get("problema"), "componente": x.get("descripcion")}
-    out: dict[str, list[str]] = {"texto": [_plano(p.get("texto") or respaldo.get(tipo))], "nota": [_plano(p.get("nota"))],
-                                 "lista": [_plano(t) for t in p.get("lista") or []],
+    out: dict[str, list[str]] = {"texto": [_plano(sp(p.get("texto") or respaldo.get(tipo)))],
+                                 "nota": [_plano(sp(p.get("nota")))],
+                                 "lista": [_plano(sp(t)) for t in p.get("lista") or []],
                                  "leyenda": [_plano(l.get("texto")) for l in p.get("leyenda") or []]}
-    cifras = p.get("cifras") or (c.get("cifras") if tipo in ("portada", "portadilla") else None) or []
-    out["cifras"] = [_plano(k.get(campo)) for k in cifras for campo in ("v", "l", "fuente")]
+    cifras = [guion.cifra_tecnica(k) for k in
+              p.get("cifras") or (c.get("cifras") if tipo in ("portada", "portadilla") else None) or []]
+    out["cifras"] = [_plano(k.get(campo)) for k in cifras if k for campo in ("v", "l", "fuente")]
     if tipo == "portada":
         out["modulos"] = [_plano(m.get(campo)) for m in datos["modulos"] for campo in ("nombre", "lema")]
     elif tipo == "portadilla":
-        out["propuesta"] = [_plano(c.get("propuesta"))]
-        out["metas"] = [_plano(f"{m['indicador']}: {m.get('base') or '—'} → {m.get('meta') or '—'}")
-                        for m in c.get("metas") or []]
+        out["propuesta"] = [_plano(sp(c.get("propuesta")))]
     elif tipo == "componentes":
-        out["componentes"] = [_plano(k.get(campo)) for k in c.get("componentes") or [] for campo in ("nombre", "resumen")]
+        out["componentes"] = [_plano(sp(k.get(campo))) for k in c.get("componentes") or []
+                              for campo in ("nombre", "resumen", "plazo")]
     elif tipo == "componente":
-        out["componente"] = [_plano(x.get(campo)) for campo in ("nombre", "resumen", "plazo", "ubicacion")]
-        out["componente"] += [_plano(x.get("base_costo")) if x.get("costo") else ""]
-        out["componente"] += [_plano(f"{k}: {v}") for k, v in x.get("especificaciones") or []]
-        out["componente"] += [_plano(t.get("nombre")) for t in x.get("proyecto_tipo") or []]
+        out["componente"] = [_plano(sp(x.get(campo))) for campo in ("nombre", "resumen", "plazo", "ubicacion")]
+        out["componente"] += [_plano(f"{e[0]}: {e[1]}") for e in map(guion.especificacion_tecnica,
+                                                                      x.get("especificaciones") or []) if e]
+        out["componente"] += [_plano(sp(t.get("nombre"))) for t in x.get("proyecto_tipo") or []]
     elif tipo == "comparacion":
         for lado in ("antes", "despues"):
             out[lado] = [" · ".join(t for t in (_plano((p.get(lado) or {}).get("titulo")),
-                                                 _plano((p.get(lado) or {}).get("texto"))) if t)]
-    elif tipo == "financiacion":
-        g = c.get("gestion") or {}
-        out["pedido"], out["madurez_nota"] = [_plano(g.get("pedido"))], [_plano(g.get("madurez_nota"))]
-        out["a_quien"] = [_plano(t) for t in g.get("a_quien") or []]
-        out["siguientes_pasos"] = [_plano(t) for t in g.get("pasos") or []]
-        out["mezcla"] = [_plano(f.get("mecanismo")) for f in c.get("financiacion") or []]
-        out["proyectos_tipo"] = [_plano(t.get("nombre")) for t in c.get("proyectos_tipo") or []]
-    elif tipo == "fuentes":
-        out["fuentes"] = [_plano(f.get(campo)) for f in c.get("fuentes") or []
-                          for campo in ("nombre", "tipo", "que_financia", "requisito")]
-    elif tipo == "ruta":
-        out["hitos"] = [_plano(f"{h['fecha']}: {h['texto']}") for h in c.get("hitos") or []]
-        out["fases"] = [_plano(f["nombre"]) for f in c.get("fases") or []]
-    elif tipo == "pedidos":
-        out["entidades"] = [_plano(e.get(campo)) for e in c.get("entidades") or [] for campo in ("entidad", "pedido")]
+                                                 _plano(sp((p.get(lado) or {}).get("texto")))) if t)]
+    elif tipo == "inmersion":
+        i = next(k for k in datos["tecnica"]["inmersiones"] if k["id"] == p["inmersion"])
+        out["inmersion"] = [_plano(i["nombre"]), _plano(i["texto"])]
+    elif tipo == "metas":
+        out["metas"] = [_plano(f"{m['indicador']}: {_plano(sp(m.get('base'))) or '—'} → {_plano(sp(m.get('meta'))) or '—'}")
+                        for m in c.get("metas") or []]
+    elif tipo == "cronograma":
+        out["obras"] = [_plano(f"{k['nombre']}: {sp(k.get('plazo'))}") for m in datos["modulos"]
+                        for k in m.get("componentes") or [] if _plano(sp(k.get("plazo")))]
     return {k: [t for t in v if t] for k, v in out.items()}
-
-
-def _capitulos_de(datos: dict) -> list[dict]:
-    return [datos["portada"], *datos["modulos"], datos["financiacion"], datos["ruta"], datos["pedidos"]]
 
 
 @pytest.mark.skipif(not PROPUESTA_JSON.is_file(), reason="Sin web/data/propuesta.json")
 def test_el_guion_trae_enteros_los_textos_de_la_pantalla():
     """La herramienta le dice al modelo que el guion «es lo que muestra la presentación en ese paso» y que no invente:
-    cada texto que la pantalla muestra (el texto del paso, la nota, la lista, las cifras con su rótulo y su fuente, lo
-    que se pide, la madurez, a quién tocar, los siguientes pasos, cómo se accede a cada fuente, lo que financia cada una
-    y su requisito, las especificaciones, la base del costo, dónde, el plazo, las metas, los hitos, la leyenda…) llega
-    ENTERO, igual que en web/data/propuesta.json. Antes un tope de 3 KB por paso cortaba a media frase el texto de la
-    financiación de saneamiento (de 457 a 89 caracteres), sus pedidos, los diez pedidos por entidad, la nota de los
-    pedidos y 19 de los 20 textos de las fuentes, y la prueba lo aceptaba porque solo miraba el comienzo."""
+    cada texto que la pantalla técnica muestra (el texto del paso, la nota, la lista, las cifras con su rótulo y su
+    fuente, las especificaciones, los referentes, dónde, el plazo, las metas, la inmersión, la leyenda…) llega ENTERO,
+    igual que en web/data/propuesta.json después de quitarle la plata. Y no llega plata: ni «$» ni «millones de pesos»."""
     datos = json.loads(PROPUESTA_JSON.read_text(encoding="utf-8"))
     revisados = 0
-    for cap, c in zip(_capitulos_de(datos), G.capitulos, strict=True):
-        pasos = [p for p in cap.get("pasos") or [] if p] or [{"id": "inicio", "tipo": "texto", "titulo": c["nombre"]}]
-        for p, g in zip(pasos, c["pasos"], strict=True):
+    for cap, c in zip(guion.capitulos_tecnicos(datos), G.capitulos, strict=True):
+        for p, g in zip(cap["pasos"], c["pasos"], strict=True):
             assert p["id"] == g["id"], (c["id"], p["id"])
             en_guion = set(_textos(g))
             for campo, textos in _en_pantalla(datos, cap, p).items():
                 for t in textos:
                     revisados += 1
-                    # La hoja de ruta pinta el nombre de cada fase sobre su barra; el guion le suma los años que abarca
-                    entero = any(s.startswith(f"{t} (") for s in en_guion) if campo == "fases" else t in en_guion
-                    assert entero, (c["id"], p["id"], campo, t)
-            # El texto principal y la nota van en su campo, tal cual
-            assert g["texto"] == _plano(p.get("texto") or {"portada": cap.get("lema"), "portadilla": cap.get("problema"),
-                                                           "componente": next((k.get("descripcion") for k in
-                                                                               cap.get("componentes") or []
-                                                                               if k.get("id") == p.get("componente")),
-                                                                              None)}.get(p.get("tipo"))), p["id"]
-            assert g.get("nota", "") == _plano(p.get("nota")), p["id"]
-            # Nada sale cortado: ningún texto del guion termina en «…» si no lo hace en la propuesta
+                    assert t in en_guion, (c["id"], p["id"], campo, t)
+            assert g["texto"] == _plano(guion.sin_plata(p.get("texto") or {
+                "portada": cap.get("lema"), "portadilla": cap.get("problema"),
+                "componente": next((k.get("descripcion") for k in cap.get("componentes") or []
+                                    if k.get("id") == p.get("componente")), None)}.get(p.get("tipo")))), p["id"]
+            assert g.get("nota", "") == _plano(guion.sin_plata(p.get("nota"))), p["id"]
             propios = {_plano(t) for t in _textos(cap)}
             assert not [t for t in en_guion if t.endswith("…") and t not in propios], (c["id"], p["id"])
-    assert revisados > 1000, revisados
+    assert revisados > 800, revisados
+    texto = json.dumps(json.loads(guion.RUTA.read_text(encoding="utf-8")), ensure_ascii=False)
+    assert "$" not in texto and "millones de pesos" not in texto
+    for c in G.capitulos:
+        for x in c.get("componentes") or []:
+            assert not any("$" in t or "millones de pesos" in t for t in _textos(x)), (c["id"], x["id"])
 
     def paso(cid, pid):
         ci = G.por_id(cid)
         return G.capitulos[ci]["pasos"][G.paso(ci, pid)]
 
-    def modulo(mid):
-        return next(m for m in datos["modulos"] if m["id"] == mid)
-
-    # Los casos del verificador, uno por uno, con su largo entero (el texto de la financiación de saneamiento llegaba
-    # con 89 caracteres; su pedido, con 93, y antes del tope de 3 KB, con 591 por el tope de 600 de cada texto)
-    san = modulo("saneamiento")
-    fin = next(p for p in san["pasos"] if p["id"] == "financiacion")
-    f = paso("saneamiento", "financiacion")
-    assert f["texto"] == _plano(fin["texto"]) and len(f["texto"]) == 457, len(f["texto"])
-    assert "PTAR" in f["texto"] and "Res. 0467" in f["texto"] and "$1.747 M" in f["texto"]
-    assert f["pedido"] == _plano(san["gestion"]["pedido"]) and len(f["pedido"]) == 681
-    assert f["a_quien"] == [_plano(t) for t in san["gestion"]["a_quien"]] and len(f["a_quien"]) == 9
-    assert f["siguientes_pasos"] == [_plano(t) for t in san["gestion"]["pasos"]] and len(f["siguientes_pasos"]) == 10
-    relleno = next(p for p in san["pasos"] if p["id"] == "relleno_nuevo")
-    comp = next(k for k in san["componentes"] if k["id"] == relleno["componente"])
+    # Lo técnico que el panel muestra entero: la ficha de la torre (área, capacidad, estructura) y la del relleno nuevo
+    torre = paso("salud", "torre")["componente"]
+    assert torre["nombre"].startswith("Torre de servicios de primer nivel")
+    assert any(e.startswith("Estructura: Dual en concreto") and "146 pilotes" in e for e in torre["especificaciones"])
+    assert "Laboratorio: 24 horas y 55 pruebas en sitio · hoy terceriza la mayor parte" in torre["especificaciones"]
+    assert not any(e.startswith(("Proyectos:", "Dotación: $")) for e in torre["especificaciones"])
     r = paso("saneamiento", "relleno_nuevo")
-    assert r["texto"] == _plano(relleno.get("texto") or comp["descripcion"]) and len(r["texto"]) == 482
-    assert r["componente"]["ubicacion"] == _plano(comp["ubicacion"]) and len(r["componente"]["ubicacion"]) == 611
-    assert [k["l"] for k in r["cifras"]] == [_plano(k["l"]) for k in relleno["cifras"]]
-    assert max(len(k["l"]) for k in r["cifras"]) == 108
-    agro = paso("agroindustria", "financiacion")
-    assert agro["pedido"] == _plano(modulo("agroindustria")["gestion"]["pedido"]) and len(agro["pedido"]) == 566
-    assert agro["siguientes_pasos"] == [_plano(t) for t in modulo("agroindustria")["gestion"]["pasos"]]
-    pedidos = G.capitulos[G.por_id("pedidos")]["pasos"][0]
-    assert [e["pedido"] for e in pedidos["entidades"]] == [_plano(e["pedido"]) for e in datos["pedidos"]["entidades"]]
-    assert len(pedidos["entidades"]) == 10 and pedidos["nota"] == _plano(datos["pedidos"]["pasos"][0]["nota"])
-    assert len(pedidos["nota"]) == 370
-    fuentes = paso("financiacion", "fuentes")["fuentes"]
-    assert [(x["que_financia"], x["requisito"]) for x in fuentes] == [
-        (_plano(x["que_financia"]), _plano(x["requisito"])) for x in datos["financiacion"]["fuentes"]]
-    sgr = next(x for x in fuentes if x["nombre"].startswith("Sistema General de Regalías"))
-    assert len(sgr["que_financia"]) == 264 and len(sgr["requisito"]) == 139
+    assert len(r["texto"]) == 482 and len(r["componente"]["ubicacion"]) == 611
+    # Las inmersiones: el paso dice qué modelo del atlas muestra
+    assert paso("salud", "torre_sismo")["inmersion"]["id"] == "torre_sismo"
+    assert any("0,939 %" in t for t in paso("salud", "torre_sismo")["lista"])
+    assert paso("saneamiento", "relleno_parque")["inmersion"]["id"] == "relleno_parque"
+    # El cronograma trae el plazo de cada componente, sin cortar el año de la obra
+    obras = [t for m in paso("ruta", "cronograma")["obras"] for t in m["componentes"]]
+    assert len(obras) == sum(len(m["componentes"]) for m in datos["modulos"]) - 0
+    assert any(t.startswith("Parque lineal del Caño Colector Shell") and "obra en 2031" in t for t in obras)
 
 
 @pytest.mark.skipif(not PROPUESTA_JSON.is_file(), reason="Sin web/data/propuesta.json")
-def test_el_guion_trae_lo_que_muestra_cada_paso():
-    """Lo que antes faltaba del todo: las fuentes de financiación con su nombre, qué financian y su requisito, a quién
-    se pide, los siguientes pasos, cómo se accede a cada fuente en cada módulo, los proyectos tipo, los plazos (antes se
-    cortaban en 80 caracteres y perdían el año de la obra), las especificaciones, la base del costo, las fuentes de cada
-    componente y las metas del módulo."""
+def test_el_guion_trae_las_fichas_los_enfoques_y_las_inmersiones():
+    """Cada capítulo de módulo trae la ficha técnica de cada componente (lo que devuelve `visual` con detalle o
+    enfoque) y si tiene lugar en la maqueta (el `enfoque` que calcula build_propuesta.py); el guion, el catálogo de
+    inmersiones de general.json. El índice sigue compacto."""
     datos = json.loads(PROPUESTA_JSON.read_text(encoding="utf-8"))
-    fuentes = {f["id"]: f for f in datos["financiacion"]["fuentes"]}
-    fin = G.capitulos[G.por_id("financiacion")]
-    paso = next(p for p in fin["pasos"] if p["tipo"] == "fuentes")
-    assert [f["nombre"] for f in paso["fuentes"]] == [f["nombre"] for f in datos["financiacion"]["fuentes"]]
-    assert all(f.get("que_financia") and f.get("requisito") and f.get("tipo") for f in paso["fuentes"]), paso
     for m in datos["modulos"]:
         c = G.capitulos[G.por_id(m["id"])]
-        g = m["gestion"]
-        f = next(p for p in c["pasos"] if p["tipo"] == "financiacion")
-        assert f["a_quien"] == [_plano(t) for t in g["a_quien"]], m["id"]
-        assert f["siguientes_pasos"] == [_plano(t) for t in g["pasos"]], m["id"]
-        assert f["madurez"] == g["madurez"] and f["madurez_nota"] and f["pedido"] and f["mezcla"], m["id"]
-        assert [x.get("mecanismo", "") for x in f["mezcla"]] == [_plano(x.get("mecanismo")) for x in m["financiacion"]]
-        assert f.get("proyectos_tipo", []) == [_plano(t["nombre"]) for t in m.get("proyectos_tipo") or []], m["id"]
-        portadilla = next(p for p in c["pasos"] if p["tipo"] == "portadilla")
-        assert len(portadilla["metas"]) == len(m["metas"]), m["id"]
-        assert portadilla["metas"][0].startswith(_plano(m["metas"][0]["indicador"]) + ": "), m["id"]
-        for p in c["pasos"]:
-            if p["tipo"] != "componente":
-                continue
-            x = next(k for k in m["componentes"] if _plano(k["nombre"]) == p["componente"]["nombre"])
-            comp = p["componente"]
-            assert comp.get("plazo", "") == _plano(x.get("plazo")), (m["id"], p["id"])
-            assert comp.get("base_costo", "") == _plano(x.get("base_costo")), (m["id"], p["id"])
-            assert comp["fuentes"] == [fuentes[i].get("corto") or fuentes[i]["nombre"] for i in x["fuentes"]], p["id"]
-            assert comp["especificaciones"] == [_plano(f"{k}: {v}") for k, v in x["especificaciones"]], p["id"]
-    # El plazo que se cortaba justo antes del año de la obra
-    cano = G.capitulos[G.por_id("urbanismo")]["pasos"][G.paso(G.por_id("urbanismo"), "cano")]
-    assert "obra en 2031" in cano["componente"]["plazo"]
-    # Los pedidos, entidad por entidad, con los módulos que mueve cada uno
-    pedidos = G.capitulos[G.por_id("pedidos")]["pasos"][0]
-    assert [e["entidad"] for e in pedidos["entidades"]] == [_plano(e["entidad"]) for e in datos["pedidos"]["entidades"]]
-    assert all(e.get("modulos") and e.get("pedido") for e in pedidos["entidades"])
-    # El índice sigue compacto: solo ids, nombres y títulos
-    assert len(json.dumps(G.indice(), ensure_ascii=False).encode("utf-8")) < 6000
+        assert [x["id"] for x in c["componentes"]] == [k["id"] for k in m["componentes"]], m["id"]
+        for x, k in zip(c["componentes"], m["componentes"]):
+            assert x["enfoque"] == bool(k.get("enfoque")), (m["id"], k["id"])
+            assert x["nombre"] == _plano(k["nombre"]) and x.get("plazo", "") == _plano(guion.sin_plata(k.get("plazo")))
+    comps = {(c["id"], x["id"]): x["enfoque"] for c in G.capitulos for x in c.get("componentes") or []}
+    assert comps[("salud", "torre")] and comps[("agroindustria", "trilladora")] and comps[("tic", "zonas")]
+    assert not comps[("vivienda", "titulacion")] and not comps[("agroindustria", "capital")]
+    assert sum(comps.values()) >= 40
+    assert [i["id"] for i in G.inmersiones] == [i["id"] for i in datos["tecnica"]["inmersiones"]]
+    assert G.inmersion("Simulador sísmico")["id"] == "torre_sismo" and G.inmersion("torre_bim")["id"] == "torre_bim"
+    assert G.inmersion("marte") is None
+    assert G.componente(G.por_id("agroindustria"), "Trilladora de arroz con secado y silos")["id"] == "trilladora"
+    assert G.componente(G.por_id("agroindustria"), "trilladora")["id"] == "trilladora"
+    assert G.componente(G.por_id("agroindustria"), "torre") is None
+    indice = G.indice()
+    assert len(json.dumps(indice, ensure_ascii=False).encode("utf-8")) < 9000
+    agro = next(c for c in indice["capitulos"] if c["id"] == "agroindustria")
+    assert "trilladora" in agro["componentes"] and "capital (sin lugar en la maqueta)" in agro["componentes"]
+    assert {"id": "torre_sismo", "nombre": "Simulador sísmico"} in indice["inmersiones"]
 
 
-def test_rangos_como_los_muestra_la_presentacion():
-    """`fmtRango`, `fmtM` y `aprox` de main.js (comprobados a mano contra el navegador con los costos de la propuesta)."""
-    assert guion.rango(54_321, 100_400) == "$54 – 100 mil M"
-    assert guion.rango(77_000, 77_000) == "≈ $77,0 mil M"
-    assert guion.rango(300, 850) == "$300 – 850 M"
-    assert guion.rango(1_150_000, 1_400_000) == "$1,2 – 1,4 billones"
-    assert guion.rango_de({"min": 2816.0, "central": 8444.4, "max": 14072.7}) == "$2,8 – 14 mil M"
-    assert guion.rango_de({"central": 500}) == "≈ $500 M" and guion.rango_de(None) == ""
-    assert guion.millones(999.5) == "$1.000 M" and guion.millones(2_500_000) == "$2,5 billones"
-    assert guion.aproximado(116_294) == "≈ $120,0 mil M" and guion.aproximado(True) == ""
-    assert guion.plano("<b>300</b>\xa0viviendas en 2028–\U00002060" + "2031  y más") == "300 viviendas en 2028–2031 y más"
+NODE_SIN_PLATA = r"""// tecnica.js con cada texto, cifra y especificación de la propuesta. Uso: node <guion> <url de tecnica.js> <entrada>
+import { readFileSync } from 'node:fs';
+const [url, archivo] = process.argv.slice(2);
+const { sinPlata, cifraTecnica, especificacionTecnica, capsTecnica, anios } = await import(url);
+const e = JSON.parse(readFileSync(archivo, 'utf8'));
+console.log(JSON.stringify({ textos: e.textos.map((t) => sinPlata(t)), tramos: e.textos.map((t) => sinPlata(t, true)),
+  cifras: e.cifras.map(cifraTecnica), specs: e.specs.map(especificacionTecnica), anios: e.textos.map(anios),
+  caps: capsTecnica(e.datos).map((c) => [c.id, c.nombre, c.corto, c.pasos.map((p) => p.id)]) }));
+"""
+
+
+@requiere_node
+@pytest.mark.skipif(not PROPUESTA_JSON.is_file(), reason="Sin web/data/propuesta.json")
+def test_las_reglas_sin_plata_son_las_mismas_en_python_y_en_js(tmp_path):
+    """Lo que la pantalla técnica le quita a cada texto (tecnica.js) es lo que el guion le quita (guion.py): si no, el
+    asistente explicaría una cifra que la sala no ve, o la sala vería plata. Con cada texto, cifra y especificación de
+    la propuesta, y con los casos que importan (un paréntesis con «$», un tramo de una especificación, una frase)."""
+    datos = json.loads(PROPUESTA_JSON.read_text(encoding="utf-8"))
+    textos, cifras, specs = [], [], []
+
+    def recorrer(v, k=""):
+        if isinstance(v, str):
+            textos.append(v)
+        elif isinstance(v, list):
+            if k == "especificaciones":
+                specs.extend(v)
+            else:
+                for x in v:
+                    recorrer(x, k)
+        elif isinstance(v, dict):
+            for kk, x in v.items():
+                if kk == "cifras" and isinstance(x, list):
+                    cifras.extend(x)
+                recorrer(x, kk)
+    recorrer({"m": datos["modulos"], "p": datos["portada"], "t": datos["tecnica"]})
+    casos = ["Laboratorio de 24 horas; hoy terceriza ($440 M en 2025).", "100 casas · $6.801 M · 9 % de obra",
+             "Una frase sin plata. Otra con $5.000 M. Res. 3100 de 2019 sigue.", "Sin nada que quitar", "",
+             "Ahorra ≈877 $/kWh. <b>Otra</b> frase.", "El costo (estimado) es alto (≈$1 M)."]
+    textos += casos
+    specs += [["Costo anual", "1 año"], ["Tope del subsidio", "12 SMMLV"], ["Área", "3.369,6 m² · $1 M"], ["X", "$1 M"]]
+    cifras += [{"v": "$1 M", "l": "x"}, {"v": "3", "l": "pisos (con $1 M)"}, {"v": "1.394", "l": "millones al año"}]
+    (tmp_path / "entrada.json").write_text(json.dumps({"textos": textos, "cifras": cifras, "specs": specs,
+                                                        "datos": datos}), encoding="utf-8")
+    (tmp_path / "sin_plata.mjs").write_text(NODE_SIN_PLATA, encoding="utf-8")
+    r = subprocess.run(["node", str(tmp_path / "sin_plata.mjs"), TECNICA_JS.as_uri(), str(tmp_path / "entrada.json")],
+                       capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+    js = json.loads(r.stdout)
+    assert js["textos"] == [guion.sin_plata(t) for t in textos]
+    assert js["tramos"] == [guion.sin_plata(t, tramos=True) for t in textos]
+    assert js["cifras"] == [guion.cifra_tecnica(c) for c in cifras]
+    assert js["specs"] == [list(e) if e else None for e in map(guion.especificacion_tecnica, specs)]
+    assert js["caps"] == [[c["id"], c["nombre"], c["corto"], [p["id"] for p in c["pasos"]]]
+                          for c in guion.capitulos_tecnicos(datos)]
+    assert len(textos) > 2000 and len(specs) > 250
+    # Los casos, uno por uno
+    assert guion.sin_plata(casos[0]) == "Laboratorio de 24 horas; hoy terceriza."
+    assert guion.sin_plata(casos[1], tramos=True) == "100 casas · 9 % de obra"
+    assert guion.sin_plata(casos[2]) == "Una frase sin plata. Res. 3100 de 2019 sigue."
+    assert guion.sin_plata(casos[5]) == "<b>Otra</b> frase."
+    assert guion.sin_plata(casos[6]) == "El costo (estimado) es alto."
+    assert [guion.especificacion_tecnica(e) for e in specs[-4:]] == [None, None, ("Área", "3.369,6 m²"), None]
+    assert [guion.cifra_tecnica(c) for c in cifras[-3:]] == [None, {"v": "3", "l": "pisos"}, None]
+    assert js["anios"][textos.index(casos[2])] == [2019, 2019]
+
+
+def test_plano_quita_el_html_y_no_acorta():
+    assert guion.plano("<b>300</b> viviendas en 2028–⁠" + "2031  y más") == "300 viviendas en 2028–2031 y más"
     # Nunca acorta: lo que se ve en pantalla llega entero al modelo (el peso del paso lo mira `problemas`)
     assert guion.plano("palabra " * 2000) == ("palabra " * 2000).strip()
 
 
 def test_buscar_capitulo_y_paso():
     assert G.capitulos[G.buscar("vivienda").indice]["id"] == "vivienda"
-    assert G.capitulos[G.buscar("Cómo se FINANCIA").indice]["id"] == "financiacion"
-    assert G.capitulos[G.buscar("financiación").indice]["id"] == "financiacion"
+    assert G.capitulos[G.buscar("Cronograma de OBRA").indice]["id"] == "ruta"
+    assert G.capitulos[G.buscar("cronograma").indice]["id"] == "ruta"
     assert G.capitulos[G.buscar("agua").indice]["id"] == "aguas"
-    assert G.capitulos[G.buscar("hoja de ruta").indice]["id"] == "ruta"
+    assert G.buscar("financiación") == guion.Resolucion(None)   # la técnica no tiene financiación
     r = G.buscar("sa")  # salud y saneamiento
     assert r.indice is None and {G.capitulos[i]["id"] for i in r.candidatos} == {"salud", "saneamiento"}
     assert G.buscar("marte") == guion.Resolucion(None) and G.buscar("¿?") == guion.Resolucion(None)
@@ -495,18 +522,17 @@ CODIGO = re.compile(r"\d{10,}|\d{3}-\d{3}-\d{3}-\d{5}|\d+(?:\.\d){5,}")
 
 
 def test_la_explicacion_deja_las_cifras_del_guion_y_frena_los_codigos():
-    """El modelo copia las cifras del guion en la explicación: los montos («$106.271 M», «$1,2 – 1,4 billones», y en
-    pesos con sus puntos de miles, «$1.156.350» por habitante), los rangos («1.346–1.500»), los periodos y los años entre
-    paréntesis pasan; solo se frenan los códigos. Con el guion entero (antes se cortaba a 3 KB por paso)."""
+    """El modelo copia las cifras del guion en la explicación: las cifras de cada paso, los rangos («1.346–1.500»), los
+    periodos y los años entre paréntesis pasan; solo se frenan los códigos. El guion técnico no trae montos, pero la
+    explicación sigue dejando pasar uno en pesos con sus puntos de miles («$1.156.350»). Con el guion entero."""
     import unicodedata
     textos = list(_textos([c["pasos"] for c in G.capitulos]))
     frenados = {(t, hi.numero_largo(" ".join(unicodedata.normalize("NFKC", t).split()))) for t in textos}
     frenados = {(t, x) for t, x in frenados if x}
     assert frenados and all(CODIGO.fullmatch(x) or f"CO1.NTC.{x}" in t for t, x in frenados), frenados
-    assert any("$1.156.350" in t for t in textos)
     assert P.validar({"op": "explicar", "explicacion": "Por habitante, $1.156.350 en 2028"}).explicacion
     cifras = {x for c in G.capitulos for p in c["pasos"] for x in _cifras_de(p)}
-    assert len(cifras) > 100
+    assert len(cifras) > 50
     for x in cifras:
         assert P.validar({"op": "explicar", "explicacion": f"Son {x} en 2028–2031."}).explicacion, x
 
@@ -931,7 +957,7 @@ def test_las_reglas_de_la_explicacion_son_las_mismas_en_los_tres_lados(tmp_path)
     # solo se les parece, no
     assert [servidor(t) for t in FECHAS + MONTOS] == list(FECHAS + MONTOS)
     assert not any(map(servidor, FECHAS_QUE_NO + MONTOS_QUE_NO))
-    assert sum(e is None for e in esperado) >= 25 and sum(e is not None for e in esperado) > 100
+    assert sum(e is None for e in esperado) >= 25 and sum(e is not None for e in esperado) > 70
     (tmp_path / "pares.json").write_text(json.dumps(list(zip(frases, esperado))), encoding="utf-8")
     (tmp_path / "textos.mjs").write_text(NODE_TEXTOS, encoding="utf-8")
     r = subprocess.run(["node", str(tmp_path / "textos.mjs"), PUENTE_JS.as_uri(), MANDO_JS.as_uri(),
@@ -1706,6 +1732,109 @@ r.vista_malas_no_mueven = vi.partes.length === 0 && vi.idas.length === idasVista
 r.texto = ['Hola  mundo ', ' ', '\u0000x', 'Teléfono 300 123 4567', 'Año 2028–2031, $106.271 M', 'a@b', 'ok ❤', 'ok ❤\u{fe0f}'].map((x) => M.textoVisible(x));
 console.log(JSON.stringify(r));
 """
+
+
+GUION_MANDO_VISUAL = r"""// La orden «visual» del mando, con una capa visual falsa. Uso: node <guion> <url de mando.js>
+const [modulo] = process.argv.slice(2);
+const M = await import(modulo);
+const clases = () => { const s = new Set(); return { add: (c) => s.add(c), remove: (c) => s.delete(c), contains: (c) => s.has(c), toggle: (c, v) => (v ? s.add(c) : s.delete(c)) }; };
+function armar(visual) {
+  const oyentes = {}, enviados = [];
+  const padre = { postMessage: (m, o) => enviados.push([structuredClone(m), o]) };
+  const ventana = { location: { origin: 'https://sitio.example' }, addEventListener: (t, f) => { (oyentes[t] ||= []).push(f); },
+    matchMedia: () => ({ matches: false }), innerWidth: 1400 };
+  ventana.parent = padre;
+  const p = { textContent: '' }, sub = { classList: clases(), querySelector: () => p, getBoundingClientRect: () => ({ height: 40 }) };
+  const pres = { classList: clases(), style: { setProperty: () => {}, removeProperty: () => {} } };
+  const documento = { querySelector: (s) => ({ '#pres': pres, '.subtitulo': sub, '.leyenda3d': { childElementCount: 0 } })[s] ?? null,
+    querySelectorAll: () => [] };
+  const caps = [{ id: 'salud', nombre: 'Salud', pasos: [{ titulo: 'Uno' }, { titulo: 'Dos' }] }];
+  const estado = { ci: 0, pi: 0 };
+  M.montarMando({ caps, estado, ir: async () => {}, vecino: (ci, pi) => [ci, pi], ventana, documento, ...(visual ? { visual } : {}) });
+  return async (data) => {
+    const antes = enviados.length;
+    for (const f of oyentes.message || []) f({ data: { canal: 'yondo-presentacion', v: 1, ...data }, origin: 'https://sitio.example', source: padre });
+    await new Promise((ok) => setTimeout(ok, 5));
+    return enviados.slice(antes).map(([m]) => m);
+  };
+}
+const pedidos = [];
+let vis = { enfoque: null, camara: 'paso', rumbo: null, girar: false, comparar: 'proyecto', detalle: null, inmersion: null, tema: null, abierta: null };
+const visual = {
+  estado: () => ({ ...vis }),
+  aplicar: async (c) => { pedidos.push(c); if (c.enfoque === 'marte') return 'El capítulo Salud no tiene el componente «marte»'; vis = { ...vis, ...c }; return null; },
+};
+const con = armar(visual), sin = armar(null);
+const r = {};
+r.sin_capa = (await sin({ orden: 'visual', camara: 'aerea', id: 1 })).map((m) => [m.tipo, m.error]);
+r.vacia = (await con({ orden: 'visual', id: 2 })).map((m) => [m.tipo, m.error]);
+r.buena = (await con({ orden: 'visual', id: 3, enfoque: 'torre', camara: 'aerea', rumbo: 180, girar: true, comparar: 'hoy', detalle: 'torre', inmersion: 'torre_sismo', tema: 'oscuro' })).map((m) => [m.tipo, m.visual]);
+r.vuelve = (await con({ orden: 'visual', id: 4, enfoque: null, rumbo: null, detalle: null, inmersion: null })).map((m) => m.tipo);
+r.malas = [];
+for (const x of [{ camara: 'cenital' }, { rumbo: 360 }, { rumbo: 1.5 }, { rumbo: '90' }, { girar: 'si' }, { comparar: 'ayer' },
+  { tema: 'gris' }, { enfoque: 'Torre' }, { enfoque: 'a b' }, { detalle: 3 }, { inmersion: '' }, { tema: null }, { camara: null }])
+  r.malas.push((await con({ orden: 'visual', id: 5, ...x })).map((m) => [m.tipo, m.error]));
+r.otra_clave = (await con({ orden: 'visual', id: 6, camara: 'aerea', panel: true })).map((m) => [m.tipo, m.error]);
+r.error_de_la_capa = (await con({ orden: 'visual', id: 7, enfoque: 'marte' })).map((m) => [m.tipo, m.error]);
+r.pedidos = pedidos;
+console.log(JSON.stringify(r));
+"""
+
+
+@requiere_node
+def test_la_orden_visual_del_mando_con_node(tmp_path):
+    """La orden `visual` de mando.js: sin la capa visual (la presentación sin ?modo=tecnica) responde el error; con ella,
+    revisa la forma de cada parte (las listas, los rangos, los ids en minúsculas) y le pasa a visual.js exactamente las
+    partes que llegaron, también las que vuelven a lo del paso (null); lo que visual.js rechaza (un componente que no
+    está en el capítulo) vuelve como error. El estado que responde lleva lo visual."""
+    (tmp_path / "visual.mjs").write_text(GUION_MANDO_VISUAL, encoding="utf-8")
+    p = subprocess.run(["node", str(tmp_path / "visual.mjs"), MANDO_JS.as_uri()], capture_output=True, text=True,
+                       timeout=60)
+    assert p.returncode == 0, p.stderr
+    r = json.loads(p.stdout.strip().splitlines()[-1])
+    assert r["sin_capa"] == [["error", "Esta presentación no tiene la capa visual: es la de la presentación técnica (?modo=tecnica)"]]
+    assert r["vacia"] == [["error", "La orden visual no dice qué cambiar"]]
+    assert r["buena"] == [["estado", {"enfoque": "torre", "camara": "aerea", "rumbo": 180, "girar": True, "comparar": "hoy",
+                                      "detalle": "torre", "inmersion": "torre_sismo", "tema": "oscuro", "abierta": None}]]
+    assert r["vuelve"] == ["estado"]
+    assert all(len(x) == 1 and x[0][0] == "error" and x[0][1].startswith("Valor que la presentación no admite en: ")
+               for x in r["malas"]), r["malas"]
+    assert r["otra_clave"] == [["error", "La orden trae datos que la presentación no usa"]]
+    assert r["error_de_la_capa"] == [["error", "El capítulo Salud no tiene el componente «marte»"]]
+    assert r["pedidos"] == [
+        {"enfoque": "torre", "camara": "aerea", "rumbo": 180, "girar": True, "comparar": "hoy", "detalle": "torre",
+         "inmersion": "torre_sismo", "tema": "oscuro"},
+        {"enfoque": None, "rumbo": None, "detalle": None, "inmersion": None}, {"enfoque": "marte"}]
+
+
+def test_la_capa_visual_de_la_presentacion_tecnica():
+    """visual.js y escenario.js, lo que no se prueba sin navegador: la capa solo se arma en la técnica, se reinicia en
+    cada paso salvo el tema, los encuadres de los módulos pasan por ella, el atlas solo se toca desde el mismo origen y
+    con sus botones de modo, y la torre se muestra sin los paneles ni la conexión que la propuesta descartó."""
+    main = MAIN_JS.read_text(encoding="utf-8")
+    visual = (RAIZ / "web/js/propuesta/visual.js").read_text(encoding="utf-8")
+    escenario = (RAIZ / "web/js/escenario.js").read_text(encoding="utf-8")
+    torre = (RAIZ / "web/js/scenes/torre.js").read_text(encoding="utf-8")
+    atlas_main = (RAIZ / "web/js/main.js").read_text(encoding="utf-8")
+    assert "const visual = TECNICA ? crearVisual({" in main and "visual?.alPaso();" in main
+    assert "if (visual?.reencuadrar()) return;" in main
+    assert "export const INICIAL = Object.freeze({ enfoque: null, camara: 'paso', rumbo: null, girar: false, comparar: 'proyecto', detalle: null, inmersion: null });" in visual
+    assert "Object.assign(vis, INICIAL);" in visual and "escena.encuadrar = (obj, opts = {}) =>" in visual
+    assert "atlas.html?escenario=1#" in visual and "f.contentWindow?.__escenario" in visual
+    # el texto de la ficha pasa por sinPlata y especificacionTecnica, y lo que no es de la propuesta, por esc
+    assert "especificacionTecnica" in visual and "sinPlata(x.descripcion)" in visual
+    # El atlas: solo en un marco y con «?escenario=1»; pulsa los botones de modo de cada vista
+    assert "export const ESCENARIO = consulta.get('escenario') === '1' && enMarco;" in escenario
+    assert "BOTON = { torre: 'modoTorre', parque: 'modoParque' }" in escenario
+    assert atlas_main.index("import './escenario.js';") < atlas_main.index("import { TEXTOS }")
+    assert "dispatchEvent(new CustomEvent('atlas:vista', { detail: { id } }));" in atlas_main
+    assert "if (SIN_SOLAR && (o.name === 'solar' || o.name === 'conexion')) o.visible = false;" in torre
+    # Los modos que pide el catálogo existen en el atlas (build_propuesta.py también lo revisa)
+    datos = json.loads(PROPUESTA_JSON.read_text(encoding="utf-8")) if PROPUESTA_JSON.is_file() else {"tecnica": {}}
+    atlas = (RAIZ / "web/atlas.html").read_text(encoding="utf-8")
+    for i in datos["tecnica"].get("inmersiones", []):
+        assert f'data-modo-{i["vista"]}="{i["modo"]}"' in atlas, i["id"]
+    assert "html[data-escenario] .stage { position: fixed; inset: 0;" in atlas
 
 
 @requiere_node

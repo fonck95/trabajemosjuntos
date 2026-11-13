@@ -10,6 +10,8 @@ o referente que aplica, una mezcla de fuentes, su grado de madurez y un pedido c
   «Propuesta 2028–2031 ↗». No comparte vistas, rutas ni estado con el atlas.
 - **Datos:** los archivos de `data/propuesta/` se juntan en `web/data/propuesta.json` con `python3 scripts/build_data.py`, que llama a `scripts/build_propuesta.py`.
 - **Corte:** 28 de octubre de 2026. Cifras en millones de pesos constantes de 2026.
+- **Versión técnica:** `propuesta.html?modo=tecnica`, la que muestran el asistente del panel y los agentes por MCP (ver
+  [Presentación técnica](#presentación-técnica)).
 
 ## Cómo se recorre
 
@@ -234,6 +236,32 @@ Las obras van en dos olas:
 - **2029–2031:** interceptores y PTAR, parque lineal, mirador, plantas del parque agroindustrial, urbanizaciones y el
   cierre de Las Américas con su parque y la primera parte de su granja solar.
 
+## Presentación técnica
+
+Con `?modo=tecnica` la misma página es la **presentación técnica**: lo que se construye, dónde, cómo funciona y cómo se
+mide, sin costos ni financiación. Es la que abre la vista **Presentación** del panel y la que manejan el asistente y los
+agentes por MCP (`admin/docs/agente.md`, «La presentación técnica»).
+
+- **Capítulos:** portada técnica, las siete áreas y el cronograma de obra (cada componente con su barra de 2027 a 2032).
+  Cada área conserva sus pasos menos el de financiación, suma las inmersiones de `data/propuesta/general.json`
+  (`tecnica.pasos`) y cierra con un paso de metas.
+- **Sin plata:** de cada texto se quitan los paréntesis con «$», las frases que lo llevan y, en las especificaciones, los
+  tramos con plata; no se muestran las cifras en pesos ni las especificaciones de costo, valor, precio, subsidio, tope,
+  presupuesto, financiación, crédito, aporte o tarifa (`web/js/propuesta/tecnica.js`, con las mismas reglas que el guion
+  del asistente, `admin/app/agente/guion.py`).
+- **Panel:** hoja de especificaciones, proyecto tipo o referente, sitio y plazo con su barra; el render de cada área
+  (`web/img/home/area-*.webp`) en su portadilla y en su telón; fichas técnicas para imprimir; brújula, escala y el estado
+  «Con el proyecto» u «Hoy».
+- **Inmersiones:** modelos 3D del atlas en una ventana sobre la maqueta (`atlas.html?escenario=1`,
+  `web/js/escenario.js`): la torre del hospital en su sitio, por pisos de servicio, por dentro, el laboratorio, el
+  simulador sísmico y el modelo BIM (`docs/11`, `docs/14`, `docs/15`, `docs/16`), y el relleno Las Américas hoy y con su
+  parque ecotecnológico (`docs/12`). En salud van después de la torre (pisos, recorrido, sismo y BIM) y en saneamiento,
+  después del relleno.
+- **Lo que el asistente cambia sin cambiar de paso** (`web/js/propuesta/visual.js`): enfocar un componente (el `enfoque`
+  que `build_propuesta.py` le calcula a cada uno: el paso que lo desarrolla, sus sitios o trazados de `geo.json`, o la
+  réplica de una sede), abrir su ficha técnica, mostrar el sitio hoy frente al proyecto, la cámara aérea, oblicua o
+  rasante, más cerca o más lejos, el rumbo, que gire, una inmersión y el tema claro u oscuro.
+
 ## Ideas incorporadas de los renders del usuario
 
 - **Mirador Puerta del Magdalena.** Se mantuvo lo esencial del render: zona A de protección hidráulica, zona B de plaza
@@ -266,12 +294,16 @@ mostrarse junto al modelo 3D.
 | Ruta | Qué es |
 |---|---|
 | `web/propuesta.html` | Página de la presentación (documento HTML completo; `build_site.py` la copia tal cual) |
-| `web/js/propuesta/main.js` | Capítulos, pasos, panel con GSAP, navegación, índice y fichas para imprimir |
+| `web/js/propuesta/main.js` | Capítulos, pasos, panel con GSAP, navegación, índice y fichas para imprimir (y, con `?modo=tecnica`, los de la presentación técnica) |
+| `web/js/propuesta/tecnica.js` | Presentación técnica: capítulos y pasos, y las reglas que quitan la plata de cada texto |
+| `web/js/propuesta/visual.js` | Presentación técnica: cámara, enfoque, hoy o proyecto, ficha técnica, inmersiones en el atlas, tema, brújula y escala |
+| `web/js/propuesta/mando.js` | El mando a distancia del panel (asistente, pantalla en off y agentes por MCP) |
+| `web/js/escenario.js` | El atlas como escenario de la presentación técnica (`atlas.html?escenario=1`) |
 | `web/js/propuesta/escena.js` | Escena 3D compartida: terreno, río, puente, vías, sedes y encuadre según el panel |
 | `web/js/propuesta/geo3d.js` | Geometría procedural (losas, cintas, árboles, naves, graderías, letras) y animaciones |
 | `web/js/propuesta/piezas/` | Cancha de sóftbol, mirador, parque lineal, PTAR, ampliación de la PTAP, parque agroindustrial, granja solar y relleno sanitario nuevo (`relleno.js`) |
 | `web/js/propuesta/modulos/` | Lo 3D de cada capítulo: capas, vistas y animaciones por paso |
-| `data/propuesta/general.json` | Portada, catálogo de fuentes, hoja de ruta y pedidos |
+| `data/propuesta/general.json` | Portada, catálogo de fuentes, hoja de ruta, pedidos y la sección `tecnica` (portada técnica, inmersiones y sus pasos, metas y cronograma) |
 | `data/propuesta/modulos/*.json` | Un archivo por módulo |
 | `data/propuesta/geo.json` | Sitios y trazados de cada propuesta |
 | `data/propuesta/territorio.json` | Río, vías y puente (de `scripts/geo/territorio_propuesta.py` con `data/geo/osm_corredor_puente.xml`) |

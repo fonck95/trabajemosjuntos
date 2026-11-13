@@ -40,6 +40,10 @@ const EDIFICIO_GLB = new Set(['obra_nueva', 'solar', 'equipos']);
 // (y ≈ 29), el bloque técnico (y de −24,8 a −20,8) ni con los árboles, postes y parqueaderos del occidente (x ≥ −34). El ejemplo
 // del contrato (x = −30) caía sobre el parqueadero y dos árboles
 const AREA_TIPO = 320.6, TIPO_XY = [-46, 0];
+// En la presentación técnica (el atlas como escenario, js/escenario.js) la torre se muestra como la propone la propuesta
+// 2028–2031: sin paneles propios ni la conexión a la microrred de sedes, porque su energía viene de la granja solar
+// centralizada (lo mismo que hace js/propuesta/modulos/salud.js con la réplica de la maqueta)
+const SIN_SOLAR = document.documentElement.hasAttribute('data-escenario');
 
 // grupos de servicio con sus colores de señalización (Res. 1633 de 2025): rojo urgencias, naranja consulta, amarillo apoyo
 // diagnóstico y terapéutico, azul internación, verde esterilización, violeta administración, café servicios generales. Con la
@@ -131,6 +135,7 @@ export function mount(root) {
       if (o.name === 'adecuaciones') o.visible = modo === 'torre' || nuevo();
       if (EDIFICIO_GLB.has(o.name)) o.visible = !exterior && !conPisos;
       if (o.name === 'conexion') o.visible = exterior !== 'total';   // la acometida llega al hospital, que el recorrido oculta
+      if (SIN_SOLAR && (o.name === 'solar' || o.name === 'conexion')) o.visible = false;
     });
     if (gHosp) gHosp.visible = exterior !== 'total';
     gTipo.visible = capaTipo && modo === 'torre';

@@ -1,5 +1,6 @@
-// Vista Presentación: la propuesta Yondó 2028–2031 (la presentación pública, web/propuesta.html del sitio) dentro del
-// panel, para mostrarla y explicarla, a mano o con el asistente (herramienta `presentacion`, docs/agente.md).
+// Vista Presentación: la propuesta Yondó 2028–2031 en su versión técnica (la presentación pública del sitio,
+// web/propuesta.html?modo=tecnica: lo que se construye, sin costos, con los modelos 3D del atlas) dentro del panel, para
+// mostrarla y explicarla, a mano o con el asistente (herramienta `presentacion`, docs/agente.md).
 //
 // * La presentación va en un <iframe> sin `sandbox` (con él no cargaría sus módulos ni sus datos; el límite de verdad es
 //   la CSP del sitio). En el servicio único el sitio está en la raíz del mismo origen (/propuesta); con el panel
@@ -51,16 +52,21 @@ function cargarEstilos() {
 
 /** Dónde está la presentación: {src, origen} o null si este servidor no tiene el sitio. */
 async function direccion() {
-  if (BASE) return { src: `${location.origin}/propuesta`, origen: location.origin };   // servicio único: el sitio en la raíz
+  if (BASE) return { src: `${location.origin}/propuesta?modo=tecnica`, origen: location.origin };   // servicio único: el sitio en la raíz
   let sitio = null;
   try { sitio = (await api.get('/api/yo'))?.sitio_url; } catch { sitio = null; }
   if (typeof sitio !== 'string' || !SITIO.test(sitio)) return null;
-  const u = new URL(`${sitio.replace(/\/+$/, '')}/propuesta`);
+  const u = new URL(`${sitio.replace(/\/+$/, '')}/propuesta?modo=tecnica`);
   return { src: u.href, origen: u.origin };
 }
 
 /** La orden para mando.js de una acción del puente (ya validada por `accionPresentacion`). */
 function ordenDe(p) {
+  if (p.op === 'visual') {
+    const o = { orden: 'visual' };
+    for (const [k, v] of Object.entries(p)) if (k !== 'tipo' && k !== 'op') o[k] = v;
+    return o;
+  }
   if (p.op === 'vista') {
     const o = { orden: 'vista' };
     for (const k of ['panel', 'indice', 'fichas']) if (typeof p[k] === 'boolean') o[k] = p[k];

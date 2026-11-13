@@ -370,6 +370,9 @@ export function crearEscena(el, datos) {
     // puede estar en la mitad de arriba de la pantalla): recorta lo libre por abajo. Con la hoja grande está oculto
     const elSub = document.querySelector('.subtitulo.visible'), sub = elSub?.getBoundingClientRect();
     if (sub?.height && getComputedStyle(elSub).visibility === 'visible') y1 = Math.min(y1, sub.top - r.top - 8);
+    // la ficha técnica de la presentación técnica (visual.js) va a la derecha en pantalla grande: tampoco se encuadra debajo
+    const det = document.querySelector('.detalle:not([hidden])')?.getBoundingClientRect();
+    if (det?.width && det.width < W * 0.6) x1 = Math.min(x1, det.left - r.left - 16);
     if (x1 - x0 < W * 0.25) { x0 = 0; x1 = W; }
     // con la hoja inferior del celular la franja libre puede ser baja, pero nunca se encuadra en la pantalla entera: la
     // obra quedaría debajo del texto. Se deja una franja mínima de 90 px.

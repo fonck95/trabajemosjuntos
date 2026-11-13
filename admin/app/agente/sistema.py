@@ -114,9 +114,12 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
         lineas.append(f"- {frase[0].upper()}{frase[1:]}. Luego di en una frase qué quedó en pantalla.")
     if "presentacion" in nombres:
         lineas.append(
-            "- Para mostrar y explicar la propuesta Yondó 2028–2031 (la presentación pública del proyecto) usa "
-            "`presentacion`: `indice` si no conoces los capítulos y luego `ir` al capítulo y paso. Explica en el chat "
-            "con detalle y solo con los datos que te devuelve; en pantalla (`explicacion`), una frase corta. Esa frase "
+            "- Para mostrar y explicar la propuesta Yondó 2028–2031 (la presentación técnica: lo que se construye, "
+            "sin costos) usa `presentacion`: `indice` si no conoces los capítulos y luego `ir` al capítulo y paso. Para "
+            "mostrar algo concreto sin cambiar de paso, `visual` (enfocar un componente y abrir su ficha técnica, hoy "
+            "frente al proyecto, la cámara, un modelo del atlas como la torre por dentro o el simulador sísmico). "
+            "Explica en el chat con detalle y solo con los datos que te devuelve; en pantalla (`explicacion`), una "
+            "frase corta. Esa frase "
             "se proyecta ante otras personas: nunca lleva datos de habitantes ni de la base. Si el contexto dice que "
             "hay una pantalla en off abierta, lo que la sala ve es esa: «siguiente» y «anterior» van desde su paso, y "
             "solo cambia cuando la persona te pide algo concreto (no la muevas por tu cuenta).")

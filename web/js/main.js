@@ -1,4 +1,7 @@
 // Navegación entre vistas con transiciones GSAP, textos y carga diferida de cada escena 3D.
+// escenario.js va primero: con «?escenario=1» (la presentación técnica enmarca el atlas) marca la página antes de que
+// cargue cualquier escena y recibe qué vista y qué modo mostrar
+import './escenario.js';
 import { TEXTOS } from './data.js';
 import { gsap, countUp } from './core.js';
 
@@ -72,6 +75,8 @@ async function show(id) {
   }
   stages[id].start();
   stages[id].intro();
+  // la vista ya tiene su escena y sus botones (escenario.js espera esto para pulsar el modo que se pidió)
+  dispatchEvent(new CustomEvent('atlas:vista', { detail: { id } }));
 }
 
 // Las transiciones se encadenan para que dos clics rápidos no se crucen
