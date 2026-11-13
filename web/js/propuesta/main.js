@@ -559,4 +559,4 @@ const [ci0, pi0] = desdeHash();
 ir(ci0, pi0, { primera: true });
 // mando a distancia: dentro de la vista Presentación del panel (un iframe), el asistente lleva la presentación por
 // postMessage y muestra su explicación en el subtítulo. Fuera de un iframe no escucha nada
-montarMando({ caps, estado, ir, vecino, abrirIndice, reencuadrar });
+montarMando({ caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel: (v) => alternarPanel(!v), reencuadrar });

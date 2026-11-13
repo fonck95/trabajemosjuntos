@@ -169,6 +169,8 @@ def _indices() -> dict[str, list[IndexModel]]:
         # Quién dejó de autorizar (`olvidar_en_conversaciones`): solo hace falta mientras dura una herramienta que la
         # estaba leyendo (un turno nunca pasa de 10 minutos)
         "agente_olvidos": [i("ts", expireAfterSeconds=3600), i("persona_id")],
+        # La clave MCP de la presentación (app/api/pantalla.py): _id es su SHA-256; una por persona
+        "claves_mcp": [i("uid")],
     }
 
 

@@ -21,6 +21,7 @@ from datetime import datetime
 from typing import Any, Container, Iterable
 
 from .. import modelo
+from .. import pantalla as pantalla_off
 from . import guion as guion_presentacion
 from . import minimizar
 from .herramientas.interfaz import RUTAS_PANEL
@@ -116,7 +117,9 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
             "- Para mostrar y explicar la propuesta Yondó 2028–2031 (la presentación pública del proyecto) usa "
             "`presentacion`: `indice` si no conoces los capítulos y luego `ir` al capítulo y paso. Explica en el chat "
             "con detalle y solo con los datos que te devuelve; en pantalla (`explicacion`), una frase corta. Esa frase "
-            "se proyecta ante otras personas: nunca lleva datos de habitantes ni de la base.")
+            "se proyecta ante otras personas: nunca lleva datos de habitantes ni de la base. Si el contexto dice que "
+            "hay una pantalla en off abierta, lo que la sala ve es esa: «siguiente» y «anterior» van desde su paso, y "
+            "solo cambia cuando la persona te pide algo concreto (no la muevas por tu cuenta).")
     lineas.append("- Enlaza a las personas y reuniones que nombres: [Nombre](/personas/123), [Reunión](/reuniones/45). "
                   "Solo rutas internas del panel.")
     if any(h.tipo == "escritura" for h in hs):
@@ -244,6 +247,18 @@ def guion_del_contexto() -> Any:
         return None
 
 
+def pantalla_del_contexto(db: Any, uid: Any) -> str:
+    """Lo que muestra la pantalla en off de la persona si hay una abierta (`app/pantalla.py`), o «» (correr con
+    `run_in_threadpool`: lee la base y el guion)."""
+    if not isinstance(uid, int) or isinstance(uid, bool):
+        return ""
+    doc = pantalla_off.leer(db, uid)
+    if not pantalla_off.conectada(doc):
+        return ""
+    guion = guion_del_contexto()
+    return pantalla_off.describir(pantalla_off.estado(doc, guion), guion) if guion is not None else ""
+
+
 def _presentacion(p: Any, guion: Any) -> str:
     """«Vivienda (vivienda), paso 3 de 6: <título>» si `p` ({capitulo, paso}) es un capítulo y un paso del guion; si no,
     nada. El nombre y el título salen del guion: del navegador solo se acepta un id y un número."""
@@ -263,10 +278,11 @@ def _presentacion(p: Any, guion: Any) -> str:
 
 
 def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int] | None = None,
-                       guion: Any = None) -> str:
+                       guion: Any = None, pantalla: str = "") -> str:
     """El bloque de texto con el contexto del panel para el comienzo del mensaje de la persona. `etiquetas`: las que
     pueden ir en el filtro de etiqueta (`etiquetas_del_contexto`); sin ellas, ese filtro no va (ante la duda, no se
-    manda). `guion`: el de la presentación (`guion_del_contexto`); sin él, la presentación abierta no va."""
+    manda). `guion`: el de la presentación (`guion_del_contexto`); sin él, la presentación abierta no va. `pantalla`: lo
+    que muestra la pantalla en off abierta (`pantalla_del_contexto`), que lo dice el servidor, no el navegador."""
     c = contexto if isinstance(contexto, dict) else {}
     lineas = [f"Fecha y hora en Colombia: {_fecha(ahora)}"]
     ruta = _ruta(c.get("ruta"))
@@ -287,4 +303,6 @@ def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int]
     presentacion = _presentacion(c.get("presentacion"), guion)
     if presentacion:
         lineas.append(f"Presentación abierta: {presentacion}")
+    if pantalla:
+        lineas.append(f"Pantalla en off abierta: {pantalla}")
     return "<contexto_del_panel>\n" + "\n".join(lineas) + "\n</contexto_del_panel>"

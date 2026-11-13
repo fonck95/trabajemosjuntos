@@ -54,7 +54,8 @@ ESPERA_MAX_S = 60
 METODOS_SEGUROS = {"GET", "HEAD", "OPTIONS"}
 MB = 1 << 20
 LIMITE_JSON = 256 * 1024  # el JSON más grande del panel (una ficha o una reunión) cabe de sobra
-RUTAS_SIN_SESION = {"/api/login", "/api/yo"}
+# El servidor MCP de la presentación (app/api/mcp.py) tampoco usa la sesión: lo autentica su clave, en la ruta
+RUTAS_SIN_SESION = {"/api/login", "/api/yo", "/api/mcp"}
 # Con la clave temporal sin cambiar o el compromiso sin aceptar, un usuario solo llega a estas rutas (3.5)
 RUTAS_DE_CUENTA = {"/api/yo", "/api/yo/clave", "/api/yo/compromiso", "/api/logout"}
 ROLES_USUARIO = ("coordinador", "planillero", "consultor")  # los que viven en la colección `usuarios`

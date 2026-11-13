@@ -117,7 +117,8 @@ def test_los_capitulos_son_los_de_main_js():
         assert [p["id"] for p in c["pasos"]] == [p["id"] for p in pasos], c["id"]
     # Lo de main.js que hace falta para el control remoto
     assert "import { montarMando } from './mando.js';" in js
-    assert "montarMando({ caps, estado, ir, vecino, abrirIndice, reencuadrar });" in js
+    assert ("montarMando({ caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel: (v) => alternarPanel(!v), "
+            "reencuadrar });") in js
     assert "dispatchEvent(new CustomEvent('propuesta:paso'" in js
     assert re.search(r"function avanzar\(d\) \{\n  if \(tlTelon\?\.isActive\(\)\) \{ tlTelon\.progress\(1\); return; \}"
                      r"\n  const \[ci, pi\] = vecino\(estado\.ci, estado\.pi, d\);", js)
@@ -1183,8 +1184,9 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
     assert p.returncode == 0, p.stderr
     r = json.loads(p.stdout.strip().splitlines()[-1])
     assert r["exports"] == ["CANAL", "MAX_EXPLICACION", "VERSION", "accionPresentacion", "accionesEnCola",
-                            "accionesPresentacion", "avisarEstado", "estadoPresentacion", "estadoValido",
-                            "presentacionLista", "presentacionNoDisponible", "proyectorVivo", "registrarPresentacion"]
+                            "accionesPresentacion", "avisarEstado", "estadoDePantalla", "estadoPresentacion",
+                            "estadoValido", "ordenesHacia", "presentacionLista", "presentacionNoDisponible",
+                            "proyectorVivo", "registrarPresentacion"]
     assert r["navegadas"] == ["/presentacion"] and r["en_cola"] == 2 and r["lista_antes"] is False
     assert r["estado_sin_vista"] is None and r["registro_invalido"] == "function"
     assert r["aplicadas"] == [["ir"], ["explicar"], ["siguiente"]]
@@ -1610,14 +1612,17 @@ function armar({ propio = 'https://sitio.example', panel = 'https://panel.exampl
   const ir = async (ci, pi) => { idas.push([ci, pi]); estado.ci = ci; estado.pi = pi; paso(); };
   const vecino = (ci, pi, d) => { pi += d; if (pi >= caps[ci].pasos.length) { if (ci < caps.length - 1) { ci++; pi = 0; } else pi = caps[ci].pasos.length - 1; } if (pi < 0) { if (ci > 0) { ci--; pi = caps[ci].pasos.length - 1; } else pi = 0; } return [ci, pi]; };
   let indice = 0, reencuadres = 0;
-  const mando = M.montarMando({ caps, estado, ir, vecino, abrirIndice: () => { indice++; }, reencuadrar: () => { reencuadres++; }, ventana, documento });
+  const partes = [];   // lo que la orden «vista» pidió: [parte, valor]
+  const mando = M.montarMando({ caps, estado, ir, vecino, abrirIndice: (v) => { indice++; partes.push(['indice', v]); },
+    abrirFichas: (v) => partes.push(['fichas', v]), verPanel: (v) => partes.push(['panel', v]),
+    reencuadrar: () => { reencuadres++; }, ventana, documento });
   const mensaje = async (data, { origen = 'https://panel.example', fuente = padre } = {}) => {
     const antes = enviados.length;
     for (const f of oyentes.message || []) f({ data, origin: origen, source: fuente });
     await new Promise((ok) => setTimeout(ok, 5));
     return enviados.slice(antes);
   };
-  return { mando, oyentes, enviados, padre, sub, p, estado, idas, ir, mensaje, enlaces, indice: () => indice, reencuadres: () => reencuadres };
+  return { mando, oyentes, enviados, padre, sub, p, pres, estado, idas, ir, mensaje, enlaces, partes, indice: () => indice, reencuadres: () => reencuadres };
 }
 const r = {};
 const O = (orden, extra = {}) => ({ canal: 'yondo-presentacion', v: 1, orden, ...extra });
@@ -1675,6 +1680,29 @@ for (const [i, m] of malas.entries()) {
 }
 r.malas_no_mueven = t.idas.length === idasAntes && !t.sub.classList.contains('visible');
 r.estado_orden = (await t.mensaje(O('estado', { id: 'no es un número' }))).map(([m]) => [m.tipo, 'id' in m]);
+// La vista: cada parte con verdadero o falso, sin cambiar de paso; el índice cierra las fichas y al revés
+const vi = armar();
+await vi.ir(1, 0);
+const idasVista = vi.idas.length;
+vi.partes.length = 0;
+r.vista_panel = (await vi.mensaje(O('vista', { panel: false, controles: false, id: 20 }))).map(([m]) => [m.tipo, m.id, m.capitulo, m.paso]);
+r.vista_partes = vi.partes.splice(0);
+r.sin_controles = vi.pres.classList.contains('sin-controles');
+await vi.mensaje(O('vista', { indice: true, id: 21 }));
+r.vista_indice = vi.partes.splice(0);
+await vi.mensaje(O('vista', { fichas: true, controles: true, id: 22 }));
+r.vista_fichas = vi.partes.splice(0);
+r.con_controles = !vi.pres.classList.contains('sin-controles');
+// Ir a un paso cierra el índice y las fichas
+await vi.mensaje(O('ir', { capitulo: 'vivienda', paso: 2, id: 23 }));
+r.ir_cierra = vi.partes.splice(0);
+r.vista_malas = [];
+for (const [i, m] of [O('vista'), O('vista', { panel: 'no' }), O('vista', { indice: 1 }), O('vista', { indice: true, fichas: true }),
+  O('vista', { tema: 'claro' }), O('vista', { panel: true, capitulo: 'vivienda' })].entries()) {
+  const res = await vi.mensaje({ ...m, id: 200 + i });
+  r.vista_malas.push(res.map(([x]) => [x.tipo, x.id, typeof x.error === 'string' && x.error.length > 0]));
+}
+r.vista_malas_no_mueven = vi.partes.length === 0 && vi.idas.length === idasVista + 1;
 r.texto = ['Hola  mundo ', ' ', '\u0000x', 'Teléfono 300 123 4567', 'Año 2028–2031, $106.271 M', 'a@b', 'ok ❤', 'ok ❤\u{fe0f}'].map((x) => M.textoVisible(x));
 console.log(JSON.stringify(r));
 """
@@ -1711,6 +1739,15 @@ def test_mando_de_la_presentacion_con_node(tmp_path):
     assert r["malas_no_mueven"] is True
     assert r["estado_orden"] == [["estado", False]]
     assert r["texto"] == ["Hola mundo", None, None, None, "Año 2028–2031, $106.271 M", None, "ok ❤", None]
+    # La vista cambia lo que se ve sin cambiar de paso y responde el estado de ese paso
+    assert r["vista_panel"] == [["estado", 20, "vivienda", 1]]
+    assert r["vista_partes"] == [["panel", False]] and r["sin_controles"] is True
+    assert r["vista_indice"] == [["fichas", False], ["indice", True]]
+    assert r["vista_fichas"] == [["indice", False], ["fichas", True]] and r["con_controles"] is True
+    assert r["ir_cierra"] == [["indice", False], ["fichas", False]]
+    for i, res in enumerate(r["vista_malas"]):
+        assert res == [["error", 200 + i, True]], (i, res)
+    assert r["vista_malas_no_mueven"] is True
 
 
 # ───────────────────────────── En Chromium ─────────────────────────────

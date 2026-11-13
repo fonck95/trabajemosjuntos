@@ -23,8 +23,8 @@ from starlette.middleware.gzip import GZipMiddleware
 
 from . import acceso, config, db, migraciones
 from .agente import proveedores
-from .api import (acercamientos, agente, agente_mnemo, ajustes, calidad, personas, reuniones, sistema, tablero,
-                  usuarios, zonas)
+from .api import (acercamientos, agente, agente_mnemo, ajustes, calidad, mcp, pantalla, personas, reuniones, sistema,
+                  tablero, usuarios, zonas)
 from .seguridad import (CabecerasSeguras, Cortacircuitos, GuardiaApi, base_de, limpiar_al_iniciar, ruta_interna,
                         sin_base)
 
@@ -129,7 +129,7 @@ def crear_app(cfg: config.Config | None = None) -> FastAPI:
     app.add_middleware(GZipSalvoFlujos, minimum_size=1024)
     app.add_middleware(CabecerasSeguras)
     for m in (sistema, tablero, personas, reuniones, calidad, usuarios, acercamientos, zonas, ajustes, agente,
-              agente_mnemo):
+              agente_mnemo, pantalla, mcp):
         app.include_router(m.r)
 
     @app.exception_handler(RequestValidationError)

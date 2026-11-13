@@ -1,8 +1,11 @@
 // Mi cuenta (7.9): cambio de clave, compromiso de confidencialidad e indicadores propios. Con la clave temporal o el
 // compromiso pendientes, es la única vista que se abre. El coordinador cambia su clave y acepta el compromiso como
 // planilleros y consultores; solo el administrador de `.env` (uid 0) no tiene clave en el panel.
+// «Agentes por MCP»: la clave con que un agente externo (Claude, Mnemo u otro cliente MCP) maneja la pantalla en off de
+// la presentación (app/api/mcp.py). Se muestra una sola vez, al crearla; cambiar la clave del panel la anula.
 import { api, configurar, nombreRol, puede, sesion } from '../api.js';
-import { $, aviso, avisoError, fecha, html, montar } from '../ui.js';
+import { url } from '../base.js';
+import { $, aviso, avisoError, confirmar, fecha, html, montar } from '../ui.js';
 import { pintarIndicadores } from './usuarios.js';
 
 export async function vistaCuenta(el, { ir }) {
@@ -37,12 +40,18 @@ export async function vistaCuenta(el, { ir }) {
           <p class="sec">Versión ${yo.compromiso?.version || '—'}${yo.compromiso?.aceptado ? html` · aceptado el ${fecha(yo.compromiso.aceptado_en, true)}` : ''}</p>
           ${yo.compromiso?.aceptado ? '' : html`<button class="btn primario" id="aceptar" ${yo.debe_cambiar_clave ? 'disabled title="Primero cambie su clave temporal"' : ''}>Acepto el compromiso</button>`}`}
         </section>
+        ${!pendiente && puede('presentacion.ver') ? html`<section class="tarjeta c-12" id="t-mcp">
+          <header><h2>Agentes por MCP</h2><span class="nota">La presentación de la propuesta</span></header>
+          <p class="sec">Un agente externo (Claude, Mnemo u otro cliente MCP) puede manejar su <a href="${url('/presentacion?off=1')}" target="_blank" rel="noopener">pantalla en off</a>: ir a un capítulo y paso, poner una frase en pantalla, cambiar lo que se ve y hacer que llene la ventana. Es la misma herramienta del asistente del panel. Solo la presentación: con esta clave no se ve ni se cambia ningún dato de personas.</p>
+          <div id="mcp"><div class="cargando"><div class="giro"></div></div></div>
+        </section>` : ''}
         <section class="tarjeta c-12" id="t-indicadores">
           <header><h2>Mis indicadores</h2><span class="nota">Últimos 30 días</span></header>
           <div id="indicadores">${pendiente ? html`<p class="sec">Aparecen cuando su cuenta esté al día.</p>` : html`<div class="cargando"><div class="giro"></div></div>`}</div>
         </section>
       </div>`);
     if (!pendiente) cargarIndicadores();
+    if ($('#mcp', el)) cargarMcp();
     if (pendiente === 'clave') el.querySelector('#f-clave [name=actual]')?.focus();
   }
 
@@ -53,6 +62,33 @@ export async function vistaCuenta(el, { ir }) {
       if (c.isConnected) pintarIndicadores(c, ind, { rol: yo.rol });
     } catch (e) {
       if (c.isConnected) montar(c, html`<p class="sec">${e.message}</p>`);
+    }
+  }
+
+  function pintarMcp(info, nueva = null) {
+    const c = $('#mcp', el);
+    if (!c?.isConnected) return;
+    montar(c, html`
+      <dl class="datos-mcp">
+        <dt>Dirección del servidor MCP</dt><dd><code id="mcp-direccion">${info.direccion}</code> <button type="button" class="btn chico" data-copiar="mcp-direccion">Copiar</button></dd>
+        <dt>Clave</dt><dd>${info.tiene ? html`Creada el ${fecha(info.creada, true)}${info.usada ? html` · usada por última vez el ${fecha(info.usada, true)}` : ' · todavía sin usar'}` : 'Sin clave'}</dd>
+      </dl>
+      ${nueva ? html`<div class="aviso-legal mcp-nueva" role="status">
+        <p><b>Copie la clave ahora: no se vuelve a mostrar.</b> Va en la cabecera <code>Authorization: Bearer …</code> del cliente MCP. Si el cliente solo acepta una dirección, use la segunda (lleva la clave: guárdela como un secreto).</p>
+        <div class="mcp-copiar"><label class="campo"><span>Clave</span><input id="mcp-clave" readonly value="${nueva.clave}"></label><button type="button" class="btn" data-copiar="mcp-clave">Copiar</button></div>
+        <div class="mcp-copiar"><label class="campo"><span>Dirección con la clave</span><input id="mcp-con-clave" readonly value="${nueva.direccion_con_clave}"></label><button type="button" class="btn" data-copiar="mcp-con-clave">Copiar</button></div>
+      </div>` : ''}
+      <div class="fila-botones">
+        <button type="button" class="btn ${info.tiene ? '' : 'primario'}" id="mcp-crear">${info.tiene ? 'Crear otra clave' : 'Crear clave'}</button>
+        ${info.tiene ? html`<button type="button" class="btn" id="mcp-revocar">Revocar la clave</button>` : ''}
+        <a class="btn" href="${url('/presentacion?off=1')}" target="_blank" rel="noopener">Abrir la pantalla en off</a>
+      </div>`);
+  }
+
+  async function cargarMcp() {
+    try { pintarMcp(await api.get('/api/pantalla/clave')); } catch (e) {
+      const c = $('#mcp', el);
+      if (c?.isConnected) montar(c, html`<p class="sec">${e.message}</p>`);
     }
   }
 
@@ -96,6 +132,24 @@ export async function vistaCuenta(el, { ir }) {
     }
   });
   el.addEventListener('click', async (e) => {
+    const copiar = e.target.closest('[data-copiar]');
+    if (copiar) {
+      const origen = $(`#${copiar.dataset.copiar}`, el);
+      const texto = origen?.value ?? origen?.textContent ?? '';
+      try { await navigator.clipboard.writeText(texto); aviso('Copiado'); } catch { origen?.select?.(); aviso('Selecciónelo y cópielo', 'error'); }
+      return;
+    }
+    if (e.target.closest('#mcp-crear')) {
+      const reemplaza = !!$('#mcp-revocar', el);
+      if (reemplaza && !await confirmar('La clave anterior deja de valer: el agente que la use ya no podrá manejar la pantalla.', { si: 'Crear otra' })) return;
+      try { const r = await api.post('/api/pantalla/clave'); pintarMcp(r, r); } catch (err) { avisoError(err); }
+      return;
+    }
+    if (e.target.closest('#mcp-revocar')) {
+      if (!await confirmar('El agente que use esta clave ya no podrá manejar la pantalla en off.', { si: 'Revocar' })) return;
+      try { const r = await api.del('/api/pantalla/clave'); pintarMcp(r); aviso('Clave revocada'); } catch (err) { avisoError(err); }
+      return;
+    }
     if (!e.target.closest('#aceptar')) return;
     try {
       await api.post('/api/yo/compromiso', { version: yo.compromiso?.version });

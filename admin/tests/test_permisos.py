@@ -15,7 +15,10 @@ from app import seguridad as seg
 A = "solo A"  # solo el administrador: ningún permiso que tengan P o C
 P = acceso.PERMISOS["planillero"]
 C = acceso.PERMISOS["consultor"]
-SIN_PERMISOS = {("POST", "/api/login"), ("GET", "/api/yo")}
+# El servidor MCP de la presentación (app/api/mcp.py) no usa la sesión: lo autentica su clave, que la ruta comprueba
+# antes de leer el cuerpo (tests/test_pantalla_mcp.py)
+SIN_SESION_MCP = {("POST", "/api/mcp"), ("GET", "/api/mcp"), ("DELETE", "/api/mcp")}
+SIN_PERMISOS = {("POST", "/api/login"), ("GET", "/api/yo")} | SIN_SESION_MCP
 
 # (método, ruta, permisos esperados o A, grupo dueño). Las rutas van con {} en lugar del nombre del parámetro.
 # Endpoints actuales (3.7, filas 1 a 45)
