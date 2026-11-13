@@ -263,5 +263,164 @@
         "nota": "La ANI y la concesión no ponen plata en esta propuesta: se les pide coordinar el estribo con la protección de la orilla. Los ministerios forman la fuente «Nación» ($79.922 M); el Fondo Único de TIC va con los fondos. No se listan los aportes del municipio ($25.468 M), de hogares y socios privados ($25.771 M), de Corantioquia ($7.500 M) ni de la cooperación ($3.800 M)."
       }
     ]
+  },
+  "tecnica": {
+    "nota": "La presentación técnica (web/propuesta.html?modo=tecnica) es la que muestran el asistente del panel y los agentes por MCP: lo que se construye, cómo funciona y cómo se mide, sin costos ni financiación (esos están en la propuesta para la gestión). Sus pasos son los de cada módulo sin el de financiación, más las inmersiones en los modelos del atlas y un paso de metas.",
+    "portada": {
+      "titulo": "Yondó 2028–2031: lo que se construye, pieza por pieza",
+      "lema": "Siete áreas sobre la maqueta 3D del territorio real: el sitio, las especificaciones, el referente técnico y las metas de cada obra",
+      "texto": "La presentación técnica de la propuesta integral: cada obra en su sitio real del municipio, con lo que se construye, cómo funciona, qué norma o proyecto tipo la respalda y qué cambia cuando opere.",
+      "nota": "Maqueta 3D con calles, caños y ciénagas de OpenStreetMap, huellas de edificaciones abiertas y réplicas de las sedes públicas levantadas con satélite, Street View y fotos. Toca un área para ir a ella."
+    },
+    "metas": {
+      "titulo": "Lo que cambia y cómo se mide",
+      "texto": "Cada meta parte de una línea base medida y llega a un valor verificable al cierre del periodo."
+    },
+    "cronograma": {
+      "titulo": "Cronograma de obra 2027–2032",
+      "texto": "Cada barra es un componente, del primer estudio a la entrada en operación, según el plazo de su ficha técnica. Las obras que dependen de otras van después: el parque lineal espera a la PTAR y la PTAP a que bajen las pérdidas.",
+      "nota": "Plazos de prefactibilidad: se ajustan con los diseños de cada obra."
+    },
+    "inmersiones": [
+      {
+        "id": "torre",
+        "vista": "torre",
+        "modo": "torre",
+        "nombre": "La torre en su sitio",
+        "texto": "El modelo de la torre de cuatro pisos junto al hospital actual, sobre el sitio del antiguo Centro Vida."
+      },
+      {
+        "id": "torre_hoy",
+        "vista": "torre",
+        "modo": "hoy",
+        "nombre": "El predio hoy",
+        "texto": "Las alas del antiguo Centro Vida que se demuelen para levantar la torre, junto al hospital en uso desde 1989."
+      },
+      {
+        "id": "torre_pisos",
+        "vista": "torre",
+        "modo": "pisos",
+        "nombre": "Pisos por servicio",
+        "texto": "Los cuatro pisos de la planta real separados, cada recinto con el color de su grupo de la Res. 1633 de 2025."
+      },
+      {
+        "id": "torre_recorrido",
+        "vista": "torre",
+        "modo": "recorrido",
+        "nombre": "Recorrido por dentro",
+        "texto": "La torre en primera persona, piso por piso, con la dotación de cada recinto en su lugar."
+      },
+      {
+        "id": "torre_laboratorio",
+        "vista": "torre",
+        "modo": "laboratorio",
+        "nombre": "El laboratorio clínico",
+        "texto": "El recorrido en la puerta del laboratorio de 24 horas del piso 2, con sus analizadores, neveras y reactivos."
+      },
+      {
+        "id": "torre_sismo",
+        "vista": "torre",
+        "modo": "sismo",
+        "nombre": "Simulador sísmico",
+        "texto": "La estructura prediseñada con la NSR-10 sometida a un sismo, con la deriva de cada piso."
+      },
+      {
+        "id": "torre_bim",
+        "vista": "torre",
+        "modo": "bim",
+        "nombre": "Modelo BIM federado",
+        "texto": "El modelo IFC4 de la torre por disciplinas: arquitectura, estructura, refuerzo, cimentación y dotación, con sus interferencias resueltas."
+      },
+      {
+        "id": "relleno_hoy",
+        "vista": "parque",
+        "modo": "hoy",
+        "nombre": "El relleno Las Américas hoy",
+        "texto": "Las celdas, el frente activo y las lagunas de lixiviados del relleno que opera con la licencia vencida desde 2023."
+      },
+      {
+        "id": "relleno_parque",
+        "vista": "parque",
+        "modo": "parque",
+        "nombre": "El parque ecotecnológico",
+        "texto": "La granja solar sobre las celdas clausuradas y, fuera de ellas, el coworking rural, la granja, el circuito y el humedal."
+      }
+    ],
+    "pasos": {
+      "salud": [
+        {
+          "id": "torre_pisos",
+          "despues_de": "torre",
+          "tipo": "inmersion",
+          "inmersion": "torre_pisos",
+          "titulo": "Cuatro pisos, cada servicio en su color",
+          "texto": "La planta real de la torre, piso por piso: 3.369,6 m² en cuatro pisos, cada recinto con el color de su grupo de servicios de la Res. 1633 de 2025.",
+          "lista": [
+            "<b>15 camas</b>: 13 generales y 2 habitaciones de parto TPR, más 6 camillas de observación y una sala de expansión de 8 camillas para emergencias.",
+            "<b>15 consultorios</b> y 3 unidades odontológicas; hoy (REPS 2022) hay 9 camas, 4 camillas y 13 consultorios.",
+            "Rayos X digital, ecografía, vacunación, farmacia, terapias y un <b>laboratorio de 24 horas</b> con 55 pruebas en sitio.",
+            "Urgencias en rojo, internación en azul, apoyo diagnóstico en amarillo, consulta en naranja, esterilización en verde y administración en violeta."
+          ]
+        },
+        {
+          "id": "torre_recorrido",
+          "despues_de": "torre_pisos",
+          "tipo": "inmersion",
+          "inmersion": "torre_recorrido",
+          "titulo": "La torre por dentro, a la altura de los ojos",
+          "texto": "Un recorrido en primera persona por los cuatro pisos con la dotación en su lugar: cada equipo tiene su ficha, su exigencia de la norma y su anclaje sísmico.",
+          "lista": [
+            "<b>1.702 unidades</b> ubicadas una por una en <b>270 recintos</b>: 946 de dotación, 611 de infraestructura, 17 de equipamiento fijo y 12 analizadores de laboratorio.",
+            "Cada unidad con su exigencia de la Res. 3100 de 2019, su clase de riesgo y su registro sanitario (Decreto 4725).",
+            "Con el cierre de brechas, 11 de los 12 servicios que se habilitan quedan sin faltantes exigibles en dotación e infraestructura.",
+            "El laboratorio del piso 2 hace unas 5.365 pruebas al mes: urgencias en 60 minutos o menos y tamizaje en 24 a 72 horas."
+          ]
+        },
+        {
+          "id": "torre_sismo",
+          "despues_de": "torre_recorrido",
+          "tipo": "inmersion",
+          "inmersion": "torre_sismo",
+          "titulo": "Una estructura que sigue en servicio después del sismo",
+          "texto": "La torre es una edificación indispensable (grupo de uso IV de la NSR-10): debe seguir atendiendo después de un terremoto. El simulador mueve la estructura prediseñada con sismos reales e hipotéticos.",
+          "lista": [
+            "Sistema dual de concreto (pórticos y muros) con capacidad moderada de disipación (DMO), para la amenaza sísmica intermedia de Yondó.",
+            "Columnas de 0,80 a 0,90 m, muros de 0,35 m y <b>146 pilotes de 15 m</b>; período fundamental de 0,455 s.",
+            "Deriva máxima de <b>0,939 %</b> de la altura del piso, frente al límite de 1 % de la norma.",
+            "Con el sismo del nido de Bucaramanga se mueve 0,056 % de la altura de cada piso y con un sismo local hipotético bajo Yondó, 0,416 %: queda en ocupación inmediata."
+          ]
+        },
+        {
+          "id": "torre_bim",
+          "despues_de": "torre_sismo",
+          "tipo": "inmersion",
+          "inmersion": "torre_bim",
+          "titulo": "Un modelo BIM federado y sin choques",
+          "texto": "La torre existe ya como modelo de información: arquitectura, estructura, refuerzo, cimentación y dotación en un modelo federado IFC4 que se coordinó hasta no dejar interferencias duras.",
+          "lista": [
+            "<b>4.583 elementos</b> con su clase IFC4, su nivel, su material y sus cantidades, más 64.849 barras de refuerzo (292.289 kg) con su forma real.",
+            "La primera coordinación encontró <b>280 interferencias duras</b>; corregidas sus causas en la estructura, la planta y el modelo, quedan <b>0</b>.",
+            "Esquema IFC4 validado sin errores y con identificadores estables: regenerar el modelo no cambia lo que no cambió.",
+            "Nivel de información (LOIN) objetivo: arquitectura ≈ 300, estructura ≈ 350, refuerzo ≈ 400 y dotación ≈ 200 a 300."
+          ]
+        }
+      ],
+      "saneamiento": [
+        {
+          "id": "relleno_parque",
+          "despues_de": "relleno",
+          "tipo": "inmersion",
+          "inmersion": "relleno_parque",
+          "titulo": "El parque ecotecnológico sobre el relleno clausurado",
+          "texto": "El relleno Las Américas se clausura por partes desde 2028 con cobertura final, manejo de lixiviados y gases y una posclausura de 20 años. Encima de las celdas va una granja solar; lo que tiene gente queda fuera de ellas.",
+          "lista": [
+            "Granja solar de <b>997 kWp</b> (1.812 módulos de 550 Wp) que produce unos <b>1,34 GWh al año</b>, montada por partes a medida que la cobertura asienta.",
+            "Unos 530 kWp en 2031 sobre las celdas cubiertas desde 2028 y el resto hacia 2033–2034.",
+            "Coworking rural de 312 m² con 40 puestos, cafetería, taller de bicicletas, granja con invernadero, huerta y apiario, mirador, circuito y humedal.",
+            "Todo lo que tiene gente va a 30 m o más de las celdas y las lagunas."
+          ]
+        }
+      ]
+    }
   }
 }

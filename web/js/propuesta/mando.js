@@ -14,15 +14,34 @@
 //   fichas y los botones de la presentación (la pantalla en off del panel, que nadie toca, los oculta). Sin controles
 //   tampoco atiende el teclado (la presentación enfoca el índice al abrirlo y las flechas la moverían): solo le avisa al
 //   panel de Escape (`tecla`), que allá devuelve la ventana.
+// * `visual` (solo en la presentación técnica, ?modo=tecnica) cambia lo que se ve sin cambiar de paso: la cámara (camara,
+//   rumbo, girar), la obra que enfoca (enfoque), hoy o con el proyecto (comparar), la ficha técnica de un componente
+//   (detalle), un modelo del atlas a pantalla completa (inmersion) y el tema. Aquí se revisa la forma de cada valor (los
+//   ids, las listas, los tipos); que el componente exista en el capítulo o la inmersión en el catálogo lo revisa
+//   visual.js, que responde el error sin mover nada.
 // * Cada cambio de paso (también por el teclado o un clic) se le avisa al panel con el estado: capítulo, paso, total,
-//   nombre del capítulo, título del paso y la explicación a la vista. main.js lo anuncia con el evento `propuesta:paso`.
-// main.js le entrega sus piezas (caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel, reencuadrar) al final del
-// arranque: así este
+//   nombre del capítulo, título del paso, la explicación a la vista y, en la técnica, lo visual. main.js lo anuncia con
+//   el evento `propuesta:paso` (y visual.js, `propuesta:visual`).
+// main.js le entrega sus piezas (caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel, reencuadrar y, en la
+// técnica, visual) al final del arranque: así este
 // módulo no depende de la escena 3D y se prueba con Node (admin/tests/test_agente_presentacion.py).
 export const CANAL = 'yondo-presentacion';
 export const VERSION = 1;
 export const MAX_EXPLICACION = 220;   // `MAX_EXPLICACION` de la herramienta y del puente del panel: una prueba los compara
 const ID = /^[a-z_]{2,40}$/;
+const ID_PIEZA = /^[a-z0-9_]{1,40}$/;   // un componente o una inmersión (los ids de la propuesta)
+// `visual`: los valores que admite cada parte (visual.js y `_VISUAL` de la herramienta)
+export const CAMARAS = ['paso', 'aerea', 'oblicua', 'rasante', 'cerca', 'lejos'];
+const VISUAL = {
+  enfoque: (v) => v === null || (typeof v === 'string' && ID_PIEZA.test(v)),
+  detalle: (v) => v === null || (typeof v === 'string' && ID_PIEZA.test(v)),
+  inmersion: (v) => v === null || (typeof v === 'string' && ID_PIEZA.test(v)),
+  camara: (v) => CAMARAS.includes(v),
+  rumbo: (v) => v === null || (Number.isInteger(v) && v >= 0 && v <= 359),
+  girar: (v) => typeof v === 'boolean',
+  comparar: (v) => v === 'hoy' || v === 'proyecto',
+  tema: (v) => v === 'claro' || v === 'oscuro',
+};
 const ORIGEN = /^https?:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/;
 const ORIGEN_HTTPS = /^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/i;
 // Lo que el subtítulo no muestra (`_explicacion_visible` de admin/app/agente/herramientas/interfaz.py, con las mismas
@@ -55,6 +74,7 @@ const ESCALAS = [1, 0.93, 0.86, 0.8, 0.75];
 const CLAVES = new Map([
   ['ir', ['capitulo', 'paso', 'explicacion']], ['avanzar', ['d', 'explicacion']], ['explicar', ['explicacion']],
   ['quitar_explicacion', []], ['estado', []], ['vista', ['panel', 'indice', 'fichas', 'controles']],
+  ['visual', Object.keys(VISUAL)],
 ]);
 
 const cifra = (t) => Number(t.replace(/\./g, '').replace(',', '.'));
@@ -117,7 +137,7 @@ const limpio = (t, n) => String(t ?? '').replace(/[\xa0\u{202f}]/gu, ' ').replac
 /** Monta el mando si la presentación está dentro de un iframe; si no, no escucha nada y devuelve null. Devuelve
  * {subtitulo(texto|null), estado()} (para las pruebas y por si main.js lo necesita). */
 export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, abrirFichas = () => {}, verPanel = () => {},
-  reencuadrar = () => {}, ventana = globalThis.window, documento = globalThis.document } = {}) {
+  reencuadrar = () => {}, visual = null, ventana = globalThis.window, documento = globalThis.document } = {}) {
   if (!ventana || !documento || !Array.isArray(caps) || !estado || typeof ir !== 'function' || typeof vecino !== 'function') return null;
   let padre = null;
   try { padre = ventana.parent; } catch { return null; }
@@ -148,7 +168,8 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     const p = c.pasos[estado.pi] || {};
     const visible = !!sub?.classList.contains('visible');
     return { capitulo: c.id, paso: estado.pi + 1, total: c.pasos.length, nombre: limpio(c.nombre, 80),
-      titulo: limpio(p.titulo || c.nombre, 200), explicacion: visible, texto: visible ? texto?.textContent ?? null : null };
+      titulo: limpio(p.titulo || c.nombre, 200), explicacion: visible, texto: visible ? texto?.textContent ?? null : null,
+      ...(visual ? { visual: visual.estado() } : {}) };
   }
   function enviar(msj, origen = null) {
     const destinos = origen ? [origen] : origenPadre ? [origenPadre] : [...permitidos];
@@ -285,6 +306,17 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       if (m.controles !== undefined) { pres?.classList.toggle('sin-controles', !m.controles); sinTeclado = !m.controles; }
       return responder(id, 'estado', origen);
     }
+    // Lo visual, sin cambiar de paso: solo las partes que vienen, cada una con un valor de su lista
+    if (m.orden === 'visual') {
+      if (!visual) return fallo('Esta presentación no tiene la capa visual: es la de la presentación técnica (?modo=tecnica)');
+      const partes = Object.keys(VISUAL).filter((k) => m[k] !== undefined);
+      if (!partes.length) return fallo('La orden visual no dice qué cambiar');
+      const malas = partes.filter((k) => !VISUAL[k](m[k]));
+      if (malas.length) return fallo(`Valor que la presentación no admite en: ${malas.join(', ')}`);
+      const error = await visual.aplicar(Object.fromEntries(partes.map((k) => [k, m[k]])));
+      if (error) return fallo(String(error).slice(0, 160));
+      return responder(id, 'estado', origen);
+    }
     if (m.orden === 'explicar' || m.orden === 'quitar_explicacion') {
       if (m.orden === 'explicar' && !explicacion) return fallo('Falta la explicación');
       subtitulo(explicacion);
@@ -326,6 +358,8 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     enviar({ tipo: listo ? 'estado' : 'listo', ...actual() });
     listo = true;
   });
+  // Lo visual que cambia sin orden (la persona arrastra la cámara y deja de girar, cierra la ficha): el panel lo sabe
+  ventana.addEventListener('propuesta:visual', () => { if (listo) enviar({ tipo: 'estado', ...actual() }); });
   // Sin controles, ninguna tecla mueve la presentación (en captura: antes que las de main.js); Escape va al panel
   ventana.addEventListener('keydown', (e) => {
     if (!sinTeclado) return;

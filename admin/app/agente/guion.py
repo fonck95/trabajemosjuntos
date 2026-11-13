@@ -1,59 +1,64 @@
-"""El guion de la presentación de la propuesta 2028–2031 (web/propuesta.html): lo que el asistente sabe de cada capítulo
-y de cada paso para presentarla y explicarla (la herramienta `presentacion`, `herramientas/interfaz.py`).
+"""El guion de la presentación técnica de la propuesta 2028–2031 (web/propuesta.html?modo=tecnica): lo que el asistente
+sabe de cada capítulo y de cada paso para presentarla y explicarla (la herramienta `presentacion`,
+`herramientas/interfaz.py`), y lo que puede mostrar en ella (las obras que enfoca la cámara, las fichas técnicas y las
+inmersiones en los modelos del atlas).
 
 Por qué está hecho así:
 
+* El asistente del panel y los agentes por MCP muestran la presentación TÉCNICA: lo que se construye, dónde, cómo
+  funciona y cómo se mide, sin costos ni financiación (esos van en la propuesta para la gestión, web/propuesta.html sin
+  `modo`). Por eso el guion tampoco los trae: lo que no está en pantalla el modelo no lo explica.
 * Lo genera `scripts/build_propuesta.py` (con `derivar`) a partir de lo mismo que lee la presentación
   (web/data/propuesta.json) y queda versionado aquí, en `propuesta_guion.json`: así lo tiene también el panel que se
   despliega aparte (Root Directory = admin), que no trae web/. Una prueba (test_agente_presentacion.py) lo compara con
   lo que se deriva de web/data/propuesta.json: si alguien cambia la propuesta y no lo regenera, falla.
 * Son datos públicos de la propuesta, los mismos que se ven en pantalla: nada de la base de habitantes. Por eso no pasa
   por `minimizar`.
-* Los capítulos van en el orden y con los nombres de `caps` en web/js/propuesta/main.js (la portada, los módulos en el
-  orden de general.json, la financiación, la hoja de ruta y los pedidos), y un capítulo sin pasos recibe el paso
-  «inicio», como allí: el asistente y la presentación cuentan los pasos igual (la dirección `#vivienda/3` es el tercero).
-  Otra prueba compara los nombres fijos con los de main.js.
-* Cada paso trae lo que su panel muestra (`RENDER` de main.js, con los mismos títulos y textos de respaldo), en texto
-  plano: sin HTML y sin los espacios que no se cortan ni las uniones de palabras (U+2060) que pone build_propuesta.py
-  para el panel. También lo que el modelo necesita para explicarlo sin inventar: las fuentes de financiación por su
-  nombre (con qué financia cada una, su requisito y, en cada módulo, cómo se accede a ella), a quién se le pide, los
-  siguientes pasos y los hitos, los plazos, las especificaciones, la base de cada costo, los proyectos tipo, la fuente
-  de cada cifra y las metas.
-* Nada se acorta: la herramienta le dice al modelo que explique «con esos datos (no invente otros)», y un texto cortado
-  a media frase («…suman $47.577 M de los $70.537 M del módulo. La…») es justo lo que lo obliga a adivinar. El único
-  tope es lo que pesa un paso para el modelo (`MAX_BYTES_PASO`, muy por debajo de `MAX_CONTENIDO` de la herramienta):
-  si una propuesta nueva lo pasa, `problemas` lo dice y build_propuesta.py --estricto falla, para decidir qué se saca
-  en vez de cortar en silencio.
+* Los capítulos van en el orden y con los nombres de `capsTecnica` en web/js/propuesta/main.js (la portada, los módulos
+  en el orden de general.json y el cronograma de obra), y sus pasos son los de `pasosTecnicos`: los del módulo sin el de
+  financiación, con las inmersiones de general.json (`tecnica.pasos`) detrás del paso que dicen y, al final, el de
+  metas. El asistente y la presentación cuentan los pasos igual (la dirección `#salud/4` es el cuarto).
+* Lo que tiene plata se quita con las mismas reglas que main.js (`sin_plata`, `cifra_tecnica`, `especificacion_tecnica`):
+  un paréntesis con «$», la frase que lo lleve y, en una especificación, el tramo entre «·» o «;»; una cifra en pesos o
+  en millones no se muestra. Una prueba con Node compara las dos implementaciones con cada texto de la propuesta.
+* Cada paso trae lo que su panel muestra (`RENDER_TECNICA` de main.js, con los mismos títulos y textos de respaldo), en
+  texto plano: sin HTML y sin los espacios que no se cortan ni las uniones de palabras (U+2060) que pone
+  build_propuesta.py para el panel. Cada capítulo trae sus componentes (id, nombre y si la cámara los puede enfocar) y
+  el guion, el catálogo de inmersiones del atlas: con eso la herramienta valida `visual` antes de tocar la pantalla.
+* Nada se acorta: la herramienta le dice al modelo que explique «con esos datos (no invente otros)». El único tope es
+  lo que pesa un paso para el modelo (`MAX_BYTES_PASO`): si una propuesta nueva lo pasa, `problemas` lo dice y
+  build_propuesta.py --estricto falla, para decidir qué se saca en vez de cortar en silencio.
 * Solo usa la biblioteca estándar: build_propuesta.py lo carga por su ruta, sin las dependencias del panel. El panel lo
-  lee con `cargar` (con caché por la fecha del archivo; pymongo no interviene, pero es lectura de disco: desde una
-  corrutina va con `run_in_threadpool`).
+  lee con `cargar` (con caché por la fecha del archivo; es lectura de disco: desde una corrutina va con
+  `run_in_threadpool`).
 """
 from __future__ import annotations
 
 import html
 import json
-import math
 import re
 import threading
 import unicodedata
 from dataclasses import dataclass
-from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any
 
 RUTA = Path(__file__).with_name("propuesta_guion.json")
-VERSION = 1
-# Lo que pesa a lo sumo un paso para el modelo (su JSON en UTF-8, como lo manda `Resultado.texto_para_modelo`). El más
-# pesado de la propuesta, la financiación de saneamiento (nueve fuentes con cómo se accede a cada una, a quién tocar y
-# diez pasos), pesa unos 10 KB entero: el tope le deja un margen y es menos de un tercio de `MAX_CONTENIDO` (40.000)
+VERSION = 2
+MODO = "tecnica"
+# Lo que pesa a lo sumo un paso para el modelo (su JSON en UTF-8, como lo manda `Resultado.texto_para_modelo`): muy por
+# debajo de `MAX_CONTENIDO` (40.000) de la herramienta. El más pesado, el cronograma de obra (los plazos de todos los
+# componentes), pesa unos 9 KB
 MAX_BYTES_PASO = 12000
 MAX_PASOS = 60       # el tope de `paso` en la herramienta y en el navegador
-# Los capítulos que no salen de `modulos`, con los nombres que tienen fijos en web/js/propuesta/main.js (`caps`)
+# Los capítulos que no salen de `modulos`, con los nombres que tienen fijos en web/js/propuesta/main.js (`capsTecnica`)
 FIJOS_ANTES = (("portada", "Portada", "Portada"),)
-FIJOS_DESPUES = (("financiacion", "Cómo se financia", "Financiación"), ("ruta", "Hoja de ruta", "Ruta"),
-                 ("pedidos", "Lo que pedimos", "Pedidos"))
+FIJOS_DESPUES = (("ruta", "Cronograma de obra", "Cronograma"),)
 ID = re.compile(r"[a-z_]{2,40}")
 ID_PASO = re.compile(r"[a-z0-9_]{1,40}")
+# Los títulos fijos de los pasos que arma main.js (`pasosTecnicos`, `capsTecnica`) cuando general.json no trae otro
+TITULO_METAS = "Lo que cambia y cómo se mide"
+TITULO_CRONOGRAMA = "Cronograma de obra"
 
 
 # ───────────────────────────── Texto plano ─────────────────────────────
@@ -82,76 +87,115 @@ def clave(v: Any) -> str:
     return " ".join(re.sub(r"[^a-z0-9]+", " ", t).split())
 
 
-# ───────────────────────────── Cifras como las muestra la presentación ─────────────────────────────
+# ───────────────────────────── Sin plata (las mismas reglas de main.js) ─────────────────────────────
 
-def _numero(v: float, maximo: int, minimo: int = 0) -> str:
-    """`toLocaleString('es-CO', {minimumFractionDigits, maximumFractionDigits})`: punto de miles, coma decimal y el
-    redondeo de Intl (la mitad, hacia afuera)."""
-    d = Decimal(repr(float(v))).quantize(Decimal(1).scaleb(-maximo), rounding=ROUND_HALF_UP)
-    entero, _, decimales = f"{abs(d):f}".partition(".")
-    decimales = decimales.rstrip("0")
-    decimales = decimales + "0" * max(0, minimo - len(decimales))
-    entero = f"{int(entero):,}".replace(",", ".")
-    return ("-" if d < 0 else "") + entero + (f",{decimales}" if decimales else "")
-
-
-def _cifra2(v: float | None) -> float:
-    """Dos cifras significativas (`cifra2` de main.js): una estimación de perfil no pretende más precisión."""
-    if not v:
-        return 0.0
-    k = 10.0 ** (math.floor(math.log10(abs(v))) - 1)
-    return math.floor(v / k + 0.5) * k  # Math.round de JavaScript
+# Lo que delata plata en un texto: el signo de pesos o «millones de pesos»
+PLATA = re.compile(r"\$|millones de pesos")
+# Un paréntesis (sin otro adentro) que lleva plata, con el espacio de antes
+_PARENTESIS = re.compile(r"\s*\([^()]*\$[^()]*\)")
+# Dónde termina una frase: un punto, un signo de cierre de pregunta o de exclamación, espacio y una mayúscula, un signo
+# de apertura, un paréntesis o una etiqueta (no un número: «Res. 3100» no parte)
+_FRASE = re.compile(r"(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡«(<])")
+# Los tramos de una especificación («100 casas · $6.801 M · 9 % de obra»)
+_TRAMO = re.compile(r"\s+·\s+|;\s+")
+_ANTES_DE_SIGNO = re.compile(r"\s+([,.;:])")
+# La especificación cuyo nombre es de plata («Costo anual», «Tope del subsidio») no va, diga lo que diga
+CLAVE_PLATA = re.compile(r"costo|valor|precio|subsidio|tope|presupuest|financ|cr[eé]dito|aporte|tarifa", re.I)
 
 
-def millones(v: float | None) -> str:
-    """Millones de pesos de 2026 en corto (`fmtM` de main.js): «$77,0 mil M», «$850 M», «$1,2 billones»."""
-    if v is None or isinstance(v, bool) or not isinstance(v, (int, float)) or math.isnan(v):
-        return "—"
-    a = abs(v)
-    if a >= 1e6:
-        return f"${_numero(v / 1e6, 2)} billones"
-    if a >= 1000:
-        return f"${_numero(v / 1000, 1, 1)} mil M"
-    return f"${_numero(math.floor(v + 0.5), 0)} M"
+def _sin_parentesis(t: str) -> str:
+    antes = None
+    while antes != t:
+        antes, t = t, _PARENTESIS.sub("", t)
+    return t
 
 
-def rango(minimo: Any, maximo: Any) -> str:
-    """Un rango aproximado (`fmtRango` de main.js): «$54 – 100 mil M»; si los dos extremos coinciden, «≈ $77 mil M»."""
-    if not all(isinstance(x, (int, float)) and not isinstance(x, bool) and not math.isnan(x) for x in (minimo, maximo)):
-        return "—"
-    a, b = _cifra2(min(minimo, maximo)), _cifra2(max(minimo, maximo))
-    if a == b:
-        return f"≈ {millones(b)}"
-    div, unidad, dec = (1e6, " billones", 2) if b >= 1e6 else (1000, " mil M", 1) if b >= 1000 else (1, " M", 0)
-    return f"${_numero(a / div, dec)} – {_numero(b / div, dec)}{unidad}"
-
-
-def rango_de(c: Any) -> str:
-    """El rango de un objeto {min, central, max} (`rg` de main.js), o «» si no hay."""
-    if not isinstance(c, dict) or c.get("central") is None and (c.get("min") is None or c.get("max") is None):
+def sin_plata(t: Any, tramos: bool = False) -> str:
+    """El texto sin lo que tiene plata (`sinPlata` de main.js): los paréntesis con «$», los tramos entre «·» o «;» que
+    la lleven (con `tramos`, las especificaciones) y las frases que la lleven. Lo demás queda igual, con su HTML."""
+    if not isinstance(t, str):
         return ""
-    m = c.get("min") if c.get("min") is not None else c.get("central")
-    x = c.get("max") if c.get("max") is not None else c.get("central")
-    r = rango(m, x)
-    return "" if r == "—" else r
+    if not PLATA.search(t):
+        return t
+    t = _sin_parentesis(t)
+    if tramos:
+        t = " · ".join(x for x in _TRAMO.split(t) if x.strip() and not PLATA.search(x))
+    t = " ".join(f for f in _FRASE.split(t) if f.strip() and not PLATA.search(f))
+    return _ANTES_DE_SIGNO.sub(r"\1", t).strip()
 
 
-def aproximado(v: Any) -> str:
-    """Un valor suelto como aproximación (`aprox` de main.js)."""
-    return f"≈ {millones(_cifra2(v))}" if isinstance(v, (int, float)) and not isinstance(v, bool) else ""
+def cifra_tecnica(c: Any) -> dict | None:
+    """Una cifra grande sin plata (`cifraTecnica` de main.js): no va si su valor o su rótulo hablan de pesos o de
+    millones; el rótulo pierde los paréntesis con «$»."""
+    if not isinstance(c, dict) or not isinstance(c.get("v"), str) or not c["v"].strip():
+        return None
+    rotulo = _sin_parentesis(c.get("l") or "") if isinstance(c.get("l"), str) else ""
+    if PLATA.search(c["v"]) or PLATA.search(rotulo) or "millones" in rotulo.lower():
+        return None
+    return {**c, "l": _ANTES_DE_SIGNO.sub(r"\1", rotulo).strip()}
+
+
+def especificacion_tecnica(e: Any) -> tuple[str, str] | None:
+    """[nombre, valor] de una especificación sin plata (`especificacionTecnica` de main.js), o None si no queda nada."""
+    if not isinstance(e, (list, tuple)) or len(e) != 2 or not all(isinstance(x, str) for x in e):
+        return None
+    if CLAVE_PLATA.search(e[0]) or PLATA.search(e[0]):
+        return None
+    v = sin_plata(e[1], tramos=True)
+    return (e[0], v) if v else None
+
+
+# ───────────────────────────── Los capítulos y los pasos de la presentación técnica ─────────────────────────────
+
+def pasos_tecnicos(m: dict, tec: dict) -> list[dict]:
+    """Los pasos de un módulo en la presentación técnica (`pasosTecnicos` de main.js): los suyos sin el de financiación,
+    cada inmersión de `tec.pasos` detrás del paso que dice `despues_de` (o al final, si no está) y, si el módulo tiene
+    metas, el paso de metas."""
+    pasos = [p for p in m.get("pasos") or [] if isinstance(p, dict) and p.get("tipo") != "financiacion"]
+    extra = (tec.get("pasos") or {}).get(m.get("id")) if isinstance(tec.get("pasos"), dict) else None
+    for e in extra if isinstance(extra, list) else []:
+        if not isinstance(e, dict):
+            continue
+        k = next((i for i, p in enumerate(pasos) if p.get("id") == e.get("despues_de")), None)
+        pasos.insert(len(pasos) if k is None else k + 1, e)
+    if m.get("metas"):
+        metas = tec.get("metas") if isinstance(tec.get("metas"), dict) else {}
+        pasos.append({"id": "metas", "tipo": "metas", "titulo": metas.get("titulo") or TITULO_METAS,
+                      "texto": metas.get("texto") or ""})
+    return pasos
+
+
+def capitulos_tecnicos(datos: dict) -> list[dict]:
+    """Los capítulos de la presentación técnica, en el orden de `capsTecnica` de main.js, cada uno con sus pasos."""
+    tec = datos.get("tecnica") if isinstance(datos.get("tecnica"), dict) else {}
+    tp = tec.get("portada") if isinstance(tec.get("portada"), dict) else {}
+    portada = datos.get("portada") if isinstance(datos.get("portada"), dict) else {}
+    cid, nombre, corto = FIJOS_ANTES[0]
+    caps = [{**portada, **tp, "id": cid, "nombre": nombre, "corto": corto, "pasos": [
+        {"id": "inicio", "tipo": "portada", "titulo": tp.get("titulo") or portada.get("titulo"),
+         "texto": tp.get("texto") or "", "nota": tp.get("nota") or ""},
+        *[p for p in portada.get("pasos") or [] if isinstance(p, dict) and p.get("tipo") != "portada"]]}]
+    caps += [{**m, "pasos": pasos_tecnicos(m, tec)} for m in datos.get("modulos") or [] if isinstance(m, dict)]
+    cr = tec.get("cronograma") if isinstance(tec.get("cronograma"), dict) else {}
+    cid, nombre, corto = FIJOS_DESPUES[0]
+    caps.append({"id": cid, "nombre": nombre, "corto": corto, "pasos": [
+        {"id": "cronograma", "tipo": "cronograma", "titulo": cr.get("titulo") or TITULO_CRONOGRAMA,
+         "texto": cr.get("texto") or "", "nota": cr.get("nota") or ""}]})
+    return caps
 
 
 # ───────────────────────────── Del JSON de la presentación al guion ─────────────────────────────
 
 def _lista(v: Any) -> list[str]:
-    return [x for x in (plano(x) for x in (v if isinstance(v, list) else [])) if x]
+    return [x for x in (plano(sin_plata(x)) for x in (v if isinstance(v, list) else [])) if x]
 
 
 def _cifras(v: Any) -> list[dict]:
-    """Las cifras grandes (`cifras` de main.js): el valor, su rótulo y, si la trae, la fuente que la respalda."""
+    """Las cifras grandes sin plata (`cifras` de main.js): el valor, su rótulo y, si la trae, la fuente."""
     out = []
     for c in v if isinstance(v, list) else []:
-        if isinstance(c, dict) and plano(c.get("v")):
+        c = cifra_tecnica(c)
+        if c and plano(c.get("v")):
             out.append({k: x for k, x in (("v", plano(c.get("v"))), ("l", plano(c.get("l"))),
                                           ("fuente", plano(c.get("fuente")))) if x})
     return out
@@ -161,86 +205,29 @@ def _leyenda(v: Any) -> list[str]:
     return [t for t in (plano(x.get("texto")) for x in (v if isinstance(v, list) else []) if isinstance(x, dict)) if t]
 
 
-def _fuentes_de(datos: dict) -> dict[str, dict]:
-    fin = datos.get("financiacion") if isinstance(datos.get("financiacion"), dict) else {}
-    return {f["id"]: f for f in fin.get("fuentes") or [] if isinstance(f, dict) and isinstance(f.get("id"), str)}
-
-
-def _nombre_fuente(fuentes: dict[str, dict], fid: Any) -> str:
-    f = fuentes.get(fid) if isinstance(fid, str) else None
-    return plano((f or {}).get("corto") or (f or {}).get("nombre") or fid)
-
-
-def _margen(inv: Any) -> tuple[float, float]:
-    """(mínimo, máximo) de la inversión de un módulo como fracción de la central: cada aporte se muestra con el mismo
-    margen (`pilaFinanciacion` y `matriz` de main.js)."""
-    if not isinstance(inv, dict) or not inv.get("central"):
-        return 1.0, 1.0
-    c = inv["central"]
-    return (inv.get("min") if inv.get("min") is not None else c) / c, (inv.get("max") if inv.get("max") is not None
-                                                                      else c) / c
-
-
-def _mezcla(fin: Any, inv: Any, fuentes: dict[str, dict]) -> list[dict]:
-    """La mezcla de fuentes de un módulo (`pilaFinanciacion` de main.js): cada fuente, cómo se accede a ella en este
-    módulo y su aporte, con el margen de la inversión."""
-    k0, k1 = _margen(inv)
-    out = []
-    for f in fin if isinstance(fin, list) else []:
-        if isinstance(f, dict):
-            monto = f.get("monto") or 0
-            out.append({k: x for k, x in (("fuente", _nombre_fuente(fuentes, f.get("fuente"))),
-                                          ("mecanismo", plano(f.get("mecanismo"))),
-                                          ("monto", rango(monto * k0, monto * k1))) if x})
-    return out
-
-
-def _por_fuente(datos: dict, fuentes: dict[str, dict]) -> list[dict]:
-    """Lo que aporta cada fuente a toda la propuesta, de mayor a menor (el paso `matriz`)."""
-    totales: dict[str, list[float]] = {}
-    for m in datos.get("modulos") or []:
-        k0, k1 = _margen(m.get("inversion"))
-        for x in m.get("financiacion") or []:
-            if isinstance(x, dict) and x.get("fuente") in fuentes:
-                t = totales.setdefault(x["fuente"], [0.0, 0.0, 0.0])
-                monto = x.get("monto") or 0
-                t[0], t[1], t[2] = t[0] + monto, t[1] + monto * k0, t[2] + monto * k1
-    orden = sorted(((fid, t) for fid, t in totales.items() if t[0] > 0), key=lambda e: -e[1][0])
-    return [{k: x for k, x in (("fuente", _nombre_fuente(fuentes, fid)), ("entidad", plano(fuentes[fid].get("entidad"))),
-                               ("monto", rango(t[1], t[2]))) if x} for fid, t in orden]
-
-
-def _inversion_total(datos: dict) -> str:
-    mods = [m for m in datos.get("modulos") or [] if isinstance(m, dict)]
-    inv = [m.get("inversion") or {} for m in mods]
-    lo = sum(i.get("min") if i.get("min") is not None else i.get("central") or 0 for i in inv)
-    hi = sum(i.get("max") if i.get("max") is not None else i.get("central") or 0 for i in inv)
-    return rango(lo, hi) if inv else ""
-
-
 def _tipos(v: Any) -> list[str]:
-    """Los nombres de los proyectos tipo y referentes (`chipsTipo` de main.js)."""
-    return [t for t in (plano(x.get("nombre")) for x in (v if isinstance(v, list) else []) if isinstance(x, dict)) if t]
+    """Los nombres de los proyectos tipo y referentes, sin plata (`chipsTipo` de main.js)."""
+    return [t for t in (plano(sin_plata(x.get("nombre"))) for x in (v if isinstance(v, list) else [])
+                        if isinstance(x, dict)) if t]
 
 
-def _componente(x: dict, fuentes: dict[str, dict]) -> dict:
-    """El componente de un paso `componente`: lo que dice su ficha en el panel (especificaciones, costo y su base,
-    proyectos tipo, fuentes de financiación por su nombre, dónde y el plazo)."""
-    specs = [plano(f"{e[0]}: {e[1]}") for e in x.get("especificaciones") or []
-             if isinstance(e, (list, tuple)) and len(e) == 2]
-    out = {"nombre": plano(x.get("nombre")), "resumen": plano(x.get("resumen")),
-           "costo": rango_de(x.get("costo")), "base_costo": plano(x.get("base_costo")) if x.get("costo") else "",
-           "plazo": plano(x.get("plazo")), "especificaciones": [e for e in specs if e],
-           "fuentes": [_nombre_fuente(fuentes, f) for f in x.get("fuentes") or []],
-           "proyectos_tipo": _tipos(x.get("proyecto_tipo")), "ubicacion": plano(x.get("ubicacion"))}
-    return {k: v for k, v in out.items() if v}
+def ficha_tecnica(x: dict) -> dict:
+    """La ficha técnica de un componente (`fichaTecnica` de main.js): lo que hace, sus especificaciones sin plata, el
+    proyecto tipo o referente, dónde y el plazo."""
+    specs = [plano(f"{e[0]}: {e[1]}") for e in map(especificacion_tecnica, x.get("especificaciones") or []) if e]
+    out = {"id": x.get("id"), "nombre": plano(x.get("nombre")), "resumen": plano(sin_plata(x.get("resumen"))),
+           "descripcion": plano(sin_plata(x.get("descripcion"))), "especificaciones": [e for e in specs if e],
+           "proyectos_tipo": _tipos(x.get("proyecto_tipo")), "ubicacion": plano(sin_plata(x.get("ubicacion"))),
+           "plazo": plano(sin_plata(x.get("plazo"))), "enfoque": bool(x.get("enfoque"))}
+    return {k: v for k, v in out.items() if v not in ("", [], None)}
 
 
-def _meta(x: Any) -> str:
-    """Una meta del módulo como la escriben las fichas de main.js: «indicador: base → meta»."""
-    if not isinstance(x, dict) or not x.get("indicador"):
+def meta_tecnica(x: Any) -> str:
+    """Una meta como la muestra el paso de metas: «indicador: base → meta» (sin plata; sin indicador, nada)."""
+    if not isinstance(x, dict) or not isinstance(x.get("indicador"), str) or PLATA.search(x["indicador"]):
         return ""
-    return plano(f"{x.get('indicador')}: {x.get('base') or '—'} → {x.get('meta') or '—'}")
+    base, meta = plano(sin_plata(x.get("base"))) or "—", plano(sin_plata(x.get("meta"))) or "—"
+    return plano(f"{x['indicador']}: {base} → {meta}")
 
 
 def bytes_de(paso: dict) -> int:
@@ -248,14 +235,12 @@ def bytes_de(paso: dict) -> int:
     return len(json.dumps(paso, ensure_ascii=False).encode("utf-8"))
 
 
-# El título de un paso que no trae el suyo, según su tipo (los respaldos de `RENDER` en main.js)
-TITULO_POR_TIPO = {"componentes": "Qué se construye", "financiacion": "Cómo se financia",
-                   "matriz": "Cómo se financia todo", "fuentes": "Las fuentes, una por una",
-                   "ruta": "De la idea a la obra", "pedidos": "Lo que pedimos"}
+# El título de un paso que no trae el suyo, según su tipo (los respaldos de `RENDER_TECNICA` en main.js)
+TITULO_POR_TIPO = {"componentes": "Qué se construye", "metas": TITULO_METAS, "cronograma": TITULO_CRONOGRAMA}
 
 
-def _paso(datos: dict, c: dict, p: dict, fuentes: dict[str, dict]) -> dict:
-    """Lo que muestra el panel en el paso `p` del capítulo `c` (`RENDER` de main.js), con sus mismos respaldos."""
+def _paso(datos: dict, c: dict, p: dict, inmersiones: dict[str, dict]) -> dict:
+    """Lo que muestra el panel en el paso `p` del capítulo `c` (`RENDER_TECNICA` de main.js), con sus mismos respaldos."""
     tipo = p.get("tipo") if isinstance(p.get("tipo"), str) else "texto"
     x = next((k for k in c.get("componentes") or [] if isinstance(k, dict) and k.get("id") == p.get("componente")),
              None) if tipo == "componente" else None
@@ -264,71 +249,52 @@ def _paso(datos: dict, c: dict, p: dict, fuentes: dict[str, dict]) -> dict:
     titulo = plano(p.get("titulo") or respaldo) or plano(c.get("nombre"))
     texto = p.get("texto") or {"portada": c.get("lema"), "portadilla": c.get("problema"),
                                "componente": (x or {}).get("descripcion")}.get(tipo)
-    out: dict[str, Any] = {"id": p.get("id"), "tipo": tipo, "titulo": titulo, "texto": plano(texto)}
-    comp = _componente(x, fuentes) if x else {}
+    out: dict[str, Any] = {"id": p.get("id"), "tipo": tipo, "titulo": titulo, "texto": plano(sin_plata(texto))}
     cifras = _cifras(p.get("cifras") or (c.get("cifras") if tipo in ("portada", "portadilla") else None))
     if cifras:
         out["cifras"] = cifras
-    if comp:
-        out["componente"] = comp
+    if x:
+        ficha = ficha_tecnica(x)
+        if not p.get("texto"):
+            ficha.pop("descripcion", None)   # sin texto propio, el texto del paso ya es la descripción
+        out["componente"] = ficha
     if tipo == "portada":
-        out["modulos"] = [{k: v for k, v in (("nombre", plano(m.get("nombre"))), ("lema", plano(m.get("lema"))),
-                                             ("inversion", rango_de(m.get("inversion")))) if v}
+        out["modulos"] = [{k: v for k, v in (("id", m.get("id")), ("nombre", plano(m.get("nombre"))),
+                                             ("lema", plano(m.get("lema"))),
+                                             ("componentes", len(m.get("componentes") or []))) if v}
                           for m in datos.get("modulos") or [] if isinstance(m, dict)]
-        out["inversion_total"] = _inversion_total(datos)
     elif tipo == "portadilla":
-        out.update({k: v for k, v in (("propuesta", plano(c.get("propuesta"))),
-                                      ("inversion", rango_de(c.get("inversion")))) if v})
-        metas = [t for t in map(_meta, c.get("metas") or []) if t]
-        if metas:
-            out["metas"] = metas
+        propuesta = plano(sin_plata(c.get("propuesta")))
+        if propuesta:
+            out["propuesta"] = propuesta
     elif tipo == "componentes":
-        out["componentes"] = [{k: v for k, v in (("nombre", plano(x.get("nombre"))), ("costo", rango_de(x.get("costo"))),
-                                                 ("resumen", plano(x.get("resumen")))) if v}
-                              for x in c.get("componentes") or [] if isinstance(x, dict)]
-        if c.get("inversion"):
-            out["inversion"] = rango_de(c.get("inversion"))
+        out["componentes"] = [{k: v for k, v in (("nombre", plano(k.get("nombre"))),
+                                                 ("resumen", plano(sin_plata(k.get("resumen")))),
+                                                 ("plazo", plano(sin_plata(k.get("plazo"))))) if v}
+                              for k in c.get("componentes") or [] if isinstance(k, dict)]
     elif tipo == "comparacion":
         for lado in ("antes", "despues"):
             d = p.get(lado) if isinstance(p.get(lado), dict) else {}
-            t = " · ".join(x for x in (plano(d.get("titulo")), plano(d.get("texto"))) if x)
+            t = " · ".join(v for v in (plano(d.get("titulo")), plano(sin_plata(d.get("texto")))) if v)
             if t:
                 out[lado] = t
-    elif tipo == "financiacion":
-        g = c.get("gestion") if isinstance(c.get("gestion"), dict) else {}
-        mezcla = _mezcla(c.get("financiacion"), c.get("inversion"), fuentes)
-        if mezcla:
-            out["mezcla"] = mezcla
-        out.update({k: v for k, v in (("proyectos_tipo", _tipos(c.get("proyectos_tipo"))),
-                                      ("madurez", plano(g.get("madurez"))),
-                                      ("madurez_nota", plano(g.get("madurez_nota"))),
-                                      ("pedido", plano(g.get("pedido"))),
-                                      ("a_quien", _lista(g.get("a_quien"))),
-                                      ("siguientes_pasos", _lista(g.get("pasos")))) if v})
-    elif tipo == "matriz":
-        out["por_fuente"] = _por_fuente(datos, fuentes)
-        out["inversion_total"] = _inversion_total(datos)
-    elif tipo == "fuentes":
-        out["fuentes"] = [{k: v for k, v in (("nombre", plano(f.get("nombre"))), ("corto", plano(f.get("corto"))),
-                                             ("tipo", plano(f.get("tipo"))), ("que_financia", plano(f.get("que_financia"))),
-                                             ("requisito", plano(f.get("requisito")))) if v}
-                          for f in c.get("fuentes") or [] if isinstance(f, dict)]
-    elif tipo == "ruta":
-        out["fases"] = [plano(f"{f.get('nombre')} ({_anio(f.get('desde'))}–{_anio(f.get('hasta'))})")
-                        for f in c.get("fases") or [] if isinstance(f, dict)]
-        out["hitos"] = [plano(f"{h.get('fecha')}: {h.get('texto')}") for h in c.get("hitos") or [] if isinstance(h, dict)]
-    elif tipo == "pedidos":
-        nombres = {m.get("id"): plano(m.get("nombre")) for m in datos.get("modulos") or [] if isinstance(m, dict)}
-        out["entidades"] = [{k: v for k, v in (("entidad", plano(e.get("entidad"))),
-                                                ("monto", aproximado(e.get("monto")) if e.get("monto") else ""),
-                                                ("pedido", plano(e.get("pedido"))),
-                                                ("modulos", [nombres[i] for i in e.get("modulos") or []
-                                                             if isinstance(i, str) and nombres.get(i)])) if v}
-                            for e in c.get("entidades") or [] if isinstance(e, dict)]
+    elif tipo == "inmersion":
+        i = inmersiones.get(p.get("inmersion")) or {}
+        out["inmersion"] = {k: v for k, v in (("id", p.get("inmersion")), ("nombre", plano(i.get("nombre"))),
+                                              ("muestra", plano(i.get("texto")))) if v}
+    elif tipo == "metas":
+        metas = [t for t in map(meta_tecnica, c.get("metas") or []) if t]
+        if metas:
+            out["metas"] = metas
+    elif tipo == "cronograma":
+        out["obras"] = [{"modulo": plano(m.get("nombre")), "componentes": [
+            plano(f"{k.get('nombre')}: {sin_plata(k.get('plazo'))}") for k in m.get("componentes") or []
+            if isinstance(k, dict) and plano(sin_plata(k.get("plazo")))]}
+            for m in datos.get("modulos") or [] if isinstance(m, dict)]
     lista = _lista(p.get("lista"))
     if lista:
         out["lista"] = lista
-    nota = plano(p.get("nota"))
+    nota = plano(sin_plata(p.get("nota")))
     if nota:
         out["nota"] = nota
     leyenda = _leyenda(p.get("leyenda"))
@@ -337,47 +303,49 @@ def _paso(datos: dict, c: dict, p: dict, fuentes: dict[str, dict]) -> dict:
     return out
 
 
-def _anio(v: Any) -> str:
-    return str(int(v)) if isinstance(v, (int, float)) and not isinstance(v, bool) else "?"
-
-
 def derivar(datos: dict) -> dict:
-    """El guion a partir de web/data/propuesta.json (lo que arma build_propuesta.py): capítulos en el orden de main.js,
-    cada uno con sus pasos. Siempre el mismo resultado para los mismos datos (sin fechas ni nada que cambie solo)."""
-    fuentes = _fuentes_de(datos)
-    caps: list[dict] = []
-    for cid, nombre, corto in FIJOS_ANTES:
-        caps.append({**(datos.get(cid) if isinstance(datos.get(cid), dict) else {}), "id": cid, "nombre": nombre,
-                     "corto": corto})
-    caps += [dict(m) for m in datos.get("modulos") or [] if isinstance(m, dict)]
-    for cid, nombre, corto in FIJOS_DESPUES:
-        caps.append({**(datos.get(cid) if isinstance(datos.get(cid), dict) else {}), "id": cid, "nombre": nombre,
-                     "corto": corto})
+    """El guion de la presentación técnica a partir de web/data/propuesta.json (lo que arma build_propuesta.py):
+    capítulos en el orden de main.js, cada uno con sus pasos y sus componentes, y el catálogo de inmersiones del atlas.
+    Siempre el mismo resultado para los mismos datos (sin fechas ni nada que cambie solo)."""
+    tec = datos.get("tecnica") if isinstance(datos.get("tecnica"), dict) else {}
+    catalogo = [i for i in tec.get("inmersiones") or [] if isinstance(i, dict) and isinstance(i.get("id"), str)]
+    inmersiones = {i["id"]: i for i in catalogo}
     capitulos = []
-    for c in caps:
-        pasos = [p for p in c.get("pasos") or [] if isinstance(p, dict)] or [{"id": "inicio", "tipo": "texto",
-                                                                             "titulo": c.get("nombre")}]
+    for c in capitulos_tecnicos(datos):
         cap: dict[str, Any] = {"id": c["id"], "nombre": plano(c.get("nombre")),
                                "corto": plano(c.get("corto") or c.get("nombre"))}
         lema = plano(c.get("lema") or c.get("subtitulo"))
         if lema:
             cap["lema"] = lema
-        inv = rango_de(c.get("inversion"))
-        if inv:
-            cap["inversion"] = inv
-        cap["pasos"] = [_paso(datos, c, p, fuentes) for p in pasos]
+        comps = [k for k in c.get("componentes") or [] if isinstance(k, dict) and isinstance(k.get("id"), str)]
+        if comps:
+            # la ficha técnica de cada uno: la herramienta la devuelve cuando el asistente la muestra (detalle) o la
+            # enfoca, para que explique con esos datos
+            cap["componentes"] = [{**ficha_tecnica(k), "enfoque": bool(k.get("enfoque"))} for k in comps]
+        cap["pasos"] = [_paso(datos, c, p, inmersiones) for p in c["pasos"]]
         capitulos.append(cap)
-    return {"version": VERSION, "fuente": "web/data/propuesta.json", "capitulos": capitulos}
+    return {"version": VERSION, "modo": MODO, "fuente": "web/data/propuesta.json",
+            "inmersiones": [{"id": i["id"], "nombre": plano(i.get("nombre")), "muestra": plano(i.get("texto"))}
+                            for i in catalogo],
+            "capitulos": capitulos}
 
 
 def problemas(g: dict) -> list[str]:
     """Lo que impediría usar el guion (lo revisa build_propuesta.py antes de escribirlo y `Guion.desde` al cargarlo):
-    ids de capítulo o de paso que no cumplen la forma que aceptan la herramienta y el navegador, repetidos, capítulos
-    con más pasos que el tope o un paso que pesa más de `MAX_BYTES_PASO`."""
+    ids de capítulo, de paso, de componente o de inmersión que no cumplen la forma que aceptan la herramienta y el
+    navegador, repetidos, capítulos con más pasos que el tope, un paso que pesa más de `MAX_BYTES_PASO` o que lleva a
+    una inmersión que no está en el catálogo."""
     out = []
     caps = g.get("capitulos") if isinstance(g, dict) else None
     if not isinstance(caps, list) or not caps:
         return ["el guion no tiene capítulos"]
+    inm = g.get("inmersiones") if isinstance(g.get("inmersiones"), list) else []
+    ids_inm = [i.get("id") if isinstance(i, dict) else None for i in inm]
+    for i in ids_inm:
+        if not isinstance(i, str) or not ID_PASO.fullmatch(i):
+            out.append(f"inmersión con un id que no es de letras minúsculas, números o «_»: {i!r}")
+    if len(set(map(str, ids_inm))) != len(ids_inm):
+        out.append("ids de inmersión repetidos")
     vistos = set()
     for c in caps:
         cid = c.get("id") if isinstance(c, dict) else None
@@ -387,6 +355,13 @@ def problemas(g: dict) -> list[str]:
         if cid in vistos:
             out.append(f"capítulo repetido: {cid}")
         vistos.add(cid)
+        comps = c.get("componentes") if isinstance(c.get("componentes"), list) else []
+        ids_c = [k.get("id") if isinstance(k, dict) else None for k in comps]
+        for k in ids_c:
+            if not isinstance(k, str) or not ID_PASO.fullmatch(k):
+                out.append(f"{cid}: componente con un id que no es de letras minúsculas, números o «_»: {k!r}")
+        if len(set(map(str, ids_c))) != len(ids_c):
+            out.append(f"{cid}: ids de componente repetidos")
         pasos = c.get("pasos")
         if not isinstance(pasos, list) or not 1 <= len(pasos) <= MAX_PASOS:
             out.append(f"{cid}: debe tener de 1 a {MAX_PASOS} pasos")
@@ -402,6 +377,9 @@ def problemas(g: dict) -> list[str]:
                 out.append(f"{cid}/{p.get('id')}: paso sin título")
             elif isinstance(p, dict) and bytes_de(p) > MAX_BYTES_PASO:
                 out.append(f"{cid}/{p.get('id')}: el paso pesa {bytes_de(p)} bytes (el tope es {MAX_BYTES_PASO})")
+            if isinstance(p, dict) and p.get("tipo") == "inmersion" and \
+                    (p.get("inmersion") or {}).get("id") not in ids_inm:
+                out.append(f"{cid}/{p.get('id')}: lleva a una inmersión que no está en el catálogo")
     return out
 
 
@@ -417,13 +395,32 @@ class Resolucion:
 @dataclass(frozen=True)
 class Guion:
     capitulos: tuple[dict, ...]
+    inmersiones: tuple[dict, ...] = ()
 
     @classmethod
     def desde(cls, datos: Any) -> "Guion":
         malos = problemas(datos)
         if malos:
             raise ValueError("Guion de la presentación inválido: " + "; ".join(malos[:5]))
-        return cls(tuple(datos["capitulos"]))
+        return cls(tuple(datos["capitulos"]), tuple(datos.get("inmersiones") or ()))
+
+    def componentes(self, ci: int) -> list[dict]:
+        """Los componentes del capítulo `ci` (id, nombre y si la cámara los puede enfocar); [] si no tiene."""
+        return list(self.capitulos[ci].get("componentes") or [])
+
+    def componente(self, ci: int, texto: Any) -> dict | None:
+        """El componente del capítulo `ci` por su id o su nombre (sin tildes ni mayúsculas), o None."""
+        k = clave(texto)
+        if not k:
+            return None
+        return next((x for x in self.componentes(ci) if k in (clave(x["id"]), clave(x["nombre"]))), None)
+
+    def inmersion(self, texto: Any) -> dict | None:
+        """La inmersión del catálogo por su id o su nombre, o None."""
+        k = clave(texto)
+        if not k:
+            return None
+        return next((i for i in self.inmersiones if k in (clave(i["id"]), clave(i.get("nombre")))), None)
 
     def __len__(self) -> int:
         return len(self.capitulos)
@@ -488,9 +485,17 @@ class Guion:
         return ci, pi
 
     def indice(self) -> dict:
-        """Capítulos con su id, nombre y los títulos de sus pasos (lo que el modelo necesita para elegir, en pocos KB)."""
-        return {"capitulos": [{"id": c["id"], "nombre": c["nombre"], "pasos": [p["titulo"] for p in c["pasos"]]}
-                              for c in self.capitulos], "total_pasos": self.total_pasos()}
+        """Capítulos con su id, nombre, los títulos de sus pasos y los ids de sus componentes (los que la cámara enfoca
+        marcados), y el catálogo de inmersiones: lo que el modelo necesita para elegir, en pocos KB."""
+        caps = []
+        for c in self.capitulos:
+            cap = {"id": c["id"], "nombre": c["nombre"], "pasos": [p["titulo"] for p in c["pasos"]]}
+            if c.get("componentes"):
+                cap["componentes"] = [x["id"] + ("" if x.get("enfoque") else " (sin lugar en la maqueta)")
+                                      for x in c["componentes"]]
+            caps.append(cap)
+        return {"capitulos": caps, "total_pasos": self.total_pasos(),
+                "inmersiones": [{"id": i["id"], "nombre": i.get("nombre")} for i in self.inmersiones]}
 
 
 _cache: tuple[tuple, Guion] | None = None

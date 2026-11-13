@@ -163,12 +163,79 @@ def test_con_la_pantalla_abierta_el_asistente_no_mueve_la_pestana_del_chat():
     assert _hacer(db, 0, {"op": "ir", "capitulo": "salud"}, por="asistente").acciones[0]["capitulo"] == "salud"
 
 
+def test_visual_cambia_lo_que_se_ve_y_vuelve_a_lo_del_paso():
+    """La op `visual`: resuelve los componentes del capítulo de la pantalla (por id o por nombre) y la inmersión del
+    catálogo, guarda solo lo pedido, le devuelve al modelo la ficha técnica de lo que muestra y, al cambiar de paso,
+    todo vuelve a lo del paso salvo el tema."""
+    db = _Base()
+    _hacer(db, 7, {"op": "ir", "capitulo": "salud", "paso": 3})
+    r = _hacer(db, 7, {"op": "visual", "enfoque": "Torre de servicios de primer nivel del Hospital Héctor Abad Gómez",
+                       "camara": "aerea", "rumbo": 180, "girar": True})
+    assert r.acciones == [] and r.contenido["componente"]["id"] == "torre"
+    assert r.contenido["componente"]["lugar_en_la_maqueta"] is True and r.contenido["componente"]["especificaciones"]
+    assert "$" not in json.dumps(r.contenido, ensure_ascii=False)
+    assert r.resumen == ("La presentación muestra la cámara en «Torre de servicios de primer nivel del Hospital Héctor "
+                         "Abad Gómez», vista aérea, mirando desde el rumbo 180°, la cámara gira")
+    d = db.pantallas.find_one({"_id": 7})
+    assert (d["enfoque"], d["camara"], d["rumbo"], d["girar"], d["capitulo"], d["paso"]) == ("torre", "aerea", 180, True, "salud", 3)
+    _hacer(db, 7, {"op": "visual", "detalle": "telesalud", "comparar": "hoy", "inmersion": "Simulador sísmico",
+                   "tema": "oscuro"})
+    d = db.pantallas.find_one({"_id": 7})
+    assert (d["detalle"], d["comparar"], d["inmersion"], d["tema"]) == ("telesalud", "hoy", "torre_sismo", "oscuro")
+    e = _hacer(db, 7, {"op": "estado"}).contenido["pantalla"]
+    assert e["visual"]["inmersion"] == "torre_sismo" and "Simulador sísmico" in e["muestra"]
+    assert "la ficha técnica de «Telesalud rural en red»" in e["muestra"] and "tema oscuro" in e["muestra"]
+    # Lo que vuelve a lo del paso: «paso», «cerrar» y la cámara «paso» (que devuelve también el rumbo)
+    _hacer(db, 7, {"op": "visual", "enfoque": "paso", "detalle": "cerrar", "inmersion": "paso", "camara": "paso"})
+    d = db.pantallas.find_one({"_id": 7})
+    assert (d["enfoque"], d["detalle"], d["inmersion"], d["camara"], d["rumbo"]) == (None, None, None, "paso", None)
+    _hacer(db, 7, {"op": "visual", "inmersion": "maqueta", "enfoque": "torre"})
+    # Cambiar de paso: todo vuelve a lo del paso, salvo el tema
+    _hacer(db, 7, {"op": "siguiente"})
+    d = db.pantallas.find_one({"_id": 7})
+    assert (d["paso"], d["enfoque"], d["inmersion"], d["comparar"], d["girar"], d["tema"]) == \
+        (4, None, None, "proyecto", False, "oscuro")
+    # El asistente sin pantalla abierta: la acción exacta para la vista de la pestaña del chat
+    r = _hacer(db, 9, {"op": "visual", "capitulo": "agroindustria", "enfoque": "trilladora", "detalle": "trilladora"},
+               por="asistente")
+    assert r.acciones == [{"tipo": "presentacion", "op": "visual", "enfoque": "trilladora", "detalle": "trilladora"}]
+    r = _hacer(db, 9, {"op": "visual", "capitulo": "agroindustria", "enfoque": "paso"}, por="asistente")
+    assert r.acciones == [{"tipo": "presentacion", "op": "visual", "enfoque": None}]
+
+
+def test_visual_no_mueve_nada_si_no_existe():
+    db = _Base()
+    _hacer(db, 7, {"op": "ir", "capitulo": "vivienda", "paso": 1})
+    v = db.pantallas.find_one({"_id": 7})["v"]
+    for entrada, codigo, dice in [
+            ({"op": "visual", "enfoque": "titulacion"}, "invalido", "no tiene un lugar propio en la maqueta"),
+            ({"op": "visual", "enfoque": "marte"}, "no_existe", "no tiene el componente «marte»"),
+            ({"op": "visual", "detalle": "torre"}, "no_existe", "no tiene el componente «torre»"),
+            ({"op": "visual", "inmersion": "marte"}, "no_existe", "no tiene la inmersión «marte»"),
+            ({"op": "visual", "capitulo": "salud", "enfoque": "torre"}, "invalido", "vaya primero a ese capítulo")]:
+        with pytest.raises(hi.ErrorHerramienta) as e:
+            _hacer(db, 7, entrada)
+        assert e.value.codigo == codigo and dice in str(e.value), (entrada, str(e.value))
+    assert db.pantallas.find_one({"_id": 7})["v"] == v   # todo o nada
+    # Con candidatos: los componentes con lugar en la maqueta (para enfoque) o todos (para detalle)
+    with pytest.raises(hi.ErrorHerramienta) as e:
+        _hacer(db, 7, {"op": "visual", "enfoque": "titulacion"})
+    assert {"id": "nuevas", "nombre": "Urbanización VIP/VIS urbana (Lote 1 y Lote 2)"} in e.value.detalle["con_lugar"]
+    assert all(x["id"] != "titulacion" for x in e.value.detalle["con_lugar"])
+
+
 def test_entradas_que_no_valen():
     for malo, dice in [({"op": "vista"}, "diga qué mostrar"), ({"op": "vista", "indice": True, "fichas": True}, "no se abren a la vez"),
                        ({"op": "vista", "panel": "no"}, "boolean"), ({"op": "vista", "panel": 1}, "boolean"),
                        ({"op": "pantalla_completa"}, "activar"), ({"op": "ir", "capitulo": "salud", "activar": True}, "no usa"),
                        ({"op": "explicar", "explicacion": "x", "panel": True}, "no usa"), ({"op": "estado", "paso": 1}, "no usa"),
-                       ({"op": "vista", "panel": True, "explicacion": "x"}, "no usa")]:
+                       ({"op": "vista", "panel": True, "explicacion": "x"}, "no usa"),
+                       ({"op": "visual"}, "diga qué cambiar"), ({"op": "visual", "camara": "cenital"}, "camara"),
+                       ({"op": "visual", "rumbo": 360}, "rumbo"), ({"op": "visual", "rumbo": True}, "rumbo"),
+                       ({"op": "visual", "comparar": "ayer"}, "comparar"), ({"op": "visual", "camara": None}, "no va vacío"),
+                       ({"op": "visual", "enfoque": "torre", "paso": 2}, "no usa"),
+                       ({"op": "ir", "capitulo": "salud", "enfoque": "torre"}, "no usa"),
+                       ({"op": "vista", "panel": True, "tema": "oscuro"}, "no usa")]:
         with pytest.raises(ValueError) as e:
             hi.PresentacionEntrada.model_validate(malo)
         assert dice in str(e.value), (malo, str(e.value))
@@ -181,6 +248,13 @@ def test_el_estado_guardado_se_corrige_si_el_guion_cambio():
     assert pantalla.conectada(None) is False and pantalla.conectada({"visto": datetime.now(timezone.utc)}) is True
     with pytest.raises(ValueError):
         pantalla.guardar(_Base(), 1, {"personas": [1]}, "mcp")
+    # Lo visual que no vale (o que ya no está en el capítulo) vuelve a lo del paso; el tema raro, al del navegador
+    e = pantalla.estado({"capitulo": "salud", "paso": 3, "enfoque": "marte", "detalle": "torre", "camara": "cenital",
+                         "rumbo": 400, "girar": "si", "comparar": "hoy", "inmersion": "torre_bim", "tema": "gris"}, G)
+    assert (e["enfoque"], e["detalle"], e["camara"], e["rumbo"], e["girar"], e["comparar"], e["inmersion"], e["tema"]) == \
+        (None, "torre", "paso", None, False, "hoy", "torre_bim", None)
+    assert pantalla.estado({"capitulo": "vivienda", "paso": 1, "enfoque": "titulacion"}, G)["enfoque"] is None
+    assert pantalla.estado({"capitulo": "marte", "paso": 1, "enfoque": "torre", "tema": "oscuro"}, G)["tema"] == "oscuro"
 
 
 # ───────────────────────────── El protocolo MCP ─────────────────────────────
@@ -310,6 +384,21 @@ r.otro_paso = P.ordenesHacia({ ...base, indice: true, panel: false }, { ...base,
 r.otro_paso_con_indice = P.ordenesHacia(base, { ...base, paso: 3, indice: true });
 r.solo_vista = P.ordenesHacia(base, { ...base, fichas: true, panel: false });
 r.solo_completa = P.ordenesHacia(base, { ...base, completa: true });
+// visual: la acción, el estado con sus partes y lo que cambia (al cambiar de paso, desde lo del paso; el tema queda)
+r.visual_validas = [A({ op: 'visual', enfoque: 'torre', camara: 'aerea' }), A({ op: 'visual', enfoque: null, rumbo: null }),
+  A({ op: 'visual', rumbo: 0, girar: false, comparar: 'hoy', detalle: 'torre', inmersion: 'torre_sismo', tema: 'claro' })];
+r.visual_malas = [A({ op: 'visual' }), A({ op: 'visual', camara: 'cenital' }), A({ op: 'visual', rumbo: 360 }),
+  A({ op: 'visual', enfoque: 'Torre' }), A({ op: 'visual', tema: null }), A({ op: 'visual', camara: 'aerea', panel: true }),
+  A({ op: 'ir', capitulo: 'salud', enfoque: 'torre' }), A({ op: 'vista', panel: true, girar: true })];
+const vis = { ...base, enfoque: 'torre', camara: 'aerea', rumbo: 180, girar: false, comparar: 'proyecto', detalle: null, inmersion: null, tema: null };
+r.estado_visual = P.estadoDePantalla(vis);
+r.estados_visuales_malos = [{ ...vis, camara: 'x' }, { ...vis, rumbo: 400 }, { ...vis, enfoque: 'A' }, { ...vis, tema: 'gris' }].map((e) => P.estadoDePantalla(e));
+r.estado_sin_visual = P.estadoDePantalla(base);
+const sv = P.estadoDePantalla(base);
+r.solo_visual = P.ordenesHacia(sv, P.estadoDePantalla(vis));
+r.visual_vuelve = P.ordenesHacia(P.estadoDePantalla(vis), sv);
+r.paso_con_visual = P.ordenesHacia(P.estadoDePantalla({ ...vis, tema: 'oscuro' }), P.estadoDePantalla({ ...vis, paso: 3, enfoque: null, camara: 'paso', rumbo: null, tema: 'oscuro', detalle: 'torre' }));
+r.desde_nada_visual = P.ordenesHacia(null, P.estadoDePantalla({ ...vis, tema: 'oscuro' }));
 console.log(JSON.stringify(r));
 """
 
@@ -336,6 +425,24 @@ def test_el_puente_acepta_las_ordenes_nuevas_y_la_pantalla_en_off_calcula_lo_que
                                          {"orden": "vista", "indice": True}]
     assert r["solo_vista"] == [{"orden": "vista", "panel": False, "fichas": True}]
     assert r["solo_completa"] == []   # la ventana la llena la vista, no mando.js
+    assert r["visual_validas"] == [
+        {"tipo": "presentacion", "op": "visual", "enfoque": "torre", "camara": "aerea"},
+        {"tipo": "presentacion", "op": "visual", "enfoque": None, "rumbo": None},
+        {"tipo": "presentacion", "op": "visual", "rumbo": 0, "girar": False, "comparar": "hoy", "detalle": "torre",
+         "inmersion": "torre_sismo", "tema": "claro"}]
+    assert r["visual_malas"] == [None] * 8
+    assert r["estado_visual"]["enfoque"] == "torre" and r["estado_visual"]["tema"] is None
+    assert r["estados_visuales_malos"] == [None] * 4
+    # un servidor de antes (sin lo visual): lo del paso
+    assert (r["estado_sin_visual"]["camara"], r["estado_sin_visual"]["comparar"]) == ("paso", "proyecto")
+    assert r["solo_visual"] == [{"orden": "visual", "enfoque": "torre", "camara": "aerea", "rumbo": 180}]
+    assert r["visual_vuelve"] == [{"orden": "visual", "enfoque": None, "camara": "paso", "rumbo": None}]
+    # cambiar de paso deja lo visual en lo del paso: solo va lo que difiere de eso (el tema ya estaba)
+    assert r["paso_con_visual"] == [{"orden": "ir", "capitulo": "vivienda", "paso": 3},
+                                    {"orden": "visual", "detalle": "torre"}]
+    assert r["desde_nada_visual"] == [{"orden": "ir", "capitulo": "vivienda", "paso": 2},
+                                      {"orden": "visual", "enfoque": "torre", "camara": "aerea", "rumbo": 180,
+                                       "tema": "oscuro"}]
 
 
 # ───────────────────────────── Con MongoDB ─────────────────────────────

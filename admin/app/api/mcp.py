@@ -44,14 +44,17 @@ PROTOCOLOS = ("2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05")
 LIMITE_MINUTO = 120
 NOMBRE = "presentacion"
 INSTRUCCIONES = (
-    "Maneja la presentación de la propuesta de inversión Yondó 2028–2031 en la pantalla en off de la persona: la vista "
-    "Presentación del panel abierta en modo en off en un proyector o un televisor, sin controles, que solo cambia con "
-    "estas órdenes. Usa la herramienta presentacion: indice para conocer los capítulos, ir a un capítulo y paso (te "
-    "devuelve lo que muestra ese paso para explicarlo con esos datos), siguiente y anterior desde donde esté, explicar "
-    "para poner una frase corta en pantalla, vista para el panel de texto, el índice o las fichas, pantalla_completa "
-    "para que llene la ventana y estado para saber qué muestra y si está abierta. Cambia la pantalla solo cuando la "
-    "persona pide algo concreto. Lo que pones en pantalla lo ve una sala: nunca datos de personas, «@» ni números de 7 "
-    "o más dígitos.")
+    "Maneja la presentación técnica de la propuesta Yondó 2028–2031 (lo que se construye, sin costos, sobre la maqueta "
+    "3D del territorio y con modelos 3D del atlas) en la pantalla en off de la persona: la vista Presentación del panel "
+    "abierta en modo en off en un proyector o un televisor, sin controles, que solo cambia con estas órdenes. Usa la "
+    "herramienta presentacion: indice para conocer los capítulos, sus componentes y las inmersiones; ir a un capítulo y "
+    "paso (te devuelve lo que muestra ese paso para explicarlo con esos datos); siguiente y anterior desde donde esté; "
+    "explicar para poner una frase corta en pantalla; vista para el panel de texto, el índice o las fichas técnicas; "
+    "visual para lo que se ve sin cambiar de paso (enfocar un componente, su ficha técnica, hoy frente al proyecto, la "
+    "cámara aérea, oblicua o rasante, el rumbo, que gire, un modelo del atlas como la torre del hospital por dentro, el "
+    "simulador sísmico o el modelo BIM, y el tema); pantalla_completa para que llene la ventana y estado para saber qué "
+    "muestra y si está abierta. Cambia la pantalla solo cuando la persona pide algo concreto. Lo que pones en pantalla "
+    "lo ve una sala: nunca datos de personas, «@» ni números de 7 o más dígitos.")
 D_MCP = D_PRESENTACION.replace("en el panel de la persona o en su pantalla en off", "en la pantalla en off de la persona")
 
 _usos: dict[str, deque] = {}

@@ -2,14 +2,32 @@
 // lo que se pide al nivel central) y pasos dentro de cada capítulo. Cada paso cambia el panel con GSAP, mueve la cámara
 // sobre el territorio real y muestra las capas 3D de ese paso. El contenido sale de data/propuesta.json (generado desde
 // data/propuesta/ por scripts/build_data.py); lo 3D de cada módulo vive en js/propuesta/modulos/<id>.js.
+// Con «?modo=tecnica», la presentación técnica (la que muestran el asistente del panel y los agentes por MCP): lo que se
+// construye, cómo funciona y cómo se mide, sin costos ni financiación (tecnica.js), con las inmersiones en los modelos
+// del atlas y lo que el asistente cambia de lo que se ve sin cambiar de paso (visual.js: cámara, enfoque, hoy/proyecto,
+// ficha técnica, inmersión y tema).
 import { gsap, reducedMotion, countUp } from '../core.js';
 import { crearEscena } from './escena.js';
 import { montarMando } from './mando.js';
+import { capsTecnica, sinPlata, cifraTecnica, especificacionTecnica, anios } from './tecnica.js';
+import { crearVisual } from './visual.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const pres = $('#pres'), cab = $('.panel-cab'), cuerpo = $('.panel-cuerpo'), riel = $('.riel'), puntos = $('.puntos');
 const progreso = $('.progreso'), telon = $('.telon'), indice = $('.indice'), fichas = $('.fichas'), leyenda = $('.leyenda3d');
+// La técnica es la de la vista Presentación del panel del equipo (con sesión), donde la manejan el asistente y los
+// agentes por MCP: solo existe dentro de su marco. El sitio solo deja que lo enmarque el propio panel (frame-ancestors de
+// admin/servidor.py); abierta sola en el sitio público, con o sin «?modo=tecnica», es la propuesta pública de siempre
+let enMarco = false;
+try { enMarco = window.parent !== window; } catch { enMarco = true; }
+const TECNICA = enMarco && new URLSearchParams(location.search).get('modo') === 'tecnica';
+if (TECNICA) {
+  pres.classList.add('tecnica');
+  const marca = $('.marca span');
+  if (marca) marca.innerHTML = '<b>Yondó 2028–2031</b><br>Presentación técnica · lo que se construye';
+  $('[data-accion="fichas"]')?.setAttribute('title', 'Fichas técnicas de los componentes para imprimir o guardar en PDF');
+}
 const ICONOS = {
   portada: '<path d="M4 20V9l8-5 8 5v11M9 20v-6h6v6" />',
   vivienda: '<path d="M3 11l9-7 9 7M5 10v10h14V10M10 20v-5h4v5" />',
@@ -65,7 +83,8 @@ function cambiarTema() {
 
 // ---------------------------------------------------------------- datos y capítulos
 const datos = await fetch(new URL('../../data/propuesta.json', import.meta.url)).then((r) => { if (!r.ok) throw new Error(`data/propuesta.json (${r.status})`); return r.json(); });
-const caps = [
+// la técnica tiene sus propios capítulos (tecnica.js: portada, siete módulos y cronograma de obra, sin financiación ni pedidos)
+const caps = TECNICA ? capsTecnica(datos) : [
   { id: 'portada', nombre: 'Portada', corto: 'Portada', ...datos.portada },
   ...datos.modulos.map((m, i) => ({ ...m, modulo: true })),
   { id: 'financiacion', nombre: 'Cómo se financia', corto: 'Financiación', ...datos.financiacion },
@@ -80,8 +99,9 @@ const inversionMax = datos.modulos.reduce((a, m) => a + (m.inversion?.max ?? m.i
 const rgTotal = () => fmtRango(inversionMin, inversionMax);
 
 // riel e índice
-riel.innerHTML = caps.map((c, i) => `${i === 1 || i === caps.length - 3 ? '<span class="sep" aria-hidden="true"></span>' : ''}<button type="button" data-cap="${i}" style="--mc:${colorDe(c.id)}" aria-label="${esc(c.nombre)}">${icono(c.id)}<span class="tip">${esc(c.nombre)}</span></button>`).join('');
-$('.rejilla', indice).innerHTML = caps.map((c, i) => `<button type="button" class="tarjeta" data-cap="${i}" style="--mc:${colorDe(c.id)}"><span class="n">${icono(c.id)}</span><b>${esc(c.nombre)}</b><span>${esc(c.lema || c.subtitulo || '')}</span>${c.inversion ? `<em>${rg(c.inversion)}</em>` : ''}</button>`).join('');
+const sepFinal = TECNICA ? caps.length - 1 : caps.length - 3;
+riel.innerHTML = caps.map((c, i) => `${i === 1 || i === sepFinal ? '<span class="sep" aria-hidden="true"></span>' : ''}<button type="button" data-cap="${i}" style="--mc:${colorDe(c.id)}" aria-label="${esc(c.nombre)}">${icono(c.id)}<span class="tip">${esc(c.nombre)}</span></button>`).join('');
+$('.rejilla', indice).innerHTML = caps.map((c, i) => `<button type="button" class="tarjeta" data-cap="${i}" style="--mc:${colorDe(c.id)}"><span class="n">${icono(c.id)}</span><b>${esc(c.nombre)}</b><span>${esc(c.lema || c.subtitulo || '')}</span>${TECNICA ? (c.componentes?.length ? `<em>${c.componentes.length} componentes · ${c.pasos.length} pasos</em>` : '') : c.inversion ? `<em>${rg(c.inversion)}</em>` : ''}</button>`).join('');
 progreso.innerHTML = caps.map((c) => `<i style="--mc:${colorDe(c.id)};--k:${c.pasos.length}"><b></b></i>`).join('');
 
 // ---------------------------------------------------------------- escena 3D y módulos
@@ -253,6 +273,108 @@ const RENDER = {
     };
   },
 };
+// ---------------------------------------------------------------- panel de la presentación técnica
+// Lo mismo que se ve en cada paso, sin plata (tecnica.js): las cifras en pesos no van, de los textos se quita lo que la
+// lleva y en lugar de costos y fuentes van las especificaciones, el referente técnico, el sitio, el plazo y las metas.
+// admin/app/agente/guion.py arma con las mismas reglas lo que sabe el asistente de cada paso
+const cifrasT = (l = []) => cifras((l || []).map(cifraTecnica).filter(Boolean));
+const listaT = (l = []) => { const t = (l || []).map((x) => sinPlata(x)).filter(Boolean); return t.length ? `<ul>${t.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''; };
+const notaT = (t) => { const n = sinPlata(t); return n ? `<p class="nota">${n}</p>` : ''; };
+function hojaTecnica(x) {
+  const specs = (x.especificaciones || []).map(especificacionTecnica).filter(Boolean);
+  return specs.length ? `<h3>Especificaciones</h3><dl class="hoja">${specs.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>` : '';
+}
+function referentes(x) {
+  const t = (x.proyecto_tipo || []).map((k) => ({ ...k, nombre: sinPlata(k.nombre) })).filter((k) => k.nombre);
+  return t.length ? `<h3>Proyecto tipo y referentes</h3>${chipsTipo(t)}` : '';
+}
+// el plazo como una barra sobre 2027–2032
+const ANIOS = [2027, 2028, 2029, 2030, 2031, 2032];
+function barraPlazo(plazo) {
+  const a = anios(plazo);
+  if (!a) return '';
+  const x0 = ANIOS[0], n = ANIOS.length, l = ((Math.max(x0, a[0]) - x0) / n) * 100, w = ((Math.min(x0 + n, a[1] + 1) - Math.max(x0, a[0])) / n) * 100;
+  return `<div class="plazo-barra"><div class="anios">${ANIOS.map((y) => `<span>${y}</span>`).join('')}</div><i style="left:${l}%;width:${w}%"></i></div>`;
+}
+const renderArea = (id) => `<figure class="render"><img src="img/home/area-${esc(id)}.webp" alt="" loading="lazy" decoding="async"><figcaption>Render de la maqueta 3D</figcaption></figure>`;
+const RENDER_TECNICA = {
+  portada(c, p) {
+    const obras = datos.modulos.reduce((a, m) => a + (m.componentes?.length || 0), 0);
+    return {
+      cab: `<p class="ceja">${esc(datos.meta?.lugar || 'Yondó, Antioquia')} · ${esc(datos.meta?.periodo || '2028–2031')} · presentación técnica</p><h2>${titulo(p.titulo || c.titulo)}</h2><p class="lead">${sinPlata(p.texto || c.lema || '')}</p>`,
+      cuerpo: `${cifrasT(c.cifras)}
+        <h3>Siete áreas · ${obras} componentes</h3>
+        <div class="comps">${datos.modulos.map((m, i) => `<button type="button" class="comp" data-ir="${i + 1}" style="--mc:${colorDe(m.id)}"><b>${esc(m.nombre)}</b><span class="v">${m.componentes?.length || 0} piezas</span><span class="d">${esc(m.lema || '')}</span></button>`).join('')}</div>
+        ${notaT(p.nota)}`,
+    };
+  },
+  portadilla(c, p) {
+    return {
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || c.lema)}</h2><p class="lead">${sinPlata(p.texto || c.problema || '')}</p>`,
+      cuerpo: `${renderArea(c.id)}${cifrasT(p.cifras || c.cifras)}
+        ${sinPlata(c.propuesta) ? `<h3>Lo que proponemos</h3><p>${sinPlata(c.propuesta)}</p>` : ''}`,
+    };
+  },
+  componentes(c, p) {
+    return {
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Qué se construye')}</h2>${sinPlata(p.texto) ? `<p class="lead">${sinPlata(p.texto)}</p>` : ''}`,
+      cuerpo: `<div class="comps">${(c.componentes || []).map((x) => `<button type="button" class="comp" data-det="${esc(x.id)}"><b>${esc(x.nombre)}</b><span class="v">${esc(sinPlata(x.plazo).split(' (')[0])}</span><span class="d">${sinPlata(x.resumen || '')}</span></button>`).join('')}</div>
+        <p class="nota" style="margin-top:10px">Cada pieza tiene su ficha técnica: especificaciones, referente, sitio y plazo.</p>`,
+    };
+  },
+  componente(c, p) {
+    const x = (c.componentes || []).find((k) => k.id === p.componente) || {};
+    const plazo = sinPlata(x.plazo);
+    return {
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || x.nombre)}</h2><p class="lead">${sinPlata(p.texto || x.descripcion || '')}</p>`,
+      cuerpo: `${p.texto && sinPlata(x.descripcion) ? `<h3>Qué es</h3><p>${sinPlata(x.descripcion)}</p>` : ''}
+        ${hojaTecnica(x)}${referentes(x)}
+        ${sinPlata(x.ubicacion) ? `<h3>Dónde</h3><p>${sinPlata(x.ubicacion)}</p>` : ''}
+        ${plazo ? `<h3>Plazo</h3><p>${esc(plazo)}</p>${barraPlazo(plazo)}` : ''}
+        ${cifrasT(p.cifras)}`,
+    };
+  },
+  comparacion(c, p) {
+    return {
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo)}</h2>${sinPlata(p.texto) ? `<p class="lead">${sinPlata(p.texto)}</p>` : ''}`,
+      cuerpo: `<div class="compara"><div class="no"><b>${esc(p.antes?.titulo || 'Antes')}</b>${sinPlata(p.antes?.texto)}</div><div class="si"><b>${esc(p.despues?.titulo || 'Propuesta')}</b>${sinPlata(p.despues?.texto)}</div></div>
+        ${p.grafico === 'reloj' ? relojAgua(p) : ''}${cifrasT(p.cifras)}${notaT(p.nota)}`,
+    };
+  },
+  texto(c, p) {
+    return {
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || c.nombre)}</h2>${sinPlata(p.texto) ? `<p class="lead">${sinPlata(p.texto)}</p>` : ''}`,
+      cuerpo: `${listaT(p.lista)}${cifrasT(p.cifras)}${notaT(p.nota)}`,
+    };
+  },
+  inmersion(c, p) {
+    const i = (datos.tecnica?.inmersiones || []).find((k) => k.id === p.inmersion) || {};
+    return {
+      cab: `<p class="ceja">${esc(c.nombre)} · modelo 3D del atlas</p><h2>${titulo(p.titulo || i.nombre)}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
+      cuerpo: `${listaT(p.lista)}<p class="en-pantalla"><b>En pantalla</b>${esc(i.nombre || '')}${i.texto ? ` · ${esc(i.texto)}` : ''}</p>`,
+    };
+  },
+  metas(c, p) {
+    const metas = (c.metas || []).filter((x) => typeof x?.indicador === 'string' && !/\$|millones de pesos/.test(x.indicador));
+    return {
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Lo que cambia y cómo se mide')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
+      cuerpo: `<div class="metas">${metas.map((x) => `<div class="meta"><b>${esc(x.indicador)}</b><span class="de"><small>Hoy</small>${sinPlata(x.base) || '—'}</span><span class="a"><small>Meta</small>${sinPlata(x.meta) || '—'}</span></div>`).join('')}</div>`,
+    };
+  },
+  cronograma(c, p) {
+    const x0 = ANIOS[0], n = ANIOS.length, pos = (a) => ((a - x0) / n) * 100;
+    const filas = datos.modulos.map((m) => {
+      const comps = (m.componentes || []).map((k) => ({ k, a: anios(sinPlata(k.plazo)) })).filter((k) => k.a);
+      if (!comps.length) return '';
+      return `<div class="grupo" style="--mc:${colorDe(m.id)}"><p class="g-mod">${esc(m.nombre)}</p>${comps.map(({ k, a }) => { const l = pos(Math.max(x0, a[0])), w = pos(Math.min(x0 + n, a[1] + 1)) - l; return `<div class="g-fila" title="${esc(sinPlata(k.plazo))}"><span>${esc(k.nombre)}</span><span class="g-bar"><i class="barra-r" style="left:${l}%;width:${w}%"></i></span></div>`; }).join('')}</div>`;
+    }).join('');
+    return {
+      cab: `<p class="ceja">Cronograma</p><h2>${titulo(p.titulo || 'Cronograma de obra')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
+      cuerpo: `<div class="cronograma"><div class="g-fila g-anios"><span></span><span class="g-bar">${ANIOS.map((y) => `<b style="left:${pos(y)}%">${y}</b>`).join('')}</span></div>${filas}</div>${notaT(p.nota)}`,
+    };
+  },
+};
+
 // el cuerpo del panel se desvanece abajo mientras haya más contenido para leer
 function marcarDesborde() {
   const p = $('.panel'), hojaEntera = getComputedStyle(p).overflowY === 'auto', el = hojaEntera ? p : cuerpo;
@@ -323,6 +445,9 @@ async function mostrar(ci, pi, { dir = 1, primera = false } = {}) {
   $$('i', progreso).forEach((el, i) => el.style.setProperty('--p', i < ci ? 1 : i > ci ? 0 : (pi + 1) / c.pasos.length));
   leyenda.innerHTML = (p.leyenda || []).map((l) => `<span><i class="${l.forma || ''}" style="--c:${l.color || 'var(--mc)'}"></i><em>${esc(l.texto)}</em></span>`).join('');
   leyenda.classList.remove('abierta');
+  // lo que el asistente cambió de lo que se ve (cámara, enfoque, ficha, inmersión) vuelve a lo del paso; un paso de
+  // inmersión abre la suya
+  visual?.alPaso();
   // cada cambio de paso se anuncia, venga del teclado, de un clic, de la dirección o del mando del panel: mando.js le avisa
   // al panel (y acomoda el subtítulo junto a la leyenda nueva) y la hoja de ruta deja de girar al salir de su capítulo
   dispatchEvent(new CustomEvent('propuesta:paso', { detail: { capitulo: c.id, paso: pi + 1, total: c.pasos.length } }));
@@ -342,6 +467,10 @@ function telonDe(c) {
   tlTelon?.kill();
   const banda = $('.banda', telon), n = $('.n', telon), t = $('.t', telon), l = $('.l', telon);
   telon.style.setProperty('--mc', colorDe(c.id));
+  // en la técnica, cada módulo entra con el render de su área detrás de su color (sin número: los capítulos no se numeran)
+  const conRender = TECNICA && datos.modulos.some((m) => m.id === c.id);
+  telon.classList.toggle('con-render', conRender);
+  if (conRender) telon.style.setProperty('--render', `url("img/home/area-${c.id}.webp")`);
   n.textContent = ''; t.innerHTML = [...(c.nombre || '')].map((ch) => `<span class="ch">${ch === ' ' ? '&nbsp;' : esc(ch)}</span>`).join(''); l.textContent = c.lema || '';
   tlTelon = gsap.timeline({ defaults: { ease: 'power3.inOut' } })
     .set(telon, { autoAlpha: 1 })
@@ -366,7 +495,8 @@ function terminar(anim, ms) {
 }
 
 async function pintarPanel(c, p, dir, conTelon) {
-  const r = (RENDER[p.tipo] || RENDER.texto)(c, p);
+  const R = TECNICA ? RENDER_TECNICA : RENDER;
+  const r = (R[p.tipo] || R.texto)(c, p);
   // con la pestaña oculta no se anima la salida: nadie la ve y no habría cuadros para ella
   const salir = gsap && !reducedMotion && cab.innerHTML && !document.hidden ? gsap.to([cab, cuerpo], { opacity: 0, y: dir > 0 ? -12 : 12, duration: 0.18, ease: 'power2.in' }) : null;
   if (salir) await terminar(salir, 500);
@@ -388,6 +518,8 @@ async function pintarPanel(c, p, dir, conTelon) {
   desde($$('.comp .bar i, .pila i', cuerpo), { scaleX: 0, transformOrigin: 'left center', duration: 0.7, stagger: 0.04, ease: 'power2.out' }, 0.45);
   desde($$('.rango .eje i, .rango .eje em, .madurez span', cuerpo), { opacity: 0, scaleX: 0.3, transformOrigin: 'left center', duration: 0.5, stagger: 0.04 }, 0.45);
   desde($$('.gantt .barra-r', cuerpo), { scaleX: 0, transformOrigin: 'left center', duration: 0.6, stagger: 0.12 }, 0.4);
+  desde($$('.cronograma .barra-r, .plazo-barra i', cuerpo), { scaleX: 0, transformOrigin: 'left center', duration: 0.5, stagger: 0.015 }, 0.4);
+  desde($$('.metas .meta, .hoja dt, .render', cuerpo), { opacity: 0, x: -8, duration: 0.35, stagger: 0.03 }, 0.3);
   tlPanel.add(() => $$('.cifra b[data-cuenta]', cuerpo).forEach((b) => countUp(b, 1.2)), 0.35);
   const arco = $('.arco-hoy', cuerpo);
   if (arco) { const L = arco.getTotalLength(); gsap.fromTo(arco, { strokeDasharray: L, strokeDashoffset: L }, { strokeDashoffset: 0, duration: 1.1, delay: 0.6, ease: 'power2.out' }); }
@@ -420,6 +552,7 @@ function reencuadrar() {
   clearTimeout(tReenc);
   tReenc = setTimeout(() => {
     if (escena.st.userMoved || estado.ci < 0) return;
+    if (visual?.reencuadrar()) return;   // con una cámara o un enfoque pedidos, se repite ese encuadre
     const c = caps[estado.ci], p = c.pasos[estado.pi], m = ctx3d[c.id], def = m?.pasos?.[p.id] || m?.pasos?.['*'] || {};
     (def.vista || m?.vista)?.();
   }, 250);
@@ -436,12 +569,23 @@ function abrirFichas(v = fichas.hidden) {
   fichas.hidden = !v;
   if (!v || fichas.dataset.listo) return;
   fichas.dataset.listo = '1';
+  if (TECNICA) { fichas.innerHTML = fichasTecnicas(); return; }
   fichas.innerHTML = `<div class="cab"><h2>Fichas de la propuesta 2028–2031</h2><div class="herr"><button type="button" data-accion="imprimir">Imprimir o guardar en PDF</button><button type="button" data-accion="fichas">Cerrar</button></div></div>
     <p class="nota">${esc(datos.meta?.moneda || 'Millones de pesos constantes de 2026')} · corte ${esc(datos.meta?.fecha_corte || '')} · inversión total aproximada ${rgTotal()} (rangos de perfil, no costos fijos)</p>
     ${datos.modulos.map((m, i) => `<article style="--mc:${colorDe(m.id)}"><p class="ceja">${esc(m.nombre)}</p><h3>${esc(m.lema || '')}</h3>
       <div class="cols"><div><p>${m.problema || ''}</p><p><b>Propuesta.</b> ${m.propuesta || ''}</p>
         <table class="tabla"><thead><tr><th>Componente</th><th class="n">Costo aproximado</th><th>Proyecto tipo</th></tr></thead><tbody>${(m.componentes || []).map((x) => `<tr><td>${esc(x.nombre)}</td><td class="n">${rg(x.costo)}</td><td>${(x.proyecto_tipo || []).map((t) => esc(t.nombre)).join('; ') || '—'}</td></tr>`).join('')}<tr><td><b>Total</b></td><td class="n"><b>${rg(m.inversion)}</b></td><td></td></tr></tbody></table></div>
       <div>${pilaFinanciacion(m.financiacion || [], m.inversion)}${m.gestion?.pedido ? `<div class="pedido"><b>Lo que pedimos</b>${m.gestion.pedido}</div>` : ''}${m.metas?.length ? `<h4 style="margin:12px 0 4px">Metas</h4><ul>${m.metas.map((x) => `<li>${esc(x.indicador)}: ${esc(x.base ?? '')} → <b>${esc(x.meta)}</b></li>`).join('')}</ul>` : ''}</div></div></article>`).join('')}`;
+}
+// las fichas técnicas para imprimir: por módulo, lo que propone y cada componente con sus especificaciones, su referente,
+// su sitio y su plazo, y las metas (sin costos ni financiación)
+function fichasTecnicas() {
+  return `<div class="cab"><h2>Fichas técnicas 2028–2031</h2><div class="herr"><button type="button" data-accion="imprimir">Imprimir o guardar en PDF</button><button type="button" data-accion="fichas">Cerrar</button></div></div>
+    <p class="nota">Presentación técnica · corte ${esc(datos.meta?.fecha_corte || '')} · especificaciones de prefactibilidad: se ajustan con los diseños de cada obra</p>
+    ${datos.modulos.map((m) => `<article style="--mc:${colorDe(m.id)}"><p class="ceja">${esc(m.nombre)}</p><h3>${esc(m.lema || '')}</h3>
+      <p>${sinPlata(m.propuesta)}</p>
+      <div class="fichas-comps">${(m.componentes || []).map((x) => { const specs = (x.especificaciones || []).map(especificacionTecnica).filter(Boolean); return `<section><h4>${esc(x.nombre)}</h4>${x.resumen ? `<p class="nota">${sinPlata(x.resumen)}</p>` : ''}${specs.length ? `<dl class="hoja">${specs.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>` : ''}${sinPlata(x.plazo) ? `<p class="nota"><b>Plazo:</b> ${esc(sinPlata(x.plazo))}</p>` : ''}</section>`; }).join('')}</div>
+      ${m.metas?.length ? `<h4 style="margin:12px 0 4px">Metas</h4><ul>${m.metas.filter((x) => !/\$|millones de pesos/.test(x.indicador || '')).map((x) => `<li>${esc(x.indicador)}: ${sinPlata(x.base) || '—'} → <b>${sinPlata(x.meta) || '—'}</b></li>`).join('')}</ul>` : ''}</article>`).join('')}`;
 }
 function pantalla() { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.().catch(() => {}); }
 function alternarPanel(v) {
@@ -463,7 +607,10 @@ document.addEventListener('click', (e) => {
   if (cap) { abrirIndice(false); ir(+cap.dataset.cap, 0); return; }
   if (paso) { ir(estado.ci, +paso.dataset.paso); return; }
   if (irA) { ir(+irA.dataset.ir, 0); return; }
-  if (comp) { const k = pasoDeComp(caps[estado.ci], comp.dataset.comp); if (k >= 0) ir(estado.ci, k); }
+  if (comp) { const k = pasoDeComp(caps[estado.ci], comp.dataset.comp); if (k >= 0) ir(estado.ci, k); return; }
+  // técnica: una pieza abre su ficha y, si tiene lugar en la maqueta, la cámara va a ella
+  const det = e.target.closest('[data-det]');
+  if (det && visual) visual.abrirDetalle(det.dataset.det);
 });
 leyenda.addEventListener('click', () => leyenda.classList.toggle('abierta'));
 
@@ -554,9 +701,14 @@ $('.panel').addEventListener('touchend', (e) => {
 });
 addEventListener('hashchange', () => { const [ci, pi] = desdeHash(); ir(ci, pi); });
 
+// lo que el asistente cambia de lo que se ve sin cambiar de paso (solo en la técnica: cámara, enfoque, hoy/proyecto,
+// ficha técnica, inmersión en el atlas y tema)
+const visual = TECNICA ? crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D, capasVisibles: () => capasVisibles, colorDe }) : null;
+
 // arranque: la vista que pide la dirección (o la portada)
 const [ci0, pi0] = desdeHash();
 ir(ci0, pi0, { primera: true });
 // mando a distancia: dentro de la vista Presentación del panel (un iframe), el asistente lleva la presentación por
 // postMessage y muestra su explicación en el subtítulo. Fuera de un iframe no escucha nada
-montarMando({ caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel: (v) => alternarPanel(!v), reencuadrar });
+montarMando({ caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel: (v) => alternarPanel(!v), reencuadrar,
+  visual });
