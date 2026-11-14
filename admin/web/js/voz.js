@@ -4,14 +4,20 @@
 // * Suena solo donde mira la sala (la pestaña del chat, la ventana del proyector o la pantalla en off) y solo después de
 //   un gesto de la persona en ESA ventana: el navegador no deja hablar a una página que nadie tocó. `encender` corre en
 //   el clic del botón «Voz» (destraba la síntesis con una locución vacía); si la preferencia ya estaba encendida, el
-//   primer toque o tecla en la ventana la activa.
+//   primer toque o tecla en la ventana la activa. En el proyector esos toques y teclas caen en el iframe de la
+//   presentación, que ocupa la ventana, y no llegan aquí: mando.js los avisa y la vista llama a `gesto()` (la activación
+//   de la persona en el iframe vale también para la ventana que lo contiene).
+// * `soltar()` al desmontar la vista: quita los oyentes de la ventana y de la síntesis y calla (si no, cada montaje
+//   sumaría los suyos).
 // * La preferencia se guarda en este navegador (`yj_voz`); un almacenamiento bloqueado no rompe nada.
 // * La voz: la mejor en español de las que tenga el equipo (es-CO; después es-419, es-MX, es-US; después es-ES; después
 //   cualquier es-*), las locales antes que las remotas. Una voz remota manda el texto a un servicio del fabricante del
 //   navegador: solo se usa si no hay ninguna local en español (y el texto proyectado nunca trae datos de personas).
 // * `decir` habla una frase y resuelve 'dicha', 'cortada' (callar, una pausa) o 'fallo' (sin voz, un error, el vigía
 //   vencido); nunca lanza. Chrome corta las locuciones largas cerca de los 15 s: una frase de más de PARTIR caracteres
-//   se dice en dos partes. `paraDecir` solo cambia lo que se oye (las siglas, las unidades), no lo que se ve.
+//   se dice en partes de PARTIR como mucho (contadas sobre lo que se oye, que con las siglas y las unidades dichas crece).
+//   La locución en curso se guarda: si nadie la retiene, Chrome la recoge y pierde su `onend`, y la frase queda colgada
+//   hasta el vigía. `paraDecir` solo cambia lo que se oye (las siglas, las unidades), no lo que se ve.
 // Sin dependencias del DOM del panel: la ventana y el almacén llegan por parámetro (admin/tests, con una síntesis falsa).
 
 export const CLAVE = 'yj_voz';
@@ -37,14 +43,28 @@ export function paraDecir(t) {
   return s.replace(/\s+/g, ' ').trim();
 }
 
-/** Las partes en que se dice una frase: una, o dos si pasa de PARTIR (por «, » o «; » cerca de la mitad). */
+/** Las partes en que se dice una frase: una, o varias de PARTIR caracteres como mucho. Se corta por la «, » o «; » más
+ * cercana a la mitad solo si las dos mitades caben; si no, por el espacio más cercano a la mitad, y cada mitad que
+ * todavía no cabe se vuelve a partir (una «, » pegada a un extremo dejaría la otra parte tan larga como la frase). */
 export function partes(t) {
-  if ([...t].length <= PARTIR) return [t];
-  const mitad = t.length / 2;
-  let mejor = -1;
-  for (const m of t.matchAll(/[,;] /g)) if (mejor < 0 || Math.abs(m.index - mitad) < Math.abs(mejor - mitad)) mejor = m.index;
-  if (mejor < 0) { const e = t.indexOf(' ', Math.floor(mitad)); mejor = e > 0 ? e - 1 : -1; }
-  return mejor > 0 ? [t.slice(0, mejor + 1).trim(), t.slice(mejor + 1).trim()].filter(Boolean) : [t];
+  const s = String(t ?? '');
+  if ([...s].length <= PARTIR) return [s];
+  const mitad = s.length / 2;
+  const cabe = (x) => [...x.trim()].length <= PARTIR;
+  // el corte (la posición donde empieza la segunda mitad) más cercano a la mitad entre los que `sirve` acepta
+  const corte = (re, sirve) => {
+    let mejor = -1;
+    for (const m of s.matchAll(re)) {
+      const c = m.index + 1;
+      if (sirve(c) && (mejor < 0 || Math.abs(c - mitad) < Math.abs(mejor - mitad))) mejor = c;
+    }
+    return mejor;
+  };
+  let c = corte(/[,;] /g, (i) => cabe(s.slice(0, i)) && cabe(s.slice(i)));
+  if (c < 0) c = corte(/\s/g, (i) => !!s.slice(0, i).trim() && !!s.slice(i).trim());
+  // una sola palabra más larga que el tope: por la mitad, sin partir un carácter
+  if (c < 0) { const cp = [...s]; c = cp.slice(0, Math.ceil(cp.length / 2)).join('').length; }
+  return [s.slice(0, c), s.slice(c)].map((x) => x.trim()).filter(Boolean).flatMap(partes);
 }
 
 /** Lo que se espera a una locución antes de darla por colgada. */
@@ -77,8 +97,10 @@ export function crearVoz({ ventana = globalThis, almacen = null } = {}) {
   let voz = null;
   let vocesListas = false;
   const oyentes = new Set();
-  let actual = null;   // {resolver, reloj}: la locución en curso
+  let actual = null;   // {ficha, resolver, reloj, u}: la locución en curso (`u` la retiene: ver la cabecera)
   let ficha = 0;
+  let alCambiarVoces = null;   // el oyente de `voiceschanged` y el reloj de la espera de las voces (`soltar` los quita)
+  let tVoces = null;
 
   const avisar = () => { for (const f of oyentes) { try { f(estado()); } catch { /* el oyente se fue */ } } };
 
@@ -91,10 +113,11 @@ export function crearVoz({ ventana = globalThis, almacen = null } = {}) {
       return lista.length > 0;
     };
     if (mirar()) return;
-    try { sintesis.addEventListener?.('voiceschanged', () => { mirar(); }); } catch { /* sin el evento */ }
+    alCambiarVoces = () => { mirar(); };
+    try { sintesis.addEventListener?.('voiceschanged', alCambiarVoces); } catch { /* sin el evento */ }
     // sin el evento (o si no llega): se da por cargada al rato, con lo que haya
-    const t = setTimeout(() => { mirar(); vocesListas = true; avisar(); }, ESPERA_VOCES_MS);
-    t?.unref?.();
+    tVoces = setTimeout(() => { tVoces = null; mirar(); vocesListas = true; avisar(); }, ESPERA_VOCES_MS);
+    tVoces?.unref?.();
   }
 
   /** 'activa' | 'apagada' | 'sin_activar' | 'sin_voces' */
@@ -172,6 +195,7 @@ export function crearVoz({ ventana = globalThis, almacen = null } = {}) {
           fin('fallo');
         };
         clearTimeout(actual.reloj);
+        actual.u = u;
         actual.reloj = setTimeout(() => fin('fallo'), vigia(trozos[i]));
         actual.reloj?.unref?.();
         try { sintesis.speak(u); } catch { fin('fallo'); }
@@ -180,18 +204,33 @@ export function crearVoz({ ventana = globalThis, almacen = null } = {}) {
     });
   }
 
-  // Con la preferencia encendida, el primer gesto en esta ventana la activa
+  /** Un gesto de la persona (aquí o en la presentación, que la vista reenvía): con la preferencia encendida, la activa. */
+  function gesto() { if (preferida && !activada) activar(); }
+
+  // El primer toque o tecla en esta ventana
   if (hay) {
     cargarVoces();
-    const gesto = () => { if (preferida && !activada) activar(); };
     try {
       ventana.addEventListener?.('pointerdown', gesto, true);
       ventana.addEventListener?.('keydown', gesto, true);
     } catch { /* nada */ }
   }
 
+  /** La vista se desmonta: sin oyentes de la ventana ni de la síntesis, y callada. */
+  function soltar() {
+    try {
+      ventana?.removeEventListener?.('pointerdown', gesto, true);
+      ventana?.removeEventListener?.('keydown', gesto, true);
+    } catch { /* nada */ }
+    if (alCambiarVoces) { try { sintesis.removeEventListener?.('voiceschanged', alCambiarVoces); } catch { /* nada */ } }
+    alCambiarVoces = null;
+    clearTimeout(tVoces);
+    tVoces = null;
+    callar();
+  }
+
   return {
-    estado, encender, apagar, activar, decir, callar,
+    estado, encender, apagar, activar, gesto, soltar, decir, callar,
     alCambiar(f) { oyentes.add(f); return () => oyentes.delete(f); },
   };
 }

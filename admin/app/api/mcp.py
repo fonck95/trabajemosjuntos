@@ -55,9 +55,10 @@ INSTRUCCIONES = (
     "simulador sísmico o el modelo BIM, y el tema); pantalla_completa para que llene la ventana y estado para saber qué "
     "muestra y si está abierta. Para explicar algo, presenta con un recorrido narrado: guion del capítulo y luego UNA "
     "llamada recorrido de 3 a 6 escenas (lo que se dice y lo que se ve) con un cierre; la pantalla en off lo reproduce "
-    "sola con subtítulo y voz, estado dice por qué escena va y control_recorrido lo pausa, salta o detiene. Hace falta "
-    "la pantalla en off abierta. Cambia la pantalla solo cuando la persona pide algo concreto. Lo que pones en pantalla "
-    "lo ve una sala: nunca datos de personas, costos, «@» ni números de 7 o más dígitos.")
+    "sola con subtítulo y voz, estado dice por qué escena va y control_recorrido lo pausa, salta o detiene (uno que "
+    "suena en la pestaña del panel de la persona se maneja desde ahí). Hace falta la pantalla en off abierta. Cambia la "
+    "pantalla solo cuando la persona pide algo concreto. Lo que pones en pantalla lo ve una sala: nunca datos de "
+    "personas, costos, «@» ni números de 7 o más dígitos.")
 D_MCP = D_PRESENTACION.replace("en el panel de la persona o en su pantalla en off", "en la pantalla en off de la persona")
 
 _usos: dict[str, deque] = {}

@@ -266,14 +266,17 @@ def guion_del_contexto() -> Any:
 
 def pantalla_del_contexto(db: Any, uid: Any) -> str:
     """Lo que muestra la pantalla en off de la persona si hay una abierta (`app/pantalla.py`), o «» (correr con
-    `run_in_threadpool`: lee la base y el guion)."""
+    `run_in_threadpool`: lee la base y el guion). Con un recorrido sonando, su escena en curso (`a_la_vista`), no la
+    base guardada: si no, el modelo pediría lo visual de otro capítulo o avanzaría desde la última escena."""
     if not isinstance(uid, int) or isinstance(uid, bool):
         return ""
     doc = pantalla_off.leer(db, uid)
     if not pantalla_off.conectada(doc):
         return ""
     guion = guion_del_contexto()
-    return pantalla_off.describir(pantalla_off.estado(doc, guion), guion) if guion is not None else ""
+    if guion is None:
+        return ""
+    return pantalla_off.describir(pantalla_off.estado(pantalla_off.a_la_vista(doc, guion), guion), guion)
 
 
 def _presentacion(p: Any, guion: Any) -> str:
@@ -295,8 +298,9 @@ def _presentacion(p: Any, guion: Any) -> str:
 
 
 def recorrido_del_contexto(db: Any, uid: Any) -> str:
-    """Dónde va el recorrido narrado de la persona, si hay uno sonando o terminó hace poco (`pantalla.resumen_recorrido`;
-    el título sale de la base, nunca del navegador), o «» (correr con `run_in_threadpool`)."""
+    """Dónde va el recorrido narrado de la persona, si hay uno sonando o terminó hace poco (`pantalla.resumen_recorrido`:
+    uno terminado hace más de 2 minutos o abandonado hace media hora ya no se nombra; el título sale de la base, nunca
+    del navegador), o «» (correr con `run_in_threadpool`)."""
     if not isinstance(uid, int) or isinstance(uid, bool):
         return ""
     guion = guion_del_contexto()

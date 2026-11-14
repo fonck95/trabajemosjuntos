@@ -3,9 +3,11 @@
 * `GET /api/pantalla?v=N`: la vista Presentación en modo en off pregunta cada poco. Con la versión que ya tiene, 204 sin
   cuerpo; si cambió, el estado entero. Cada pregunta deja la pantalla como abierta (`visto`).
 * El recorrido narrado (`app/recorrido.py`): `POST /api/pantalla/progreso` (el avance que manda la página que lo
-  reproduce: la pestaña, el proyector o la pantalla en off; no sube la versión ni marca la pantalla como abierta),
-  `POST /api/pantalla/recorrido/control` (los botones de la tarjeta del chat cuando suena en otra pantalla) y
-  `GET /api/pantalla/recorrido` (la tarjeta lo sigue; solo lectura, tampoco marca `visto`).
+  reproduce: la pestaña, el proyector o la pantalla en off; no marca la pantalla como abierta; uno final lo cierra y,
+  si el recorrido ya no es el vigente o está cerrado, 409: la página que todavía lo reproduce lo detiene),
+  `POST /api/pantalla/recorrido/control` (los botones de la tarjeta del chat cuando suena en otra pantalla, y «Volver a
+  reproducir» en cualquier destino: vuelve con el id del nuevo) y `GET /api/pantalla/recorrido` (la tarjeta lo sigue;
+  solo lectura, tampoco marca `visto`).
 * `GET`, `POST` y `DELETE /api/pantalla/clave`: la clave MCP de la persona (una por persona; crear otra reemplaza la
   anterior). Se muestra una sola vez, al crearla: en la base queda su SHA-256 y la huella de la sesión de ese momento,
   así cambiar la clave del panel (o la credencial del administrador) la anula, como a las sesiones."""
@@ -115,8 +117,11 @@ def control_recorrido(c: ControlEntrada, db: Database = Depends(obtener_db),
         res = pantalla.controlar(db, quien.uid, g, c.accion, "panel", rid=c.rid)
     except ValueError:
         raise HTTPException(409, "No hay un recorrido sonando con ese id") from None
-    x = pantalla.resumen_recorrido(res["doc"], g) or {}
-    return {k: x.get(k) for k in ("id", "titulo", "escena", "de", "fase", "cerrado")}
+    # El id es el del recorrido que quedó (con «reproducir», el nuevo: la tarjeta sigue ese), aunque el resumen ya no lo
+    # nombre (uno detenido antes de su primer avance)
+    r, x = res["recorrido"] or {}, pantalla.resumen_recorrido(res["doc"], g) or {}
+    return {"id": r.get("id"), "titulo": r.get("titulo"), "escena": x.get("escena"), "de": len(r.get("escenas") or []),
+            "fase": x.get("fase"), "cerrado": r.get("cerrado")}
 
 
 @r.get("/pantalla/recorrido")
@@ -125,10 +130,16 @@ def ver_recorrido(db: Database = Depends(obtener_db), quien: Quien = Depends(req
     g = _guion()
     doc = pantalla.leer(db, quien.uid)
     x = pantalla.resumen_recorrido(doc, g)
-    pr = pantalla.progreso_de(doc, pantalla.recorrido_de(doc, g)) or {}
+    v = pantalla.recorrido_de(doc, g)
+    pr = pantalla.progreso_de(doc, v) or {}
     return {"recorrido": x and {k: x[k] for k in ("id", "titulo", "destino", "cerrado", "escena", "de", "fase",
                                                     "motivo", "voz", "hace_s")},
-            "frase": pr.get("frase"), "avisos": (x or {}).get("avisos", [])}
+            "frase": pr.get("frase"), "avisos": (x or {}).get("avisos", []),
+            # la pantalla en off sigue abierta (preguntó hace poco): en pausa no hay avances, esto dice si alguien la oye
+            "conectada": pantalla.conectada(doc),
+            # el último recorrido guardado, aunque el resumen ya no lo nombre (terminó hace rato, quedó abandonado): la
+            # tarjeta lo mira antes de reanudar uno que se cortó
+            "vigente": v and {"id": v["id"], "cerrado": v["cerrado"]}}
 
 
 def _info(doc: dict | None, request: Request) -> dict:

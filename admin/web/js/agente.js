@@ -1286,12 +1286,16 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       alSugerencia: (s) => {
         if (turno) { entrada.value = s; entrada.focus(); entrada.dispatchEvent(new Event('input')); } else enviar(s);
       },
-      reproducir: (rid, desde) => {
+      // «Volver a reproducir» le pide al servidor que lo vuelva a armar y llega con el id nuevo (`nuevo`): se reproduce
+      // el guardado con ese id (y se guarda así, para volver a reproducirlo otra vez). «Reanudar» sigue con el mismo
+      reproducir: (rid, desde, nuevo) => {
         const r = recorridosGuardados.get(rid);
         if (!r) return false;
-        presentacion({ tipo: 'presentacion', op: 'recorrido', recorrido: r, ...(desde > 1 ? { desde } : {}) });
+        const x = typeof nuevo === 'string' && nuevo !== rid ? { ...r, id: nuevo } : r;
+        presentacion({ tipo: 'presentacion', op: 'recorrido', recorrido: x, ...(desde > 1 ? { desde } : {}) });
         return true;
       },
+      guardado: (rid) => recorridosGuardados.has(rid),
     });
     enAsistente().append(t.el);
     ultima = null;
@@ -1401,6 +1405,9 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       return;
     }
     if (p.op === 'recorrido') { guardarRecorrido(p.recorrido); pildora = false; }
+    // Detener un recorrido que no suena en este navegador (el servidor lo cerró porque el asistente pidió otra cosa, y
+    // sonaba en otro lado o ya había terminado): no hay nada que hacer, y no se abre la presentación para eso
+    if (p.op === 'control_recorrido' && p.accion === 'detener' && recorridoEnCurso()?.rid !== p.rid) return;
     // Detrás de las que ya esperan en este turno, aunque ahora se pudiera: se aplican en el orden en que llegaron
     if (presEnEspera && turno && presEnEspera.turno === turno) {
       presEnEspera.lista.push(p);

@@ -159,7 +159,7 @@ def _texto(v: Any, maximo: int) -> bool:
     if not isinstance(v, str):
         return False
     try:
-        return texto_proyectable(v, maximo, plata=False) == v
+        return texto_proyectable(v, maximo) == v
     except ValueError:
         return False
 
@@ -225,7 +225,7 @@ def _resaltar(r: Any, guion: Any, ci: int | None, pi: int | None, esc: dict) -> 
 
 def validar(r: Any, guion: Any = None) -> list[str]:
     """Lo que impide reproducir el recorrido absoluto `r` (vacío si nada): la forma exacta, los textos con las reglas de
-    lo que se proyecta y sin plata, los topes y, con `guion`, que cada capítulo, paso, componente, inmersión y resaltado
+    lo que se proyecta (sin plata, como todo lo de la presentación técnica), los topes y, con `guion`, que cada capítulo, paso, componente, inmersión y resaltado
     exista en el guion vigente. Pura: la usan la herramienta al crearlo y la pantalla al leerlo de la base."""
     if not isinstance(r, dict) or set(r) != {"id", "titulo", "escenas", "cierre"}:
         return ["el recorrido no tiene la forma"]

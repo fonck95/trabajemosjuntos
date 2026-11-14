@@ -143,12 +143,14 @@ y sigue igual.
   encuadra la obra (al menos 90 px): si no cabe, su letra se achica y, en vertical, la hoja inferior cede más. Se vuelve
   a acomodar, con la letra más grande que cabe donde queda, al girar el celular, al ocultar o mostrar el panel («Solo
   3D») y al cambiar la altura de la hoja, sin esperar a que termine de moverse. Esa frase
-  se proyecta ante otras personas: nunca lleva datos de habitantes, «@» (tampoco «＠» ni «﹫») ni números de 7 o más
-  dígitos, también escritos por grupos (con espacios, puntos, guiones, rayas, barras o paréntesis), ni caracteres que no
-  se ven; sí un periodo («2028-2031», «2028–2031», «2028/2031»), una fecha que existe («15/11/2026», «2026-11-15») y los
-  montos de la propuesta («$106.271 M», «$116.294 – 210.000 M», «$1.156.350»; con «$» y puntos de miles, hasta 7 cifras
-  enteras: «$1.023.456.789» o «$71.234.567» no pasan, son una cédula o un teléfono). «Siguiente» y «anterior» siguen
-  desde el paso que dice el contexto. La barra de la vista muestra el capítulo y el paso, avanza y retrocede, pone la
+  se proyecta ante otras personas: nunca lleva datos de habitantes, «@» (tampoco «＠» ni «﹫»), números de 7 o más
+  dígitos, también escritos por grupos (con espacios, puntos, guiones, rayas, barras, paréntesis, el apóstrofo de los
+  millones o lo que se escribe en su lugar, «71'234.567», «71´234.567», o un punto de viñeta), costos («$», «COP»,
+  «pesos», «billones de», «billón de», «millones de pesos», en
+  mayúsculas o minúsculas: la presentación que se maneja es la técnica, que no los muestra) ni caracteres que no se
+  ven; sí un periodo («2028-2031», «2028–2031», «2028/2031»), una fecha que existe («15/11/2026», «2026-11-15») y un
+  rango de cifras de menor a mayor («1.346–1.500 kWh»). «Siguiente» y «anterior» siguen desde el paso que dice el
+  contexto. La barra de la vista muestra el capítulo y el paso, avanza y retrocede, pone la
   presentación a **Pantalla completa** y la **Abre en otra pantalla**: una ventana del panel
   (`/presentacion?pantalla=1`) sin menú ni asistente, para el proyector, que arranca en el capítulo, el paso y con la
   explicación de la pestaña del chat. Mientras esa ventana está abierta, manda ella: el asistente (y los botones de la
@@ -232,10 +234,10 @@ lo que se nombra y después lo oye o lo lee, frase por frase.
 
 - **Todo o nada.** El servidor (`app/recorrido.py`) resuelve cada escena contra el guion (los nombres e ids de pasos,
   componentes e inmersiones, y lo que se resalta, contra lo que muestra ese paso) heredando lo de la anterior, y la deja
-  **absoluta**: cada escena trae lo visual completo. Si una falla, no se guarda nada y vuelve el error con el número de
-  la escena y los candidatos. Las frases siguen las reglas de la explicación y además **sin costos** (ni «$» ni
-  «millones de pesos»). La duración estimada (lectura de cada frase, asiento de la imagen, lo que se sostiene) no pasa
-  de 4 minutos.
+  **absoluta**: cada escena trae lo visual completo (una que repite el capítulo sin decir el paso sigue en el mismo
+  paso). Si una falla, no se guarda nada y vuelve el error con el número de la escena y los candidatos. Las frases
+  siguen las reglas de la explicación, también **sin costos**. La duración estimada (lectura de cada frase, asiento de
+  la imagen, lo que se sostiene) no pasa de 4 minutos.
 - **Quién lleva el reloj.** Lo reproduce el panel (`web/js/reproductor.js`), no el modelo: en la pestaña del chat, en
   la ventana del proyector o en la pantalla en off, donde mire la sala. Por cada escena manda a la presentación la
   orden `escena` (atómica: cambia de paso si hace falta, aplica lo visual, resalta y responde cuando la imagen se
@@ -245,22 +247,38 @@ lo que se nombra y después lo oye o lo lee, frase por frase.
 - **La voz.** Opcional y apagada por omisión: la del navegador (Web Speech, `web/js/voz.js`), en español (es-CO
   primero; después es-419, es-MX, es-US, es-ES), con las siglas y unidades dichas como se leen (NSR-10, m², «24 h»). Se
   enciende con el botón **Voz** de esa ventana (la barra de la vista, el botón flotante del proyector o la barra de la
-  pantalla en off): el navegador solo deja hablar a una página que alguien tocó. La preferencia queda en ese navegador.
+  pantalla en off): el navegador solo deja hablar a una página que alguien tocó. En el proyector, con la preferencia ya
+  encendida en ese navegador, también la activan tocar el panel de texto, una tecla o el control de la presentación
+  (tocar la maqueta 3D, también a través del subtítulo, es tomar la cámara: pausa el recorrido). La preferencia queda en ese navegador.
   Sin voz, sin voces en español o si falla, cada frase se lee en pantalla con el mismo ritmo.
 - **Manejarlo.** La tarjeta del recorrido en el chat muestra las escenas (dónde, qué hace y qué dice), el avance en
   vivo y los controles: Pausa/Continuar, Anterior, Siguiente, Repetir y Detener; al terminar, **Volver a reproducir** y
-  las sugerencias como botones. Mientras suena, una barra fija arriba de la conversación («● En la sala · escena 3 de
-  6») lo deja a mano. En la presentación, las flechas, la barra espaciadora y los botones de su control pasan de
-  escena, P pausa y Escape detiene. Si la persona mueve la maqueta o cambia de paso a mano, se pausa; al seguir, la
-  escena vuelve. Si escribe en el chat, se pausa al terminar la frase. Cualquier otra orden de la presentación lo
-  detiene y la imagen queda donde iba.
+  las sugerencias como botones. Volver a reproducir (y `control_recorrido` reproducir del asistente) pasa por el
+  servidor: lo registra con un id nuevo y la tarjeta sigue a ese; solo se puede con el último recorrido. Mientras
+  suena, una barra fija arriba de la conversación («● En la sala · escena 3 de 6») lo deja a mano. En la presentación,
+  las flechas, la barra espaciadora y los botones de su control pasan de escena, P pausa y Escape detiene. Si la
+  persona mueve la maqueta o cambia de paso a mano, se pausa; al seguir, la escena vuelve. Si escribe en el chat, se
+  pausa al terminar la frase. Cualquier otra orden de la presentación que valga lo detiene y la imagen queda donde iba
+  (una que no vale, como un capítulo o un componente que no existe, vuelve con su error y la narración sigue). Si
+  sonaba en la pestaña o el proyector, el servidor manda detenerlo allá también cuando la orden va a la pantalla en
+  off, y lo mismo cuando el asistente arma otro recorrido que va a la pantalla en off; la tarjeta dice que se detuvo
+  porque el asistente mostró otra cosa. Un recorrido nuevo en el mismo lugar reemplaza al que sonaba: su tarjeta dice
+  «Lo reemplazó otro recorrido».
 - **Dónde suena.** Sin pantalla en off abierta, en la vista Presentación de la pestaña del chat o, si hay una, en la
   ventana del proyector (la tarjeta sigue su avance por el canal del proyector). Si el proyector se abre a mitad del
-  recorrido, este pasa allá desde la escena en curso; si se cierra, la tarjeta ofrece **Reanudar desde la escena k**.
-  Con la pantalla en off abierta (y siempre por MCP), suena allá.
+  recorrido, este pasa allá desde la escena en curso; si se cierra, la tarjeta ofrece **Reanudar desde la escena k**
+  (sigue en la pestaña con el mismo id, si todavía es el último recorrido y no se cerró, y si no suena otro). Con la
+  pantalla en off abierta (y siempre por MCP), suena allá: la tarjeta pregunta por su avance y, si la pantalla deja de
+  dar noticias (sonando, sin avances en un minuto; en pausa o no, si ya no pregunta por su estado), lo da por detenido.
+  Una pausa larga se sigue preguntando, más despacio.
 - **El avance.** El reproductor le avisa al servidor cada fase (`POST /api/pantalla/progreso`): el contexto del
   asistente y la op `estado` dicen en qué escena va, si está en pausa y los avisos (el modelo del atlas no cargó, no
-  encontró lo que resaltar). Así puede seguir desde ahí, controlarlo o responder sobre lo que la sala está viendo.
+  encontró lo que resaltar), y describen lo que muestra la escena en curso, de donde parte también la próxima orden.
+  Así puede seguir desde ahí, controlarlo o responder sobre lo que la sala está viendo. Un avance final (terminó, se
+  detuvo o falló) lo cierra en el servidor, con la imagen donde quedó; el traspaso de la pestaña al proyector no. Un
+  avance de un recorrido que el servidor ya cerró o reemplazó responde 409 y la página lo detiene. El contexto lo
+  nombra dos minutos después de terminar y deja de nombrarlo si en media hora no llega ningún avance ni control (la
+  página que lo reproducía se cerró); en pausa con la pantalla en off abierta, lo sigue nombrando.
 - **Con personas en la conversación**, la presentación no proyecta texto (`explicar`, `ir` con explicación ni
   `recorrido`): responde `con_personas`. Se muestra en una conversación sin datos de habitantes.
 
@@ -281,9 +299,11 @@ o el celular) o a un agente externo por MCP (Claude, Mnemo u otro cliente MCP). 
   la vista del panel no la mueve.
 - **Recorridos.** Un [recorrido narrado](#recorridos-narrados) con la pantalla en off abierta suena allá (con la voz de
   ese navegador, si se encendió en su barra). La pantalla lo narra si llega a tiempo (menos de 90 s) y, si se recargó a
-  mitad, sigue desde la escena donde iba; uno viejo no se narra: queda en su última escena. Los controles (de la
-  tarjeta del chat, del asistente o de un agente por MCP con `control_recorrido`) se aplican una vez cada uno. Por MCP,
-  `recorrido` exige la pantalla en off abierta (si no, 409 `sin_pantalla`) y el avance se sigue con `estado`.
+  mitad, sigue desde la escena donde iba; uno viejo no se narra: queda en su última escena. Si se abre mientras un
+  recorrido suena en la pestaña o el proyector, muestra su escena en curso, sin narrarlo. Los controles (de la tarjeta
+  del chat, del asistente o de un agente por MCP con `control_recorrido`) se aplican una vez cada uno. Por MCP,
+  `recorrido` exige la pantalla en off abierta (si no, 409 `sin_pantalla`), el avance se sigue con `estado` y uno que el
+  asistente armó en la pestaña del panel no se controla (409 `en_el_panel`: se maneja desde ahí).
 - **Pantalla completa.** «Ponla en pantalla completa» hace que la presentación llene la ventana, sin el menú ni las
   barras del panel. Escape la devuelve en esa pantalla hasta la próxima orden. La pantalla completa del navegador (sin
   la barra de direcciones) es F11 en ese equipo, o el navegador en modo quiosco: un navegador no deja que una página la
@@ -686,9 +706,8 @@ se suba.
   `postMessage` con el origen exacto (nunca `'*'`) y cada lado acepta solo mensajes de la otra ventana y de su origen,
   con una forma estricta: órdenes de una lista, capítulos y pasos que existen, nada de claves de más. El subtítulo se
   pinta como texto y su frase se rechaza (en la herramienta, en el navegador y en la presentación, con las mismas
-  reglas y sobre su forma NFKC) con caracteres que no se ven, «@» o números de 7 o más dígitos, también por grupos;
-  solo pasan un periodo, un rango de cifras de menor a mayor, una fecha que existe y un monto en pesos con su signo y
-  hasta 7 cifras enteras.
+  reglas y sobre su forma NFKC) con caracteres que no se ven, «@», números de 7 o más dígitos, también por grupos, o
+  costos; solo pasan un periodo, un rango de cifras de menor a mayor y una fecha que existe.
   El origen del panel que escribe `build_site.py` (de
   `PANEL_URL`) va como lo entrega el navegador, en minúsculas y sin «:443», y `mando.js` lo vuelve a normalizar: si
   no, la presentación diría «listo» y no aceptaría ninguna orden. El modo proyector se abre con un enlace (no con

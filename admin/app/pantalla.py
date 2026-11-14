@@ -13,11 +13,13 @@ sabe si hay una pantalla abierta (`conectada`).
 Y el recorrido narrado (`app/recorrido.py`): el último que armó un agente, con su destino (la vista de la pestaña o
 el proyector, o la pantalla en off: donde suena, en un solo lugar), el último control que le mandaron (`control_recorrido`,
 que la pantalla aplica una sola vez por número) y el avance que manda la página que lo reproduce (`progreso`, sin subir
-la versión). Mientras un recorrido no está cerrado, la base (capítulo, paso y lo visual) es su última escena; otra orden lo
-«colapsa» (`colapsar`): deja como base la escena que la sala está viendo y lo cierra.
+la versión). Mientras un recorrido no está cerrado, la base guardada (capítulo, paso y lo visual) es su última escena (la
+que queda al terminar), pero lo que la sala ve es la escena en curso (`a_la_vista`): de esa parten el contexto del
+asistente, el estado y las órdenes. Se cierra al terminar (un avance final: «fin», «error» o «detenido») o cuando otra
+orden lo «colapsa» (`colapsar`), y en los dos casos la base pasa a ser la escena donde iba.
 
 No guarda datos de personas: el guion de la propuesta es público y todo texto para la pantalla pasa antes por las reglas
-de lo que se proyecta (`app/proyectable.py`): sin «@» ni números de 7 o más dígitos (y los del recorrido, sin plata)."""
+de lo que se proyecta (`app/proyectable.py`): sin «@», números de 7 o más dígitos ni costos."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -45,6 +47,13 @@ CAMPOS = ("capitulo", "paso", "explicacion", "panel", "indice", "fichas", "compl
 VIVA_S = 10
 # Quién la cambió: el asistente del panel, un agente por MCP o los controles del panel (la tarjeta del recorrido)
 ORIGENES = ("asistente", "mcp", "panel")
+# Los «detenido» que no cierran el recorrido: el traspaso de la pestaña al proyector (sigue allá, con el mismo id) y el
+# reemplazo (la página empezó otro: si es el mismo id, es ese el que sigue)
+NO_CIERRAN = ("proyector", "reemplazo")
+# Cuánto dice el contexto que un recorrido terminó (o se cerró), y cuándo se da por abandonado uno que nunca terminó: un
+# recorrido dura a lo sumo 4 minutos, pero en pausa no llegan avances y una ronda de preguntas puede ser larga
+MOSTRAR_TERMINADO = timedelta(minutes=2)
+ABANDONADO = timedelta(minutes=30)
 _ID_PIEZA = re.compile(r"[a-z0-9_]{1,40}")   # un componente o una inmersión (`ID_PASO` del guion)
 
 
@@ -122,9 +131,12 @@ def conectada(doc: dict | None, ahora: datetime | None = None) -> bool:
 def para_pantalla(e: dict, doc: dict | None = None, guion: Any = None, ahora: datetime | None = None) -> dict:
     """Lo que recibe la pantalla: la versión y los campos y, si hay uno para ella (destino pantalla en off, sin cerrar),
     el recorrido con su edad (calculada aquí: el reloj del navegador puede estar corrido), el último control y el
-    avance con su antigüedad."""
-    out = {"v": e["v"], **{k: e[k] for k in CAMPOS}, "recorrido": None, "control_recorrido": None, "progreso": None}
+    avance con su antigüedad. Con uno que suena en la pestaña o el proyector (destino vista), los campos son los de su
+    escena en curso: una pantalla en off que se abre a mitad muestra lo que la sala ve, no la última escena."""
     r = recorrido_de(doc, guion) if guion is not None else None
+    if r and r["destino"] == "vista" and not r["cerrado"]:
+        e = estado(a_la_vista(doc, guion, r), guion)
+    out = {"v": e["v"], **{k: e[k] for k in CAMPOS}, "recorrido": None, "control_recorrido": None, "progreso": None}
     ahora = ahora or _ahora()
     if r and r["destino"] == "pantalla_off" and not r["cerrado"]:
         creado = _aware(r.get("creado")) or ahora
@@ -170,6 +182,21 @@ def escena_actual(doc: dict | None, r: dict) -> int:
     return n if isinstance(n, int) and 1 <= n <= len(r["escenas"]) else len(r["escenas"])
 
 
+def base_en_curso(doc: dict | None, r: dict) -> dict:
+    """Los campos de la pantalla en la escena del recorrido `r` que la sala está viendo (`escena_actual`)."""
+    return rec.estado_de_escena(r["escenas"][escena_actual(doc, r) - 1])
+
+
+def a_la_vista(doc: dict | None, guion: Any, r: dict | None = None) -> dict | None:
+    """El documento con la base que la sala está viendo: con un recorrido sin cerrar (`r`, o el guardado), la de su
+    escena en curso (la base guardada es la última escena, la que queda al terminar); si no, el mismo. Solo en memoria:
+    es lo que dicen el contexto del asistente y el estado, y de donde parte una orden (`colapsar` la escribe al cerrarlo)."""
+    r = r or recorrido_de(doc, guion)
+    if not doc or not r or r["cerrado"]:
+        return doc
+    return {**doc, **base_en_curso(doc, r)}
+
+
 def guardar_recorrido(db: Database, uid: int, absoluto: dict, destino: str, por: str) -> dict:
     """Guarda un recorrido nuevo (reemplaza al anterior), sin control ni avance, con la base en su última escena y sin
     explicación. Sube la versión."""
@@ -183,25 +210,30 @@ def guardar_recorrido(db: Database, uid: int, absoluto: dict, destino: str, por:
                        "$inc": {"v": 1}}, upsert=True, return_document=ReturnDocument.AFTER)
 
 
-def colapsar(db: Database, uid: int, guion: Any, por: str = "asistente") -> dict | None:
-    """Si hay un recorrido sin cerrar, lo cierra y deja como base la escena que la sala está viendo (la del último avance
-    o, sin avance, la última), sin explicación: así la orden que lo interrumpe parte de lo que se ve. Devuelve el
-    documento nuevo, o None si no había nada que cerrar."""
+def colapsar(db: Database, uid: int, guion: Any, por: str = "asistente", rid: str | None = None) -> dict | None:
+    """Si hay un recorrido sin cerrar (con `rid`, solo si es ese), lo cierra y deja como base la escena que la sala está
+    viendo (la del último avance o, sin avance, la última), sin explicación: así la orden que lo interrumpe parte de lo
+    que se ve. Devuelve el documento nuevo, o None si no había nada que cerrar. Con `rid`, uno que llegó entretanto (otro
+    agente armó otro recorrido) no se cierra por una orden que iba para el anterior; y la escritura solo vale sobre uno
+    todavía abierto."""
     doc = leer(db, uid)
     r = recorrido_de(doc, guion)
-    if not r or r["cerrado"]:
+    if not r or r["cerrado"] or (rid is not None and r["id"] != rid):
         return None
-    base = rec.estado_de_escena(r["escenas"][escena_actual(doc, r) - 1])
     return db.pantallas.find_one_and_update(
-        {"_id": uid, "recorrido.id": r["id"]},
-        {"$set": {**base, "recorrido.cerrado": True, "actualizada": _ahora(), "por": por}, "$inc": {"v": 1}},
+        {"_id": uid, "recorrido.id": r["id"], "recorrido.cerrado": False},
+        {"$set": {**base_en_curso(doc, r), "recorrido.cerrado": True, "actualizada": _ahora(), "por": por},
+         "$inc": {"v": 1}},
         return_document=ReturnDocument.AFTER)
 
 
 def guardar_progreso(db: Database, uid: int, p: dict) -> bool:
     """El avance que manda la página que reproduce (ya con su forma validada por la API): solo si es del recorrido
     guardado y sin cerrar, sin subir la versión (la pantalla no tiene nada nuevo que aplicar). Los avisos se juntan, sin
-    repetirse, hasta 8. Devuelve False si el recorrido no es ese."""
+    repetirse, hasta 8. Un avance final (`recorrido.TERMINALES`) además lo cierra, con la base en la escena donde quedó,
+    y sube la versión: así la pantalla en off que lo narró recibe lo que muestra, el contexto lo da por terminado y un
+    control o una orden posterior no lo toma por vivo. Salvo un «detenido» de NO_CIERRAN. Devuelve False si el recorrido
+    no es ese o ya está cerrado (la API responde 409 y la página que todavía lo reproduce lo detiene)."""
     doc = db.pantallas.find_one({"_id": uid}, {"recorrido": 1, "progreso": 1})
     r = (doc or {}).get("recorrido")
     if not isinstance(r, dict) or r.get("id") != p["rid"] or r.get("cerrado") is not False or \
@@ -213,15 +245,25 @@ def guardar_progreso(db: Database, uid: int, p: dict) -> bool:
     pr = {k: p[k] for k in ("rid", "n", "de", "fase", "frase", "voz") if k in p}
     if p.get("motivo"):
         pr["motivo"] = p["motivo"]
-    db.pantallas.update_one({"_id": uid, "recorrido.id": p["rid"]},
-                            {"$set": {"progreso": {**pr, "avisos": previos[-8:], "en": _ahora()}}})
-    return True
+    cambios: dict = {"$set": {"progreso": {**pr, "avisos": previos[-8:], "en": _ahora()}}}
+    if p["fase"] in rec.TERMINALES and not (p["fase"] == "detenido" and p.get("motivo") in NO_CIERRAN):
+        try:
+            base = rec.estado_de_escena(r["escenas"][p["n"] - 1])
+        except (KeyError, TypeError):   # alguien la tocó en la base: se cierra igual (`estado` corrige lo que no vale)
+            base = {}
+        cambios["$set"].update({**base, "recorrido.cerrado": True, "actualizada": _ahora()})
+        cambios["$inc"] = {"v": 1}
+    # Sobre uno todavía abierto: si entretanto lo cerró otra orden (o llegó otro), el avance ya no es de nadie
+    return db.pantallas.find_one_and_update({"_id": uid, "recorrido.id": p["rid"], "recorrido.cerrado": False},
+                                            cambios) is not None
 
 
 def controlar(db: Database, uid: int, guion: Any, accion: str, por: str, rid: str | None = None) -> dict:
     """Un control del recorrido (`recorrido.CONTROLES`): queda con su número (la pantalla aplica cada uno una sola vez)
     y sube la versión. «detener» además lo colapsa; «reproducir» lo vuelve a empezar con un id nuevo (también uno ya
-    cerrado). Devuelve {"recorrido", "doc"}; ValueError «sin_recorrido» si no hay uno (o `rid` no es el suyo)."""
+    cerrado, si es el último: «Volver a reproducir» de la tarjeta pasa por aquí y sigue al id nuevo). Devuelve
+    {"recorrido", "doc"}; ValueError «sin_recorrido» si no hay uno (o `rid` no es el suyo, o entre la lectura y la
+    escritura llegó otro)."""
     if accion not in rec.CONTROLES or por not in ORIGENES:
         raise ValueError("pantalla.controlar")
     doc = leer(db, uid)
@@ -235,24 +277,39 @@ def controlar(db: Database, uid: int, guion: Any, accion: str, por: str, rid: st
     n = ((doc or {}).get("control_recorrido") or {}).get("n")
     n = n + 1 if isinstance(n, int) and not isinstance(n, bool) else 1
     doc = db.pantallas.find_one_and_update(
-        {"_id": uid, "recorrido.id": r["id"]},
-        {"$set": {"control_recorrido": {"accion": accion, "n": n, "rid": r["id"]}, "actualizada": _ahora(), "por": por},
+        {"_id": uid, "recorrido.id": r["id"], "recorrido.cerrado": False},
+        {"$set": {"control_recorrido": {"accion": accion, "n": n, "rid": r["id"], "en": _ahora()},
+                  "actualizada": _ahora(), "por": por},
          "$inc": {"v": 1}}, return_document=ReturnDocument.AFTER)
+    if doc is None:   # entre la lectura y la escritura llegó otro recorrido (o este se cerró): el control no era para él
+        raise ValueError("sin_recorrido")
     if accion == "detener":
-        doc = colapsar(db, uid, guion, por) or doc
+        doc = colapsar(db, uid, guion, por, rid=r["id"]) or doc
     return {"recorrido": recorrido_de(doc, guion), "doc": doc}
 
 
 def resumen_recorrido(doc: dict | None, guion: Any, ahora: datetime | None = None) -> dict | None:
-    """Dónde va el recorrido para el modelo (`estado`, el contexto del panel): None si no hay uno o si está cerrado
-    desde hace más de 2 minutos."""
+    """Dónde va el recorrido para el modelo (`estado`, el contexto del panel): None si no hay uno, si terminó o se cerró
+    hace más de MOSTRAR_TERMINADO o si quedó abandonado (sin avance ni control en ABANDONADO: la página que lo
+    reproducía se cerró, o nunca sonó). Así el contexto no le dice al modelo, días después, que siga con uno que nadie oye."""
     r = recorrido_de(doc, guion)
     if not r:
         return None
     pr = progreso_de(doc, r) or {}
     ahora = ahora or _ahora()
     en = _aware(pr.get("en"))
-    if r["cerrado"] and (not en or ahora - en > timedelta(minutes=2)):
+    final = r["cerrado"] or pr.get("fase") in rec.TERMINALES
+    if final and (not en or ahora - en > MOSTRAR_TERMINADO):
+        return None
+    # Lo último que pasó: un avance, la creación o un control de ESTE recorrido (tras una pausa larga, «continuar» lo
+    # revive antes de que llegue el avance del que lo reproduce). Otra escritura de la pantalla (la pantalla completa)
+    # no cuenta: reviviría para el modelo uno que nadie oye. En pausa con la pantalla en off abierta no hay abandono:
+    # la sala lo tiene delante, aunque en pausa no lleguen avances
+    c = (doc or {}).get("control_recorrido")
+    control = _aware(c.get("en")) if isinstance(c, dict) and c.get("rid") == r["id"] else None
+    vivo = max((t for t in (en, _aware(r.get("creado")), control) if t), default=ahora)
+    en_pausa_viva = r["destino"] == "pantalla_off" and pr.get("fase") == "pausa" and conectada(doc, ahora)
+    if not final and not en_pausa_viva and ahora - vivo > ABANDONADO:
         return None
     n = escena_actual(doc, r)
     esc = r["escenas"][n - 1]
@@ -286,6 +343,8 @@ def describir_recorrido(x: dict | None) -> str:
         t += f"; voz: {x['voz'].replace('_', ' ')}"
     if x["avisos"]:
         t += "; avisos: " + ", ".join(f"escena {a['n']}, {AVISO.get(a['tipo'], a['tipo'])}" for a in x["avisos"][:4])
+    if isinstance(x.get("hace_s"), int) and x["hace_s"] >= 60:   # en pausa es normal; si no, quizá ya nadie lo oye
+        t += f"; el último avance llegó hace {x['hace_s'] // 60} min"
     return t
 
 
