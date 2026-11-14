@@ -227,6 +227,13 @@ const P = {
   reloj: '<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm0-13.5V12l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   abajo: '<path d="M12 5v14m0 0-6-6m6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
   info: '<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm0-10v5.5m0-8.6v.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  // lo que hace cada paso del plan guiado con la maqueta (los chips de la tarjeta del chat: `HACE` de agente-recorrido.js)
+  capas: '<path d="m12 3.5 9 4.5-9 4.5L3 8zM3 12.5 12 17l9-4.5M3 16.5 12 21l9-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  aislar: '<rect x="8.5" y="8.5" width="7" height="7" rx="1.5"/><path d="M4 8.5V4h4.5M15.5 4H20v4.5M20 15.5V20h-4.5M8.5 20H4v-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  partes: '<path d="M5 13h14v7H5zM4 8.5l8-4.5 8 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  recorrer: '<circle cx="5" cy="18" r="2.2"/><path d="M8 17c3.5-.6 3.6-3.6 5.5-6.4 1.4-2 3.3-3.3 6-3.6M16.5 3.8 20 7l-3.5 3.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  mirar: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3"/>',
+  animar: '<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 8.3v7.4a.5.5 0 0 0 .8.4l5-3.7a.5.5 0 0 0 0-.8l-5-3.7a.5.5 0 0 0-.8.4z"/>',
 };
 // Los íconos salen de la tabla P (texto fijo de este archivo): por eso se marcan como HTML sin pasar por `crudo`
 export const icono = (n) => new Crudo(`<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${P[n] || ''}</svg>`);

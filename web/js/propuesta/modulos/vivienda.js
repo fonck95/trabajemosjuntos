@@ -136,6 +136,8 @@ export async function crear(esc, datos, cap) {
     completo: ['viv.nueva', 'viv.mejoramiento'],
     salir: () => gris(false),
     alCompleto: () => gris(false),
+    // estados que una pieza del catálogo puede pedir (visual.js): las cubiertas del pueblo en gris, para que se lean los techos a mejorar
+    efectos: { gris },
     pasos: {
       portadilla: { capas: [], antes: () => gris(false), vista: vistaCasco },
       componentes: { capas: ['viv.nueva', 'viv.mejoramiento'], antes: () => gris(true), vista: vistaCasco },

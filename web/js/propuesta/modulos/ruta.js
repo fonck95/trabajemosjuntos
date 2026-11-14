@@ -6,7 +6,8 @@ export function crear(esc, datos) {
   const pts = [...pinesDe(datos).map(({ x, y }) => [x, y]).filter(([x, y]) => Math.hypot(x, y) < 1500), [-650, -420], [700, -420], [700, 760], [-650, 760]];
   let girando = false;
   esc.st.onFrame(() => {
-    const on = girando && !esc.st.flying && !esc.st.userMoved;
+    // con una narración en pantalla (esc.guiado) o un paseo de la cámara, el giro lo lleva el plan: aquí no se gira
+    const on = girando && !esc.st.flying && !esc.st.userMoved && !esc.guiado && !esc.st.paseo;
     esc.st.controls.autoRotate = on; esc.st.controls.autoRotateSpeed = 0.35;
     return on;
   });

@@ -114,28 +114,32 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
         lineas.append(f"- {frase[0].upper()}{frase[1:]}. Luego di en una frase qué quedó en pantalla.")
     if "presentacion" in nombres:
         lineas += [
-            "- Presentar la propuesta (presentación técnica: lo que se construye, sin costos). Cuando te pidan mostrar o "
-            "explicar algo («explícanos la torre», «muéstranos el agua»), presenta como una persona en una sala, con un "
-            "recorrido narrado: 1) si no tienes los datos de ese capítulo, en UNA misma ronda pide `presentacion` op "
-            "`guion` del capítulo e `ir` al paso donde empiezas (la sala ya ve el tema mientras preparas); 2) UNA llamada "
-            "`recorrido` con 3 a 6 escenas y un `cierre`; 3) en el chat, antes, una línea con qué se va a ver; después, "
-            "un complemento de 3 a 6 líneas que NO repita la narración (datos del guion que no se dijeron) y termine con "
-            "una pregunta.",
-            "- El arco de un recorrido (omite lo que no aplique): ubicar (el paso, cámara aerea u oblicua); cómo está hoy "
-            "(comparar hoy o la inmersión de hoy); qué se construye (comparar proyecto, enfoque, resaltar la leyenda); "
-            "cómo funciona o el dato clave (detalle con la especificación resaltada, una inmersión, un punto de la "
-            "lista); qué cambia y cuándo (la meta o la cifra resaltada); y el cierre con 2 o 3 ideas.",
-            "- La narración de cada escena: una idea, una o dos frases habladas (90 a 200 caracteres), en presente, sin "
-            "listas ni paréntesis, sobre lo que la escena muestra en ese momento («Aquí ven…», «Fíjense en la fila de "
-            "estructura…»), y resalta en la misma escena lo que nombras. Cifras solo del guion, tal como vienen; nunca "
-            "costos, datos de habitantes, «@» ni números de 7 o más dígitos. Uno o dos cambios visuales por escena, con "
-            "intención: aérea para ubicar, oblicua para el edificio, hoy y proyecto para el contraste; sin girar ni "
-            "enfocar en todas.",
-            "- `ir`, `visual` y `explicar` sueltos son para pedidos puntuales («pasa al siguiente», «vista aérea», «abre "
-            "la ficha del matadero»): detienen el recorrido que esté sonando. Si la persona escribe durante un recorrido, "
-            "queda en pausa (lo dice el contexto): responde breve y sigue con `control_recorrido` (continuar), o arma un "
-            "recorrido corto. Si el contexto dice que hay una pantalla en off abierta, la sala ve esa: no la muevas por tu "
-            "cuenta.",
+            "- Presentar la propuesta (presentación técnica: lo que se construye, sin costos). PLAN PRIMERO: cuando te "
+            "pidan mostrar o explicar algo («explícanos la torre», «muéstranos el agua»), no lo cuentes en el chat ni "
+            "muevas la pantalla orden por orden: arma un plan y deja que la pantalla lo ejecute paso a paso, mostrando "
+            "MIENTRAS explica. 1) Si no tienes los datos de ese capítulo, pide `presentacion` op `guion` (sus pasos, sus "
+            "fichas, las piezas de la maqueta y los modelos del atlas). 2) UNA llamada `recorrido` con el plan: `titulo`, "
+            "de 6 a 10 `pasos` (hasta 12) y un `cierre`. 3) En el chat, ANTES de esa llamada, una sola línea que anuncia "
+            "el plan («Les muestro la torre en ocho pasos: dónde va, cómo está hoy, qué se construye y cómo resiste un "
+            "sismo»); DESPUÉS, solo una pregunta corta. La explicación ES la narración del plan: no la repitas ni la "
+            "resumas en el chat.",
+            "- Cada paso del plan es UNA frase hablada (`dice`: corta, en presente, sin listas ni paréntesis: «Aquí "
+            "ven…», «Fíjense en…») y algo que ocurre en pantalla MIENTRAS se dice, para que la sala vea lo que nombras "
+            "en ese momento: la cámara (`camara` aerea u oblicua, `rumbo`, `elevacion`, `zoom`, `mirar` una pieza, o un "
+            "viaje con `mover`: rodear la obra, acercarse, subir), las piezas de la maqueta (`aislar` una obra, "
+            "`mostrar`, `ocultar`, quitarle partes con `sin`: «torre.cubierta» deja ver las losas), `enfoque`, la ficha "
+            "(`detalle`) con la especificación resaltada, `comparar` hoy y proyecto, un modelo del atlas (`inmersion`), "
+            "`animar`, y `resaltar` la cifra o el punto que nombras. Cada paso parte del anterior: di solo lo que "
+            "cambia. Un arco que sirve: ubicar con una vista amplia; cómo está hoy; qué se construye, pieza por pieza; "
+            "cómo funciona o el dato clave; qué cambia y cuándo; y el cierre con 2 o 3 ideas.",
+            "- Cifras solo del guion, tal como vienen; en pantalla nunca costos, datos de habitantes, «@» ni números de "
+            "7 o más dígitos. Usa los ids del guion (pasos, componentes, piezas, partes, modelos): lo opcional que no "
+            "exista se descarta con un aviso y el plan corre igual; no lo mandes otra vez por un aviso.",
+            "- `ir`, `visual` y `explicar` sueltos son para pedidos puntuales («pasa al siguiente», «vista aérea», "
+            "«quítale la cubierta», «abre la ficha del matadero»): detienen el plan que esté en curso. Si la persona "
+            "escribe durante un plan, queda en pausa (lo dice el contexto): responde breve y sigue con "
+            "`control_recorrido` (continuar), o arma un plan corto. Si el contexto dice que hay una pantalla en off "
+            "abierta, la sala ve esa: no la muevas por tu cuenta.",
         ]
     lineas.append("- Enlaza a las personas y reuniones que nombres: [Nombre](/personas/123), [Reunión](/reuniones/45). "
                   "Solo rutas internas del panel.")
@@ -298,7 +302,8 @@ def _presentacion(p: Any, guion: Any) -> str:
 
 
 def recorrido_del_contexto(db: Any, uid: Any) -> str:
-    """Dónde va el recorrido narrado de la persona, si hay uno sonando o terminó hace poco (`pantalla.resumen_recorrido`:
+    """Dónde va el plan guiado de la persona (el recorrido narrado: «Plan «…» en la pestaña…: paso 3 de 8 del plan,
+    narrando»), si hay uno sonando o terminó hace poco (`pantalla.resumen_recorrido`:
     uno terminado hace más de 2 minutos o abandonado hace media hora ya no se nombra; el título sale de la base, nunca
     del navegador), o «» (correr con `run_in_threadpool`)."""
     if not isinstance(uid, int) or isinstance(uid, bool):

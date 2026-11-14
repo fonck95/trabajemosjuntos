@@ -4,8 +4,12 @@ televisor o la misma pestaña.
 
 Cada usuario tiene una (`pantallas`, _id = uid; 0 el administrador): el capítulo y el paso, la explicación en pantalla,
 lo que se ve (el panel de texto o «Solo 3D», el índice, las fichas), si llena la ventana y lo visual de la presentación
-técnica (`VISUAL`: la cámara, la obra enfocada, hoy o con el proyecto, la ficha técnica abierta, la inmersión en un
-modelo del atlas y el tema). Al cambiar de paso lo visual vuelve a lo del paso, salvo el tema. Solo la cambian las órdenes de
+técnica (`VISUAL`: la cámara con su encuadre, su rumbo, su elevación, su acercamiento y a qué apunta, la obra enfocada,
+hoy o con el proyecto, la ficha técnica abierta, la inmersión en un modelo del atlas, las piezas de la maqueta que se
+muestran, se ocultan o se aíslan, las partes que se les quitan y el tema). Al cambiar de paso lo visual vuelve a lo del
+paso, salvo el tema. Y dos acciones que NO son estado (`ACCIONES`): `mover` (el viaje de la cámara que pidió la última
+orden `visual`) y `animar` (repetir la animación del paso); la pantalla las hace una vez y cualquier otra orden, un
+cambio de paso o el cierre de un recorrido las deja en nada. Solo la cambian las órdenes de
 un agente: lo que se toca a mano en la vista del panel no la mueve. La versión `v` sube con cada cambio; la pantalla
 pregunta cada poco por ella (`GET /api/pantalla?v=`) y aplica solo lo nuevo. Cada pregunta deja `visto`: así un agente
 sabe si hay una pantalla abierta (`conectada`).
@@ -37,11 +41,18 @@ from . import recorrido as rec
 # pantalla completa (aunque `completa` no cambie): la pantalla que la devolvió con Escape vuelve a llenar la ventana
 # Lo visual de la presentación técnica (la op `visual` de la herramienta, la orden `visual` de mando.js), con lo que vale
 # en cada paso. El tema no vuelve al cambiar de paso: None es «el del navegador»
-VISUAL_INICIAL = {"enfoque": None, "camara": "paso", "rumbo": None, "girar": False, "comparar": "proyecto",
-                  "detalle": None, "inmersion": None}
+# (las mismas claves, en el mismo orden, en `VISUAL` de app/recorrido.py, de mando.js y del puente: una prueba las
+# compara. Las listas de VISUAL_INICIAL no se tocan: `visual_inicial()` da una copia con las suyas)
+VISUAL_INICIAL = {"enfoque": None, "camara": "paso", "rumbo": None, "elevacion": None, "zoom": None, "mirar": None,
+                  "girar": False, "comparar": "proyecto", "detalle": None, "inmersion": None, "mostrar": [],
+                  "ocultar": [], "aislar": None, "sin": []}
 VISUAL = (*VISUAL_INICIAL, "tema")
 CAMARAS = ("paso", "aerea", "oblicua", "rasante", "cerca", "lejos")
-CAMPOS = ("capitulo", "paso", "explicacion", "panel", "indice", "fichas", "completa", "orden_completa", *VISUAL)
+# Lo que no es estado: el movimiento de la cámara y la animación del paso que pidió la última orden `visual`
+ACCIONES_INICIALES = {"mover": None, "animar": False}
+ACCIONES = tuple(ACCIONES_INICIALES)
+CAMPOS = ("capitulo", "paso", "explicacion", "panel", "indice", "fichas", "completa", "orden_completa", *VISUAL,
+          *ACCIONES)
 # Una pantalla pregunta cada 1,5 s (vistas/presentacion.js): sin preguntas en este tiempo, se da por cerrada. Holgado: un
 # navegador espacia los relojes de una pestaña que no está a la vista
 VIVA_S = 10
@@ -51,7 +62,7 @@ ORIGENES = ("asistente", "mcp", "panel")
 # reemplazo (la página empezó otro: si es el mismo id, es ese el que sigue)
 NO_CIERRAN = ("proyector", "reemplazo")
 # Cuánto dice el contexto que un recorrido terminó (o se cerró), y cuándo se da por abandonado uno que nunca terminó: un
-# recorrido dura a lo sumo 4 minutos, pero en pausa no llegan avances y una ronda de preguntas puede ser larga
+# recorrido dura a lo sumo 5 minutos, pero en pausa no llegan avances y una ronda de preguntas puede ser larga
 MOSTRAR_TERMINADO = timedelta(minutes=2)
 ABANDONADO = timedelta(minutes=30)
 _ID_PIEZA = re.compile(r"[a-z0-9_]{1,40}")   # un componente o una inmersión (`ID_PASO` del guion)
@@ -67,10 +78,16 @@ def _aware(t: Any) -> datetime | None:
     return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
 
 
+def visual_inicial() -> dict:
+    """Lo visual de un paso recién abierto (sin el tema, que no vuelve), con sus listas propias."""
+    return rec.copia_visual(VISUAL_INICIAL)
+
+
 def inicial(guion: Any) -> dict:
     """La pantalla antes de la primera orden: la portada, con el panel de texto y sin llenar la ventana."""
     return {"capitulo": guion.capitulos[0]["id"], "paso": 1, "explicacion": None, "panel": True, "indice": False,
-            "fichas": False, "completa": False, "orden_completa": 0, **VISUAL_INICIAL, "tema": None}
+            "fichas": False, "completa": False, "orden_completa": 0, **visual_inicial(), "tema": None,
+            **ACCIONES_INICIALES}
 
 
 def estado(doc: dict | None, guion: Any) -> dict:
@@ -85,7 +102,7 @@ def estado(doc: dict | None, guion: Any) -> dict:
     if ci is None or isinstance(paso, bool) or not isinstance(paso, int) or \
             not 1 <= paso <= len(guion.capitulos[ci]["pasos"]):
         base = inicial(guion)
-        e.update(capitulo=base["capitulo"], paso=1, explicacion=None, **VISUAL_INICIAL)
+        e.update(capitulo=base["capitulo"], paso=1, explicacion=None, **visual_inicial(), **ACCIONES_INICIALES)
     for k in ("panel", "indice", "fichas", "completa"):
         e[k] = e[k] is True if k != "panel" else e[k] is not False
     if not isinstance(e["explicacion"], str) or not e["explicacion"]:
@@ -101,25 +118,42 @@ def _id_pieza(v: Any) -> bool:
     return isinstance(v, str) and bool(_ID_PIEZA.fullmatch(v))
 
 
+def _entero(v: Any, lo: int, hi: int) -> bool:
+    return isinstance(v, int) and not isinstance(v, bool) and lo <= v <= hi
+
+
 def _visual_valido(e: dict, guion: Any) -> None:
-    """Lo visual guardado, con los valores que admite la presentación: lo que no cumple (o un componente que ya no
-    está en el capítulo, una inmersión que ya no está en el catálogo, si el guion cambió) vuelve a lo del paso."""
+    """Lo visual guardado, con los valores que admite la presentación: lo que no cumple (o un componente o una pieza de
+    la maqueta que ya no está en el capítulo, una inmersión que ya no está en el catálogo, si el guion cambió) vuelve a
+    lo del paso; de una lista (mostrar, ocultar, sin) solo se va lo que no vale. Y las dos acciones, con su forma."""
     ci = guion.por_id(e["capitulo"])
     ids = {x["id"] for x in guion.capitulos[ci].get("componentes") or []} if ci is not None else set()
     lugar = {x["id"] for x in guion.capitulos[ci].get("componentes") or [] if x.get("enfoque")} if ci is not None else set()
+    piezas = {x["id"]: {p["id"] for p in x["partes"]} for x in guion.piezas(ci)} if ci is not None else {}
     inm = {i["id"] for i in getattr(guion, "inmersiones", ()) or ()} | {"maqueta"}
+    for k in rec.LISTAS:
+        vale = (lambda x: _id_pieza(x) and x in piezas) if k != "sin" else \
+            (lambda x: isinstance(x, str) and bool(rec.ID_PARTE.fullmatch(x))
+             and x.split(".")[1] in piezas.get(x.split(".")[0], ()))
+        e[k] = list(dict.fromkeys(x for x in e[k] if vale(x)))[:rec.MAX_LISTA] if isinstance(e[k], list) else []
     buenos = {"enfoque": e["enfoque"] is None or (_id_pieza(e["enfoque"]) and e["enfoque"] in lugar),
               "detalle": e["detalle"] is None or (_id_pieza(e["detalle"]) and e["detalle"] in ids),
               "inmersion": e["inmersion"] is None or (_id_pieza(e["inmersion"]) and e["inmersion"] in inm),
               "camara": e["camara"] in CAMARAS,
-              "rumbo": e["rumbo"] is None or (isinstance(e["rumbo"], int) and not isinstance(e["rumbo"], bool)
-                                              and 0 <= e["rumbo"] <= 359),
+              "rumbo": e["rumbo"] is None or _entero(e["rumbo"], 0, 359),
+              "elevacion": e["elevacion"] is None or _entero(e["elevacion"], *rec.ELEVACION),
+              "zoom": e["zoom"] is None or rec.zoom_valido(e["zoom"]),
+              "mirar": e["mirar"] is None or (_id_pieza(e["mirar"]) and (e["mirar"] in piezas or e["mirar"] in lugar)),
+              "aislar": e["aislar"] is None or (_id_pieza(e["aislar"]) and e["aislar"] in piezas),
               "girar": isinstance(e["girar"], bool), "comparar": e["comparar"] in ("hoy", "proyecto")}
     for k, bien in buenos.items():
         if not bien:
             e[k] = VISUAL_INICIAL[k]
     if e["tema"] not in (None, "claro", "oscuro"):
         e["tema"] = None
+    if e["mover"] is not None and not rec.mover_valido(e["mover"]):
+        e["mover"] = None
+    e["animar"] = e["animar"] is True
 
 
 def conectada(doc: dict | None, ahora: datetime | None = None) -> bool:
@@ -161,7 +195,8 @@ def recorrido_de(doc: dict | None, guion: Any) -> dict | None:
     r = (doc or {}).get("recorrido")
     if not isinstance(r, dict) or r.get("destino") not in rec.DESTINOS or not isinstance(r.get("cerrado"), bool):
         return None
-    absoluto = {k: r.get(k) for k in ("id", "titulo", "escenas", "cierre")}
+    # (`al_dia`: uno guardado antes del plan guiado, con lo que le falta en lo del paso)
+    absoluto = rec.al_dia({k: r.get(k) for k in ("id", "titulo", "escenas", "cierre")})
     if rec.validar(absoluto, guion):
         return None
     return {**absoluto, "destino": r["destino"], "cerrado": r["cerrado"], "creado": r.get("creado")}
@@ -248,7 +283,7 @@ def guardar_progreso(db: Database, uid: int, p: dict) -> bool:
     cambios: dict = {"$set": {"progreso": {**pr, "avisos": previos[-8:], "en": _ahora()}}}
     if p["fase"] in rec.TERMINALES and not (p["fase"] == "detenido" and p.get("motivo") in NO_CIERRAN):
         try:
-            base = rec.estado_de_escena(r["escenas"][p["n"] - 1])
+            base = rec.estado_de_escena(rec.al_dia(r)["escenas"][p["n"] - 1])
         except (KeyError, TypeError):   # alguien la tocó en la base: se cierra igual (`estado` corrige lo que no vale)
             base = {}
         cambios["$set"].update({**base, "recorrido.cerrado": True, "actualizada": _ahora()})
@@ -328,21 +363,24 @@ FASE = {"preparando": "preparando la imagen", "narrando": "narrando", "sostenien
         "sin_avance": "sin avance todavía"}
 DONDE = {"vista": "en la pestaña o el proyector", "pantalla_off": "en la pantalla en off"}
 AVISO = {"atlas": "el modelo del atlas no cargó", "resaltar": "no encontró lo que resaltar",
-         "asiento": "la imagen tardó en asentarse", "voz": "la voz no pudo hablar"}
+         "asiento": "la imagen tardó en asentarse", "voz": "la voz no pudo hablar",
+         "parcial": "parte de lo pedido no se pudo mostrar"}
 
 
 def describir_recorrido(x: dict | None) -> str:
-    """«Recorrido «La torre del hospital» en la pantalla en off: escena 3 de 6, narrando; voz: activa; avisos: escena 5,
-    el modelo del atlas no cargó» (`resumen_recorrido`), o «»."""
+    """«Plan «La torre del hospital» en la pantalla en off: paso 3 de 6 del plan, narrando; voz: activa; avisos: paso 5,
+    el modelo del atlas no cargó» (`resumen_recorrido`), o «». Para el modelo y la persona es un plan con pasos («del
+    plan»: el paso del capítulo es otro y va en la línea de la presentación)."""
     if not x:
         return ""
-    t = f"Recorrido «{x['titulo']}» {DONDE[x['destino']]}: escena {x['escena']} de {x['de']}, {FASE.get(x['fase'], x['fase'])}"
+    t = (f"Plan «{x['titulo']}» {DONDE[x['destino']]}: paso {x['escena']} de {x['de']} del plan, "
+         f"{FASE.get(x['fase'], x['fase'])}")
     if x.get("motivo") == "mensaje" and x["fase"] == "pausa":
         t += " porque la persona escribió"
     if x.get("voz"):
         t += f"; voz: {x['voz'].replace('_', ' ')}"
     if x["avisos"]:
-        t += "; avisos: " + ", ".join(f"escena {a['n']}, {AVISO.get(a['tipo'], a['tipo'])}" for a in x["avisos"][:4])
+        t += "; avisos: " + ", ".join(f"paso {a['n']}, {AVISO.get(a['tipo'], a['tipo'])}" for a in x["avisos"][:4])
     if isinstance(x.get("hace_s"), int) and x["hace_s"] >= 60:   # en pausa es normal; si no, quizá ya nadie lo oye
         t += f"; el último avance llegó hace {x['hace_s'] // 60} min"
     return t
@@ -397,8 +435,26 @@ def describir(e: dict, guion: Any) -> str:
         partes.append(f"la ficha técnica de «{nombres.get(e['detalle'], e['detalle'])}» ({e['detalle']})")
     if e.get("comparar") == "hoy":
         partes.append("el sitio como está hoy (sin el proyecto)")
+    piezas = {x["id"]: x for x in guion.piezas(ci)}
+    nombre = lambda i: piezas[i]["nombre"] if i in piezas else nombres.get(i, i)   # noqa: E731
+
+    def parte(i: str) -> str:
+        pieza, _, pid = i.partition(".")
+        suya = next((p["nombre"] for p in (piezas.get(pieza) or {}).get("partes", []) if p["id"] == pid), pid)
+        return f"{suya} de «{nombre(pieza)}» ({i})"
+    if e.get("aislar"):
+        partes.append(f"solo se ve «{nombre(e['aislar'])}» ({e['aislar']}), el resto apagado o en gris")
+    if e.get("mostrar"):
+        partes.append("además muestra " + ", ".join(f"«{nombre(i)}» ({i})" for i in e["mostrar"]))
+    if e.get("ocultar"):
+        partes.append("oculta " + ", ".join(f"«{nombre(i)}» ({i})" for i in e["ocultar"]))
+    if e.get("sin"):
+        partes.append("sin " + ", ".join(parte(i) for i in e["sin"]))
     camara = [x for x in (f"vista {e['camara']}" if e.get("camara") not in (None, "paso") else "",
                           f"mirando desde el rumbo {e['rumbo']}°" if e.get("rumbo") is not None else "",
+                          f"a {e['elevacion']}° sobre el horizonte" if e.get("elevacion") is not None else "",
+                          f"zoom {e['zoom']:g}" if e.get("zoom") is not None else "",
+                          f"apunta a «{nombre(e['mirar'])}» ({e['mirar']})" if e.get("mirar") else "",
                           "girando" if e.get("girar") else "") if x]
     if camara:
         partes.append("cámara: " + ", ".join(camara))

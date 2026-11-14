@@ -10,7 +10,13 @@ revisión del recorrido encontró y que test_recorrido.py no cubre.
   mantiene mientras la primera escena se prepara.
 * La voz, con una síntesis falsa: `partes` nunca deja una parte de más de PARTIR caracteres (tampoco con una «, »
   pegada a un extremo, sin comas, sin espacios o con lo que crece al decirse); `gesto()` la activa si la preferencia
-  está encendida, y `soltar()` quita los oyentes de la ventana y de la síntesis y calla.
+  está encendida, y `soltar()` quita los oyentes de la ventana y de la síntesis y calla. Está encendida por omisión:
+  sin preferencia guardada (o sin poder leerla) queda a un gesto de sonar, y si la persona ya había tocado la página
+  cuando la vista se abre, suena sin más; apagada solo si la persona la apagó.
+
+Los tiempos son los del plan guiado (la escena ya no espera a que la imagen se asiente: responde y, tras el respiro,
+suena): `sostener_ms` de las escenas de prueba es SOSTENER_MS (1300). `ms`, `previa` y el aviso `parcial` se prueban en
+test_plan_guiado.py.
 """
 import json
 import subprocess
@@ -35,7 +41,7 @@ def _node(tmp_path: Path, guion: str, *args: str) -> dict:
 
 
 NODE_REPRODUCTOR = r"""
-const { crearReproductor, lecturaMs, ENTRE_FRASES_MS, RESPIRO_MS, CIERRE_SOSTENER_MS, TICK_MS } = await import(process.argv[2]);
+const { crearReproductor, lecturaMs, ENTRE_FRASES_MS, RESPIRO_MS, SOSTENER_MS, CIERRE_SOSTENER_MS, TICK_MS } = await import(process.argv[2]);
 function relojFalso() {
   let t = 0, id = 0; const cola = new Map();
   return { ahora: () => t, programar(f, ms) { const h = ++id; cola.set(h, { f, en: t + ms }); return h; }, cancelar(h) { cola.delete(h); },
@@ -52,8 +58,10 @@ function vozManual() {
     terminar(res = 'dicha') { const p = v.pendiente; v.pendiente = null; p?.ok(res); } };
   return v;
 }
-const V = { enfoque: null, camara: 'paso', rumbo: null, girar: false, comparar: 'proyecto', detalle: null, inmersion: null };
-const esc = (paso, frases) => ({ capitulo: 'salud', paso, panel: true, visual: V, resaltar: null, frases, sostener_ms: 1100 });
+const V = { enfoque: null, camara: 'paso', rumbo: null, elevacion: null, zoom: null, mirar: null, girar: false, comparar: 'proyecto',
+  detalle: null, inmersion: null, mostrar: [], ocultar: [], aislar: null, sin: [] };
+const esc = (paso, frases) => ({ capitulo: 'salud', paso, panel: true, visual: V, resaltar: null, mover: null, animar: false, frases,
+  sostener_ms: SOSTENER_MS });
 const rec = (id, { cierre = { puntos: ['Uno', 'Dos'] }, escenas } = {}) => ({ id: id.repeat(12), titulo: 'Prueba', cierre,
   escenas: escenas || [esc(1, ['Frase uno.', 'Frase dos.']), esc(2, ['Frase tres.']), esc(3, ['Frase cuatro.'])] });
 const nombre = (o) => o.orden + (o.orden === 'escena' ? ':' + o.n : o.frase !== undefined ? ':f' + o.frase
@@ -65,7 +73,22 @@ function armar({ respuesta = () => ({ ok: true }), voz } = {}) {
     avisar: (p) => avances.push(`${p.rid[0]}${p.n}/${p.fase}${p.frase ? ':' + p.frase : ''}${p.motivo ? '!' + p.motivo : ''}${p.aviso ? '?' + p.aviso : ''}`) });
   return { reloj, ordenes, avances, rep };
 }
-const out = {};
+const out = { tiempos: { RESPIRO_MS, ENTRE_FRASES_MS, SOSTENER_MS, CIERRE_SOSTENER_MS } };
+
+// 0. El ritmo de una escena, sin voz: responde la orden, el respiro, cada frase su lectura con la pausa entre ellas, lo
+// que se sostiene y la siguiente. Ya no hay espera de asiento: nada más se suma
+{
+  const { reloj, ordenes, rep } = armar();
+  rep.iniciar(rec('z', { cierre: null }));
+  const marcas = {};
+  const hasta = async (orden, tope) => { while (!ordenes.includes(orden) && reloj.ahora() < tope) await reloj.avanzar(10); return reloj.ahora(); };
+  await reloj.avanzar(1);
+  marcas.escena = ordenes.slice();
+  marcas.primera = await hasta('narracion:f0', 20000);
+  marcas.segunda = await hasta('narracion:f1', 20000);
+  marcas.siguiente = await hasta('escena:2', 20000);
+  out.ritmo = marcas;
+}
 
 // 1. La persona mueve la imagen con la pausa ya puesta (un botón, el chat): al seguir, la escena vuelve
 for (const [clave, pausar] of [['persona_boton', (rep) => rep.pausar('boton')],
@@ -177,7 +200,7 @@ async function hastaElResumen() {
   await a.reloj.avanzar(RESPIRO_MS + 50);
   voz.empezar();
   voz.terminar('dicha');
-  await a.reloj.avanzar(1100 + 50);   // sostener_ms
+  await a.reloj.avanzar(SOSTENER_MS + 50);   // sostener_ms
   return { ...a, voz };
 }
 {
@@ -252,6 +275,13 @@ console.log(JSON.stringify(out));
 @requiere_node
 def test_el_reproductor_pausa_reemplazo_voz_que_falla_y_cierre(tmp_path):
     r = _node(tmp_path, NODE_REPRODUCTOR, REPRODUCTOR_JS.as_uri())
+    # Los tiempos del plan guiado y el ritmo de una escena sin voz: el respiro (350), la lectura de cada frase (3200) con
+    # 250 entre ellas, lo que se sostiene (1300) y la escena siguiente. Sin espera de asiento
+    assert r["tiempos"] == {"RESPIRO_MS": 350, "ENTRE_FRASES_MS": 250, "SOSTENER_MS": 1300, "CIERRE_SOSTENER_MS": 4000}
+    ritmo = r["ritmo"]
+    assert ritmo["escena"] == ["escena:1"], ritmo
+    assert 350 <= ritmo["primera"] <= 370 and 350 + 3200 + 250 <= ritmo["segunda"] <= 350 + 3200 + 250 + 20, ritmo
+    assert 350 + 2 * 3200 + 250 + 1300 <= ritmo["siguiente"] <= 350 + 2 * 3200 + 250 + 1300 + 20, ritmo
     # La persona movió la imagen con la pausa puesta: el motivo pasa a «persona» (una vez) y al seguir vuelve la escena
     b = r["persona_boton"]
     assert b["motivo"] == "a1/pausa!boton" and b["devuelve"] is True and b["avisos"] == 1
@@ -353,6 +383,30 @@ const apagada = V.crearVoz({ ventana, almacen: { getItem: () => '0', setItem() {
 apagada.gesto();
 out.gesto_apagada = apagada.estado();
 apagada.soltar();
+// Encendida por omisión: sin preferencia guardada, o sin poder leerla, queda a un gesto de sonar (y no escribe nada
+// hasta que la persona elige); guardada, se respeta
+const otraVentana = (extra = {}) => oyentes({ speechSynthesis: sintesis, SpeechSynthesisUtterance: Locucion, ...extra });
+const nuevo = { d: {}, getItem(k) { return this.d[k] ?? null; }, setItem(k, v) { this.d[k] = v; } };
+const porOmision = V.crearVoz({ ventana: otraVentana(), almacen: nuevo });
+out.por_omision = [porOmision.estado(), Object.keys(nuevo.d).length];
+porOmision.gesto();
+out.por_omision.push(porOmision.estado());
+porOmision.apagar();
+out.por_omision.push(porOmision.estado(), nuevo.d.yj_voz);
+const trasApagar = V.crearVoz({ ventana: otraVentana(), almacen: nuevo });
+out.apagada_se_respeta = trasApagar.estado();
+trasApagar.encender();
+out.encendida_se_guarda = [trasApagar.estado(), nuevo.d.yj_voz];
+const bloqueado = V.crearVoz({ ventana: otraVentana(), almacen: { getItem() { throw new Error('x'); }, setItem() { throw new Error('x'); } } });
+out.almacen_bloqueado = bloqueado.estado();
+// La persona ya había tocado la página cuando la vista se abre (le escribió al asistente, que abre la presentación
+// después): suena sin otro gesto. Si la apagó, no
+const tocada = { navigator: { userActivation: { hasBeenActive: true } } };
+const yaTocada = V.crearVoz({ ventana: otraVentana(tocada), almacen: { getItem: () => null, setItem() {} } });
+const sinTocar = V.crearVoz({ ventana: otraVentana({ navigator: { userActivation: { hasBeenActive: false } } }), almacen: { getItem: () => null, setItem() {} } });
+const tocadaYApagada = V.crearVoz({ ventana: otraVentana(tocada), almacen: { getItem: () => '0', setItem() {} } });
+out.ya_tocada = [yaTocada.estado(), sinTocar.estado(), tocadaYApagada.estado()];
+for (const v of [porOmision, trasApagar, bloqueado, yaTocada, sinTocar, tocadaYApagada]) v.soltar();
 // soltar(): quita los oyentes de la ventana y de la síntesis, y corta lo que suena
 sintesis.modo = 'colgada';
 const p = voz.decir('Una frase que no termina');
@@ -383,5 +437,10 @@ def test_la_voz_parte_bien_se_activa_con_un_gesto_y_se_suelta(tmp_path):
     # gesto y soltar
     assert r["oyentes"] == [1, 1, 1]
     assert r["sin_activar"] == "sin_activar" and r["tras_gesto"] == "activa" and r["gesto_apagada"] == "apagada"
+    # encendida por omisión: a un gesto de sonar, sin guardar nada hasta que la persona elige; lo guardado se respeta
+    assert r["por_omision"] == ["sin_activar", 0, "activa", "apagada", "0"], r["por_omision"]
+    assert r["apagada_se_respeta"] == "apagada" and r["encendida_se_guarda"] == ["activa", "1"]
+    assert r["almacen_bloqueado"] == "sin_activar"
+    assert r["ya_tocada"] == ["activa", "sin_activar", "apagada"], r["ya_tocada"]
     assert len(r["habladas"]) >= 2 and all(n <= tope for n in r["habladas"])
     assert r["soltada"] == "cortada" and r["tras_soltar"] == [0, 0, 0]

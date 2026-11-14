@@ -292,6 +292,72 @@ def test_el_guion_trae_las_fichas_los_enfoques_y_las_inmersiones():
     assert {"id": "torre_sismo", "nombre": "Simulador sísmico"} in indice["inmersiones"]
 
 
+@pytest.mark.skipif(not PROPUESTA_JSON.is_file(), reason="Sin web/data/propuesta.json (el panel desplegado aparte)")
+def test_el_guion_trae_la_maqueta_de_cada_capitulo():
+    """Las piezas de la maqueta que el plan guiado puede mostrar, ocultar, aislar o apuntar con la cámara, y las partes
+    que se les quitan (`tecnica.maqueta` de general.json): al guion solo pasan su id y su nombre, en texto plano. Se
+    resuelven por id o por nombre, y una propuesta sin catálogo deja el guion sin maqueta, no roto."""
+    datos = json.loads(PROPUESTA_JSON.read_text(encoding="utf-8"))
+    catalogo = datos["tecnica"]["maqueta"]
+    assert guion.VERSION == 3 and json.loads(guion.RUTA.read_text(encoding="utf-8"))["version"] == 3
+    assert set(catalogo) <= {c["id"] for c in G.capitulos}
+    for c in G.capitulos:
+        piezas = G.piezas(G.por_id(c["id"]))
+        assert [x["id"] for x in piezas] == [x["id"] for x in catalogo.get(c["id"], [])], c["id"]
+        for x, k in zip(piezas, catalogo.get(c["id"], [])):
+            assert set(x) == {"id", "nombre", "partes"} and x["nombre"] == _plano(k["nombre"]), (c["id"], k["id"])
+            assert x["partes"] == [{"id": p["id"], "nombre": _plano(p["nombre"])} for p in k.get("partes", [])]
+            assert "\xa0" not in x["nombre"] and "<" not in x["nombre"]
+    # ni capas, ni grupos, ni nodos: eso es de la presentación (visual.js), al modelo no le sirve
+    texto = json.dumps([c.get("maqueta") for c in G.capitulos], ensure_ascii=False)
+    assert '"capas"' not in texto and '"grupos"' not in texto and '"nodos"' not in texto and '"replica"' not in texto
+    sa, ur, ag = G.por_id("salud"), G.por_id("urbanismo"), G.por_id("aguas")
+    assert [x["id"] for x in G.piezas(sa)] == ["hospital_hoy", "torre", "telesalud", "puestos"]
+    assert [p["id"] for p in G.pieza(sa, "torre")["partes"]] == ["cubierta", "equipos", "jardines"]
+    # Por id, por nombre sin tildes ni mayúsculas, o por las palabras con que empieza (si es una sola pieza)
+    assert G.pieza(sa, "Torre nueva de cuatro pisos")["id"] == "torre" and G.pieza(sa, "TORRE NUEVA")["id"] == "torre"
+    assert G.pieza(ur, "cancha de softbol casabe")["id"] == "softbol" and G.pieza(sa, "hospital")["id"] == "hospital_hoy"
+    assert G.pieza(sa, "tore") is None and G.pieza(sa, "softbol") is None and G.pieza(sa, "") is None
+    assert G.pieza(sa, None) is None and G.pieza(sa, 7) is None
+    assert G.pieza(ag, "red")["id"] == "red" and G.pieza(ag, "la") is None   # igual gana; ambiguo, ninguna
+    assert G.parte(sa, "torre", "cubierta")["id"] == "cubierta" and G.parte(sa, "torre", "Equipos en la cubierta")["id"] == "equipos"
+    assert G.parte(sa, "torre", "techo") is None and G.parte(sa, "hospital_hoy", "cubierta") is None
+    assert G.parte(sa, "no_existe", "cubierta") is None
+    # A qué puede apuntar la cámara (`mirar`): una pieza o un componente con lugar en la maqueta
+    assert G.mirable(sa, "hospital_hoy") == {"id": "hospital_hoy", "nombre": "El hospital de hoy"}
+    assert G.mirable(sa, "telesalud")["id"] == "telesalud" and G.mirable(sa, "ambulancias")["id"] == "ambulancias"
+    assert G.mirable(G.por_id("vivienda"), "titulacion") is None and G.mirable(sa, "marte") is None
+    # Lo que lee el modelo: en el guion del capítulo, con nombres y partes; en el índice, solo los ids
+    leer = G.capitulo_para_leer(sa)
+    assert leer["maqueta"][0] == {"id": "hospital_hoy", "nombre": "El hospital de hoy"}   # sin partes, sin la clave
+    assert leer["maqueta"][1] == {"id": "torre", "nombre": "Torre nueva de cuatro pisos", "partes": [
+        {"id": "cubierta", "nombre": "Cubierta y parasoles (deja ver las losas)"},
+        {"id": "equipos", "nombre": "Equipos en la cubierta"}, {"id": "jardines", "nombre": "Árboles y jardines"}]}
+    assert list(leer) == ["capitulo", "pasos", "componentes", "maqueta", "inmersiones"]
+    for c in G.capitulos:
+        assert len(json.dumps(G.capitulo_para_leer(G.por_id(c["id"])), ensure_ascii=False).encode("utf-8")) < 36000, c["id"]
+    indice = {c["id"]: c for c in G.indice()["capitulos"]}
+    assert indice["salud"]["maqueta"] == ["hospital_hoy", "torre", "telesalud", "puestos"]
+    # Defensivo: sin catálogo, o con uno que no tiene la forma, el guion sale sin maqueta (o sin esa pieza) y vale
+    for maqueta in (None, [], "x", {"salud": "torre"}, {"salud": [None, 3, {"nombre": "Sin id"}, {"id": 5}]}):
+        d = guion.derivar({**datos, "tecnica": {**datos["tecnica"], "maqueta": maqueta}})
+        assert guion.problemas(d) == [] and all("maqueta" not in c for c in d["capitulos"]), maqueta
+        assert guion.Guion.desde(d).piezas(4) == [] and guion.Guion.desde(d).pieza(4, "torre") is None
+    sin = guion.derivar({k: v for k, v in datos.items() if k != "tecnica"})
+    assert all("maqueta" not in c for c in sin["capitulos"])
+    d = guion.derivar({**datos, "tecnica": {**datos["tecnica"], "maqueta": {"salud": [
+        {"id": "torre", "partes": [{"id": "cubierta"}, "x", {"nombre": "Sin id"}]}, {"id": "otra", "nombre": "<b>Otra</b>&nbsp;pieza"}]}}})
+    assert d["capitulos"][4]["maqueta"] == [{"id": "torre", "nombre": "torre", "partes": [{"id": "cubierta", "nombre": "cubierta"}]},
+                                            {"id": "otra", "nombre": "Otra pieza", "partes": []}]
+    # Y `problemas` frena los ids que la herramienta y el navegador no aceptarían, o repetidos
+    for malo, parte in (([{"id": "Torre"}], "pieza de la maqueta con un id"), ([{"id": "a"}, {"id": "a"}], "ids de pieza de la maqueta repetidos"),
+                        ([{"id": "a", "partes": [{"id": "b"}, {"id": "b"}]}], "partes de la pieza"),
+                        ([{"id": "a", "partes": [{"id": "B c"}]}], "partes de la pieza"), ("torre", "no es una lista de piezas")):
+        d = guion.derivar(datos)
+        d["capitulos"][4]["maqueta"] = malo
+        assert any(parte in x for x in guion.problemas(d)), (malo, guion.problemas(d))
+
+
 NODE_SIN_PLATA = r"""// tecnica.js con cada texto, cifra y especificación de la propuesta. Uso: node <guion> <url de tecnica.js> <entrada>
 import { readFileSync } from 'node:fs';
 const [url, archivo] = process.argv.slice(2);
@@ -430,6 +496,13 @@ def test_definicion_y_esquema():
                                                 {"maxLength": 40, "minLength": 1, "type": "string"}]
     assert s["properties"]["explicacion"]["maxLength"] == hi.MAX_EXPLICACION == 220
     assert "220" in s["properties"]["explicacion"]["description"] and "220" in d["description"]
+    # El plan guiado: `pasos` (hasta 12) con `dice`; lo que da el plan también en `visual`, con sus topes a la vista
+    assert s["properties"]["pasos"]["maxItems"] == 12 and "escenas" not in s["properties"]
+    assert {"elevacion", "zoom", "mirar", "mostrar", "ocultar", "aislar", "sin", "mover", "animar"} <= set(s["properties"])
+    assert s["properties"]["zoom"] == {**s["properties"]["zoom"], "type": "number", "minimum": 0.3, "maximum": 3}
+    assert s["properties"]["sin"]["maxItems"] == 8 and s["properties"]["sin"]["items"]["type"] == "string"
+    assert "PLAN" in d["description"] and "pasos" in d["description"] and "dice" in d["description"]
+    assert len(texto) < 14000   # el esquema va en cada pedido al modelo
     # Al final de las de interfaz: el orden fijo de `fijas()` (las conversaciones congelan la lista)
     assert [h.nombre for h in herramientas.fijas()][-1] == "presentacion"
 
@@ -695,9 +768,19 @@ def test_sistema_explica_cuando_usarla():
     quien = acceso.Quien(uid=5, usuario="p5", nombre="Pepa", rol="planillero", permisos=acceso.PERMISOS["planillero"])
     t = sistema.texto(quien, [P])
     assert "`presentacion`" in t and "`guion`" in t and "`recorrido`" in t and "`control_recorrido`" in t
-    # el método didáctico: una ronda para preparar, una llamada para el recorrido, un complemento que no repite
-    assert "UNA misma ronda" in t and "UNA llamada" in t and "NO repita la narración" in t
-    assert "nunca costos, datos de habitantes" in t and "El arco de un recorrido" in t
+    # el plan guiado: plan primero (el guion y UNA llamada con el plan), pasos de UNA frase que muestran mientras
+    # explican, y en el chat una línea antes y solo una pregunta corta después (la explicación ES la narración)
+    assert "PLAN PRIMERO" in t and "UNA llamada `recorrido`" in t and "de 6 a 10 `pasos` (hasta 12)" in t
+    assert "UNA frase hablada (`dice`" in t and "MIENTRAS se dice" in t and "MIENTRAS explica" in t
+    assert "ANTES de esa llamada, una sola línea que anuncia el plan" in t and "DESPUÉS, solo una pregunta corta" in t
+    assert "La explicación ES la narración del plan: no la repitas ni la resumas en el chat" in t
+    for campo in ("`mover`", "`aislar`", "`mostrar`", "`ocultar`", "`sin`", "`mirar`", "`elevacion`", "`zoom`", "`animar`",
+                  "`detalle`", "`comparar`", "`inmersion`", "`resaltar`"):
+        assert campo in t, campo
+    assert "nunca costos, datos de habitantes" in t and "Un arco que sirve" in t
+    assert "se descarta con un aviso y el plan corre igual" in t
+    # (ya no manda mover la pantalla antes del plan: eso era mostrar sin explicar)
+    assert "UNA misma ronda" not in t and "escenas" not in t
     assert "`presentacion`" not in sistema.texto(quien, [H["abrir_vista"]])
     assert "presentacion" in sistema.VISTAS_MENU and "presentacion" in bucle.ACCIONES
 
@@ -1243,7 +1326,8 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
     assert r["exports"] == ["AVISOS", "CANAL", "CONTROLES", "FASES", "MAX_CIERRE", "MAX_ESCENAS", "MAX_EXPLICACION",
                             "MAX_FRASES", "MAX_PUNTO", "MAX_SOSTENER_MS", "MAX_TITULO", "MOTIVOS", "RESALTAR",
                             "TERMINALES", "VERSION", "VOCES", "accionPresentacion", "accionesEnCola",
-                            "accionesPresentacion", "avisarEstado", "avisarRecorrido", "controlRecorrido",
+                            "accionesPresentacion", "alternarVozRecorrido", "avisarEstado", "avisarRecorrido",
+                            "controlRecorrido",
                             "escucharRecorrido", "estadoDePantalla", "estadoPresentacion", "estadoValido",
                             "ordenesHacia", "presentacionLista", "presentacionNoDisponible", "progresoValido",
                             "proyectorVivo", "recorridoEnCurso", "recorridoValido", "registrarPresentacion"]
@@ -1852,8 +1936,11 @@ def test_la_capa_visual_de_la_presentacion_tecnica():
     atlas_main = (RAIZ / "web/js/main.js").read_text(encoding="utf-8")
     assert "const visual = TECNICA ? crearVisual({" in main and "visual?.alPaso();" in main
     assert "if (visual?.reencuadrar()) return;" in main
-    assert "export const INICIAL = Object.freeze({ enfoque: null, camara: 'paso', rumbo: null, girar: false, comparar: 'proyecto', detalle: null, inmersion: null });" in visual
-    assert "Object.assign(vis, INICIAL);" in visual and "escena.encuadrar = (obj, opts = {}) =>" in visual
+    # (lo visual de cada paso, con las claves del plan guiado en el orden de siempre: test_recorrido compara las copias)
+    assert ("export const INICIAL = Object.freeze({ enfoque: null, camara: 'paso', rumbo: null, elevacion: null, zoom: null, "
+            "mirar: null, girar: false, comparar: 'proyecto', detalle: null, inmersion: null, mostrar: [], ocultar: [], "
+            "aislar: null, sin: [] });") in visual
+    assert "escena.encuadrar = (obj, opts = {}) =>" in visual
     assert "atlas.html?escenario=1#" in visual and "f.contentWindow?.__escenario" in visual
     # el texto de la ficha pasa por sinPlata y especificacionTecnica, y lo que no es de la propuesta, por esc
     assert "especificacionTecnica" in visual and "sinPlata(x.descripcion)" in visual

@@ -488,11 +488,11 @@ def test_la_tarjeta_vuelve_a_reproducir_por_el_servidor_y_sigue_al_que_suena(tar
     # tarjeta no queda «preparando» con la barra puesta)
     assert r["volver"]["estado"] == "Volviendo a empezar…" and r["volver"]["sonando"] is False, r
     assert r["volver_otra_vez"] == {"llamadas": 1, "deshabilitado": True}, r
-    assert r["sigue_al_nuevo"]["estado"] == "Escena 1 de 2 · Narrando", r
-    assert r["mas_nuevo"] == {"estado": "Terminó", "nota": "Ya no se puede volver a reproducir: hay un recorrido más nuevo.",
+    assert r["sigue_al_nuevo"]["estado"] == "Paso 1 de 2 · Narrando", r
+    assert r["mas_nuevo"] == {"estado": "Terminó", "nota": "Ya no se puede volver a reproducir: hay un plan más nuevo.",
                               "sonando": False, "deshabilitado": True, "reproducidos": 0}, r
     assert r["no_guardado"]["llamadas"] == 0, r
-    assert r["no_guardado"]["nota"] == "No se pudo volver a reproducir: el recorrido ya no está en este navegador.", r
+    assert r["no_guardado"]["nota"] == "No se pudo volver a reproducir: el plan ya no está en este navegador.", r
     # La barra y la pausa al escribir van a la del que suena, no a la más nueva
     assert r["del_chat_e"] == "fffffffffff6" and r["del_chat_d"] == "eeeeeeeeeee5", r
     assert r["pausa_a"] == ["pausar:eeeeeeeeeee5:suave"], r
@@ -501,17 +501,17 @@ def test_la_tarjeta_vuelve_a_reproducir_por_el_servidor_y_sigue_al_que_suena(tar
 @requiere_node
 def test_la_tarjeta_de_la_pantalla_en_off_no_queda_sonando_para_siempre(tarjeta):
     r = tarjeta
-    assert r["off_sonando"]["estado"] == "Escena 2 de 2 · Narrando" and r["off_sonando"]["sonando"] is True, r
-    assert r["off_mudo"] == {"estado": "Detenido en la escena 2", "nota": "Se detuvo: la pantalla en off dejó de responder.",
+    assert r["off_sonando"]["estado"] == "Paso 2 de 2 · Narrando" and r["off_sonando"]["sonando"] is True, r
+    assert r["off_mudo"] == {"estado": "Detenido en el paso 2", "nota": "Se detuvo: la pantalla en off dejó de responder.",
                              "sonando": False}, r
     assert r["off_barra"] is None, r
-    assert r["pausa_larga"] == {"estado": "Escena 2 de 2 · En pausa", "nota": "", "sonando": True, "pausado": True}, r
-    assert r["sin_preguntar"]["estado"] == "Escena 2 de 2 · En pausa" and r["sin_preguntar"]["gets"] == 0, r
-    assert r["tras_continuar"]["estado"] == "Escena 2 de 2 · Narrando", r
+    assert r["pausa_larga"] == {"estado": "Paso 2 de 2 · En pausa", "nota": "", "sonando": True, "pausado": True}, r
+    assert r["sin_preguntar"]["estado"] == "Paso 2 de 2 · En pausa" and r["sin_preguntar"]["gets"] == 0, r
+    assert r["tras_continuar"]["estado"] == "Paso 2 de 2 · Narrando", r
     assert r["tras_continuar"]["control"] == "POST /api/pantalla/recorrido/control continuar:ddddeeeeffff", r
-    assert r["continuo_el_asistente"]["estado"] == "Escena 2 de 2 · Narrando", r
-    assert r["cerrada_al_rato"]["estado"] == "Escena 2 de 2 · En pausa" and r["cerrada_al_rato"]["sonando"] is True, r
-    assert r["cerrada"] == {"estado": "Detenido en la escena 2", "nota": "Se detuvo: la pantalla en off dejó de responder.",
+    assert r["continuo_el_asistente"]["estado"] == "Paso 2 de 2 · Narrando", r
+    assert r["cerrada_al_rato"]["estado"] == "Paso 2 de 2 · En pausa" and r["cerrada_al_rato"]["sonando"] is True, r
+    assert r["cerrada"] == {"estado": "Detenido en el paso 2", "nota": "Se detuvo: la pantalla en off dejó de responder.",
                             "sonando": False}, r
-    assert r["sin_empezar"]["estado"] == "Escena 2 de 2 · Preparando", r
-    assert r["nunca_empezo"]["estado"] == "Detenido en la escena 2" and r["nunca_empezo"]["sonando"] is False, r
+    assert r["sin_empezar"]["estado"] == "Paso 2 de 2 · Preparando", r
+    assert r["nunca_empezo"]["estado"] == "Detenido en el paso 2" and r["nunca_empezo"]["sonando"] is False, r

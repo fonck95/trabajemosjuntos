@@ -1,16 +1,21 @@
-// El reproductor del recorrido narrado: lleva el reloj de la explicación (docs/agente.md, «Recorridos narrados»).
+// El reproductor del plan guiado (el recorrido narrado): lleva el reloj de la explicación (docs/agente.md, «Recorridos
+// narrados»).
 //
-// El asistente arma en una sola llamada un recorrido de escenas (app/recorrido.py lo valida y lo deja absoluto: cada
-// escena trae su paso, lo visual, lo que se resalta y la narración en frases). Este módulo lo reproduce en la página
-// que enmarca la presentación (la pestaña del chat, la ventana del proyector o la pantalla en off), con órdenes a
-// mando.js: la escena (atómica: responde cuando la imagen se asentó), la frase que suena, la pausa y el cierre. Así la
-// sala ve primero lo que se nombra y después lo oye o lo lee, frase por frase, al ritmo de la voz si está encendida o
-// de un tiempo de lectura si no.
+// El asistente arma en una sola llamada un plan de pasos (por dentro, un recorrido de escenas: app/recorrido.py lo
+// valida y lo deja absoluto: cada escena trae su paso, lo visual, lo que se resalta, cómo se mueve la cámara y la
+// narración en frases). Este módulo lo reproduce en la página que enmarca la presentación (la pestaña del chat, la
+// ventana del proyector o la pantalla en off), con órdenes a mando.js: la escena, la frase que suena, la pausa y el
+// cierre. La escena ya no espera a que la imagen se asiente: la presentación pinta la narración y empieza a mover la
+// cámara, las piezas y la ficha en el acto, durante lo que dura la narración (`ms`). Así la sala ve lo que se nombra
+// MIENTRAS lo oye o lo lee, frase por frase, al ritmo de la voz si está encendida o de un tiempo de lectura si no.
 //
-// * Ciclo de una escena: «preparando» (la orden `escena`, hasta ESPERA_ESCENA_MS) → RESPIRO_MS → «narrando» (cada
-//   frase se ilumina cuando empieza a sonar; sin voz, cuando aparece, y se queda su tiempo de lectura) → «sosteniendo»
-//   (sostener_ms: la sala mira) → la siguiente. Al final, el cierre: «En resumen» con los puntos, «¿Preguntas?» y la
-//   narración se quita; la imagen queda donde terminó.
+// * Ciclo de una escena: «preparando» (la orden `escena` con `ms`, lo que durará su narración; responde enseguida,
+//   salvo que cargue un modelo del atlas: hasta ESPERA_ESCENA_MS) → RESPIRO_MS → «narrando» (cada frase se ilumina
+//   cuando empieza a sonar; sin voz, cuando aparece, y se queda su tiempo de lectura) → «sosteniendo» (sostener_ms: la
+//   sala mira) → la siguiente. Al final, el cierre: «En resumen» con los puntos, «¿Preguntas?» y la narración se
+//   quita; la imagen queda donde terminó.
+// * Un plan nuevo puede empezar con una espera (`previa`, PREVIA_MS: el chat muestra el plan entero antes del primer
+//   paso), en fase «preparando»: se pausa como las demás y la cortan un salto («siguiente» empieza ya) o un detener.
 // * Las esperas se pueden pausar y guardan lo que les falta. Miden con `reloj.ahora()` y dan ticks de TICK_MS como
 //   mucho: una pestaña oculta, cuyos relojes el navegador espacia, no adelanta ni atrasa el ritmo.
 // * Pausa dura (un botón, la tecla p, la persona movió la maqueta): calla en el acto. Al seguir, la frase en curso se
@@ -27,10 +32,16 @@
 //   barra y al servidor (POST /api/pantalla/progreso: el asistente y los agentes por MCP lo leen en `estado`).
 // Lógica pura: `orden`, `voz`, `reloj` y `avisar` llegan por parámetro (admin/tests lo prueba con Node y un reloj falso).
 
+// Los tiempos (los mismos de app/recorrido.py, que estima con ellos la duración: una prueba los compara)
+export const PREVIA_MS = 1800;
 export const RESPIRO_MS = 350;
 export const ENTRE_FRASES_MS = 250;
+export const SOSTENER_MS = 1300;
+export const SOSTENER_MIRAR_MS = 2700;
 export const CIERRE_SOSTENER_MS = 4000;
 export const PREGUNTAS_MS = 12000;
+export const MAX_ESCENAS = 12;
+export const AVISOS = ['atlas', 'resaltar', 'asiento', 'voz', 'parcial'];
 export const ESPERA_ESCENA_MS = 25000;
 export const MAX_FALLAS = 2;
 export const TICK_MS = 250;
@@ -41,6 +52,9 @@ export const CONTROLES = ['pausar', 'continuar', 'siguiente', 'anterior', 'repet
 
 /** Lo que tarda en leerse un texto (`recorrido.lectura_ms` del servidor: la duración estimada sale de lo mismo). */
 export const lecturaMs = (t) => Math.min(16000, Math.max(3200, 1500 + 62 * [...String(t)].length));
+/** Lo que dura la narración de una escena: la lectura de sus frases y las pausas entre ellas. Va en la orden `escena`
+ * (`ms`): es lo que la cámara tarda en llegar adonde termina. */
+export const narracionMs = (frases) => frases.reduce((a, f) => a + lecturaMs(f), 0) + ENTRE_FRASES_MS * Math.max(0, frases.length - 1);
 
 const relojDelNavegador = {
   ahora: () => (globalThis.performance?.now ? performance.now() : Date.now()),
@@ -70,6 +84,7 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
   let enVuelo = null;      // la orden en curso (detener la espera, hasta DETENER_ESPERA_MS)
   let narrando = false;    // hay una narración en pantalla (a la que se le puede mandar pausa o frase)
   let mandoEscena = false; // ya salió una orden `escena`: al terminar hay que dejarla atrás aunque no haya respondido
+  let enPrevia = false;    // la espera antes de la primera escena (`previa`): «siguiente» la corta y empieza
   let alPrimera = null;    // resuelve la promesa de `iniciar` cuando la primera escena está a la vista (o falló)
   const despiertos = new Set();   // las esperas en curso: se despiertan al seguir o saltar
   const despertar = () => { for (const f of [...despiertos]) f(); };
@@ -149,6 +164,7 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
     if (mia !== gen) return false;
     narrando = false;
     mandoEscena = false;
+    enPrevia = false;
     fase = f;
     emitir(motivo ? { motivo } : {});
     despertar();
@@ -207,14 +223,28 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
     frase = 0;
     emitir();
     mandoEscena = true;
+    // `mover` y `animar` son de la escena (un recorrido de antes no los trae: sin movimiento propio ni animación)
     const res = await mandar({ orden: 'escena', capitulo: esc.capitulo, paso: esc.paso, panel: esc.panel,
-      visual: esc.visual, resaltar: esc.resaltar, frases: esc.frases, titulo: r.titulo, n: k, de: de(),
-      voz: voz.estado() === 'activa', rid: r.id }, { plazo: ESPERA_ESCENA_MS });
+      visual: esc.visual, resaltar: esc.resaltar, mover: esc.mover ?? null, animar: esc.animar === true, frases: esc.frases,
+      titulo: r.titulo, n: k, de: de(), voz: voz.estado() === 'activa', rid: r.id, ms: narracionMs(esc.frases) },
+    { plazo: ESPERA_ESCENA_MS });
     if (!vigente(g)) return null;
     return res;
   }
 
-  async function jugar(g, desde) {
+  async function jugar(g, desde, previa = 0) {
+    if (previa > 0) {
+      // el plan recién llegó: el chat lo muestra entero antes de que empiece el primer paso. Con la pausa ya puesta
+      // (pedida al arrancar), sigue en pausa y la espera corre al seguir
+      n = desde;
+      frase = 0;
+      if (pausado) faseAntes = 'preparando'; else fase = 'preparando';
+      enPrevia = true;
+      emitir();
+      const paso = await esperar(previa, g);
+      if (vigente(g)) enPrevia = false;   // si no, la cortó un salto, un detener u otro recorrido: lo suyo manda
+      if (!paso) return;
+    }
     for (n = desde; n <= de(); n++) {
       if (!await hastaSeguir(g)) return;
       const esc = r.escenas[n - 1];
@@ -239,7 +269,9 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       narrando = true;
       // la pausa llegó mientras la imagen cambiaba: la narración nueva también se ve en pausa
       if (pausado) mandar({ orden: 'narracion', pausa: true });
-      if (res.aviso) emitir({ aviso: res.aviso });
+      // lo que la presentación avisa de la escena (el atlas no cargó, no encontró lo que señalar, parte de lo pedido
+      // no se pudo mostrar: `parcial`) sigue al asistente y a la tarjeta
+      if (AVISOS.includes(res.aviso)) emitir({ aviso: res.aviso });
       if (!await esperar(RESPIRO_MS, g)) return;
       for (let k = 0; k < esc.frases.length; k++) {
         const alIntentar = () => { fase = 'narrando'; frase = k; emitir(); };
@@ -277,25 +309,27 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
     await terminar(g, 'fin');
   }
 
-  function saltar(k) {
+  function saltar(k, { previa = 0 } = {}) {
     if (!r) return;
     gen++;
     voz.callar();
     pausado = false;
     suave = false;
     fallas = 0;
+    enPrevia = false;
     despertar();
     const g = gen;
     if (k > de()) cerrar(g).catch(() => {});
-    else jugar(g, Math.max(1, k)).catch(() => {});
+    else jugar(g, Math.max(1, k), previa).catch(() => {});
   }
 
   const activo = () => !!r && !!fase && !TERMINALES.includes(fase);
 
   return {
-    /** Arranca `rec` (ya validado) desde la escena `desde`; un recorrido que suena se reemplaza. Resuelve cuando la
-     * primera escena está a la vista (true) o no se pudo (false). */
-    iniciar(rec, { desde = 1 } = {}) {
+    /** Arranca `rec` (ya validado) desde la escena `desde`; un recorrido que suena se reemplaza. Con `previa` (ms)
+     * espera eso antes de la primera escena, en «preparando» (un plan nuevo: el chat lo muestra entero antes de
+     * empezar). Resuelve cuando la primera escena está a la vista (true) o no se pudo (false). */
+    iniciar(rec, { desde = 1, previa = 0 } = {}) {
       if (activo()) {
         // lo que sonaba se corta aquí (no en el salto): así sus continuaciones ya no pueden emitir con el recorrido nuevo
         gen++;
@@ -316,7 +350,7 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       narrando = false;
       mandoEscena = false;
       motivoPausa = null;
-      saltar(Math.min(Math.max(1, desde | 0), de()));
+      saltar(Math.min(Math.max(1, desde | 0), de()), { previa: Number.isFinite(previa) && previa > 0 ? Math.min(previa, 30000) : 0 });
       return primera;
     },
     /** `suave`: entra al terminar la frase en curso (la persona escribe en el chat). */
@@ -340,7 +374,12 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       return true;
     },
     alternar(motivo = 'boton') { return pausado || suave ? this.continuar() : this.pausar(motivo); },
-    siguiente() { if (!activo()) return false; if (n > de()) { terminar(gen, 'fin'); return true; } saltar(n + 1); return true; },
+    siguiente() {
+      if (!activo()) return false;
+      if (n > de()) { terminar(gen, 'fin'); return true; }
+      saltar(enPrevia ? n : n + 1);   // en la espera de antes de empezar, «siguiente» es «empiece ya»
+      return true;
+    },
     anterior() { if (!activo()) return false; saltar(Math.max(1, Math.min(n, de() + 1) - 1)); return true; },
     repetir() { if (!activo()) return false; saltar(Math.min(n, de())); return true; },
     /** Detiene y quita la narración; espera la orden en vuelo hasta DETENER_ESPERA_MS. */

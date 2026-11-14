@@ -24,11 +24,15 @@
 //   ventana, sin el menú ni las barras del panel; Escape la devuelve hasta la próxima orden de pantalla completa.
 // * En la pestaña del chat, `pantalla_completa` del asistente hace lo mismo con esta vista (el botón del asistente queda
 //   a mano para seguir hablando); Escape la devuelve.
-// * El recorrido narrado (reproductor.js, voz.js): la acción `recorrido` no se convierte en una orden; la reproduce
-//   aquí el reproductor, que lleva el reloj de la explicación y le manda a la presentación escena, frase, pausa y
-//   cierre. Suena en la página que mira la sala (la pestaña del chat, la ventana del proyector o la pantalla en off),
-//   con la voz del navegador si la persona la encendió con el botón «Voz» de esa ventana; si ya la había encendido antes,
-//   la activa el primer toque o tecla de la persona, también sobre la presentación (mando.js lo avisa con `gesto`: en el
+// * El plan guiado (el recorrido narrado: reproductor.js, voz.js): la acción `recorrido` no se convierte en una orden;
+//   la reproduce aquí el reproductor, que lleva el reloj de la explicación y le manda a la presentación cada paso del
+//   plan (la escena: lo que se muestra ocurre mientras se dice), la frase que suena, la pausa y el cierre. Un plan
+//   nuevo espera PREVIA_MS antes del primer paso (el chat lo muestra entero); uno que se reanuda, se vuelve a
+//   reproducir, llega traspasado de otra ventana o la pantalla en off retoma, no. Suena en la página que mira la sala
+//   (la pestaña del chat, la ventana del proyector o la pantalla en off), con la voz del navegador, que está encendida
+//   mientras la persona no la apague (el botón «Voz» de esa ventana o el interruptor de la tarjeta del chat, que llega
+//   por el puente: `alternarVoz`); la activa el primer toque o tecla de la persona en esa ventana, también sobre la
+//   presentación (mando.js lo avisa con `gesto`: en el
 //   proyector el iframe ocupa la ventana y los toques no llegan a esta). Las teclas y los botones de la presentación lo
 //   manejan mientras suena (avanzan escenas, pausan, detienen), y si la persona mueve la imagen se pausa. Cualquier otra
 //   acción lo detiene antes. El avance va al puente (la tarjeta del chat), a la barra y al servidor (POST
@@ -41,7 +45,7 @@ import { $, html, icono, montar } from '../ui.js';
 import { AVISOS, CANAL, TERMINALES, VERSION, accionPresentacion, accionesPresentacion, avisarEstado, avisarRecorrido,
   controlRecorrido, estadoDePantalla, estadoPresentacion, estadoValido, ordenesHacia, presentacionNoDisponible,
   proyectorVivo, recorridoEnCurso, registrarPresentacion } from '../agente-presentacion.js';
-import { crearReproductor } from '../reproductor.js';
+import { PREVIA_MS, crearReproductor } from '../reproductor.js';
 import { crearVoz } from '../voz.js';
 
 const ESPERA_LISTO_MS = 45000;   // la presentación carga sus datos y la maqueta 3D: si en esto no avisó, se dice
@@ -79,10 +83,24 @@ async function direccion() {
 }
 
 /** Dónde queda la pantalla al terminar o detener un recorrido en la escena `esc`: sus campos base (`estado_de_escena`
- * de app/recorrido.py), sobre lo último aplicado (el tema y la pantalla completa no cambian). */
+ * de app/recorrido.py). De lo último aplicado solo quedan el tema y la pantalla completa, que la escena no cambia. Lo
+ * visual es el de la escena y nada más: la parte que no trae (una escena de antes del plan guiado) es lo del paso
+ * (`ordenesHacia` da por inicial lo que falta), no lo que hubiera antes. Su movimiento y su animación ya pasaron. */
 function baseDeEscena(antes, esc) {
-  return { ...(antes || {}), capitulo: esc.capitulo, paso: esc.paso, explicacion: null, panel: esc.panel, indice: false,
-    fichas: false, ...esc.visual };
+  const { tema = null, completa, orden_completa } = antes || {};
+  return { tema, completa, orden_completa, capitulo: esc.capitulo, paso: esc.paso, explicacion: null, panel: esc.panel,
+    indice: false, fichas: false, ...esc.visual, mover: null, animar: false };
+}
+
+// Los planes que esta página ya reprodujo (los últimos): su id y su contenido. «Volver a reproducir» llega del servidor
+// con un id nuevo y el mismo contenido, y «Reanudar» con el mismo id: ninguno es un plan nuevo
+const reproducidos = [];
+/** ¿Es `r` un plan que esta página todavía no reprodujo? Queda anotado. */
+function esNuevo(r) {
+  const huella = JSON.stringify([r.titulo, r.escenas, r.cierre]);
+  const visto = reproducidos.some((x) => x.id === r.id || x.huella === huella);
+  if (!visto) { reproducidos.push({ id: r.id, huella }); while (reproducidos.length > 6) reproducidos.shift(); }
+  return !visto;
 }
 
 const dormir = (ms) => new Promise((ok) => { setTimeout(ok, ms); });
@@ -190,17 +208,18 @@ export async function vistaPresentacion(el, { q } = {}) {
     // con un recorrido sonando (aquí o en el proyector), la barra dice dónde va
     const aqui = rep.estado();
     const alla = !aqui || !rep.activo() ? recorridoEnCurso() : null;
+    // (hacia la persona es un «plan» con «pasos»; por dentro, un recorrido con escenas)
     if (rep.activo() && aqui) {
-      const donde = aqui.fase === 'cierre' ? 'en resumen' : `escena ${aqui.n} de ${aqui.de}`;
-      pasoEl.textContent = `Recorrido · ${rep.recorrido().titulo} · ${donde}${aqui.pausado ? ' · en pausa' : ''}`;
+      const donde = aqui.fase === 'cierre' ? 'en resumen' : `paso ${aqui.n} de ${aqui.de}`;
+      pasoEl.textContent = `Plan · ${rep.recorrido().titulo} · ${donde}${aqui.pausado ? ' · en pausa' : ''}`;
     } else if (alla?.donde === 'proyector') {
-      pasoEl.textContent = `Recorrido en el proyector · escena ${alla.n} de ${alla.de}${alla.fase === 'pausa' ? ' · en pausa' : ''}`;
+      pasoEl.textContent = `Plan en el proyector · paso ${alla.n} de ${alla.de}${alla.fase === 'pausa' ? ' · en pausa' : ''}`;
     } else {
       pasoEl.textContent = `Paso ${e.paso} de ${e.total}${e.titulo ? ` · ${e.titulo}` : ''}`;
     }
     const sonando = rep.activo() || alla?.donde === 'proyector';
     for (const [b, que] of [[anterior, 'anterior'], [siguiente, 'siguiente']]) {
-      const t = `${sonando ? 'Escena' : 'Paso'} ${que}`;
+      const t = sonando ? `Paso ${que} del plan` : `Paso ${que}`;
       b.title = t;
       b.setAttribute('aria-label', t);
     }
@@ -284,14 +303,29 @@ export async function vistaPresentacion(el, { q } = {}) {
       b.setAttribute('aria-label', TEXTO_VOZ[e]);
     }
   };
-  for (const b of botonesVoz) b.addEventListener('click', () => { if (voz.estado() === 'activa') voz.apagar(); else voz.encender(); });
-  limpiezas.push(voz.alCambiar(pintarVoz));
+  // El botón «Voz» y el interruptor de la tarjeta del chat (por el puente) hacen lo mismo: la encienden (el clic es el
+  // gesto que la deja hablar) o la apagan. Devuelve cómo quedó
+  const alternarVoz = () => {
+    if (voz.estado() === 'activa') voz.apagar(); else voz.encender();
+    return voz.estado();
+  };
+  for (const b of botonesVoz) b.addEventListener('click', alternarVoz);
+  // Con una narración en pantalla, la presentación también lo sabe (las barras de la voz, quién lee el subtítulo); sin
+  // narración responde un error que no importa
+  let hablaba = voz.estado() === 'activa';
+  limpiezas.push(voz.alCambiar((e) => {
+    pintarVoz();
+    const habla = e === 'activa';
+    if (habla !== hablaba && rep.activo()) orden({ orden: 'narracion', voz: habla });
+    hablaba = habla;
+  }));
   pintarVoz();
 
   // `enPausa`: la pantalla en off que se recargó con el recorrido en pausa lo retoma en su escena y en pausa. La pausa
-  // entra cuando la escena ya está a la vista (antes, el cambio de imagen la taparía con «preparando»)
-  async function aplicarRecorrido(p, { enPausa = false } = {}) {
-    const primera = rep.iniciar(p.recorrido, { desde: p.desde || 1 });
+  // entra cuando la escena ya está a la vista (antes, el cambio de imagen la taparía con «preparando»). `previa`: un
+  // plan nuevo desde el primer paso espera PREVIA_MS antes de empezar (el chat lo muestra entero)
+  async function aplicarRecorrido(p, { enPausa = false, previa = false } = {}) {
+    const primera = rep.iniciar(p.recorrido, { desde: p.desde || 1, ...(previa ? { previa: PREVIA_MS } : {}) });
     if (enPausa) primera.then((ok) => { if (ok && rep.recorrido() === p.recorrido) rep.pausar('boton'); });
     await Promise.race([primera, dormir(PRIMERA_ESCENA_MS)]);
     return { op: p.op, ok: true };
@@ -312,7 +346,13 @@ export async function vistaPresentacion(el, { q } = {}) {
     for (const a of Array.isArray(lista) ? lista : []) {
       const p = accionPresentacion(a);
       if (!p) { res.push({ op: typeof a?.op === 'string' ? a.op.slice(0, 30) : null, ok: false, error: 'Acción no válida' }); continue; }
-      if (p.op === 'recorrido') { res.push(await aplicarRecorrido(p)); continue; }
+      if (p.op === 'recorrido') {
+        // un plan nuevo llega sin `desde`; el que se traspasa de otra ventana lo trae siempre, y el que se reanuda o se
+        // vuelve a reproducir ya pasó por aquí
+        const nuevo = esNuevo(p.recorrido);
+        res.push(await aplicarRecorrido(p, { previa: nuevo && p.desde === undefined }));
+        continue;
+      }
       if (p.op === 'control_recorrido') { res.push(controlar(p)); continue; }
       if (p.op === 'preparando') {
         if (!rep.activo()) await orden({ orden: 'narracion', preparando: p.activar });
@@ -389,6 +429,7 @@ export async function vistaPresentacion(el, { q } = {}) {
         quitarRegistro ||= registrarPresentacion({ aplicar, estado: () => estado, cambio: mirar,
           recorrido: () => (rep.activo() ? { recorrido: rep.recorrido(), n: rep.estado().n } : null),
           soltarRecorrido: (motivo) => rep.detener(motivo),
+          alternarVoz,   // el interruptor de voz de la tarjeta del chat (`alternarVozRecorrido` del puente)
           ...(proyector ? { proyector: true } : {}) });
         if (proyector) iframe.focus({ preventScroll: true });   // las flechas del teclado van a la presentación
       }
@@ -425,7 +466,9 @@ export async function vistaPresentacion(el, { q } = {}) {
       else if (x.edad_s < VIGENCIA_RECORRIDO_S) desde = 1;
       if (desde) {
         const { edad_s: _edad, ...r } = x;
-        await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde }, { enPausa: pr?.fase === 'pausa' });
+        // el que esta pantalla retoma (ya tuvo avance) o ya reprodujo no espera; el que le llega nuevo, sí
+        const nuevo = esNuevo(r);
+        await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde }, { enPausa: pr?.fase === 'pausa', previa: nuevo && !pr });
       }
     } else if (!x && rep.activo()) {
       // el asistente pidió otra cosa o lo detuvo: el servidor lo cerró

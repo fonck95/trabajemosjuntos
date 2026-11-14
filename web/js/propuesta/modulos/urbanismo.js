@@ -198,8 +198,10 @@ export async function crear(esc, datos) {
   const vistaInst = () => esc.encuadrar([...explanada, ...(pp2 ? [[pp2.x, pp2.y]] : soft.userData.contorno)], { rumbo: 208, elev: 38, margen: 0.94, alto: 10 });
   // la plaza, el deck, el mirador y el muelle, más toda la zona A (la protección de la orilla que abre el paso); en el
   // celular, sin los 280 m de orilla, que dejarían el mirador diminuto (solo el punto del rótulo de la zona A)
-  const encuadrarMir = () => esc.encuadrar(mir ? [...mir.userData.contorno, ...(innerWidth > 640 ? mir.userData.contornoA : [mir.userData.zonaA])] : caja([cfgMir.origen], 150), { rumbo: 221, elev: 30, margen: 0.92, alto: 12 });
-  const vistaMir = () => { encuadrarMir(); if (!mir) listoMir.then((m) => { if (m && cMir.visible) encuadrarMir(); }); };
+  const encuadrarMir = (vuelo = true) => esc.encuadrar(mir ? [...mir.userData.contorno, ...(innerWidth > 640 ? mir.userData.contornoA : [mir.userData.zonaA])] : caja([cfgMir.origen], 150), { rumbo: 221, elev: 30, margen: 0.92, alto: 12, vuelo });
+  // cuando el mirador termina de cargar se vuelve a encuadrar; con una narración en pantalla (esc.guiado) o un paseo de
+  // la cámara solo queda anotado: la cámara la lleva el plan
+  const vistaMir = () => { encuadrarMir(); if (!mir) listoMir.then((m) => { if (m && cMir.visible) encuadrarMir(!esc.guiado && !esc.st.paseo); }); };
   const animSoft = () => {
     const P = soft.userData.partes;
     crecer(P.obras, { duracion: 1.1, retraso: 0.6, onUpdate: inv, alFinal: () => esc.st.updateShadows() });
@@ -230,6 +232,9 @@ export async function crear(esc, datos) {
     completo: [...capasTodo, 'urb.mirador'],
     alCompleto: () => hoy(false),
     salir: () => hoy(true),
+    // cuando el asistente muestra, oculta o aísla piezas (visual.js): si la cancha no está a la vista, su lote no queda
+    // vacío (vuelven las casas de hoy), y al revés
+    alAjustar: () => hoy(!cSoft.visible),
     pasos: {
       portadilla: { capas: ['urb.ciudadela', 'urb.hoy'], antes: () => hoy(true), vista: vistaCiud },
       componentes: { capas: capasTodo, antes: () => hoy(false), vista: vistaCiud, animar: () => { animSoft(); animCano(); animAla(); animInst(); }, etiquetas: piezas },

@@ -85,6 +85,8 @@ export function crear(esc, datos) {
     completo: ['tic.fibra', 'tic.granja'],
     salir: () => { panelesSedes(false); verRelleno(false); },
     alCompleto: () => { panelesSedes(false); verRelleno(true); },
+    // estados que una pieza del catálogo puede pedir (visual.js): el modelo descartado, con paneles en cada sede
+    efectos: { paneles_por_sede: panelesSedes },
     pasos: {
       portadilla: { capas: ['tic.hoy'], antes: () => { panelesSedes(false); verRelleno(false); }, vista: vistaCasco },
       fibra: { capas: ['tic.fibra', 'tic.zonas', 'tic.zonas2'], antes: () => panelesSedes(false), vista: vistaCasco },

@@ -1,8 +1,13 @@
-// La tarjeta del recorrido narrado en el chat del asistente (agente.js) y la barra fija que lo sigue mientras suena.
+// La tarjeta del plan guiado en el chat del asistente (agente.js) y la barra fija que lo sigue mientras suena. Hacia la
+// persona es un «plan» con «pasos»; por dentro siguen el recorrido y sus escenas (la acción `recorrido`, el reproductor).
 //
-// La acción `recorrido` del servidor trae lo que la persona necesita para seguirlo y manejarlo desde el chat: el
-// título, dónde suena, la duración estimada, las escenas (dónde está cada una, lo que hace y su narración), el cierre y
-// las sugerencias para seguir. El avance llega en vivo:
+// La acción `recorrido` del servidor trae el plan entero y la tarjeta lo muestra ANTES de que empiece («Plan listo:
+// empieza enseguida»): el título, cuántos pasos, la duración estimada, dónde suena y los pasos numerados (dónde está
+// cada uno, lo que hace mientras se dice y su frase), el cierre y las sugerencias para seguir. Después lo sigue paso a
+// paso: el paso en curso va marcado y abierto, con la frase que suena resaltada; los hechos, con su marca. Los demás
+// van resumidos en un renglón («Ver todo» los abre). La lista de pasos tiene su propio desplazamiento y va sola al
+// paso en curso mientras la persona no la haya movido para leer otra parte; el desplazamiento del chat no se toca.
+// El avance llega en vivo:
 // * si suena en esta pestaña o en el proyector, del puente (`escucharRecorrido`: el reproductor de la vista o el canal
 //   del proyector);
 // * si suena en la pantalla en off (otro equipo), de GET /api/pantalla/recorrido cada SONDEO_MS mientras no termine. Una
@@ -11,15 +16,19 @@
 //   aplicaba. En pausa no hay avances: la tarjeta mira si la pantalla sigue abierta (`conectada`) y, si se cerró, también
 //   lo da por detenido. Una pausa larga se sigue preguntando, más despacio (SONDEO_LENTO_MS), así se ve el «continuar»
 //   que mande el asistente.
-// Los controles van adonde suena (el puente o POST /api/pantalla/recorrido/control). Al terminar ofrece volver a
-// reproducirlo y las sugerencias como botones (al tocar una, se envía como mensaje de la persona). Volver a reproducirlo
-// pasa siempre por el servidor, que lo vuelve a armar con un id nuevo (también uno que otra orden cerró): así el
-// asistente lo ve y lo controla, y su avance no rebota. Si el asistente armó otro después, ya no se puede (409).
+// Los controles van adonde suena (el puente o POST /api/pantalla/recorrido/control). El interruptor de voz dice cómo
+// está la voz donde suena (`voz` del avance) y la enciende o la apaga si suena en esta pestaña (`alternarVozRecorrido`
+// del puente: el clic es el gesto que el navegador pide); si suena en otra ventana, dice dónde se enciende. Al terminar
+// ofrece volver a reproducirlo y las sugerencias como botones (al tocar una, se envía como mensaje de la persona).
+// Volver a reproducirlo pasa siempre por el servidor, que lo vuelve a armar con un id nuevo (también uno que otra orden
+// cerró): así el asistente lo ve y lo controla, y su avance no rebota. Si el asistente armó otro después, ya no se
+// puede (409).
 //
 // Seguridad: todo se valida con la forma exacta y se pinta con textContent (nada del modelo entra como HTML). La
-// tarjeta no es aria-live: solo cambia aria-current de la escena en curso.
+// tarjeta no es aria-live: solo cambia aria-current del paso en curso.
 import { ErrorApi, api } from './api.js';
-import { MAX_CIERRE, MAX_ESCENAS, MAX_EXPLICACION, MAX_PUNTO, MAX_TITULO, TERMINALES, controlRecorrido,
+import * as puente from './agente-presentacion.js';
+import { MAX_CIERRE, MAX_ESCENAS, MAX_EXPLICACION, MAX_FRASES, MAX_PUNTO, MAX_TITULO, TERMINALES, VOCES, controlRecorrido,
   escucharRecorrido, proyectorVivo, recorridoEnCurso } from './agente-presentacion.js';
 
 const SONDEO_MS = 1500;
@@ -31,19 +40,37 @@ const SIN_NOTICIAS_S = 60;              // sonando y sin un avance en esto, la p
                                         // espera más larga sin avisar es el cierre: el resumen, lo que se sostiene y
                                         // «¿Preguntas?», unos 35 s)
 const SIN_EMPEZAR_MS = 90000;           // y sin ningún avance en esto, no lo va a narrar (`VIGENCIA_RECORRIDO_S` de la vista)
+const NOTA_PROPIA_MS = 7000;            // lo que dura una nota que pidió la persona (dónde se enciende la voz) aunque
+                                        // llegue otro avance
 const RID = /^[0-9a-f]{12}$/;
-// Lo que hace cada escena (`HACE` de la herramienta): el nombre y el ícono de ui.js
+// Lo que hace cada paso (`HACE` de la herramienta): el nombre y el ícono de ui.js
 export const HACE = {
   paso: ['Cambia de paso', 'siguiente'], camara: ['Mueve la cámara', 'gps'], enfoque: ['Enfoca una obra', 'buscar'],
   ficha: ['Abre una ficha', 'info'], hoy: ['Muestra hoy', 'reloj'], proyecto: ['Muestra el proyecto', 'presentacion'],
   modelo: ['Abre un modelo del atlas', 'zona'], resaltar: ['Resalta', 'pin'], solo3d: ['Solo 3D', 'pantalla'],
-  girar: ['Gira', 'repetir'],
+  girar: ['Gira', 'repetir'], capas: ['Muestra u oculta piezas', 'capas'], aislar: ['Aísla una obra', 'aislar'],
+  partes: ['Quita partes', 'partes'], mover: ['Recorre con la cámara', 'recorrer'], mirar: ['Apunta la cámara', 'mirar'],
+  animar: ['Anima la obra', 'animar'],
 };
 const FASE = { preparando: 'Preparando', narrando: 'Narrando', sosteniendo: 'Mirando', cierre: 'En resumen', pausa: 'En pausa',
   fin: 'Terminó', detenido: 'Detenido', error: 'Detenido por un error', sin_avance: 'Preparando' };
+const LISTO = 'Plan listo: empieza enseguida';
 const AVISO = { atlas: 'el modelo del atlas no cargó', resaltar: 'no encontró lo que resaltar', asiento: 'la imagen tardó en asentarse',
-  voz: 'la voz no pudo hablar' };
+  voz: 'la voz no pudo hablar', parcial: 'parte de lo pedido no se pudo mostrar' };
 const DONDE = { aqui: 'en esta pestaña', proyector: 'en el proyector', pantalla_off: 'en la pantalla en off' };
+// El interruptor de voz: lo que dice, su nombre para quien no lo ve (contiene lo que dice) y la ayuda; y, si no se
+// maneja desde aquí, dónde sí
+const VOZ = {
+  activa: { texto: 'Voz', nombre: 'Voz del plan', ayuda: 'La voz del plan está encendida' },
+  apagada: { texto: 'Voz', nombre: 'Voz del plan', ayuda: 'La voz del plan está apagada' },
+  sin_activar: { texto: 'Activar voz', nombre: 'Activar voz del plan', ayuda: 'La voz del plan espera un toque para sonar' },
+  sin_voces: { texto: 'Sin voces', nombre: 'Sin voces en español para el plan', ayuda: 'El navegador donde suena no tiene voces en español' },
+};
+const VOZ_ALLA = {
+  aqui: 'La voz se enciende en la presentación de esta pestaña, con su botón «Voz»: ábrala primero.',
+  proyector: 'La voz suena en la ventana del proyector: se enciende o se apaga allá, con su botón «Voz» (abajo a la izquierda).',
+  pantalla_off: 'La voz suena en la pantalla en off: se enciende o se apaga allá, con su botón «Voz».',
+};
 
 const cadena = (v, max) => typeof v === 'string' && v.trim() && [...v].length <= max && !/[\u0000-\u001f\u007f]/.test(v);
 
@@ -65,10 +92,11 @@ export function tarjetaValida(a) {
   if (!Array.isArray(sug) || sug.length > 3 || !sug.every((x) => cadena(x, 60))) return null;
   if (!Array.isArray(a.escenas) || !a.escenas.length || a.escenas.length > MAX_ESCENAS) return null;
   const escenas = [];
+  const maxHace = Object.keys(HACE).length;
   for (const e of a.escenas) {
     if (!e || typeof e !== 'object' || Array.isArray(e) || Object.keys(e).some((k) => !['narracion', 'donde', 'hace'].includes(k))) return null;
     if (!cadena(e.narracion, MAX_EXPLICACION) || !cadena(e.donde, 300)) return null;
-    if (!Array.isArray(e.hace) || e.hace.length > 10 || !e.hace.every((h) => Object.prototype.hasOwnProperty.call(HACE, h))) return null;
+    if (!Array.isArray(e.hace) || e.hace.length > maxHace || !e.hace.every((h) => Object.prototype.hasOwnProperty.call(HACE, h))) return null;
     escenas.push({ narracion: e.narracion, donde: e.donde, hace: [...new Set(e.hace)] });
   }
   return { id: a.id, titulo: a.titulo, destino: a.destino, duracion_ms: a.duracion_ms, cierre, sugerencias: [...sug], escenas };
@@ -79,6 +107,34 @@ export function duracion(ms) {
   if (s < 60) return `${s} s`;
   const m = Math.floor(s / 60), r = s % 60;
   return r ? `${m} min ${r} s` : `${m} min`;
+}
+
+// Dónde termina una frase, como `partir_frases` de app/recorrido.py: un punto o un cierre de pregunta o de exclamación,
+// un espacio y una mayúscula o un signo de apertura, salvo después de una sigla con puntos («la E.S.E. Hospital…»). Sin
+// «lookbehind»: un Safari viejo no cargaría el módulo
+const ABRE_FRASE = /[A-ZÁÉÍÓÚÑ¿¡«(]/;
+const SIGLA = /(?:^|[^\p{L}\p{N}_])(?:[A-ZÁÉÍÓÚÑ]\.){2,}$|(?:^|[^\p{L}\p{N}_])(?:Res|art|Art|núm|No|Dr|Sr|Sra)\.$/u;
+
+/** La narración de un paso en sus frases (de 1 a MAX_FRASES), partida como la parte el servidor: el avance dice cuál
+ * suena por su número. La tarjeta recibe la narración entera; cuando el plan está en este navegador, sus frases ya
+ * partidas mandan (`frases` de crearTarjetaRecorrido). */
+export function partirFrases(texto) {
+  const t = String(texto ?? '').split(/\s+/).filter(Boolean).join(' ');
+  const partes = [];
+  let desde = 0;
+  for (let i = 1; i < t.length - 1; i++) {
+    if (t[i] === ' ' && '.!?'.includes(t[i - 1]) && ABRE_FRASE.test(t[i + 1])) {
+      partes.push(t.slice(desde, i));
+      desde = i + 1;
+    }
+  }
+  partes.push(t.slice(desde));
+  const frases = [];
+  for (const x of partes) {
+    if (frases.length && SIGLA.test(frases[frases.length - 1])) frases[frases.length - 1] += ` ${x}`;
+    else frases.push(x);
+  }
+  return frases.length > MAX_FRASES ? [...frases.slice(0, MAX_FRASES - 1), frases.slice(MAX_FRASES - 1).join(' ')] : frases;
 }
 
 // ── La barra fija: sigue a la tarjeta que suena (la más nueva) ──
@@ -112,13 +168,18 @@ export function pausaPorMensaje() {
   if (t && !t.pausado()) t.controlar('pausar', { suave: true, nota: 'En pausa mientras responde el asistente.' });
 }
 
+const sinMovimiento = () => {
+  try { return !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
+};
+
 /**
- * La tarjeta del recorrido `a` (ya validado con `tarjetaValida`).
+ * La tarjeta del plan `a` (ya validado con `tarjetaValida`).
  * deps: {el, ico, alSugerencia(texto), reproducir(rid, desde, nuevo?) → bool (la vista o el proyector: el recorrido
  * guardado con el id `rid`, desde la escena `desde`; con `nuevo`, con ese id: el que le dio el servidor al volver a
- * armarlo), guardado?(rid) → bool (¿lo tiene este navegador?)}
+ * armarlo), guardado?(rid) → bool (¿lo tiene este navegador?), frases?(rid) → [[frase, …], …] (las frases de cada
+ * escena del recorrido que tiene este navegador; sin eso, la narración se parte aquí)}
  */
-export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, guardado }) {
+export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, guardado, frases }) {
   let rid = a.id;
   let donde = a.destino === 'pantalla_off' ? 'pantalla_off' : (proyectorVivo() ? 'proyector' : 'aqui');
   let ultimo = null;        // el último avance
@@ -131,6 +192,14 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   let desdeRid = Date.now();
   let sinPantallaDesde = null;   // desde cuándo el servidor dice que la pantalla en off no está abierta
   let volviendo = false;         // «Volver a reproducir» ya pidió el id nuevo y espera su primer avance
+  let empezo = false;            // ya salió del «Plan listo» (el primer paso empezó a decirse, o se reanudó más adelante)
+  let viva = 'preparando';       // la fase del paso `nViva` antes de una pausa: dice qué frase queda resaltada
+  let nViva = 0;
+  let actual = null;             // el <li> del paso en curso (o el del cierre)
+  let completo = false;          // «Ver todo»: todos los pasos abiertos y la lista sin su desplazamiento propio
+  let vozSabida = null;          // cómo está la voz donde suena (del avance o del interruptor)
+  let notaPropia = 0;            // hasta cuándo se queda la nota que pidió la persona
+  let notaDeVoz = false;         // la nota que se ve habla de la voz
 
   const art = el('article', 'agente-recorrido');
   art.dataset.destino = a.destino;
@@ -138,18 +207,57 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   const sello = el('span', 'rec-sello');
   sello.append(ico('presentacion'));
   const tit = el('div', 'rec-titulos');
-  const h = el('h3', null, a.titulo);
+  // «Plan · título»
+  const h = el('h3');
+  h.append(el('span', 'rec-tipo', 'Plan'), el('span', 'rec-sep', ' · '), el('span', 'rec-titulo', a.titulo));
   const meta = el('small', 'rec-meta');
-  tit.append(el('span', 'rec-tipo', 'Recorrido narrado'), h, meta);
+  tit.append(h, meta);
   cab.append(sello, tit);
   const avance = el('div', 'rec-avance');
   const barra = el('i');
   avance.append(barra);
   avance.setAttribute('aria-hidden', 'true');
-  const estadoEl = el('p', 'rec-estado', 'Preparando la primera escena…');
+  // El estado, «Ver todo» y el interruptor de voz, en un renglón
+  const fila = el('div', 'rec-fila');
+  const estadoEl = el('p', 'rec-estado', LISTO);
+  const bTodo = el('button', 'rec-todo', 'Ver todo');
+  bTodo.type = 'button';
+  bTodo.setAttribute('aria-expanded', 'false');
+  bTodo.setAttribute('aria-label', 'Ver todo el plan');
+  const bVoz = el('button', 'rec-voz');
+  bVoz.type = 'button';
+  bVoz.setAttribute('role', 'switch');
+  bVoz.setAttribute('aria-checked', 'false');
+  bVoz.setAttribute('aria-label', 'Voz del plan');
+  const vozTexto = el('span', 'rec-voz-texto', 'Voz');
+  const perilla = el('i', 'rec-voz-perilla');
+  perilla.setAttribute('aria-hidden', 'true');
+  bVoz.append(ico('voz'), vozTexto, perilla);
+  bVoz.hidden = true;   // hasta saber cómo está (el primer avance)
+  fila.append(estadoEl, bTodo, bVoz);
+
+  // Las frases de cada paso: las del recorrido que tiene este navegador (si arman la misma narración) o partidas aquí
+  let propias = null;
+  try { propias = frases?.(a.id) ?? null; } catch { propias = null; }
+  const frasesDe = (i) => {
+    const f = Array.isArray(propias) ? propias[i] : null;
+    return Array.isArray(f) && f.length && f.every((x) => typeof x === 'string') && f.join(' ') === a.escenas[i].narracion
+      ? f : partirFrases(a.escenas[i].narracion);
+  };
+  const marcaDe = () => {
+    const m = el('span', 'rec-marca');
+    m.setAttribute('aria-hidden', 'true');
+    return m;
+  };
   const lista = el('ol', 'rec-escenas');
-  const items = a.escenas.map((e) => {
+  lista.tabIndex = 0;   // se desplaza: con el teclado también
+  lista.setAttribute('aria-label', 'Pasos del plan');
+  const items = a.escenas.map((e, i) => {
     const li = el('li', 'rec-escena');
+    const hecho = el('span', 'sr');   // «Hecho»: la marca, para quien no la ve
+    const texto = el('p', 'rec-narracion');
+    const spans = frasesDe(i).map((f) => el('span', 'rec-frase', f));
+    spans.forEach((s, k) => { if (k) texto.append(' '); texto.append(s); });
     const chips = el('div', 'rec-chips');
     for (const k of e.hace) {
       const c = el('span', 'rec-chip');
@@ -157,20 +265,18 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
       c.append(ico(HACE[k][1]), el('span', null, HACE[k][0]));
       chips.append(c);
     }
-    const marca = el('span', 'rec-marca');
-    marca.setAttribute('aria-hidden', 'true');
-    li.append(marca, el('b', 'rec-donde', e.donde), el('p', 'rec-narracion', e.narracion), chips);
+    li.append(marcaDe(), hecho, el('b', 'rec-donde', e.donde), texto, chips);
     lista.append(li);
-    return li;
+    return { li, hecho, frases: spans, avisos: new Set(), aviso: null };
   });
   let liCierre = null;
+  let hechoCierre = null;
   if (a.cierre) {
     liCierre = el('li', 'rec-escena rec-cierre');
+    hechoCierre = el('span', 'sr');
     const pts = el('ul', 'rec-puntos');
     for (const x of a.cierre) pts.append(el('li', null, x));
-    const marca = el('span', 'rec-marca');
-    marca.setAttribute('aria-hidden', 'true');
-    liCierre.append(marca, el('b', 'rec-donde', 'En resumen'), pts);
+    liCierre.append(marcaDe(), hechoCierre, el('b', 'rec-donde', 'En resumen'), pts);
     lista.append(liCierre);
   }
   const notaEl = el('p', 'rec-nota');
@@ -193,7 +299,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   const bDet = boton('detener', 'Detener', 'detener');
   controles.append(bPausa, bAnt, bSig, bRep, bDet);
   controles.setAttribute('role', 'group');
-  controles.setAttribute('aria-label', 'Controles del recorrido');
+  controles.setAttribute('aria-label', 'Controles del plan');
   const final = el('div', 'rec-final');
   final.hidden = true;
   const bOtra = boton('reproducir', 'Volver a reproducir', 'reproducir', 'btn chico primario');
@@ -208,20 +314,110 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     sugerencias.append(b);
   }
   sugerencias.hidden = true;
-  art.append(cab, avance, estadoEl, lista, notaEl, controles, final, sugerencias);
+  art.append(cab, avance, fila, lista, notaEl, controles, final, sugerencias);
+  art.dataset.etapa = 'listo';
 
   function pintarMeta() {
-    const partes = [`${a.escenas.length} ${a.escenas.length === 1 ? 'escena' : 'escenas'}`, `≈ ${duracion(a.duracion_ms)}`, DONDE[donde]];
+    const partes = [`${a.escenas.length} ${a.escenas.length === 1 ? 'paso' : 'pasos'}`, `≈ ${duracion(a.duracion_ms)}`, DONDE[donde]];
     meta.textContent = partes.join(' · ');
   }
   pintarMeta();
 
-  function nota(t) {
-    notaEl.textContent = t || '';
-    notaEl.hidden = !t;
+  // ── El final de la tarjeta (los controles, las sugerencias) no se sale de la vista cuando la tarjeta crece ──
+  let marcoChat = null;
+  /** Lo que desplaza a la tarjeta: el registro del chat. */
+  function marco() {
+    if (marcoChat?.isConnected && marcoChat.contains(art)) return marcoChat;
+    marcoChat = null;
+    if (typeof art.getBoundingClientRect !== 'function' || typeof globalThis.getComputedStyle !== 'function') return null;
+    for (let x = art.parentElement; x && !marcoChat; x = x.parentElement) {
+      const o = getComputedStyle(x).overflowY;
+      if (o === 'auto' || o === 'scroll') marcoChat = x;
+    }
+    return marcoChat;
+  }
+  /** Corre `f`, que cambia el alto de la tarjeta o del chat (una nota, los botones del final, la barra fija que
+   * aparece): si el final de la tarjeta se veía, se sigue viendo (el chat baja lo justo). Si la persona estaba leyendo
+   * otra parte y no se veía, el chat no se mueve. */
+  function conElPieALaVista(f) {
+    const m = marco();
+    let hueco = null;
+    if (m) {
+      const r = art.getBoundingClientRect(), v = m.getBoundingClientRect();
+      if (r.bottom <= v.bottom + 1 && r.bottom > v.top) hueco = v.bottom - r.bottom;
+    }
+    f();
+    if (hueco === null) return;
+    const d = art.getBoundingClientRect().bottom + hueco - m.getBoundingClientRect().bottom;
+    if (d > 1) m.scrollTop += Math.ceil(d);
   }
 
-  function pintar(p) {
+  /** La nota de la tarjeta. `deVoz`: habla de la voz (el interruptor la quita cuando ya no hace falta). */
+  function nota(t, deVoz = false) {
+    notaDeVoz = !!t && deVoz;
+    if (notaEl.textContent === (t || '') && notaEl.hidden === !t) return;
+    conElPieALaVista(() => {
+      notaEl.textContent = t || '';
+      notaEl.hidden = !t;
+    });
+  }
+  /** Una nota que pidió la persona (tocó el interruptor de voz): se queda un momento aunque llegue otro avance. */
+  function notaDeLaPersona(t) {
+    nota(t, true);
+    notaPropia = t ? Date.now() + NOTA_PROPIA_MS : 0;
+  }
+
+  // ── La lista: cuál va abierto y hasta dónde se desplaza ──
+  const sinLista = () => completo || typeof lista.scrollTo !== 'function';
+  const aLaVista = (li) => sinLista() || !li
+    || (li.offsetTop < lista.scrollTop + lista.clientHeight && li.offsetTop + li.offsetHeight > lista.scrollTop);
+  /** Lleva la lista al paso `li`, con el anterior asomado arriba (lo que se acaba de decir). */
+  function llevar(li, suave = true) {
+    if (sinLista() || !li) return;
+    const ref = li.previousElementSibling || li;
+    lista.scrollTo({ top: Math.max(0, ref.offsetTop), behavior: suave && !sinMovimiento() ? 'smooth' : 'auto' });
+  }
+  function abrir() {
+    for (const it of items) it.li.classList.toggle('abierta', completo || it.li === actual);
+    liCierre?.classList.toggle('abierta', completo || liCierre === actual);
+  }
+  bTodo.addEventListener('click', () => {
+    completo = !completo;
+    art.classList.toggle('completo', completo);
+    bTodo.setAttribute('aria-expanded', String(completo));
+    bTodo.textContent = completo ? 'Resumir' : 'Ver todo';
+    bTodo.setAttribute('aria-label', completo ? 'Resumir el plan' : 'Ver todo el plan');
+    abrir();
+    if (!completo) llevar(actual, false);
+  });
+
+  // ── La voz ──
+  function pintarVoz(e) {
+    if (!VOCES.includes(e)) return;
+    vozSabida = e;
+    bVoz.dataset.voz = e;
+    bVoz.setAttribute('aria-checked', String(e === 'activa'));
+    vozTexto.textContent = VOZ[e].texto;
+    bVoz.setAttribute('aria-label', VOZ[e].nombre);
+    bVoz.title = `${VOZ[e].ayuda} (${DONDE[donde]})`;
+    bVoz.hidden = terminado;
+  }
+  bVoz.addEventListener('click', () => {
+    // Solo si suena en esta pestaña: con el plan en la pantalla en off, la vista de aquí (si está abierta) no es la que habla
+    let e = null;
+    if (donde === 'aqui') { try { e = puente.alternarVozRecorrido?.() ?? null; } catch { e = null; } }
+    if (!VOCES.includes(e)) {
+      notaDeLaPersona(VOZ_ALLA[donde === 'aqui' && proyectorVivo() ? 'proyector' : donde]);
+      return;
+    }
+    pintarVoz(e);
+    if (e === 'sin_voces') notaDeLaPersona('Este navegador no tiene voces en español: el plan se lee en pantalla.');
+    else if (e === 'sin_activar') notaDeLaPersona('El navegador todavía no deja sonar la voz: toque otra vez «Activar voz».');
+    else if (notaDeVoz) notaDeLaPersona('');
+  });
+
+  const pintar = (p) => conElPieALaVista(() => pintarYa(p));
+  function pintarYa(p) {
     ultimo = p;
     if (volviendo) { volviendo = false; bOtra.disabled = false; }
     const de = a.escenas.length;
@@ -229,30 +425,57 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     const fase = p.fase in FASE ? p.fase : 'preparando';
     const enCierre = fase === 'cierre' || (fase === 'pausa' && p.enCierre);
     const fin = fase === 'fin';
-    items.forEach((li, i) => {
+    terminado = TERMINALES.includes(fase);
+    // «Plan listo»: llegó entero y todavía no empieza (la espera de antes del primer paso, o la pantalla en off que aún no avisa)
+    if (fase !== 'preparando' || n > 1) empezo = true;
+    const listo = !empezo;
+    // La fase del paso antes de una pausa (la pausa no cambia lo que queda resaltado)
+    if (fase !== 'pausa') { viva = fase; nViva = n; } else if (nViva !== n) { viva = p.frase > 0 ? 'narrando' : 'preparando'; nViva = n; }
+    const nuevo = terminado || listo ? null : enCierre ? liCierre : items[n - 1].li;
+    // ¿la lista seguía al paso en curso? (antes de abrir y cerrar pasos: cambian de alto)
+    const seguia = aLaVista(actual);
+    const cambio = nuevo !== actual;
+    actual = nuevo;
+    items.forEach((it, i) => {
       const k = i + 1;
-      const hecha = fin || k < n || (enCierre && k <= n);
-      li.classList.toggle('hecha', hecha);
-      const cur = !fin && !TERMINALES.includes(fase) && !enCierre && k === n;
-      if (cur) { li.setAttribute('aria-current', 'step'); li.dataset.fase = fase; } else { li.removeAttribute('aria-current'); delete li.dataset.fase; }
+      const hecha = fin || (!listo && (k < n || (enCierre && k <= n)));
+      it.li.classList.toggle('hecha', hecha);
+      it.hecho.textContent = hecha ? 'Hecho. ' : '';
+      const cur = it.li === actual;
+      if (cur) { it.li.setAttribute('aria-current', 'step'); it.li.dataset.fase = fase; } else { it.li.removeAttribute('aria-current'); delete it.li.dataset.fase; }
+      // la frase que suena y las que ya se dijeron
+      const suena = cur && viva === 'narrando' ? Math.min(p.frase || 0, it.frases.length - 1) : -1;
+      const todas = cur && viva === 'sosteniendo';
+      it.frases.forEach((s, j) => {
+        s.classList.toggle('sonando', j === suena);
+        s.classList.toggle('dicha', todas || j < suena);
+      });
     });
     if (liCierre) {
       liCierre.classList.toggle('hecha', fin);
-      if (enCierre) liCierre.setAttribute('aria-current', 'step'); else liCierre.removeAttribute('aria-current');
+      hechoCierre.textContent = fin ? 'Hecho. ' : '';
+      if (liCierre === actual) liCierre.setAttribute('aria-current', 'step'); else liCierre.removeAttribute('aria-current');
     }
+    abrir();
+    if (cambio && seguia) llevar(actual);
     if (p.aviso && AVISO[p.aviso]) marcarAviso(n, AVISO[p.aviso]);
     if (p.motivo === 'escena_fallida' && !TERMINALES.includes(fase)) marcarAviso(n, 'no se pudo mostrar');
     const total = de + 1;
-    const hechas = fin ? total : enCierre ? de + 0.5 : (n - 1) + (fase === 'sosteniendo' ? 0.85 : fase === 'narrando' ? 0.5 : 0.15);
+    const hechas = fin ? total : enCierre ? de + 0.5 : listo ? 0
+      : (n - 1) + (viva === 'sosteniendo' ? 0.85 : viva === 'narrando' ? 0.5 : 0.15);
     barra.style.width = `${Math.round((hechas / total) * 100)}%`;
-    terminado = TERMINALES.includes(fase);
     art.dataset.fase = fase;
+    art.dataset.etapa = terminado ? 'final' : listo ? 'listo' : 'marcha';
     // lo que dice la línea de estado
     if (fin) estadoEl.textContent = `Terminó${p.t_ms ? ` · ${duracion(p.t_ms)}` : ''}`;
-    else if (fase === 'detenido') estadoEl.textContent = p.motivo === 'reemplazo' ? 'Lo reemplazó otro recorrido' : `Detenido en la escena ${n}`;
-    else if (fase === 'error') estadoEl.textContent = `Se detuvo por un error en la escena ${n}`;
+    else if (fase === 'detenido') estadoEl.textContent = p.motivo === 'reemplazo' ? 'Lo reemplazó otro plan' : `Detenido en el paso ${n}`;
+    else if (fase === 'error') estadoEl.textContent = `Se detuvo por un error en el paso ${n}`;
     else if (enCierre) estadoEl.textContent = fase === 'pausa' ? 'En pausa · en el resumen' : 'En resumen';
-    else estadoEl.textContent = `Escena ${n} de ${de} · ${FASE[fase]}`;
+    else if (listo) estadoEl.textContent = LISTO;
+    else estadoEl.textContent = `Paso ${n} de ${de} · ${FASE[fase]}`;
+    // la voz donde suena
+    if (VOCES.includes(p.voz)) pintarVoz(p.voz);
+    bVoz.hidden = terminado || !vozSabida;
     // los botones
     const pausado = fase === 'pausa';
     bPausa.dataset.accion = pausado ? 'continuar' : 'pausar';
@@ -265,7 +488,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     const cortado = fase === 'detenido' && p.motivo === 'proyector';
     bReanudar.hidden = !cortado;
     if (cortado) {
-      bReanudar.querySelector('span').textContent = `Reanudar desde la escena ${n}`;
+      bReanudar.querySelector('span').textContent = `Reanudar desde el paso ${n}`;
       bReanudar.dataset.desde = String(n);
     }
     // las notas
@@ -273,31 +496,44 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     else if (fase === 'detenido' && p.motivo === 'otra_orden') nota('Se detuvo: el asistente mostró otra cosa.');
     else if (fase === 'detenido' && p.motivo === 'sin_respuesta') nota('Se detuvo: la pantalla en off dejó de responder.');
     else if (pausado && p.motivo === 'mensaje') nota('En pausa mientras responde el asistente.');
-    else if (pausado && p.motivo === 'persona') nota('En pausa: movieron la imagen. Al continuar, la escena vuelve.');
-    else if (!terminado && donde === 'proyector' && p.voz === 'sin_activar') nota('Toque el botón «Voz» (abajo a la izquierda) en la ventana del proyector para activar la voz; tocar la maqueta pausa el recorrido.');
-    else if (!terminado && donde === 'aqui' && p.voz === 'sin_activar') nota('Toque «Voz» en la barra de la presentación para oírla.');
+    else if (pausado && p.motivo === 'persona') nota('En pausa: movieron la imagen. Al continuar, el paso vuelve.');
+    else if (Date.now() < notaPropia && !terminado) { /* la que pidió la persona se queda un momento */ }
+    else if (!terminado && donde === 'proyector' && p.voz === 'sin_activar') nota('Toque el botón «Voz» (abajo a la izquierda) en la ventana del proyector para activar la voz; tocar la maqueta pausa el plan.', true);
+    else if (!terminado && donde === 'pantalla_off' && p.voz === 'sin_activar') nota('Toque la pantalla en off (o su botón «Voz») para activar la voz.', true);
+    else if (!terminado && donde === 'aqui' && p.voz === 'sin_activar') nota('Toque «Activar voz» para oír el plan.', true);
     else if (!pausado) nota('');
     if (terminado) soltar();
     avisarBarra();
   }
 
+  /** Un aviso del paso `n` (cada texto una vez; varios, en el mismo renglón). */
   function marcarAviso(n, t) {
-    const li = items[n - 1];
-    if (!li || li.querySelector('.rec-aviso')) return;
-    li.append(el('small', 'rec-aviso', t));
+    const it = items[n - 1];
+    if (!it || it.avisos.has(t)) return;
+    it.avisos.add(t);
+    if (!it.aviso) { it.aviso = el('small', 'rec-aviso'); it.li.append(it.aviso); }
+    it.aviso.textContent = [...it.avisos].join(' · ');
+  }
+  function quitarAvisos() {
+    for (const it of items) {
+      it.avisos.clear();
+      it.aviso?.remove();
+      it.aviso = null;
+    }
   }
 
   // ── De dónde llega el avance ──
+  const delPuente = (p, de) => {
+    if (p.rid !== rid) return;
+    // el reproductor de aquí lo soltó para pasárselo al proyector que se abrió: sigue allá (lo dirá el proyector)
+    if (de === 'aqui' && p.fase === 'detenido' && p.motivo === 'proyector') return;
+    if (de === 'proyector' || de === 'aqui') { const antes = donde; donde = de; if (antes !== donde) pintarMeta(); }
+    pintar({ ...p, enCierre: p.fase === 'cierre' || (p.fase === 'pausa' && ultimo?.fase === 'cierre') || (p.fase === 'pausa' && !!ultimo?.enCierre) });
+  };
   function escuchar() {
     quitar();
     if (a.destino === 'vista') {
-      quitar = escucharRecorrido((p, de) => {
-        if (p.rid !== rid) return;
-        // el reproductor de aquí lo soltó para pasárselo al proyector que se abrió: sigue allá (lo dirá el proyector)
-        if (de === 'aqui' && p.fase === 'detenido' && p.motivo === 'proyector') return;
-        if (de === 'proyector' || de === 'aqui') { const antes = donde; donde = de; if (antes !== donde) pintarMeta(); }
-        pintar({ ...p, enCierre: p.fase === 'cierre' || (p.fase === 'pausa' && ultimo?.fase === 'cierre') || (p.fase === 'pausa' && !!ultimo?.enCierre) });
-      });
+      quitar = escucharRecorrido(delPuente);
     } else {
       // El tope corre desde el último cambio (otra escena, otra fase u otra frase), no desde que se creó la tarjeta: una
       // pausa larga para preguntas no la congela. Al vencer en pausa sigue preguntando más despacio; sonando, o sin
@@ -392,7 +628,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     if (bOtra.disabled) return;
     const enVista = a.destino !== 'pantalla_off';
     if (enVista && guardado && !guardado(rid)) {
-      nota('No se pudo volver a reproducir: el recorrido ya no está en este navegador.');
+      nota('No se pudo volver a reproducir: el plan ya no está en este navegador.');
       return;
     }
     bOtra.disabled = true;
@@ -404,7 +640,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     } catch (e) {
       const otro = e instanceof ErrorApi && e.estado === 409;
       bOtra.disabled = otro;
-      nota(otro ? 'Ya no se puede volver a reproducir: hay un recorrido más nuevo.'
+      nota(otro ? 'Ya no se puede volver a reproducir: hay un plan más nuevo.'
         : `No se pudo: ${String(e?.message || 'sin conexión').slice(0, 140)}.`);
       return;
     }
@@ -415,7 +651,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     desdeRid = Date.now();
     sinPantallaDesde = null;
     bOtra.disabled = false;
-    for (const li of art.querySelectorAll('.rec-aviso')) li.remove();
+    quitarAvisos();
     if (!enVista) {
       pintar({ rid, n: 1, de: a.escenas.length, fase: 'preparando' });
       escuchar();
@@ -431,7 +667,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
         volviendo = false;
         bOtra.disabled = false;
         pintar({ rid, n: 1, de: a.escenas.length, fase: 'detenido' });
-        nota('No se pudo volver a reproducir: el recorrido ya no está en este navegador.');
+        nota('No se pudo volver a reproducir: el plan ya no está en este navegador.');
       } else setTimeout(() => { if (volviendo) { volviendo = false; bOtra.disabled = false; } }, VOLVER_ESPERA_MS);
     }
   });
@@ -443,17 +679,17 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     const k = Number(bReanudar.dataset.desde) || 1;
     // el que suena es por fuerza más nuevo (el servidor solo acepta el último): este ya no se reanuda
     const otro = recorridoEnCurso();
-    if (otro && otro.rid !== rid) { bReanudar.hidden = true; nota('Ya no se puede reanudar: hay un recorrido más nuevo.'); return; }
+    if (otro && otro.rid !== rid) { bReanudar.hidden = true; nota('Ya no se puede reanudar: hay un plan más nuevo.'); return; }
     // el vigente del servidor (`vigente`, no el resumen: ese deja de nombrar uno cerrado o terminado a los dos minutos)
     let resp = null;
     try { resp = await api.get('/api/pantalla/recorrido'); } catch { /* sin conexión: se intenta igual */ }
     const v = resp?.vigente;
     if (resp && (!v || v.id !== rid || v.cerrado)) {
       bReanudar.hidden = true;
-      nota(v && v.id === rid ? 'Ya no se puede reanudar: se cerró. Use «Volver a reproducir».' : 'Ya no se puede reanudar: hay un recorrido más nuevo.');
+      nota(v && v.id === rid ? 'Ya no se puede reanudar: se cerró. Use «Volver a reproducir».' : 'Ya no se puede reanudar: hay un plan más nuevo.');
       return;
     }
-    if (!reproducir?.(rid, k)) nota('No se pudo reanudar: el recorrido ya no está en este navegador.');
+    if (!reproducir?.(rid, k)) nota('No se pudo reanudar: el plan ya no está en este navegador.');
   });
 
   const t = {
@@ -468,12 +704,21 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   };
   tarjetasVivas.add(t);
   escuchar();
+  // El plan pudo empezar antes de que existiera su tarjeta (su primer avance ya pasó, y el siguiente llega con el primer
+  // paso): lo que el puente sabe de él se pinta en cuanto la tarjeta está en el chat. Así la barra y la pausa al
+  // escribir ya lo cuentan, y el interruptor de voz dice cómo está
+  if (a.destino === 'vista') {
+    setTimeout(() => {
+      const ya = ultimo || !art.isConnected ? null : recorridoEnCurso();
+      if (ya && ya.rid === rid) { const { donde: de, ...p } = ya; delPuente(p, de); }
+    }, 0);
+  }
   return t;
 }
 
 /**
- * La barra fija arriba del registro del chat mientras un recorrido suena (aunque el turno haya terminado o la persona
- * suba en el historial): «● En la sala · escena 3 de 6 · Pausa · Detener».
+ * La barra fija arriba del registro del chat mientras un plan suena (aunque el turno haya terminado o la persona suba
+ * en el historial): «● Plan · paso 3 de 8 · título · Pausa · Detener».
  */
 export function montarBarraRecorrido(antesDe, { el, ico }) {
   const b = el('div', 'agente-rec-barra');
@@ -485,6 +730,8 @@ export function montarBarraRecorrido(antesDe, { el, ico }) {
   pausa.type = 'button';
   const det = el('button', 'btn fantasma chico');
   det.type = 'button';
+  det.title = 'Detener el plan';
+  det.setAttribute('aria-label', det.title);
   det.append(ico('detener'), el('span', null, 'Detener'));
   b.append(punto, txt, pausa, det);
   antesDe.before(b);
@@ -496,8 +743,11 @@ export function montarBarraRecorrido(antesDe, { el, ico }) {
     const p = t.avance();
     const enPausa = p?.fase === 'pausa';
     b.dataset.fase = p?.fase || '';
-    txt.textContent = `En la sala · ${t.titulo} · ${p?.fase === 'cierre' ? 'en resumen' : `escena ${p?.n || 1} de ${p?.de || 1}`}`;
+    const va = p?.fase === 'cierre' || (enPausa && p?.enCierre) ? 'en resumen' : `paso ${p?.n || 1} de ${p?.de || 1}`;
+    txt.textContent = `Plan · ${va}${enPausa ? ' · en pausa' : ''} · ${t.titulo}`;
     pausa.replaceChildren(ico(enPausa ? 'reproducir' : 'pausa'), el('span', null, enPausa ? 'Continuar' : 'Pausa'));
+    pausa.title = enPausa ? 'Continuar el plan' : 'Pausar el plan';
+    pausa.setAttribute('aria-label', pausa.title);
   };
   oyentesBarra.add(pintar);
   pausa.addEventListener('click', () => { if (actual) actual.controlar(actual.pausado() ? 'continuar' : 'pausar'); });

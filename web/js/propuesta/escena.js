@@ -118,6 +118,7 @@ export function crearEscena(el, datos) {
 
   // réplicas de las sedes públicas, en su estado de hoy (sin las adecuaciones del atlas: paneles, baterías, conexiones)
   const edificios = new Map();
+  let cargados = 0;   // cuántos modelos de sedes han llegado (la caja de una sede cambia cuando llega el suyo)
   EDIFICIOS.forEach((e) => {
     const g = new THREE.Group(); g.position.copy(V(e.x, e.y)); S.add(g);
     const [sx, sy, sz] = e.tamano || [20, 8, 20];
@@ -126,7 +127,7 @@ export function crearEscena(el, datos) {
     const it = { e, g, ph, lod: null, cargado: false, modo: { capa: 'hoy', sin: [] }, listo: [] };
     if (e.archivo) {
       it.lod = progressiveLOD([{ url: e.archivo, distance: 0 }, { url: e.archivo_lod1, distance: 300 }], (lod) => {
-        ph.visible = false; it.cargado = true; aplicarModo(it); st.updateShadows();
+        ph.visible = false; it.cargado = true; cargados++; aplicarModo(it); st.updateShadows();
         it.listo.splice(0).forEach((fn) => fn(it));
       });
       g.add(it.lod);
@@ -134,15 +135,19 @@ export function crearEscena(el, datos) {
     edificios.set(e.id, it);
   });
   st.onFrame(() => { edificios.forEach((it) => it.lod?.update(st.camera)); return false; });
-  // modo de una réplica: 'hoy' (como está) o 'proyecto' (con sus adecuaciones, salvo las capas de «sin»)
+  // modo de una réplica: 'hoy' (como está) o 'proyecto' (con sus adecuaciones, salvo las de «sin»: nombres de nodos de
+  // cualquier nivel dentro de «adecuaciones», como `solar` o `obra_nueva_cubierta`). Parte de cero cada vez: lo que
+  // otra lista ocultó vuelve a verse (antes quedaba oculto para siempre y solo llegaba a los hijos directos)
   function aplicarModo(it) {
     if (!it.lod) return;
-    const proy = it.modo.capa === 'proyecto';
+    const proy = it.modo.capa === 'proyecto', sin = new Set(it.modo.sin);
+    const enAdecuaciones = (o) => { for (let p = o.parent; p; p = p.parent) if (p.name === 'adecuaciones') return true; return false; };
     it.lod.traverse((o) => {
       if (o.name === 'adecuaciones') o.visible = proy;
-      if (o.name === 'cubierta_actual' && o.userData.reemplazada) o.visible = !proy;
+      else if (enAdecuaciones(o)) o.visible = !sin.has(o.name);
+      // sin la cubierta nueva, la sede conserva la actual (si no, queda sin esa parte del techo, con los paneles en el aire)
+      if (o.name === 'cubierta_actual' && o.userData.reemplazada) o.visible = !proy || sin.has('cubierta_nueva');
       if (o.userData.demoler) o.visible = !proy;
-      if (proy && it.modo.sin.includes(o.name) && o.parent?.name === 'adecuaciones') o.visible = false;
     });
   }
 
@@ -155,10 +160,17 @@ export function crearEscena(el, datos) {
   }
   // CSS2DRenderer no hereda la visibilidad del padre: cada etiqueta se muestra solo si toda su cadena es visible
   // etiquetas visibles: las de las capas visibles; en las vistas de conjunto (soloEtiquetas) solo las de algunas capas
+  // (y el rótulo de una parte de una capa —`userData.parte`, el nombre de su grupo— tampoco se ve si esa parte está
+  // oculta o atenuada: verGrupos, atenuarHermanos)
   let soloCapas = null;
+  const partesApagadas = new Map();   // capa → nombres de sus grupos ocultos o atenuados
   function verEtiqueta(o) {
     let v = o.userData.ver !== false, permitida = !soloCapas;
-    for (let p = o.parent; p; p = p.parent) { if (!p.visible) { v = false; break; } if (soloCapas?.has(p)) permitida = true; }
+    const parte = o.userData.parte;
+    for (let p = o.parent; p; p = p.parent) {
+      if (!p.visible || (parte && partesApagadas.get(p)?.has(parte))) { v = false; break; }
+      if (soloCapas?.has(p)) permitida = true;
+    }
     o.visible = v && permitida;
   }
   function sincronizarEtiquetas() { S.traverse((o) => { if (o.isCSS2DObject) verEtiqueta(o); }); }
@@ -202,6 +214,9 @@ export function crearEscena(el, datos) {
   // cruce otro rótulo; si no caben, los chicos se ocultan y los principales se quedan en su sitio. Ningún recuadro tapa
   // el punto de otro. Si un rótulo queda lejos de su punto, una guía los une. Reemplaza el de core.js solo en esta página.
   st.declutterLabels = function () {
+    // durante un paseo (la cámara gira despacio mientras se explica) el reparto se rehace cuatro veces por segundo y no
+    // en cada cuadro: no tiene memoria, y un rótulo apartado saltaría de un lado a otro de la obra de un cuadro al otro
+    if (this.paseo) { const t = performance.now(); if (t - (this._tReparto || 0) < 250) return; this._tReparto = t; }
     const z = zonaPx(), v = new THREE.Vector3(), items = [];
     const pantalla = (p) => { v.copy(p).project(this.camera); return v.z > 1 ? null : [((v.x + 1) / 2) * z.W, ((1 - v.y) / 2) * z.H]; };
     // los rótulos se apartan de la obra en pantallas chicas y, si la vista lo pide (encuadrar con apartar), en las grandes
@@ -345,6 +360,52 @@ export function crearEscena(el, datos) {
     m.vertexColors = !v; m.color.copy(v ? new THREE.Color('#c4c7c8') : colorCubierta); m.needsUpdate = true; st.invalidate();
   }
 
+  // ---------------------------------------------------------------- partes de una capa (lo que visual.js oculta o atenúa)
+  // Los grupos con nombre dentro de unas capas (`cubierta`, `obras`, `luces`, `matadero`… de piezas/*.js) se pueden ocultar,
+  // y los hermanos de unos grupos, dejar en gris translúcido (para aislar una nave del parque sin que desaparezca lo
+  // demás). restaurarGrupos devuelve todo lo tocado: los pasos de los módulos no saben de esto
+  const tocados = new Set();
+  const gruposDe = (capasIds, nombres) => { const out = []; for (const id of capasIds) capas.get(id)?.traverse((o) => { if (o.name && nombres.includes(o.name)) out.push([o, capas.get(id)]); }); return out; };
+  const apagar = (capa, nombre) => { if (!partesApagadas.has(capa)) partesApagadas.set(capa, new Set()); partesApagadas.get(capa).add(nombre); };
+  /** Muestra u oculta los grupos `nombres` de las capas `capasIds`. Devuelve cuántos encontró. */
+  function verGrupos(capasIds, nombres, v) {
+    const gs = gruposDe(capasIds, nombres);
+    gs.forEach(([o, capa]) => {
+      if (o.userData._vis === undefined) o.userData._vis = o.visible;
+      o.visible = !!v; tocados.add(o);
+      if (!v) apagar(capa, o.name); else partesApagadas.get(capa)?.delete(o.name);
+    });
+    sincronizarEtiquetas(); st.updateShadows();
+    return gs.length;
+  }
+  // se cambia la REFERENCIA del material de cada malla (no el material, que es compartido y lo repinta el tema) y se
+  // guarda la suya para devolverla; sin sombra propia mientras tanto
+  const fantasma = new THREE.MeshBasicMaterial({ color: 0x9aa0a6, transparent: true, opacity: 0.16, depthWrite: false });
+  /** Deja en gris translúcido los hermanos de los grupos `nombres` de las capas `capasIds`. Devuelve cuántas mallas cambió. */
+  function atenuarHermanos(capasIds, nombres) {
+    let n = 0;
+    gruposDe(capasIds, nombres).forEach(([g, capa]) => g.parent?.children.forEach((h) => {
+      if (nombres.includes(h.name) || h.isCSS2DObject) return;
+      if (h.name) apagar(capa, h.name);
+      h.traverse((o) => {
+        if (!o.isMesh || o.userData._mat) return;
+        o.userData._mat = o.material; o.userData._cs = o.castShadow; o.material = fantasma; o.castShadow = false; tocados.add(o); n++;
+      });
+    }));
+    sincronizarEtiquetas(); st.updateShadows();
+    return n;
+  }
+  /** Devuelve todo lo que verGrupos y atenuarHermanos cambiaron. */
+  function restaurarGrupos() {
+    if (!tocados.size && !partesApagadas.size) return;
+    tocados.forEach((o) => {
+      if (o.userData._mat) { o.material = o.userData._mat; o.castShadow = o.userData._cs; delete o.userData._mat; delete o.userData._cs; }
+      if (o.userData._vis !== undefined) { o.visible = o.userData._vis; delete o.userData._vis; }
+    });
+    tocados.clear(); partesApagadas.clear();
+    sincronizarEtiquetas(); st.updateShadows();
+  }
+
   // ---------------------------------------------------------------- encuadres que respetan el panel
   const elPanel = () => document.querySelector('.panel');
   // zona libre de la pantalla en coordenadas normalizadas (−1…1, y hacia arriba)
@@ -390,16 +451,15 @@ export function crearEscena(el, datos) {
     if (obj?.isObject3D) return puntosDe(solidBox(obj, 0.2));
     return obj.map(([x, y, h]) => V(x, y, h || 0));
   }
-  // encuadra (rumbo: desde dónde se mira, en grados desde el norte en sentido horario; elev: grados sobre el horizonte)
-  // obra: lo que los rótulos deben esquivar en el celular, si no es todo lo encuadrado (por ejemplo, un lote dentro de una
-  // vista que también muestra el río y el puente); sinCruces: los rótulos apartados no ponen su guía cruzando otra;
-  // apartar: los rótulos que caen sobre la obra se apartan arriba o abajo de ella también en pantalla grande
-  function encuadrar(obj, { rumbo = 200, elev = 38, margen = 0.86, duracion = 1.8, alto = 0, minDist = 60, obra, sinCruces = false, apartar = false } = {}) {
+  // La postura de cámara que hace caber `obj` en la zona libre (rumbo: desde dónde se mira, en grados desde el norte en
+  // sentido horario; elev: grados sobre el horizonte; margen: la fracción de la zona libre que ocupa, más de 1 acerca;
+  // minDist: el piso de la distancia; alto: metros de aire encima). Solo calcula: no mueve nada. Devuelve la posición, el
+  // objetivo, el centro de lo encuadrado, la distancia y sus puntos, o null si no hay qué encuadrar. La usan encuadrar
+  // (que vuela a ella) y visual.js (que lleva la cámara hasta ella con un paseo mientras se explica)
+  function postura(obj, { rumbo = 200, elev = 38, margen = 0.86, alto = 0, minDist = 60 } = {}) {
     const pts = puntosDe(obj);
-    if (!pts.length) return;
+    if (!pts.length) return null;
     if (alto) pts.push(...pts.map((p) => p.clone().setY(p.y + alto)));
-    st._obra = obra ? puntosDe(obra) : pts;
-    st._obra.sinCruces = sinCruces; st._obra.apartar = apartar;
     const z = zona(), cam = st.camera.clone(); cam.far = 1e7; cam.updateProjectionMatrix();
     const az = THREE.MathUtils.degToRad(rumbo), el2 = THREE.MathUtils.degToRad(elev);
     const dir = new THREE.Vector3(Math.sin(az) * Math.cos(el2), Math.sin(el2), -Math.cos(az) * Math.cos(el2));
@@ -415,10 +475,25 @@ export function crearEscena(el, datos) {
       tgt.addScaledVector(right, (((x0 + x1) / 2 - zx) * D * tanV * cam.aspect)).addScaledVector(up, (((y0 + y1) / 2 - zy) * D * tanV));
     }
     colocar();
-    st.controls.maxDistance = Math.max(st.controls.maxDistance, D * 2);
+    return { pos: cam.position.toArray(), tgt: tgt.toArray(), centro: c.toArray(), D, rumbo, elev, pts };
+  }
+  // encuadra: vuela a la postura de `obj` (las opciones de postura, más duracion)
+  // obra: lo que los rótulos deben esquivar en el celular, si no es todo lo encuadrado (por ejemplo, un lote dentro de una
+  // vista que también muestra el río y el puente); sinCruces: los rótulos apartados no ponen su guía cruzando otra;
+  // apartar: los rótulos que caen sobre la obra se apartan arriba o abajo de ella también en pantalla grande;
+  // vuelo: false deja todo listo (lo que esquivan los rótulos, el tope de distancia) y devuelve la postura SIN mover la
+  // cámara: la lleva quien llama (el paseo de visual.js)
+  function encuadrar(obj, opts = {}) {
+    const { duracion = 1.8, obra, sinCruces = false, apartar = false, vuelo = true } = opts;
+    const p = postura(obj, opts);
+    if (!p) return;
+    st._obra = obra ? puntosDe(obra) : p.pts;
+    st._obra.sinCruces = sinCruces; st._obra.apartar = apartar;
+    st.controls.maxDistance = Math.max(st.controls.maxDistance, p.D * 2);
+    if (!vuelo) return p;
     st.userMoved = false;
-    st.flyTo(cam.position.toArray(), tgt.toArray(), duracion);
-    return D;
+    st.flyTo(p.pos, p.tgt, duracion);
+    return p.D;
   }
 
   // ---------------------------------------------------------------- colores del tema (CSS) para materiales y líneas
@@ -435,7 +510,12 @@ export function crearEscena(el, datos) {
 
   return {
     st, S, T, M, el, edificios, huellas, listoHuellas, zonasHoy, puente,
-    capa: nuevaCapa, capas, etiqueta, linea, flujo, encuadrar, zona, sincronizarEtiquetas, css, tenir, contextoGris,
+    capa: nuevaCapa, capas, etiqueta, linea, flujo, encuadrar, postura, zona, sincronizarEtiquetas, css, tenir, contextoGris,
+    verGrupos, atenuarHermanos, restaurarGrupos,
+    // ¿están en gris las cubiertas del contexto? (quien lo pone de paso, como `aislar` de visual.js, lo deja como estaba)
+    enGris: () => !ctxMats.roof.vertexColors,
+    // con una narración en pantalla (visual.guiado) los módulos no mueven la cámara por su cuenta: la lleva el plan
+    guiado: false,
     colorModulo: (id) => css(`--m-${id}`),
     // muestra solo las capas pedidas (las demás se ocultan) y devuelve las que acaban de aparecer
     verCapas(ids) {
@@ -451,7 +531,9 @@ export function crearEscena(el, datos) {
       const it = edificios.get(id); if (!it) return;
       it.modo = { capa, sin }; aplicarModo(it); st.updateShadows();
     },
+    modoDe(id) { const m = edificios.get(id)?.modo; return m ? { capa: m.capa, sin: [...m.sin] } : null; },
     alCargarEdificio(id, fn) { const it = edificios.get(id); if (!it) return; if (it.cargado) fn(it); else it.listo.push(fn); },
+    cargados: () => cargados,
     cajaEdificio(id) { const it = edificios.get(id); if (!it) return null; return it.cargado ? solidBox(it.lod) : new THREE.Box3().setFromObject(it.ph); },
   };
 }

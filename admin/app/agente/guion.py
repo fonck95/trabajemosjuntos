@@ -25,6 +25,11 @@ Por qué está hecho así:
   texto plano: sin HTML y sin los espacios que no se cortan ni las uniones de palabras (U+2060) que pone
   build_propuesta.py para el panel. Cada capítulo trae sus componentes (id, nombre y si la cámara los puede enfocar) y
   el guion, el catálogo de inmersiones del atlas: con eso la herramienta valida `visual` antes de tocar la pantalla.
+* Cada capítulo trae también su `maqueta`: las piezas de la maqueta 3D que el plan guiado puede mostrar, ocultar o
+  aislar, y las partes que se les pueden quitar (`tecnica.maqueta` de general.json), solo con su id y su nombre. Las
+  capas, los grupos y los nodos de cada pieza no vienen: son de la presentación (visual.js), al modelo no le sirven.
+  Cuando la pieza es un componente del capítulo lleva su mismo id. Si la propuesta no trae catálogo, el capítulo queda
+  sin `maqueta` y la herramienta descarta con un aviso lo que se pida de ella.
 * Nada se acorta: la herramienta le dice al modelo que explique «con esos datos (no invente otros)». El único tope es
   lo que pesa un paso para el modelo (`MAX_BYTES_PASO`): si una propuesta nueva lo pasa, `problemas` lo dice y
   build_propuesta.py --estricto falla, para decidir qué se saca en vez de cortar en silencio.
@@ -44,7 +49,7 @@ from pathlib import Path
 from typing import Any
 
 RUTA = Path(__file__).with_name("propuesta_guion.json")
-VERSION = 2
+VERSION = 3
 MODO = "tecnica"
 # Lo que pesa a lo sumo un paso para el modelo (su JSON en UTF-8, como lo manda `Resultado.texto_para_modelo`): muy por
 # debajo de `MAX_CONTENIDO` (40.000) de la herramienta. El más pesado, el cronograma de obra (los plazos de todos los
@@ -303,13 +308,29 @@ def _paso(datos: dict, c: dict, p: dict, inmersiones: dict[str, dict]) -> dict:
     return out
 
 
+def _maqueta(piezas: Any) -> list[dict]:
+    """Las piezas de la maqueta de un capítulo para el modelo (`tecnica.maqueta[capítulo]`): id, nombre y las partes que
+    se les pueden quitar (id y nombre), en su orden. Defensivo: lo que no es una pieza con id (o una parte con id) no
+    va; sin nombre, queda el id. `problemas` dice después si un id no tiene la forma o se repite."""
+    out = []
+    for x in piezas if isinstance(piezas, list) else []:
+        if not isinstance(x, dict) or not isinstance(x.get("id"), str):
+            continue
+        partes = [{"id": p["id"], "nombre": plano(p.get("nombre")) or p["id"]}
+                  for p in (x.get("partes") if isinstance(x.get("partes"), list) else [])
+                  if isinstance(p, dict) and isinstance(p.get("id"), str)]
+        out.append({"id": x["id"], "nombre": plano(x.get("nombre")) or x["id"], "partes": partes})
+    return out
+
+
 def derivar(datos: dict) -> dict:
     """El guion de la presentación técnica a partir de web/data/propuesta.json (lo que arma build_propuesta.py):
-    capítulos en el orden de main.js, cada uno con sus pasos y sus componentes, y el catálogo de inmersiones del atlas.
-    Siempre el mismo resultado para los mismos datos (sin fechas ni nada que cambie solo)."""
+    capítulos en el orden de main.js, cada uno con sus pasos, sus componentes y las piezas de su maqueta, y el catálogo
+    de inmersiones del atlas. Siempre el mismo resultado para los mismos datos (sin fechas ni nada que cambie solo)."""
     tec = datos.get("tecnica") if isinstance(datos.get("tecnica"), dict) else {}
     catalogo = [i for i in tec.get("inmersiones") or [] if isinstance(i, dict) and isinstance(i.get("id"), str)]
     inmersiones = {i["id"]: i for i in catalogo}
+    maquetas = tec.get("maqueta") if isinstance(tec.get("maqueta"), dict) else {}
     capitulos = []
     for c in capitulos_tecnicos(datos):
         cap: dict[str, Any] = {"id": c["id"], "nombre": plano(c.get("nombre")),
@@ -322,6 +343,10 @@ def derivar(datos: dict) -> dict:
             # la ficha técnica de cada uno: la herramienta la devuelve cuando el asistente la muestra (detalle) o la
             # enfoca, para que explique con esos datos
             cap["componentes"] = [{**ficha_tecnica(k), "enfoque": bool(k.get("enfoque"))} for k in comps]
+        maqueta = _maqueta(maquetas.get(c["id"]))
+        if maqueta:
+            # lo que el plan guiado puede mostrar, ocultar, aislar o apuntar con la cámara en este capítulo
+            cap["maqueta"] = maqueta
         cap["pasos"] = [_paso(datos, c, p, inmersiones) for p in c["pasos"]]
         capitulos.append(cap)
     return {"version": VERSION, "modo": MODO, "fuente": "web/data/propuesta.json",
@@ -332,9 +357,9 @@ def derivar(datos: dict) -> dict:
 
 def problemas(g: dict) -> list[str]:
     """Lo que impediría usar el guion (lo revisa build_propuesta.py antes de escribirlo y `Guion.desde` al cargarlo):
-    ids de capítulo, de paso, de componente o de inmersión que no cumplen la forma que aceptan la herramienta y el
-    navegador, repetidos, capítulos con más pasos que el tope, un paso que pesa más de `MAX_BYTES_PASO` o que lleva a
-    una inmersión que no está en el catálogo."""
+    ids de capítulo, de paso, de componente, de inmersión, de pieza de la maqueta o de una de sus partes que no cumplen
+    la forma que aceptan la herramienta y el navegador, repetidos, capítulos con más pasos que el tope, un paso que pesa
+    más de `MAX_BYTES_PASO` o que lleva a una inmersión que no está en el catálogo."""
     out = []
     caps = g.get("capitulos") if isinstance(g, dict) else None
     if not isinstance(caps, list) or not caps:
@@ -362,6 +387,21 @@ def problemas(g: dict) -> list[str]:
                 out.append(f"{cid}: componente con un id que no es de letras minúsculas, números o «_»: {k!r}")
         if len(set(map(str, ids_c))) != len(ids_c):
             out.append(f"{cid}: ids de componente repetidos")
+        maqueta = c.get("maqueta", [])
+        if not isinstance(maqueta, list) or not all(isinstance(x, dict) for x in maqueta):
+            out.append(f"{cid}: la maqueta no es una lista de piezas")
+            maqueta = []
+        ids_m = [x.get("id") for x in maqueta]
+        for x in maqueta:
+            if not isinstance(x.get("id"), str) or not ID_PASO.fullmatch(x["id"]):
+                out.append(f"{cid}: pieza de la maqueta con un id que no es de letras minúsculas, números o «_»: "
+                           f"{x.get('id')!r}")
+            partes = x.get("partes", [])
+            ids_p = [p.get("id") if isinstance(p, dict) else None for p in partes] if isinstance(partes, list) else [None]
+            if any(not isinstance(p, str) or not ID_PASO.fullmatch(p) for p in ids_p) or len(set(ids_p)) != len(ids_p):
+                out.append(f"{cid}/{x.get('id')}: partes de la pieza con un id inválido o repetido")
+        if len(set(map(str, ids_m))) != len(ids_m):
+            out.append(f"{cid}: ids de pieza de la maqueta repetidos")
         pasos = c.get("pasos")
         if not isinstance(pasos, list) or not 1 <= len(pasos) <= MAX_PASOS:
             out.append(f"{cid}: debe tener de 1 a {MAX_PASOS} pasos")
@@ -384,6 +424,22 @@ def problemas(g: dict) -> list[str]:
 
 
 # ───────────────────────────── El guion en el panel ─────────────────────────────
+
+def parecido(lista: list[dict], texto: Any) -> dict | None:
+    """El elemento de `lista` ({id, nombre}) que se pidió con `texto`: el que tiene ese id o ese nombre (sin tildes ni
+    mayúsculas) o, si ninguno es igual, el único que tiene todas las palabras pedidas al comienzo de alguna de las de
+    su id o su nombre. None si no hay, o si hay varios así (ambiguo: mejor decirlo que adivinar)."""
+    k = clave(texto)
+    if not k:
+        return None
+    igual = next((x for x in lista if k in (clave(x["id"]), clave(x.get("nombre")))), None)
+    if igual is not None:
+        return igual
+    pedidas = k.split()
+    parecidos = [x for x in lista
+                 if all(any(s.startswith(p) for s in clave(f"{x['id']} {x.get('nombre') or ''}").split()) for p in pedidas)]
+    return parecidos[0] if len(parecidos) == 1 else None
+
 
 @dataclass(frozen=True)
 class Resolucion:
@@ -414,6 +470,31 @@ class Guion:
         if not k:
             return None
         return next((x for x in self.componentes(ci) if k in (clave(x["id"]), clave(x["nombre"]))), None)
+
+    def piezas(self, ci: int) -> list[dict]:
+        """Las piezas de la maqueta del capítulo `ci` que se pueden mostrar, ocultar o aislar: [{id, nombre, partes:
+        [{id, nombre}]}]; [] si el capítulo no tiene (o el guion es de antes del catálogo)."""
+        return [{"id": x["id"], "nombre": x.get("nombre") or x["id"], "partes": list(x.get("partes") or [])}
+                for x in self.capitulos[ci].get("maqueta") or []]
+
+    def pieza(self, ci: int, texto: Any) -> dict | None:
+        """La pieza de la maqueta del capítulo `ci` por su id o su nombre (sin tildes ni mayúsculas), o None. Si
+        ninguna es igual, la única que tiene todas las palabras pedidas al comienzo de alguna de las suyas («torre
+        nueva» → la torre; «red» en Aguas no: son varias); con varias así, None (`parecido`)."""
+        return parecido(self.piezas(ci), texto)
+
+    def parte(self, ci: int, pieza_id: Any, texto: Any) -> dict | None:
+        """La parte `texto` (id o nombre) de la pieza `pieza_id` del capítulo `ci`, o None."""
+        x = next((p for p in self.piezas(ci) if p["id"] == pieza_id), None)
+        return parecido(x["partes"], texto) if x else None
+
+    def mirable(self, ci: int, texto: Any) -> dict | None:
+        """A qué puede apuntar la cámara en el capítulo `ci` sin cambiar lo que se ve (`mirar`): una pieza de la
+        maqueta o un componente con lugar en ella, por id o por nombre; {id, nombre} o None."""
+        x = self.pieza(ci, texto)
+        if x is None:
+            x = parecido([k for k in self.componentes(ci) if k.get("enfoque")], texto)
+        return {"id": x["id"], "nombre": x["nombre"]} if x else None
 
     def inmersion(self, texto: Any) -> dict | None:
         """La inmersión del catálogo por su id o su nombre, o None."""
@@ -505,9 +586,11 @@ class Guion:
         return out
 
     def capitulo_para_leer(self, ci: int, tope: int = 32000) -> dict:
-        """Todo lo de un capítulo para armar un recorrido narrado, de una vez: sus pasos (con lo que muestra cada uno y
-        lo que se puede resaltar), la ficha técnica de cada componente (una sola vez: el paso dice cuál con su id) y el
-        catálogo de inmersiones. Si pasa de `tope` bytes, las fichas van sin descripción ni referentes."""
+        """Todo lo de un capítulo para armar un plan guiado (un recorrido narrado), de una vez: sus pasos (con lo que
+        muestra cada uno y lo que se puede resaltar), la ficha técnica de cada componente (una sola vez: el paso dice
+        cuál con su id), las piezas de la maqueta que se pueden mostrar, ocultar, aislar o apuntar con la cámara, con
+        las partes que se les pueden quitar (`maqueta`; una pieza sin partes va sin esa clave) y el catálogo de
+        inmersiones. Si pasa de `tope` bytes, las fichas van sin descripción ni referentes."""
         c = self.capitulos[ci]
         pasos = []
         for pi, p in enumerate(c["pasos"]):
@@ -521,6 +604,7 @@ class Guion:
                   for x in self.componentes(ci)]
         out = {"capitulo": {k: c[k] for k in ("id", "nombre", "lema") if c.get(k)}, "pasos": pasos,
                "componentes": fichas,
+               "maqueta": [{k: v for k, v in x.items() if v or k != "partes"} for x in self.piezas(ci)],
                "inmersiones": [{"id": i["id"], "nombre": i.get("nombre"), "muestra": i.get("muestra")}
                                for i in self.inmersiones]}
         if len(json.dumps(out, ensure_ascii=False).encode("utf-8")) > tope:
@@ -530,14 +614,17 @@ class Guion:
         return out
 
     def indice(self) -> dict:
-        """Capítulos con su id, nombre, los títulos de sus pasos y los ids de sus componentes (los que la cámara enfoca
-        marcados), y el catálogo de inmersiones: lo que el modelo necesita para elegir, en pocos KB."""
+        """Capítulos con su id, nombre, los títulos de sus pasos, los ids de sus componentes (los que la cámara enfoca
+        marcados) y los de las piezas de su maqueta (sus nombres y sus partes, en `capitulo_para_leer`), y el catálogo
+        de inmersiones: lo que el modelo necesita para elegir, en pocos KB."""
         caps = []
         for c in self.capitulos:
             cap = {"id": c["id"], "nombre": c["nombre"], "pasos": [p["titulo"] for p in c["pasos"]]}
             if c.get("componentes"):
                 cap["componentes"] = [x["id"] + ("" if x.get("enfoque") else " (sin lugar en la maqueta)")
                                       for x in c["componentes"]]
+            if c.get("maqueta"):
+                cap["maqueta"] = [x["id"] for x in c["maqueta"]]
             caps.append(cap)
         return {"capitulos": caps, "total_pasos": self.total_pasos(),
                 "inmersiones": [{"id": i["id"], "nombre": i.get("nombre")} for i in self.inmersiones]}

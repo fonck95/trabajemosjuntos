@@ -5,7 +5,7 @@
 // Con «?modo=tecnica», la presentación técnica (la que muestran el asistente del panel y los agentes por MCP): lo que se
 // construye, cómo funciona y cómo se mide, sin costos ni financiación (tecnica.js), con las inmersiones en los modelos
 // del atlas y lo que el asistente cambia de lo que se ve sin cambiar de paso (visual.js: cámara, enfoque, hoy/proyecto,
-// ficha técnica, inmersión y tema).
+// ficha técnica, inmersión, tema y las piezas de la maqueta que muestra, oculta o aísla mientras explica).
 import { gsap, reducedMotion, countUp } from '../core.js';
 import { crearEscena } from './escena.js';
 import { montarMando } from './mando.js';
@@ -414,6 +414,9 @@ function desdeHash() {
   const ci = Math.max(0, caps.findIndex((c) => c.id === id));
   return [ci, Math.min(Math.max(0, (parseInt(n, 10) || 1) - 1), caps[ci].pasos.length - 1)];
 }
+// opts: { dir, telon, camara, animar }. Un plan guiado (mando.js, la orden `escena`) cambia de paso con `telon: false`
+// (sin el telón del capítulo, que taparía lo que se está explicando), `camara: false` (el paso no lanza su vuelo: la
+// cámara la lleva visual.aplicar con un paseo que dura lo que la frase) y `animar` según lo pida el paso del plan
 function ir(ci, pi, opts = {}) { cola = cola.then(() => mostrar(ci, pi, opts)).catch((e) => console.error(e)); return cola; }
 // el paso vecino (d = 1, el siguiente; −1, el anterior): al terminar un capítulo se pasa al primero del siguiente (o al
 // último del anterior) y en el último paso de la presentación (o en el primero) se queda. Solo calcula: lo usan las
@@ -430,7 +433,7 @@ function avanzar(d) {
   ir(ci, pi, { dir: d });
 }
 
-async function mostrar(ci, pi, { dir = 1, primera = false } = {}) {
+async function mostrar(ci, pi, { dir = 1, primera = false, telon: conTelon = true, camara = true, animar = true } = {}) {
   if (ci === estado.ci && pi === estado.pi) return;
   const c = caps[ci], p = c.pasos[pi], cambia = ci !== estado.ci;
   estado.ci = ci; estado.pi = pi;
@@ -452,16 +455,18 @@ async function mostrar(ci, pi, { dir = 1, primera = false } = {}) {
   // cada cambio de paso se anuncia, venga del teclado, de un clic, de la dirección o del mando del panel: mando.js le avisa
   // al panel (y acomoda el subtítulo junto a la leyenda nueva) y la hoja de ruta deja de girar al salir de su capítulo
   dispatchEvent(new CustomEvent('propuesta:paso', { detail: { capitulo: c.id, paso: pi + 1, total: c.pasos.length } }));
-  // telón al cambiar de capítulo (no en la primera carga)
-  if (cambia && !primera && gsap && !reducedMotion) telonDe(c);
-  await pintarPanel(c, p, dir, cambia && !primera);
+  // telón al cambiar de capítulo (no en la primera carga ni cuando quien cambia pide que no lo haya)
+  const entra = cambia && !primera && conTelon !== false;
+  if (entra && gsap && !reducedMotion) telonDe(c);
+  await pintarPanel(c, p, dir, entra);
   // 3D: capas y cámara del paso (los módulos pueden tardar en cargar: se espera al suyo hasta 4 s y, si llega después,
   // se vuelve a aplicar el paso); si mientras tanto se pasó a otro paso, este ya no toca la escena
   const listo = await Promise.race([cargas[ci].then(() => true), new Promise((r) => setTimeout(() => r(false), 4000))]);
   const vigente = () => estado.ci === ci && estado.pi === pi;
   if (!vigente()) return;
-  pasar3D(c, p);
-  if (!listo) cargas[ci].then(() => { if (vigente()) pasar3D(c, p); });
+  pasar3D(c, p, { camara, animar, entrada: true });
+  // (el módulo que llega tarde sí encuadra: lo que llevaba la cámara se calculó sin la vista de este paso)
+  if (!listo) cargas[ci].then(() => { if (vigente()) pasar3D(c, p, { animar, entrada: true }); });
 }
 
 function telonDe(c) {
@@ -526,23 +531,42 @@ async function pintarPanel(c, p, dir, conTelon) {
   if (arco) { const L = arco.getTotalLength(); gsap.fromTo(arco, { strokeDasharray: L, strokeDashoffset: L }, { strokeDashoffset: 0, duration: 1.1, delay: 0.6, ease: 'power2.out' }); }
 }
 
-let capasVisibles = [];
-function pasar3D(c, p) {
+// Pone lo 3D del paso `p` del capítulo `c`: sus capas, el estado de su módulo, su encuadre y su animación. En la técnica,
+// visual.js ajusta encima lo que el asistente muestra, oculta o aísla (ajustar: las capas y el filtro de rótulos;
+// efectos: réplicas, partes quitadas, gris) y lo deshace antes de que el módulo ponga el estado del paso siguiente.
+// `camara: false` no vuela (al llegar al paso solo queda anotado qué encuadra: la cámara la lleva quien llama) y
+// `animar: false` no corre la animación: así se vuelve a aplicar el paso «en suave» cuando solo cambian las piezas a la
+// vista. `entrada`: es la llegada al paso (mostrar), no un retoque de visual.js
+let capasVisibles = [];   // las capas del paso, sin lo que el asistente añade o quita
+let animada = { clave: '', t: 0 };
+function pasar3D(c, p, { camara = true, animar = true, entrada = false } = {}) {
   const m = ctx3d[c.id], def = m?.pasos?.[p.id] || m?.pasos?.['*'] || {};
+  visual?.deshacer();
   const ids = [...(m?.siempre || []), ...(def.capas || []), ...(p.capas || [])];
   // la visión completa (hoja de ruta, pedidos) muestra las capas principales de todos los módulos; en los demás pasos,
   // los otros módulos dejan la maqueta como está hoy (por ejemplo, la torre del hospital vuelve a su estado actual)
   Object.entries(ctx3d).forEach(([id, x]) => {
     if (def.todos) { ids.push(...(x?.completo || [])); x?.alCompleto?.(); } else if (id !== c.id) x?.salir?.();
   });
-  escena.verCapas(ids);
   // en la visión de conjunto solo quedan las etiquetas del capítulo (si no, se enciman las de las siete áreas)
-  escena.soloEtiquetas?.(def.etiquetas || (def.todos ? [...(m?.siempre || []), ...(def.capas || []), ...(p.capas || [])] : null));
+  let etiquetas = def.etiquetas || (def.todos ? [...(m?.siempre || []), ...(def.capas || []), ...(p.capas || [])] : null), veo = ids;
+  const aj = visual?.ajustar(c, ids, etiquetas);
+  if (aj) { veo = aj.ids; etiquetas = aj.etiquetas; }
+  escena.verCapas(veo);
+  escena.soloEtiquetas?.(etiquetas);
   capasVisibles = ids;
   def.antes?.();
-  escena.st._obra = null;   // la vista del paso dice qué obra encuadra (los rótulos se apartan de ella en el celular)
-  (def.vista || m?.vista)?.();
-  if (gsap && !reducedMotion) def.animar?.(); else def.alFinal?.();
+  visual?.efectos(c);   // después de `antes`: el estado del paso es el punto de partida
+  // la vista del paso dice qué obra encuadra (los rótulos se apartan de ella en el celular). Sin cámara, al llegar al
+  // paso solo queda anotada (en seco); en un retoque de visual.js ni eso: lo que el paso encuadra no cambió
+  const vista = def.vista || m?.vista;
+  if (camara || !visual) { escena.st._obra = null; vista?.(); } else if (entrada) { escena.st._obra = null; visual.enSeco(vista); }
+  // la animación del paso no vuelve a arrancar si acaba de hacerlo al llegar (la orden `escena` cambia de paso y,
+  // enseguida, llama a visual.aplicar: los dos con `animar`)
+  const clave = `${c.id}/${p.id}`, ahora = performance.now();
+  const repetida = !entrada && animada.clave === clave && ahora - animada.t < 1500;
+  animada = entrada && animar ? { clave, t: ahora } : { clave: '', t: 0 };
+  if (animar && !repetida) { if (gsap && !reducedMotion) def.animar?.(); else def.alFinal?.(); }
   // el mapa de sombras se recalcula a pedido: una vez más cuando ya terminaron de crecer las piezas del paso
   clearTimeout(tSombras); tSombras = setTimeout(() => escena.st.updateShadows(), 3600);
 }
@@ -553,7 +577,10 @@ function reencuadrar() {
   clearTimeout(tReenc);
   tReenc = setTimeout(() => {
     if (escena.st.userMoved || estado.ci < 0) return;
-    if (visual?.reencuadrar()) return;   // con una cámara o un enfoque pedidos, se repite ese encuadre
+    // con una cámara o un enfoque pedidos, se repite ese encuadre; durante un paseo (la cámara viaja mientras se
+    // explica) no se lanza ningún vuelo: visual.js lo deja para cuando llegue
+    if (visual?.reencuadrar()) return;
+    if (escena.st.paseo) return;
     const c = caps[estado.ci], p = c.pasos[estado.pi], m = ctx3d[c.id], def = m?.pasos?.[p.id] || m?.pasos?.['*'] || {};
     (def.vista || m?.vista)?.();
   }, 250);
@@ -754,14 +781,16 @@ function resaltar(r) {
 function restaurarEncuadre() {
   if (!escena.st.userMoved || estado.ci < 0) return;
   escena.st.userMoved = false;
-  if (visual?.reencuadrar()) return;
+  // en la técnica, al encuadre que visual.js tiene anotado (el del paso al llegar, el del enfoque o el de `mirar`): no se
+  // vuelve a medir la vista del paso, que puede tener sus piezas a medio crecer
+  if (visual) { visual.restaurar(); return; }
   const c = caps[estado.ci], p = c.pasos[estado.pi], m = ctx3d[c.id], def = m?.pasos?.[p.id] || m?.pasos?.['*'] || {};
   (def.vista || m?.vista)?.();
 }
 
 // lo que el asistente cambia de lo que se ve sin cambiar de paso (solo en la técnica: cámara, enfoque, hoy/proyecto,
-// ficha técnica, inmersión en el atlas y tema)
-const visual = TECNICA ? crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D, capasVisibles: () => capasVisibles, colorDe }) : null;
+// ficha técnica, inmersión en el atlas, tema y las piezas de la maqueta)
+const visual = TECNICA ? crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D, colorDe }) : null;
 
 // arranque: la vista que pide la dirección (o la portada)
 const [ci0, pi0] = desdeHash();

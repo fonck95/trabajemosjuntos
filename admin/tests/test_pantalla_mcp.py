@@ -217,6 +217,97 @@ def test_visual_cambia_lo_que_se_ve_y_vuelve_a_lo_del_paso():
     assert r.acciones == [{"tipo": "presentacion", "op": "visual", "enfoque": None}]
 
 
+def test_visual_con_la_camara_libre_las_piezas_y_las_partes():
+    """Lo que el plan guiado le suma a `visual`: la elevación y el acercamiento de la cámara, a qué apunta, las piezas
+    de la maqueta que se muestran, se ocultan o se aíslan, las partes que se les quitan y dos acciones que no son
+    estado (el viaje de la cámara y la animación del paso). Tolerante: lo que no resuelve se descarta con un aviso y lo
+    demás se aplica; solo es un error si no queda nada que hacer."""
+    db = _Base()
+    _hacer(db, 7, {"op": "ir", "capitulo": "salud", "paso": 3})
+    r = _hacer(db, 7, {"op": "visual", "aislar": "Torre nueva", "sin": ["torre.cubierta", "equipos"], "elevacion": 60,
+                       "zoom": 1.5, "mirar": "torre"})
+    assert r.acciones == [] and "avisos" not in r.contenido
+    assert r.resumen == ("La presentación muestra a 60° sobre el horizonte, zoom 1.5, la cámara apunta a «Torre nueva de "
+                         "cuatro pisos», solo «Torre nueva de cuatro pisos», sin torre.cubierta, torre.equipos")
+    d = db.pantallas.find_one({"_id": 7})
+    assert (d["aislar"], d["sin"], d["elevacion"], d["zoom"], d["mirar"]) == ("torre", ["torre.cubierta", "torre.equipos"], 60, 1.5, "torre")
+    assert (d["mover"], d["animar"]) == (None, False)
+    e = _hacer(db, 7, {"op": "estado"}).contenido["pantalla"]
+    assert {k: e["visual"][k] for k in ("aislar", "sin", "elevacion", "zoom", "mirar", "mostrar", "ocultar")} == {
+        "aislar": "torre", "sin": ["torre.cubierta", "torre.equipos"], "elevacion": 60, "zoom": 1.5, "mirar": "torre",
+        "mostrar": [], "ocultar": []}
+    assert list(e["visual"]) == list(pantalla.VISUAL) and "mover" not in e["visual"]
+    for parte in ("solo se ve «Torre nueva de cuatro pisos» (torre)", "sin Cubierta y parasoles (deja ver las losas) de «Torre "
+                  "nueva de cuatro pisos» (torre.cubierta)", "a 60° sobre el horizonte", "zoom 1.5",
+                  "apunta a «Torre nueva de cuatro pisos» (torre)"):
+        assert parte in e["muestra"], (parte, e["muestra"])
+    # El viaje de la cámara y la animación: van una vez (quedan en la pantalla hasta la orden siguiente) y no son estado
+    r = _hacer(db, 7, {"op": "visual", "mover": {"giro": 90, "zoom": 2, "elevacion": 30}, "animar": True})
+    assert r.resumen == ("La presentación muestra la cámara gira 90°, termina con zoom 2, termina a 30° sobre el horizonte, "
+                         "la animación del paso otra vez")
+    d = db.pantallas.find_one({"_id": 7})
+    assert (d["mover"], d["animar"], d["aislar"], d["zoom"]) == ({"giro": 90, "zoom": 2, "elevacion": 30}, True, "torre", 1.5)
+    x = pantalla.para_pantalla(pantalla.estado(d, G), d, G)
+    assert (x["mover"], x["animar"], x["aislar"]) == ({"giro": 90, "zoom": 2, "elevacion": 30}, True, "torre")
+    assert list(x) == ["v", *pantalla.CAMPOS, "recorrido", "control_recorrido", "progreso"]
+    _hacer(db, 7, {"op": "visual", "ocultar": ["hospital_hoy", "telesalud"], "mostrar": "puestos"})
+    d = db.pantallas.find_one({"_id": 7})
+    assert (d["mover"], d["animar"], d["ocultar"], d["mostrar"]) == (None, False, ["hospital_hoy", "telesalud"], ["puestos"])
+    # Lo último que se pide es lo que vale: lo que ahora se muestra deja de estar oculto, y lo que se aísla, también
+    _hacer(db, 7, {"op": "visual", "mostrar": ["telesalud"]})
+    d = db.pantallas.find_one({"_id": 7})
+    assert (d["mostrar"], d["ocultar"]) == (["telesalud"], ["hospital_hoy"])
+    _hacer(db, 7, {"op": "visual", "aislar": "hospital_hoy"})
+    assert db.pantallas.find_one({"_id": 7})["ocultar"] == []
+    # Lo que vuelve a lo del paso: «nada» (aislar), «paso» (mirar), [] (sin) y la cámara «paso», que devuelve también el
+    # rumbo, la elevación y el acercamiento
+    _hacer(db, 7, {"op": "visual", "aislar": "nada", "mirar": "paso", "sin": [], "camara": "paso"})
+    d = db.pantallas.find_one({"_id": 7})
+    assert (d["aislar"], d["mirar"], d["sin"], d["camara"], d["rumbo"], d["elevacion"], d["zoom"]) == (
+        None, None, [], "paso", None, None, None)
+    # Tolerante: lo que se sale de su rango se recorta y lo que no existe se descarta, con un aviso; lo demás se aplica
+    r = _hacer(db, 7, {"op": "visual", "elevacion": 99, "zoom": 0.1, "aislar": "tore", "ocultar": ["telesalud", "marte"],
+                       "sin": ["torre.techo"], "mover": {"giro": 500}})
+    d = db.pantallas.find_one({"_id": 7})
+    assert (d["elevacion"], d["zoom"], d["aislar"], d["ocultar"], d["sin"], d["mover"]) == (85, 0.3, None, ["telesalud"], [], {"giro": 360})
+    avisos = r.contenido["avisos"]
+    assert len(avisos) == 6 and "Lo de «avisos» no se pudo mostrar; lo demás sí." in r.contenido["nota"]
+    assert "elevacion 99 quedó en 85 (va de 8 a 85)" in avisos and "zoom 0.1 quedó en 0.3 (va de 0.3 a 3)" in avisos
+    assert "la pieza «tore» no está en Salud (aislar); piezas: hospital_hoy, torre, telesalud, puestos" in avisos
+    assert any("«marte»" in a and "(ocultar)" in a for a in avisos) and any("no tiene la parte «techo»" in a for a in avisos)
+    assert "mover.giro 500 quedó en 360 (va de -360 a 360)" in avisos
+    # Si no queda nada que hacer, es un error con las piezas del capítulo, y no se mueve nada
+    v = d["v"]
+    for malo in ({"op": "visual", "aislar": "tore"}, {"op": "visual", "mirar": "marte"}, {"op": "visual", "mover": {"giro": "mucho"}},
+                 {"op": "visual", "zoom": "cerca"}):
+        with pytest.raises(hi.ErrorHerramienta) as e:
+            _hacer(db, 7, malo)
+        assert e.value.codigo == "no_existe" and str(e.value).startswith("No quedó nada que mostrar: "), malo
+        assert e.value.detalle["maqueta"][1] == {"id": "torre", "nombre": "Torre nueva de cuatro pisos",
+                                                 "partes": ["cubierta", "equipos", "jardines"]}
+    assert db.pantallas.find_one({"_id": 7})["v"] == v
+    # `ir` devuelve las piezas de la maqueta del capítulo (lo que `visual` puede mostrar, ocultar o aislar) y lo deja
+    # todo como lo dice el paso
+    r = _hacer(db, 7, {"op": "ir", "capitulo": "salud", "paso": 4})
+    assert r.contenido["maqueta"][1]["partes"] == ["cubierta", "equipos", "jardines"]
+    d = db.pantallas.find_one({"_id": 7})
+    assert {k: d[k] for k in pantalla.VISUAL_INICIAL} == pantalla.VISUAL_INICIAL and (d["mover"], d["animar"]) == (None, False)
+    # El asistente sin pantalla abierta: la acción exacta para la pestaña (lo que cambia y, una vez, lo que hace)
+    r = _hacer(db, 9, {"op": "visual", "capitulo": "urbanismo", "aislar": "softbol", "sin": ["cubierta"], "mover": {"giro": -45}},
+               por="asistente")
+    assert r.acciones == [{"tipo": "presentacion", "op": "visual", "aislar": "softbol", "sin": ["softbol.cubierta"],
+                           "mover": {"giro": -45}}]
+    # (sin una pieza que lo diga, «cubierta» en Urbanismo son dos: el aviso dice cuáles)
+    r = _hacer(db, 9, {"op": "visual", "capitulo": "urbanismo", "sin": ["cubierta"], "elevacion": 40}, por="asistente")
+    assert "«cubierta» puede ser softbol.cubierta, instalaciones.cubierta: diga cuál (pieza.parte) (sin)" in r.contenido["avisos"]
+    # Lo nuevo no se cuela en las otras operaciones, y lo que no tiene la forma no tumba la entrada de `visual`
+    for malo in ({"op": "ir", "capitulo": "salud", "aislar": "torre"}, {"op": "explicar", "explicacion": "x", "mover": {"giro": 3}},
+                 {"op": "vista", "panel": True, "zoom": 2}, {"op": "estado", "animar": True}):
+        with pytest.raises(ValueError, match="no usa"):
+            hi.PresentacionEntrada.model_validate(malo)
+    assert isinstance(hi.PresentacionEntrada.model_validate({"op": "visual", "zoom": "cerca"}).zoom, hi.NoVale)
+
+
 def test_visual_no_mueve_nada_si_no_existe():
     db = _Base()
     _hacer(db, 7, {"op": "ir", "capitulo": "vivienda", "paso": 1})
@@ -290,6 +381,28 @@ def test_el_estado_guardado_se_corrige_si_el_guion_cambio():
         (None, "torre", "paso", None, False, "hoy", "torre_bim", None)
     assert pantalla.estado({"capitulo": "vivienda", "paso": 1, "enfoque": "titulacion"}, G)["enfoque"] is None
     assert pantalla.estado({"capitulo": "marte", "paso": 1, "enfoque": "torre", "tema": "oscuro"}, G)["tema"] == "oscuro"
+    # Lo del plan guiado: lo que no vale vuelve a lo del paso; de una lista solo se va lo que no vale (o se repite)
+    e = pantalla.estado({"capitulo": "salud", "paso": 3, "elevacion": 90, "zoom": 1.234, "mirar": "marte", "aislar": "softbol",
+                         "mostrar": ["torre", "marte", "torre", 3], "ocultar": "torre", "sin": ["torre.cubierta", "torre.techo", "x"],
+                         "mover": {"giro": 500}, "animar": "si"}, G)
+    assert (e["elevacion"], e["zoom"], e["mirar"], e["aislar"], e["mostrar"], e["ocultar"], e["sin"], e["mover"], e["animar"]) == \
+        (None, None, None, None, ["torre"], [], ["torre.cubierta"], None, False)
+    e = pantalla.estado({"capitulo": "salud", "paso": 3, "elevacion": 8, "zoom": 3, "mirar": "telesalud", "aislar": "torre",
+                         "mover": {"giro": -40, "zoom": 0.3}, "animar": True}, G)
+    assert (e["elevacion"], e["zoom"], e["mirar"], e["aislar"], e["mover"], e["animar"]) == \
+        (8, 3, "telesalud", "torre", {"giro": -40, "zoom": 0.3}, True)
+    # Un documento de antes del plan guiado (sin las claves nuevas) se lee con lo del paso; la pantalla sin órdenes, igual
+    e = pantalla.estado({"capitulo": "salud", "paso": 3, "enfoque": "torre", "camara": "aerea", "v": 2}, G)
+    assert {k: e[k] for k in ("elevacion", "zoom", "mirar", "mostrar", "ocultar", "aislar", "sin", "mover", "animar")} == {
+        "elevacion": None, "zoom": None, "mirar": None, "mostrar": [], "ocultar": [], "aislar": None, "sin": [],
+        "mover": None, "animar": False}
+    assert pantalla.para_pantalla(pantalla.estado(None, G), None, G) == {
+        "v": 0, "capitulo": "portada", "paso": 1, "explicacion": None, "panel": True, "indice": False, "fichas": False,
+        "completa": False, "orden_completa": 0, **pantalla.VISUAL_INICIAL, "tema": None, "mover": None, "animar": False,
+        "recorrido": None, "control_recorrido": None, "progreso": None}
+    # (las listas de lo que vale en cada paso no se comparten: cambiar las de un estado no toca las del módulo)
+    pantalla.estado(None, G)["sin"].append("x")
+    assert pantalla.VISUAL_INICIAL["sin"] == [] and pantalla.inicial(G)["sin"] == []
 
 
 # ───────────────────────────── El protocolo MCP ─────────────────────────────
@@ -488,7 +601,7 @@ def test_la_pantalla_pregunta_por_su_estado(sesion):
     e = r.json()
     assert e == {"v": 0, "capitulo": "portada", "paso": 1, "explicacion": None, "panel": True, "indice": False,
                  "fichas": False, "completa": False, "orden_completa": 0, **pantalla.VISUAL_INICIAL, "tema": None,
-                 "recorrido": None, "control_recorrido": None, "progreso": None}
+                 "mover": None, "animar": False, "recorrido": None, "control_recorrido": None, "progreso": None}
     assert sesion.get("/api/pantalla?v=0").status_code == 204
     db = sesion.app.state.db
     assert pantalla.conectada(db.pantallas.find_one({"_id": 0}))

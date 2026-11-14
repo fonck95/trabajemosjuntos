@@ -1,15 +1,19 @@
-// La voz del recorrido narrado (reproductor.js): la síntesis del navegador (Web Speech), opcional y apagada por omisión.
+// La voz del plan guiado (el recorrido narrado de reproductor.js): la síntesis del navegador (Web Speech), encendida por
+// omisión (la persona la apaga con el botón «Voz» o con el interruptor de la tarjeta del chat).
 // Lo que se ve no depende de ella: sin voz, cada frase se queda en pantalla su tiempo de lectura.
 //
 // * Suena solo donde mira la sala (la pestaña del chat, la ventana del proyector o la pantalla en off) y solo después de
-//   un gesto de la persona en ESA ventana: el navegador no deja hablar a una página que nadie tocó. `encender` corre en
-//   el clic del botón «Voz» (destraba la síntesis con una locución vacía); si la preferencia ya estaba encendida, el
-//   primer toque o tecla en la ventana la activa. En el proyector esos toques y teclas caen en el iframe de la
-//   presentación, que ocupa la ventana, y no llegan aquí: mando.js los avisa y la vista llama a `gesto()` (la activación
-//   de la persona en el iframe vale también para la ventana que lo contiene).
+//   un gesto de la persona en ESA ventana: el navegador no deja hablar a una página que nadie tocó. Con la preferencia
+//   encendida (lo es mientras nadie la apague), el primer toque o tecla en la ventana la activa: escribirle al
+//   asistente y enviar el mensaje ya lo es. Y si la persona ya había tocado la página antes de que la vista se abriera
+//   (el asistente la abre después del mensaje), se activa al crearse (`navigator.userActivation`). `encender` corre en
+//   el clic del botón «Voz» (destraba la síntesis con una locución vacía). En el proyector los toques y las teclas caen
+//   en el iframe de la presentación, que ocupa la ventana, y no llegan aquí: mando.js los avisa y la vista llama a
+//   `gesto()` (la activación de la persona en el iframe vale también para la ventana que lo contiene).
 // * `soltar()` al desmontar la vista: quita los oyentes de la ventana y de la síntesis y calla (si no, cada montaje
 //   sumaría los suyos).
-// * La preferencia se guarda en este navegador (`yj_voz`); un almacenamiento bloqueado no rompe nada.
+// * La preferencia se guarda en este navegador (`yj_voz`: '1' encendida, '0' apagada; sin guardar, encendida); un
+//   almacenamiento bloqueado no rompe nada.
 // * La voz: la mejor en español de las que tenga el equipo (es-CO; después es-419, es-MX, es-US; después es-ES; después
 //   cualquier es-*), las locales antes que las remotas. Una voz remota manda el texto a un servicio del fabricante del
 //   navegador: solo se usa si no hay ninguna local en español (y el texto proyectado nunca trae datos de personas).
@@ -91,8 +95,9 @@ export function crearVoz({ ventana = globalThis, almacen = null } = {}) {
   const hay = !!sintesis && typeof Locucion === 'function';
   let guardado = null;
   try { almacen ??= ventana?.localStorage ?? null; } catch { almacen = null; }
-  try { guardado = almacen?.getItem(CLAVE) === '1'; } catch { guardado = false; }
-  let preferida = !!guardado;
+  try { guardado = almacen?.getItem(CLAVE) ?? null; } catch { guardado = null; }
+  // Encendida por omisión: sin preferencia guardada (o sin poder leerla) se quiere voz; la guardada se respeta
+  let preferida = guardado !== '0';
   let activada = false;
   let voz = null;
   let vocesListas = false;
@@ -207,13 +212,17 @@ export function crearVoz({ ventana = globalThis, almacen = null } = {}) {
   /** Un gesto de la persona (aquí o en la presentación, que la vista reenvía): con la preferencia encendida, la activa. */
   function gesto() { if (preferida && !activada) activar(); }
 
-  // El primer toque o tecla en esta ventana
+  // El primer toque o tecla en esta ventana. Si la persona ya la tocó antes de que la vista se abriera (le escribió al
+  // asistente, que abre la presentación después), ese gesto ya pasó y aquí no se ve: el navegador dice que lo hubo
   if (hay) {
     cargarVoces();
     try {
       ventana.addEventListener?.('pointerdown', gesto, true);
       ventana.addEventListener?.('keydown', gesto, true);
     } catch { /* nada */ }
+    let tocada = false;
+    try { tocada = ventana.navigator?.userActivation?.hasBeenActive === true; } catch { tocada = false; }
+    if (tocada) gesto();
   }
 
   /** La vista se desmonta: sin oyentes de la ventana ni de la síntesis, y callada. */

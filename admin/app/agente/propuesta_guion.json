@@ -1,5 +1,5 @@
 {
- "version": 2,
+ "version": 3,
  "modo": "tecnica",
  "fuente": "web/data/propuesta.json",
  "inmersiones": [
@@ -55,6 +55,18 @@
    "nombre": "Portada",
    "corto": "Portada",
    "lema": "Siete áreas sobre la maqueta 3D del territorio real: el sitio, las especificaciones, el referente técnico y las metas de cada obra",
+   "maqueta": [
+    {
+     "id": "pines",
+     "nombre": "Pines de las siete áreas",
+     "partes": []
+    },
+    {
+     "id": "territorio",
+     "nombre": "Nombres del territorio: río, puente, Barrancabermeja y Kilómetro Cinco",
+     "partes": []
+    }
+   ],
    "pasos": [
     {
      "id": "inicio",
@@ -280,6 +292,23 @@
      "ubicacion": "Casco urbano (barrios de origen informal) y centros poblados; los predios rurales, con la Agencia Nacional de Tierras.",
      "plazo": "2028–2030 (por etapas, antes de postular cada grupo de hogares)",
      "enfoque": false
+    }
+   ],
+   "maqueta": [
+    {
+     "id": "nuevas",
+     "nombre": "Vivienda nueva: bloques del Lote 1 y casas del Lote 2",
+     "partes": []
+    },
+    {
+     "id": "mejoramientos",
+     "nombre": "Techos de las casas a mejorar (muestra)",
+     "partes": []
+    },
+    {
+     "id": "rural",
+     "nombre": "Casas rurales de muestra (prototipo VIVA)",
+     "partes": []
     }
    ],
    "pasos": [
@@ -610,6 +639,103 @@
      "ubicacion": "Al noroccidente del estribo de Yondó (aguas abajo), entre 32 y 118 m del eje del puente, detrás de la ronda de 30 m. La esquina occidental queda a ≈10 m de la plataforma del pozo Casabe 207: cerramiento verde y concepto de Ecopetrol.",
      "plazo": "Estudio de mercado de FONTUR y diseños en 2028–2029; obra en 2030, después de la zona A",
      "enfoque": true
+    }
+   ],
+   "maqueta": [
+    {
+     "id": "hoy",
+     "nombre": "El estadio y el caño como están hoy",
+     "partes": []
+    },
+    {
+     "id": "ciudadela",
+     "nombre": "Contorno de la ciudadela y las sedes que integra",
+     "partes": []
+    },
+    {
+     "id": "softbol",
+     "nombre": "Cancha de Sóftbol Casabe",
+     "partes": [
+      {
+       "id": "cubierta",
+       "nombre": "Cubiertas de las graderías"
+      },
+      {
+       "id": "graderias",
+       "nombre": "Graderías, dugouts y baños"
+      },
+      {
+       "id": "luces",
+       "nombre": "Torres de luz LED"
+      },
+      {
+       "id": "arboles",
+       "nombre": "Árboles"
+      }
+     ]
+    },
+    {
+     "id": "parque_lineal",
+     "nombre": "Parque lineal del caño",
+     "partes": [
+      {
+       "id": "cauce",
+       "nombre": "Cauce renaturalizado"
+      },
+      {
+       "id": "sendas",
+       "nombre": "Sendero y ciclorruta"
+      },
+      {
+       "id": "puentes",
+       "nombre": "Puentes peatonales"
+      },
+      {
+       "id": "arboles",
+       "nombre": "Bosque y jardines de lluvia"
+      }
+     ]
+    },
+    {
+     "id": "alameda",
+     "nombre": "Alameda de la ciudadela",
+     "partes": []
+    },
+    {
+     "id": "instalaciones",
+     "nombre": "Canchas cubiertas y skatepark",
+     "partes": [
+      {
+       "id": "cubierta",
+       "nombre": "Cubierta de las canchas"
+      }
+     ]
+    },
+    {
+     "id": "mirador",
+     "nombre": "Mirador Puerta del Magdalena",
+     "partes": [
+      {
+       "id": "proteccion",
+       "nombre": "Zona A: protección de la orilla"
+      },
+      {
+       "id": "plaza",
+       "nombre": "Zona B: plaza"
+      },
+      {
+       "id": "letras",
+       "nombre": "Letras YONDÓ"
+      },
+      {
+       "id": "deck",
+       "nombre": "Deck y mirador elevado"
+      },
+      {
+       "id": "muelle",
+       "nombre": "Muelle flotante"
+      }
+     ]
     }
    ],
    "pasos": [
@@ -1083,6 +1209,77 @@
      "enfoque": false
     }
    ],
+   "maqueta": [
+    {
+     "id": "lote_hoy",
+     "nombre": "El lote como está hoy y el estribo socavado",
+     "partes": []
+    },
+    {
+     "id": "parque",
+     "nombre": "El parque completo",
+     "partes": [
+      {
+       "id": "zonas",
+       "nombre": "Colores de las tres zonas"
+      },
+      {
+       "id": "arboles",
+       "nombre": "Barrera de árboles"
+      }
+     ]
+    },
+    {
+     "id": "flujos",
+     "nombre": "Circuito entre plantas y salida por el puente",
+     "partes": []
+    },
+    {
+     "id": "matadero",
+     "nombre": "Matadero, corrales y frigorífico",
+     "partes": []
+    },
+    {
+     "id": "frio",
+     "nombre": "Central de frío",
+     "partes": []
+    },
+    {
+     "id": "pescado",
+     "nombre": "Planta de pescado",
+     "partes": []
+    },
+    {
+     "id": "concentrados",
+     "nombre": "Fábrica de concentrados",
+     "partes": []
+    },
+    {
+     "id": "trilladora",
+     "nombre": "Trilladora con secado y silos",
+     "partes": []
+    },
+    {
+     "id": "leche",
+     "nombre": "Acopio de leche",
+     "partes": []
+    },
+    {
+     "id": "maquinaria",
+     "nombre": "Banco de maquinaria",
+     "partes": []
+    },
+    {
+     "id": "biodigestor",
+     "nombre": "Biodigestor y compostaje",
+     "partes": []
+    },
+    {
+     "id": "agua",
+     "nombre": "PTAR industrial",
+     "partes": []
+    }
+   ],
    "pasos": [
     {
      "id": "portadilla",
@@ -1368,6 +1565,41 @@
      "ubicacion": "Base de ambulancias de la E.S.E. Hospital Héctor Abad Gómez, en la cabecera de Yondó.",
      "plazo": "2028–2029",
      "enfoque": true
+    }
+   ],
+   "maqueta": [
+    {
+     "id": "hospital_hoy",
+     "nombre": "El hospital de hoy",
+     "partes": []
+    },
+    {
+     "id": "torre",
+     "nombre": "Torre nueva de cuatro pisos",
+     "partes": [
+      {
+       "id": "cubierta",
+       "nombre": "Cubierta y parasoles (deja ver las losas)"
+      },
+      {
+       "id": "equipos",
+       "nombre": "Equipos en la cubierta"
+      },
+      {
+       "id": "jardines",
+       "nombre": "Árboles y jardines"
+      }
+     ]
+    },
+    {
+     "id": "telesalud",
+     "nombre": "Red de telesalud",
+     "partes": []
+    },
+    {
+     "id": "puestos",
+     "nombre": "Puestos de salud rurales",
+     "partes": []
     }
    ],
    "pasos": [
@@ -1802,6 +2034,33 @@
      "enfoque": true
     }
    ],
+   "maqueta": [
+    {
+     "id": "sistema",
+     "nombre": "Pozos, PTAP, tanque y conducción",
+     "partes": []
+    },
+    {
+     "id": "red",
+     "nombre": "Red de distribución del casco",
+     "partes": []
+    },
+    {
+     "id": "red_intermitente",
+     "nombre": "La red como está hoy: con agua 9 de cada 24 horas",
+     "partes": []
+    },
+    {
+     "id": "sectorizacion",
+     "nombre": "Sectores hidráulicos, válvulas y macromedidores",
+     "partes": []
+    },
+    {
+     "id": "ptap",
+     "nombre": "Módulo de ampliación de la PTAP",
+     "partes": []
+    }
+   ],
    "pasos": [
     {
      "id": "portadilla",
@@ -2115,6 +2374,80 @@
      "ubicacion": "Vereda Las Américas, a 3,9 km del parque principal por vía (7,0140 N, 73,9342 O; ubicación inferida por satélite, confianza media). El EOT (Tabla 32) delimita el polígono del relleno unos 830 m al suroriente, junto al de la planta municipal: hay que conciliarlo con el catastro (lote 893-000-033-00210).",
      "plazo": "2028–2031 (cierre de las celdas viejas desde 2028 y del frente activo en 2030–2031; parque y primera parte de la granja solar en 2031; el resto de la granja hacia 2033–2034; posclausura hasta ≈2051)",
      "enfoque": true
+    }
+   ],
+   "maqueta": [
+    {
+     "id": "vertimientos",
+     "nombre": "Vertimientos de hoy sin tratar",
+     "partes": []
+    },
+    {
+     "id": "ebar",
+     "nombre": "Estaciones de bombeo existentes",
+     "partes": []
+    },
+    {
+     "id": "interceptores",
+     "nombre": "Interceptores, impulsión y estación de llegada",
+     "partes": []
+    },
+    {
+     "id": "ptar",
+     "nombre": "PTAR central, laguna y descarga",
+     "partes": [
+      {
+       "id": "arboles",
+       "nombre": "Barrera de árboles"
+      }
+     ]
+    },
+    {
+     "id": "sitios_ptar",
+     "nombre": "Sitios evaluados para la PTAR",
+     "partes": []
+    },
+    {
+     "id": "relleno_nuevo",
+     "nombre": "Relleno nuevo de Kilómetro Cinco",
+     "partes": [
+      {
+       "id": "celdas",
+       "nombre": "Celdas"
+      },
+      {
+       "id": "obras",
+       "nombre": "ECA, compostaje, lagunas y portería"
+      }
+     ]
+    },
+    {
+     "id": "sitios_relleno",
+     "nombre": "Sitios evaluados para el relleno y radio del aeropuerto",
+     "partes": []
+    },
+    {
+     "id": "via_relleno",
+     "nombre": "Vía al relleno",
+     "partes": []
+    },
+    {
+     "id": "relleno",
+     "nombre": "Relleno Las Américas convertido en parque",
+     "partes": [
+      {
+       "id": "granja",
+       "nombre": "Granja solar sobre las celdas"
+      },
+      {
+       "id": "parque",
+       "nombre": "Parque: coworking, granja y circuito"
+      },
+      {
+       "id": "baterias",
+       "nombre": "Almacenamiento"
+      }
+     ]
     }
    ],
    "pasos": [
@@ -2514,6 +2847,38 @@
      "enfoque": true
     }
    ],
+   "maqueta": [
+    {
+     "id": "sedes_hoy",
+     "nombre": "Sedes públicas hoy",
+     "partes": []
+    },
+    {
+     "id": "fibra",
+     "nombre": "Anillo de fibra y centro de control",
+     "partes": []
+    },
+    {
+     "id": "zonas",
+     "nombre": "Zonas Digitales",
+     "partes": []
+    },
+    {
+     "id": "telemetria",
+     "nombre": "Telemetría de las EBAR y la PTAR",
+     "partes": []
+    },
+    {
+     "id": "granja",
+     "nombre": "Granja solar municipal",
+     "partes": []
+    },
+    {
+     "id": "paneles_por_sede",
+     "nombre": "Modelo descartado: paneles en cada sede",
+     "partes": []
+    }
+   ],
    "pasos": [
     {
      "id": "portadilla",
@@ -2715,6 +3080,43 @@
    "id": "ruta",
    "nombre": "Cronograma de obra",
    "corto": "Cronograma",
+   "maqueta": [
+    {
+     "id": "vivienda",
+     "nombre": "Vivienda",
+     "partes": []
+    },
+    {
+     "id": "urbanismo",
+     "nombre": "Urbanismo",
+     "partes": []
+    },
+    {
+     "id": "agroindustria",
+     "nombre": "Agroindustria",
+     "partes": []
+    },
+    {
+     "id": "salud",
+     "nombre": "Salud",
+     "partes": []
+    },
+    {
+     "id": "aguas",
+     "nombre": "Aguas",
+     "partes": []
+    },
+    {
+     "id": "saneamiento",
+     "nombre": "Saneamiento",
+     "partes": []
+    },
+    {
+     "id": "tic",
+     "nombre": "TIC y energía",
+     "partes": []
+    }
+   ],
    "pasos": [
     {
      "id": "cronograma",
