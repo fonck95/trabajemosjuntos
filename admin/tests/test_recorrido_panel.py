@@ -466,6 +466,28 @@ await dormir(100);
 desfase += 91 * 1000;
 await dormir(1700);
 r.nunca_empezo = ver(H);
+
+// 7. La tarjeta es el plan: listo antes de empezar, el paso en curso marcado, los hechos, el aviso parcial y la voz
+{
+  const rid = '777788889999';
+  const J = crear(rid, 'vista');
+  const pasos = () => J.el.querySelectorAll('li').filter((li) => !li.className.split(' ').includes('rec-aviso'));
+  const foto = () => ({ estado: ver(J).estado, etapa: J.el.dataset.etapa, en_curso: pasos().findIndex((li) => li.atributos['aria-current'] === 'step'),
+    hechas: pasos().filter((li) => li.className.split(' ').includes('hecha')).length });
+  r.plan_listo = foto();
+  av(rid, 1, 'preparando');
+  r.plan_previa = foto();
+  av(rid, 1, 'narrando');
+  r.plan_paso1 = foto();
+  av(rid, 2, 'narrando', { aviso: 'parcial' });
+  r.plan_paso2 = foto();
+  r.plan_avisos = J.el.querySelectorAll('.rec-aviso').map((x) => x.textContent);
+  // el interruptor de voz sin una vista que la tenga aquí: una nota, sin romperse
+  J.el.querySelector('.rec-voz').click();
+  r.plan_voz = ver(J).nota;
+  av(rid, 2, 'fin');
+  r.plan_fin = foto();
+}
 console.log(JSON.stringify(r));
 process.exit(0);
 """
@@ -515,3 +537,19 @@ def test_la_tarjeta_de_la_pantalla_en_off_no_queda_sonando_para_siempre(tarjeta)
                             "sonando": False}, r
     assert r["sin_empezar"]["estado"] == "Paso 2 de 2 · Preparando", r
     assert r["nunca_empezo"]["estado"] == "Detenido en el paso 2" and r["nunca_empezo"]["sonando"] is False, r
+
+
+@requiere_node
+def test_la_tarjeta_es_el_plan_y_lo_sigue_paso_a_paso(tarjeta):
+    r = tarjeta
+    # Antes de empezar, el plan entero y «listo»; la espera de antes del primer paso no lo cambia
+    assert r["plan_listo"] == {"estado": "Plan listo: empieza enseguida", "etapa": "listo", "en_curso": -1, "hechas": 0}, r
+    assert r["plan_previa"]["etapa"] == "listo" and r["plan_previa"]["en_curso"] == -1, r
+    # En marcha: el paso en curso marcado (aria-current) y los anteriores, hechos
+    assert r["plan_paso1"] == {"estado": "Paso 1 de 2 · Narrando", "etapa": "marcha", "en_curso": 0, "hechas": 0}, r
+    assert r["plan_paso2"] == {"estado": "Paso 2 de 2 · Narrando", "etapa": "marcha", "en_curso": 1, "hechas": 1}, r
+    # Lo que la presentación descartó de un paso queda dicho en la tarjeta
+    assert any("parte de lo pedido no se pudo mostrar" in x for x in r["plan_avisos"]), r
+    # El interruptor de voz, sin una vista que la encienda aquí, lo dice
+    assert isinstance(r["plan_voz"], str) and "voz" in r["plan_voz"].lower(), r
+    assert r["plan_fin"]["etapa"] == "final" and r["plan_fin"]["en_curso"] == -1 and r["plan_fin"]["hechas"] == 2, r
