@@ -238,6 +238,27 @@ def test_visual_no_mueve_nada_si_no_existe():
     assert all(x["id"] != "titulacion" for x in e.value.detalle["con_lugar"])
 
 
+def test_por_mcp_no_se_controla_un_recorrido_que_suena_en_la_pestana():
+    """Un recorrido que el asistente armó sin pantalla en off suena en la pestaña del panel (destino vista): por MCP no
+    se controla (solo la pantalla en off lee los controles guardados y la pestaña no sabría nada), con un 409 que dice
+    por qué y sin tocar nada."""
+    db = _Base()
+    _hacer(db, 7, {"op": "recorrido", "titulo": "La torre", "escenas": [
+        {"capitulo": "salud", "paso": "torre", "narracion": "Aquí se levanta la nueva torre."}]}, por="asistente")
+    antes = db.pantallas.find_one({"_id": 7})
+    assert antes["recorrido"]["destino"] == "vista"
+    for accion in ("pausar", "detener", "reproducir"):
+        with pytest.raises(hi.ErrorHerramienta) as e:
+            _hacer(db, 7, {"op": "control_recorrido", "accion": accion})
+        assert (e.value.codigo, e.value.estado) == ("en_el_panel", 409) and "pestaña" in str(e.value)
+    assert db.pantallas.find_one({"_id": 7}) == antes
+    # Cerrado (otra orden lo detuvo): no hay nada sonando
+    _hacer(db, 7, {"op": "ir", "capitulo": "aguas"})
+    with pytest.raises(hi.ErrorHerramienta) as e:
+        _hacer(db, 7, {"op": "control_recorrido", "accion": "reproducir"})
+    assert e.value.codigo == "sin_recorrido"
+
+
 def test_entradas_que_no_valen():
     for malo, dice in [({"op": "vista"}, "diga qué mostrar"), ({"op": "vista", "indice": True, "fichas": True}, "no se abren a la vez"),
                        ({"op": "vista", "panel": "no"}, "boolean"), ({"op": "vista", "panel": 1}, "boolean"),

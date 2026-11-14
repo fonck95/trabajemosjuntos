@@ -678,8 +678,8 @@ OPS_PRESENTACION = ("indice", "guion", "ir", "siguiente", "anterior", "explicar"
                     "visual", "recorrido", "control_recorrido", "pantalla_completa", "estado")
 # Lo que arma un recorrido narrado (`recorrido`) y lo que lo maneja (`control_recorrido`)
 PARTES_RECORRIDO = ("titulo", "escenas", "cierre", "sugerencias")
-# Las ops que cambian lo que se ve: con un recorrido sonando, primero lo colapsan (la sala ve la escena en curso y desde
-# ahí parte la orden)
+# Las ops que cambian lo que se ve: con un recorrido sonando, parten de la escena en curso (la que la sala ve) y, ya
+# resueltas, lo colapsan (lo cierran con esa escena como base) justo antes de guardarse
 COLAPSAN = ("ir", "siguiente", "anterior", "explicar", "quitar_explicacion", "vista", "visual")
 # Lo que dice cada operación del estado de la pantalla en off (las demás no lo cambian): `vista` y `pantalla_completa`
 PARTES_VISTA = ("panel", "indice", "fichas")
@@ -689,7 +689,8 @@ CAMARAS = pantalla_off.CAMARAS
 NOMBRE_CAMARA = {"paso": "el encuadre del paso", "aerea": "vista aérea", "oblicua": "vista oblicua",
                  "rasante": "vista rasante, casi a ras del suelo", "cerca": "más cerca", "lejos": "más lejos"}
 MAX_PASO = guion_presentacion.MAX_PASOS
-# Las reglas de lo que se proyecta viven en app/proyectable.py (también las usan el recorrido y la pantalla en off)
+# Las reglas de lo que se proyecta viven en app/proyectable.py (también las usan el recorrido y la pantalla en off): la
+# presentación que se maneja es siempre la técnica, así que la explicación tampoco lleva costos
 _explicacion_visible = texto_proyectable
 
 
@@ -713,18 +714,17 @@ Explicacion = Annotated[str, Field(min_length=1, max_length=MAX_EXPLICACION), Af
 Rumbo = Annotated[int, Field(ge=0, le=359), BeforeValidator(_paso_no_booleano)]
 
 
-def _sin_plata(maximo: int):
-    """Un texto del recorrido: las reglas de lo que se proyecta, con su tope y sin plata (la presentación técnica no
-    muestra costos)."""
-    return lambda v: texto_proyectable(v, maximo, plata=False)
+def _con_tope(maximo: int):
+    """Un texto del recorrido: las reglas de lo que se proyecta (sin costos, como la explicación), con su tope."""
+    return lambda v: texto_proyectable(v, maximo)
 
 
 Narracion = Annotated[str, Field(min_length=1, max_length=rec.MAX_NARRACION),
-                      AfterValidator(_sin_plata(rec.MAX_NARRACION))]
-TituloRecorrido = Annotated[str, Field(min_length=3, max_length=rec.MAX_TITULO), AfterValidator(_sin_plata(rec.MAX_TITULO))]
-PuntoCierre = Annotated[str, Field(min_length=3, max_length=rec.MAX_PUNTO), AfterValidator(_sin_plata(rec.MAX_PUNTO))]
+                      AfterValidator(_con_tope(rec.MAX_NARRACION))]
+TituloRecorrido = Annotated[str, Field(min_length=3, max_length=rec.MAX_TITULO), AfterValidator(_con_tope(rec.MAX_TITULO))]
+PuntoCierre = Annotated[str, Field(min_length=3, max_length=rec.MAX_PUNTO), AfterValidator(_con_tope(rec.MAX_PUNTO))]
 Sugerencia = Annotated[str, Field(min_length=3, max_length=rec.MAX_SUGERENCIA),
-                       AfterValidator(_sin_plata(rec.MAX_SUGERENCIA))]
+                       AfterValidator(_con_tope(rec.MAX_SUGERENCIA))]
 
 
 def _volver_al_paso(v: Any, campo: str) -> Any:
@@ -808,8 +808,8 @@ class PresentacionEntrada(_Entrada):
         "Id o nombre del capítulo (del índice o del contexto del panel)"))
     paso: PasoNumero | PasoId | None = Field(None, description="Número del paso desde 1, o su id (del índice)")
     explicacion: Explicacion | None = Field(None, description=(
-        "Una o dos frases cortas para la pantalla (se proyecta; hasta 220 caracteres): sin datos de habitantes, «@» ni "
-        "números de 7 o más dígitos"))
+        "Una o dos frases cortas para la pantalla (se proyecta; hasta 220 caracteres): sin datos de habitantes, costos, "
+        "«@» ni números de 7 o más dígitos"))
     panel: StrictBool | None = Field(None, description=(
         "vista: true muestra el panel de texto del paso; false deja solo la maqueta 3D («Solo 3D»)"))
     indice: StrictBool | None = Field(None, description="vista: true abre el índice de capítulos; false lo cierra")
@@ -1032,7 +1032,11 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
     pantalla en off abierta: entonces la que cambia es esa y la pestaña del chat no se mueve (la persona puede estar
     escribiendo desde el celular). Sin pantalla abierta, «siguiente» y «anterior» sin punto de partida los calcula la
     vista de la pestaña del chat (no se sabe desde dónde): la pantalla en off no cambia. Con MCP, o con una pantalla
-    abierta, se calculan desde la pantalla en off."""
+    abierta, se calculan desde la pantalla en off.
+
+    Con un recorrido sonando, todo parte de la escena que la sala está viendo (no de la base guardada, que es su última
+    escena), y una orden que cambia lo que se ve lo cierra recién cuando ya no puede fallar: un capítulo que no existe o
+    un componente mal escrito vuelve con su error y la narración sigue."""
     g = await cargar_guion()
     if a.op == "indice":
         return Resultado({**g.indice(), "nota": (
@@ -1047,13 +1051,10 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
     abierta = pantalla_off.conectada(doc)
     desde_pantalla = abierta or por == "mcp"
     if a.op == "recorrido":
-        return await _recorrido(db, uid, g, a, por, abierta)
+        return await _recorrido(db, uid, g, a, por, abierta, doc)
     if a.op == "control_recorrido":
         return await _control_recorrido(db, uid, g, a, por, abierta)
-    if a.op in COLAPSAN:
-        # con un recorrido sonando, la orden parte de la escena que la sala está viendo (y el recorrido se cierra)
-        doc = await run_in_threadpool(pantalla_off.colapsar, db, uid, g, por) or doc
-    e = pantalla_off.estado(doc, g)
+    e = pantalla_off.estado(pantalla_off.a_la_vista(doc, g), g)
     if a.op == "estado":
         return Resultado({"pantalla": _estado_para_modelo(doc, e, g, abierta), "nota": (
             NOTA_PANTALLA_ABIERTA if abierta else NOTA_SIN_PANTALLA)},
@@ -1095,12 +1096,14 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
         resumen = "La presentación llena la ventana" if a.activar else "La presentación volvió a la vista del panel"
         accion = {"tipo": "presentacion", "op": "pantalla_completa", "activar": a.activar}
     elif a.op in ("siguiente", "anterior") and a.capitulo is None and not desde_pantalla:
-        # Sin el punto de partida la presentación calcula el paso; el modelo lo ve en el contexto del próximo mensaje
+        # Sin el punto de partida la presentación calcula el paso; el modelo lo ve en el contexto del próximo mensaje. La
+        # pantalla en off no cambia, pero el recorrido que suena se detiene igual
+        detener = await _colapsar(db, uid, g, doc, por)
         return Resultado({"nota": (
             f"La presentación pasa al paso {'siguiente' if a.op == 'siguiente' else 'anterior'} desde donde esté. Para "
             "saber cuál es (y recibir lo que muestra), use ir o indique capitulo y paso de partida.")},
             f"Pasé al paso {'siguiente' if a.op == 'siguiente' else 'anterior'} de la presentación",
-            acciones=[{"tipo": "presentacion", "op": a.op, **extra}])
+            acciones=[*detener, {"tipo": "presentacion", "op": a.op, **extra}])
     else:
         if a.op in ("siguiente", "anterior") and a.capitulo is None:
             ci, pi = g.por_id(e["capitulo"]), e["paso"] - 1   # desde donde está la pantalla en off
@@ -1126,10 +1129,28 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
         # paso, salvo el tema (como mando.js y visual.js)
         cambios = {"capitulo": c["id"], "paso": pi + 1, "explicacion": a.explicacion or None, "indice": False,
                    "fichas": False, **pantalla_off.VISUAL_INICIAL}
+    # Ya resuelta (nada más puede fallar): cierra el recorrido que sonaba, con la escena en curso como base, y encima
+    # guarda lo pedido
+    detener = await _colapsar(db, uid, g, doc, por) if a.op in COLAPSAN else []
     await run_in_threadpool(pantalla_off.guardar, db, uid, cambios, por)
     if desde_pantalla:
         contenido["pantalla"] = NOTA_PANTALLA_ABIERTA if abierta else NOTA_SIN_PANTALLA
-    return Resultado(contenido, resumen, acciones=[accion] if accion and not abierta and por == "asistente" else [])
+    return Resultado(contenido, resumen,
+                     acciones=[*detener, *([accion] if accion and not abierta and por == "asistente" else [])])
+
+
+async def _colapsar(db: Any, uid: int, g: guion_presentacion.Guion, doc: dict | None, por: str) -> list[dict]:
+    """Cierra el recorrido que sonaba cuando se leyó `doc` (si sigue siendo ese: uno que llegó entretanto no se toca),
+    con la escena en curso como base. Si sonaba en la pestaña o el proyector del asistente, devuelve la acción que lo
+    detiene allá, haya o no una pantalla en off abierta (la orden misma no siempre va al navegador, y un avance sin
+    recorrido vigente solo lo detiene en la próxima frase). La pantalla en off se entera sola: le llega sin recorrido."""
+    r = pantalla_off.recorrido_de(doc, g)
+    if not r or r["cerrado"]:
+        return []
+    cerrado = await run_in_threadpool(pantalla_off.colapsar, db, uid, g, por, r["id"])
+    if cerrado is None or r["destino"] != "vista" or por != "asistente":
+        return []
+    return [{"tipo": "presentacion", "op": "control_recorrido", "rid": r["id"], "accion": "detener", "motivo": "otra_orden"}]
 
 
 def _visual(g: guion_presentacion.Guion, e: dict, a: PresentacionEntrada, desde_pantalla: bool) -> tuple[dict, str, dict]:
@@ -1278,7 +1299,9 @@ def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> dict:
         try:
             if x.capitulo is not None:
                 nci = _resolver_capitulo(g, x.capitulo)
-                npi = _resolver_paso(g, nci, x.paso)
+                # el modelo suele repetir el capítulo en cada escena: sin paso, en el mismo capítulo sigue en el mismo
+                # paso (como promete el esquema); en otro capítulo, o en la primera escena, va al primero
+                npi = pi if x.paso is None and nci == ci else _resolver_paso(g, nci, x.paso)
             elif x.paso is not None:
                 nci, npi = ci, _resolver_paso(g, ci, x.paso)
             else:
@@ -1306,7 +1329,8 @@ def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> dict:
             raise _con_escena(e, n) from None
         esc = {"capitulo": g.capitulos[ci]["id"], "paso": pi + 1, "panel": panel, "visual": dict(visual),
                "resaltar": resaltar, "frases": rec.partir_frases(x.narracion), "sostener_ms": 0}
-        esc["sostener_ms"] = int(round(x.sostener * 1000)) if x.sostener is not None else             rec.sostener_por_omision(esc, escenas[-1] if escenas else None, g)
+        esc["sostener_ms"] = int(round(x.sostener * 1000)) if x.sostener is not None else \
+            rec.sostener_por_omision(esc, escenas[-1] if escenas else None, g)
         escenas.append(esc)
     return {"id": secrets.token_hex(6), "titulo": a.titulo, "escenas": escenas,
             "cierre": {"puntos": list(a.cierre.puntos)} if a.cierre else None}
@@ -1406,10 +1430,12 @@ DONDE_SUENA = {"vista": "la vista Presentación de la pestaña del chat (o el pr
 
 
 async def _recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: PresentacionEntrada, por: str,
-                     abierta: bool) -> Resultado:
+                     abierta: bool, doc: dict | None = None) -> Resultado:
     """La op `recorrido`: compone, valida todo o nada, guarda y devuelve lo que el modelo necesita (compacto) y, al
     asistente, las acciones (la de la presentación si suena en la pestaña o el proyector, y la de la tarjeta del chat).
-    Por MCP hace falta una pantalla en off abierta: no hay otra pantalla donde suene."""
+    Por MCP hace falta una pantalla en off abierta: no hay otra pantalla donde suene. Si el nuevo va a la pantalla en off
+    y en la pestaña o el proyector sonaba otro (`doc`, la pantalla antes de guardarlo), también lo detiene allá: si no,
+    las dos voces se pisaban hasta su próximo avance, y uno en pausa no se enteraba nunca."""
     if por == "mcp" and not abierta:
         raise ErrorHerramienta("Abra la pantalla en off antes de un recorrido (la vista Presentación en modo en off, en el "
                                "proyector): por MCP no hay otra pantalla donde se vea y se oiga. ir y visual sí quedan "
@@ -1423,6 +1449,7 @@ async def _recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: Presenta
         raise ErrorHerramienta(f"El recorrido dura unos {round(ms / 1000)} s y el tope es {rec.MAX_DURACION_MS // 1000}: "
                                "divídalo en dos (menos escenas o narraciones más cortas).", "invalido", estado=422)
     destino = "pantalla_off" if abierta or por == "mcp" else "vista"
+    previo = pantalla_off.recorrido_de(doc, g)
     await run_in_threadpool(pantalla_off.guardar_recorrido, db, uid, r, destino, por)
     avisos = _avisos(g, r)
     minutos, segundos = divmod(round(ms / 1000), 60)
@@ -1437,34 +1464,56 @@ async def _recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: Presenta
         contenido["avisos"] = avisos
     acciones: list[dict] = []
     if por == "asistente":
+        if destino == "pantalla_off" and previo and not previo["cerrado"] and previo["destino"] == "vista":
+            acciones.append({"tipo": "presentacion", "op": "control_recorrido", "rid": previo["id"], "accion": "detener",
+                             "motivo": "otra_orden"})
         if destino == "vista":
             acciones.append({"tipo": "presentacion", "op": "recorrido", "recorrido": r})
-        acciones.append({"tipo": "recorrido", "id": r["id"], "titulo": r["titulo"], "destino": destino,
-                         "duracion_ms": ms, "cierre": r["cierre"]["puntos"] if r["cierre"] else None,
-                         "sugerencias": list(a.sugerencias or []),
-                         "escenas": [{"narracion": " ".join(e["frases"]), "donde": _donde(g, e),
-                                      "hace": _hace(g, e, r["escenas"][n - 1] if n else None)}
-                                     for n, e in enumerate(r["escenas"])]})
+        acciones.append(_tarjeta(g, r, destino, ms, list(a.sugerencias or [])))
     return Resultado(contenido, f"Recorrido «{r['titulo']}» · {len(r['escenas'])} escenas · ≈{dura}", acciones=acciones)
+
+
+def _tarjeta(g: guion_presentacion.Guion, r: dict, destino: str, ms: int, sugerencias: list[str]) -> dict:
+    """La acción de la tarjeta del recorrido en el chat (agente-recorrido.js): dónde, qué hace y qué dice cada escena,
+    la duración, el cierre y las sugerencias. Sigue el avance del recorrido con este id."""
+    return {"tipo": "recorrido", "id": r["id"], "titulo": r["titulo"], "destino": destino, "duracion_ms": ms,
+            "cierre": r["cierre"]["puntos"] if r["cierre"] else None, "sugerencias": sugerencias,
+            "escenas": [{"narracion": " ".join(e["frases"]), "donde": _donde(g, e),
+                         "hace": _hace(g, e, r["escenas"][n - 1] if n else None)} for n, e in enumerate(r["escenas"])]}
 
 
 async def _control_recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: PresentacionEntrada, por: str,
                              abierta: bool) -> Resultado:
     """La op `control_recorrido`: queda guardado (la pantalla en off lo aplica una vez) y, si el recorrido suena en la
-    pestaña o el proyector, va como acción al navegador del asistente. «reproducir» lo vuelve a empezar con otro id."""
+    pestaña o el proyector, va como acción al navegador del asistente. «reproducir» lo vuelve a empezar con otro id: al
+    asistente le vuelve también la tarjeta del nuevo (la del anterior sigue el avance de su id, y el nuevo quedaría sin
+    avance, sin barra en el chat y sin pausa al escribir). Por MCP, uno que suena en la pestaña o el proyector del panel
+    no se controla: solo la pantalla en off lee los controles guardados, y la pestaña no sabría nada."""
+    sin_recorrido = ErrorHerramienta("No hay un recorrido sonando: arme uno con la op recorrido.", "sin_recorrido",
+                                     estado=409)
+    if por == "mcp":
+        actual = pantalla_off.recorrido_de(await run_in_threadpool(pantalla_off.leer, db, uid), g)
+        if actual and actual["destino"] == "vista":
+            if actual["cerrado"]:
+                raise sin_recorrido
+            raise ErrorHerramienta(
+                f"El recorrido «{actual['titulo']}» suena en la pestaña del panel de la persona (o en su proyector), no "
+                "en la pantalla en off: se controla desde ahí. Para manejar uno, arme otro con la pantalla en off "
+                "abierta.", "en_el_panel", estado=409)
     try:
         res = await run_in_threadpool(pantalla_off.controlar, db, uid, g, a.accion, por)
     except ValueError:
-        raise ErrorHerramienta("No hay un recorrido sonando: arme uno con la op recorrido.", "sin_recorrido",
-                               estado=409) from None
+        raise sin_recorrido from None
     r, doc = res["recorrido"], res["doc"]
     estado = pantalla_off.resumen_recorrido(doc, g) or {}
     acciones: list[dict] = []
-    if por == "asistente" and r and r["destino"] == "vista":
+    if por == "asistente" and r:
         if a.accion == "reproducir":
-            acciones.append({"tipo": "presentacion", "op": "recorrido",
-                             "recorrido": {k: r[k] for k in ("id", "titulo", "escenas", "cierre")}})
-        else:
+            if r["destino"] == "vista":
+                acciones.append({"tipo": "presentacion", "op": "recorrido",
+                                 "recorrido": {k: r[k] for k in ("id", "titulo", "escenas", "cierre")}})
+            acciones.append(_tarjeta(g, r, r["destino"], rec.duracion_ms(r, g), []))
+        elif r["destino"] == "vista":
             acciones.append({"tipo": "presentacion", "op": "control_recorrido", "rid": r["id"], "accion": a.accion})
     nombres = {"pausar": "Pausé", "continuar": "Seguí con", "siguiente": "Pasé a la escena siguiente de",
                "anterior": "Volví a la escena anterior de", "repetir": "Repetí la escena de", "reproducir": "Volví a empezar",

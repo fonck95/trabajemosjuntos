@@ -27,10 +27,13 @@
 // * El recorrido narrado (reproductor.js, voz.js): la acción `recorrido` no se convierte en una orden; la reproduce
 //   aquí el reproductor, que lleva el reloj de la explicación y le manda a la presentación escena, frase, pausa y
 //   cierre. Suena en la página que mira la sala (la pestaña del chat, la ventana del proyector o la pantalla en off),
-//   con la voz del navegador si la persona la encendió con el botón «Voz» de esa ventana. Las teclas y los botones de la
-//   presentación lo manejan mientras suena (avanzan escenas, pausan, detienen), y si la persona mueve la imagen se
-//   pausa. Cualquier otra acción lo detiene antes. El avance va al puente (la tarjeta del chat), a la barra y al
-//   servidor (POST /api/pantalla/progreso), así el asistente y los agentes por MCP saben dónde va.
+//   con la voz del navegador si la persona la encendió con el botón «Voz» de esa ventana; si ya la había encendido antes,
+//   la activa el primer toque o tecla de la persona, también sobre la presentación (mando.js lo avisa con `gesto`: en el
+//   proyector el iframe ocupa la ventana y los toques no llegan a esta). Las teclas y los botones de la presentación lo
+//   manejan mientras suena (avanzan escenas, pausan, detienen), y si la persona mueve la imagen se pausa. Cualquier otra
+//   acción lo detiene antes. El avance va al puente (la tarjeta del chat), a la barra y al servidor (POST
+//   /api/pantalla/progreso), así el asistente y los agentes por MCP saben dónde va; si el servidor ya no lo tiene por
+//   vigente (otra orden lo cerró, otro recorrido lo reemplazó), se detiene aquí también.
 // * Los estilos (css/presentacion.css) los carga la vista, como agente.js los suyos.
 import { ErrorApi, api } from '../api.js';
 import { BASE, url } from '../base.js';
@@ -45,6 +48,7 @@ const ESPERA_LISTO_MS = 45000;   // la presentación carga sus datos y la maquet
 const ESPERA_ORDEN_MS = 12000;   // un cambio de capítulo con su telón y la maqueta del módulo tarda unos segundos
 const POLL_MS = 1500;            // la pantalla en off pregunta por su estado (app/pantalla.py la da por cerrada a los 10 s)
 const POLL_ERROR_MS = 4000;      // sin conexión con el panel, reintenta más espaciado
+const LATIDO_MS = 4000;          // durante una espera larga, la pantalla en off sigue avisando que está abierta
 const PRIMERA_ESCENA_MS = 10000; // al aceptar un recorrido se espera a que la primera escena esté a la vista (o esto)
 const VIGENCIA_RECORRIDO_S = 90; // la pantalla en off narra un recorrido nuevo; uno viejo se aplica en silencio
 const REANUDAR_S = 20;           // y reanuda uno a medias si su último avance es de hace menos que esto
@@ -242,7 +246,17 @@ export async function vistaPresentacion(el, { q } = {}) {
     while (avancePendiente) {
       const x = avancePendiente;
       avancePendiente = null;
-      try { await api.post('/api/pantalla/progreso', x); } catch { /* otro recorrido lo reemplazó, o sin conexión */ }
+      try {
+        await api.post('/api/pantalla/progreso', x);
+      } catch (err) {
+        // El servidor ya no lo tiene por vigente: lo cerró otra orden (un agente por MCP, el asistente con la pantalla en
+        // off abierta) o llegó otro recorrido. Si es el que suena aquí, se detiene: si no, seguiría hablando en la sala
+        // sin que el asistente, la tarjeta ni la barra lo vean. Sin conexión, sigue. Con 'otra_orden', no 'reemplazo':
+        // un proyector que se abre después no lo retoma (el puente le pasa al nuevo el que se soltó con 'reemplazo')
+        if (err instanceof ErrorApi && err.estado === 409 && rep.activo() && rep.recorrido()?.id === x.rid) {
+          rep.detener('otra_orden').catch(() => {});
+        }
+      }
     }
     avanceEnVuelo = false;
   }
@@ -257,6 +271,7 @@ export async function vistaPresentacion(el, { q } = {}) {
     },
   });
   limpiezas.push(() => { rep.detener('otra_orden'); voz.callar(); });
+  limpiezas.push(() => voz.soltar());   // sus oyentes de la ventana y de la síntesis: si no, cada montaje sumaría otros
   const botonesVoz = [...el.querySelectorAll('.pres-voz')];
   const pintarVoz = () => {
     const e = voz.estado();
@@ -273,15 +288,20 @@ export async function vistaPresentacion(el, { q } = {}) {
   limpiezas.push(voz.alCambiar(pintarVoz));
   pintarVoz();
 
-  async function aplicarRecorrido(p) {
+  // `enPausa`: la pantalla en off que se recargó con el recorrido en pausa lo retoma en su escena y en pausa. La pausa
+  // entra cuando la escena ya está a la vista (antes, el cambio de imagen la taparía con «preparando»)
+  async function aplicarRecorrido(p, { enPausa = false } = {}) {
     const primera = rep.iniciar(p.recorrido, { desde: p.desde || 1 });
+    if (enPausa) primera.then((ok) => { if (ok && rep.recorrido() === p.recorrido) rep.pausar('boton'); });
     await Promise.race([primera, dormir(PRIMERA_ESCENA_MS)]);
     return { op: p.op, ok: true };
   }
   function controlar(p) {
     const r = rep.recorrido();
     if (!r || r.id !== p.rid || !rep.activo()) return { op: p.op, ok: false, error: 'Ese recorrido ya no está sonando' };
-    rep.control(p.accion, { suave: !!p.suave });
+    // el detener del servidor cuando el asistente mostró otra cosa: la tarjeta lo dice así, no como el botón Detener
+    if (p.accion === 'detener' && p.motivo === 'otra_orden') rep.detener('otra_orden');
+    else rep.control(p.accion, { suave: !!p.suave });
     return { op: p.op, ok: true };
   }
 
@@ -328,9 +348,14 @@ export async function vistaPresentacion(el, { q } = {}) {
     if (e.source !== iframe.contentWindow || e.origin !== d.origen) return;
     const m = e.data;
     if (!m || typeof m !== 'object' || Array.isArray(m) || m.canal !== CANAL || m.v !== VERSION) return;
+    // Un toque o una tecla de la persona sobre la presentación: enciende la voz que ya estaba elegida (en el proyector es
+    // el único gesto que hay: el iframe ocupa la ventana). La activación del usuario dentro del iframe vale también aquí
+    if (m.tipo === 'gesto') { voz.gesto(); return; }
     // La presentación sin controles (la pantalla en off) no atiende el teclado: Escape devuelve aquí la ventana. Con un
-    // recorrido sonando, las teclas y los botones de la presentación lo manejan
+    // recorrido sonando, las teclas y los botones de la presentación lo manejan. Las que no son Escape también son un
+    // gesto (Escape no le da al navegador la activación del usuario: con él la voz no podría hablar)
     if (m.tipo === 'tecla') {
+      if (m.tecla !== 'Escape' && m.tecla !== 'detener') voz.gesto();
       if (m.tecla === 'Escape' && 'presLlena' in raiz.dataset) llenar(false);
       else if (rep.activo()) {
         if (m.tecla === 'siguiente') rep.siguiente();
@@ -383,17 +408,24 @@ export async function vistaPresentacion(el, { q } = {}) {
       if (r && pr.rid === r.id) aplicado = baseDeEscena(aplicado, r.escenas[pr.n - 1]);
     };
   }
+  // Un recorrido que esta pantalla ve por primera vez (se abrió o se recargó con él en el servidor). Si ya tuvo avance,
+  // decide el avance: uno terminado no se vuelve a narrar; uno en pausa se retoma en su escena y en pausa (en pausa no
+  // hay avances y su antigüedad no dice nada: antes se lo daba por viejo, la pantalla saltaba a la última escena y no
+  // atendía el «continuar»); uno a medias con un avance reciente (la pantalla se recargó) sigue en su escena, y uno sin
+  // noticias hace rato (la pantalla se cerró) no se narra. Sin avance, se narra si es nuevo: una pantalla que se abre
+  // después no narra uno viejo. El que no se narra se queda en la escena de su último avance (`enSuEscena`)
   async function recorridoDeLaPantalla(e) {
     const x = e.recorrido;
     if (x && x.id !== ridOff) {
       ridOff = x.id;
       controlOff = e.control_recorrido?.n || 0;
-      const pr = e.progreso;
-      const reanuda = !!pr && pr.hace_s < REANUDAR_S && !TERMINALES.includes(pr.fase);
-      // uno viejo (la pantalla se abrió después) no se narra: los campos base lo dejan en su última escena
-      if (x.edad_s < VIGENCIA_RECORRIDO_S || reanuda) {
+      const pr = e.progreso;   // del mismo recorrido: `estadoDePantalla` descarta el de otro
+      let desde = 0;
+      if (pr) desde = !TERMINALES.includes(pr.fase) && (pr.fase === 'pausa' || pr.hace_s < REANUDAR_S) ? pr.n : 0;
+      else if (x.edad_s < VIGENCIA_RECORRIDO_S) desde = 1;
+      if (desde) {
         const { edad_s: _edad, ...r } = x;
-        await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde: reanuda ? pr.n : 1 });
+        await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde }, { enPausa: pr?.fase === 'pausa' });
       }
     } else if (!x && rep.activo()) {
       // el asistente pidió otra cosa o lo detuvo: el servidor lo cerró
@@ -403,6 +435,13 @@ export async function vistaPresentacion(el, { q } = {}) {
       if (e.control_recorrido.accion !== 'reproducir') rep.control(e.control_recorrido.accion);
     }
   }
+  // Mientras el servidor tiene abierto un recorrido, su base es la última escena (la que queda si termina): uno que esta
+  // pantalla no narra, o que dejó de narrar sin que el servidor lo cierre, se queda en la escena de su último avance en
+  // vez de saltar al final con la próxima versión (una pantalla completa, un control)
+  const enSuEscena = (e) => {
+    const esc = e.recorrido && e.progreso ? e.recorrido.escenas[e.progreso.n - 1] : null;
+    return esc ? baseDeEscena(e, esc) : e;
+  };
   async function seguirAlServidor() {
     if (siguiendo) return;
     siguiendo = true;
@@ -414,17 +453,25 @@ export async function vistaPresentacion(el, { q } = {}) {
         const r = await api.get(`/api/pantalla?v=${versionVista}`);
         const e = estadoDePantalla(r);
         if (e) {
-          await recorridoDeLaPantalla(e);
-          // mientras suena un recorrido, lo que se ve lo pone él (solo la pantalla completa se aplica igual)
-          for (const o of rep.activo() ? [] : ordenesHacia(aplicado, e)) {
-            const res = await orden(o);
-            if (!res.ok) console.warn('La pantalla en off no pudo aplicar', o.orden, res.error);
-          }
+          // Las esperas largas (la primera escena, hasta PRIMERA_ESCENA_MS; cada orden, hasta ESPERA_ORDEN_MS) no dejan de
+          // avisar que la pantalla sigue abierta: si no, el servidor la daba por cerrada (VIVA_S) y un recorrido que el
+          // asistente armaba en ese hueco salía para la pestaña. La respuesta no se usa: la próxima vuelta vuelve a leer
+          const latido = setInterval(() => { api.get(`/api/pantalla?v=${versionVista}`).catch(() => {}); }, LATIDO_MS);
+          let meta;
+          try {
+            await recorridoDeLaPantalla(e);
+            // mientras suena un recorrido, lo que se ve lo pone él (solo la pantalla completa se aplica igual)
+            meta = rep.activo() ? null : enSuEscena(e);
+            for (const o of meta ? ordenesHacia(aplicado, meta) : []) {
+              const res = await orden(o);
+              if (!res.ok) console.warn('La pantalla en off no pudo aplicar', o.orden, res.error);
+            }
+          } finally { clearInterval(latido); }
           // Cada orden de pantalla completa se aplica, aunque no cambie el valor: así vuelve a llenar la ventana que
           // se devolvió con Escape
           if (!aplicado || aplicado.completa !== e.completa || aplicado.orden_completa !== e.orden_completa) llenar(e.completa);
           if (rep.activo()) aplicado = { ...(aplicado || e), completa: e.completa, orden_completa: e.orden_completa };
-          else aplicado = e;
+          else aplicado = meta;
           versionVista = e.v;
         }
         if (offEstado) offEstado.textContent = 'Conectada: la manejan el asistente y los agentes por MCP';

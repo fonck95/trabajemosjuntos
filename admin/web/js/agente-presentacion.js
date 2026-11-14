@@ -29,7 +29,10 @@
 //   y, con varias en fila, las últimas vencían, y la vista de aquí volvía al paso viejo del proyector.
 // * Una ventana que se cerró sin avisar (el «adios» de `pagehide` no siempre llega) o que se colgó no acusa: en
 //   ESPERA_ACUSE_MS se da por cerrada y la orden se aplica en esta pestaña. Si se cierra (avisando o dejando de latir)
-//   con la orden ya acusada, tampoco se pierde: va al proyector que quede o a la vista de aquí.
+//   con la orden ya acusada, tampoco se pierde: va al proyector que quede o a la vista de aquí. Un proyector que solo
+//   estaba ocupado (armando su maqueta 3D) recibe la lista al liberarse y la aplica igual, salvo la que trae un
+//   recorrido: esa caduca (`hasta`), porque ya suena aquí y sonaría en los dos. Cuando ese proyector vuelve, el recorrido
+//   que suena aquí se le pasa desde la escena en curso, como al abrirse (`seguir`).
 // * La pestaña que sigue a un proyector le pregunta cada latido si sigue ahí («quien») y él contesta en el acto: su
 //   propio latido es un reloj, y el navegador espacia los relojes de una pestaña oculta (hasta uno por minuto).
 //
@@ -39,7 +42,8 @@
 // ventana es el proyector, a las demás por el canal (`recorrido`), aceptado solo del que manda. Los controles de la
 // tarjeta (`controlRecorrido`) van adonde suena. Si se abre un proyector mientras el recorrido suena aquí, se le pasa
 // desde la escena en curso (`sincronizar`); si el proyector que lo reproducía se cierra, la tarjeta lo sabe y ofrece
-// reanudarlo.
+// reanudarlo. Mientras suena en el proyector, la persona que mueve la presentación de esta pestaña lo pausa allá (no se
+// le lleva su paso: eso lo detendría como si el asistente hubiera pedido otra cosa).
 //
 // Solo importa base.js y `navegar` (el `ir` de app.js) llega por parámetro: así no depende de app.js y se prueba con
 // Node (admin/tests/test_agente_presentacion.py).
@@ -53,6 +57,7 @@ const ESPERA_MAX_MS = 120000;
 const LATIDO_MS = 2000;               // el proyector se anuncia cada tanto
 const VIVO_MS = 6500;                 // sin anuncios en este tiempo, se da por cerrado
 const ESPERA_ACUSE_MS = 2500;         // lo que se espera el acuse del proyector (llega en milisegundos si está vivo)
+const MARGEN_ACUSE_MS = 500;          // una lista que caduca vence esto antes del plazo del acuse (lo que tarda en volver)
 const ESPERA_FILA_MS = 60000;         // lo que una orden acusada puede esperar en la fila del proyector a que la empiece
 const ESPERA_PROYECTOR_MS = 15000;    // y desde que la empieza, su respuesta, por acción (él espera 12 s a la presentación)
 const OPS = new Set(['ir', 'siguiente', 'anterior', 'explicar', 'quitar_explicacion', 'vista', 'visual', 'pantalla_completa',
@@ -77,26 +82,32 @@ const VISUAL = {
 const PARTES_VISUAL = Object.keys(VISUAL);
 // lo visual de cada paso (al cambiar de paso vuelve a esto; el tema no)
 const VISUAL_INICIAL = { enfoque: null, camara: 'paso', rumbo: null, girar: false, comparar: 'proyecto', detalle: null, inmersion: null };
-const DEL_RECORRIDO = ['recorrido', 'desde', 'rid', 'accion', 'suave'];
+const DEL_RECORRIDO = ['recorrido', 'desde', 'rid', 'accion', 'suave', 'motivo'];
 const CLAVES = new Set(['tipo', 'op', 'capitulo', 'paso', 'explicacion', 'panel', 'indice', 'fichas', 'activar', ...PARTES_VISUAL,
   ...DEL_RECORRIDO]);
 const ID_VENTANA = /^[a-z0-9]{8,40}$/;
-// Lo que la explicación no puede traer (`_explicacion_visible` de la herramienta, `textoVisible` de mando.js, con las
-// mismas reglas): se proyecta ante una sala. La «@» y los números se buscan en la forma NFKC del texto (la «＠» de
-// ancho completo, los dígitos en superíndice o de ancho completo y los guiones de compatibilidad cuentan como los
-// comunes); TIRADA son los dígitos con lo que los separa al escribir un teléfono o una cédula, y PERIODO y RANGO lo
-// único que puede pasar de 6 dígitos (un periodo y un rango de cifras de la propuesta, de menor a mayor). Antes se
-// quitan las fechas que existen (FECHA: «15/11/2026», «2026-11-15», de 1900 a 2099): cada una corta la tirada
+// Lo que la explicación no puede traer (`texto_proyectable` de app/proyectable.py, `textoVisible` de mando.js, con las
+// mismas reglas): se proyecta ante una sala. La «@», los números y la plata se buscan en la forma NFKC
+// del texto (la «＠» y el «＄» de ancho completo, los dígitos en superíndice o de ancho completo y los guiones de
+// compatibilidad cuentan como los comunes); TIRADA son los dígitos con lo que los separa al escribir un teléfono o una
+// cédula (también pegados con el apóstrofo recto o tipográfico, el acento agudo o grave que se escribe en su lugar, la
+// prima o un punto de viñeta: «71'234.567» o «71´234.567», con el
+// apóstrofo de los millones, es como se escribe a mano una cédula en Colombia), y PERIODO y RANGO lo único que puede
+// pasar de 6 dígitos (un periodo y un rango de cifras de la propuesta, de menor a mayor). Antes se quitan las fechas que
+// existen (FECHA: «15/11/2026», «2026-11-15», de 1900 a 2099): cada una corta la tirada
 const NO_SE_VE = /[\p{Cc}\p{Cf}\p{Cs}\p{Co}\p{Cn}\p{Zl}\p{Zp}\u{34f}\u{115f}\u{1160}\u{17b4}\u{17b5}\u{2800}\u{3164}\u{ffa0}\u{180b}-\u{180f}\u{fe00}-\u{fe0f}\u{e0000}-\u{e0fff}]/u;
 const ACENTOS = /[\p{Mn}\p{Me}]{3,}/u;
-const TIRADA = /\p{Nd}+(?:(?:[.,_\u00b7(]|\) ?|\)? ?[\-\u2010-\u2015\u2212\/] ?\(?| )\p{Nd}+)*/gu;
+// (pegados: . , _ · ( ' ‘ ’ ` ʹ ʼ ′ ‧ • ∙ ・, y «´», que en la forma NFKC es un espacio y un acento combinante; los de
+// ancho completo ya quedaron como estos en la forma NFKC)
+const TIRADA = /\p{Nd}+(?:(?:[.,_\u00b7'\u2018\u2019\u2032\u2027\u2022\u2219\u30fb\u0060\u02b9\u02bc(]| \u0301|\) ?|\)? ?[\-\u2010-\u2015\u2212\/] ?\(?| )\p{Nd}+)*/gu;
 const PERIODO = /^((?:19|20)[0-9]{2}) ?[\-\u2010-\u2015\u2212\/] ?((?:19|20)[0-9]{2})$/u;
 const RANGO = /^([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?) ?[\-\u2010-\u2015\u2212] ?([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?)$/u;
 const FECHA = /(?<!\p{Nd})(?:([0-9]{4}) ?([.\-\u2010-\u2015\u2212\/]) ?([0-9]{1,2}) ?\2 ?([0-9]{1,2})|([0-9]{1,2}) ?([.\-\u2010-\u2015\u2212\/]) ?([0-9]{1,2}) ?\6 ?([0-9]{4}))(?!\p{Nd})/gu;
-// Un monto en pesos con su signo y sus puntos de miles («$1.156.350», el costo por habitante del guion): la tirada
-// va justo después de «$», en grupos de tres y con 7 cifras enteras a lo sumo (`_MONTO` de la herramienta): una cédula
-// o un teléfono de 8 o más dígitos no pasa por llevar «$» delante
-const MONTO = /^(?:[0-9]{1,3}|[0-9]\.[0-9]{3})\.[0-9]{3}(?:,[0-9]{1,2})?$/u;
+// Lo que delata un costo (`PLATA` de app/proyectable.py y de mando.js, la misma regla): el signo, «COP», «pesos»,
+// «billones de», «billón de» o «millones de pesos», en mayúsculas o minúsculas. La presentación que maneja el panel es siempre la
+// técnica, que no muestra plata: nada de lo que se le manda la lleva (ni la explicación ni el recorrido). La de
+// tecnica.js, que limpia los datos de la propuesta, es otra cosa y no cambia con esta
+const PLATA = /[$\u{1F4B2}]|\bcop\b|\bpesos\b|\bbill(?:ones|[o\u00f3\u00d3]n) de\b|millones de pesos/iu;
 const DIGITOS_MAX = 6;
 
 // ───────── El recorrido narrado (app/recorrido.py: los mismos topes y listas; una prueba los compara) ─────────
@@ -116,14 +127,12 @@ export const MOTIVOS = ['persona', 'tecla', 'boton', 'mensaje', 'otra_orden', 'r
   'escena_fallida'];
 export const AVISOS = ['atlas', 'resaltar', 'asiento', 'voz'];
 const RID = /^[0-9a-f]{12}$/;
-// lo que el recorrido no proyecta además de lo de la explicación: costos (es la presentación técnica)
-const PLATA = /\$|millones de pesos/;
 const VISUAL_ESCENA = Object.keys(VISUAL_INICIAL);
 const entero = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
 const exactas = (o, claves) => !!o && typeof o === 'object' && !Array.isArray(o) && Object.keys(o).length === claves.length
   && claves.every((k) => Object.prototype.hasOwnProperty.call(o, k));
 // un texto del recorrido: se proyecta tal cual (sin cambiarle nada: si no, no vale)
-const tal = (v, max) => explicacionVisible(v, max, { plata: false }) === v;
+const tal = (v, max) => explicacionVisible(v, max) === v;
 
 function resaltarValido(r) {
   if (r === null) return true;
@@ -181,7 +190,8 @@ export function progresoValido(p) {
 }
 
 /** Las acciones del recorrido: `recorrido` (el recorrido entero y, si se reanuda, `desde`), `control_recorrido` (rid,
- * accion de CONTROLES y `suave` solo con pausar) y `preparando` (activar: la píldora mientras el asistente arma). */
+ * accion de CONTROLES, `suave` solo con pausar y `motivo` 'otra_orden' solo con detener: el servidor lo cerró porque el
+ * asistente mostró otra cosa) y `preparando` (activar: la píldora mientras el asistente arma). */
 function accionRecorrido(a) {
   const solo = (claves) => Object.keys(a).every((k) => k === 'tipo' || k === 'op' || claves.includes(k));
   if (a.op === 'recorrido') {
@@ -191,9 +201,11 @@ function accionRecorrido(a) {
     return { tipo: 'presentacion', op: 'recorrido', recorrido: r, ...(a.desde !== undefined ? { desde: a.desde } : {}) };
   }
   if (a.op === 'control_recorrido') {
-    if (!solo(['rid', 'accion', 'suave']) || typeof a.rid !== 'string' || !RID.test(a.rid) || !CONTROLES.includes(a.accion)) return null;
+    if (!solo(['rid', 'accion', 'suave', 'motivo']) || typeof a.rid !== 'string' || !RID.test(a.rid) || !CONTROLES.includes(a.accion)) return null;
     if (a.suave !== undefined && (a.suave !== true || a.accion !== 'pausar')) return null;
-    return { tipo: 'presentacion', op: 'control_recorrido', rid: a.rid, accion: a.accion, ...(a.suave ? { suave: true } : {}) };
+    if (a.motivo !== undefined && (a.motivo !== 'otra_orden' || a.accion !== 'detener')) return null;
+    return { tipo: 'presentacion', op: 'control_recorrido', rid: a.rid, accion: a.accion, ...(a.suave ? { suave: true } : {}),
+      ...(a.motivo ? { motivo: a.motivo } : {}) };
   }
   if (!solo(['activar']) || typeof a.activar !== 'boolean') return null;
   return { tipo: 'presentacion', op: 'preparando', activar: a.activar };
@@ -201,10 +213,10 @@ function accionRecorrido(a) {
 
 /** La acción `presentacion` del servidor, normalizada, o null si no tiene la forma estricta: un objeto con solo las
  * claves conocidas, `op` de la lista, `capitulo` como id (obligatorio para `ir`), `paso` entero de 1 a 60 (solo con
- * `ir`), y `explicacion` de hasta MAX_EXPLICACION caracteres que se ve tal cual (obligatoria para `explicar`). `vista`
- * lleva solo `panel`, `indice` y `fichas` (al menos una, cada una verdadero o falso; el índice y las fichas no a la vez)
- * y `pantalla_completa` solo `activar` (verdadero o falso). `visual` lleva solo sus partes (al menos una, cada una con
- * un valor de su lista). */
+ * `ir`), y `explicacion` de hasta MAX_EXPLICACION caracteres que se ve tal cual y sin costos (obligatoria para
+ * `explicar`). `vista` lleva solo `panel`, `indice` y `fichas` (al menos una, cada una verdadero o falso; el índice y
+ * las fichas no a la vez) y `pantalla_completa` solo `activar` (verdadero o falso). `visual` lleva solo sus partes (al
+ * menos una, cada una con un valor de su lista). */
 export function accionPresentacion(a) {
   if (!a || typeof a !== 'object' || Array.isArray(a) || a.tipo !== 'presentacion') return null;
   if (Object.keys(a).some((k) => !CLAVES.has(k)) || typeof a.op !== 'string' || !OPS.has(a.op)) return null;
@@ -263,13 +275,12 @@ function esFecha(m) {
 }
 
 /** ¿Trae `t` (en NFKC y con los espacios en uno) un número de más de DIGITOS_MAX dígitos que no es un periodo, un rango
- * de cifras, una fecha ni un monto en pesos? (`numero_largo` de la herramienta: las fechas que existen se quitan antes y
- * cortan la tirada) */
+ * de cifras ni una fecha? (`numero_largo` de la herramienta: las fechas que existen se quitan antes y cortan la tirada).
+ * Un monto en pesos («$1.156.350») ya no es excepción: PLATA lo frena antes */
 function numeroLargo(t) {
   t = t.replace(FECHA, (...m) => (esFecha(m) ? ' | ' : m[0]));
-  for (const { 0: tirada, index } of t.matchAll(TIRADA)) {
+  for (const [tirada] of t.matchAll(TIRADA)) {
     if (tirada.match(/\p{Nd}/gu).length <= DIGITOS_MAX) continue;
-    if (/\$ ?$/u.test(t.slice(0, index)) && MONTO.test(tirada)) continue;
     const p = PERIODO.exec(tirada);
     if (p && Number(p[1]) <= Number(p[2])) continue;
     const r = RANGO.exec(tirada);
@@ -279,12 +290,15 @@ function numeroLargo(t) {
   return false;
 }
 
-function explicacionVisible(v, max = MAX_EXPLICACION, { plata = true } = {}) {
+/** El texto tal como se proyecta (los espacios seguidos en uno), o null si no se puede: la explicación de `explicar` y de
+ * `ir`, la que dice el estado y los textos del recorrido, todos con la misma regla y sin una opción que deje pasar la
+ * plata (así ninguno la proyecta por olvido). */
+function explicacionVisible(v, max = MAX_EXPLICACION) {
   if (typeof v !== 'string' || NO_SE_VE.test(v) || ACENTOS.test(v)) return null;
   const t = v.replace(/\s+/g, ' ').trim();
   if (!t || [...t].length > max) return null;
   const k = t.normalize('NFKC').replace(/\s+/g, ' ').trim();
-  if (!plata && PLATA.test(k)) return null;
+  if (PLATA.test(k)) return null;
   return k.includes('@') || numeroLargo(k) ? null : t;
 }
 
@@ -497,6 +511,10 @@ function sincronizar(id) {
   let enCurso = null;
   try { enCurso = control?.recorrido?.() || null; } catch { enCurso = null; }
   if (enCurso?.recorrido) {
+    // lo último que dijo aquí cuenta como lo último del proyector hasta que él diga lo suyo: si se cierra antes, la
+    // tarjeta lo sabe (`olvidar`) y ofrece reanudarlo, en vez de quedarse sonando
+    const u = ultimoAvance?.p;
+    if (u?.rid === enCurso.recorrido.id && !TERMINALES.includes(u.fase) && !avanceDe.has(id)) avanceDe.set(id, u);
     try { control.soltarRecorrido?.('proyector'); } catch { /* nada */ }
     lista = [{ tipo: 'presentacion', op: 'recorrido', recorrido: enCurso.recorrido, desde: enCurso.n }];
   } else if (ultimoAvance?.donde === 'proyector' && enviados.has(ultimoAvance.p.rid)
@@ -595,6 +613,16 @@ let otraVez = false;
 async function seguir() {
   if (!control || soyProyector() || llevando) return;
   if (siguiendo) { otraVez = true; return; }
+  // Un recorrido que suena aquí con un proyector que manda: se reprodujo aquí porque él no acusó a tiempo (ocupado), y
+  // ya volvió. Se le pasa desde la escena en curso, como al abrirse (allá mira la sala), en vez de llevar la vista de
+  // aquí a su paso: eso lo detendría como si el asistente hubiera pedido otra cosa
+  let enCurso = null;
+  try { enCurso = control.recorrido?.() || null; } catch { enCurso = null; }
+  if (enCurso?.recorrido) {
+    const p = elegido();
+    if (p && !p.sincronizando) sincronizar(p.id);
+    return;
+  }
   const e = guia()?.estado;
   let local = null;
   try { local = estadoValido(control.estado()); } catch { local = null; }
@@ -669,7 +697,10 @@ async function alMensaje(m) {
              && Number.isInteger(m.nro) && Array.isArray(m.acciones) && m.acciones.length >= 1 && m.acciones.length <= 20
              && (m.para === undefined || m.para === yo)) {
     // Soy el proyector: acuso recibo en el acto (la otra pestaña sabe que sigo aquí), aviso cuando la empiezo, aplico (lo
-    // que no tiene la forma de una acción vuelve como error, sin aplicarse) y respondo
+    // que no tiene la forma de una acción vuelve como error, sin aplicarse) y respondo. Una lista que caducó mientras
+    // esta ventana estaba ocupada no se aplica ni se acusa: la otra pestaña ya la aplicó en su vista (el mismo
+    // navegador, el mismo reloj: el canal es por origen)
+    if (Number.isFinite(m.hasta) && Date.now() > m.hasta) return;
     publicar({ tipo: 'recibido', id: yo, para: m.de, nro: m.nro });
     const acciones = m.acciones.map(accionPresentacion);
     const empezar = () => {
@@ -794,8 +825,9 @@ function recordar(lista) {
 }
 
 /** Manda `lista` al proyector `para`. Si no acusa recibo en ESPERA_ACUSE_MS, o se cierra antes de responder, se da por
- * cerrado y la promesa falla con `sinProyector` (quien llamó la aplica en otro lado). */
-function alProyector(lista, para) {
+ * cerrado y la promesa falla con `sinProyector` (quien llamó la aplica en otro lado). Con `caduca`, el proyector no la
+ * aplica si le llega después de ese plazo (estaba ocupado): quien llamó ya la aplicó en otro lado. */
+function alProyector(lista, para, { caduca = false } = {}) {
   return new Promise((ok, mal) => {
     const n = ++nro;
     recordar(lista);
@@ -806,7 +838,8 @@ function alProyector(lista, para) {
       cambio();   // la barra vuelve a la vista de aquí (o al proyector que quede)
     }, ESPERA_ACUSE_MS);
     esperando.set(n, it);
-    publicar({ tipo: 'ordenes', de: yo, nro: n, acciones: lista, para });
+    publicar({ tipo: 'ordenes', de: yo, nro: n, acciones: lista, para,
+      ...(caduca ? { hasta: Date.now() + ESPERA_ACUSE_MS - MARGEN_ACUSE_MS } : {}) });
   });
 }
 
@@ -869,6 +902,15 @@ function llevar() {
   let local = null;
   try { local = estadoValido(control.estado()); } catch { local = null; }
   if (!p || !e || !local || (local.capitulo === e.capitulo && local.paso === e.paso)) return;
+  // Con un recorrido sonando en el proyector, la persona que mueve la presentación de aquí (su control, el teclado, el
+  // índice: aquí no hay narración que los tome) no le lleva el paso, que lo detendría como si el asistente hubiera
+  // pedido otra cosa: lo pausa, como cuando se mueve la imagen allá (docs/agente.md), y la vista de aquí vuelve a la
+  // escena que se ve allá
+  const rc = recorridoEnCurso();
+  if (rc?.donde === 'proyector') {
+    controlRecorrido(rc.rid, 'pausar').then(cambio, cambio);
+    return;
+  }
   llevado = { capitulo: local.capitulo, paso: local.paso };
   llevando++;
   const fin = () => { llevando--; cambio(); };
@@ -914,11 +956,15 @@ async function aplicarDonde(lista, opciones) {
   const conPaso = () => (desdeAlla
     ? [{ tipo: 'presentacion', op: 'ir', capitulo: desdeAlla.capitulo, paso: desdeAlla.paso }, ...lista] : lista);
   const sinPaso = (r) => (desdeAlla && Array.isArray(r) ? r.slice(1) : r);
+  // Un recorrido que el proyector no acusa a tiempo se reproduce aquí: si lo aplicara al liberarse, sonaría en los dos.
+  // Las demás órdenes no caducan: aplicadas tarde, el proyector queda en el mismo paso que la vista de aquí (que lo
+  // sigue), y sin ellas volvería a su paso viejo y la vista de aquí con él
+  const caduca = lista.some((a) => a?.op === 'recorrido');
   const probados = new Set();
   for (let p = elegido(); p && !probados.has(p.id); p = elegido()) {
     probados.add(p.id);
     try {
-      return sinPaso(await alProyector(conPaso(), p.id));
+      return sinPaso(await alProyector(conPaso(), p.id, { caduca }));
     } catch (e) {
       if (!e?.sinProyector) throw e;
       if (e.empezo && !desdeAlla && lista.length < 20 && lista.some(relativa)) desdeAlla = e.empezo;

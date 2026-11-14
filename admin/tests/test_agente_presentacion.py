@@ -441,13 +441,28 @@ FECHAS = ("La radicación vence el 15/11/2026.", "Reunión el 07/03/2028 en el s
           "Del 15/11/2026 al 31/12/2027, 300 viviendas")
 FECHAS_QUE_NO = ("Vence el 31/02/2026", "Vence el 11/15/2026", "En 2027-02-29", "Del 15/11/1850",
                  "El 15/11/2026 300 123 4567", "El 15/11/2026/3001234567", "Al 15/11-2026")
-# Un monto en pesos con su signo y sus puntos de miles (el guion trae «$1.156.350» por habitante), de 7 cifras enteras a
-# lo sumo; sin el signo, sin los puntos, con otro número pegado o más largo (una cédula o un teléfono con «$» delante),
-# no
+# Un monto en pesos con su signo y sus puntos de miles («$1.156.350», el costo por habitante que traía el guion) ya no
+# pasa: lo que se proyecta en la presentación técnica no lleva costos. Tampoco lo que solo se le parece (sin el signo,
+# una cédula o un teléfono con «$» delante), ni los costos escritos sin «$» (COSTOS)
 MONTOS = ("Por habitante, $1.156.350", "Son $ 1.156.350,50 al mes", "Son $123.456,78 al mes")
 MONTOS_QUE_NO = ("Son 1.156.350 por habitante", "Al $3001234567", "Al $300 123 4567", "Son $1.156.350 300 viviendas",
                  "Cédula $1.023.456.789", "Llame al $3.001.234.567", "$71.234.567", "Son \uff041.023.456.789",
                  "Son $ 1.023.456.789,00", "Son $1.000.000.000.000.000.000")
+COSTOS = ("Cuesta 106.271 Millones de pesos", "MILLONES DE PESOS 116.294", "COP 106.271 millones", "Inversión: cop 5 mil",
+          "La obra vale 1,2 billones de pesos", "Son 2 Billones de", "Unos 300 Pesos", "Cuesta \U0001F4B2116.294 M",
+          "Cuesta \uff04116 M", "Inversión de $106.271 M en 2028–2031 ❤", "Cuesta $116.294 – 210.000 M",
+          "Cuesta un billón de", "Cuesta UN BILLÓN DE", "Un billon de")
+# Una cédula o un teléfono con los grupos pegados por el apóstrofo de los millones (recto, tipográfico, de ancho
+# completo o lo que se escribe en su lugar), la prima o un punto de viñeta
+SEPARADORES = ("Habla doña Ana, C.C. 71'234.567", "cédula 1'023'456.789", "Cédula 1\u2019023\u2019456",
+               "Cédula 71\uff07234\uff07567", "Al 300\u2032123\u20324567", "Llamen al 300\u2027123\u20274567",
+               "Tel 300\u2022123\u20224567", "Tel 300\u2219123\u22194567", "Tel 300\u30fb123\u30fb4567",
+               "Tel 300\uff65123\uff654567",
+               # el acento agudo (en la forma NFKC, un espacio y un acento combinante), el grave, el apóstrofo de apertura
+               # y los modificadores que se escriben en su lugar
+               "C.C. 71\u00b4234.567", "cédula 1\u00b4023\u00b4456.789", "Tel 300\u2018123\u20184567",
+               "Cédula 71\u0060234\u0060567", "Cédula 71\uff40234\uff40567", "Cédula 71\u02bc234\u02bc567",
+               "ID 71\u02b9234\u02b9567", "ID 71\u0374234\u0374567")
 
 
 @pytest.mark.parametrize("entrada", [
@@ -471,8 +486,9 @@ MONTOS_QUE_NO = ("Son 1.156.350 por habitante", "Al $3001234567", "Al $300 123 4
         "Al \u00b3\u2070\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077", "Al \uff13\uff10\uff10\uff11\uff12\uff13\uff14\uff15\uff16\uff17",
         "BPIN 2022003050034", "Periodo al revés 2031-2028", "En 2028 300 viviendas", "CC 71.234-567",
         # Lo que parece una fecha y no lo es (no existe, mes y día al revés, fuera de 1900–2099), o un número pegado a
-        # una fecha de verdad: se mira como cualquier número. Lo mismo con lo que parece un monto en pesos
-        *FECHAS_QUE_NO, *MONTOS_QUE_NO)),
+        # una fecha de verdad: se mira como cualquier número. Los costos (con «$» o sin él) y lo que se les parece
+        *FECHAS_QUE_NO, *MONTOS, *MONTOS_QUE_NO, *COSTOS, *SEPARADORES)),
+    {"op": "ir", "capitulo": "salud", "explicacion": "Son 1,2 billones de pesos"},
     {"op": "anterior", "paso": 2}, ["ir"], "ir",
 ])
 def test_entradas_invalidas(entrada):
@@ -483,17 +499,22 @@ def test_entradas_invalidas(entrada):
 def test_entradas_validas_y_normalizadas():
     e = P.validar({"op": "explicar", "explicacion": "  Dos   espacios\ny un salto  "})
     assert e.explicacion == "Dos espacios y un salto"
-    assert P.validar({"op": "explicar", "explicacion": "Inversión de $106.271 M en 2028–2031 ❤"}).explicacion
+    assert P.validar({"op": "explicar", "explicacion": "Inversión en 2028–2031 ❤"}).explicacion
     # Periodos con guion, raya o barra, rangos de cifras de la propuesta y «m²» (se devuelve sin NFKC: no pasa a «m2»)
     for t in ("La propuesta 2028-2031 tiene siete módulos.", "Fases 2026-2027 y 2028-2031.", "Del 2028/2031",
-              "En 2028 – 2031", "Cuesta $116.294 – 210.000 M", "Rango 1.346–1.500 kWh/kWp", "Desde 2018 (3.383)",
-              "En 2028, 300 viviendas", "Casas de 50 m² en 2028–2031", "x" * 220, *FECHAS, *MONTOS):
+              "En 2028 – 2031", "Entre 116.294 – 210.000 m²", "Rango 1.346–1.500 kWh/kWp", "Desde 2018 (3.383)",
+              "En 2028, 300 viviendas", "Casas de 50 m² en 2028–2031", "x" * 220, "La copa del árbol",
+              "A escala 1:100.000", *FECHAS):
         assert P.validar({"op": "explicar", "explicacion": t}).explicacion == t, t
     # El error dice qué hacer (también con una fecha que no existe: cómo se escribe una)
     with pytest.raises(ValidationError) as e:
         P.validar({"op": "explicar", "explicacion": "Llame al 300 - 123 - 4567"})
     msg = str(e.value)
-    assert "7 o más dígitos" in msg and "«2028–2031»" in msg and "$106.271 M" in msg and "chat" in msg
+    # (sin sugerir montos: la presentación técnica no los muestra)
+    assert "7 o más dígitos" in msg and "«2028–2031»" in msg and "apóstrofos" in msg and "chat" in msg and "$" not in msg
+    with pytest.raises(ValidationError) as e:
+        P.validar({"op": "explicar", "explicacion": "Inversión de $106.271 M en 2028–2031"})
+    assert "no muestra costos" in str(e.value) and "chat" in str(e.value)
     with pytest.raises(ValidationError) as e:
         P.validar({"op": "explicar", "explicacion": "Vence el 31/02/2026"})
     assert "«15/11/2026»" in str(e.value) and "«2026-11-15»" in str(e.value) and "existan" in str(e.value)
@@ -525,14 +546,15 @@ CODIGO = re.compile(r"\d{10,}|\d{3}-\d{3}-\d{3}-\d{5}|\d+(?:\.\d){5,}")
 
 def test_la_explicacion_deja_las_cifras_del_guion_y_frena_los_codigos():
     """El modelo copia las cifras del guion en la explicación: las cifras de cada paso, los rangos («1.346–1.500»), los
-    periodos y los años entre paréntesis pasan; solo se frenan los códigos. El guion técnico no trae montos, pero la
-    explicación sigue dejando pasar uno en pesos con sus puntos de miles («$1.156.350»). Con el guion entero."""
+    periodos y los años entre paréntesis pasan; solo se frenan los códigos. El guion técnico no trae montos, y la
+    explicación tampoco deja pasar uno («$1.156.350»): es la presentación técnica, sin costos. Con el guion entero."""
     import unicodedata
     textos = list(_textos([c["pasos"] for c in G.capitulos]))
     frenados = {(t, hi.numero_largo(" ".join(unicodedata.normalize("NFKC", t).split()))) for t in textos}
     frenados = {(t, x) for t, x in frenados if x}
     assert frenados and all(CODIGO.fullmatch(x) or f"CO1.NTC.{x}" in t for t, x in frenados), frenados
-    assert P.validar({"op": "explicar", "explicacion": "Por habitante, $1.156.350 en 2028"}).explicacion
+    with pytest.raises(ValidationError, match="costos"):
+        P.validar({"op": "explicar", "explicacion": "Por habitante, $1.156.350 en 2028"})
     cifras = {x for c in G.capitulos for p in c["pasos"] for x in _cifras_de(p)}
     assert len(cifras) > 50
     for x in cifras:
@@ -939,7 +961,11 @@ FRASES = [
     "En 2028, 300 viviendas", "En 2031. 300 familias", "Desde 2018 (3.383)", "Cuesta $116.294 – 210.000 M",
     "Rango 1.346–1.500 kWh", "Casas de 50 m² en 2028–2031", "Inversión de $106.271 M en 2028–2031 ❤", "Con cariño ❤\ufe0f",
     "Al revés \u202eodot", "a\u0301\u0301\u0301", "Dos\nrenglones", "Sin\u200bancho", *FECHAS, *FECHAS_QUE_NO,
-    *MONTOS, *MONTOS_QUE_NO,
+    *MONTOS, *MONTOS_QUE_NO, *COSTOS, *SEPARADORES, "La copa del árbol", "A escala 1:100.000", "Del 2028'31",
+    # «cop» con el `\b` de ASCII, el de JavaScript: junto a una letra con tilde también frena, en los tres lados
+    "La propuesta copó el auditorio",
+    # el acento agudo junto a dígitos que no llegan a 7, y «billón» sin «de»
+    "Del 2028\u00b431", "Los 80\u00b4s", "Un billonario de", "El billón", "La copa de 2 \u00b4 3",
 ]
 
 
@@ -958,10 +984,10 @@ def test_las_reglas_de_la_explicacion_son_las_mismas_en_los_tres_lados(tmp_path)
             return None
     esperado = [servidor(t) for t in frases]
     assert esperado[:4] == ["Hola", "Dos espacios", "x" * 220, None]
-    # Las fechas que existen y los montos en pesos pasan tal cual (y entonces también en el puente y en el mando); lo que
-    # solo se les parece, no
-    assert [servidor(t) for t in FECHAS + MONTOS] == list(FECHAS + MONTOS)
-    assert not any(map(servidor, FECHAS_QUE_NO + MONTOS_QUE_NO))
+    # Las fechas que existen pasan tal cual (y entonces también en el puente y en el mando); lo que solo se les parece, los
+    # costos (con «$» o sin él, en mayúsculas o minúsculas) y los números pegados con apóstrofos o viñetas, no
+    assert [servidor(t) for t in FECHAS] == list(FECHAS)
+    assert not any(map(servidor, FECHAS_QUE_NO + MONTOS + MONTOS_QUE_NO + COSTOS + SEPARADORES))
     assert sum(e is None for e in esperado) >= 25 and sum(e is not None for e in esperado) > 70
     (tmp_path / "pares.json").write_text(json.dumps(list(zip(frases, esperado))), encoding="utf-8")
     (tmp_path / "textos.mjs").write_text(NODE_TEXTOS, encoding="utf-8")
@@ -1875,7 +1901,7 @@ def test_mando_de_la_presentacion_con_node(tmp_path):
         assert res == [["error", 100 + i, "https://panel.example", True]], (i, res)
     assert r["malas_no_mueven"] is True
     assert r["estado_orden"] == [["estado", False]]
-    assert r["texto"] == ["Hola mundo", None, None, None, "Año 2028–2031, $106.271 M", None, "ok ❤", None]
+    assert r["texto"] == ["Hola mundo", None, None, None, None, None, "ok ❤", None]   # sin costos tampoco
     # La vista cambia lo que se ve sin cambiar de paso y responde el estado de ese paso
     assert r["vista_panel"] == [["estado", 20, "vivienda", 1]]
     assert r["vista_partes"] == [["panel", False]] and r["sin_controles"] is True

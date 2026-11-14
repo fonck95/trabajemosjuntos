@@ -3,8 +3,9 @@ llamada un recorrido de escenas (lo que se ve + lo que se dice) y la página que
 reloj, con la voz del navegador si la persona la encendió.
 
 * El servidor: app/recorrido.py (las frases, los tiempos, la validación de todo o nada), la op `recorrido` de la
-  herramienta `presentacion` (con la base en memoria de test_pantalla_mcp), el avance, los controles, el colapso cuando
-  el asistente pide otra cosa y la guarda con personas.
+  herramienta `presentacion` (con la base en memoria de test_pantalla_mcp), el avance (uno final lo cierra), los
+  controles, el colapso cuando el asistente pide otra cosa (solo si lo pedido vale, y avisando a la pestaña donde
+  suena), la escena en curso como lo que se ve, cuándo el contexto deja de nombrarlo y la guarda con personas.
 * El navegador, con Node: el reproductor (admin/web/js/reproductor.js) con un reloj falso, la voz (voz.js) con una
   síntesis falsa, los validadores del puente y la tarjeta del chat, con lo que de verdad arma el servidor.
 * Que los topes y las listas sean los mismos en los cuatro lados, y las reglas de lo que se pinta.
@@ -12,17 +13,22 @@ reloj, con la voz del navegador si la persona la encendió.
 import json
 import re
 import subprocess
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 import ayudas_agente as aa
+from fastapi import HTTPException
+
 from app import pantalla, recorrido as rec
-from app.agente import conversaciones as conv_db, guion as guion_presentacion
+from app.agente import conversaciones as conv_db, guion as guion_presentacion, sistema
 from app.agente.herramientas import interfaz as hi
 from app.agente.herramientas.base import ErrorHerramienta
+from app.api import pantalla as api_pantalla
 from app.proyectable import texto_proyectable
-from test_agente_presentacion import P, requiere_node
+from test_agente_presentacion import COSTOS, MONTOS, SEPARADORES, P, requiere_node
 from test_pantalla_mcp import _Base, _hacer
 
 ADMIN = Path(__file__).resolve().parents[1]
@@ -64,13 +70,26 @@ def test_las_frases_no_se_cortan_en_una_sigla_y_son_tres_a_lo_sumo():
     assert rec.lectura_ms("x" * 100) == 1500 + 62 * 100
 
 
-def test_lo_proyectado_del_recorrido_no_trae_costos_ni_datos_de_personas():
-    assert texto_proyectable("Cuatro pisos y 15 camas", plata=False) == "Cuatro pisos y 15 camas"
-    for malo in ("Cuesta $5.000", "Unos 30 millones de pesos", "Llame al 300 123 4567", "ana@correo.co", "x" * 221):
+def test_lo_proyectado_no_trae_costos_ni_datos_de_personas():
+    """Costos como se escriben en Colombia (en mayúsculas o minúsculas, con «$» o sin él) y cédulas o teléfonos con
+    separadores que no son los de siempre (el apóstrofo de los millones, los puntos de viñeta): las listas de
+    test_agente_presentacion, que también compara los tres lados."""
+    assert texto_proyectable("Cuatro pisos y 15 camas") == "Cuatro pisos y 15 camas"
+    for malo in (*COSTOS, *MONTOS, *SEPARADORES, "Unos 30 millones de pesos", "Llame al 300 123 4567", "ana@correo.co",
+                 "x" * 221):
         with pytest.raises(ValueError):
-            texto_proyectable(malo, plata=False)
-    # La explicación suelta (op explicar) sigue como antes: la regla sin plata es solo del recorrido
-    assert texto_proyectable("Cuesta $5.000") == "Cuesta $5.000"
+            texto_proyectable(malo)
+    # Un monto se frena por lo que es (el mensaje lo dice), no como un número largo
+    with pytest.raises(ValueError, match="no muestra costos"):
+        texto_proyectable("Por habitante, $1.156.350")
+    # «cop» y «pesos» como palabras sueltas, no dentro de otras; los dos puntos no unen dígitos (una escala)
+    for bueno in ("La copa del árbol", "Los pesados", "Escopeta", "A escala 1:100.000", "Del 2028'31"):
+        assert texto_proyectable(bueno) == bueno, bueno
+    # La explicación suelta (op explicar, también en ir) sigue la misma regla: la presentación es siempre la técnica
+    for entrada in ({"op": "explicar", "explicacion": "Cuesta $5.000"},
+                    {"op": "ir", "capitulo": "salud", "explicacion": "Son 1,2 billones de pesos"}):
+        with pytest.raises(Exception, match="costos"):
+            hi.PresentacionEntrada.model_validate(entrada)
 
 
 def test_el_recorrido_se_arma_absoluto_y_llega_a_la_pestana_y_a_la_tarjeta():
@@ -152,8 +171,12 @@ def test_avance_estado_control_y_colapso():
     # Un control: va como acción a la pestaña (el recorrido suena allá)
     c = _hacer(db, 7, {"op": "control_recorrido", "accion": "pausar"}, por="asistente")
     assert c.acciones == [{"tipo": "presentacion", "op": "control_recorrido", "rid": rid, "accion": "pausar"}]
-    # Otra orden lo colapsa: queda cerrado en la escena donde iba y lo pedido se aplica encima
-    _hacer(db, 7, {"op": "visual", "camara": "aerea"}, por="asistente")
+    # Otra orden lo colapsa: queda cerrado en la escena donde iba y lo pedido se aplica encima; a la pestaña, donde
+    # suena, primero la orden de detenerlo
+    v = _hacer(db, 7, {"op": "visual", "camara": "aerea"}, por="asistente")
+    assert v.acciones[0] == {"tipo": "presentacion", "op": "control_recorrido", "rid": rid, "accion": "detener",
+                             "motivo": "otra_orden"}
+    assert v.acciones[1]["op"] == "visual" and len(v.acciones) == 2
     d = db.pantallas.find_one({"_id": 7})
     assert d["recorrido"]["cerrado"] is True and (d["paso"], d["inmersion"], d["camara"]) == (3, "torre_hoy", "aerea")
     # Cerrado, el último avance a medias se lee como detenido
@@ -163,11 +186,269 @@ def test_avance_estado_control_y_colapso():
     with pytest.raises(ErrorHerramienta) as e:
         _hacer(db, 7, {"op": "control_recorrido", "accion": "pausar"}, por="asistente")
     assert e.value.codigo == "sin_recorrido"
-    # «reproducir» lo vuelve a empezar con otro id
+    # «reproducir» lo vuelve a empezar con otro id, y con la tarjeta del nuevo (la del viejo sigue el avance de su id)
     db, r = _armar()
     viejo = r.acciones[0]["recorrido"]["id"]
     c = _hacer(db, 7, {"op": "control_recorrido", "accion": "reproducir"}, por="asistente")
-    assert c.acciones[0]["op"] == "recorrido" and c.acciones[0]["recorrido"]["id"] != viejo
+    nuevo = c.acciones[0]["recorrido"]["id"]
+    assert c.acciones[0]["op"] == "recorrido" and nuevo != viejo
+    assert c.acciones[1] == {**r.acciones[1], "id": nuevo, "sugerencias": []}
+    assert db.pantallas.find_one({"_id": 7})["recorrido"]["id"] == nuevo
+
+
+def _avance(db, uid, rid, n, fase, de=5, **extra):
+    return pantalla.guardar_progreso(db, uid, {"rid": rid, "n": n, "de": de, "fase": fase, "frase": 0,
+                                               "voz": "sin_voces", **extra})
+
+
+def test_un_capitulo_repetido_sin_paso_sigue_en_el_mismo_paso():
+    """El modelo suele repetir el capítulo en cada escena: sin paso, sigue en el de la anterior (con lo visual que traía),
+    y lo que resalta se valida contra ese paso. En otro capítulo sin paso, va al primero."""
+    _, r = _armar(entrada={"op": "recorrido", "titulo": "La torre", "escenas": [
+        {"capitulo": "salud", "paso": "torre", "inmersion": "torre_hoy", "narracion": "Así está hoy el predio."},
+        {"capitulo": "Salud", "camara": "aerea", "resaltar": {"leyenda": 1}, "narracion": "Desde arriba se ve el predio."},
+        {"capitulo": "aguas", "narracion": "Y el agua."}]})
+    e1, e2, e3 = r.acciones[0]["recorrido"]["escenas"]
+    assert (e1["capitulo"], e1["paso"]) == (e2["capitulo"], e2["paso"]) == ("salud", 3)
+    assert e2["visual"]["inmersion"] == "torre_hoy" and e2["visual"]["camara"] == "aerea"
+    assert e2["resaltar"] == {"tipo": "leyenda", "n": 1}
+    assert (e3["capitulo"], e3["paso"], e3["visual"]) == ("aguas", 1, rec.VISUAL_INICIAL)
+
+
+def test_una_orden_que_falla_no_corta_el_recorrido():
+    """Lo que no existe no mueve nada: tampoco cierra el recorrido que suena (ni sube la versión de la pantalla)."""
+    db = _Base()
+    pantalla.marcar_vista(db, 7)
+    _, r = _armar(db)
+    rid = db.pantallas.find_one({"_id": 7})["recorrido"]["id"]
+    assert r.acciones[-1]["destino"] == "pantalla_off" and _avance(db, 7, rid, 2, "narrando")
+    v = db.pantallas.find_one({"_id": 7})["v"]
+    for malo in ({"op": "visual", "enfoque": "no_existe_esto"}, {"op": "visual", "capitulo": "aguas", "camara": "aerea"},
+                 {"op": "ir", "capitulo": "no existe"}, {"op": "ir", "capitulo": "salud", "paso": 40},
+                 {"op": "visual", "inmersion": "otra_cosa"}, {"op": "siguiente", "capitulo": "salud", "paso": 11}):
+        for por in ("asistente", "mcp"):
+            with pytest.raises(ErrorHerramienta):
+                _hacer(db, 7, malo, por=por)
+    d = db.pantallas.find_one({"_id": 7})
+    assert d["recorrido"]["cerrado"] is False and d["v"] == v and _avance(db, 7, rid, 2, "narrando", frase=1)
+    # Lo que sí vale lo cierra, con lo pedido encima de la escena en curso (la pantalla en off se entera sola: sin
+    # acción para el navegador)
+    ok = _hacer(db, 7, {"op": "visual", "capitulo": "salud", "camara": "aerea"}, por="asistente")
+    d = db.pantallas.find_one({"_id": 7})
+    assert ok.acciones == [] and d["recorrido"]["cerrado"] is True and (d["paso"], d["camara"]) == (3, "aerea")
+    assert d["inmersion"] == "torre_hoy"
+
+
+def test_el_contexto_el_estado_y_las_ordenes_parten_de_la_escena_en_curso():
+    """Mientras suena, la base guardada es la última escena, pero la sala ve la escena en curso: eso dicen el estado, el
+    contexto del asistente y lo que recibe una pantalla en off que se abre a mitad, y de ahí parte la orden."""
+    entrada = {"op": "recorrido", "titulo": "Dos capítulos", "escenas": [
+        {"capitulo": "salud", "paso": "torre", "camara": "oblicua", "narracion": "La torre."},
+        {"capitulo": "aguas", "paso": 2, "narracion": "El agua."}]}
+    db, r = _armar(entrada=entrada)
+    rid = r.acciones[0]["recorrido"]["id"]
+    assert _avance(db, 7, rid, 1, "narrando", de=2)
+    d = db.pantallas.find_one({"_id": 7})
+    assert (d["capitulo"], d["paso"]) == ("aguas", 2)   # la base guardada: la que queda al terminar
+    est = _hacer(db, 7, {"op": "estado"}, por="asistente").contenido["pantalla"]
+    assert (est["capitulo"], est["paso"], est["visual"]["camara"]) == ("salud", 3, "oblicua")
+    assert est["muestra"].startswith("Salud (salud), paso 3") and est["recorrido"]["escena"] == 1
+    # Una pantalla en off que se abre ahora muestra la escena 1 (el recorrido suena en la pestaña: no se lo lleva)
+    e = pantalla.para_pantalla(pantalla.estado(d, G), d, G)
+    assert (e["capitulo"], e["paso"], e["camara"], e["recorrido"]) == ("salud", 3, "oblicua", None)
+    pantalla.marcar_vista(db, 7)
+    assert sistema.pantalla_del_contexto(db, 7).startswith("Salud (salud), paso 3")
+    assert "escena 1 de 2, narrando" in sistema.recorrido_del_contexto(db, 7)
+    # «siguiente» desde la pantalla parte de ahí, y visual con el capítulo de la escena en curso no da 409
+    assert _hacer(db, 7, {"op": "visual", "capitulo": "salud", "girar": True}, por="mcp").contenido["capitulo"]["id"] == "salud"
+    db, r = _armar(entrada=entrada)
+    _avance(db, 7, r.acciones[0]["recorrido"]["id"], 1, "narrando", de=2)
+    pantalla.marcar_vista(db, 7)
+    s = _hacer(db, 7, {"op": "siguiente"}, por="asistente")
+    assert (s.contenido["capitulo"]["id"], s.contenido["paso"]) == ("salud", 4)
+
+
+def test_un_avance_final_cierra_el_recorrido_salvo_el_traspaso():
+    db, r = _armar()
+    rid = r.acciones[0]["recorrido"]["id"]
+    escenas = r.acciones[0]["recorrido"]["escenas"]
+    v = db.pantallas.find_one({"_id": 7})["v"]
+    # El traspaso al proyector (y un reemplazo) no lo cierran: el mismo id sigue en otro lado
+    for motivo in ("proyector", "reemplazo"):
+        assert _avance(db, 7, rid, 2, "detenido", motivo=motivo)
+        assert db.pantallas.find_one({"_id": 7})["recorrido"]["cerrado"] is False
+    assert _avance(db, 7, rid, 2, "narrando") and db.pantallas.find_one({"_id": 7})["v"] == v
+    # Un error en la escena 3: cerrado, con la base en esa escena y la versión arriba (la pantalla en off lo aplica)
+    assert _avance(db, 7, rid, 3, "error", motivo="escena_fallida")
+    d = db.pantallas.find_one({"_id": 7})
+    assert d["recorrido"]["cerrado"] is True and d["v"] == v + 1
+    assert {k: d[k] for k in rec.estado_de_escena(escenas[2])} == rec.estado_de_escena(escenas[2])
+    assert pantalla.resumen_recorrido(d, G)["fase"] == "error"
+    # Ya cerrado: el avance no es de nadie (la API responde 409) y los controles no lo toman por vivo
+    assert not _avance(db, 7, rid, 3, "narrando")
+    for por in ("asistente", "mcp"):
+        with pytest.raises(ErrorHerramienta) as e:
+            _hacer(db, 7, {"op": "control_recorrido", "accion": "anterior"}, por=por)
+        assert e.value.codigo == "sin_recorrido"
+    # «fin» y «detenido» por un botón también cierran
+    for fase, n in (("fin", 5), ("detenido", 2)):
+        db, r = _armar()
+        rid = r.acciones[0]["recorrido"]["id"]
+        assert _avance(db, 7, rid, n, fase, **({"motivo": "boton"} if fase == "detenido" else {}))
+        d = db.pantallas.find_one({"_id": 7})
+        assert d["recorrido"]["cerrado"] is True and d["paso"] == r.acciones[0]["recorrido"]["escenas"][n - 1]["paso"]
+        assert pantalla.resumen_recorrido(d, G)["fase"] == fase
+
+
+def test_el_contexto_deja_de_nombrar_un_recorrido_terminado_o_abandonado():
+    ahora = datetime.now(timezone.utc)
+    db, r = _armar()
+    rid = r.acciones[0]["recorrido"]["id"]
+    d = db.pantallas.find_one({"_id": 7})
+    # Sin avance (nunca sonó): un rato sí, media hora después no
+    assert pantalla.resumen_recorrido(d, G, ahora + timedelta(minutes=5))["fase"] == "sin_avance"
+    assert pantalla.resumen_recorrido(d, G, ahora + timedelta(minutes=31)) is None
+    # En pausa porque la persona escribió y después cerró la pestaña: lo nombra con la antigüedad, y luego no
+    _avance(db, 7, rid, 2, "pausa", motivo="mensaje")
+    d = db.pantallas.find_one({"_id": 7})
+    x = pantalla.resumen_recorrido(d, G, ahora + timedelta(minutes=10, seconds=30))
+    t = pantalla.describir_recorrido(x)
+    assert "en pausa porque la persona escribió" in t and t.endswith("; el último avance llegó hace 10 min")
+    assert pantalla.resumen_recorrido(d, G, ahora + timedelta(minutes=31)) is None
+    assert "hace" not in pantalla.describir_recorrido(pantalla.resumen_recorrido(d, G, ahora))
+    # Terminado: dos minutos
+    _avance(db, 7, rid, 5, "fin")
+    d = db.pantallas.find_one({"_id": 7})
+    assert pantalla.resumen_recorrido(d, G, ahora + timedelta(minutes=1))["fase"] == "fin"
+    assert pantalla.resumen_recorrido(d, G, ahora + timedelta(minutes=3)) is None
+    # Un «detenido» que no lo cierra (el traspaso que nunca llegó al proyector) también es final para el contexto
+    db, r = _armar()
+    _avance(db, 7, r.acciones[0]["recorrido"]["id"], 2, "detenido", motivo="proyector")
+    assert pantalla.resumen_recorrido(db.pantallas.find_one({"_id": 7}), G, ahora + timedelta(minutes=3)) is None
+
+
+def test_un_control_tras_una_pausa_larga_revive_el_recorrido():
+    """En pausa más de media hora (una ronda de preguntas) y después «continuar»: el control cuenta como actividad. Si
+    no, la tarjeta de la pantalla en off, que pregunta antes de que llegue el avance del televisor, lo daba por detenido
+    mientras el televisor volvía a narrar."""
+    ahora = datetime.now(timezone.utc)
+    db = _Base()
+    pantalla.marcar_vista(db, 7)
+    _armar(db)
+    rid = db.pantallas.find_one({"_id": 7})["recorrido"]["id"]
+    _avance(db, 7, rid, 2, "pausa", motivo="mensaje")
+    viejo = ahora - timedelta(minutes=31)
+    db.pantallas.update_one({"_id": 7}, {"$set": {"progreso.en": viejo, "recorrido.creado": viejo, "actualizada": viejo}})
+    assert pantalla.resumen_recorrido(db.pantallas.find_one({"_id": 7}), G) is None
+    pantalla.controlar(db, 7, G, "continuar", "panel", rid=rid)
+    assert pantalla.resumen_recorrido(db.pantallas.find_one({"_id": 7}), G)["fase"] == "pausa"
+
+
+def test_un_recorrido_para_la_pantalla_en_off_detiene_el_que_suena_en_la_pestana():
+    """Sin pantalla en off, el recorrido suena en la pestaña; se abre la pantalla y el asistente arma otro: va a la
+    pantalla y el de la pestaña se detiene allá (si no, las dos voces se pisaban, y uno en pausa no se enteraba nunca)."""
+    db, r = _armar()
+    viejo = r.acciones[0]["recorrido"]["id"]
+    _avance(db, 7, viejo, 2, "pausa", motivo="mensaje")
+    pantalla.marcar_vista(db, 7)
+    assert api_pantalla.ver_recorrido(db=db, quien=SimpleNamespace(uid=7))["conectada"] is True
+    b = _hacer(db, 7, ENTRADA, por="asistente")
+    assert b.acciones[0] == {"tipo": "presentacion", "op": "control_recorrido", "rid": viejo, "accion": "detener",
+                             "motivo": "otra_orden"}
+    assert [a["tipo"] for a in b.acciones[1:]] == ["recorrido"] and b.acciones[1]["destino"] == "pantalla_off"
+    # Uno que ya sonaba en la pantalla en off, no: le llega el nuevo
+    c = _hacer(db, 7, ENTRADA, por="asistente")
+    assert [a["tipo"] for a in c.acciones] == ["recorrido"]
+    # Sin la pantalla, la tarjeta lo sabe (`conectada`): en pausa no hay otros avances que lo digan
+    db.pantallas.update_one({"_id": 7}, {"$set": {"visto": datetime.now(timezone.utc) - timedelta(minutes=1)}})
+    assert api_pantalla.ver_recorrido(db=db, quien=SimpleNamespace(uid=7))["conectada"] is False
+
+
+def test_detener_no_cierra_el_recorrido_que_llego_entretanto():
+    """Entre la lectura del control y su escritura llega otro recorrido: el «detener» iba para el anterior y el nuevo
+    sigue abierto."""
+    db, r = _armar()
+    viejo = r.acciones[0]["recorrido"]["id"]
+    escribir = db.pantallas.find_one_and_update
+    llegado = []
+
+    def con_carrera(filtro, cambios, **kw):
+        if not llegado and (cambios.get("$set") or {}).get("control_recorrido"):
+            llegado.append(True)
+            pantalla.guardar_recorrido(db, 7, {**r.acciones[0]["recorrido"], "id": "b" * 12, "titulo": "Otro recorrido"},
+                                       "vista", "asistente")
+        return escribir(filtro, cambios, **kw)
+    db.pantallas.find_one_and_update = con_carrera
+    with pytest.raises(ValueError, match="sin_recorrido"):
+        pantalla.controlar(db, 7, G, "detener", "panel", rid=viejo)
+    d = db.pantallas.find_one({"_id": 7})
+    assert llegado and d["recorrido"]["titulo"] == "Otro recorrido" and d["recorrido"]["cerrado"] is False
+    # Y colapsar con el id del anterior tampoco lo toca
+    assert pantalla.colapsar(db, 7, G, "panel", rid=viejo) is None
+    assert db.pantallas.find_one({"_id": 7})["recorrido"]["cerrado"] is False
+
+
+def test_lo_que_recibe_la_pestana_cuando_el_servidor_cierra_o_reproduce():
+    # Con la pantalla en off abierta después (la orden ya no va a la pestaña), igual va la de detener el que suena allá
+    db, r = _armar()
+    rid = r.acciones[0]["recorrido"]["id"]
+    pantalla.marcar_vista(db, 7)
+    v = _hacer(db, 7, {"op": "visual", "camara": "oblicua"}, por="asistente")
+    assert v.acciones == [{"tipo": "presentacion", "op": "control_recorrido", "rid": rid, "accion": "detener",
+                          "motivo": "otra_orden"}]
+    # «siguiente» sin punto de partida (lo calcula la pestaña): también lo cierra en el servidor
+    db, r = _armar()
+    rid = r.acciones[0]["recorrido"]["id"]
+    s = _hacer(db, 7, {"op": "siguiente"}, por="asistente")
+    assert [a.get("accion") or a["op"] for a in s.acciones] == ["detener", "siguiente"]
+    assert db.pantallas.find_one({"_id": 7})["recorrido"]["cerrado"] is True
+    # Sin recorrido sonando, nada de más; con uno de la pantalla en off, tampoco (le llega sin recorrido)
+    assert [a["op"] for a in _hacer(db, 7, {"op": "ir", "capitulo": "aguas"}, por="asistente").acciones] == ["ir"]
+    db = _Base()
+    pantalla.marcar_vista(db, 7)
+    _armar(db)
+    assert _hacer(db, 7, {"op": "explicar", "explicacion": "Una frase."}, por="asistente").acciones == []
+    assert db.pantallas.find_one({"_id": 7})["recorrido"]["cerrado"] is True
+    # «reproducir» en la pantalla en off: la tarjeta del nuevo, sin acción de presentación
+    db = _Base()
+    pantalla.marcar_vista(db, 7)
+    _, r = _armar(db)
+    c = _hacer(db, 7, {"op": "control_recorrido", "accion": "reproducir"}, por="asistente")
+    nuevo = db.pantallas.find_one({"_id": 7})["recorrido"]["id"]
+    assert [a["tipo"] for a in c.acciones] == ["recorrido"] and c.acciones[0]["id"] == nuevo != r.acciones[0]["id"]
+    assert c.acciones[0]["destino"] == "pantalla_off" and c.acciones[0]["escenas"] == r.acciones[0]["escenas"]
+
+
+def test_la_api_cierra_con_el_avance_final_y_reproduce_uno_cerrado():
+    """Las rutas del avance y de los controles, con la base en memoria (sin MongoDB)."""
+    db, r = _armar()
+    rid = r.acciones[0]["recorrido"]["id"]
+    quien = SimpleNamespace(uid=7)
+
+    def avance(**x):
+        p = api_pantalla.ProgresoEntrada(**{"rid": rid, "n": 5, "de": 5, "fase": "fin", "voz": "apagada", **x})
+        return api_pantalla.progreso(p, db=db, quien=quien)
+
+    def control(rid_, accion):
+        return api_pantalla.control_recorrido(api_pantalla.ControlEntrada(rid=rid_, accion=accion), db=db, quien=quien)
+
+    assert avance().status_code == 204 and db.pantallas.find_one({"_id": 7})["recorrido"]["cerrado"] is True
+    for x in ({"fase": "narrando"}, {"rid": "0" * 12, "fase": "narrando"}):
+        with pytest.raises(HTTPException) as e:
+            avance(**x)
+        assert e.value.status_code == 409
+    # Volver a reproducir el que terminó (el vigente, aunque cerrado): vuelve con otro id, abierto
+    x = control(rid, "reproducir")
+    assert x["id"] != rid and x["cerrado"] is False and x["fase"] == "sin_avance"
+    assert db.pantallas.find_one({"_id": 7})["recorrido"]["id"] == x["id"]
+    # El viejo ya no es el vigente: ni reproducir ni otro control
+    for accion in ("reproducir", "pausar"):
+        with pytest.raises(HTTPException) as e:
+            control(rid, accion)
+        assert e.value.status_code == 409
+    # Detener el nuevo sin avance todavía: dice cuál detuvo
+    y = control(x["id"], "detener")
+    assert y["id"] == x["id"] and y["cerrado"] is True
 
 
 def test_con_personas_en_la_conversacion_no_se_proyecta_texto(sesion, ctx):
@@ -459,7 +740,7 @@ globalThis.addEventListener ||= () => {};
 globalThis.location = { pathname: '/', origin: 'https://panel.example' };
 const P = await import(process.argv[2]);
 const T = await import(process.argv[3]);
-const { recorrido, tarjeta } = JSON.parse(await (await import('node:fs/promises')).readFile(process.argv[4], 'utf8'));
+const { recorrido, tarjeta, colapso } = JSON.parse(await (await import('node:fs/promises')).readFile(process.argv[4], 'utf8'));
 const out = {};
 const copia = (x) => JSON.parse(JSON.stringify(x));
 out.valido = JSON.stringify(P.recorridoValido(recorrido)) === JSON.stringify(recorrido);
@@ -481,6 +762,8 @@ out.acciones = [
   a({ op: 'control_recorrido', rid: recorrido.id, accion: 'pausar', suave: true }), a({ op: 'control_recorrido', rid: recorrido.id, accion: 'siguiente', suave: true }),
   a({ op: 'control_recorrido', rid: recorrido.id, accion: 'reproducir' }), a({ op: 'preparando', activar: true }),
   a({ op: 'preparando' }), a({ op: 'ir', capitulo: 'salud', rid: recorrido.id }),
+  // el detener del servidor cuando el asistente mostró otra cosa: el motivo, solo ese y solo con detener
+  a(colapso), a({ ...colapso, accion: 'pausar' }), a({ ...colapso, motivo: 'boton' }),
 ];
 const pr = { rid: recorrido.id, n: 2, de: 5, fase: 'narrando', frase: 1, voz: 'activa', t_ms: 10 };
 out.progreso = [P.progresoValido(pr), P.progresoValido({ ...pr, n: 6 }), P.progresoValido({ ...pr, fase: 'x' }),
@@ -501,8 +784,9 @@ console.log(JSON.stringify(out));
 
 @requiere_node
 def test_el_puente_y_la_tarjeta_validan_lo_que_arma_el_servidor(tmp_path):
-    _, r = _armar()
-    datos = {"recorrido": r.acciones[0]["recorrido"], "tarjeta": r.acciones[1]}
+    db, r = _armar()
+    colapso = _hacer(db, 7, {"op": "visual", "camara": "oblicua"}, por="asistente").acciones[0]
+    datos = {"recorrido": r.acciones[0]["recorrido"], "tarjeta": r.acciones[1], "colapso": colapso}
     (tmp_path / "datos.json").write_text(json.dumps(datos, ensure_ascii=False), encoding="utf-8")
     (tmp_path / "puente.mjs").write_text(NODE_PUENTE, encoding="utf-8")
     p = subprocess.run(["node", str(tmp_path / "puente.mjs"), PUENTE_JS.as_uri(), TARJETA_JS.as_uri(),
@@ -514,7 +798,9 @@ def test_el_puente_y_la_tarjeta_validan_lo_que_arma_el_servidor(tmp_path):
     rid = datos["recorrido"]["id"]
     assert o["acciones"] == [True, True, None,
                              {"tipo": "presentacion", "op": "control_recorrido", "rid": rid, "accion": "pausar", "suave": True},
-                             None, None, {"tipo": "presentacion", "op": "preparando", "activar": True}, None, None]
+                             None, None, {"tipo": "presentacion", "op": "preparando", "activar": True}, None, None,
+                             colapso, None, None]
+    assert colapso["motivo"] == "otra_orden" and colapso["rid"] == rid
     assert o["progreso"][0] == {"rid": rid, "n": 2, "de": 5, "fase": "narrando", "frase": 1, "voz": "activa", "t_ms": 10}
     assert o["progreso"][1:4] == [None, None, None] and o["progreso"][4]["motivo"] == "persona"
     assert o["pantalla"] == [4, {"rid": rid, "accion": "pausar", "n": 2}, {"rid": rid, "n": 2, "de": 5, "fase": "pausa", "hace_s": 1}]
