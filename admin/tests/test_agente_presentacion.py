@@ -124,7 +124,7 @@ def test_los_capitulos_son_los_de_la_presentacion_tecnica():
     # Lo de main.js que hace falta para el control remoto
     assert "import { montarMando } from './mando.js';" in js
     assert ("montarMando({ caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel: (v) => alternarPanel(!v), "
-            "reencuadrar,\n  visual });") in js
+            "reencuadrar,\n  visual, asentada, resaltar, restaurarEncuadre });") in js
     assert "dispatchEvent(new CustomEvent('propuesta:paso'" in js
     assert re.search(r"function avanzar\(d\) \{\n  if \(tlTelon\?\.isActive\(\)\) \{ tlTelon\.progress\(1\); return; \}"
                      r"\n  const \[ci, pi\] = vecino\(estado\.ci, estado\.pi, d\);", js)
@@ -581,12 +581,12 @@ def test_ir_devuelve_el_paso_y_una_accion_exacta(sesion, ctx):
     assert r.contenido["posicion"] == f"Paso 3 de {len(vi['pasos'])} del capítulo Vivienda"
     assert r.resumen == f"Mostré Vivienda · paso 3 de {len(vi['pasos'])}" and r.personas == set()
     # Por nombre y por id del paso, con la explicación (normalizada) para la pantalla
-    r = _ej(sesion, ctx, {"op": "ir", "capitulo": "Cómo se financia", "paso": "fuentes",
-                          "explicacion": "Diez  fuentes, una por una."})
-    assert r.acciones == [{"tipo": "presentacion", "op": "ir", "capitulo": "financiacion", "paso": 2,
-                           "explicacion": "Diez fuentes, una por una."}]
+    r = _ej(sesion, ctx, {"op": "ir", "capitulo": "Infraestructura TIC", "paso": "fibra",
+                          "explicacion": "La  fibra, tramo por tramo."})
+    assert r.acciones == [{"tipo": "presentacion", "op": "ir", "capitulo": "tic", "paso": 2,
+                           "explicacion": "La fibra, tramo por tramo."}]
     # Sin paso, el primero
-    assert _ej(sesion, ctx, {"op": "ir", "capitulo": "pedidos"}).acciones[0]["paso"] == 1
+    assert _ej(sesion, ctx, {"op": "ir", "capitulo": "ruta"}).acciones[0]["paso"] == 1
 
 
 def test_siguiente_y_anterior_calculan_el_destino(sesion, ctx):
@@ -602,8 +602,8 @@ def test_siguiente_y_anterior_calculan_el_destino(sesion, ctx):
     assert r.acciones[0]["paso"] == 4
     # En los extremos se queda, y lo dice
     ultimo = G.capitulos[-1]
-    r = _ej(sesion, ctx, {"op": "siguiente", "capitulo": "pedidos", "paso": len(ultimo["pasos"])})
-    assert r.acciones[0] == {"tipo": "presentacion", "op": "ir", "capitulo": "pedidos", "paso": len(ultimo["pasos"])}
+    r = _ej(sesion, ctx, {"op": "siguiente", "capitulo": ultimo["id"], "paso": len(ultimo["pasos"])})
+    assert r.acciones[0] == {"tipo": "presentacion", "op": "ir", "capitulo": ultimo["id"], "paso": len(ultimo["pasos"])}
     assert "último" in r.contenido["aviso"]
     assert "primer" in _ej(sesion, ctx, {"op": "anterior", "capitulo": "portada", "paso": 1}).contenido["aviso"]
     # Sin el punto de partida, lo calcula la presentación
@@ -672,7 +672,10 @@ def test_los_cuatro_roles_y_el_permiso(sesion, como, ctx):
 def test_sistema_explica_cuando_usarla():
     quien = acceso.Quien(uid=5, usuario="p5", nombre="Pepa", rol="planillero", permisos=acceso.PERMISOS["planillero"])
     t = sistema.texto(quien, [P])
-    assert "`presentacion`" in t and "frase corta" in t and "nunca lleva datos de habitantes" in t
+    assert "`presentacion`" in t and "`guion`" in t and "`recorrido`" in t and "`control_recorrido`" in t
+    # el método didáctico: una ronda para preparar, una llamada para el recorrido, un complemento que no repite
+    assert "UNA misma ronda" in t and "UNA llamada" in t and "NO repita la narración" in t
+    assert "nunca costos, datos de habitantes" in t and "El arco de un recorrido" in t
     assert "`presentacion`" not in sistema.texto(quien, [H["abrir_vista"]])
     assert "presentacion" in sistema.VISTAS_MENU and "presentacion" in bucle.ACCIONES
 
@@ -1211,10 +1214,13 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
                        timeout=60)
     assert p.returncode == 0, p.stderr
     r = json.loads(p.stdout.strip().splitlines()[-1])
-    assert r["exports"] == ["CANAL", "MAX_EXPLICACION", "VERSION", "accionPresentacion", "accionesEnCola",
-                            "accionesPresentacion", "avisarEstado", "estadoDePantalla", "estadoPresentacion",
-                            "estadoValido", "ordenesHacia", "presentacionLista", "presentacionNoDisponible",
-                            "proyectorVivo", "registrarPresentacion"]
+    assert r["exports"] == ["AVISOS", "CANAL", "CONTROLES", "FASES", "MAX_CIERRE", "MAX_ESCENAS", "MAX_EXPLICACION",
+                            "MAX_FRASES", "MAX_PUNTO", "MAX_SOSTENER_MS", "MAX_TITULO", "MOTIVOS", "RESALTAR",
+                            "TERMINALES", "VERSION", "VOCES", "accionPresentacion", "accionesEnCola",
+                            "accionesPresentacion", "avisarEstado", "avisarRecorrido", "controlRecorrido",
+                            "escucharRecorrido", "estadoDePantalla", "estadoPresentacion", "estadoValido",
+                            "ordenesHacia", "presentacionLista", "presentacionNoDisponible", "progresoValido",
+                            "proyectorVivo", "recorridoEnCurso", "recorridoValido", "registrarPresentacion"]
     assert r["navegadas"] == ["/presentacion"] and r["en_cola"] == 2 and r["lista_antes"] is False
     assert r["estado_sin_vista"] is None and r["registro_invalido"] == "function"
     assert r["aplicadas"] == [["ir"], ["explicar"], ["siguiente"]]
@@ -1223,7 +1229,7 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
     # El estado sale limpio (sin claves de más ni caracteres de control) y nunca lanza
     # (`texto`, la explicación a la vista, es null: esta presentación no la dice)
     assert r["estado"] == {"capitulo": "vivienda", "paso": 3, "total": 6, "nombre": "Vivienda", "titulo": "Paso  tres",
-                           "explicacion": True, "texto": None}
+                           "explicacion": True, "texto": None, "por": "orden", "recorrido": None}
     assert r["estado_que_lanza"] is None and r["proyector_sin_nadie"] is False
     assert r["cerrada"] == "La presentación se cerró antes de aplicar el cambio"
     assert r["vencida"] == "La presentación no terminó de cargar" and r["no_navego_en_la_vista"] is True
@@ -1236,7 +1242,7 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
                                  {"op": "ir", "ok": False}]
     assert r["en_proyector"] == [["ir", "ir"]] and r["navego_con_proyector"] == []
     assert r["estado_del_proyector"] == {"capitulo": "aguas", "paso": 2, "total": 5, "nombre": "Aguas",
-                                         "titulo": "Así funciona hoy", "explicacion": False, "texto": None}
+                                         "titulo": "Así funciona hoy", "explicacion": False, "texto": None, "por": "orden", "recorrido": None}
     assert r["raros_sin_efecto"] is True and r["tras_adios"] is False
     # El proyector que se cerró sin avisar: en unos segundos (no los 15 del plazo de la respuesta) la orden se aplica aquí,
     # una sola vez, abriendo la vista
@@ -1967,7 +1973,7 @@ async function enviar(page, texto) {
   await page.waitForFunction(() => document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
 }
 
-const marco = (page) => page.frames().find((f) => /\/propuesta(#|$)/.test(f.url()));
+const marco = (page) => page.frames().find((f) => /\/propuesta(\?[^#]*)?(#|$)/.test(f.url()));
 async function enLaPresentacion(page, hash, explicacion) {
   await page.waitForFunction(() => !!document.querySelector('#pres-iframe'), null, espera);
   let f = null;
@@ -2120,7 +2126,7 @@ async function entrar(page, ruta) {
   await page.evaluate(async () => { window.__P = await import(new URL('agente-presentacion.js', document.querySelector('script[type=module]').src).href); });
 }
 
-const marco = (page) => page.frames().find((f) => /\/propuesta(#|$)/.test(f.url()));
+const marco = (page) => page.frames().find((f) => /\/propuesta(\?[^#]*)?(#|$)/.test(f.url()));
 
 // Se mide con el diseño quieto, no tras un tiempo fijo: las letras cargadas (o fallidas) y las cajas que importan sin
 // moverse ni transiciones en curso durante varios cuadros seguidos, en el panel y en la presentación
@@ -2548,7 +2554,7 @@ const origen = new URL(base).origin;
 const pref = new URL(base).pathname.replace(/\/+$/, '');
 const espera = { timeout: 90000 };
 const salida = { pasos: {}, errores: [], csp: [] };
-const marco = (page) => page.frames().find((f) => /\/propuesta(#|$)/.test(f.url()));
+const marco = (page) => page.frames().find((f) => /\/propuesta(\?[^#]*)?(#|$)/.test(f.url()));
 
 async function enPaso(page, hash, texto) {
   await page.waitForFunction(() => !!document.querySelector('#pres-iframe'), null, espera);
@@ -2673,7 +2679,7 @@ const origen = new URL(base).origin;
 const espera = { timeout: 90000 };
 const tope = { timeout: 30000, polling: 100 };
 const salida = { errores: [], csp: [], fases: {} };
-const marco = (page) => page.frames().find((f) => /\/propuesta(#|$)/.test(f.url()));
+const marco = (page) => page.frames().find((f) => /\/propuesta(\?[^#]*)?(#|$)/.test(f.url()));
 const hash = (page) => marco(page).evaluate(() => location.hash);
 
 async function enPaso(page, h) {
@@ -2866,7 +2872,7 @@ const pref = new URL(base).pathname.replace(/\/+$/, '');
     salida.segundos = (Date.now() - t0) / 1000;
     salida.barra = await page.textContent('#pres-paso');
     salida.siguiente_activo = await page.isEnabled('#pres-siguiente');
-    const f = page.frames().find((x) => /\/propuesta(#|$)/.test(x.url()));
+    const f = page.frames().find((x) => /\/propuesta(\?[^#]*)?(#|$)/.test(x.url()));
     salida.preguntas = f ? await f.evaluate(() => window.__preguntas || 0) : null;
     await ctx.close();
   } finally {

@@ -113,16 +113,30 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
         frase = "; ".join(vistas)
         lineas.append(f"- {frase[0].upper()}{frase[1:]}. Luego di en una frase qué quedó en pantalla.")
     if "presentacion" in nombres:
-        lineas.append(
-            "- Para mostrar y explicar la propuesta Yondó 2028–2031 (la presentación técnica: lo que se construye, "
-            "sin costos) usa `presentacion`: `indice` si no conoces los capítulos y luego `ir` al capítulo y paso. Para "
-            "mostrar algo concreto sin cambiar de paso, `visual` (enfocar un componente y abrir su ficha técnica, hoy "
-            "frente al proyecto, la cámara, un modelo del atlas como la torre por dentro o el simulador sísmico). "
-            "Explica en el chat con detalle y solo con los datos que te devuelve; en pantalla (`explicacion`), una "
-            "frase corta. Esa frase "
-            "se proyecta ante otras personas: nunca lleva datos de habitantes ni de la base. Si el contexto dice que "
-            "hay una pantalla en off abierta, lo que la sala ve es esa: «siguiente» y «anterior» van desde su paso, y "
-            "solo cambia cuando la persona te pide algo concreto (no la muevas por tu cuenta).")
+        lineas += [
+            "- Presentar la propuesta (presentación técnica: lo que se construye, sin costos). Cuando te pidan mostrar o "
+            "explicar algo («explícanos la torre», «muéstranos el agua»), presenta como una persona en una sala, con un "
+            "recorrido narrado: 1) si no tienes los datos de ese capítulo, en UNA misma ronda pide `presentacion` op "
+            "`guion` del capítulo e `ir` al paso donde empiezas (la sala ya ve el tema mientras preparas); 2) UNA llamada "
+            "`recorrido` con 3 a 6 escenas y un `cierre`; 3) en el chat, antes, una línea con qué se va a ver; después, "
+            "un complemento de 3 a 6 líneas que NO repita la narración (datos del guion que no se dijeron) y termine con "
+            "una pregunta.",
+            "- El arco de un recorrido (omite lo que no aplique): ubicar (el paso, cámara aerea u oblicua); cómo está hoy "
+            "(comparar hoy o la inmersión de hoy); qué se construye (comparar proyecto, enfoque, resaltar la leyenda); "
+            "cómo funciona o el dato clave (detalle con la especificación resaltada, una inmersión, un punto de la "
+            "lista); qué cambia y cuándo (la meta o la cifra resaltada); y el cierre con 2 o 3 ideas.",
+            "- La narración de cada escena: una idea, una o dos frases habladas (90 a 200 caracteres), en presente, sin "
+            "listas ni paréntesis, sobre lo que la escena muestra en ese momento («Aquí ven…», «Fíjense en la fila de "
+            "estructura…»), y resalta en la misma escena lo que nombras. Cifras solo del guion, tal como vienen; nunca "
+            "costos, datos de habitantes, «@» ni números de 7 o más dígitos. Uno o dos cambios visuales por escena, con "
+            "intención: aérea para ubicar, oblicua para el edificio, hoy y proyecto para el contraste; sin girar ni "
+            "enfocar en todas.",
+            "- `ir`, `visual` y `explicar` sueltos son para pedidos puntuales («pasa al siguiente», «vista aérea», «abre "
+            "la ficha del matadero»): detienen el recorrido que esté sonando. Si la persona escribe durante un recorrido, "
+            "queda en pausa (lo dice el contexto): responde breve y sigue con `control_recorrido` (continuar), o arma un "
+            "recorrido corto. Si el contexto dice que hay una pantalla en off abierta, la sala ve esa: no la muevas por tu "
+            "cuenta.",
+        ]
     lineas.append("- Enlaza a las personas y reuniones que nombres: [Nombre](/personas/123), [Reunión](/reuniones/45). "
                   "Solo rutas internas del panel.")
     if any(h.tipo == "escritura" for h in hs):
@@ -280,8 +294,19 @@ def _presentacion(p: Any, guion: Any) -> str:
     return f"{_limpio(c['nombre'], 80)} ({cid}), paso {paso} de {len(c['pasos'])}" + (f": {titulo}" if titulo else "")
 
 
+def recorrido_del_contexto(db: Any, uid: Any) -> str:
+    """Dónde va el recorrido narrado de la persona, si hay uno sonando o terminó hace poco (`pantalla.resumen_recorrido`;
+    el título sale de la base, nunca del navegador), o «» (correr con `run_in_threadpool`)."""
+    if not isinstance(uid, int) or isinstance(uid, bool):
+        return ""
+    guion = guion_del_contexto()
+    if guion is None:
+        return ""
+    return pantalla_off.describir_recorrido(pantalla_off.resumen_recorrido(pantalla_off.leer(db, uid), guion))
+
+
 def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int] | None = None,
-                       guion: Any = None, pantalla: str = "") -> str:
+                       guion: Any = None, pantalla: str = "", recorrido: str = "") -> str:
     """El bloque de texto con el contexto del panel para el comienzo del mensaje de la persona. `etiquetas`: las que
     pueden ir en el filtro de etiqueta (`etiquetas_del_contexto`); sin ellas, ese filtro no va (ante la duda, no se
     manda). `guion`: el de la presentación (`guion_del_contexto`); sin él, la presentación abierta no va. `pantalla`: lo
@@ -306,6 +331,8 @@ def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int]
     presentacion = _presentacion(c.get("presentacion"), guion)
     if presentacion:
         lineas.append(f"Presentación abierta: {presentacion}")
+    if recorrido:
+        lineas.append(recorrido)
     if pantalla:
         lineas.append(f"Pantalla en off abierta: {pantalla}")
     return "<contexto_del_panel>\n" + "\n".join(lineas) + "\n</contexto_del_panel>"

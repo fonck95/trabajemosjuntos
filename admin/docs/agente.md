@@ -50,7 +50,7 @@ Las herramientas del panel (`app/agente/herramientas/`):
 | `pendientes`, `mi_trabajo`, `buscar_lugar`, `catalogos` | lectura | todos | Insignias y colas, listas de trabajo, nomenclátor de barrios y veredas, catálogos no sensibles |
 | `mapa` | interfaz | A, K | Vuela a un lugar, filtra, cambia capas y mapa base, resalta personas, abre una zona |
 | `abrir_vista` | interfaz | todos | Abre una vista o una ficha que su rol puede ver |
-| `presentacion` | interfaz | todos | La [presentación técnica](#la-presentación-técnica) de la propuesta 2028–2031 (lo que se construye, sin costos): el índice (capítulos, pasos, componentes e inmersiones), ir a un capítulo y paso (le vuelve lo que muestra ese paso para explicarlo: textos, cifras, especificaciones, referentes, sitio, plazos, metas y el modelo del atlas que muestra, todo entero y sin plata: nada se acorta, y un paso pesa a lo sumo 12 KB), siguiente y anterior, una o dos frases en pantalla, de hasta 220 caracteres (`explicar`, `quitar_explicacion`), los paneles sin cambiar de paso (`vista`: el panel de texto o solo la maqueta 3D, el índice, las fichas técnicas), lo que se ve sin cambiar de paso (`visual`: la cámara, la obra enfocada, su ficha técnica, hoy o con el proyecto, un modelo 3D del atlas y el tema, con la ficha de lo que muestra), que llene la ventana (`pantalla_completa`) y qué muestra la [pantalla en off](#pantalla-en-off-y-agentes-por-mcp) (`estado`). Solo guarda esa pantalla: ningún dato de personas. Un agente externo la usa igual [por MCP](#pantalla-en-off-y-agentes-por-mcp) |
+| `presentacion` | interfaz | todos | La [presentación técnica](#la-presentación-técnica) de la propuesta 2028–2031 (lo que se construye, sin costos): el índice (capítulos, pasos, componentes e inmersiones), ir a un capítulo y paso (le vuelve lo que muestra ese paso para explicarlo: textos, cifras, especificaciones, referentes, sitio, plazos, metas y el modelo del atlas que muestra, todo entero y sin plata: nada se acorta, y un paso pesa a lo sumo 12 KB), siguiente y anterior, una o dos frases en pantalla, de hasta 220 caracteres (`explicar`, `quitar_explicacion`), los paneles sin cambiar de paso (`vista`: el panel de texto o solo la maqueta 3D, el índice, las fichas técnicas), lo que se ve sin cambiar de paso (`visual`: la cámara, la obra enfocada, su ficha técnica, hoy o con el proyecto, un modelo 3D del atlas y el tema, con la ficha de lo que muestra), que llene la ventana (`pantalla_completa`), qué muestra la [pantalla en off](#pantalla-en-off-y-agentes-por-mcp) (`estado`) y el [recorrido narrado](#recorridos-narrados): `guion` (todo un capítulo para preparar la explicación), `recorrido` (de 1 a 8 escenas, cada una con lo que se ve y lo que se dice, en una sola llamada) y `control_recorrido` (pausar, seguir, saltar, repetir, volver a empezar, detener). Solo guarda esa pantalla: ningún dato de personas. Un agente externo la usa igual [por MCP](#pantalla-en-off-y-agentes-por-mcp) |
 
 A = administrador, K = coordinador, P = planillero. Las de Mnemo (`mnemo_…`) se describen [más abajo](#conectar-con-mnemo).
 
@@ -220,6 +220,50 @@ maqueta 3D del territorio real, con lo que se agrega para presentar cada detalle
   (`claro` u `oscuro`). Los componentes y las inmersiones se piden por id o por nombre y se resuelven contra el guion;
   lo que no existe (o un componente sin lugar en la maqueta, para `enfoque`) no mueve nada y vuelve con los candidatos.
 
+### Recorridos narrados
+
+Para explicar algo (una obra, un capítulo, «muéstrame el hospital»), el asistente no encadena órdenes sueltas: lee el
+guion del capítulo (`guion`) y arma, en **una sola llamada**, un **recorrido** de 3 a 6 escenas (8 a lo sumo). Cada
+escena dice **lo que se ve** (el paso, la cámara, la obra enfocada, su ficha, hoy o con el proyecto, un modelo del
+atlas, «Solo 3D», girar, y lo que se resalta: una cifra, un punto, una entrada de la leyenda, una especificación o un
+componente) y **lo que se dice** (una a tres frases, hasta 220 caracteres). Al final, un cierre «En resumen» de uno a
+tres puntos y, en el chat, sugerencias para seguir. Así la explicación avanza al ritmo de la imagen: la sala ve primero
+lo que se nombra y después lo oye o lo lee, frase por frase.
+
+- **Todo o nada.** El servidor (`app/recorrido.py`) resuelve cada escena contra el guion (los nombres e ids de pasos,
+  componentes e inmersiones, y lo que se resalta, contra lo que muestra ese paso) heredando lo de la anterior, y la deja
+  **absoluta**: cada escena trae lo visual completo. Si una falla, no se guarda nada y vuelve el error con el número de
+  la escena y los candidatos. Las frases siguen las reglas de la explicación y además **sin costos** (ni «$» ni
+  «millones de pesos»). La duración estimada (lectura de cada frase, asiento de la imagen, lo que se sostiene) no pasa
+  de 4 minutos.
+- **Quién lleva el reloj.** Lo reproduce el panel (`web/js/reproductor.js`), no el modelo: en la pestaña del chat, en
+  la ventana del proyector o en la pantalla en off, donde mire la sala. Por cada escena manda a la presentación la
+  orden `escena` (atómica: cambia de paso si hace falta, aplica lo visual, resalta y responde cuando la imagen se
+  asentó: sin telón ni vuelo de cámara y con el modelo del atlas cargado), espera un respiro y narra: cada frase se
+  ilumina en el subtítulo cuando empieza a sonar (o cuando aparece, sin voz) y se queda su tiempo de lectura; después la
+  imagen se sostiene un momento. El subtítulo dice el título del recorrido y en qué escena va (puntos, sin números).
+- **La voz.** Opcional y apagada por omisión: la del navegador (Web Speech, `web/js/voz.js`), en español (es-CO
+  primero; después es-419, es-MX, es-US, es-ES), con las siglas y unidades dichas como se leen (NSR-10, m², «24 h»). Se
+  enciende con el botón **Voz** de esa ventana (la barra de la vista, el botón flotante del proyector o la barra de la
+  pantalla en off): el navegador solo deja hablar a una página que alguien tocó. La preferencia queda en ese navegador.
+  Sin voz, sin voces en español o si falla, cada frase se lee en pantalla con el mismo ritmo.
+- **Manejarlo.** La tarjeta del recorrido en el chat muestra las escenas (dónde, qué hace y qué dice), el avance en
+  vivo y los controles: Pausa/Continuar, Anterior, Siguiente, Repetir y Detener; al terminar, **Volver a reproducir** y
+  las sugerencias como botones. Mientras suena, una barra fija arriba de la conversación («● En la sala · escena 3 de
+  6») lo deja a mano. En la presentación, las flechas, la barra espaciadora y los botones de su control pasan de
+  escena, P pausa y Escape detiene. Si la persona mueve la maqueta o cambia de paso a mano, se pausa; al seguir, la
+  escena vuelve. Si escribe en el chat, se pausa al terminar la frase. Cualquier otra orden de la presentación lo
+  detiene y la imagen queda donde iba.
+- **Dónde suena.** Sin pantalla en off abierta, en la vista Presentación de la pestaña del chat o, si hay una, en la
+  ventana del proyector (la tarjeta sigue su avance por el canal del proyector). Si el proyector se abre a mitad del
+  recorrido, este pasa allá desde la escena en curso; si se cierra, la tarjeta ofrece **Reanudar desde la escena k**.
+  Con la pantalla en off abierta (y siempre por MCP), suena allá.
+- **El avance.** El reproductor le avisa al servidor cada fase (`POST /api/pantalla/progreso`): el contexto del
+  asistente y la op `estado` dicen en qué escena va, si está en pausa y los avisos (el modelo del atlas no cargó, no
+  encontró lo que resaltar). Así puede seguir desde ahí, controlarlo o responder sobre lo que la sala está viendo.
+- **Con personas en la conversación**, la presentación no proyecta texto (`explicar`, `ir` con explicación ni
+  `recorrido`): responde `con_personas`. Se muestra en una conversación sin datos de habitantes.
+
 ## Pantalla en off y agentes por MCP
 
 La **pantalla en off** es la presentación de la propuesta para una sala: se abre en el proyector o en un televisor, no
@@ -235,6 +279,11 @@ o el celular) o a un agente externo por MCP (Claude, Mnemo u otro cliente MCP). 
   lo visual de la presentación técnica (la cámara, la obra enfocada, la ficha técnica, hoy o con el proyecto, el modelo
   del atlas y el tema; al cambiar de paso vuelve a lo del paso, salvo el tema) y la pantalla completa. La presentación queda inerte: ni clics ni teclado, y sin sus botones. Lo que se toque a mano en
   la vista del panel no la mueve.
+- **Recorridos.** Un [recorrido narrado](#recorridos-narrados) con la pantalla en off abierta suena allá (con la voz de
+  ese navegador, si se encendió en su barra). La pantalla lo narra si llega a tiempo (menos de 90 s) y, si se recargó a
+  mitad, sigue desde la escena donde iba; uno viejo no se narra: queda en su última escena. Los controles (de la
+  tarjeta del chat, del asistente o de un agente por MCP con `control_recorrido`) se aplican una vez cada uno. Por MCP,
+  `recorrido` exige la pantalla en off abierta (si no, 409 `sin_pantalla`) y el avance se sigue con `estado`.
 - **Pantalla completa.** «Ponla en pantalla completa» hace que la presentación llene la ventana, sin el menú ni las
   barras del panel. Escape la devuelve en esa pantalla hasta la próxima orden. La pantalla completa del navegador (sin
   la barra de direcciones) es F11 en ese equipo, o el navegador en modo quiosco: un navegador no deja que una página la
@@ -648,6 +697,13 @@ se suba.
   responde al terminarla; una ventana que no acusa, que deja de latir o que se despide con órdenes en curso se da por
   cerrada y esas órdenes se aplican en la pestaña del chat. Su estado trae la explicación que está a la vista, y solo
   manda la ventana de proyector abierta más recientemente.
+- **El recorrido narrado** se valida entero en el servidor y otra vez en el navegador (`recorridoValido` del puente,
+  `escena` de `mando.js`), con las reglas de la explicación y sin costos, y se pinta con nodos de texto. El avance
+  (`POST /api/pantalla/progreso`) y los controles (`POST /api/pantalla/recorrido/control`) piden la sesión, el permiso
+  `presentacion.ver` y el CSRF, con la forma exacta (listas cerradas, sin claves de más) y solo para el recorrido
+  vigente. La voz es la del navegador: con una voz local no sale nada del equipo; una remota (la del fabricante del
+  navegador) solo se usa si no hay ninguna local en español, y lo que dice es lo mismo que se proyecta, sin datos de
+  personas.
 - **El flujo.** `POST` con CSRF y respuesta en flujo NDJSON (una línea JSON por evento, con un latido cada 15 s), sin
   GZip en esas dos rutas (lo retendría hasta el final) y con cupos propios en el servicio único, que se piden con el
   cuerpo ya leído (con el plazo y el tope del ingreso).
@@ -682,7 +738,10 @@ se suba.
 | `web/js/agente-presentacion.js` | El puente entre el asistente y la vista Presentación: la cola, la navegación a `/presentacion`, el validador de la acción y el canal con la ventana del proyector |
 | `web/js/vistas/presentacion.js`, `web/css/presentacion.css` | La vista Presentación: el iframe de la propuesta, su barra, el modo proyector (`?pantalla=1`), la pantalla en off (`?off=1`) y la ventana llena |
 | `web/js/propuesta/mando.js` (del sitio) | En la presentación: recibe las órdenes del panel (también `vista`), le avisa cada cambio de paso y pinta el subtítulo |
-| `app/pantalla.py`, `app/api/pantalla.py` | La pantalla en off de cada persona (su estado, `GET /api/pantalla`) y su clave MCP (`/api/pantalla/clave`) |
+| `app/pantalla.py`, `app/api/pantalla.py` | La pantalla en off de cada persona (su estado, `GET /api/pantalla`), su clave MCP (`/api/pantalla/clave`) y el recorrido narrado: guardarlo, colapsarlo, el avance (`POST /api/pantalla/progreso`), los controles (`POST /api/pantalla/recorrido/control`) y dónde va (`GET /api/pantalla/recorrido`) |
+| `app/recorrido.py`, `app/proyectable.py` | El recorrido narrado (sus topes, las frases, los tiempos, la validación absoluta contra el guion) y las reglas de lo que se proyecta (también sin costos) |
+| `web/js/reproductor.js`, `web/js/voz.js` | El reproductor del recorrido (el reloj de la explicación, pausas, saltos, cierre) y la voz del navegador |
+| `web/js/agente-recorrido.js` | La tarjeta del recorrido en el chat y su barra fija |
 | `app/api/mcp.py` | El servidor MCP de la presentación (`POST /api/mcp`): la herramienta `presentacion` para un agente externo |
 | `web/js/vistas/cuenta.js` | Mi cuenta, con **Agentes por MCP**: la dirección del servidor y la clave |
 | `web/js/api.js` (`flujo`) | Lee la respuesta NDJSON con el CSRF de la sesión |
@@ -724,7 +783,7 @@ se suba.
 | `progreso`, `texto` | Trozos de una nota de progreso o de la respuesta |
 | `texto_ronda` | `texto`: el texto final de la ronda en curso cuando no coincide con lo que llegó por partes (con Mnemo, los trozos son un adelanto). Reemplaza el de la ronda |
 | `herramienta` | `id`, `nombre`, `etiqueta`, `estado` (`inicio`, `ok`, `error`, `pendiente`, `aprobada`, `rechazada`) y `resumen` |
-| `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias`, `mapa` (acciones del mapa) o `presentacion` (`op`: `ir` con `capitulo` y `paso` desde 1, `siguiente`, `anterior`, `explicar` o `quitar_explicacion`; `explicacion`, la frase para la pantalla, en todas salvo la última; `vista` con `panel`, `indice` o `fichas`; `visual` con `enfoque`, `camara`, `rumbo`, `girar`, `comparar`, `detalle`, `inmersion` o `tema`; `pantalla_completa` con `activar`) |
+| `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias`, `mapa` (acciones del mapa) o `presentacion` (`op`: `ir` con `capitulo` y `paso` desde 1, `siguiente`, `anterior`, `explicar` o `quitar_explicacion`; `explicacion`, la frase para la pantalla, en todas salvo la última; `vista` con `panel`, `indice` o `fichas`; `visual` con `enfoque`, `camara`, `rumbo`, `girar`, `comparar`, `detalle`, `inmersion` o `tema`; `pantalla_completa` con `activar`; `recorrido` con el recorrido absoluto; `control_recorrido` con `rid` y `accion`) o `recorrido` (la tarjeta del chat: `id`, `titulo`, `destino`, `duracion_ms`, `cierre`, `sugerencias` y por escena `narracion`, `donde` y `hace`) |
 | `confirmar` | La tarjeta de una escritura: `id`, `titulo`, `detalle` (pares etiqueta y valor, enteros: el widget no recorta nada, y si llegan más de 40 o uno de más de 4.000 caracteres no ofrece **Aprobar**) y `aviso`. Lo pendiente al abrir una conversación lleva lo mismo y, si lo guardó una versión anterior del panel, `vieja` (tampoco ofrece **Aprobar**) |
 | `descartar` | La ronda se repite tras un error pasajero: se borra lo que se pintó de ella |
 | `aviso` | `texto` y `nivel` (`info` o `alerta`): un rechazo del modelo, el paso a un modelo de respaldo |

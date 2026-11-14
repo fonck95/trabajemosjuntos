@@ -24,17 +24,31 @@
 //   ventana, sin el menú ni las barras del panel; Escape la devuelve hasta la próxima orden de pantalla completa.
 // * En la pestaña del chat, `pantalla_completa` del asistente hace lo mismo con esta vista (el botón del asistente queda
 //   a mano para seguir hablando); Escape la devuelve.
+// * El recorrido narrado (reproductor.js, voz.js): la acción `recorrido` no se convierte en una orden; la reproduce
+//   aquí el reproductor, que lleva el reloj de la explicación y le manda a la presentación escena, frase, pausa y
+//   cierre. Suena en la página que mira la sala (la pestaña del chat, la ventana del proyector o la pantalla en off),
+//   con la voz del navegador si la persona la encendió con el botón «Voz» de esa ventana. Las teclas y los botones de la
+//   presentación lo manejan mientras suena (avanzan escenas, pausan, detienen), y si la persona mueve la imagen se
+//   pausa. Cualquier otra acción lo detiene antes. El avance va al puente (la tarjeta del chat), a la barra y al
+//   servidor (POST /api/pantalla/progreso), así el asistente y los agentes por MCP saben dónde va.
 // * Los estilos (css/presentacion.css) los carga la vista, como agente.js los suyos.
 import { ErrorApi, api } from '../api.js';
 import { BASE, url } from '../base.js';
 import { $, html, icono, montar } from '../ui.js';
-import { CANAL, VERSION, accionPresentacion, accionesPresentacion, avisarEstado, estadoDePantalla, estadoPresentacion,
-  estadoValido, ordenesHacia, presentacionNoDisponible, proyectorVivo, registrarPresentacion } from '../agente-presentacion.js';
+import { AVISOS, CANAL, TERMINALES, VERSION, accionPresentacion, accionesPresentacion, avisarEstado, avisarRecorrido,
+  controlRecorrido, estadoDePantalla, estadoPresentacion, estadoValido, ordenesHacia, presentacionNoDisponible,
+  proyectorVivo, recorridoEnCurso, registrarPresentacion } from '../agente-presentacion.js';
+import { crearReproductor } from '../reproductor.js';
+import { crearVoz } from '../voz.js';
 
 const ESPERA_LISTO_MS = 45000;   // la presentación carga sus datos y la maqueta 3D: si en esto no avisó, se dice
 const ESPERA_ORDEN_MS = 12000;   // un cambio de capítulo con su telón y la maqueta del módulo tarda unos segundos
 const POLL_MS = 1500;            // la pantalla en off pregunta por su estado (app/pantalla.py la da por cerrada a los 10 s)
 const POLL_ERROR_MS = 4000;      // sin conexión con el panel, reintenta más espaciado
+const PRIMERA_ESCENA_MS = 10000; // al aceptar un recorrido se espera a que la primera escena esté a la vista (o esto)
+const VIGENCIA_RECORRIDO_S = 90; // la pantalla en off narra un recorrido nuevo; uno viejo se aplica en silencio
+const REANUDAR_S = 20;           // y reanuda uno a medias si su último avance es de hace menos que esto
+const TEXTO_VOZ = { activa: 'Voz activa', apagada: 'Voz', sin_activar: 'Toque para activar la voz', sin_voces: 'Sin voces en español' };
 const SITIO = /^(https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?|http:\/\/(127\.0\.0\.1|localhost)(:\d{1,5})?)(\/[A-Za-z0-9._~%-]*)*$/;
 
 let estilos = null;
@@ -59,6 +73,15 @@ async function direccion() {
   const u = new URL(`${sitio.replace(/\/+$/, '')}/propuesta?modo=tecnica`);
   return { src: u.href, origen: u.origin };
 }
+
+/** Dónde queda la pantalla al terminar o detener un recorrido en la escena `esc`: sus campos base (`estado_de_escena`
+ * de app/recorrido.py), sobre lo último aplicado (el tema y la pantalla completa no cambian). */
+function baseDeEscena(antes, esc) {
+  return { ...(antes || {}), capitulo: esc.capitulo, paso: esc.paso, explicacion: null, panel: esc.panel, indice: false,
+    fichas: false, ...esc.visual };
+}
+
+const dormir = (ms) => new Promise((ok) => { setTimeout(ok, ms); });
 
 /** La orden para mando.js de una acción del puente (ya validada por `accionPresentacion`). */
 function ordenDe(p) {
@@ -93,6 +116,7 @@ export async function vistaPresentacion(el, { q } = {}) {
         <div class="pres-donde"><b id="pres-off-capitulo">Pantalla en off</b><small id="pres-off-paso">Cargando la presentación…</small></div>
         <div class="pres-botones">
           <span class="chip borde pres-off-chip">${icono('agente')}<span id="pres-off-estado">Esperando al asistente</span></span>
+          <button type="button" class="btn pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta pantalla (la del navegador)">${icono('voz')}<span>Voz</span></button>
           <a class="btn" id="pres-salir-off" href="${url('/presentacion')}">${icono('cerrar')}<span>Salir del modo en off</span></a>
         </div>
       </div>
@@ -102,6 +126,7 @@ export async function vistaPresentacion(el, { q } = {}) {
         <div class="pres-botones">
           <button type="button" class="btn" id="pres-anterior" aria-label="Paso anterior" title="Paso anterior" disabled>${icono('anterior')}</button>
           <button type="button" class="btn primario" id="pres-siguiente" aria-label="Paso siguiente" title="Paso siguiente" disabled><span>Siguiente</span>${icono('siguiente')}</button>
+          ${off ? '' : html`<button type="button" class="btn pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta pestaña (la del navegador)">${icono('voz')}<span>Voz</span></button>`}
           ${conPantalla ? html`<button type="button" class="btn" id="pres-pantalla" aria-label="Pantalla completa" title="Pantalla completa">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
           <a class="btn" id="pres-otra" href="${url('/presentacion?pantalla=1')}" target="_blank" rel="noopener" aria-label="Abrir en otra pantalla (proyector)" title="Abre la presentación en otra ventana para el proyector: el asistente la sigue manejando desde aquí">${icono('proyector')}<span>Abrir en otra pantalla</span></a>
           <a class="btn" id="pres-off" href="${url('/presentacion?off=1')}" target="_blank" rel="noopener" aria-label="Pantalla en off" title="Una pantalla sin controles para el proyector o un televisor, en este equipo o en otro: solo cambia cuando se le pide al asistente o a un agente por MCP">${icono('agente')}<span>Pantalla en off</span></a>
@@ -109,7 +134,10 @@ export async function vistaPresentacion(el, { q } = {}) {
       </div>
       <p class="pres-remoto" id="pres-remoto" role="status" hidden>${icono('proyector')}<span>La presentación se está mostrando en otra pantalla: el asistente, estos botones y la presentación de aquí la manejan allá.</span></p>
       <div class="pres-marco" id="pres-marco"></div>
-      ${proyector && conPantalla ? html`<button type="button" class="btn oscuro pres-completa" id="pres-completa">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
+      ${proyector ? html`<div class="pres-flotantes">
+        ${conPantalla ? html`<button type="button" class="btn oscuro pres-completa" id="pres-completa">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
+        <button type="button" class="btn oscuro pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta ventana (la del navegador)">${icono('voz')}<span>Voz</span></button>
+      </div>` : ''}
     </section>`);
   const marco = $('#pres-marco', el);
   // En off la barra que se ve es la suya (la de los botones queda oculta, sin ids repetidos)
@@ -155,7 +183,23 @@ export async function vistaPresentacion(el, { q } = {}) {
     const e = (!proyector && !off && estadoPresentacion()) || estado;
     if (!e) return;
     capituloEl.textContent = e.nombre || e.capitulo;
-    pasoEl.textContent = `Paso ${e.paso} de ${e.total}${e.titulo ? ` · ${e.titulo}` : ''}`;
+    // con un recorrido sonando (aquí o en el proyector), la barra dice dónde va
+    const aqui = rep.estado();
+    const alla = !aqui || !rep.activo() ? recorridoEnCurso() : null;
+    if (rep.activo() && aqui) {
+      const donde = aqui.fase === 'cierre' ? 'en resumen' : `escena ${aqui.n} de ${aqui.de}`;
+      pasoEl.textContent = `Recorrido · ${rep.recorrido().titulo} · ${donde}${aqui.pausado ? ' · en pausa' : ''}`;
+    } else if (alla?.donde === 'proyector') {
+      pasoEl.textContent = `Recorrido en el proyector · escena ${alla.n} de ${alla.de}${alla.fase === 'pausa' ? ' · en pausa' : ''}`;
+    } else {
+      pasoEl.textContent = `Paso ${e.paso} de ${e.total}${e.titulo ? ` · ${e.titulo}` : ''}`;
+    }
+    const sonando = rep.activo() || alla?.donde === 'proyector';
+    for (const [b, que] of [[anterior, 'anterior'], [siguiente, 'siguiente']]) {
+      const t = `${sonando ? 'Escena' : 'Paso'} ${que}`;
+      b.title = t;
+      b.setAttribute('aria-label', t);
+    }
   }
   // Y en la pestaña del chat, el aviso de que se está mostrando en otra pantalla: en el acto cuando el puente avisa que
   // cambió algo del proyector (`cambio`) y cada poco, porque uno que se cerró sin avisar solo deja de contar al vencer
@@ -165,10 +209,10 @@ export async function vistaPresentacion(el, { q } = {}) {
     pintarEstado();
   }
 
-  function orden(o) {
+  function orden(o, { plazo = ESPERA_ORDEN_MS } = {}) {
     return new Promise((ok) => {
       const id = ++nro;
-      const reloj = setTimeout(() => { pendientes.delete(id); ok({ ok: false, error: 'La presentación no respondió' }); }, ESPERA_ORDEN_MS);
+      const reloj = setTimeout(() => { pendientes.delete(id); ok({ ok: false, error: 'La presentación no respondió', sinRespuesta: true }); }, plazo);
       pendientes.set(id, (r) => { clearTimeout(reloj); ok(r); });
       try {
         iframe.contentWindow.postMessage({ canal: CANAL, v: VERSION, id, ...o }, d.origen);
@@ -187,13 +231,76 @@ export async function vistaPresentacion(el, { q } = {}) {
   document.addEventListener('keydown', alTecla);
   limpiezas.push(() => document.removeEventListener('keydown', alTecla));
 
-  // Lo que el asistente (o los botones) piden: una orden por acción, en orden, cada una con su resultado
+  // ── El recorrido narrado: el reproductor de esta página, su voz y el avance ──
+  const voz = crearVoz();
+  // El avance va al servidor de a uno: el más nuevo reemplaza al que esperaba y siempre sale (no se pierde la última fase)
+  let avanceEnVuelo = false, avancePendiente = null;
+  async function enviarAvance(p) {
+    avancePendiente = p;
+    if (avanceEnVuelo) return;
+    avanceEnVuelo = true;
+    while (avancePendiente) {
+      const x = avancePendiente;
+      avancePendiente = null;
+      try { await api.post('/api/pantalla/progreso', x); } catch { /* otro recorrido lo reemplazó, o sin conexión */ }
+    }
+    avanceEnVuelo = false;
+  }
+  let alTerminarRecorrido = null;   // la pantalla en off deja `aplicado` en la escena donde quedó
+  const rep = crearReproductor({
+    orden, voz,
+    avisar: (pr) => {
+      avisarRecorrido(pr);
+      pintarEstado();
+      enviarAvance(pr);
+      if (TERMINALES.includes(pr.fase)) { try { alTerminarRecorrido?.(pr); } catch { /* nada */ } }
+    },
+  });
+  limpiezas.push(() => { rep.detener('otra_orden'); voz.callar(); });
+  const botonesVoz = [...el.querySelectorAll('.pres-voz')];
+  const pintarVoz = () => {
+    const e = voz.estado();
+    for (const b of botonesVoz) {
+      b.setAttribute('aria-pressed', String(e === 'activa'));
+      b.disabled = e === 'sin_voces';
+      b.dataset.voz = e;
+      const t = b.querySelector('span');
+      if (t) t.textContent = TEXTO_VOZ[e];
+      b.setAttribute('aria-label', TEXTO_VOZ[e]);
+    }
+  };
+  for (const b of botonesVoz) b.addEventListener('click', () => { if (voz.estado() === 'activa') voz.apagar(); else voz.encender(); });
+  limpiezas.push(voz.alCambiar(pintarVoz));
+  pintarVoz();
+
+  async function aplicarRecorrido(p) {
+    const primera = rep.iniciar(p.recorrido, { desde: p.desde || 1 });
+    await Promise.race([primera, dormir(PRIMERA_ESCENA_MS)]);
+    return { op: p.op, ok: true };
+  }
+  function controlar(p) {
+    const r = rep.recorrido();
+    if (!r || r.id !== p.rid || !rep.activo()) return { op: p.op, ok: false, error: 'Ese recorrido ya no está sonando' };
+    rep.control(p.accion, { suave: !!p.suave });
+    return { op: p.op, ok: true };
+  }
+
+  // Lo que el asistente (o los botones) piden: una orden por acción, en orden, cada una con su resultado. Un recorrido
+  // lo reproduce el reproductor; cualquier otra acción (salvo sus controles y la píldora) lo detiene antes
   async function aplicar(lista) {
     const res = [];
     for (const a of Array.isArray(lista) ? lista : []) {
       const p = accionPresentacion(a);
       if (!p) { res.push({ op: typeof a?.op === 'string' ? a.op.slice(0, 30) : null, ok: false, error: 'Acción no válida' }); continue; }
+      if (p.op === 'recorrido') { res.push(await aplicarRecorrido(p)); continue; }
+      if (p.op === 'control_recorrido') { res.push(controlar(p)); continue; }
+      if (p.op === 'preparando') {
+        if (!rep.activo()) await orden({ orden: 'narracion', preparando: p.activar });
+        res.push({ op: p.op, ok: true });
+        continue;
+      }
       if (p.op === 'pantalla_completa') { llenar(p.activar); res.push({ op: p.op, ok: true }); continue; }
+      if (rep.activo()) await rep.detener('otra_orden');
       const r = await orden(ordenDe(p));
       res.push({ op: p.op, ok: r.ok === true, ...(r.error ? { error: r.error } : {}) });
     }
@@ -221,16 +328,32 @@ export async function vistaPresentacion(el, { q } = {}) {
     if (e.source !== iframe.contentWindow || e.origin !== d.origen) return;
     const m = e.data;
     if (!m || typeof m !== 'object' || Array.isArray(m) || m.canal !== CANAL || m.v !== VERSION) return;
-    // La presentación sin controles (la pantalla en off) no atiende el teclado: Escape devuelve aquí la ventana
-    if (m.tipo === 'tecla') { if (m.tecla === 'Escape' && 'presLlena' in raiz.dataset) llenar(false); return; }
+    // La presentación sin controles (la pantalla en off) no atiende el teclado: Escape devuelve aquí la ventana. Con un
+    // recorrido sonando, las teclas y los botones de la presentación lo manejan
+    if (m.tipo === 'tecla') {
+      if (m.tecla === 'Escape' && 'presLlena' in raiz.dataset) llenar(false);
+      else if (rep.activo()) {
+        if (m.tecla === 'siguiente') rep.siguiente();
+        else if (m.tecla === 'anterior') rep.anterior();
+        else if (m.tecla === 'pausa') rep.alternar('tecla');
+        else if (m.tecla === 'detener') rep.detener('tecla');
+      }
+      return;
+    }
     if (m.tipo !== 'listo' && m.tipo !== 'estado' && m.tipo !== 'error') return;
     const nuevo = estadoValido(m);
     if (nuevo) { estado = nuevo; pintarEstado(); }
     if (Number.isInteger(m.id) && pendientes.has(m.id)) {
       const resolver = pendientes.get(m.id);
       pendientes.delete(m.id);
-      resolver({ ok: m.tipo === 'estado', ...(m.tipo === 'error' ? { error: typeof m.error === 'string' ? m.error.slice(0, 160) : 'No se pudo' } : {}) });
+      resolver({ ok: m.tipo === 'estado', ...(m.tipo === 'error' ? { error: typeof m.error === 'string' ? m.error.slice(0, 160) : 'No se pudo' } : {}),
+        ...(m.tipo === 'estado' && AVISOS.includes(m.aviso) ? { aviso: m.aviso } : {}) });
+    } else if (m.tipo === 'estado' && nuevo?.por === 'persona' && rep.activo()) {
+      // la persona movió la imagen (un paso, la cámara): el recorrido se pausa; al seguir, la escena vuelve
+      rep.alPersona();
     }
+    // la presentación se recargó a mitad del recorrido: la escena en curso vuelve a empezar
+    if (m.tipo === 'listo' && lista && rep.activo()) rep.repetir();
     if (!lista && (m.tipo === 'listo' || (m.tipo === 'estado' && nuevo))) {
       lista = true;
       clearTimeout(tListo);
@@ -239,6 +362,8 @@ export async function vistaPresentacion(el, { q } = {}) {
       if (off) seguirAlServidor();
       else {
         quitarRegistro ||= registrarPresentacion({ aplicar, estado: () => estado, cambio: mirar,
+          recorrido: () => (rep.activo() ? { recorrido: rep.recorrido(), n: rep.estado().n } : null),
+          soltarRecorrido: (motivo) => rep.detener(motivo),
           ...(proyector ? { proyector: true } : {}) });
         if (proyector) iframe.focus({ preventScroll: true });   // las flechas del teclado van a la presentación
       }
@@ -250,6 +375,34 @@ export async function vistaPresentacion(el, { q } = {}) {
   // cuando termina la anterior
   let tPoll = 0, versionVista = -1, aplicado = null, siguiendo = false;
   const offEstado = $('#pres-off-estado', el);
+  // El recorrido en la pantalla en off: el que vio por última vez (id) y el último control que aplicó (n)
+  let ridOff = null, controlOff = 0;
+  if (off) {
+    alTerminarRecorrido = (pr) => {
+      const r = rep.recorrido();
+      if (r && pr.rid === r.id) aplicado = baseDeEscena(aplicado, r.escenas[pr.n - 1]);
+    };
+  }
+  async function recorridoDeLaPantalla(e) {
+    const x = e.recorrido;
+    if (x && x.id !== ridOff) {
+      ridOff = x.id;
+      controlOff = e.control_recorrido?.n || 0;
+      const pr = e.progreso;
+      const reanuda = !!pr && pr.hace_s < REANUDAR_S && !TERMINALES.includes(pr.fase);
+      // uno viejo (la pantalla se abrió después) no se narra: los campos base lo dejan en su última escena
+      if (x.edad_s < VIGENCIA_RECORRIDO_S || reanuda) {
+        const { edad_s: _edad, ...r } = x;
+        await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde: reanuda ? pr.n : 1 });
+      }
+    } else if (!x && rep.activo()) {
+      // el asistente pidió otra cosa o lo detuvo: el servidor lo cerró
+      await rep.detener('otra_orden');
+    } else if (x && rep.activo() && e.control_recorrido && e.control_recorrido.n > controlOff) {
+      controlOff = e.control_recorrido.n;
+      if (e.control_recorrido.accion !== 'reproducir') rep.control(e.control_recorrido.accion);
+    }
+  }
   async function seguirAlServidor() {
     if (siguiendo) return;
     siguiendo = true;
@@ -261,14 +414,17 @@ export async function vistaPresentacion(el, { q } = {}) {
         const r = await api.get(`/api/pantalla?v=${versionVista}`);
         const e = estadoDePantalla(r);
         if (e) {
-          for (const o of ordenesHacia(aplicado, e)) {
+          await recorridoDeLaPantalla(e);
+          // mientras suena un recorrido, lo que se ve lo pone él (solo la pantalla completa se aplica igual)
+          for (const o of rep.activo() ? [] : ordenesHacia(aplicado, e)) {
             const res = await orden(o);
             if (!res.ok) console.warn('La pantalla en off no pudo aplicar', o.orden, res.error);
           }
           // Cada orden de pantalla completa se aplica, aunque no cambie el valor: así vuelve a llenar la ventana que
           // se devolvió con Escape
           if (!aplicado || aplicado.completa !== e.completa || aplicado.orden_completa !== e.orden_completa) llenar(e.completa);
-          aplicado = e;
+          if (rep.activo()) aplicado = { ...(aplicado || e), completa: e.completa, orden_completa: e.orden_completa };
+          else aplicado = e;
           versionVista = e.v;
         }
         if (offEstado) offEstado.textContent = 'Conectada: la manejan el asistente y los agentes por MCP';
@@ -299,7 +455,11 @@ export async function vistaPresentacion(el, { q } = {}) {
 
   // Con un proyector vivo, el paso lo da él (el puente le manda la orden solo a él y este iframe lo sigue): así los
   // botones llevan a las dos pantallas al mismo paso aunque el de allá haya cambiado sin pasar por aquí
+  // Con un recorrido sonando (aquí o en el proyector), los botones pasan de escena
   const mover = (op) => {
+    if (rep.activo()) { if (op === 'siguiente') rep.siguiente(); else rep.anterior(); return; }
+    const alla = recorridoEnCurso();
+    if (alla?.donde === 'proyector') { controlRecorrido(alla.rid, op).catch(() => {}); return; }
     accionesPresentacion([{ tipo: 'presentacion', op }]).catch(() => {});
   };
   anterior.addEventListener('click', () => mover('anterior'));

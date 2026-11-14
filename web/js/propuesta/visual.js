@@ -59,7 +59,11 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
     st.camera.lookAt(st.controls.target);
     return true;
   });
-  st.controls.addEventListener('start', () => { if (vis.girar) { vis.girar = false; avisar(); } });
+  // la persona tomó la cámara: deja de girar y se avisa como suyo (un recorrido que suena se pausa, mando.js)
+  st.controls.addEventListener('start', () => {
+    vis.girar = false;
+    dispatchEvent(new CustomEvent('propuesta:visual', { detail: { ...estadoVisual(), por: 'persona' } }));
+  });
 
   // ---------------------------------------------------------------- brújula, escala y estado (pantallas grandes)
   const hud = document.createElement('div');
@@ -170,7 +174,7 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   const reencuadrarSiQuieto = () => { if (!st.userMoved) reencuadrar(); };
 
   // ---------------------------------------------------------------- inmersión en un modelo del atlas
-  const inm = { abierta: false, actual: null, marco: null, puente: null };
+  const inm = { abierta: false, actual: null, marco: null, puente: null, fallo: false };
   const capaInm = document.createElement('div');
   capaInm.className = 'inmersion';
   capaInm.hidden = true;
@@ -212,6 +216,7 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
     return inm.puente;
   }
   function fallaAtlas() {
+    inm.fallo = true;
     const t = capaInm.querySelector('.inm-cargando');
     if (t) t.textContent = 'No se pudo cargar el modelo del atlas';
   }
@@ -235,6 +240,7 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
       inm.abierta = true;
       capaInm.hidden = false;
       capaInm.querySelector('.inm-cargando').textContent = 'Cargando el modelo del atlas…';
+      inm.fallo = false;
       pres.classList.add('con-inmersion');
       ubicarInmersion();
       st.stop();
@@ -329,6 +335,23 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   });
 
   pintarHud();
-  return { aplicar, estado: estadoVisual, alPaso, reencuadrar: () => { if (vis.enfoque || vis.camara !== 'paso' || vis.rumbo != null) { reencuadrar(); return true; } return false; },
+  /** ¿Se puede aplicar `v` (lo visual de una escena) en el capítulo `ci`? null, o el error (mando.js valida la escena
+   * entera antes de mover nada: el componente está en ese capítulo, con lugar en la maqueta para el enfoque, y la
+   * inmersión en el catálogo). */
+  function validar(v, ci) {
+    const c = caps[ci], comps = new Map((c?.componentes || []).map((x) => [x.id, x]));
+    for (const k of ['enfoque', 'detalle']) {
+      if (v[k] == null) continue;
+      const x = comps.get(v[k]);
+      if (!x) return `El capítulo ${c?.nombre || ''} no tiene el componente «${v[k]}»`;
+      if (k === 'enfoque' && !x.enfoque) return `«${x.nombre}» no tiene un lugar propio en la maqueta`;
+    }
+    if (v.inmersion != null && v.inmersion !== 'maqueta' && !catalogo.has(v.inmersion)) return 'La presentación no tiene esa inmersión';
+    return null;
+  }
+  // un modelo del atlas pedido que todavía carga (la escena espera a que esté antes de narrar)
+  const cargando = () => inm.abierta && !capaInm.classList.contains('lista') && !inm.fallo;
+
+  return { aplicar, estado: estadoVisual, alPaso, validar, cargando, reencuadrar: () => { if (vis.enfoque || vis.camara !== 'paso' || vis.rumbo != null) { reencuadrar(); return true; } return false; },
     abrirDetalle: (id) => aplicar({ detalle: id, ...(comp(id)?.enfoque ? { enfoque: id } : {}) }) };
 }

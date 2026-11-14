@@ -19,6 +19,15 @@
 //   (detalle), un modelo del atlas a pantalla completa (inmersion) y el tema. Aquí se revisa la forma de cada valor (los
 //   ids, las listas, los tipos); que el componente exista en el capítulo o la inmersión en el catálogo lo revisa
 //   visual.js, que responde el error sin mover nada.
+// * El recorrido narrado (admin/web/js/reproductor.js, en la página del panel que enmarca la presentación): `escena`
+//   es una orden atómica (el paso, «Solo 3D», lo visual, el resaltado y la narración de una escena, con el título del
+//   recorrido y su avance) que se valida entera antes de mover nada y responde cuando la imagen se asentó (el telón, el
+//   panel, el vuelo de la cámara, el modelo del atlas): recién entonces pinta la narración en el subtítulo, frase por
+//   frase, con textContent. `narracion` ilumina una frase (cuando la voz empieza a decirla), marca la pausa, dice si hay
+//   voz o muestra la píldora «El asistente prepara la explicación…»; `cierre`, el resumen y «¿Preguntas?». Mientras suena
+//   un recorrido, las flechas, la barra espaciadora, P y Escape (y los botones del control) no cambian de paso: se le
+//   avisan al panel (`tecla`), que maneja el recorrido. Y si la persona mueve la presentación a mano (un paso, la
+//   cámara), el estado lo dice (`por: 'persona'`): el recorrido se pausa.
 // * Cada cambio de paso (también por el teclado o un clic) se le avisa al panel con el estado: capítulo, paso, total,
 //   nombre del capítulo, título del paso, la explicación a la vista y, en la técnica, lo visual. main.js lo anuncia con
 //   el evento `propuesta:paso` (y visual.js, `propuesta:visual`).
@@ -30,6 +39,18 @@ export const VERSION = 1;
 export const MAX_EXPLICACION = 220;   // `MAX_EXPLICACION` de la herramienta y del puente del panel: una prueba los compara
 const ID = /^[a-z_]{2,40}$/;
 const ID_PIEZA = /^[a-z0-9_]{1,40}$/;   // un componente o una inmersión (los ids de la propuesta)
+// El recorrido narrado (`app/recorrido.py` y agente-presentacion.js con los mismos valores: una prueba los compara)
+export const MAX_TITULO = 80;
+export const MAX_FRASES = 3;
+export const MAX_ESCENAS = 8;
+export const MAX_PUNTO = 80;
+export const MAX_CIERRE = 200;
+export const RID = /^[0-9a-f]{12}$/;
+export const RESALTAR = { cifra: 12, punto: 20, leyenda: 12, especificacion: 20 };
+export const TECLAS = ['Escape', 'siguiente', 'anterior', 'pausa', 'detener'];
+// Lo que delata plata (`PLATA` de tecnica.js y de app/proyectable.py): los textos del recorrido no la llevan
+const PLATA = /\$|millones de pesos/;
+const ASIENTO_MS = 5000, ASIENTO_ATLAS_MS = 15000;   // lo que espera, a lo sumo, que la imagen se asiente
 // `visual`: los valores que admite cada parte (visual.js y `_VISUAL` de la herramienta)
 export const CAMARAS = ['paso', 'aerea', 'oblicua', 'rasante', 'cerca', 'lejos'];
 const VISUAL = {
@@ -75,7 +96,11 @@ const CLAVES = new Map([
   ['ir', ['capitulo', 'paso', 'explicacion']], ['avanzar', ['d', 'explicacion']], ['explicar', ['explicacion']],
   ['quitar_explicacion', []], ['estado', []], ['vista', ['panel', 'indice', 'fichas', 'controles']],
   ['visual', Object.keys(VISUAL)],
+  ['escena', ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'frases', 'titulo', 'n', 'de', 'voz', 'rid']],
+  ['narracion', ['frase', 'pausa', 'voz', 'preparando']],
+  ['cierre', ['puntos', 'rid']],
 ]);
+const VISUAL_ESCENA = ['enfoque', 'camara', 'rumbo', 'girar', 'comparar', 'detalle', 'inmersion'];
 
 const cifra = (t) => Number(t.replace(/\./g, '').replace(',', '.'));
 
@@ -103,14 +128,39 @@ function numeroLargo(t) {
 }
 
 /** La explicación lista para el subtítulo (los espacios seguidos quedan en uno, como los pinta el navegador; sin NFKC:
- * se muestra como vino), o null si no se puede mostrar tal cual: no es texto, está vacía, pasa de MAX_EXPLICACION o trae
- * lo que NO_SE_VE o ACENTOS prohíben, una «@» o un número largo. */
-export function textoVisible(v) {
+ * se muestra como vino), o null si no se puede mostrar tal cual: no es texto, está vacía, pasa de `max` (por omisión
+ * MAX_EXPLICACION) o trae lo que NO_SE_VE o ACENTOS prohíben, una «@» o un número largo; con `plata: false` (los textos
+ * del recorrido), tampoco «$» ni «millones de pesos» (`texto_proyectable` de app/proyectable.py). */
+export function textoVisible(v, max = MAX_EXPLICACION, { plata = true } = {}) {
   if (typeof v !== 'string' || NO_SE_VE.test(v) || ACENTOS.test(v)) return null;
   const t = v.replace(/\s+/g, ' ').trim();
-  if (!t || [...t].length > MAX_EXPLICACION) return null;
+  if (!t || [...t].length > max) return null;
   const k = t.normalize('NFKC').replace(/\s+/g, ' ').trim();
+  if (!plata && PLATA.test(k)) return null;
   return k.includes('@') || numeroLargo(k) ? null : t;
+}
+
+const entero = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
+const exactas = (o, claves) => !!o && typeof o === 'object' && !Array.isArray(o) && Object.keys(o).length === claves.length
+  && claves.every((k) => Object.prototype.hasOwnProperty.call(o, k));
+
+/** ¿Es `r` un resaltado de la forma exacta? (null, {tipo, n}, {tipo: 'especificacion', n, en} o {tipo: 'componente', id}) */
+export function resaltarValido(r) {
+  if (r === null) return true;
+  if (!r || typeof r !== 'object' || typeof r.tipo !== 'string') return false;
+  if (r.tipo === 'componente') return exactas(r, ['tipo', 'id']) && typeof r.id === 'string' && ID_PIEZA.test(r.id);
+  if (!(r.tipo in RESALTAR)) return false;
+  if (r.tipo === 'especificacion') return exactas(r, ['tipo', 'n', 'en']) && entero(r.n, 1, RESALTAR.especificacion) && (r.en === 'panel' || r.en === 'ficha');
+  return exactas(r, ['tipo', 'n']) && entero(r.n, 1, RESALTAR[r.tipo]);
+}
+
+/** Las frases de una escena si se pueden proyectar tal cual (de 1 a MAX_FRASES, sin plata, juntas hasta
+ * MAX_EXPLICACION), o null. */
+export function frasesVisibles(frases) {
+  if (!Array.isArray(frases) || !frases.length || frases.length > MAX_FRASES) return null;
+  const out = frases.map((f) => textoVisible(f, MAX_EXPLICACION, { plata: false }));
+  if (out.some((f, i) => f === null || f !== frases[i])) return null;
+  return out.reduce((a, f) => a + [...f].length, 0) + out.length - 1 <= MAX_EXPLICACION ? out : null;
 }
 
 /** Los orígenes de los que se aceptan órdenes y a los que se responde: el de la página (si es http o https; nunca
@@ -137,7 +187,8 @@ const limpio = (t, n) => String(t ?? '').replace(/[\xa0\u{202f}]/gu, ' ').replac
 /** Monta el mando si la presentación está dentro de un iframe; si no, no escucha nada y devuelve null. Devuelve
  * {subtitulo(texto|null), estado()} (para las pruebas y por si main.js lo necesita). */
 export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, abrirFichas = () => {}, verPanel = () => {},
-  reencuadrar = () => {}, visual = null, ventana = globalThis.window, documento = globalThis.document } = {}) {
+  reencuadrar = () => {}, visual = null, asentada = async () => true, resaltar = () => true, restaurarEncuadre = () => {},
+  ventana = globalThis.window, documento = globalThis.document } = {}) {
   if (!ventana || !documento || !Array.isArray(caps) || !estado || typeof ir !== 'function' || typeof vecino !== 'function') return null;
   let padre = null;
   try { padre = ventana.parent; } catch { return null; }
@@ -154,6 +205,10 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   let origenPadre = null;       // el del panel que mandó la última orden válida: a él van los avisos siguientes
   let pasoDelSubtitulo = null;  // «capitulo/paso» al que corresponde la explicación en pantalla
   let sinTeclado = false;       // vista {controles: false}: la pantalla en off del panel
+  let textoActual = null;       // lo que dice el subtítulo (la explicación, las frases o el cierre), para el estado
+  let narracion = null;         // el recorrido que narra: {rid, n, de, frases, frase}
+  let aplicando = 0;            // órdenes en curso: un cambio sin ninguna es de la persona
+  let porPersona = false;       // el último cambio lo hizo la persona (un paso, la cámara): el recorrido se pausa
 
   // Dentro del panel, los enlaces de la barra (el Home, el atlas) abren otra pestaña: si no, el iframe dejaría la
   // presentación y el asistente ya no la podría manejar
@@ -168,7 +223,8 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     const p = c.pasos[estado.pi] || {};
     const visible = !!sub?.classList.contains('visible');
     return { capitulo: c.id, paso: estado.pi + 1, total: c.pasos.length, nombre: limpio(c.nombre, 80),
-      titulo: limpio(p.titulo || c.nombre, 200), explicacion: visible, texto: visible ? texto?.textContent ?? null : null,
+      titulo: limpio(p.titulo || c.nombre, 200), explicacion: visible, texto: visible ? textoActual : null,
+      por: porPersona ? 'persona' : 'orden', recorrido: narracion ? { rid: narracion.rid, n: narracion.n, de: narracion.de } : null,
       ...(visual ? { visual: visual.estado() } : {}) };
   }
   function enviar(msj, origen = null) {
@@ -266,17 +322,140 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   function subtitulo(t, paso = clave()) {
     if (!sub || !texto) return;
     const antes = sub.classList.contains('visible');
+    salirDeNarracion();
     if (t) {
       texto.textContent = t;
+      textoActual = t;
       sub.classList.add('visible');
       pasoDelSubtitulo = paso;
     } else {
       sub.classList.remove('visible');   // el texto se queda mientras se desvanece
       pasoDelSubtitulo = null;
+      textoActual = null;
     }
     medir();
     // En la pantalla chica el subtítulo le quita alto a la maqueta: la cámara vuelve a encuadrar (si nadie la movió)
     if (antes !== !!t && chica?.matches) reencuadrar();
+  }
+
+  // ── La narración de un recorrido, en la misma caja del subtítulo (así `medir` y `acomodar` siguen valiendo): una
+  // cabecera con el título, el avance en puntos (sin números) y las barras de la voz, y las frases en spans. Todo con
+  // createElement y textContent: nada del recorrido se pinta como HTML
+  const nuevo = (etiqueta, clase, t) => { const e = documento.createElement(etiqueta); if (clase) e.className = clase; if (t != null) e.textContent = t; return e; };
+  let cab = null;
+  function cabecera(titulo, n, de) {
+    if (!sub || typeof documento.createElement !== 'function') return null;
+    if (!cab) { cab = nuevo('div', 'sub-cab'); sub.insertBefore(cab, texto); }
+    const puntos = nuevo('span', 'sub-puntos');
+    for (let i = 1; i <= de; i++) puntos.append(nuevo('i', i < n ? 'hecha' : i === n ? 'actual' : ''));
+    const voz = nuevo('span', 'sub-voz');
+    voz.setAttribute('aria-hidden', 'true');
+    voz.append(nuevo('i'), nuevo('i'), nuevo('i'));
+    cab.replaceChildren(nuevo('b', 'sub-titulo', titulo), puntos, voz, nuevo('span', 'sub-pausa', 'En pausa'));
+    return cab;
+  }
+  function salirDeNarracion() {
+    narracion = null;
+    sub?.classList.remove('narracion', 'cierre', 'pausado', 'con-voz', 'cambiando', 'preparando');
+    cab?.remove();
+    cab = null;
+    resaltar(null);
+  }
+  function pintarFrases(frases, activa) {
+    texto.replaceChildren(...frases.map((f, i) => nuevo('span', `frase${i === activa ? ' activa' : i < activa ? ' dicha' : ''}`, f)));
+  }
+  function narrar({ titulo, n, de, frases, voz, rid }) {
+    if (!sub || !texto || typeof documento.createElement !== 'function') return;
+    const antes = sub.classList.contains('visible');
+    sub.classList.remove('cierre', 'cambiando', 'preparando', 'pausado');
+    sub.classList.add('narracion', 'visible');
+    sub.classList.toggle('con-voz', !!voz);
+    sub.setAttribute('aria-live', voz ? 'off' : 'polite');   // con voz no se lee dos veces
+    cabecera(titulo, n, de);
+    pintarFrases(frases, 0);
+    narracion = { rid, n, de, frases, frase: 0, titulo };
+    textoActual = frases.join(' ');
+    pasoDelSubtitulo = clave();
+    medir();
+    if (!antes && chica?.matches) reencuadrar();
+  }
+  function cierre(puntos) {
+    sub.classList.add('cierre');
+    sub.classList.remove('pausado', 'cambiando');
+    // el resumen es del recorrido entero: lo señalado en la última escena deja de estarlo
+    resaltar?.(null);
+    const b = cab?.querySelector('.sub-titulo');
+    if (b) b.textContent = puntos ? 'En resumen' : '¿Preguntas?';
+    cab?.querySelector('.sub-puntos')?.replaceChildren();
+    if (puntos) {
+      texto.replaceChildren(...puntos.map((x) => nuevo('span', 'punto', x)));
+      textoActual = puntos.join(' · ');
+    }
+    medir();
+  }
+  // La píldora mientras el asistente prepara: solo si no hay narración ni explicación a la vista; se apaga sola
+  let tPreparando = 0;
+  function preparando(v) {
+    clearTimeout(tPreparando);
+    if (!sub || !texto) return;
+    if (v && !sub.classList.contains('visible')) {
+      sub.classList.add('preparando', 'visible');
+      texto.textContent = 'El asistente prepara la explicación…';
+      textoActual = null;
+      pasoDelSubtitulo = null;
+      tPreparando = setTimeout(() => preparando(false), 25000);
+      medir();
+    } else if (!v && sub.classList.contains('preparando')) {
+      sub.classList.remove('preparando', 'visible');
+      medir();
+    }
+  }
+
+  // La orden `escena`: todo validado antes de mover nada
+  function escenaInvalida(m) {
+    const ci = typeof m.capitulo === 'string' && ID.test(m.capitulo) ? caps.findIndex((c) => c.id === m.capitulo) : -1;
+    if (ci < 0) return 'La presentación no tiene ese capítulo';
+    if (!entero(m.paso, 1, caps[ci].pasos.length)) return 'Ese capítulo no tiene ese paso';
+    if (typeof m.panel !== 'boolean' || typeof m.voz !== 'boolean') return 'panel y voz van con verdadero o falso';
+    if (!exactas(m.visual, VISUAL_ESCENA) || VISUAL_ESCENA.some((k) => !VISUAL[k](m.visual[k]))) return 'Lo visual de la escena no tiene la forma';
+    if (!resaltarValido(m.resaltar)) return 'El resaltado no tiene la forma';
+    if (!frasesVisibles(m.frases)) return 'La narración no se puede mostrar tal como es';
+    if (textoVisible(m.titulo, MAX_TITULO, { plata: false }) !== m.titulo) return 'El título no se puede mostrar tal como es';
+    if (!entero(m.n, 1, MAX_ESCENAS) || !entero(m.de, m.n, MAX_ESCENAS)) return 'El avance de la escena no vale';
+    if (typeof m.rid !== 'string' || !RID.test(m.rid)) return 'El recorrido no tiene un id válido';
+    const malo = visual.validar?.(m.visual, ci);
+    return malo || null;
+  }
+  async function escena(m) {
+    const ci = caps.findIndex((c) => c.id === m.capitulo), pi = m.paso - 1;
+    const t0 = Date.now();
+    aplicando++;
+    try {
+      sub?.classList.add('cambiando');   // la narración anterior se apaga mientras la imagen cambia
+      resaltar(null);
+      if (ci !== estado.ci || pi !== estado.pi) {
+        abrirIndice(false);
+        abrirFichas(false);
+        const dir = ci < estado.ci || (ci === estado.ci && pi < estado.pi) ? -1 : 1;
+        await ir(ci, pi, { dir });
+      }
+      const conPanel = !pres?.classList.contains('sin-panel');
+      if (conPanel !== m.panel) verPanel(m.panel);
+      const ahora = visual.estado(), cambios = {};
+      for (const k of VISUAL_ESCENA) if (ahora[k] !== m.visual[k]) cambios[k] = m.visual[k];
+      let aviso = null;
+      if (Object.keys(cambios).length && await visual.aplicar(cambios)) aviso = 'atlas';
+      restaurarEncuadre();
+      if (m.resaltar && !resaltar(m.resaltar)) aviso = aviso || 'resaltar';
+      const atlas = !!visual.cargando?.();
+      const asento = await asentada({ tope: atlas ? ASIENTO_ATLAS_MS : ASIENTO_MS });
+      if (!asento) aviso = aviso || (visual.cargando?.() ? 'atlas' : 'asiento');
+      narrar(m);
+      porPersona = false;
+      return { asentada: asento, ms: Date.now() - t0, ...(aviso ? { aviso } : {}) };
+    } finally {
+      aplicando--;
+    }
   }
 
   async function atender(m, origen) {
@@ -291,6 +470,37 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       if (!explicacion) return fallo('La explicación no se puede mostrar tal como es');
     }
     if (m.orden === 'estado') return responder(id, 'estado', origen);
+    // El recorrido narrado: la escena (atómica), la frase que suena, la pausa, la voz, la píldora y el cierre
+    if (m.orden === 'escena') {
+      if (!visual) return fallo('Esta presentación no tiene la capa visual: es la de la presentación técnica (?modo=tecnica)');
+      const malo = escenaInvalida(m);
+      if (malo) return fallo(String(malo).slice(0, 160));
+      const extra = await escena(m);
+      return responder(id, 'estado', origen, extra);
+    }
+    if (m.orden === 'narracion') {
+      const partes = CLAVES.get('narracion').filter((k) => m[k] !== undefined);
+      if (!partes.length) return fallo('La orden no dice qué cambiar de la narración');
+      if (m.frase !== undefined && (!narracion || !entero(m.frase, 0, narracion.frases.length - 1))) return fallo('No hay esa frase en la narración');
+      if (['pausa', 'voz', 'preparando'].some((k) => m[k] !== undefined && typeof m[k] !== 'boolean')) return fallo('pausa, voz y preparando van con verdadero o falso');
+      if ((m.pausa !== undefined || m.voz !== undefined) && !narracion) return fallo('No hay una narración en pantalla');
+      if (m.frase !== undefined) { narracion.frase = m.frase; sub.classList.remove('pausado'); pintarFrases(narracion.frases, m.frase); }
+      if (m.pausa !== undefined) sub.classList.toggle('pausado', m.pausa);
+      if (m.voz !== undefined) { sub.classList.toggle('con-voz', m.voz); sub.setAttribute('aria-live', m.voz ? 'off' : 'polite'); }
+      if (m.preparando !== undefined) preparando(m.preparando);
+      return responder(id, 'estado', origen);
+    }
+    if (m.orden === 'cierre') {
+      if (!narracion || m.rid !== narracion.rid) return fallo('El cierre no es del recorrido en pantalla');
+      if (m.puntos !== null) {
+        const ok = Array.isArray(m.puntos) && m.puntos.length >= 1 && m.puntos.length <= 3
+          && m.puntos.every((x) => textoVisible(x, MAX_PUNTO, { plata: false }) === x)
+          && m.puntos.reduce((a, x) => a + [...x].length, 0) <= MAX_CIERRE;
+        if (!ok) return fallo('El cierre no se puede mostrar tal como es');
+      }
+      cierre(m.puntos);
+      return responder(id, 'estado', origen);
+    }
     // Lo que se ve, sin cambiar de paso: cada parte con verdadero o falso (las que no vienen quedan como están). El índice
     // y las fichas tapan la presentación: no se abren a la vez
     if (m.orden === 'vista') {
@@ -319,7 +529,7 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     }
     if (m.orden === 'explicar' || m.orden === 'quitar_explicacion') {
       if (m.orden === 'explicar' && !explicacion) return fallo('Falta la explicación');
-      subtitulo(explicacion);
+      subtitulo(explicacion);   // también sale del modo narración (quita el resaltado y el recorrido)
       return responder(id, 'estado', origen);
     }
     let destino;
@@ -341,7 +551,9 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     abrirIndice(false);
     abrirFichas(false);
     const dir = m.orden === 'avanzar' ? m.d : ci < estado.ci || (ci === estado.ci && pi < estado.pi) ? -1 : 1;
-    await ir(ci, pi, { dir });
+    aplicando++;
+    try { await ir(ci, pi, { dir }); } finally { aplicando--; }
+    porPersona = false;
     return responder(id, 'estado', origen);
   }
 
@@ -350,22 +562,49 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     const m = e.data;
     if (!m || typeof m !== 'object' || Array.isArray(m) || m.canal !== CANAL || m.v !== VERSION) return;
     origenPadre = e.origin;
-    atender(m, e.origin).catch(() => responder(undefined, 'error', e.origin, { error: 'La presentación no pudo aplicar la orden' }));
+    const conOrden = m.orden !== 'estado';
+    if (conOrden) aplicando++;
+    atender(m, e.origin).catch(() => responder(undefined, 'error', e.origin, { error: 'La presentación no pudo aplicar la orden' }))
+      .finally(() => { if (conOrden) aplicando--; });
   });
   ventana.addEventListener('propuesta:paso', () => {
+    if (!aplicando && listo) porPersona = true;   // un paso que cambió sin orden: lo movió la persona
     if (pasoDelSubtitulo && pasoDelSubtitulo !== clave()) subtitulo(null);
     medir();
     enviar({ tipo: listo ? 'estado' : 'listo', ...actual() });
     listo = true;
   });
   // Lo visual que cambia sin orden (la persona arrastra la cámara y deja de girar, cierra la ficha): el panel lo sabe
-  ventana.addEventListener('propuesta:visual', () => { if (listo) enviar({ tipo: 'estado', ...actual() }); });
-  // Sin controles, ninguna tecla mueve la presentación (en captura: antes que las de main.js); Escape va al panel
+  ventana.addEventListener('propuesta:visual', (e) => {
+    if (!aplicando && e?.detail?.por === 'persona') porPersona = true;
+    if (listo) enviar({ tipo: 'estado', ...actual() });
+  });
+  // Sin controles, ninguna tecla mueve la presentación (en captura: antes que las de main.js); Escape va al panel. Con un
+  // recorrido sonando, las teclas de avanzar, retroceder, pausar y Escape lo manejan a él (el panel decide), no al paso
+  const TECLA = { ArrowRight: 'siguiente', PageDown: 'siguiente', ' ': 'siguiente', Enter: 'siguiente', ArrowLeft: 'anterior',
+    PageUp: 'anterior', Backspace: 'anterior', p: 'pausa', P: 'pausa', k: 'pausa', K: 'pausa', Escape: 'detener' };
   ventana.addEventListener('keydown', (e) => {
-    if (!sinTeclado) return;
+    if (sinTeclado) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (e.key === 'Escape') enviar({ tipo: 'tecla', tecla: 'Escape' });
+      return;
+    }
+    if (!narracion || e.altKey || e.ctrlKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || '')) return;
+    const t = TECLA[e.key];
+    if (!t || (e.key === 'Escape' && documento.querySelector('.indice:not([hidden]), .fichas:not([hidden])'))) return;
+    if (e.key === 'Enter' && e.target?.closest?.('button,a')) return;
     e.stopImmediatePropagation();
     e.preventDefault();
-    if (e.key === 'Escape') enviar({ tipo: 'tecla', tecla: 'Escape' });
+    enviar({ tipo: 'tecla', tecla: t });
+  }, true);
+  // Y los botones del control de la presentación, mientras suena: avanzan o retroceden escenas, no pasos
+  documento.addEventListener?.('click', (e) => {
+    const b = narracion && !sinTeclado ? e.target?.closest?.('.control [data-accion="sig"], .control [data-accion="ant"]') : null;
+    if (!b) return;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    enviar({ tipo: 'tecla', tecla: b.dataset.accion === 'sig' ? 'siguiente' : 'anterior' });
   }, true);
   let tMedir = 0;
   ventana.addEventListener('resize', () => { clearTimeout(tMedir); tMedir = setTimeout(medir, 120); });
@@ -388,5 +627,5 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       .observe(pres, { attributes: true, attributeFilter: ['class'], attributeOldValue: true });
   }
   if (caps[estado.ci]) { listo = true; enviar({ tipo: 'listo', ...actual() }); }
-  return { subtitulo, estado: actual };
+  return { subtitulo, estado: actual, narrar };
 }

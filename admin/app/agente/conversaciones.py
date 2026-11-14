@@ -180,6 +180,14 @@ def sumar_personas(db: Database, cid: int, ids: set[int]) -> None:
         db[CONVERSACIONES].update_one({"_id": cid}, {"$addToSet": {"personas": {"$each": sorted(ids)}}})
 
 
+def tiene_personas(db: Database, cid: Any) -> bool:
+    """¿El modelo ya recibió en esta conversación datos de alguna persona (`personas` no está vacía)? Lo que escribe en
+    ella no se proyecta ante una sala (la guarda de la herramienta `presentacion`). Sin conversación, no."""
+    if not isinstance(cid, int) or isinstance(cid, bool):
+        return False
+    return db[CONVERSACIONES].find_one({"_id": cid, "personas.0": {"$exists": True}}, {"_id": 1}) is not None
+
+
 def suprimidas(db: Database, ids: set[int]) -> list[int]:
     """Las de `ids` que ya se suprimieron (la supresión pudo llegar mientras una herramienta las leía)."""
     return [p["_id"] for p in db.personas.find({"_id": {"$in": sorted(ids)}, "eliminado": True}, {"_id": 1})]

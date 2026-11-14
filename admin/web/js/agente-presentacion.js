@@ -33,6 +33,14 @@
 // * La pestaña que sigue a un proyector le pregunta cada latido si sigue ahí («quien») y él contesta en el acto: su
 //   propio latido es un reloj, y el navegador espacia los relojes de una pestaña oculta (hasta uno por minuto).
 //
+// El recorrido narrado (reproductor.js, docs/agente.md): la acción `recorrido` trae las escenas ya absolutas y se
+// valida aquí entera (`recorridoValido`) antes de reproducirse en la vista o en el proyector. El avance que va
+// diciendo el reproductor (`avisarRecorrido`) llega a los oyentes de esta pestaña (la tarjeta del chat) y, si esta
+// ventana es el proyector, a las demás por el canal (`recorrido`), aceptado solo del que manda. Los controles de la
+// tarjeta (`controlRecorrido`) van adonde suena. Si se abre un proyector mientras el recorrido suena aquí, se le pasa
+// desde la escena en curso (`sincronizar`); si el proyector que lo reproducía se cierra, la tarjeta lo sabe y ofrece
+// reanudarlo.
+//
 // Solo importa base.js y `navegar` (el `ir` de app.js) llega por parámetro: así no depende de app.js y se prueba con
 // Node (admin/tests/test_agente_presentacion.py).
 import { sinBase } from './base.js';
@@ -47,7 +55,8 @@ const VIVO_MS = 6500;                 // sin anuncios en este tiempo, se da por 
 const ESPERA_ACUSE_MS = 2500;         // lo que se espera el acuse del proyector (llega en milisegundos si está vivo)
 const ESPERA_FILA_MS = 60000;         // lo que una orden acusada puede esperar en la fila del proyector a que la empiece
 const ESPERA_PROYECTOR_MS = 15000;    // y desde que la empieza, su respuesta, por acción (él espera 12 s a la presentación)
-const OPS = new Set(['ir', 'siguiente', 'anterior', 'explicar', 'quitar_explicacion', 'vista', 'visual', 'pantalla_completa']);
+const OPS = new Set(['ir', 'siguiente', 'anterior', 'explicar', 'quitar_explicacion', 'vista', 'visual', 'pantalla_completa',
+  'recorrido', 'control_recorrido', 'preparando']);
 // `vista`: lo que se ve sin cambiar de paso; `pantalla_completa`: la vista llena la ventana (la pone la vista, no mando)
 const PARTES_VISTA = ['panel', 'indice', 'fichas'];
 const ID = /^[a-z_]{2,40}$/;
@@ -68,7 +77,9 @@ const VISUAL = {
 const PARTES_VISUAL = Object.keys(VISUAL);
 // lo visual de cada paso (al cambiar de paso vuelve a esto; el tema no)
 const VISUAL_INICIAL = { enfoque: null, camara: 'paso', rumbo: null, girar: false, comparar: 'proyecto', detalle: null, inmersion: null };
-const CLAVES = new Set(['tipo', 'op', 'capitulo', 'paso', 'explicacion', 'panel', 'indice', 'fichas', 'activar', ...PARTES_VISUAL]);
+const DEL_RECORRIDO = ['recorrido', 'desde', 'rid', 'accion', 'suave'];
+const CLAVES = new Set(['tipo', 'op', 'capitulo', 'paso', 'explicacion', 'panel', 'indice', 'fichas', 'activar', ...PARTES_VISUAL,
+  ...DEL_RECORRIDO]);
 const ID_VENTANA = /^[a-z0-9]{8,40}$/;
 // Lo que la explicación no puede traer (`_explicacion_visible` de la herramienta, `textoVisible` de mando.js, con las
 // mismas reglas): se proyecta ante una sala. La «@» y los números se buscan en la forma NFKC del texto (la «＠» de
@@ -88,6 +99,106 @@ const FECHA = /(?<!\p{Nd})(?:([0-9]{4}) ?([.\-\u2010-\u2015\u2212\/]) ?([0-9]{1,
 const MONTO = /^(?:[0-9]{1,3}|[0-9]\.[0-9]{3})\.[0-9]{3}(?:,[0-9]{1,2})?$/u;
 const DIGITOS_MAX = 6;
 
+// ───────── El recorrido narrado (app/recorrido.py: los mismos topes y listas; una prueba los compara) ─────────
+export const MAX_TITULO = 80;
+export const MAX_FRASES = 3;
+export const MAX_ESCENAS = 8;
+export const MAX_PUNTO = 80;
+export const MAX_CIERRE = 200;
+export const MAX_SOSTENER_MS = 8000;
+export const RESALTAR = { cifra: 12, punto: 20, leyenda: 12, especificacion: 20 };
+export const FASES = ['preparando', 'narrando', 'sosteniendo', 'cierre', 'pausa', 'fin', 'detenido', 'error'];
+export const TERMINALES = ['fin', 'detenido', 'error'];
+// los que llegan a la vista (`reproducir` lo resuelve el servidor: vuelve como un recorrido nuevo)
+export const CONTROLES = ['pausar', 'continuar', 'siguiente', 'anterior', 'repetir', 'detener'];
+export const VOCES = ['activa', 'apagada', 'sin_activar', 'sin_voces'];
+export const MOTIVOS = ['persona', 'tecla', 'boton', 'mensaje', 'otra_orden', 'reemplazo', 'proyector', 'sin_respuesta',
+  'escena_fallida'];
+export const AVISOS = ['atlas', 'resaltar', 'asiento', 'voz'];
+const RID = /^[0-9a-f]{12}$/;
+// lo que el recorrido no proyecta además de lo de la explicación: costos (es la presentación técnica)
+const PLATA = /\$|millones de pesos/;
+const VISUAL_ESCENA = Object.keys(VISUAL_INICIAL);
+const entero = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
+const exactas = (o, claves) => !!o && typeof o === 'object' && !Array.isArray(o) && Object.keys(o).length === claves.length
+  && claves.every((k) => Object.prototype.hasOwnProperty.call(o, k));
+// un texto del recorrido: se proyecta tal cual (sin cambiarle nada: si no, no vale)
+const tal = (v, max) => explicacionVisible(v, max, { plata: false }) === v;
+
+function resaltarValido(r) {
+  if (r === null) return true;
+  if (!r || typeof r !== 'object' || typeof r.tipo !== 'string') return false;
+  if (r.tipo === 'componente') return exactas(r, ['tipo', 'id']) && typeof r.id === 'string' && ID_PIEZA.test(r.id);
+  if (!Object.prototype.hasOwnProperty.call(RESALTAR, r.tipo)) return false;
+  if (r.tipo === 'especificacion') return exactas(r, ['tipo', 'n', 'en']) && entero(r.n, 1, RESALTAR.especificacion) && (r.en === 'panel' || r.en === 'ficha');
+  return exactas(r, ['tipo', 'n']) && entero(r.n, 1, RESALTAR[r.tipo]);
+}
+
+function escenaValida(e) {
+  if (!exactas(e, ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'frases', 'sostener_ms'])) return null;
+  if (typeof e.capitulo !== 'string' || !ID.test(e.capitulo) || !entero(e.paso, 1, 60) || typeof e.panel !== 'boolean') return null;
+  if (!exactas(e.visual, VISUAL_ESCENA) || VISUAL_ESCENA.some((k) => !VISUAL[k](e.visual[k]))) return null;
+  if (!resaltarValido(e.resaltar) || !entero(e.sostener_ms, 0, MAX_SOSTENER_MS)) return null;
+  const f = e.frases;
+  if (!Array.isArray(f) || !f.length || f.length > MAX_FRASES || !f.every((x) => tal(x, MAX_EXPLICACION))) return null;
+  if (f.reduce((a, x) => a + [...x].length, 0) + f.length - 1 > MAX_EXPLICACION) return null;
+  return { capitulo: e.capitulo, paso: e.paso, panel: e.panel, visual: { ...e.visual },
+    resaltar: e.resaltar && { ...e.resaltar }, frases: [...f], sostener_ms: e.sostener_ms };
+}
+
+/** El recorrido absoluto que arma el servidor (`recorrido.validar`), copiado, o null si no tiene la forma exacta: id,
+ * título, de 1 a MAX_ESCENAS escenas (cada una con su paso, lo visual completo, lo que resalta, de 1 a MAX_FRASES
+ * frases que se proyectan tal cual y sin costos, y lo que se sostiene) y el cierre (null o de 1 a 3 puntos). */
+export function recorridoValido(r) {
+  if (!exactas(r, ['id', 'titulo', 'escenas', 'cierre'])) return null;
+  if (typeof r.id !== 'string' || !RID.test(r.id) || !tal(r.titulo, MAX_TITULO)) return null;
+  if (!Array.isArray(r.escenas) || !r.escenas.length || r.escenas.length > MAX_ESCENAS) return null;
+  const escenas = r.escenas.map(escenaValida);
+  if (escenas.some((e) => !e)) return null;
+  let cierre = null;
+  if (r.cierre !== null) {
+    const pts = r.cierre?.puntos;
+    if (!exactas(r.cierre, ['puntos']) || !Array.isArray(pts) || !pts.length || pts.length > 3) return null;
+    if (!pts.every((x) => tal(x, MAX_PUNTO)) || pts.reduce((a, x) => a + [...x].length, 0) > MAX_CIERRE) return null;
+    cierre = { puntos: [...pts] };
+  }
+  return { id: r.id, titulo: r.titulo, escenas, cierre };
+}
+
+/** El avance que dice el reproductor ({rid, n, de, fase, frase, voz, motivo?, aviso?, t_ms}, la forma de
+ * `ProgresoEntrada` del servidor), o null. */
+export function progresoValido(p) {
+  if (!p || typeof p !== 'object' || Array.isArray(p)) return null;
+  const claves = ['rid', 'n', 'de', 'fase', 'frase', 'voz', 'motivo', 'aviso', 't_ms'];
+  if (Object.keys(p).some((k) => !claves.includes(k))) return null;
+  if (typeof p.rid !== 'string' || !RID.test(p.rid) || !entero(p.de, 1, MAX_ESCENAS) || !entero(p.n, 1, p.de)) return null;
+  if (!FASES.includes(p.fase) || !entero(p.frase ?? 0, 0, MAX_FRASES - 1) || !VOCES.includes(p.voz)) return null;
+  if (p.motivo != null && !MOTIVOS.includes(p.motivo)) return null;
+  if (p.aviso != null && !AVISOS.includes(p.aviso)) return null;
+  if (!entero(p.t_ms ?? 0, 0, 600000)) return null;
+  return { rid: p.rid, n: p.n, de: p.de, fase: p.fase, frase: p.frase ?? 0, voz: p.voz,
+    ...(p.motivo != null ? { motivo: p.motivo } : {}), ...(p.aviso != null ? { aviso: p.aviso } : {}), t_ms: p.t_ms ?? 0 };
+}
+
+/** Las acciones del recorrido: `recorrido` (el recorrido entero y, si se reanuda, `desde`), `control_recorrido` (rid,
+ * accion de CONTROLES y `suave` solo con pausar) y `preparando` (activar: la píldora mientras el asistente arma). */
+function accionRecorrido(a) {
+  const solo = (claves) => Object.keys(a).every((k) => k === 'tipo' || k === 'op' || claves.includes(k));
+  if (a.op === 'recorrido') {
+    if (!solo(['recorrido', 'desde'])) return null;
+    const r = recorridoValido(a.recorrido);
+    if (!r || (a.desde !== undefined && !entero(a.desde, 1, r.escenas.length))) return null;
+    return { tipo: 'presentacion', op: 'recorrido', recorrido: r, ...(a.desde !== undefined ? { desde: a.desde } : {}) };
+  }
+  if (a.op === 'control_recorrido') {
+    if (!solo(['rid', 'accion', 'suave']) || typeof a.rid !== 'string' || !RID.test(a.rid) || !CONTROLES.includes(a.accion)) return null;
+    if (a.suave !== undefined && (a.suave !== true || a.accion !== 'pausar')) return null;
+    return { tipo: 'presentacion', op: 'control_recorrido', rid: a.rid, accion: a.accion, ...(a.suave ? { suave: true } : {}) };
+  }
+  if (!solo(['activar']) || typeof a.activar !== 'boolean') return null;
+  return { tipo: 'presentacion', op: 'preparando', activar: a.activar };
+}
+
 /** La acción `presentacion` del servidor, normalizada, o null si no tiene la forma estricta: un objeto con solo las
  * claves conocidas, `op` de la lista, `capitulo` como id (obligatorio para `ir`), `paso` entero de 1 a 60 (solo con
  * `ir`), y `explicacion` de hasta MAX_EXPLICACION caracteres que se ve tal cual (obligatoria para `explicar`). `vista`
@@ -97,6 +208,8 @@ const DIGITOS_MAX = 6;
 export function accionPresentacion(a) {
   if (!a || typeof a !== 'object' || Array.isArray(a) || a.tipo !== 'presentacion') return null;
   if (Object.keys(a).some((k) => !CLAVES.has(k)) || typeof a.op !== 'string' || !OPS.has(a.op)) return null;
+  if (a.op === 'recorrido' || a.op === 'control_recorrido' || a.op === 'preparando') return accionRecorrido(a);
+  if (DEL_RECORRIDO.some((k) => a[k] !== undefined)) return null;
   const out = { tipo: 'presentacion', op: a.op };
   if (a.op === 'visual') {
     if (Object.keys(a).some((k) => k !== 'tipo' && k !== 'op' && !(k in VISUAL))) return null;
@@ -166,17 +279,19 @@ function numeroLargo(t) {
   return false;
 }
 
-function explicacionVisible(v) {
+function explicacionVisible(v, max = MAX_EXPLICACION, { plata = true } = {}) {
   if (typeof v !== 'string' || NO_SE_VE.test(v) || ACENTOS.test(v)) return null;
   const t = v.replace(/\s+/g, ' ').trim();
-  if (!t || [...t].length > MAX_EXPLICACION) return null;
+  if (!t || [...t].length > max) return null;
   const k = t.normalize('NFKC').replace(/\s+/g, ' ').trim();
+  if (!plata && PLATA.test(k)) return null;
   return k.includes('@') || numeroLargo(k) ? null : t;
 }
 
 /** El estado que manda la presentación, solo con lo que se espera: {capitulo, paso, total, nombre, titulo, explicacion,
- * texto} o null. `texto` es la explicación que está a la vista (null si no hay, si no se puede mostrar tal cual o si la
- * presentación no lo dice). */
+ * texto, por, recorrido} o null. `texto` es la explicación que está a la vista (null si no hay, si no se puede mostrar
+ * tal cual o si la presentación no lo dice); `por`: 'persona' si el último cambio lo hizo la persona (un paso, la
+ * cámara: el recorrido que suena se pausa), si no 'orden'; `recorrido`: {rid, n, de} de la narración en pantalla. */
 export function estadoValido(e) {
   if (!e || typeof e !== 'object' || Array.isArray(e)) return null;
   const { capitulo, paso, total } = e;
@@ -184,8 +299,11 @@ export function estadoValido(e) {
   if (!Number.isInteger(total) || total < 1 || total > 60 || !Number.isInteger(paso) || paso < 1 || paso > total) return null;
   const corto = (v, n) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, n) : '');
   const explicacion = e.explicacion === true;
+  const r = e.recorrido;
+  const recorrido = r && typeof r === 'object' && typeof r.rid === 'string' && RID.test(r.rid) && entero(r.de, 1, MAX_ESCENAS)
+    && entero(r.n, 1, r.de) ? { rid: r.rid, n: r.n, de: r.de } : null;
   return { capitulo, paso, total, nombre: corto(e.nombre, 80), titulo: corto(e.titulo, 200), explicacion,
-    texto: explicacion ? explicacionVisible(e.texto) : null };
+    texto: explicacion ? explicacionVisible(e.texto) : null, por: e.por === 'persona' ? 'persona' : 'orden', recorrido };
 }
 
 // ───────── La pantalla en off (vistas/presentacion.js ?off=1, app/pantalla.py) ─────────
@@ -206,8 +324,22 @@ export function estadoDePantalla(e) {
     if (k === 'tema' ? e[k] !== null && !VISUAL.tema(e[k]) : !VISUAL[k](e[k])) return null;
     visual[k] = e[k];
   }
+  // El recorrido para esta pantalla (con su edad, que la calcula el servidor), el último control y el avance. Lo que no
+  // tiene la forma se ignora (la pantalla aplica igual los campos base, que son la escena donde quedó)
+  let recorrido = null, control = null, progreso = null;
+  const x = e.recorrido;
+  if (x && typeof x === 'object' && entero(x.edad_s, 0, 1e9)) {
+    const r = recorridoValido({ id: x.id, titulo: x.titulo, escenas: x.escenas, cierre: x.cierre });
+    if (r) recorrido = { ...r, edad_s: x.edad_s };
+  }
+  const c = e.control_recorrido;
+  if (recorrido && c && typeof c === 'object' && c.rid === recorrido.id && (CONTROLES.includes(c.accion) || c.accion === 'reproducir')
+      && entero(c.n, 1, 1e9)) control = { rid: c.rid, accion: c.accion, n: c.n };
+  const pr = e.progreso;
+  if (recorrido && pr && typeof pr === 'object' && pr.rid === recorrido.id && entero(pr.de, 1, MAX_ESCENAS) && entero(pr.n, 1, pr.de)
+      && FASES.includes(pr.fase) && entero(pr.hace_s, 0, 1e9)) progreso = { rid: pr.rid, n: pr.n, de: pr.de, fase: pr.fase, hace_s: pr.hace_s };
   return { v, capitulo, paso, explicacion, panel: e.panel, indice: e.indice, fichas: e.fichas, completa: e.completa,
-    orden_completa: e.orden_completa, ...visual };
+    orden_completa: e.orden_completa, ...visual, recorrido, control_recorrido: control, progreso };
 }
 
 /** Las órdenes para mando.js que llevan la presentación de `antes` (lo último que se aplicó, o null) a `e`. La pantalla
@@ -300,6 +432,12 @@ let desde = 0;          // cuándo se abrió esta ventana como proyector: entre 
 let retirado = false;   // esta ventana de proyector se retiró porque se abrió otra: su vista sigue a la nueva
 let tomo = false;       // esta ventana de proyector ya tomó un paso (una orden, o la persona la movió): se la puede seguir
 let inicial = null;     // el paso con el que abrió (`capitulo/paso/texto`)
+// El recorrido: quién escucha el avance (la tarjeta del chat), lo último que se supo (de aquí o del proyector), lo que
+// dijo cada proyector y los recorridos que esta pestaña le mandó a uno (para pasárselo a otro que se abra)
+const oyentesRecorrido = new Set();
+const avanceDe = new Map();      // id del proyector → su último avance
+const enviados = new Map();      // rid → recorrido (los últimos 3)
+let ultimoAvance = null;         // {p, donde: 'aqui'|'proyector'}
 const clave = (e) => (e ? `${e.capitulo}/${e.paso}/${e.texto || ''}` : null);
 
 const soyProyector = () => !!control?.proyector && !retirado;
@@ -335,6 +473,8 @@ function latir() {
 /** Se abrió un proyector más nuevo: esta ventana deja de serlo (las otras pestañas la olvidan con el «adios») y su vista
  * lo sigue, como la de la pestaña del chat. */
 function retirarse() {
+  // el recorrido que sonaba aquí lo sigue el nuevo (se lo pasa la pestaña del chat)
+  try { control?.soltarRecorrido?.('reemplazo'); } catch { /* nada */ }
   retirado = true;
   publicar({ tipo: 'adios', id: yo });
   sondear();
@@ -350,15 +490,30 @@ function volver() {
  * explicación que está en pantalla. Hasta que responda, la vista de aquí no lo sigue ni su estado cuenta: todavía está
  * en la Portada. */
 function sincronizar(id) {
-  if (!control || soyProyector()) return;
-  let e = null;
-  try { e = estadoValido(control.estado()); } catch { e = null; }
-  if (!e) return;
+  if (soyProyector()) return;
+  // Un recorrido que suena aquí pasa al proyector desde la escena en curso (allá está el audio de la sala); uno que
+  // esta pestaña le había mandado a otro proyector que se retiró, también
+  let lista = null;
+  let enCurso = null;
+  try { enCurso = control?.recorrido?.() || null; } catch { enCurso = null; }
+  if (enCurso?.recorrido) {
+    try { control.soltarRecorrido?.('proyector'); } catch { /* nada */ }
+    lista = [{ tipo: 'presentacion', op: 'recorrido', recorrido: enCurso.recorrido, desde: enCurso.n }];
+  } else if (ultimoAvance?.donde === 'proyector' && enviados.has(ultimoAvance.p.rid)
+             && (!TERMINALES.includes(ultimoAvance.p.fase) || ultimoAvance.p.motivo === 'reemplazo')) {
+    lista = [{ tipo: 'presentacion', op: 'recorrido', recorrido: enviados.get(ultimoAvance.p.rid), desde: ultimoAvance.p.n }];
+  }
+  if (!lista) {
+    if (!control) return;
+    let e = null;
+    try { e = estadoValido(control.estado()); } catch { e = null; }
+    if (!e) return;
+    lista = [{ tipo: 'presentacion', op: 'ir', capitulo: e.capitulo, paso: e.paso, ...(e.texto ? { explicacion: e.texto } : {}) }];
+  }
   const p = proyectores.get(id);
   if (p) p.sincronizando = true;
   const fin = () => { if (p) p.sincronizando = false; cambio(); };
-  const ir = { tipo: 'presentacion', op: 'ir', capitulo: e.capitulo, paso: e.paso, ...(e.texto ? { explicacion: e.texto } : {}) };
-  alProyector([ir], id).then(fin, fin);
+  alProyector(lista, id).then(fin, fin);
 }
 
 /** Lo último que se supo de un proyector (sin perder si se está sincronizando). `listo` falta en el de una versión
@@ -391,6 +546,10 @@ function sondear() {
  * Antes se esperaba el plazo entero y la orden se perdía. */
 function olvidar(id) {
   const habia = proyectores.delete(id);
+  // el recorrido que sonaba allá se cortó: la tarjeta lo dice y ofrece reanudarlo
+  const ult = avanceDe.get(id);
+  avanceDe.delete(id);
+  if (ult && !TERMINALES.includes(ult.fase)) alAvance({ ...ult, fase: 'detenido', motivo: 'proyector' }, 'proyector');
   for (const [n, it] of esperando) {
     if (it.para !== id) continue;
     esperando.delete(n);
@@ -497,6 +656,15 @@ async function alMensaje(m) {
     if (habia) cambio();
   } else if (m.tipo === 'quien') {
     anunciar();
+  } else if (m.tipo === 'recorrido' && otra) {
+    // el avance del recorrido que suena en el proyector: solo del que manda
+    const p = progresoValido(m.progreso);
+    const el = elegido();
+    if (p && el && el.id === m.id) {
+      el.visto = Date.now();
+      avanceDe.set(m.id, p);
+      alAvance(p, 'proyector');
+    }
   } else if (m.tipo === 'ordenes' && soyProyector() && typeof m.de === 'string' && ID_VENTANA.test(m.de)
              && Number.isInteger(m.nro) && Array.isArray(m.acciones) && m.acciones.length >= 1 && m.acciones.length <= 20
              && (m.para === undefined || m.para === yo)) {
@@ -576,11 +744,61 @@ export function proyectorVivo() {
   return !!elegido();
 }
 
+function alAvance(p, donde) {
+  ultimoAvance = { p, donde };
+  for (const f of [...oyentesRecorrido]) { try { f(p, donde); } catch { /* el oyente se fue */ } }
+}
+
+/** El reproductor de esta pestaña avisa su avance: a los oyentes de aquí y, si esta ventana es el proyector, a las
+ * demás pestañas. */
+export function avisarRecorrido(p) {
+  const v = progresoValido(p);
+  if (!v) return;
+  alAvance(v, 'aqui');
+  if (soyProyector()) publicar({ tipo: 'recorrido', id: yo, progreso: v });
+}
+
+/** Escucha el avance de los recorridos (de aquí o del proyector que manda): f(progreso, donde). Devuelve cómo dejar de
+ * escuchar. */
+export function escucharRecorrido(f) {
+  if (typeof f !== 'function') return () => {};
+  oyentesRecorrido.add(f);
+  return () => oyentesRecorrido.delete(f);
+}
+
+/** El último avance que se supo ({...progreso, donde}) si el recorrido sigue sonando, o null. */
+export function recorridoEnCurso() {
+  const u = ultimoAvance;
+  return u && !TERMINALES.includes(u.p.fase) ? { ...u.p, donde: u.donde } : null;
+}
+
+/** Un control del recorrido `rid` (pausar, continuar, siguiente, anterior, repetir, detener) adonde suena: el proyector
+ * que manda o la vista de aquí. Nunca abre la vista: sin una presentación abierta, falla. */
+export function controlRecorrido(rid, accion, { suave = false } = {}) {
+  const a = accionPresentacion({ tipo: 'presentacion', op: 'control_recorrido', rid, accion, ...(suave ? { suave: true } : {}) });
+  if (!a) return Promise.reject(new Error('Control no válido'));
+  const p = elegido();
+  if (p) return alProyector([a], p.id).then((r) => r?.[0] || { ok: false });
+  if (control) return enOrden([a]).then((r) => r?.[0] || { ok: false });
+  return Promise.reject(new Error('No hay una presentación abierta'));
+}
+
+/** Un recorrido que esta pestaña le manda a un proyector: se guarda (los últimos 3) para pasárselo a otro que se abra. */
+function recordar(lista) {
+  for (const a of lista) {
+    if (a?.op !== 'recorrido' || !a.recorrido) continue;
+    enviados.delete(a.recorrido.id);
+    enviados.set(a.recorrido.id, a.recorrido);
+    while (enviados.size > 3) enviados.delete(enviados.keys().next().value);
+  }
+}
+
 /** Manda `lista` al proyector `para`. Si no acusa recibo en ESPERA_ACUSE_MS, o se cierra antes de responder, se da por
  * cerrado y la promesa falla con `sinProyector` (quien llamó la aplica en otro lado). */
 function alProyector(lista, para) {
   return new Promise((ok, mal) => {
     const n = ++nro;
+    recordar(lista);
     const it = { ok, mal, para, n: Math.max(1, lista.length) };
     it.reloj = setTimeout(() => {
       if (esperando.get(n) !== it) return;

@@ -445,6 +445,7 @@ async function mostrar(ci, pi, { dir = 1, primera = false } = {}) {
   $$('i', progreso).forEach((el, i) => el.style.setProperty('--p', i < ci ? 1 : i > ci ? 0 : (pi + 1) / c.pasos.length));
   leyenda.innerHTML = (p.leyenda || []).map((l) => `<span><i class="${l.forma || ''}" style="--c:${l.color || 'var(--mc)'}"></i><em>${esc(l.texto)}</em></span>`).join('');
   leyenda.classList.remove('abierta');
+  resaltar(null);
   // lo que el asistente cambió de lo que se ve (cámara, enfoque, ficha, inmersión) vuelve a lo del paso; un paso de
   // inmersión abre la suya
   visual?.alPaso();
@@ -701,6 +702,63 @@ $('.panel').addEventListener('touchend', (e) => {
 });
 addEventListener('hashchange', () => { const [ci, pi] = desdeHash(); ir(ci, pi); });
 
+// ---------------------------------------------------------------- lo que necesita el recorrido narrado (mando.js)
+// ¿Se asentó la imagen? Sin el telón ni la entrada del panel, con la cámara quieta y el modelo del atlas listo, 300 ms
+// seguidos: recién entonces se narra (la sala mira lo que se nombra). Resuelve false al vencer `tope`. Con la pestaña
+// oculta no hay cuadros que esperar: resuelve en el acto
+function asentada({ tope = 5000 } = {}) {
+  return new Promise((listo) => {
+    if (document.hidden) { listo(true); return; }
+    const t0 = performance.now();
+    let quieta = null;
+    const mirar = () => {
+      const ahora = performance.now();
+      const moviendo = !!(tlTelon?.isActive() || tlPanel?.isActive() || escena.st.flying || visual?.cargando());
+      if (moviendo) quieta = null;
+      else if ((quieta ??= ahora) && ahora - quieta >= 300) { listo(true); return; }
+      if (document.hidden) { listo(true); return; }
+      if (ahora - t0 >= tope) { listo(false); return; }
+      setTimeout(mirar, 100);
+    };
+    mirar();
+  });
+}
+// Señala lo que la narración nombra (r de `recorrido.RESALTAR_TIPOS`): un anillo en el elemento (.foco) y el resto de su
+// grupo atenuado (.con-foco), a la vista dentro del panel o de la ficha. null quita el anterior. Devuelve false si no lo
+// encontró
+let resaltado = [];
+function resaltar(r) {
+  for (const e of resaltado) e.classList.remove('foco');
+  for (const e of $$('.con-foco')) e.classList.remove('con-foco');
+  resaltado = [];
+  if (!r) return true;
+  let els = [];
+  if (r.tipo === 'cifra') els = [$$('.cifras .cifra', cuerpo)[r.n - 1]];
+  else if (r.tipo === 'punto') { const metas = $$('.metas .meta', cuerpo); els = [(metas.length ? metas : $$('ul > li', cuerpo))[r.n - 1]]; }
+  else if (r.tipo === 'leyenda') { els = [[...leyenda.children][r.n - 1]]; if (els[0] && innerWidth <= 1080) leyenda.classList.add('abierta'); }
+  else if (r.tipo === 'especificacion') {
+    const dl = r.en === 'ficha' ? $('.detalle dl.hoja') : $('dl.hoja', cuerpo), dt = dl ? $$('dt', dl)[r.n - 1] : null;
+    els = dt ? [dt, dt.nextElementSibling] : [];
+  } else if (r.tipo === 'componente') els = [$$('[data-det]', cuerpo).find((b) => b.dataset.det === r.id)];
+  els = els.filter(Boolean);
+  if (!els.length) return false;
+  for (const e of els) e.classList.add('foco');
+  els[0].parentElement?.classList.add('con-foco');
+  els[0].scrollIntoView?.({ block: 'nearest', behavior: reducedMotion ? 'auto' : 'smooth' });
+  // en el celular, con la hoja en «mini», lo resaltado del panel no se vería: la hoja sube a «medio»
+  if (hojaMQ.matches && hoja === 'mini' && r.tipo !== 'leyenda' && !(r.tipo === 'especificacion' && r.en === 'ficha')) aplicarHoja('medio');
+  resaltado = els;
+  return true;
+}
+// Si la persona movió la cámara desde la escena anterior, vuelve al encuadre vigente (el que pidió el recorrido)
+function restaurarEncuadre() {
+  if (!escena.st.userMoved || estado.ci < 0) return;
+  escena.st.userMoved = false;
+  if (visual?.reencuadrar()) return;
+  const c = caps[estado.ci], p = c.pasos[estado.pi], m = ctx3d[c.id], def = m?.pasos?.[p.id] || m?.pasos?.['*'] || {};
+  (def.vista || m?.vista)?.();
+}
+
 // lo que el asistente cambia de lo que se ve sin cambiar de paso (solo en la técnica: cámara, enfoque, hoy/proyecto,
 // ficha técnica, inmersión en el atlas y tema)
 const visual = TECNICA ? crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D, capasVisibles: () => capasVisibles, colorDe }) : null;
@@ -711,4 +769,4 @@ ir(ci0, pi0, { primera: true });
 // mando a distancia: dentro de la vista Presentación del panel (un iframe), el asistente lleva la presentación por
 // postMessage y muestra su explicación en el subtítulo. Fuera de un iframe no escucha nada
 montarMando({ caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel: (v) => alternarPanel(!v), reencuadrar,
-  visual });
+  visual, asentada, resaltar, restaurarEncuadre });
