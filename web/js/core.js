@@ -288,7 +288,8 @@ export class Stage {
     this.controls.addEventListener('change', () => this.invalidate());
     this.baseOffset = this.camera.position.clone().sub(this.controls.target);
     this.userMoved = false;
-    // si la persona toma la cámara, los vuelos en curso se cancelan en vez de pelearle el control
+    this.paseo = null;   // el paseo en curso (pasear): un movimiento lento de la cámara que no es un vuelo
+    // si la persona toma la cámara, los vuelos y el paseo en curso se cancelan en vez de pelearle el control
     this.controls.addEventListener('start', () => { this.userMoved = true; this.stopFlight(); });
     this.frameFns = [];
     this.running = false;
@@ -374,7 +375,8 @@ export class Stage {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     // en pantallas angostas la cámara se aleja para que la escena quepa
-    if (!this.userMoved && !this.flying) {
+    // (no durante un paseo: la cámara va de camino y al llegar deja su propio reposo)
+    if (!this.userMoved && !this.flying && !this.paseo) {
       const off = this.baseOffset.clone().multiplyScalar(this.fitFactor());
       this.controls.maxDistance = Math.max(this.controls.maxDistance, off.length() * 1.25);
       this.camera.position.copy(this.controls.target).add(off);
@@ -397,7 +399,52 @@ export class Stage {
   start() { engine.attach(this); this.running = true; this.invalidate(true); }
   stop() { this.running = false; }
   // Vuelo de cámara con GSAP; sin GSAP (o con movimiento reducido) salta directo
-  stopFlight() { if (!gsap) return; gsap.killTweensOf(this.camera.position); gsap.killTweensOf(this.controls.target); this._intro?.kill(); this.flying = false; }
+  stopFlight() {
+    if (!gsap) return;
+    gsap.killTweensOf(this.camera.position); gsap.killTweensOf(this.controls.target); this._intro?.kill();
+    // un paseo en curso también se corta: si siguiera, reescribiría la cámara debajo del vuelo nuevo o de la persona
+    const p = this.paseo; this.paseo = null; p?.kill();
+    this.flying = false;
+  }
+  // Paseo: la cámara va en `duracion` segundos de donde está a { target, rumbo, elev, dist } girando alrededor de lo que
+  // mira (no en línea recta), para moverla MIENTRAS se explica. rumbo: desde dónde se mira, en grados desde el norte en
+  // sentido horario (llega por el lado corto); giro: grados que gira (positivo = el rumbo crece), en vez del rumbo o,
+  // con `rumbo`, sumados a él con su signo (un giro de más de 180° no se acorta); elev: grados sobre el horizonte; dist:
+  // metros hasta el objetivo; pivote: el centro de lo que se mira (si el objetivo no es ese centro —un encuadre corrido
+  // para dejar libre un panel—, gira con la cámara alrededor de él y lo encuadrado no se sale de su sitio a mitad de la
+  // vuelta). No es un vuelo: `flying` queda en false (lo que espera a que la imagen se asiente no lo espera) y un vuelo
+  // nuevo, otro paseo o la persona que toma la cámara lo cortan (stopFlight). Al terminar o al cortarse deja su reposo
+  // (`baseOffset`), para que un cambio de tamaño del marco no devuelva la cámara al de antes; alTerminar(completo) avisa
+  pasear({ target = null, rumbo = null, elev = null, dist = null, giro = null, pivote = null } = {}, { duracion = 8, ease = 'sine.inOut', alTerminar = null } = {}) {
+    const c = this.camera.position, tg = this.controls.target, R = THREE.MathUtils.degToRad;
+    this.stopFlight();
+    const s0 = new THREE.Spherical().setFromVector3(c.clone().sub(tg)), t0 = tg.clone(), t1 = target ? new THREE.Vector3(...target) : t0;
+    const polMin = Math.max(0.01, this.controls.minPolarAngle), polMax = this.controls.maxPolarAngle;
+    const phi1 = elev == null ? s0.phi : THREE.MathUtils.clamp(Math.PI / 2 - R(elev), polMin, polMax);
+    const r1 = dist == null ? s0.radius : THREE.MathUtils.clamp(dist, this.controls.minDistance, this.controls.maxDistance);
+    // theta de three = atan2(x, z); rumbo = π − theta
+    let dth = 0;
+    if (rumbo != null) { dth = (Math.PI - R(rumbo)) - s0.theta; dth = Math.atan2(Math.sin(dth), Math.cos(dth)); }
+    if (giro != null) dth -= R(giro);
+    const s = new THREE.Spherical(), v = new THREE.Vector3(), eje = new THREE.Vector3(0, 1, 0);
+    // con pivote, y si se gira cerca de él (no en un viaje de un sitio a otro): el objetivo va de t0 a t1 girando con la cámara
+    const pv = pivote && dth ? new THREE.Vector3(...pivote) : null;
+    const a0 = pv ? t0.clone().sub(pv) : null, a1 = pv ? t1.clone().sub(pv).applyAxisAngle(eje, -dth) : null;
+    const local = !!pv && Math.max(a0.length(), t1.distanceTo(pv)) < 0.75 * Math.max(s0.radius, r1);
+    const poner = (u) => {
+      if (local) tg.copy(a0).lerp(a1, u).applyAxisAngle(eje, dth * u).add(pv); else tg.lerpVectors(t0, t1, u);
+      s.set(s0.radius + (r1 - s0.radius) * u, s0.phi + (phi1 - s0.phi) * u, s0.theta + dth * u);
+      c.copy(tg).add(v.setFromSpherical(s)); this.camera.lookAt(tg); this.invalidate();
+    };
+    const reposo = () => this.baseOffset.copy(c).sub(tg).divideScalar(this.fitFactor());
+    if (!gsap || !(duracion > 0)) { poner(1); reposo(); alTerminar?.(true); return null; }
+    const o = { u: 0 };
+    const t = gsap.to(o, { u: 1, duration: duracion, ease, onUpdate: () => poner(o.u),
+      onComplete: () => { if (this.paseo === t) this.paseo = null; reposo(); alTerminar?.(true); },
+      onInterrupt: () => { if (this.paseo === t) this.paseo = null; reposo(); alTerminar?.(false); } });
+    this.paseo = t;
+    return t;
+  }
   flyTo(pos, target = this.controls.target.toArray(), duration = 1.4) {
     const c = this.camera.position, tg = this.controls.target;
     if (!gsap) { c.set(...pos); tg.set(...target); this.baseOffset.copy(c).sub(tg).divideScalar(this.fitFactor()); this.invalidate(); return; }

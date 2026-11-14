@@ -383,6 +383,12 @@ dl.hoja dt.foco { outline: none; background: none; animation: none; color: var(-
 .chip-enfoque { color: var(--mc, var(--accent)); border-color: color-mix(in srgb, var(--mc, var(--accent)) 50%, var(--line)) !important; }
 .chip-enfoque svg { width: 15px; height: 15px; flex: none; }
 .chip-enfoque b { color: var(--ink); text-transform: none; letter-spacing: 0; font: 600 0.78rem var(--f-body); }
+/* lo que el asistente dejó solo, quitó o añadió en la maqueta (visual.js: aislar, ocultar, sin, mostrar) */
+.chip-pieza { color: var(--muted); }
+.chip-pieza em { font-style: normal; flex: none; }
+.chip-pieza b { color: var(--ink); text-transform: none; letter-spacing: 0; font: 600 0.78rem var(--f-body); }
+.chip-solo { color: var(--mc, var(--accent)); border-color: color-mix(in srgb, var(--mc, var(--accent)) 50%, var(--line)) !important; }
+.pres.con-inmersion .chip-pieza { display: none; }
 .hud-instr { display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 12px; border-radius: 14px; background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); }
 .escala { display: grid; justify-items: start; gap: 3px; font: 600 0.62rem var(--f-mono); color: var(--muted); }
 .escala i { display: block; height: 6px; min-width: 20px; border: 1.5px solid var(--ink); border-top: 0; transition: width 0.2s; }

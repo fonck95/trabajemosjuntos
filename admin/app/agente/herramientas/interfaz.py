@@ -23,7 +23,10 @@ docs/agente.md) que el widget aplica con `accionesMapa` o con `ir`. Por qué est
   reales, y el navegador, el capítulo y el paso exactos. Con `visual` cambia lo que se ve sin cambiar de paso (la cámara,
   la obra enfocada, hoy o con el proyecto, la ficha técnica de un componente, un modelo del atlas y el tema): los
   componentes y las inmersiones se resuelven aquí contra el guion (por id o por nombre) y al modelo le vuelve la ficha
-  técnica de lo que se muestra. Lo único que guarda es la
+  técnica de lo que se muestra. Y con `recorrido` arma un PLAN guiado (hasta 12 pasos: lo que se dice y lo que ocurre
+  mientras se dice: la cámara que viaja, las piezas de la maqueta que se muestran, se ocultan o se aíslan, las partes
+  que se quitan) que la pantalla ejecuta sola; ahí la composición es TOLERANTE: lo opcional que no resuelve se
+  descarta o se recorta con un aviso legible y el plan corre igual (`_componer`). Lo único que guarda es la
   pantalla en off de la persona (`app/pantalla.py`: capítulo, paso, explicación y lo que se ve, sin datos de nadie), que
   manejan este asistente y un agente por MCP (`app/api/mcp.py`) con la misma herramienta (`presentacion_en_pantalla`). Lo que el
   modelo escribe para la pantalla (`explicacion`) se proyecta ante otras personas: se rechaza con caracteres que no se
@@ -33,6 +36,7 @@ docs/agente.md) que el widget aplica con `accionesMapa` o con `ir`. Por qué est
 from __future__ import annotations
 
 import json
+import math
 import re
 import secrets
 import time
@@ -40,7 +44,8 @@ from dataclasses import dataclass, field
 from typing import Annotated, Any, Literal, Union
 from urllib.parse import urlencode
 
-from pydantic import AfterValidator, BeforeValidator, Field, StrictBool, field_validator, model_validator
+from pydantic import (AfterValidator, BeforeValidator, ConfigDict, Field, StrictBool, WrapValidator, field_validator,
+                      model_validator)
 from starlette.concurrency import run_in_threadpool
 
 from ... import pantalla as pantalla_off
@@ -676,18 +681,28 @@ async def _abrir_vista(ctx: Contexto, a: AbrirVistaEntrada) -> Resultado:
 
 OPS_PRESENTACION = ("indice", "guion", "ir", "siguiente", "anterior", "explicar", "quitar_explicacion", "vista",
                     "visual", "recorrido", "control_recorrido", "pantalla_completa", "estado")
-# Lo que arma un recorrido narrado (`recorrido`) y lo que lo maneja (`control_recorrido`)
-PARTES_RECORRIDO = ("titulo", "escenas", "cierre", "sugerencias")
+# Lo que arma un plan guiado (`recorrido`: hacia el modelo y la persona, un «plan» con «pasos»; por dentro, un recorrido
+# con escenas) y lo que lo maneja (`control_recorrido`). `pasos` y `escenas` son lo mismo: llega uno de los dos
+PARTES_RECORRIDO = ("titulo", "pasos", "escenas", "cierre", "sugerencias")
 # Las ops que cambian lo que se ve: con un recorrido sonando, parten de la escena en curso (la que la sala ve) y, ya
 # resueltas, lo colapsan (lo cierran con esa escena como base) justo antes de guardarse
 COLAPSAN = ("ir", "siguiente", "anterior", "explicar", "quitar_explicacion", "vista", "visual")
 # Lo que dice cada operación del estado de la pantalla en off (las demás no lo cambian): `vista` y `pantalla_completa`
 PARTES_VISTA = ("panel", "indice", "fichas")
-# Lo que cambia `visual` (pantalla_off.VISUAL; `VISUAL` de mando.js y de agente-presentacion.js con los mismos valores)
+# Lo que cambia `visual` (pantalla_off.VISUAL; `VISUAL` de mando.js y de agente-presentacion.js con los mismos valores) y
+# sus dos acciones, que no son estado (`mover`: el viaje de la cámara; `animar`: repetir la animación del paso)
 PARTES_VISUAL = pantalla_off.VISUAL
+ACCIONES_VISUAL = pantalla_off.ACCIONES
 CAMARAS = pantalla_off.CAMARAS
 NOMBRE_CAMARA = {"paso": "el encuadre del paso", "aerea": "vista aérea", "oblicua": "vista oblicua",
                  "rasante": "vista rasante, casi a ras del suelo", "cerca": "más cerca", "lejos": "más lejos"}
+# El acercamiento que implica cada encuadre con nombre (`PRESET` de visual.js): de ahí parte el `mover` por omisión
+ZOOM_DE_CAMARA = {"rasante": 1.1, "cerca": 1.9, "lejos": 0.5}
+# El `mover` suave de un paso del plan que no le pide nada a la cámara (que la imagen nunca quede quieta): gira unos
+# grados alrededor de lo que mira, alternando el sentido, y se acerca un poco
+GIROS_SUAVES = (10, 12, 14)
+ZOOM_SUAVE = 1.06
+MAX_AVISOS = 12
 MAX_PASO = guion_presentacion.MAX_PASOS
 # Las reglas de lo que se proyecta viven en app/proyectable.py (también las usan el recorrido y la pantalla en off): la
 # presentación que se maneja es siempre la técnica, así que la explicación tampoco lleva costos
@@ -728,9 +743,47 @@ Sugerencia = Annotated[str, Field(min_length=3, max_length=rec.MAX_SUGERENCIA),
 
 
 def _volver_al_paso(v: Any, campo: str) -> Any:
-    """«paso» (enfoque, inmersion) y «cerrar» (detalle) vuelven a lo del paso: quedan en None, pero la clave llegó."""
-    palabras = ("cerrar", "ninguna", "ninguno") if campo == "detalle" else ("paso",)
+    """«paso» (enfoque, inmersion, mirar), «cerrar» (detalle) y «nada» o «todo» (aislar) vuelven a lo del paso: quedan en
+    None, pero la clave llegó."""
+    palabras = {"detalle": ("cerrar", "ninguna", "ninguno"),
+                "aislar": ("nada", "ninguna", "ninguno", "todo", "paso")}.get(campo, ("paso",))
     return None if isinstance(v, str) and guion_presentacion.clave(v) in palabras else v
+
+
+class NoVale:
+    """Un valor opcional (de un paso del plan o de lo nuevo de `visual`) que llegó sin la forma. No tumba la entrada:
+    queda con lo que llegó, y quien compone lo recorta, lo arregla o lo descarta con un aviso legible."""
+    __slots__ = ("crudo",)
+
+    def __init__(self, crudo: Any):
+        self.crudo = crudo
+
+    def __repr__(self) -> str:
+        return f"NoVale({self.crudo!r})"
+
+
+def _tolerar(v: Any, validar: Any) -> Any:
+    try:
+        return validar(v)
+    except ValueError:   # (el ValidationError de pydantic lo es)
+        return NoVale(v)
+
+
+def Tol(tipo: Any) -> Any:
+    """`tipo` opcional y TOLERANTE: el esquema para el modelo es el de `tipo` (con sus topes), pero un valor que no
+    cumple no rechaza la llamada entera, queda como `NoVale`."""
+    return Annotated[tipo | None, WrapValidator(_tolerar)]
+
+
+def _una_o_varias(v: Any) -> Any:
+    """Una lista de nombres también puede llegar como uno solo («torre») o separados por comas."""
+    return [x.strip() for x in v.split(",") if x.strip()] if isinstance(v, str) else v
+
+
+Elevacion = Annotated[int, Field(ge=rec.ELEVACION[0], le=rec.ELEVACION[1])]
+Zoom = Annotated[float, Field(ge=rec.ZOOM[0], le=rec.ZOOM[1])]
+Nombre = Annotated[str, Field(min_length=1, max_length=80)]
+Nombres = Annotated[list[Nombre], Field(max_length=rec.MAX_LISTA), BeforeValidator(_una_o_varias)]
 
 
 class ResaltarEntrada(_Entrada):
@@ -755,35 +808,103 @@ class ResaltarEntrada(_Entrada):
         return self
 
 
-class EscenaEntrada(_Entrada):
-    """Una escena del recorrido: una idea, lo que se dice y lo que se ve mientras se dice (un cambio sobre la escena
-    anterior; al cambiar de paso lo visual vuelve a lo del paso)."""
-    narracion: Narracion = Field(..., description=(
-        "Lo que se dice mientras se ve esta escena: se proyecta y se lee en voz alta. Una o dos frases habladas (hasta "
-        "220 caracteres), sobre lo que la escena muestra; sin costos, «@» ni números de 7 o más dígitos"))
-    capitulo: str | None = Field(None, min_length=2, max_length=60, description=(
-        "Id o nombre del capítulo (obligatorio en la primera escena; las demás siguen en el de la anterior)"))
-    paso: PasoNumero | PasoId | None = Field(None, description="Número del paso desde 1 o su id; sin él, el mismo paso")
-    panel: StrictBool | None = Field(None, description="false deja solo la maqueta 3D («Solo 3D»); se hereda")
-    enfoque: str | None = Field(None, min_length=1, max_length=80, description=(
-        "La cámara va a un componente con lugar en la maqueta (id o nombre); paso vuelve al encuadre del paso"))
-    detalle: str | None = Field(None, min_length=1, max_length=80, description=(
-        "Abre la ficha técnica de un componente (id o nombre); cerrar la cierra"))
-    comparar: Literal["hoy", "proyecto"] | None = Field(None, description=(
-        "hoy: el sitio como está, sin el proyecto, en el mismo encuadre; proyecto lo devuelve"))
-    camara: Literal[CAMARAS] | None = Field(None, description="paso, aerea, oblicua, rasante, cerca o lejos")
-    rumbo: Rumbo | None = Field(None, description="Desde dónde se mira, en grados desde el norte (180: el norte arriba)")
-    girar: StrictBool | None = Field(None, description="true: la cámara gira despacio")
-    inmersion: str | None = Field(None, min_length=1, max_length=80, description=(
-        "Un modelo 3D del atlas del catálogo (id o nombre); maqueta lo cierra; paso, lo que diga el paso"))
-    resaltar: ResaltarEntrada | None = Field(None, description="Señala en pantalla lo que la narración nombra")
-    sostener: float | None = Field(None, ge=0, le=8, description=(
-        "Segundos que la imagen se queda después de narrar (por omisión 1,1, o 2,7 si hay algo que mirar)"))
+class MoverEntrada(_Entrada):
+    """Cómo viaja la cámara MIENTRAS se dice el paso (no queda como estado): al menos una de las tres."""
+    giro: Annotated[int, Field(ge=rec.GIRO[0], le=rec.GIRO[1])] | None = Field(None, description=(
+        "Grados que gira alrededor de lo que mira mientras dura la frase (positivo: el rumbo crece)"))
+    zoom: Zoom | None = Field(None, description="Acercamiento con que termina (1: el encuadre del paso; 2: el doble de cerca)")
+    elevacion: Elevacion | None = Field(None, description="Grados sobre el horizonte con que termina")
 
-    @field_validator("enfoque", "inmersion", "detalle", mode="before")
+
+class EscenaEntrada(_Entrada):
+    """Un paso del plan: UNA frase (dice) y lo que ocurre en pantalla MIENTRAS se dice. Cada paso parte del anterior (lo
+    que no nombra sigue igual); al cambiar de paso del capítulo, lo visual vuelve a lo de ese paso."""
+    # (El docstring va al modelo, con el esquema.) Solo `dice` es obligatorio. Lo demás es opcional y TOLERANTE: lo que
+    # no tiene la forma queda como `NoVale` y `_componer` lo recorta o lo descarta con un aviso; una clave que no existe
+    # tampoco tumba el plan (por eso `extra` no es «forbid», aunque el esquema para el modelo diga que no hay más)
+    model_config = ConfigDict(extra="allow", str_strip_whitespace=True,
+                              json_schema_extra={"additionalProperties": False})
+    dice: Tol(Annotated[str, Field(min_length=1, max_length=rec.MAX_NARRACION)]) = Field(None, description=(
+        "Lo que se dice en este paso: UNA frase hablada (dos a lo sumo; hasta 220 caracteres) que se proyecta y se lee "
+        "en voz alta, sobre lo que el paso muestra; sin costos, «@» ni números de 7 o más dígitos"))
+    narracion: Tol(str) = Field(None, description="Lo mismo que dice")
+    capitulo: Tol(Annotated[str, Field(min_length=2, max_length=60)]) = Field(None, description=(
+        "Id o nombre del capítulo (obligatorio en el primer paso del plan; los demás siguen en el del anterior)"))
+    paso: Tol(PasoNumero | PasoId) = Field(None, description=(
+        "El paso del capítulo que se muestra: su número desde 1 o su id; sin él, el mismo"))
+    panel: Tol(StrictBool) = Field(None, description="false deja solo la maqueta 3D («Solo 3D»); se hereda")
+    camara: Tol(Literal[CAMARAS]) = Field(None, description=(
+        "Un encuadre con nombre: paso (el del paso, también su rumbo, elevación y zoom), aerea, oblicua, rasante, cerca "
+        "o lejos"))
+    rumbo: Tol(Rumbo) = Field(None, description="Desde dónde se mira, en grados desde el norte (180: el norte arriba)")
+    elevacion: Tol(Elevacion) = Field(None, description="Grados sobre el horizonte (80: casi desde arriba; 12: a ras)")
+    zoom: Tol(Zoom) = Field(None, description="Acercamiento: 1 es el encuadre del paso; 2, el doble de cerca; 0.5, lejos")
+    mirar: Tol(Nombre) = Field(None, description=(
+        "A qué apunta la cámara SIN cambiar lo que se ve: una pieza de la maqueta o un componente con lugar (id o "
+        "nombre); paso vuelve al encuadre del paso"))
+    mover: Tol(MoverEntrada) = Field(None, description=(
+        "El viaje de la cámara mientras se dice la frase. Sin nada para la cámara en el paso, hace uno suave sola"))
+    enfoque: Tol(Nombre) = Field(None, description=(
+        "La cámara va a un componente con lugar en la maqueta y lo destaca (id o nombre); paso lo quita"))
+    aislar: Tol(Nombre) = Field(None, description=(
+        "Deja ver solo una pieza de la maqueta (id o nombre, de maqueta en el guion): el resto se apaga o queda en "
+        "gris; nada lo quita"))
+    mostrar: Tol(Nombres) = Field(None, description="Piezas de la maqueta que se ven además de las del paso (la lista entera)")
+    ocultar: Tol(Nombres) = Field(None, description="Piezas de la maqueta que se ocultan aunque el paso las muestre (la lista entera)")
+    sin: Tol(Nombres) = Field(None, description=(
+        "Partes que se le quitan a una pieza, como «pieza.parte» («torre.cubierta» deja ver las losas); [] las devuelve"))
+    detalle: Tol(Nombre) = Field(None, description="Abre la ficha técnica de un componente (id o nombre); cerrar la cierra")
+    comparar: Tol(Literal["hoy", "proyecto"]) = Field(None, description=(
+        "hoy: el sitio como está, sin el proyecto, en el mismo encuadre; proyecto lo devuelve"))
+    inmersion: Tol(Nombre) = Field(None, description=(
+        "Un modelo 3D del atlas del catálogo (id o nombre); maqueta lo cierra; paso, lo que diga el paso"))
+    animar: Tol(StrictBool) = Field(None, description="true: repite la animación propia del paso (la obra crece) mientras se dice")
+    girar: Tol(StrictBool) = Field(None, description="true: la cámara gira despacio sin parar; se hereda")
+    resaltar: Tol(ResaltarEntrada) = Field(None, description="Señala en pantalla lo que la frase nombra")
+    sostener: Tol(Annotated[float, Field(ge=0, le=8)]) = Field(None, description=(
+        "Segundos que la imagen se queda después de la frase (por omisión 1,3, o 2,7 si hay algo que mirar)"))
+
+    @field_validator("enfoque", "inmersion", "detalle", "mirar", "aislar", mode="before")
     @classmethod
     def _volver(cls, v, info):
         return _volver_al_paso(v, info.field_name)
+
+
+def _cierre_a_su_manera(v: Any) -> Any:
+    """El cierre también puede llegar como la lista de sus puntos, o como uno solo."""
+    v = {"puntos": v} if isinstance(v, list) else {"puntos": [v]} if isinstance(v, str) else v
+    if isinstance(v, dict) and isinstance(v.get("puntos"), list) and len(v["puntos"]) > rec.MAX_PUNTOS:
+        v = {**v, "puntos": v["puntos"][:rec.MAX_PUNTOS]}   # ideas de más: quedan las primeras
+    return v
+
+
+def _sugerencias_a_su_manera(v: Any) -> Any:
+    """Las sugerencias son solo para el chat: una sola como texto vale, y las que no sirven (muy cortas, muy largas o
+    con algo que no se muestra) se descartan en vez de tumbar el plan."""
+    if isinstance(v, str):
+        v = [v]
+    if not isinstance(v, list):
+        return v
+    buenas: list[str] = []
+    for x in v:
+        t = " ".join(x.split()) if isinstance(x, str) else ""
+        if not 3 <= len(t) <= rec.MAX_SUGERENCIA:
+            continue
+        try:
+            buenas.append(texto_proyectable(t, rec.MAX_SUGERENCIA))
+        except ValueError:
+            continue
+    return buenas[:rec.MAX_SUGERENCIAS]
+
+
+def _hasta_doce(v: Any) -> Any:
+    if isinstance(v, list) and len(v) > rec.MAX_ESCENAS:
+        raise ValueError(f"Un plan lleva hasta {rec.MAX_ESCENAS} pasos y llegaron {len(v)}: junte ideas o divídalo en "
+                         "dos planes")
+    return v
+
+
+Pasos = Annotated[list[EscenaEntrada], Field(min_length=1, max_length=rec.MAX_ESCENAS), BeforeValidator(_hasta_doce)]
 
 
 class CierreEntrada(_Entrada):
@@ -799,11 +920,14 @@ class CierreEntrada(_Entrada):
 
 class PresentacionEntrada(_Entrada):
     op: Literal[OPS_PRESENTACION] = Field(..., description=(
-        "indice: los capítulos y los títulos de sus pasos; ir: a un capítulo y paso (devuelve lo que muestra ese paso); "
-        "siguiente o anterior: un paso (con capitulo y paso de partida, los del contexto del panel, devuelve el paso "
-        "de destino); explicar: muestra una o dos frases cortas en pantalla; quitar_explicacion: la quita; vista: lo "
-        "que se ve sin cambiar de paso (panel, indice, fichas); pantalla_completa: la presentación llena la ventana "
-        "(activar) o vuelve a la vista con el menú; estado: qué muestra la pantalla en off y si está abierta"))
+        "indice: los capítulos y los títulos de sus pasos; guion: todo lo de un capítulo para armar un plan; recorrido: "
+        "el plan (titulo, pasos, cierre) que la pantalla ejecuta sola; control_recorrido: lo pausa, salta o detiene; "
+        "ir: a un capítulo y paso (devuelve lo que muestra ese paso); siguiente o anterior: un paso (con capitulo y "
+        "paso de partida, los del contexto del panel, devuelve el paso de destino); explicar: muestra una o dos frases "
+        "cortas en pantalla; quitar_explicacion: la quita; vista: lo que se ve sin cambiar de paso (panel, indice, "
+        "fichas); visual: la cámara, las piezas de la maqueta y lo demás, sin cambiar de paso; pantalla_completa: la "
+        "presentación llena la ventana (activar) o vuelve a la vista con el menú; estado: qué muestra la pantalla en "
+        "off, si está abierta y por qué paso va el plan"))
     capitulo: str | None = Field(None, min_length=2, max_length=60, description=(
         "Id o nombre del capítulo (del índice o del contexto del panel)"))
     paso: PasoNumero | PasoId | None = Field(None, description="Número del paso desde 1, o su id (del índice)")
@@ -838,17 +962,31 @@ class PresentacionEntrada(_Entrada):
         "pisos, por dentro, el laboratorio, el simulador sísmico, el modelo BIM, el relleno hoy y el parque); maqueta "
         "vuelve a la maqueta en un paso que muestra un modelo; paso, lo que diga el paso"))
     tema: Literal["claro", "oscuro"] | None = Field(None, description="visual: el tema de la pantalla (para el proyector)")
-    titulo: TituloRecorrido | None = Field(None, description="recorrido: el título que se ve en la sala (3 a 80)")
-    escenas: list[EscenaEntrada] | None = Field(None, min_length=1, max_length=rec.MAX_ESCENAS, description=(
-        "recorrido: de 3 a 6 escenas (hasta 8), una idea cada una"))
-    cierre: CierreEntrada | None = Field(None, description="recorrido: dos o tres ideas que quedan en la sala")
-    sugerencias: list[Sugerencia] | None = Field(None, max_length=rec.MAX_SUGERENCIAS, description=(
-        "recorrido: hasta 3 próximos pasos, solo para el chat (no se proyectan)"))
+    # visual, lo que da el plan guiado: tolerantes (lo que no vale se recorta o se descarta con un aviso)
+    elevacion: Tol(Elevacion) = Field(None, description="visual: grados de la cámara sobre el horizonte (80: casi desde arriba)")
+    zoom: Tol(Zoom) = Field(None, description="visual: acercamiento (1: el encuadre del paso; 2: el doble de cerca)")
+    mirar: Tol(Nombre) = Field(None, description=(
+        "visual: a qué apunta la cámara sin cambiar lo que se ve (una pieza de la maqueta o un componente con lugar); "
+        "paso vuelve al encuadre"))
+    mostrar: Tol(Nombres) = Field(None, description="visual: piezas de la maqueta que se ven además de las del paso (de guion)")
+    ocultar: Tol(Nombres) = Field(None, description="visual: piezas de la maqueta que se ocultan")
+    aislar: Tol(Nombre) = Field(None, description="visual: solo se ve esa pieza de la maqueta; nada lo quita")
+    sin: Tol(Nombres) = Field(None, description="visual: partes quitadas, como «pieza.parte» («torre.cubierta»); [] las devuelve")
+    mover: Tol(MoverEntrada) = Field(None, description="visual: la cámara viaja unos segundos desde donde está")
+    animar: Tol(StrictBool) = Field(None, description="visual: true repite la animación propia del paso")
+    titulo: TituloRecorrido | None = Field(None, description="recorrido: el título del plan, que se ve en la sala (3 a 80)")
+    pasos: Pasos | None = Field(None, description=(
+        "recorrido: el plan, de 6 a 10 pasos (hasta 12): cada uno UNA frase y lo que ocurre en pantalla mientras se dice"))
+    escenas: Pasos | None = Field(None, description="Lo mismo que pasos")
+    cierre: Annotated[CierreEntrada, BeforeValidator(_cierre_a_su_manera)] | None = Field(None, description=(
+        "recorrido: dos o tres ideas que quedan en la sala"))
+    sugerencias: Annotated[list[Sugerencia], BeforeValidator(_sugerencias_a_su_manera)] | None = Field(
+        None, max_length=rec.MAX_SUGERENCIAS, description="recorrido: hasta 3 próximos pasos, solo para el chat (no se proyectan)")
     accion: Literal[rec.CONTROLES] | None = Field(None, description=(
         "control_recorrido: pausar, continuar, siguiente, anterior, repetir, reproducir (otra vez, desde el comienzo) o "
         "detener"))
 
-    @field_validator("enfoque", "inmersion", "detalle", mode="before")
+    @field_validator("enfoque", "inmersion", "detalle", "mirar", "aislar", mode="before")
     @classmethod
     def _volver_al_paso(cls, v, info):
         return _volver_al_paso(v, info.field_name)
@@ -856,6 +994,14 @@ class PresentacionEntrada(_Entrada):
     def partes_visuales(self) -> dict:
         """Las partes de `visual` que llegaron (también las que llegaron en null: vuelven a lo del paso)."""
         return {k: getattr(self, k) for k in PARTES_VISUAL if k in self.model_fields_set}
+
+    def acciones_visuales(self) -> dict:
+        """Las acciones de `visual` que llegaron con algo (`mover`, `animar`): no son estado."""
+        return {k: getattr(self, k) for k in ACCIONES_VISUAL if getattr(self, k) not in (None, False)}
+
+    def plan(self) -> list[EscenaEntrada]:
+        """Los pasos del plan, hayan llegado como `pasos` o como `escenas`."""
+        return self.pasos or self.escenas or []
 
     @model_validator(mode="after")
     def _segun_op(self):
@@ -876,14 +1022,14 @@ class PresentacionEntrada(_Entrada):
                   "pantalla_completa": ("capitulo", "paso", "explicacion", *vista)}.get(self.op, (*vista, *completa))
         malos = [k for k in sobran if getattr(self, k) is not None]
         if self.op != "visual":
-            malos += [k for k in visual if k in self.model_fields_set]
+            malos += [k for k in (*visual, *ACCIONES_VISUAL) if k in self.model_fields_set]
         if malos:
             raise ValueError(f"La operación {self.op} no usa: {', '.join(malos)}")
         if self.op == "visual":
             partes = self.partes_visuales()
-            if not partes:
-                raise ValueError("Para visual, diga qué cambiar: enfoque, camara, rumbo, girar, comparar, detalle, "
-                                 "inmersion o tema")
+            if not partes and not self.acciones_visuales():
+                raise ValueError("Para visual, diga qué cambiar: enfoque, camara, rumbo, elevacion, zoom, mirar, mover, "
+                                 "girar, comparar, detalle, inmersion, mostrar, ocultar, aislar, sin, animar o tema")
             nulos = [k for k in ("camara", "rumbo", "girar", "comparar", "tema") if k in partes and partes[k] is None]
             if nulos:
                 raise ValueError(f"En visual, {', '.join(nulos)} no va vacío: diga el valor (camara: paso vuelve al "
@@ -904,10 +1050,10 @@ class PresentacionEntrada(_Entrada):
             raise ValueError("Para explicar, escriba la explicacion")
         if self.op == "guion" and self.capitulo is None:
             raise ValueError("Para guion, indique el capítulo (id o nombre, del índice)")
-        if self.op == "recorrido" and (self.titulo is None or not self.escenas):
-            raise ValueError("Para recorrido, escriba el titulo y las escenas (de 3 a 6, una idea cada una)")
-        if self.op == "recorrido" and self.escenas[0].capitulo is None:
-            raise ValueError("La primera escena del recorrido dice su capitulo")
+        if self.op == "recorrido" and self.pasos is not None and self.escenas is not None:
+            raise ValueError("pasos y escenas son lo mismo: mande solo pasos")
+        if self.op == "recorrido" and not self.plan():
+            raise ValueError("Para recorrido, escriba el titulo y los pasos del plan (de 6 a 10, una frase cada uno)")
         if self.op == "control_recorrido" and self.accion is None:
             raise ValueError("Para control_recorrido, diga la accion: pausar, continuar, siguiente, anterior, repetir, "
                              "reproducir o detener")
@@ -915,10 +1061,15 @@ class PresentacionEntrada(_Entrada):
 
 
 def _esquema_presentacion() -> dict:
-    """El esquema de la entrada sin la rama «null» del paso (número o id): el modelo simplemente omite la clave."""
+    """El esquema de la entrada para el modelo: sin la rama «null» del paso (número o id; el modelo simplemente omite la
+    clave), sin los nombres de antes (`escenas`, `narracion`: se siguen aceptando, pero el plan se pide con `pasos` y
+    `dice`; repetirlos doblaría el esquema) y con `dice` como lo único obligatorio de un paso del plan."""
     s = esquema(PresentacionEntrada)
-    escena = s["properties"]["escenas"].get("items") or {}
-    for paso in (s["properties"]["paso"], (escena.get("properties") or {}).get("paso") or {}):
+    s["properties"].pop("escenas", None)
+    del_plan = s["properties"]["pasos"].get("items") or {}
+    (del_plan.get("properties") or {}).pop("narracion", None)
+    del_plan["required"] = ["dice"]
+    for paso in (s["properties"]["paso"], (del_plan.get("properties") or {}).get("paso") or {}):
         if "anyOf" in paso:
             paso["anyOf"] = [r for r in paso["anyOf"] if r != {"type": "null"}]
             paso.pop("default", None)
@@ -999,6 +1150,11 @@ def _paso_para_modelo(g: guion_presentacion.Guion, ci: int, pi: int) -> dict:
         # lo que se puede mostrar con visual en este capítulo (enfoque solo los que tienen lugar en la maqueta)
         out["componentes"] = [{"id": x["id"], "nombre": x["nombre"], "lugar_en_la_maqueta": bool(x.get("enfoque"))}
                               for x in c["componentes"]]
+    piezas = g.piezas(ci)
+    if piezas:
+        # lo que se puede mostrar, ocultar o aislar de la maqueta (y las partes que se quitan con sin: «pieza.parte»)
+        out["maqueta"] = [{"id": x["id"], "nombre": x["nombre"],
+                           **({"partes": [p["id"] for p in x["partes"]]} if x["partes"] else {})} for x in piezas]
     return out
 
 
@@ -1013,8 +1169,16 @@ def _estado_para_modelo(doc: dict | None, e: dict, g: guion_presentacion.Guion, 
                                "panel": "los controles del panel"}[doc["por"]]
     r = pantalla_off.resumen_recorrido(doc, g)
     if r:
-        out["recorrido"] = {**r, "muestra": pantalla_off.describir_recorrido(r)}
+        out["plan"] = _plan_para_modelo(r)
     return out
+
+
+def _plan_para_modelo(r: dict) -> dict:
+    """Dónde va el plan (`pantalla.resumen_recorrido`) con las palabras del modelo: un plan y sus pasos."""
+    return {"id": r["id"], "titulo": r["titulo"], "destino": r["destino"], "cerrado": r["cerrado"], "paso": r["escena"],
+            "de": r["de"], "fase": r["fase"], "motivo": r["motivo"], "voz": r["voz"],
+            "dice_en_curso": r["narracion_en_curso"], "avisos": r["avisos"], "hace_s": r["hace_s"],
+            "muestra": pantalla_off.describir_recorrido(r)}
 
 
 NOTA_PANTALLA_ABIERTA = ("Se ve en la pantalla en off de la persona (la vista Presentación en modo en off, abierta en el "
@@ -1085,8 +1249,11 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
         resumen = f"La presentación muestra {lo_que}"
         accion = {"tipo": "presentacion", "op": "vista", **pedido}
     elif a.op == "visual":
-        contenido, resumen, cambios = _visual(g, e, a, desde_pantalla)
-        accion = {"tipo": "presentacion", "op": "visual", **cambios}
+        contenido, resumen, cambios, acciones_visuales = _visual(g, e, a, desde_pantalla)
+        # al navegador, lo que cambia y lo que hace una vez (`mover`, `animar`); en la pantalla en off quedan las dos
+        # acciones de ESTA orden (las de la anterior se van): no son estado, la pantalla las hace una vez
+        accion = {"tipo": "presentacion", "op": "visual", **cambios, **acciones_visuales}
+        cambios = {**cambios, **pantalla_off.ACCIONES_INICIALES, **acciones_visuales}
     elif a.op == "pantalla_completa":
         cambios = {"completa": a.activar, "orden_completa": time.time_ns() // 1_000_000}
         contenido = {"llena_la_ventana": a.activar, "nota": (
@@ -1128,10 +1295,12 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
         # Cambiar de paso quita la explicación anterior, cierra el índice y las fichas y deja lo visual como lo dice el
         # paso, salvo el tema (como mando.js y visual.js)
         cambios = {"capitulo": c["id"], "paso": pi + 1, "explicacion": a.explicacion or None, "indice": False,
-                   "fichas": False, **pantalla_off.VISUAL_INICIAL}
+                   "fichas": False, **pantalla_off.visual_inicial(), **pantalla_off.ACCIONES_INICIALES}
     # Ya resuelta (nada más puede fallar): cierra el recorrido que sonaba, con la escena en curso como base, y encima
     # guarda lo pedido
     detener = await _colapsar(db, uid, g, doc, por) if a.op in COLAPSAN else []
+    if a.op != "visual":   # `mover` y `animar` son de la orden `visual` que los trajo: cualquier otra los deja en nada
+        cambios = {**cambios, **pantalla_off.ACCIONES_INICIALES}
     await run_in_threadpool(pantalla_off.guardar, db, uid, cambios, por)
     if desde_pantalla:
         contenido["pantalla"] = NOTA_PANTALLA_ABIERTA if abierta else NOTA_SIN_PANTALLA
@@ -1153,10 +1322,205 @@ async def _colapsar(db: Any, uid: int, g: guion_presentacion.Guion, doc: dict | 
     return [{"tipo": "presentacion", "op": "control_recorrido", "rid": r["id"], "accion": "detener", "motivo": "otra_orden"}]
 
 
-def _visual(g: guion_presentacion.Guion, e: dict, a: PresentacionEntrada, desde_pantalla: bool) -> tuple[dict, str, dict]:
-    """La op `visual`: resuelve contra el guion lo que se pidió (los componentes del capítulo, por id o por nombre, y la
-    inmersión del catálogo) y devuelve (lo que recibe el modelo, el resumen, los cambios exactos para la pantalla y el
-    navegador). El capítulo es el que se indicó (el del contexto del panel) o el de la pantalla en off."""
+def _ver(v: Any) -> str:
+    """Un valor que llegó del modelo, para decirlo en un aviso: en un renglón y corto."""
+    v = v.crudo if isinstance(v, NoVale) else v
+    t = " ".join(str(v).split())
+    return t if len(t) <= 40 else t[:39] + "…"
+
+
+def _lista(ids: list[str], maximo: int = 14) -> str:
+    """Los candidatos de un aviso: sus ids, sin pasar de `maximo`."""
+    return (", ".join(ids[:maximo]) + ("…" if len(ids) > maximo else "")) or "ninguna"
+
+
+def _acotar(v: Any, lo: float, hi: float, decimales: int = 0) -> tuple[Any, bool]:
+    """Un número dentro de [lo, hi], entero o con `decimales`, y si hubo que tocarlo; (None, True) si no es un número
+    (tampoco verdadero o falso). Un texto con un número («1,5») vale."""
+    v = v.crudo if isinstance(v, NoVale) else v
+    if isinstance(v, str):
+        try:
+            v = float(v.strip().replace(",", "."))
+        except ValueError:
+            return None, True
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+        return None, True
+    w: Any = round(min(hi, max(lo, v)), decimales) if decimales else int(round(min(hi, max(lo, v))))
+    if isinstance(w, float) and w.is_integer():
+        w = int(w)
+    return w, abs(w - v) > 1e-9
+
+
+def _nombres(v: Any) -> list[str]:
+    """Los nombres de una lista que llegó a su manera (una lista, uno solo, separados por comas), cada uno un texto."""
+    v = _una_o_varias(v.crudo if isinstance(v, NoVale) else v)
+    return [" ".join(str(x).split())[:80] for x in (v if isinstance(v, list) else [])
+            if isinstance(x, (str, int)) and not isinstance(x, bool) and str(x).strip()]
+
+
+def _resolver_parte(g: guion_presentacion.Guion, ci: int, texto: str, contexto: list[str]) -> tuple[str | None, str]:
+    """La parte de una pieza que se pidió quitar, como «pieza.parte», o (None, por qué no). Con el punto, esa pieza y
+    esa parte (por id o por nombre). Sin él, la parte de la pieza del `contexto` (la aislada, la que mira la cámara)
+    o la de la única pieza del capítulo que tiene una parte así."""
+    c, piezas = g.capitulos[ci], g.piezas(ci)
+    todas = [f"{x['id']}.{p['id']}" for x in piezas for p in x["partes"]]
+    if "." in texto:
+        de, _, parte = texto.partition(".")
+        x = g.pieza(ci, de)
+        if x is None:
+            return None, f"la pieza «{_ver(de)}» no está en {c['nombre']}; partes que se pueden quitar: {_lista(todas)}"
+        p = g.parte(ci, x["id"], parte)
+        if p is None:
+            suyas = [f"{x['id']}.{k['id']}" for k in x["partes"]]
+            return None, (f"«{x['nombre']}» no tiene la parte «{_ver(parte)}»; "
+                          + (f"tiene: {_lista(suyas)}" if suyas else f"no tiene partes que quitar; las hay en: {_lista(todas)}"))
+        return f"{x['id']}.{p['id']}", ""
+    candidatas = [(x["id"], p["id"]) for x in piezas for p in [guion_presentacion.parecido(x["partes"], texto)] if p]
+    for pieza in contexto:
+        suya = next((f"{a}.{b}" for a, b in candidatas if a == pieza), None)
+        if suya:
+            return suya, ""
+    if len(candidatas) == 1:
+        return f"{candidatas[0][0]}.{candidatas[0][1]}", ""
+    if candidatas:
+        return None, f"«{_ver(texto)}» puede ser {_lista([f'{a}.{b}' for a, b in candidatas])}: diga cuál (pieza.parte)"
+    return None, f"«{_ver(texto)}» no es una parte de una pieza de {c['nombre']}; partes que se pueden quitar: {_lista(todas)}"
+
+
+def _resolver_maqueta(g: guion_presentacion.Guion, ci: int, llegaron: dict, visual: dict, avisar: Any) -> dict:
+    """Lo que el plan guiado suma a lo visual (`elevacion`, `zoom`, `mirar`, `mostrar`, `ocultar`, `aislar` y `sin`), de
+    lo que `llegaron`, resuelto contra el guion del capítulo `ci` de forma TOLERANTE: un número fuera de su rango se
+    recorta, y una pieza, una parte o un lugar que no resuelve se descarta, las dos cosas con un aviso legible
+    (`avisar(texto)`, con los candidatos). Devuelve lo que cambia sobre `visual` (el estado del que parte): también la
+    lista que deja de tener una pieza porque la otra la nombró (lo último que se pide es lo que vale)."""
+    c, piezas = g.capitulos[ci], g.piezas(ci)
+    ids = [x["id"] for x in piezas]
+    out: dict[str, Any] = {}
+    for k, (lo, hi), decimales, que in (("elevacion", rec.ELEVACION, 0, "grados sobre el horizonte"),
+                                        ("zoom", rec.ZOOM, 2, "veces el encuadre del paso")):
+        if k not in llegaron:
+            continue
+        if llegaron[k] is None:
+            out[k] = None
+            continue
+        w, tocado = _acotar(llegaron[k], lo, hi, decimales)
+        if w is None:
+            avisar(f"{k} «{_ver(llegaron[k])}» no es un número ({que}, de {lo:g} a {hi:g}): se ignoró")
+            continue
+        out[k] = w
+        if tocado:
+            avisar(f"{k} {_ver(llegaron[k])} quedó en {w:g} (va de {lo:g} a {hi:g})")
+    if "mirar" in llegaron:
+        v = llegaron["mirar"]
+        x = g.mirable(ci, v.crudo if isinstance(v, NoVale) else v) if v is not None else None
+        if v is None or x:
+            out["mirar"] = x["id"] if x else None
+        else:
+            con_lugar = [k["id"] for k in g.componentes(ci) if k.get("enfoque")]
+            avisar(f"la cámara no tiene dónde apuntar con «{_ver(v)}» en {c['nombre']}; puede mirar: "
+                   f"{_lista(list(dict.fromkeys([*ids, *con_lugar])))}")
+    for k in ("mostrar", "ocultar"):
+        if k not in llegaron:
+            continue
+        crudo = llegaron[k].crudo if isinstance(llegaron[k], NoVale) else llegaron[k]
+        nombres = _nombres(llegaron[k])
+        if crudo is not None and (not isinstance(crudo, (list, str)) or (isinstance(crudo, list) and len(nombres) < len(crudo))):
+            avisar(f"{k} lleva nombres de pieza (una lista de textos): no se usó «{_ver(crudo)}»")
+            if not nombres:
+                continue   # la lista sigue como estaba
+        lista, malos = [], []
+        for t in nombres:
+            x = g.pieza(ci, t)
+            if x:
+                lista.append(x["id"])
+            else:
+                malos.append(t)
+        lista = list(dict.fromkeys(lista))
+        if malos:
+            avisar(f"la pieza {', '.join(f'«{_ver(t)}»' for t in malos[:4])} no está en {c['nombre']} ({k}); "
+                   f"piezas: {_lista(ids)}")
+        if len(lista) > rec.MAX_LISTA:
+            avisar(f"{k} lleva hasta {rec.MAX_LISTA} piezas: quedaron las primeras")
+        if lista or not malos:   # si nada de lo pedido existe, la lista queda como estaba (no se vacía por un error)
+            out[k] = lista[:rec.MAX_LISTA]
+    if "aislar" in llegaron:
+        v = llegaron["aislar"]
+        x = g.pieza(ci, v.crudo if isinstance(v, NoVale) else v) if v is not None else None
+        if v is None or x:
+            out["aislar"] = x["id"] if x else None
+        else:
+            avisar(f"la pieza «{_ver(v)}» no está en {c['nombre']} (aislar); piezas: {_lista(ids)}")
+    nuevo = {**visual, **out}
+    if "sin" in llegaron:
+        contexto = [x for x in (nuevo["aislar"], nuevo["mirar"], nuevo["enfoque"]) if x]
+        lista, malas = [], 0
+        for t in _nombres(llegaron["sin"]):
+            parte, motivo = _resolver_parte(g, ci, t, contexto)
+            if parte:
+                lista.append(parte)
+            else:
+                malas += 1
+                avisar(f"{motivo} (sin)")
+        lista = list(dict.fromkeys(lista))
+        if len(lista) > rec.MAX_LISTA:
+            avisar(f"sin lleva hasta {rec.MAX_LISTA} partes: quedaron las primeras")
+        if lista or not malas:
+            out["sin"] = lista[:rec.MAX_LISTA]
+    # Lo último que se pide es lo que vale: una pieza que ahora se muestra o se aísla deja de estar oculta, y una que
+    # ahora se oculta deja de estar entre las que se muestran (si llegan las dos a la vez, queda oculta)
+    ocultar = [x for x in nuevo["ocultar"]
+               if x != out.get("aislar") and (x not in out.get("mostrar", ()) or "ocultar" in out)]
+    mostrar = [x for x in nuevo["mostrar"] if x not in ocultar]
+    if "aislar" not in out and nuevo["aislar"] and "ocultar" in out and nuevo["aislar"] in ocultar:
+        out["aislar"] = None   # la aislada en un paso anterior que ahora se pide ocultar: deja de estar aislada
+    for k, lista in (("ocultar", ocultar), ("mostrar", mostrar)):
+        if lista != nuevo[k]:
+            out[k] = lista
+    return out
+
+
+def _resolver_mover(v: Any, avisar: Any) -> dict | None:
+    """El `mover` de un paso o de `visual` ({giro?, zoom?, elevacion?}, cada parte dentro de su rango), o None si no
+    pide nada. Tolerante: un número suelto es el giro, lo que se sale de su rango se recorta y lo que no es un número
+    se descarta, con su aviso."""
+    if isinstance(v, MoverEntrada):
+        crudo: Any = v.model_dump(exclude_none=True)
+    else:
+        crudo = v.crudo if isinstance(v, NoVale) else v
+        if isinstance(crudo, (int, float)) and not isinstance(crudo, bool):
+            crudo = {"giro": crudo}
+    if not isinstance(crudo, dict):
+        if crudo not in (None, True, False):
+            avisar("mover lleva giro, zoom o elevacion (números): se ignoró")
+        return None
+    de_mas = [k for k in crudo if k not in rec.MOVER]
+    if de_mas:
+        avisar(f"mover solo lleva giro, zoom y elevacion: no se usó {', '.join(f'«{_ver(k)}»' for k in de_mas[:3])}")
+    out = {}
+    for k, (lo, hi), decimales in (("giro", rec.GIRO, 0), ("zoom", rec.ZOOM, 2), ("elevacion", rec.ELEVACION, 0)):
+        if crudo.get(k) is None:
+            continue
+        w, tocado = _acotar(crudo[k], lo, hi, decimales)
+        if w is None:
+            avisar(f"mover.{k} «{_ver(crudo[k])}» no es un número: se ignoró")
+            continue
+        out[k] = w
+        if tocado:
+            avisar(f"mover.{k} {_ver(crudo[k])} quedó en {w:g} (va de {lo:g} a {hi:g})")
+    if out.get("giro") == 0:
+        del out["giro"]   # girar cero grados no es moverse
+    return out or None
+
+
+def _visual(g: guion_presentacion.Guion, e: dict, a: PresentacionEntrada,
+            desde_pantalla: bool) -> tuple[dict, str, dict, dict]:
+    """La op `visual`: resuelve contra el guion lo que se pidió (los componentes y las piezas de la maqueta del capítulo,
+    por id o por nombre, y la inmersión del catálogo) y devuelve (lo que recibe el modelo, el resumen, los cambios
+    exactos de lo visual para la pantalla y el navegador, y las acciones que no son estado: `mover` y `animar`). El
+    capítulo es el que se indicó (el del contexto del panel) o el de la pantalla en off. Un componente o una inmersión
+    que no existe vuelve con su error y sus candidatos, como siempre; lo que suma el plan guiado (la elevación, el
+    acercamiento, a qué apunta la cámara, las piezas, las partes, el movimiento) es tolerante: lo que no resuelve se
+    descarta con un aviso y lo demás se aplica, y solo es un error si no queda nada que hacer."""
     partes = a.partes_visuales()
     ci = g.por_id(e["capitulo"])
     if a.capitulo is not None:
@@ -1172,6 +1536,7 @@ def _visual(g: guion_presentacion.Guion, e: dict, a: PresentacionEntrada, desde_
     contenido: dict[str, Any] = {"capitulo": _cap_para_modelo(c)}
     cambios: dict[str, Any] = {}
     dicho: list[str] = []
+    avisos: list[str] = []
     for k in ("enfoque", "detalle"):
         if k not in partes:
             continue
@@ -1198,52 +1563,113 @@ def _visual(g: guion_presentacion.Guion, e: dict, a: PresentacionEntrada, desde_
     for k in ("camara", "rumbo", "girar", "comparar", "tema"):
         if k in partes:
             cambios[k] = partes[k]
-    if cambios.get("camara") == "paso" and "rumbo" not in partes:
-        cambios["rumbo"] = None   # el encuadre del paso es también su rumbo
+    # El capítulo puede ser otro que el de la pantalla (el de la pestaña del chat): entonces lo visual parte de lo del paso
+    base = {k: e[k] for k in rec.VISUAL} if ci == g.por_id(e["capitulo"]) else rec.visual_inicial()
+    cambios.update(_resolver_maqueta(g, ci, partes, {**base, **{k: v for k, v in cambios.items() if k in rec.VISUAL}},
+                                     avisos.append))
+    if cambios.get("camara") == "paso":   # el encuadre del paso es también su rumbo, su elevación y su acercamiento
+        for k in ("rumbo", "elevacion", "zoom"):
+            if k not in partes:
+                cambios[k] = None
     if "camara" in cambios:
         dicho.append(NOMBRE_CAMARA[cambios["camara"]])
-    if "rumbo" in cambios:
+    if "rumbo" in cambios and ("rumbo" in partes or cambios.get("camara") != "paso"):
         dicho.append("el rumbo del paso" if cambios["rumbo"] is None else f"mirando desde el rumbo {cambios['rumbo']}°")
+    if cambios.get("elevacion") is not None:
+        dicho.append(f"a {cambios['elevacion']}° sobre el horizonte")
+    if cambios.get("zoom") is not None:
+        dicho.append(f"zoom {cambios['zoom']:g}")
+    piezas = {x["id"]: x["nombre"] for x in g.piezas(ci)}
+    nombre = lambda i: piezas.get(i) or next((x["nombre"] for x in g.componentes(ci) if x["id"] == i), i)   # noqa: E731
+    if "mirar" in cambios:
+        dicho.append(f"la cámara apunta a «{nombre(cambios['mirar'])}»" if cambios["mirar"] else
+                     "la cámara vuelve a lo que encuadra el paso")
+    if "aislar" in cambios:
+        dicho.append(f"solo «{nombre(cambios['aislar'])}»" if cambios["aislar"] else "todas las piezas del paso otra vez")
+    for k, verbo in (("mostrar", "además"), ("ocultar", "sin")):
+        if cambios.get(k):
+            dicho.append(f"{verbo} {', '.join(f'«{nombre(i)}»' for i in cambios[k])}")
+    if "sin" in cambios:
+        dicho.append(f"sin {', '.join(cambios['sin'])}" if cambios["sin"] else "las piezas con todas sus partes")
     if "girar" in cambios:
         dicho.append("la cámara gira" if cambios["girar"] else "la cámara quieta")
     if "comparar" in cambios:
         dicho.append("el sitio como está hoy" if cambios["comparar"] == "hoy" else "con el proyecto")
     if "tema" in cambios:
         dicho.append(f"tema {cambios['tema']}")
+    acciones: dict[str, Any] = {}
+    mover = _resolver_mover(a.mover, avisos.append) if a.mover is not None else None
+    if mover:
+        acciones["mover"] = mover
+        dicho.append("la cámara " + _mover_dicho(mover))
+    if a.animar is True:
+        acciones["animar"] = True
+        dicho.append("la animación del paso otra vez")
+    elif isinstance(a.animar, NoVale):
+        avisos.append("animar es true o false: se ignoró")
+    if not cambios and not acciones:
+        raise ErrorHerramienta("No quedó nada que mostrar: " + "; ".join(avisos[:4]) + ".", "no_existe", estado=404,
+                               detalle={"capitulo": c["id"], "maqueta": _maqueta_para_modelo(g, ci)})
+    if avisos:
+        contenido["avisos"] = avisos[:MAX_AVISOS]
     contenido["nota"] = (
         "Cambia lo que se ve sin cambiar de paso; al pasar a otro paso vuelve a lo del paso (salvo el tema). Explique "
         "en el chat con los datos de la ficha (no invente otros)." + (
+            " Lo de «avisos» no se pudo mostrar; lo demás sí." if avisos else "") + (
             "" if desde_pantalla or a.capitulo is not None else
             " Sin el capítulo de partida se tomó el de la pantalla en off: si la presentación de la pestaña está en "
             "otro capítulo, indique capitulo (el del contexto del panel)."))
-    return contenido, "La presentación muestra " + ", ".join(dicho), cambios
+    return contenido, "La presentación muestra " + ", ".join(dicho or ["lo mismo"]), cambios, acciones
 
 
-# ───────────────────────────── el recorrido narrado ─────────────────────────────
+def _mover_dicho(m: dict) -> str:
+    """«gira 40°, termina con zoom 1.5 y a 60°»: lo que hace la cámara con un `mover`."""
+    return ", ".join(x for x in (f"gira {m['giro']}°" if "giro" in m else "",
+                                 f"termina con zoom {m['zoom']:g}" if "zoom" in m else "",
+                                 f"termina a {m['elevacion']}° sobre el horizonte" if "elevacion" in m else "") if x)
+
+
+def _maqueta_para_modelo(g: guion_presentacion.Guion, ci: int) -> list[dict]:
+    """Las piezas de la maqueta del capítulo, compactas: id, nombre y los ids de sus partes («pieza.parte» en `sin`)."""
+    return [{"id": x["id"], "nombre": x["nombre"], **({"partes": [p["id"] for p in x["partes"]]} if x["partes"] else {})}
+            for x in g.piezas(ci)]
+
+
+# ───────────────────────────── el plan guiado (el recorrido narrado) ─────────────────────────────
 
 NOTA_GUION = (
-    "Para presentar, arme UN recorrido (op recorrido) de 3 a 6 escenas con este arco, omitiendo lo que no aplique: "
-    "1) ubicar (el paso, cámara aerea u oblicua); 2) cómo está hoy (comparar hoy o la inmersión de hoy); 3) qué se "
-    "construye (comparar proyecto, enfoque, resaltar la leyenda); 4) cómo funciona o el dato clave (detalle con la "
-    "especificación resaltada, una inmersión, un punto de la lista); 5) qué cambia y cuándo (la meta o la cifra "
-    "resaltada); y un cierre de 2 o 3 ideas. Cada escena: una idea, una o dos frases habladas que nombran lo que se ve "
-    "en ese momento, con las cifras tal como vienen aquí y sin costos. Lo que se puede resaltar en cada paso está en "
-    "«resaltable». Ejemplo: {\"op\":\"recorrido\",\"titulo\":\"La torre del hospital\",\"escenas\":[{\"capitulo\":"
-    "\"salud\",\"paso\":\"torre\",\"camara\":\"oblicua\",\"narracion\":\"…\"},{\"detalle\":\"torre\",\"resaltar\":"
-    "{\"especificacion\":\"Estructura\"},\"narracion\":\"…\"}],\"cierre\":{\"puntos\":[\"…\",\"…\"]}}")
+    "Con estos datos arme UN plan (op recorrido): titulo, pasos y cierre. De 6 a 10 pasos (hasta 12); cada paso es UNA "
+    "frase hablada (dice) y algo que ocurre en pantalla MIENTRAS se dice: la cámara (camara, rumbo, elevacion, zoom, "
+    "mirar, o un viaje con mover {giro, zoom, elevacion}), las piezas de «maqueta» (aislar una, mostrar, ocultar, o "
+    "quitarle partes con sin «pieza.parte»), enfoque, detalle (la ficha) con resaltar, comparar hoy o proyecto, una "
+    "inmersion, animar. Cada paso parte del anterior: lo que no nombra sigue igual, y al cambiar de paso del capítulo "
+    "lo visual vuelve a lo de ese paso. Un arco que sirve: ubicar con una vista amplia; cómo está hoy; qué se construye "
+    "(aislar la obra, quitarle la cubierta, rodearla con mover); el dato clave (la ficha con la especificación "
+    "resaltada, un modelo del atlas); qué cambia y cuándo (la meta o la cifra resaltada); y un cierre de 2 o 3 ideas. "
+    "La frase nombra lo que se ve en ese momento, con las cifras tal como vienen aquí y sin costos. Lo que se puede "
+    "resaltar en cada paso está en «resaltable». Lo opcional que no exista se descarta con un aviso y el plan corre "
+    "igual. Ejemplo: {\"op\":\"recorrido\",\"titulo\":\"La torre del hospital\",\"pasos\":[{\"capitulo\":\"salud\","
+    "\"paso\":\"torre\",\"camara\":\"oblicua\",\"mover\":{\"giro\":40},\"dice\":\"…\"},{\"aislar\":\"torre\",\"sin\":"
+    "[\"torre.cubierta\"],\"elevacion\":55,\"dice\":\"…\"},{\"detalle\":\"torre\",\"resaltar\":{\"especificacion\":"
+    "\"Estructura\"},\"dice\":\"…\"}],\"cierre\":{\"puntos\":[\"…\",\"…\"]}}")
 NOTA_RECORRIDO = (
-    "La sala ya lo está viendo y oyendo, escena por escena. En el chat no repita la narración: complemente en 3 a 6 líneas "
-    "con datos del guion que no se dijeron y termine con una pregunta. Si la persona escribe, el recorrido se pausa: "
-    "responda breve y siga con control_recorrido (continuar) o arme otro recorrido.")
+    "El plan ya se está ejecutando: el chat lo muestra entero y la sala lo ve y lo oye, paso a paso. La explicación ES "
+    "la narración: en el chat no la repita ni la resuma; cierre solo con una pregunta corta. Si vienen «avisos», el plan "
+    "corre igual con lo que sí valía: no lo mande otra vez por eso, téngalos en cuenta en el próximo. Si la persona "
+    "escribe, el plan se pausa: responda breve y siga con control_recorrido (continuar), o arme otro plan.")
 HACE = {"paso": "cambia de paso", "camara": "mueve la cámara", "enfoque": "enfoca una obra", "ficha": "abre una ficha",
         "hoy": "muestra hoy", "proyecto": "muestra el proyecto", "modelo": "abre un modelo del atlas",
-        "resaltar": "resalta", "solo3d": "solo 3D", "girar": "gira"}
+        "resaltar": "resalta", "solo3d": "solo 3D", "girar": "gira", "capas": "muestra u oculta piezas",
+        "aislar": "aísla una obra", "partes": "quita partes", "mover": "recorre con la cámara",
+        "mirar": "apunta la cámara", "animar": "anima la obra"}
 _NUMERO = re.compile(r"\d[\d.,]*\d|\d")
+# Lo que la cámara puede traer en un paso del plan: si nada de esto cambia (ni el paso), el paso no le pide nada
+DE_LA_CAMARA = ("camara", "rumbo", "elevacion", "zoom", "mirar", "enfoque")
 
 
-def _con_escena(e: ErrorHerramienta, n: int) -> ErrorHerramienta:
-    """El error de una escena, con su número al comienzo y en el detalle (el modelo corrige esa)."""
-    return ErrorHerramienta(f"Escena {n}: {e}", e.codigo, estado=e.estado, detalle={"escena": n, **(e.detalle or {})})
+def _con_paso(e: ErrorHerramienta, n: int) -> ErrorHerramienta:
+    """El error de un paso del plan, con su número al comienzo y en el detalle (el modelo corrige ese)."""
+    return ErrorHerramienta(f"Paso {n}: {e}", e.codigo, estado=e.estado, detalle={"paso": n, **(e.detalle or {})})
 
 
 def _resolver_resaltar(g: guion_presentacion.Guion, ci: int, pi: int, visual: dict, panel: bool,
@@ -1289,59 +1715,234 @@ def _resolver_resaltar(g: guion_presentacion.Guion, ci: int, pi: int, visual: di
     return {"tipo": tipo, "n": valor}
 
 
-def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> dict:
-    """Las escenas del modelo (cada una un cambio sobre la anterior) como recorrido absoluto, resueltas contra el guion
-    con los mismos resolutores de ir y visual. Todo o nada: el primer error, con su número de escena."""
+def _paso_tolerante(g: guion_presentacion.Guion, ci: int, v: Any) -> int | None:
+    """El índice (desde 0) del paso del capítulo `ci` que un paso del plan nombró: su número, su id, o el id o el título
+    escritos a su manera («Torre», «la torre nueva»); None si no es ninguno."""
+    v = v.crudo if isinstance(v, NoVale) else v
+    if isinstance(v, float) and v.is_integer():
+        v = int(v)
+    if isinstance(v, bool) or not isinstance(v, (int, str)):
+        return None
+    pi = g.paso(ci, v)
+    if pi is not None or not isinstance(v, str):
+        return pi
+    pasos = [{"id": p["id"], "nombre": p["titulo"], "i": i} for i, p in enumerate(g.capitulos[ci]["pasos"])]
+    x = guion_presentacion.parecido(pasos, v)
+    return x["i"] if x else None
+
+
+def _texto_del_paso(x: EscenaEntrada, extras: dict, avisar: Any) -> tuple[str | None, str]:
+    """La frase de un paso del plan (`dice`; también `narracion`, o `texto` o `frase` si el modelo la llamó así), ya con
+    las reglas de lo que se proyecta, o (None, por qué no vale). Estas reglas no se relajan: es lo que ve la sala."""
+    dados = [v.crudo if isinstance(v, NoVale) else v for v in (x.dice, x.narracion) if v is not None]
+    if len(dados) == 2 and dados[0] != dados[1]:
+        avisar("trae dice y narracion: se usó dice")
+    if not dados:
+        otra = next((k for k in extras if guion_presentacion.clave(k) in ("dice", "narracion", "texto", "frase")
+                     and isinstance(extras[k], str)), None)
+        if otra is None:
+            return None, "falta dice (la frase que se dice mientras se ve)"
+        dados = [extras.pop(otra)]
+        avisar(f"«{_ver(otra)}» se tomó como dice")
+    if not isinstance(dados[0], str):
+        return None, "dice tiene que ser un texto"
+    try:
+        return texto_proyectable(dados[0], rec.MAX_NARRACION), ""
+    except ValueError as e:
+        return None, str(e)
+
+
+def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> tuple[dict, list[str], set[int]]:
+    """Los pasos del plan (cada uno un cambio sobre el anterior) como recorrido absoluto, resueltos contra el guion.
+    Devuelve (el recorrido, los avisos y los números de los pasos que recibieron el movimiento de cámara por omisión).
+
+    TOLERANTE: lo opcional que no resuelve (una pieza de la maqueta, una parte, a qué apunta la cámara, un componente,
+    una inmersión, lo que se resalta, el capítulo o el paso de un paso que no es el primero, un valor sin la forma o
+    una clave que no existe) se descarta, y un número fuera de su rango se recorta; cada cosa deja un aviso legible con
+    el número del paso y los candidatos, y el plan corre con lo demás. Solo es un error (y entonces no se guarda nada)
+    que el primer paso no tenga un capítulo que resuelva o que un texto no se pueda proyectar: esas reglas no se
+    relajan, y el error dice en qué paso. Un paso que no le pide nada a la cámara recibe un movimiento suave
+    (`GIROS_SUAVES`, alternando el sentido, y `ZOOM_SUAVE`): la imagen nunca queda quieta mientras se habla. No dentro
+    de un modelo del atlas ni con la cámara girando sola."""
     escenas: list[dict] = []
+    avisos: list[str] = []
+    textos_malos: dict[str, list[int]] = {}
+    suaves: set[int] = set()
+    zoom_fin: float | None = None   # el acercamiento con que terminó el último `mover` (la cámara sigue desde ahí)
     ci = pi = None
-    panel, visual = True, dict(rec.VISUAL_INICIAL)
-    for n, x in enumerate(a.escenas, 1):
-        try:
-            if x.capitulo is not None:
-                nci = _resolver_capitulo(g, x.capitulo)
-                # el modelo suele repetir el capítulo en cada escena: sin paso, en el mismo capítulo sigue en el mismo
-                # paso (como promete el esquema); en otro capítulo, o en la primera escena, va al primero
-                npi = pi if x.paso is None and nci == ci else _resolver_paso(g, nci, x.paso)
-            elif x.paso is not None:
-                nci, npi = ci, _resolver_paso(g, ci, x.paso)
+    panel, visual = True, rec.visual_inicial()
+    for n, x in enumerate(a.plan(), 1):
+        def avisar(t: str, n: int = n) -> None:
+            avisos.append(f"Paso {n}: {t}")
+        extras = dict(x.model_extra or {})
+        texto, motivo = _texto_del_paso(x, extras, avisar)
+        if texto is None:
+            textos_malos.setdefault(motivo, []).append(n)
+        if extras:
+            avisar("no se usó " + ", ".join(f"«{_ver(k)}»" for k in list(extras)[:4]) + " (no es de un paso del plan)")
+        # Dónde: el capítulo y su paso. Solo el capítulo del primer paso del plan es obligatorio
+        nci = ci
+        if x.capitulo is not None:
+            pedido = x.capitulo.crudo if isinstance(x.capitulo, NoVale) else x.capitulo
+            try:
+                if not isinstance(pedido, str) or not pedido.strip():
+                    raise ErrorHerramienta(f"«{_ver(pedido)}» no es un capítulo.", "no_existe", estado=404, detalle={
+                        "capitulos": [_cap_para_modelo(k) for k in g.capitulos]})
+                nci = _resolver_capitulo(g, pedido)
+            except ErrorHerramienta as e:
+                if ci is None:
+                    raise _con_paso(e, n) from None
+                avisar(f"{e} Sigue en {g.capitulos[ci]['nombre']}; capítulos: {_lista([k['id'] for k in g.capitulos])}")
+        if nci is None:
+            raise ErrorHerramienta(f"Paso {n}: el primer paso del plan dice su capitulo (id o nombre, del índice).",
+                                   "invalido", estado=422,
+                                   detalle={"paso": n, "capitulos": [_cap_para_modelo(k) for k in g.capitulos]})
+        npi = pi if nci == ci else 0
+        if x.paso is not None:
+            pedido = _paso_tolerante(g, nci, x.paso)
+            if pedido is None:
+                k = g.capitulos[nci]
+                avisar(f"{k['nombre']} no tiene el paso «{_ver(x.paso)}»: "
+                       f"{'sigue en el mismo paso' if nci == ci else 'va a su primer paso'}; pasos: "
+                       f"{_lista([p['id'] for p in k['pasos']], 20)}")
             else:
-                nci, npi = ci, pi
-            if (nci, npi) != (ci, pi):
-                visual = dict(rec.VISUAL_INICIAL)   # otro paso: lo visual vuelve a lo del paso (visual.js, pantalla)
-            ci, pi = nci, npi
-            partes = {k: getattr(x, k) for k in rec.VISUAL if k in x.model_fields_set}
-            for k in ("enfoque", "detalle"):
-                if partes.get(k) is not None:
-                    partes[k] = _resolver_componente(g, ci, partes[k], con_lugar=k == "enfoque")["id"]
-            if partes.get("inmersion") is not None:
-                i = _resolver_inmersion(g, partes["inmersion"])
-                partes["inmersion"] = i["id"] if i else "maqueta"
-            nulos = [k for k in ("camara", "rumbo", "girar", "comparar") if k in partes and partes[k] is None]
-            if nulos:
-                raise ErrorHerramienta(f"{', '.join(nulos)} no va vacío: diga el valor.", "invalido", estado=422)
-            if partes.get("camara") == "paso" and "rumbo" not in partes:
-                partes["rumbo"] = None
-            visual = {**visual, **partes}
-            if x.panel is not None:
-                panel = x.panel
-            resaltar = _resolver_resaltar(g, ci, pi, visual, panel, x.resaltar)
-        except ErrorHerramienta as e:
-            raise _con_escena(e, n) from None
-        esc = {"capitulo": g.capitulos[ci]["id"], "paso": pi + 1, "panel": panel, "visual": dict(visual),
-               "resaltar": resaltar, "frases": rec.partir_frases(x.narracion), "sostener_ms": 0}
-        esc["sostener_ms"] = int(round(x.sostener * 1000)) if x.sostener is not None else \
+                npi = pedido
+        otro = (nci, npi) != (ci, pi)
+        if otro:
+            visual = rec.visual_inicial()   # otro paso: lo visual vuelve a lo del paso (visual.js, pantalla)
+        ci, pi = nci, npi
+        c = g.capitulos[ci]
+        antes = visual
+        dado = {k: getattr(x, k) for k in rec.VISUAL if k in x.model_fields_set}
+        partes: dict[str, Any] = {}
+        # La cámara con nombre, el rumbo, girar y hoy o proyecto: un valor vacío no pide nada
+        v = dado.get("camara")
+        if v is not None:
+            camara = guion_presentacion.clave(v.crudo) if isinstance(v, NoVale) and isinstance(v.crudo, str) else v
+            if camara in CAMARAS:
+                partes["camara"] = camara
+                if camara == "paso":   # el encuadre del paso es también su rumbo, su elevación y su acercamiento
+                    partes.update({k: None for k in ("rumbo", "elevacion", "zoom") if k not in dado})
+            else:
+                avisar(f"camara «{_ver(v)}» no es de la lista ({', '.join(CAMARAS)}): se ignoró")
+        if "rumbo" in dado:
+            w, _ = _acotar(dado["rumbo"], -3600, 3600) if dado["rumbo"] is not None else (None, False)
+            if dado["rumbo"] is not None and w is None:
+                avisar(f"rumbo «{_ver(dado['rumbo'])}» no es un número (grados desde el norte, de 0 a 359): se ignoró")
+            else:
+                partes["rumbo"] = w % 360 if w is not None else None
+        for k, valores in (("girar", (True, False)), ("comparar", ("hoy", "proyecto"))):
+            v = dado.get(k)
+            if isinstance(v, NoVale):
+                texto_k = guion_presentacion.clave(v.crudo) if isinstance(v.crudo, str) else None
+                v = {"true": True, "si": True, "false": False, "no": False}.get(texto_k, texto_k) if k == "girar" else texto_k
+                if v not in valores:
+                    avisar(f"{k} «{_ver(dado[k])}» no vale ({'true o false' if k == 'girar' else 'hoy o proyecto'}): se ignoró")
+                    continue
+            if v is not None:
+                partes[k] = v
+        # Los componentes y el modelo del atlas
+        if "enfoque" in dado:
+            v = dado["enfoque"].crudo if isinstance(dado["enfoque"], NoVale) else dado["enfoque"]
+            comp = guion_presentacion.parecido(g.componentes(ci), v) if v is not None else None
+            if v is None or (comp and comp.get("enfoque")):
+                partes["enfoque"] = comp["id"] if comp else None
+            else:
+                pieza = g.pieza(ci, v) if "mirar" not in dado else None
+                con_lugar = [k["id"] for k in g.componentes(ci) if k.get("enfoque")]
+                if pieza:   # una pieza de la maqueta que no es un componente con lugar: la cámara sí puede apuntarle
+                    dado["mirar"] = pieza["id"]
+                    avisar(f"«{pieza['nombre']}» no es un componente con lugar propio (enfoque): la cámara apunta a esa "
+                           "pieza (mirar)")
+                else:
+                    avisar(f"«{_ver(v)}» no es un componente con lugar en la maqueta de {c['nombre']}: no se enfocó; "
+                           f"con lugar: {_lista(con_lugar)}")
+        if "detalle" in dado:
+            v = dado["detalle"].crudo if isinstance(dado["detalle"], NoVale) else dado["detalle"]
+            comp = guion_presentacion.parecido(g.componentes(ci), v) if v is not None else None
+            if v is None or comp:
+                partes["detalle"] = comp["id"] if comp else None
+            else:
+                avisar(f"{c['nombre']} no tiene el componente «{_ver(v)}»: no se abrió la ficha; componentes: "
+                       f"{_lista([k['id'] for k in g.componentes(ci)])}")
+        if "inmersion" in dado:
+            v = dado["inmersion"].crudo if isinstance(dado["inmersion"], NoVale) else dado["inmersion"]
+            modelo = guion_presentacion.parecido([dict(i) for i in g.inmersiones], v) if v is not None else None
+            if v is None or modelo or guion_presentacion.clave(v) == "maqueta":
+                partes["inmersion"] = modelo["id"] if modelo else None if v is None else "maqueta"
+            else:
+                avisar(f"no hay un modelo del atlas «{_ver(v)}»: no se abrió; modelos: "
+                       f"{_lista([i['id'] for i in g.inmersiones])}")
+        # La elevación, el acercamiento, a qué apunta la cámara, las piezas de la maqueta y sus partes
+        partes.update(_resolver_maqueta(g, ci, {k: v for k, v in dado.items() if k not in partes},
+                                        {**visual, **partes}, avisar))
+        visual = {**visual, **partes}
+        if visual["aislar"] and "aislar" not in partes and visual["mirar"] != visual["aislar"] and \
+                partes.get("mirar") in {k["id"] for k in g.piezas(ci)}:
+            avisar(f"la cámara apunta a «{visual['mirar']}», pero solo se ve «{visual['aislar']}» (aislar sigue de un "
+                   "paso anterior; aislar: nada lo quita)")
+        if isinstance(x.panel, bool):
+            panel = x.panel
+        elif x.panel is not None:
+            avisar("panel es true o false: se ignoró")
+        resaltar = None
+        if isinstance(x.resaltar, NoVale):
+            avisar("resaltar lleva exactamente una de: cifra, punto, leyenda, especificacion o componente; no se "
+                   "resaltó nada")
+        elif x.resaltar is not None:
+            try:
+                resaltar = _resolver_resaltar(g, ci, pi, visual, panel, x.resaltar)
+            except ErrorHerramienta as e:
+                avisar(f"{e} No se resaltó nada.")
+        mover = _resolver_mover(x.mover, avisar) if x.mover is not None else None
+        if isinstance(x.animar, NoVale):
+            avisar("animar es true o false: se ignoró")
+        esc = {"capitulo": c["id"], "paso": pi + 1, "panel": panel, "visual": rec.copia_visual(visual),
+               "resaltar": resaltar, "mover": mover, "animar": x.animar is True,
+               "frases": rec.partir_frases(texto) if texto else ["…"], "sostener_ms": 0}
+        # Que nunca quede quieta: sin nada para la cámara (el mismo paso, el mismo encuadre y sin `mover`), un viaje suave
+        # (también el primer paso, si no trae nada para la cámara: la pantalla puede estar ya en ese paso). La cámara
+        # sigue desde donde la dejó el `mover` anterior mientras ningún paso cambie la cámara pedida: ahí el viaje suave
+        # solo gira (con otro acercamiento reabriría el encuadre o se acumularía de paso en paso)
+        misma_camara = all(visual[k] == antes[k] for k in DE_LA_CAMARA)
+        if otro or not misma_camara:
+            zoom_fin = None
+        quieta = (not otro or not escenas) and mover is None and misma_camara
+        if quieta and not visual["girar"] and rec.inmersion_de(esc, g) is None:
+            giro = GIROS_SUAVES[len(suaves) % len(GIROS_SUAVES)] * (-1 if len(suaves) % 2 else 1)
+            if zoom_fin is not None:
+                esc["mover"] = {"giro": giro}
+            else:
+                desde = visual["zoom"] or ZOOM_DE_CAMARA.get(visual["camara"], 1)
+                esc["mover"] = {"giro": giro, "zoom": round(min(rec.ZOOM[1], desde * ZOOM_SUAVE), 2)}
+            suaves.add(n)
+        if esc["mover"] and esc["mover"].get("zoom") is not None:
+            zoom_fin = esc["mover"]["zoom"]
+        segundos, tocado = _acotar(x.sostener, 0, rec.MAX_SOSTENER_MS / 1000, 3) if x.sostener is not None else (None, False)
+        if x.sostener is not None and (segundos is None or tocado):
+            avisar(f"sostener «{_ver(x.sostener)}» va de 0 a {rec.MAX_SOSTENER_MS // 1000} segundos: "
+                   f"{'se ignoró' if segundos is None else f'quedó en {segundos:g}'}")
+        esc["sostener_ms"] = int(round(segundos * 1000)) if segundos is not None else \
             rec.sostener_por_omision(esc, escenas[-1] if escenas else None, g)
         escenas.append(esc)
-    return {"id": secrets.token_hex(6), "titulo": a.titulo, "escenas": escenas,
-            "cierre": {"puntos": list(a.cierre.puntos)} if a.cierre else None}
+    if textos_malos:
+        # Lo que se proyecta no se relaja: nada se guarda ni se muestra, y el error dice en qué paso
+        partes_error = [f"{'Paso' if len(ns) == 1 else 'Pasos'} {', '.join(map(str, ns))}: {motivo}"
+                        for motivo, ns in textos_malos.items()]
+        raise ErrorHerramienta(" · ".join(partes_error[:3]) + " No se guardó ni se mostró nada: corrija ese texto y "
+                               "mande el plan de nuevo.", "invalido", estado=422,
+                               detalle={"pasos": sorted(n for ns in textos_malos.values() for n in ns)})
+    return ({"id": secrets.token_hex(6), "titulo": a.titulo or g.capitulos[g.por_id(escenas[0]["capitulo"])]["nombre"],
+             "escenas": escenas, "cierre": {"puntos": list(a.cierre.puntos)} if a.cierre else None}, avisos, suaves)
 
 
 def _digitos(t: str) -> str:
     return re.sub(r"\D", "", t)
 
 
-def _avisos(g: guion_presentacion.Guion, r: dict) -> list[str]:
-    """Lo que no impide el recorrido pero conviene corregir la próxima vez (no bloquea)."""
+def _avisos(g: guion_presentacion.Guion, r: dict, suaves: set[int] | frozenset[int] = frozenset()) -> list[str]:
+    """Lo que no impide el plan pero conviene corregir la próxima vez (no bloquea). `suaves`: los pasos que solo
+    movieron la cámara por omisión (no mostraron nada nuevo)."""
     out = []
     usados = {e["capitulo"] for e in r["escenas"]}
     texto_guion = json.dumps([c for c in g.capitulos if c["id"] in usados], ensure_ascii=False)
@@ -1350,37 +1951,64 @@ def _avisos(g: guion_presentacion.Guion, r: dict) -> list[str]:
         narracion = " ".join(e["frases"])
         fuera = [m for m in _NUMERO.findall(narracion) if len(_digitos(m)) >= 2 and _digitos(m) not in del_guion]
         if fuera:
-            out.append(f"escena {n}: {', '.join(dict.fromkeys(fuera))} no está en el guion de lo que muestra: las cifras, "
+            out.append(f"Paso {n}: {', '.join(dict.fromkeys(fuera))} no está en el guion de lo que muestra: las cifras, "
                        "tal como las trae el guion")
-        if len(narracion) > 200:
-            out.append(f"escena {n}: la narración pasa de 200 caracteres (mejor una idea más corta)")
+        if len(narracion) > 200 or len(e["frases"]) > 2:
+            out.append(f"Paso {n}: lo que dice es largo (mejor UNA frase por paso, y otro paso para la idea siguiente)")
     quieta = 1
-    for a, b in zip(r["escenas"], r["escenas"][1:]):
-        igual = all(a[k] == b[k] for k in ("capitulo", "paso", "panel", "visual")) and not b["resaltar"]
+    for n, (a, b) in enumerate(zip(r["escenas"], r["escenas"][1:]), 2):
+        igual = all(a[k] == b[k] for k in ("capitulo", "paso", "panel", "visual")) and not b["resaltar"] and \
+            not b["animar"] and (b["mover"] is None or n in suaves)
         quieta = quieta + 1 if igual else 1
         if quieta == 3:
-            out.append("la pantalla no cambia en tres escenas seguidas: cada escena debería mostrar algo")
+            out.append(f"Pasos {n - 2} a {n}: la pantalla no muestra nada nuevo en tres pasos seguidos (solo la cámara se "
+                       "mueve un poco): cada paso debería mostrar algo de lo que dice")
     if len(r["escenas"]) >= 4 and not r["cierre"]:
-        out.append("un recorrido de 4 escenas o más sin cierre: dos o tres ideas que queden en la sala")
+        out.append("Un plan de 4 pasos o más sin cierre: dos o tres ideas que queden en la sala")
     return out
 
 
+def _mover_notable(esc: dict) -> bool:
+    """¿El `mover` de la escena es un viaje que se nota (no el suave por omisión)? Gira más que eso, cambia de
+    elevación o se acerca o se aleja más de un 10 %."""
+    m = esc.get("mover")
+    if not m:
+        return False
+    desde = esc["visual"]["zoom"] or ZOOM_DE_CAMARA.get(esc["visual"]["camara"], 1)
+    return abs(m.get("giro", 0)) > max(GIROS_SUAVES) or "elevacion" in m or \
+        ("zoom" in m and abs(m["zoom"] / desde - 1) > 0.1)
+
+
 def _hace(g: guion_presentacion.Guion, esc: dict, anterior: dict | None) -> list[str]:
-    """Lo que hace una escena, de la lista fija `HACE` (los chips de la tarjeta del chat)."""
-    v, a = esc["visual"], (anterior or {}).get("visual") or rec.VISUAL_INICIAL
+    """Lo que hace una escena, de la lista fija `HACE` (los chips de la tarjeta del chat): lo que cambia sobre la
+    anterior o, si cambia de paso, sobre lo que el paso trae."""
+    otro = not anterior or (anterior["capitulo"], anterior["paso"]) != (esc["capitulo"], esc["paso"])
+    v, a = esc["visual"], rec.VISUAL_INICIAL if otro else anterior["visual"]
     out = []
-    if not anterior or (anterior["capitulo"], anterior["paso"]) != (esc["capitulo"], esc["paso"]):
+    if otro:
         out.append("paso")
-    if v["camara"] != a["camara"] or v["rumbo"] != a["rumbo"]:
+    if any(v[k] != a[k] for k in ("camara", "rumbo", "elevacion", "zoom")):
         out.append("camara")
+    if v["mirar"] and v["mirar"] != a["mirar"]:
+        out.append("mirar")
+    if _mover_notable(esc):
+        out.append("mover")
     if v["enfoque"] and v["enfoque"] != a["enfoque"]:
         out.append("enfoque")
+    if v["aislar"] and v["aislar"] != a["aislar"]:
+        out.append("aislar")
+    if (v["mostrar"] or v["ocultar"]) and (v["mostrar"], v["ocultar"]) != (a["mostrar"], a["ocultar"]):
+        out.append("capas")
+    if v["sin"] and v["sin"] != a["sin"]:
+        out.append("partes")
     if v["detalle"] and v["detalle"] != a["detalle"]:
         out.append("ficha")
     if v["comparar"] != a["comparar"]:
         out.append(v["comparar"])
     if rec.abre_atlas(esc, anterior, g):
         out.append("modelo")
+    if esc.get("animar"):
+        out.append("animar")
     if esc["resaltar"]:
         out.append("resaltar")
     if not esc["panel"] and (not anterior or anterior["panel"]):
@@ -1395,23 +2023,42 @@ def _donde(g: guion_presentacion.Guion, esc: dict) -> str:
     return f"{c['nombre']} · {c['pasos'][esc['paso'] - 1]['titulo']}"
 
 
-def _muestra(g: guion_presentacion.Guion, esc: dict) -> str:
-    """Lo que ve la sala en una escena, para el modelo: «Salud · paso 3 de 10 (Una torre…) · vista oblicua · ficha de…»."""
+def _muestra(g: guion_presentacion.Guion, esc: dict, suave: bool = False, anterior: dict | None = None) -> str:
+    """Lo que ve la sala en un paso del plan, para el modelo: «Salud · paso 3 de 10 (Una torre…) · vista oblicua · solo
+    torre · sin torre.cubierta · la cámara gira 40°». Las piezas y las partes, con su id (como las pide el modelo). Con
+    `anterior` (el paso del plan que va antes), si sigue en el mismo paso del capítulo no repite cuál es. `suave`: el
+    movimiento de la cámara es el que se pone por omisión."""
     c = g.capitulos[g.por_id(esc["capitulo"])]
     v = esc["visual"]
     nombres = {x["id"]: x["nombre"] for x in c.get("componentes") or []}
     inm = {i["id"]: i.get("nombre") for i in g.inmersiones}
-    partes = [f"{c['nombre']} · paso {esc['paso']} de {len(c['pasos'])} ({c['pasos'][esc['paso'] - 1]['titulo']})"]
+    mismo = bool(anterior) and (anterior["capitulo"], anterior["paso"]) == (esc["capitulo"], esc["paso"])
+    partes = ["el mismo paso" if mismo else
+              f"{c['nombre']} · paso {esc['paso']} de {len(c['pasos'])} ({c['pasos'][esc['paso'] - 1]['titulo']})"]
     if not esc["panel"]:
         partes.append("solo 3D")
     if v["camara"] != "paso":
         partes.append(NOMBRE_CAMARA[v["camara"]])
     if v["rumbo"] is not None:
         partes.append(f"rumbo {v['rumbo']}°")
+    if v["elevacion"] is not None:
+        partes.append(f"a {v['elevacion']}° sobre el horizonte")
+    if v["zoom"] is not None:
+        partes.append(f"zoom {v['zoom']:g}")
+    if v["mirar"]:
+        partes.append(f"la cámara apunta a {v['mirar']}")
     if v["girar"]:
         partes.append("girando")
     if v["enfoque"]:
         partes.append(f"cámara en {nombres.get(v['enfoque'], v['enfoque'])}")
+    if v["aislar"]:
+        partes.append(f"solo {v['aislar']}")
+    if v["mostrar"]:
+        partes.append(f"además {', '.join(v['mostrar'])}")
+    if v["ocultar"]:
+        partes.append(f"oculta {', '.join(v['ocultar'])}")
+    if v["sin"]:
+        partes.append(f"sin {', '.join(v['sin'])}")
     if v["detalle"]:
         partes.append(f"ficha de {nombres.get(v['detalle'], v['detalle'])}")
     if v["comparar"] == "hoy":
@@ -1419,6 +2066,10 @@ def _muestra(g: guion_presentacion.Guion, esc: dict) -> str:
     i = rec.inmersion_de(esc, g)
     if i:
         partes.append(f"modelo del atlas: {inm.get(i, i)}")
+    if esc.get("mover"):
+        partes.append("la cámara se mueve un poco sola" if suave else f"la cámara {_mover_dicho(esc['mover'])}")
+    if esc.get("animar"):
+        partes.append("anima la obra")
     if esc["resaltar"]:
         r = esc["resaltar"]
         partes.append(f"resalta {r['tipo']} {r.get('n') or nombres.get(r.get('id'), r.get('id'))}")
@@ -1431,37 +2082,39 @@ DONDE_SUENA = {"vista": "la vista Presentación de la pestaña del chat (o el pr
 
 async def _recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: PresentacionEntrada, por: str,
                      abierta: bool, doc: dict | None = None) -> Resultado:
-    """La op `recorrido`: compone, valida todo o nada, guarda y devuelve lo que el modelo necesita (compacto) y, al
-    asistente, las acciones (la de la presentación si suena en la pestaña o el proyector, y la de la tarjeta del chat).
-    Por MCP hace falta una pantalla en off abierta: no hay otra pantalla donde suene. Si el nuevo va a la pantalla en off
-    y en la pestaña o el proyector sonaba otro (`doc`, la pantalla antes de guardarlo), también lo detiene allá: si no,
-    las dos voces se pisaban hasta su próximo avance, y uno en pausa no se enteraba nunca."""
+    """La op `recorrido` (el plan guiado): lo compone de forma tolerante (`_componer`), lo valida entero, lo guarda y
+    devuelve lo que el modelo necesita (compacto: lo que se ve en cada paso y los avisos de lo que se descartó) y, al
+    asistente, las acciones (la de la presentación si suena en la pestaña o el proyector, y la de la tarjeta del chat,
+    que es el plan a la vista). Por MCP hace falta una pantalla en off abierta: no hay otra pantalla donde suene. Si el
+    nuevo va a la pantalla en off y en la pestaña o el proyector sonaba otro (`doc`, la pantalla antes de guardarlo),
+    también lo detiene allá: si no, las dos voces se pisaban hasta su próximo avance, y uno en pausa no se enteraba nunca."""
     if por == "mcp" and not abierta:
-        raise ErrorHerramienta("Abra la pantalla en off antes de un recorrido (la vista Presentación en modo en off, en el "
+        raise ErrorHerramienta("Abra la pantalla en off antes de un plan (la vista Presentación en modo en off, en el "
                                "proyector): por MCP no hay otra pantalla donde se vea y se oiga. ir y visual sí quedan "
                                "guardados.", "sin_pantalla", estado=409)
-    r = _componer(g, a)
+    r, descartado, suaves = _componer(g, a)
     problemas = rec.validar(r, g)
-    if problemas:   # no debería: _componer valida lo mismo; si pasa, mejor no reproducir nada
-        raise ErrorHerramienta("El recorrido no se puede reproducir: " + "; ".join(problemas[:4]), "invalido", estado=422)
+    if problemas:   # no debería: _componer deja solo lo que vale; si pasa, mejor no reproducir nada
+        raise ErrorHerramienta("El plan no se puede reproducir: " + "; ".join(problemas[:4]), "invalido", estado=422)
     ms = rec.duracion_ms(r, g)
     if ms > rec.MAX_DURACION_MS:
-        raise ErrorHerramienta(f"El recorrido dura unos {round(ms / 1000)} s y el tope es {rec.MAX_DURACION_MS // 1000}: "
-                               "divídalo en dos (menos escenas o narraciones más cortas).", "invalido", estado=422)
+        raise ErrorHerramienta(f"El plan dura unos {round(ms / 1000)} s y el tope es {rec.MAX_DURACION_MS // 1000}: "
+                               "divídalo en dos (menos pasos o frases más cortas).", "invalido", estado=422)
     destino = "pantalla_off" if abierta or por == "mcp" else "vista"
     previo = pantalla_off.recorrido_de(doc, g)
     await run_in_threadpool(pantalla_off.guardar_recorrido, db, uid, r, destino, por)
-    avisos = _avisos(g, r)
+    avisos = [*descartado, *_avisos(g, r, suaves)]
     minutos, segundos = divmod(round(ms / 1000), 60)
     dura = f"{minutos} min {segundos} s" if minutos else f"{segundos} s"
-    contenido = {"recorrido": {"id": r["id"], "titulo": r["titulo"], "escenas": len(r["escenas"]),
-                               "cierre": bool(r["cierre"]), "duracion_estimada_s": round(ms / 1000),
-                               "se_reproduce_en": DONDE_SUENA[destino]},
-                 "escenas": [{"n": n, "muestra": _muestra(g, e), "narracion": " ".join(e["frases"])}
-                             for n, e in enumerate(r["escenas"], 1)],
+    contenido = {"plan": {"id": r["id"], "titulo": r["titulo"], "pasos": len(r["escenas"]),
+                          "cierre": bool(r["cierre"]), "duracion_estimada_s": round(ms / 1000),
+                          "se_reproduce_en": DONDE_SUENA[destino]},
+                 "pasos": [{"n": n, "muestra": _muestra(g, e, n in suaves, r["escenas"][n - 2] if n > 1 else None)}
+                           for n, e in enumerate(r["escenas"], 1)],
                  "nota": NOTA_RECORRIDO}
     if avisos:
-        contenido["avisos"] = avisos
+        contenido["avisos"] = avisos[:MAX_AVISOS] + (
+            [f"y {len(avisos) - MAX_AVISOS} avisos más"] if len(avisos) > MAX_AVISOS else [])
     acciones: list[dict] = []
     if por == "asistente":
         if destino == "pantalla_off" and previo and not previo["cerrado"] and previo["destino"] == "vista":
@@ -1470,12 +2123,12 @@ async def _recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: Presenta
         if destino == "vista":
             acciones.append({"tipo": "presentacion", "op": "recorrido", "recorrido": r})
         acciones.append(_tarjeta(g, r, destino, ms, list(a.sugerencias or [])))
-    return Resultado(contenido, f"Recorrido «{r['titulo']}» · {len(r['escenas'])} escenas · ≈{dura}", acciones=acciones)
+    return Resultado(contenido, f"Plan «{r['titulo']}» · {len(r['escenas'])} pasos · ≈{dura}", acciones=acciones)
 
 
 def _tarjeta(g: guion_presentacion.Guion, r: dict, destino: str, ms: int, sugerencias: list[str]) -> dict:
-    """La acción de la tarjeta del recorrido en el chat (agente-recorrido.js): dónde, qué hace y qué dice cada escena,
-    la duración, el cierre y las sugerencias. Sigue el avance del recorrido con este id."""
+    """La acción de la tarjeta del plan en el chat (agente-recorrido.js): dónde, qué hace y qué dice cada paso, la
+    duración, el cierre y las sugerencias. Sigue el avance del recorrido con este id."""
     return {"tipo": "recorrido", "id": r["id"], "titulo": r["titulo"], "destino": destino, "duracion_ms": ms,
             "cierre": r["cierre"]["puntos"] if r["cierre"] else None, "sugerencias": sugerencias,
             "escenas": [{"narracion": " ".join(e["frases"]), "donde": _donde(g, e),
@@ -1484,12 +2137,12 @@ def _tarjeta(g: guion_presentacion.Guion, r: dict, destino: str, ms: int, sugere
 
 async def _control_recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: PresentacionEntrada, por: str,
                              abierta: bool) -> Resultado:
-    """La op `control_recorrido`: queda guardado (la pantalla en off lo aplica una vez) y, si el recorrido suena en la
+    """La op `control_recorrido`: queda guardado (la pantalla en off lo aplica una vez) y, si el plan suena en la
     pestaña o el proyector, va como acción al navegador del asistente. «reproducir» lo vuelve a empezar con otro id: al
     asistente le vuelve también la tarjeta del nuevo (la del anterior sigue el avance de su id, y el nuevo quedaría sin
     avance, sin barra en el chat y sin pausa al escribir). Por MCP, uno que suena en la pestaña o el proyector del panel
     no se controla: solo la pantalla en off lee los controles guardados, y la pestaña no sabría nada."""
-    sin_recorrido = ErrorHerramienta("No hay un recorrido sonando: arme uno con la op recorrido.", "sin_recorrido",
+    sin_recorrido = ErrorHerramienta("No hay un plan en curso: arme uno con la op recorrido.", "sin_recorrido",
                                      estado=409)
     if por == "mcp":
         actual = pantalla_off.recorrido_de(await run_in_threadpool(pantalla_off.leer, db, uid), g)
@@ -1497,7 +2150,7 @@ async def _control_recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: 
             if actual["cerrado"]:
                 raise sin_recorrido
             raise ErrorHerramienta(
-                f"El recorrido «{actual['titulo']}» suena en la pestaña del panel de la persona (o en su proyector), no "
+                f"El plan «{actual['titulo']}» suena en la pestaña del panel de la persona (o en su proyector), no "
                 "en la pantalla en off: se controla desde ahí. Para manejar uno, arme otro con la pantalla en off "
                 "abierta.", "en_el_panel", estado=409)
     try:
@@ -1515,12 +2168,13 @@ async def _control_recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: 
             acciones.append(_tarjeta(g, r, r["destino"], rec.duracion_ms(r, g), []))
         elif r["destino"] == "vista":
             acciones.append({"tipo": "presentacion", "op": "control_recorrido", "rid": r["id"], "accion": a.accion})
-    nombres = {"pausar": "Pausé", "continuar": "Seguí con", "siguiente": "Pasé a la escena siguiente de",
-               "anterior": "Volví a la escena anterior de", "repetir": "Repetí la escena de", "reproducir": "Volví a empezar",
+    nombres = {"pausar": "Pausé", "continuar": "Seguí con", "siguiente": "Pasé al paso siguiente de",
+               "anterior": "Volví al paso anterior de", "repetir": "Repetí el paso de", "reproducir": "Volví a empezar",
                "detener": "Detuve"}
-    contenido = {"recorrido": {k: estado.get(k) for k in ("id", "titulo", "escena", "de", "fase")}, "accion": a.accion,
-                 "nota": "Se aplica en la pantalla donde suena el recorrido; el avance llega en estado y en el contexto."}
-    return Resultado(contenido, f"{nombres[a.accion]} el recorrido «{(r or {}).get('titulo', '')}»", acciones=acciones)
+    contenido = {"plan": {"id": estado.get("id"), "titulo": estado.get("titulo"), "paso": estado.get("escena"),
+                          "de": estado.get("de"), "fase": estado.get("fase")}, "accion": a.accion,
+                 "nota": "Se aplica en la pantalla donde suena el plan; el avance llega en estado y en el contexto."}
+    return Resultado(contenido, f"{nombres[a.accion]} el plan «{(r or {}).get('titulo', '')}»", acciones=acciones)
 
 
 # Las ops que proyectan texto escrito por el modelo: en una conversación que ya trae datos de habitantes no van
@@ -1562,18 +2216,18 @@ D_ABRIR_VISTA = (
 D_PRESENTACION = (
     "Presenta la propuesta Yondó 2028–2031 en su versión técnica (lo que se construye, sin costos, sobre la maqueta 3D "
     "del territorio y con modelos del atlas) en el panel de la persona o en su pantalla en off (un proyector sin "
-    "controles). PARA EXPLICAR, UN RECORRIDO: guion (los datos de un capítulo: pasos, lo resaltable, fichas, "
-    "inmersiones; no mueve nada) y luego recorrido, en UNA llamada: titulo, de 3 a 6 escenas y cierre {puntos}. Cada "
-    "escena es una idea: narracion (una o dos frases que se proyectan y se dicen en voz alta) y lo que se ve mientras "
-    "tanto (capitulo, paso, panel, enfoque, detalle, comparar, camara, rumbo, girar, inmersion, resaltar lo que nombra; "
-    "lo que no cambia sigue de la anterior). La pantalla lo reproduce sola, a ritmo humano. Ejemplo de escenas: "
-    "[{\"capitulo\":\"salud\",\"paso\":\"torre\",\"camara\":\"oblicua\",\"narracion\":\"…\"},{\"detalle\":\"torre\","
-    "\"resaltar\":{\"especificacion\":\"Estructura\"},\"narracion\":\"…\"}]. control_recorrido: pausar, continuar, "
-    "siguiente, anterior, repetir, reproducir, detener. Pedidos puntuales (detienen el recorrido): indice; ir (devuelve "
-    "lo que muestra el paso); siguiente/anterior; explicar (una frase en pantalla, hasta 220 caracteres) y "
-    "quitar_explicacion; vista (panel, indice, fichas); visual (enfoque, detalle, comparar, camara, rumbo, girar, "
-    "inmersion, tema); pantalla_completa; estado (qué muestra y en qué escena va). Lo que no existe vuelve con "
-    "candidatos. La sala lo ve: nunca datos de habitantes, costos, «@» ni números de 7 o más dígitos.")
+    "controles). PARA EXPLICAR, PRIMERO UN PLAN: guion (los datos de un capítulo: pasos, fichas, piezas de la maqueta, "
+    "inmersiones; no mueve nada) y luego recorrido, en UNA llamada: titulo, pasos (de 6 a 10, hasta 12) y cierre "
+    "{puntos}. Cada paso: dice (UNA frase, hasta 220 caracteres, que se proyecta y se lee en voz "
+    "alta) y lo que ocurre MIENTRAS se dice: capitulo, paso, la cámara (camara, rumbo, elevacion, zoom, mirar, mover "
+    "{giro, zoom, elevacion}), las piezas (aislar, mostrar, ocultar, sin «pieza.parte»), enfoque, detalle, comparar, "
+    "inmersion, animar, resaltar; lo que no cambia sigue del paso anterior. El chat muestra el plan y la pantalla lo "
+    "ejecuta sola; lo que no exista se descarta con un aviso. Ejemplo de pasos: [{\"capitulo\":"
+    "\"salud\",\"paso\":\"torre\",\"camara\":\"oblicua\",\"mover\":{\"giro\":40},\"dice\":\"…\"},{\"aislar\":\"torre\","
+    "\"sin\":[\"torre.cubierta\"],\"dice\":\"…\"}]. control_recorrido: pausar, continuar, siguiente, anterior, repetir, "
+    "reproducir, detener. Pedidos puntuales: indice, estado y pantalla_completa; y, deteniendo el plan, ir (devuelve lo "
+    "que muestra); siguiente/anterior; explicar y quitar_explicacion; vista (panel, indice, fichas); visual (lo de un "
+    "paso, y tema). La sala lo ve: nunca datos de habitantes, costos, «@» ni números de 7 o más dígitos.")
 
 HERRAMIENTAS: list[Herramienta] = [
     Herramienta("mapa", D_MAPA, MapaEntrada, "interfaz", ("mapa.ver",), "Moviendo el mapa", _mapa,

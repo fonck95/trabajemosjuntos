@@ -57,7 +57,8 @@ export function crear(esc, datos) {
   const P = parque.userData.aModelo;
   // rótulo de cada nave con el nombre corto (sin lo que va después de «:» o «(»)
   const CORTO = { maquinaria: 'Banco de maquinaria', muelle: 'Muelle de carga' };
-  const lbl = (id, html, h = 22) => { const k = comps.find((x) => x.id === id); if (!k) return; const [x, y] = P(k.u, k.v); esc.etiqueta(html || `<b>${CORTO[id] || k.nombre.split(/[:(]/)[0].trim()}</b>`, { pos: [x, y, h], padre: cP, color: `var(${color})`, cls: 'lbl-p mini' }); };
+  // (cada rótulo lleva el id de su nave: si visual.js la oculta o la atenúa para aislar otra, su rótulo tampoco se ve)
+  const lbl = (id, html, h = 22) => { const k = comps.find((x) => x.id === id); if (!k) return; const [x, y] = P(k.u, k.v); esc.etiqueta(html || `<b>${CORTO[id] || k.nombre.split(/[:(]/)[0].trim()}</b>`, { pos: [x, y, h], padre: cP, color: `var(${color})`, cls: 'lbl-p mini' }).userData.parte = id; };
   ['matadero', 'pescado', 'concentrados', 'trilladora', 'leche', 'maquinaria', 'frio', 'muelle'].forEach((id) => lbl(id));
   if (retiro) { const [x, y] = cen(retiro); esc.etiqueta('<b>Retiro de pozos</b><small>Casabe 980 y 394: concepto de Ecopetrol</small>', { pos: [x, y, 6], padre: cP, color: 'var(--bad)', cls: 'lbl-p mini' }); }
   const [lx, ly] = lotePoly ? P(...cen(lotePoly)) : P(0, 0);

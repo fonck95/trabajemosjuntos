@@ -36,7 +36,10 @@
 // * La pestaña que sigue a un proyector le pregunta cada latido si sigue ahí («quien») y él contesta en el acto: su
 //   propio latido es un reloj, y el navegador espacia los relojes de una pestaña oculta (hasta uno por minuto).
 //
-// El recorrido narrado (reproductor.js, docs/agente.md): la acción `recorrido` trae las escenas ya absolutas y se
+// El plan guiado (el recorrido narrado: reproductor.js, docs/agente.md): la acción `recorrido` trae las escenas (los
+// pasos del plan) ya absolutas, cada una con lo visual (la cámara, las piezas que se muestran, se ocultan o se aíslan,
+// las partes que se quitan), cómo se mueve la cámara mientras se dice (`mover`) y si repite la animación del paso
+// (`animar`), y se
 // valida aquí entera (`recorridoValido`) antes de reproducirse en la vista o en el proyector. El avance que va
 // diciendo el reproductor (`avisarRecorrido`) llega a los oyentes de esta pestaña (la tarjeta del chat) y, si esta
 // ventana es el proyector, a las demás por el canal (`recorrido`), aceptado solo del que manda. Los controles de la
@@ -65,26 +68,55 @@ const OPS = new Set(['ir', 'siguiente', 'anterior', 'explicar', 'quitar_explicac
 // `vista`: lo que se ve sin cambiar de paso; `pantalla_completa`: la vista llena la ventana (la pone la vista, no mando)
 const PARTES_VISTA = ['panel', 'indice', 'fichas'];
 const ID = /^[a-z_]{2,40}$/;
-const ID_PIEZA = /^[a-z0-9_]{1,40}$/;   // un componente o una inmersión de la propuesta
+const ID_PIEZA = /^[a-z0-9_]{1,40}$/;   // un componente, una pieza de la maqueta o una inmersión de la propuesta
+const PARTE = /^[a-z0-9_]{1,40}\.[a-z0-9_]{1,40}$/;   // la parte de una pieza: «pieza.parte» («torre.cubierta»)
+const MAX_LISTA = 8;   // piezas o partes por lista (mostrar, ocultar, sin)
 // `visual` (la presentación técnica): cada parte con los valores que admite (`VISUAL` de mando.js, `PARTES_VISUAL` de la
-// herramienta y `VISUAL` de app/pantalla.py). null en enfoque, detalle, inmersion y rumbo es «lo del paso»
+// herramienta y `VISUAL` de app/pantalla.py), en el orden de siempre. null en enfoque, rumbo, elevacion, zoom, mirar,
+// detalle, inmersion y aislar es «lo del paso»; mostrar, ocultar y sin son listas de 0 a MAX_LISTA ids sin repetir
 const CAMARAS = ['paso', 'aerea', 'oblicua', 'rasante', 'cerca', 'lejos'];
+const idONada = (v) => v === null || (typeof v === 'string' && ID_PIEZA.test(v));
+// de 0.3 a 3, con dos decimales a lo sumo (1 es el encuadre del paso; 2, el doble de cerca)
+const zoomValido = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0.3 && v <= 3 && Math.abs(v * 100 - Math.round(v * 100)) < 1e-6;
+const listaDe = (re) => (v) => Array.isArray(v) && v.length <= MAX_LISTA && v.every((x) => typeof x === 'string' && re.test(x))
+  && new Set(v).size === v.length;
 const VISUAL = {
-  enfoque: (v) => v === null || (typeof v === 'string' && ID_PIEZA.test(v)),
-  detalle: (v) => v === null || (typeof v === 'string' && ID_PIEZA.test(v)),
-  inmersion: (v) => v === null || (typeof v === 'string' && ID_PIEZA.test(v)),
+  enfoque: idONada,
   camara: (v) => CAMARAS.includes(v),
   rumbo: (v) => v === null || (Number.isInteger(v) && v >= 0 && v <= 359),
+  elevacion: (v) => v === null || (Number.isInteger(v) && v >= 8 && v <= 85),
+  zoom: (v) => v === null || zoomValido(v),
+  mirar: idONada,
   girar: (v) => typeof v === 'boolean',
   comparar: (v) => v === 'hoy' || v === 'proyecto',
+  detalle: idONada,
+  inmersion: idONada,
+  mostrar: listaDe(ID_PIEZA),
+  ocultar: listaDe(ID_PIEZA),
+  aislar: idONada,
+  sin: listaDe(PARTE),
   tema: (v) => v === 'claro' || v === 'oscuro',
 };
 const PARTES_VISUAL = Object.keys(VISUAL);
-// lo visual de cada paso (al cambiar de paso vuelve a esto; el tema no)
-const VISUAL_INICIAL = { enfoque: null, camara: 'paso', rumbo: null, girar: false, comparar: 'proyecto', detalle: null, inmersion: null };
+// lo visual de cada paso (al cambiar de paso vuelve a esto; el tema no). Las listas, congeladas: se comparten
+const VISUAL_INICIAL = Object.freeze({ enfoque: null, camara: 'paso', rumbo: null, elevacion: null, zoom: null, mirar: null,
+  girar: false, comparar: 'proyecto', detalle: null, inmersion: null, mostrar: Object.freeze([]), ocultar: Object.freeze([]),
+  aislar: null, sin: Object.freeze([]) });
+// las partes de antes del plan guiado: una escena siempre las trae (las demás, si faltan, son lo del paso)
+const VISUAL_BASE = ['enfoque', 'camara', 'rumbo', 'girar', 'comparar', 'detalle', 'inmersion'];
+// Las dos acciones que no son estado (van en la escena, junto a `resaltar`, y en la orden `visual`): `mover`, lo que
+// hace la cámara mientras dura la frase (cuánto gira alrededor de lo que mira y con qué zoom y elevación termina), y
+// `animar`, que repite la animación del paso. `ms`: lo que dura el movimiento de una orden `visual` suelta
+const MOVER = {
+  giro: (v) => Number.isInteger(v) && v >= -360 && v <= 360,
+  zoom: zoomValido,
+  elevacion: (v) => Number.isInteger(v) && v >= 8 && v <= 85,
+};
+const MS_MAX = 120000;
+const ACCIONES_VISUAL = ['mover', 'animar', 'ms'];
 const DEL_RECORRIDO = ['recorrido', 'desde', 'rid', 'accion', 'suave', 'motivo'];
 const CLAVES = new Set(['tipo', 'op', 'capitulo', 'paso', 'explicacion', 'panel', 'indice', 'fichas', 'activar', ...PARTES_VISUAL,
-  ...DEL_RECORRIDO]);
+  ...ACCIONES_VISUAL, ...DEL_RECORRIDO]);
 const ID_VENTANA = /^[a-z0-9]{8,40}$/;
 // Lo que la explicación no puede traer (`texto_proyectable` de app/proyectable.py, `textoVisible` de mando.js, con las
 // mismas reglas): se proyecta ante una sala. La «@», los números y la plata se buscan en la forma NFKC
@@ -113,7 +145,7 @@ const DIGITOS_MAX = 6;
 // ───────── El recorrido narrado (app/recorrido.py: los mismos topes y listas; una prueba los compara) ─────────
 export const MAX_TITULO = 80;
 export const MAX_FRASES = 3;
-export const MAX_ESCENAS = 8;
+export const MAX_ESCENAS = 12;
 export const MAX_PUNTO = 80;
 export const MAX_CIERRE = 200;
 export const MAX_SOSTENER_MS = 8000;
@@ -125,14 +157,33 @@ export const CONTROLES = ['pausar', 'continuar', 'siguiente', 'anterior', 'repet
 export const VOCES = ['activa', 'apagada', 'sin_activar', 'sin_voces'];
 export const MOTIVOS = ['persona', 'tecla', 'boton', 'mensaje', 'otra_orden', 'reemplazo', 'proyector', 'sin_respuesta',
   'escena_fallida'];
-export const AVISOS = ['atlas', 'resaltar', 'asiento', 'voz'];
+// (`parcial`: parte de lo pedido no se pudo mostrar; la presentación lo descartó y aplicó lo demás)
+export const AVISOS = ['atlas', 'resaltar', 'asiento', 'voz', 'parcial'];
 const RID = /^[0-9a-f]{12}$/;
 const VISUAL_ESCENA = Object.keys(VISUAL_INICIAL);
+const ESCENA_BASE = ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'frases', 'sostener_ms'];
+const ESCENA = [...ESCENA_BASE, 'mover', 'animar'];
 const entero = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
+const tiene = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 const exactas = (o, claves) => !!o && typeof o === 'object' && !Array.isArray(o) && Object.keys(o).length === claves.length
-  && claves.every((k) => Object.prototype.hasOwnProperty.call(o, k));
+  && claves.every((k) => tiene(o, k));
+// un objeto con todas las claves de `base` y, de más, solo las de `todas`
+const conClaves = (o, base, todas) => !!o && typeof o === 'object' && !Array.isArray(o) && base.every((k) => tiene(o, k))
+  && Object.keys(o).every((k) => todas.includes(k));
 // un texto del recorrido: se proyecta tal cual (sin cambiarle nada: si no, no vale)
 const tal = (v, max) => explicacionVisible(v, max) === v;
+const copia = (v) => (Array.isArray(v) ? [...v] : v);
+const igual = (a, b) => a === b || (typeof a === 'object' && typeof b === 'object' && JSON.stringify(a) === JSON.stringify(b));
+
+/** ¿Es `m` un movimiento de la cámara? null, o {giro?, zoom?, elevacion?} con al menos una parte (una en null es «sin
+ * esa parte»: no cuenta). */
+function moverValido(m) {
+  if (m === null) return true;
+  if (!m || typeof m !== 'object' || Array.isArray(m)) return false;
+  const claves = Object.keys(m);
+  if (claves.some((k) => !tiene(MOVER, k) || (m[k] !== null && !MOVER[k](m[k])))) return false;
+  return claves.some((k) => m[k] !== null);
+}
 
 function resaltarValido(r) {
   if (r === null) return true;
@@ -143,21 +194,33 @@ function resaltarValido(r) {
   return exactas(r, ['tipo', 'n']) && entero(r.n, 1, RESALTAR[r.tipo]);
 }
 
+// Una escena (un paso del plan), copiada con sus mismas claves y en su mismo orden, o null. El servidor la arma con
+// todas: {capitulo, paso, panel, visual, resaltar, mover, animar, frases, sostener_ms}, y lo visual con sus catorce
+// partes. Una de antes del plan guiado (guardada en este navegador, o de un servidor que todavía no se actualizó) no
+// trae `mover`, `animar` ni las partes nuevas de lo visual: vale igual, y quien la reproduce las da por lo del paso
+// (reproductor.js, mando.js). Lo que no puede es traer una clave de más ni un valor sin la forma
 function escenaValida(e) {
-  if (!exactas(e, ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'frases', 'sostener_ms'])) return null;
+  if (!conClaves(e, ESCENA_BASE, ESCENA)) return null;
   if (typeof e.capitulo !== 'string' || !ID.test(e.capitulo) || !entero(e.paso, 1, 60) || typeof e.panel !== 'boolean') return null;
-  if (!exactas(e.visual, VISUAL_ESCENA) || VISUAL_ESCENA.some((k) => !VISUAL[k](e.visual[k]))) return null;
+  if (!conClaves(e.visual, VISUAL_BASE, VISUAL_ESCENA) || Object.keys(e.visual).some((k) => !VISUAL[k](e.visual[k]))) return null;
   if (!resaltarValido(e.resaltar) || !entero(e.sostener_ms, 0, MAX_SOSTENER_MS)) return null;
+  if (e.mover !== undefined && !moverValido(e.mover)) return null;
+  if (e.animar !== undefined && typeof e.animar !== 'boolean') return null;
   const f = e.frases;
   if (!Array.isArray(f) || !f.length || f.length > MAX_FRASES || !f.every((x) => tal(x, MAX_EXPLICACION))) return null;
   if (f.reduce((a, x) => a + [...x].length, 0) + f.length - 1 > MAX_EXPLICACION) return null;
-  return { capitulo: e.capitulo, paso: e.paso, panel: e.panel, visual: { ...e.visual },
-    resaltar: e.resaltar && { ...e.resaltar }, frases: [...f], sostener_ms: e.sostener_ms };
+  const out = {};
+  for (const k of Object.keys(e)) {
+    if (k === 'visual') out.visual = Object.fromEntries(Object.entries(e.visual).map(([p, v]) => [p, copia(v)]));
+    else out[k] = e[k] && typeof e[k] === 'object' ? (Array.isArray(e[k]) ? [...e[k]] : { ...e[k] }) : e[k];
+  }
+  return out;
 }
 
-/** El recorrido absoluto que arma el servidor (`recorrido.validar`), copiado, o null si no tiene la forma exacta: id,
- * título, de 1 a MAX_ESCENAS escenas (cada una con su paso, lo visual completo, lo que resalta, de 1 a MAX_FRASES
- * frases que se proyectan tal cual y sin costos, y lo que se sostiene) y el cierre (null o de 1 a 3 puntos). */
+/** El recorrido absoluto que arma el servidor (`recorrido.validar`), copiado, o null si no tiene la forma: id, título,
+ * de 1 a MAX_ESCENAS escenas (cada una con su paso, lo visual, lo que resalta, cómo se mueve la cámara, si repite la
+ * animación del paso, de 1 a MAX_FRASES frases que se proyectan tal cual y sin costos, y lo que se sostiene) y el
+ * cierre (null o de 1 a 3 puntos). */
 export function recorridoValido(r) {
   if (!exactas(r, ['id', 'titulo', 'escenas', 'cierre'])) return null;
   if (typeof r.id !== 'string' || !RID.test(r.id) || !tal(r.titulo, MAX_TITULO)) return null;
@@ -215,8 +278,9 @@ function accionRecorrido(a) {
  * claves conocidas, `op` de la lista, `capitulo` como id (obligatorio para `ir`), `paso` entero de 1 a 60 (solo con
  * `ir`), y `explicacion` de hasta MAX_EXPLICACION caracteres que se ve tal cual y sin costos (obligatoria para
  * `explicar`). `vista` lleva solo `panel`, `indice` y `fichas` (al menos una, cada una verdadero o falso; el índice y
- * las fichas no a la vez) y `pantalla_completa` solo `activar` (verdadero o falso). `visual` lleva solo sus partes (al
- * menos una, cada una con un valor de su lista). */
+ * las fichas no a la vez) y `pantalla_completa` solo `activar` (verdadero o falso). `visual` lleva solo sus partes (cada
+ * una con un valor de su lista) y sus acciones (`mover`, `animar` y `ms`, lo que dura el movimiento): al menos una
+ * parte, un movimiento o la animación. */
 export function accionPresentacion(a) {
   if (!a || typeof a !== 'object' || Array.isArray(a) || a.tipo !== 'presentacion') return null;
   if (Object.keys(a).some((k) => !CLAVES.has(k)) || typeof a.op !== 'string' || !OPS.has(a.op)) return null;
@@ -224,13 +288,21 @@ export function accionPresentacion(a) {
   if (DEL_RECORRIDO.some((k) => a[k] !== undefined)) return null;
   const out = { tipo: 'presentacion', op: a.op };
   if (a.op === 'visual') {
-    if (Object.keys(a).some((k) => k !== 'tipo' && k !== 'op' && !(k in VISUAL))) return null;
+    if (Object.keys(a).some((k) => k !== 'tipo' && k !== 'op' && !tiene(VISUAL, k) && !ACCIONES_VISUAL.includes(k))) return null;
     const partes = PARTES_VISUAL.filter((k) => a[k] !== undefined);
-    if (!partes.length || partes.some((k) => !VISUAL[k](a[k]))) return null;
-    for (const k of partes) out[k] = a[k];
+    if (partes.some((k) => !VISUAL[k](a[k]))) return null;
+    if (a.mover !== undefined && !moverValido(a.mover)) return null;
+    if (a.animar !== undefined && typeof a.animar !== 'boolean') return null;
+    if (a.ms !== undefined && !entero(a.ms, 0, MS_MAX)) return null;
+    // al menos algo que hacer: una parte, un movimiento o la animación (`ms` solo no dice nada)
+    if (!partes.length && !a.mover && a.animar !== true) return null;
+    for (const k of partes) out[k] = copia(a[k]);
+    if (a.mover !== undefined) out.mover = a.mover && { ...a.mover };
+    if (a.animar !== undefined) out.animar = a.animar;
+    if (a.ms !== undefined) out.ms = a.ms;
     return out;
   }
-  if (PARTES_VISUAL.some((k) => a[k] !== undefined)) return null;
+  if ([...PARTES_VISUAL, ...ACCIONES_VISUAL].some((k) => a[k] !== undefined)) return null;
   if (a.op === 'vista' || a.op === 'pantalla_completa') {
     const suyas = a.op === 'vista' ? PARTES_VISTA : ['activar'];
     if (Object.keys(a).some((k) => k !== 'tipo' && k !== 'op' && !suyas.includes(k))) return null;
@@ -332,12 +404,17 @@ export function estadoDePantalla(e) {
   if (['panel', 'indice', 'fichas', 'completa'].some((k) => typeof e[k] !== 'boolean')) return null;
   if (!Number.isSafeInteger(e.orden_completa) || e.orden_completa < 0) return null;
   // lo visual: lo que falta (un servidor de antes) es lo del paso; un valor que no cumple invalida el estado
-  const visual = { ...VISUAL_INICIAL, tema: null };
+  const visual = { ...VISUAL_INICIAL, mostrar: [], ocultar: [], sin: [], tema: null };
   for (const k of PARTES_VISUAL) {
     if (e[k] === undefined) continue;
     if (k === 'tema' ? e[k] !== null && !VISUAL.tema(e[k]) : !VISUAL[k](e[k])) return null;
-    visual[k] = e[k];
+    visual[k] = copia(e[k]);
   }
+  // las acciones de la última orden `visual` (no son estado: si el servidor las deja aquí, la pantalla las hace una
+  // vez, ver `ordenesHacia`). Sin la forma, también invalidan el estado
+  if (e.mover !== undefined && !moverValido(e.mover)) return null;
+  if (e.animar !== undefined && typeof e.animar !== 'boolean') return null;
+  const acciones = { mover: e.mover ? { ...e.mover } : null, animar: e.animar === true };
   // El recorrido para esta pantalla (con su edad, que la calcula el servidor), el último control y el avance. Lo que no
   // tiene la forma se ignora (la pantalla aplica igual los campos base, que son la escena donde quedó)
   let recorrido = null, control = null, progreso = null;
@@ -353,7 +430,7 @@ export function estadoDePantalla(e) {
   if (recorrido && pr && typeof pr === 'object' && pr.rid === recorrido.id && entero(pr.de, 1, MAX_ESCENAS) && entero(pr.n, 1, pr.de)
       && FASES.includes(pr.fase) && entero(pr.hace_s, 0, 1e9)) progreso = { rid: pr.rid, n: pr.n, de: pr.de, fase: pr.fase, hace_s: pr.hace_s };
   return { v, capitulo, paso, explicacion, panel: e.panel, indice: e.indice, fichas: e.fichas, completa: e.completa,
-    orden_completa: e.orden_completa, ...visual, recorrido, control_recorrido: control, progreso };
+    orden_completa: e.orden_completa, ...visual, ...acciones, recorrido, control_recorrido: control, progreso };
 }
 
 /** Las órdenes para mando.js que llevan la presentación de `antes` (lo último que se aplicó, o null) a `e`. La pantalla
@@ -370,15 +447,21 @@ export function ordenesHacia(antes, e) {
   const vista = {};
   for (const k of ['panel', 'indice', 'fichas']) if (base[k] !== e[k]) vista[k] = e[k];
   if (Object.keys(vista).length) out.push({ orden: 'vista', ...vista });
-  // lo visual: al cambiar de paso la presentación lo deja como lo dice el paso (salvo el tema); se manda lo que difiere.
-  // El tema solo va cuando hay uno (null es «el del navegador»: no se manda)
+  // lo visual: al cambiar de paso la presentación lo deja como lo dice el paso (salvo el tema); se manda lo que difiere
+  // (las listas, por su contenido: dos listas iguales no son el mismo objeto). El tema solo va cuando hay uno (null es
+  // «el del navegador»: no se manda)
   const antesVisual = otroPaso ? { ...VISUAL_INICIAL, tema: antes?.tema ?? null } : antes;
   const visual = {};
   for (const k of PARTES_VISUAL) {
     const valor = e[k] === undefined ? (k === 'tema' ? null : VISUAL_INICIAL[k]) : e[k];
     const previo = antesVisual[k] === undefined ? (k === 'tema' ? null : VISUAL_INICIAL[k]) : antesVisual[k];
-    if (valor !== previo && !(k === 'tema' && valor === null)) visual[k] = valor;
+    if (!igual(valor, previo) && !(k === 'tema' && valor === null)) visual[k] = copia(valor);
   }
+  // `mover` y `animar` (un movimiento de la cámara, repetir la animación del paso) son acciones, no estado: valen una vez por cada versión nueva de la pantalla (la misma pedida
+  // dos veces se hace dos veces) y nunca al abrir o recargar (no se repite una vieja)
+  const nueva = !!antes && antes.v !== e.v;
+  if (e.mover && nueva) visual.mover = { ...e.mover };
+  if (e.animar === true && nueva) visual.animar = true;
   if (Object.keys(visual).length) out.push({ orden: 'visual', ...visual });
   return out;
 }
@@ -387,7 +470,8 @@ export function ordenesHacia(antes, e) {
 
 const cola = [];
 // {aplicar(lista) → Promise<resultados>, estado() → estado | null, proyector?: true, cambio?() (la vista repinta su
-// barra: el estado del proyector cambió)}
+// barra: el estado del proyector cambió), recorrido?() y soltarRecorrido?(motivo) (el que suena aquí),
+// alternarVoz?() → el estado de la voz de esa vista (`alternarVozRecorrido`)}
 let control = null;
 let cadena = Promise.resolve();
 
@@ -810,8 +894,25 @@ export function controlRecorrido(rid, accion, { suave = false } = {}) {
   if (!a) return Promise.reject(new Error('Control no válido'));
   const p = elegido();
   if (p) return alProyector([a], p.id).then((r) => r?.[0] || { ok: false });
-  if (control) return enOrden([a]).then((r) => r?.[0] || { ok: false });
+  // Sin cola: detrás del plan que arranca (su acción no resuelve hasta que el primer paso está a la vista), un
+  // «Siguiente» o un «Detener» dados en «Plan listo» llegaban tarde: saltaban el paso 1 o no evitaban que se aplicara
+  if (control) return Promise.resolve().then(() => control.aplicar([a])).then((r) => r?.[0] || { ok: false });
   return Promise.reject(new Error('No hay una presentación abierta'));
+}
+
+/** Enciende o apaga la voz del plan en la vista de ESTA pestaña (el interruptor de la tarjeta del chat: el clic es el
+ * gesto que el navegador pide para dejarla hablar) y devuelve cómo quedó ('activa', 'apagada', 'sin_activar' o
+ * 'sin_voces'). null si la voz no se maneja desde aquí: no hay una presentación abierta en esta pestaña (el plan suena
+ * en la pantalla en off) o manda una ventana de proyector, que es donde suena: se enciende allá, con su botón «Voz».
+ * Nunca lanza. */
+export function alternarVozRecorrido() {
+  try {
+    if (!control || typeof control.alternarVoz !== 'function' || elegido()) return null;
+    const e = control.alternarVoz();
+    return VOCES.includes(e) ? e : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Un recorrido que esta pestaña le manda a un proyector: se guarda (los últimos 3) para pasárselo a otro que se abra. */

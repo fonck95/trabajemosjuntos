@@ -10,6 +10,8 @@ Entradas (data/propuesta/):
   territorio.json     río Magdalena, vías y puente (lo genera scripts/geo/territorio_propuesta.py)
 A cada componente le agrega `enfoque`: dónde lo encuadra la cámara en la maqueta (el paso que lo desarrolla, sus sitios,
 sus trazados o la réplica de una sede; ver ENFOQUES), o nada si no tiene un lugar propio.
+Revisa el catálogo de piezas de la maqueta (`tecnica.maqueta` de general.json: lo que el asistente muestra, oculta o
+aísla) contra las capas y los grupos del código de la presentación y contra los nodos de los modelos de las sedes.
 Revisa que las sumas cuadren (componentes y fuentes contra la inversión de cada módulo) y que cada fuente, componente y
 proyecto tipo citado exista, y que el Home (web/index.html) siga repitiendo el nombre y el lema de cada área, con su
 enlace y su imagen; avisa lo que no cuadra sin detener la construcción.
@@ -139,6 +141,95 @@ for mid, extra in (tecnica.get('pasos') or {}).items():
         if e.get('id') in ids:
             aviso(f'tecnica/{mid}: el paso «{e.get("id")}» repite el id de otro paso')
         ids.add(e.get('id'))
+# El catálogo de piezas de la maqueta (`tecnica.maqueta`): lo que el asistente puede mostrar, ocultar o aislar en cada
+# capítulo y las partes que les puede quitar (web/js/propuesta/visual.js; el guion solo le pasa al modelo ids y nombres).
+# Se revisa contra lo que existe: los capítulos de la técnica, los ids de capa (literales `esc.capa('…')` de los módulos),
+# los nombres de los grupos de las piezas (literales `capa('…')` de piezas/*.js, o las naves del parque, que llevan el id
+# de su sitio de geo.json), los nodos de los modelos de las sedes (el bloque JSON de cada GLB) y los estados que expone
+# cada módulo (`efectos: { … }`). Un id que no existe no rompe nada en pantalla (se ignora), pero el asistente creería
+# haber mostrado algo: por eso avisa aquí
+ID_PIEZA = re.compile(r'[a-z0-9_]{1,40}')
+JS = R / 'web/js/propuesta'
+CAPA_JS = re.compile(r"esc\.capa\('([a-z_.0-9]+)'\)")
+GRUPO_JS = re.compile(r"\bcapa\((?:raiz, )?'([A-Za-z_0-9]+)'\)")
+capas_js = {k for f in (JS / 'modulos').glob('*.js') for k in CAPA_JS.findall(f.read_text(encoding='utf-8'))}
+grupos_js = {k for f in (JS / 'piezas').glob('*.js') for k in GRUPO_JS.findall(f.read_text(encoding='utf-8'))}
+_nodos = {}
+def nodos_glb(eid):
+    """Los nombres de los nodos del modelo de una sede (su GLB de cerca), o None si no está."""
+    if eid not in _nodos:
+        f = R / f'web/models/edificios/{eid}_lod0.glb'
+        try:
+            b = f.read_bytes()
+            _nodos[eid] = {x.get('name') for x in json.loads(b[20:20 + int.from_bytes(b[12:16], 'little')]).get('nodes', [])}
+        except (OSError, ValueError):
+            _nodos[eid] = None
+    return _nodos[eid]
+def efectos_js(cid):
+    f = JS / 'modulos' / f'{cid}.js'
+    m = re.search(r'\befectos:\s*\{([^\n]*)', f.read_text(encoding='utf-8')) if f.exists() else None
+    return set(re.findall(r'[a-z_0-9]+', m.group(1))) if m else set()
+maqueta = tecnica.get('maqueta') or {}
+capitulos_tecnica = {'portada', 'ruta'} | {m['id'] for m in modulos}
+piezas_total = 0
+if not isinstance(maqueta, dict):
+    aviso('tecnica.maqueta no es un objeto {capítulo: [piezas]}')
+    maqueta = {}
+for cid, piezas in maqueta.items():
+    donde = f'maqueta/{cid}'
+    if cid not in capitulos_tecnica:
+        aviso(f'{donde}: no es un capítulo de la presentación técnica')
+    if not isinstance(piezas, list):
+        aviso(f'{donde}: no es una lista de piezas')
+        continue
+    sitios_comp = {s.get('id') for s in ((geo.get(cid) or {}).get('sitios') or []) if s.get('rol') == 'componente'}
+    grupo_vale = lambda n: n in grupos_js or n in sitios_comp
+    vistos = set()
+    for x in piezas:
+        if not isinstance(x, dict) or not isinstance(x.get('id'), str) or not ID_PIEZA.fullmatch(x['id']):
+            aviso(f'{donde}: una pieza sin id válido ([a-z0-9_], hasta 40): {x.get("id") if isinstance(x, dict) else x!r}')
+            continue
+        pid = f'{donde}/{x["id"]}'
+        piezas_total += 1
+        if x['id'] in vistos:
+            aviso(f'{pid}: el id de la pieza está repetido en el capítulo')
+        vistos.add(x['id'])
+        if not str(x.get('nombre') or '').strip():
+            aviso(f'{pid}: la pieza no tiene nombre')
+        if not isinstance(x.get('capas'), list) or not x['capas']:
+            aviso(f'{pid}: la pieza no dice sus capas')
+        for k in x.get('capas') or []:
+            if k not in capas_js:
+                aviso(f'{pid}: la capa «{k}» no existe en web/js/propuesta/modulos/')
+        for n in x.get('grupos') or []:
+            if not grupo_vale(n):
+                aviso(f'{pid}: el grupo «{n}» no está en web/js/propuesta/piezas/ ni es una nave de geo.json')
+        r, nodos = x.get('replica'), None
+        if r is not None:
+            nodos = nodos_glb(r.get('id')) if isinstance(r, dict) else None
+            if nodos is None:
+                aviso(f'{pid}: la réplica «{r.get("id") if isinstance(r, dict) else r}» no tiene modelo en web/models/edificios/')
+            for n in (r.get('sin') or []) if isinstance(r, dict) else []:
+                if nodos is not None and n not in nodos:
+                    aviso(f'{pid}: la réplica oculta el nodo «{n}», que no está en su modelo')
+        if x.get('efecto') is not None and x['efecto'] not in efectos_js(cid):
+            aviso(f'{pid}: el módulo no expone el estado «{x["efecto"]}» (efectos de web/js/propuesta/modulos/{cid}.js)')
+        partes = set()
+        for pt in x.get('partes') or []:
+            if not isinstance(pt, dict) or not isinstance(pt.get('id'), str) or not ID_PIEZA.fullmatch(pt['id']) or pt['id'] in partes:
+                aviso(f'{pid}: una parte con id repetido o inválido: {pt.get("id") if isinstance(pt, dict) else pt!r}')
+                continue
+            partes.add(pt['id'])
+            if not str(pt.get('nombre') or '').strip():
+                aviso(f'{pid}.{pt["id"]}: la parte no tiene nombre')
+            if not pt.get('grupos') and not pt.get('nodos'):
+                aviso(f'{pid}.{pt["id"]}: la parte no dice qué grupos o qué nodos la forman')
+            for n in pt.get('grupos') or []:
+                if not grupo_vale(n):
+                    aviso(f'{pid}.{pt["id"]}: el grupo «{n}» no está en web/js/propuesta/piezas/ ni es una nave de geo.json')
+            for n in pt.get('nodos') or []:
+                if nodos is None or n not in nodos:
+                    aviso(f'{pid}.{pt["id"]}: el nodo «{n}» no está en el modelo de la réplica de la pieza')
 if not terr:
     aviso('falta data/propuesta/territorio.json (python3 scripts/geo/territorio_propuesta.py)')
 
@@ -246,6 +337,7 @@ print(f'propuesta_guion.json {destino_guion.stat().st_size / 1024:.0f} KB (prese
       f'{len(guion["inmersiones"])} inmersiones, '
       f'{sum(1 for c in guion["capitulos"] for x in c.get("componentes", []) if x["enfoque"])} componentes con lugar en la maqueta')
 print(f'Textos con cifras unidas a su unidad: {cambios}')
+print(f'Catálogo de la maqueta: {piezas_total} piezas en {len(maqueta)} capítulos ({len(capas_js)} capas en los módulos)')
 print(f'Avisos de la propuesta: {len(avisos)}')
 for a in avisos:
     print('  -', a)

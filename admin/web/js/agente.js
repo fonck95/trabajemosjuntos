@@ -1,8 +1,9 @@
 // El asistente del panel (docs/agente.md): un botón flotante que abre una conversación con el modelo. Las respuestas
 // llegan en flujo (NDJSON, `flujo` de api.js) y se pintan por partes; lo que escribe en la base espera la aprobación de
 // la persona en una tarjeta; las acciones que pide el servidor (navegar, recargar, insignias, mapa, presentacion,
-// recorrido) se validan aquí antes de hacerse. El recorrido narrado de la presentación tiene su tarjeta y su barra fija
-// (agente-recorrido.js). Vive en document.body, fuera de #raiz y de #vista: sobrevive a cada cambio de vista.
+// recorrido) se validan aquí antes de hacerse. El plan guiado de la presentación (el recorrido narrado) tiene su tarjeta
+// y su barra fija (agente-recorrido.js). Vive en document.body, fuera de #raiz y de #vista: sobrevive a cada cambio de
+// vista.
 //
 // Seguridad: nada de lo que escribe el modelo se pinta como HTML. Entra con textContent o como nodos de texto, y el
 // Markdown se convierte a nodos con una lista cerrada de elementos (lo demás, también «<img …>», queda como texto). Los
@@ -1266,7 +1267,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     else if (a.tipo === 'recorrido') tarjetaRecorrido(a);
   }
 
-  // ── El recorrido narrado: la tarjeta del chat (agente-recorrido.js) ──
+  // ── El plan guiado (el recorrido narrado): la tarjeta del chat (agente-recorrido.js) ──
   // Los recorridos que llegaron a esta pestaña (los últimos 3), para volver a reproducirlos o reanudarlos
   const recorridosGuardados = new Map();
   function guardarRecorrido(r) {
@@ -1277,11 +1278,13 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   function tarjetaRecorrido(a) {
     const v = tarjetaValida(a);
     if (!v) {
-      nota('El asistente armó un recorrido que no se puede mostrar aquí.', 'alerta');
+      nota('El asistente armó un plan que no se puede mostrar aquí.', 'alerta');
       return;
     }
     const t = crearTarjetaRecorrido(v, {
       el, ico,
+      // las frases de cada paso, ya partidas (la tarjeta resalta la que suena): las del recorrido de esta pestaña
+      frases: (rid) => recorridosGuardados.get(rid)?.escenas.map((e) => e.frases) ?? null,
       // una sugerencia se envía como mensaje de la persona (con un turno en curso, queda escrita para enviarla)
       alSugerencia: (s) => {
         if (turno) { entrada.value = s; entrada.focus(); entrada.dispatchEvent(new Event('input')); } else enviar(s);
@@ -1300,6 +1303,10 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     enAsistente().append(t.el);
     ultima = null;
     programar();
+    // El plan recién llegado queda a la vista aunque la persona haya subido a leer: va a empezar a sonar en la sala y
+    // ahí están sus pasos y sus controles. Después el chat no se mueve solo por él: la lista de pasos de la tarjeta
+    // tiene su propio desplazamiento
+    alFinal(true);
   }
 
   // La píldora «El asistente prepara la explicación…» en la presentación: cuando el asistente leyó el guion de un

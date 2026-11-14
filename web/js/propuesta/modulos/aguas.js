@@ -85,13 +85,16 @@ export function crear(esc, datos) {
   const vistaSistema = (duracion) => esc.encuadrar([capt, tanque, ptap, entrada, [capt[0] - 120, capt[1]]], { rumbo: 192, elev: 42, margen: 0.9, duracion });
   let tSis = 0;
   const parar = () => clearTimeout(tSis);
-  const recorrido = () => { parar(); tSis = setTimeout(() => { if (!esc.st.userMoved && cSis.visible && !cRed.visible && !cAmp.visible) vistaSistema(3.5); }, 3000); };
+  // (con una narración en pantalla —esc.guiado— la cámara la lleva el plan: el módulo no la mueve por su cuenta)
+  const recorrido = () => { parar(); tSis = setTimeout(() => { if (!esc.guiado && !esc.st.paseo && !esc.st.userMoved && cSis.visible && !cRed.visible && !cAmp.visible) vistaSistema(3.5); }, 3000); };
   const vistaPlanta = () => esc.encuadrar(caja([ptap, tanque, capt, amp], 70), { rumbo: 160, elev: 34, margen: 0.86 });
   const vistaCasco = () => esc.encuadrar(lista.flatMap((s) => s.poligono), { rumbo: 196, elev: 50, margen: 0.94 });
   return {
     completo: ['aguas.sistema'],
     salir: () => { parpadeo = false; parar(); },
     alCompleto: parar,
+    // estados que una pieza del catálogo puede pedir (visual.js): la red como está hoy, con agua 9 de cada 24 horas
+    efectos: { intermitente: (v) => { parpadeo = !!v; if (!v) { matRed.opacity = 0.85; fBaja.set(0.9, 1); inv(); } } },
     pasos: {
       portadilla: { capas: ['aguas.sistema', 'aguas.red'], antes: () => { parar(); parpadeo = true; }, vista: vistaCasco },
       sistema: { capas: ['aguas.sistema'], antes: () => { parpadeo = false; fBaja.set(0.9, 1); }, vista: vistaPlanta, animar: recorrido, alFinal: () => vistaSistema() },

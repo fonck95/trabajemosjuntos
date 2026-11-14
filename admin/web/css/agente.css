@@ -297,46 +297,109 @@ body:has(#franja-llamada) .agente-panel {
   .agente-msj.agente-respuesta.trabajando::after { animation: none; }
 }
 
-/* ───────── El recorrido narrado de la presentación (agente-recorrido.js) ─────────
-   La tarjeta: título, dónde suena, avance, escenas (la actual marcada, las hechas con ✓), controles y, al terminar,
-   «Volver a reproducir» y las sugerencias. La barra fija arriba de la conversación mientras suena. */
+/* ───────── El plan guiado de la presentación (agente-recorrido.js) ─────────
+   La tarjeta: «Plan · título», cuántos pasos, cuánto dura y dónde suena; el avance; el estado con «Ver todo» y el
+   interruptor de voz; los pasos numerados (el que suena, marcado y abierto con su frase resaltada; los hechos, con ✓;
+   los demás, en un renglón), los controles y, al terminar, «Volver a reproducir» y las sugerencias. La lista de pasos
+   tiene su propio desplazamiento (el del chat no se toca). La barra fija, arriba de la conversación mientras suena. */
 .agente-recorrido { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px;
-  background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+  background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 9px; container-type: inline-size; }
 .rec-cab { display: flex; gap: 10px; align-items: flex-start; }
 .rec-sello { flex: none; width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center;
   background: var(--accent-soft); color: var(--accent-text); }
 .rec-sello svg { width: 18px; height: 18px; }
-.rec-titulos { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.rec-tipo { font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-text); }
+.rec-titulos { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .rec-titulos h3 { margin: 0; font-size: 15px; font-weight: 750; line-height: 1.3; overflow-wrap: anywhere; }
+.rec-tipo { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-text); }
+.rec-sep { color: var(--muted); font-weight: 500; }
 .rec-meta { color: var(--muted); font-size: 12px; }
 .rec-avance { height: 4px; border-radius: 4px; background: var(--sunken); overflow: hidden; }
 .rec-avance i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: inherit; transition: width .5s ease; }
-.rec-estado { margin: -4px 0 0; font-size: 12.5px; font-weight: 650; color: var(--ink-2); }
+/* El estado, «Ver todo» y la voz, en un renglón (en una tarjeta muy angosta, los dos botones bajan) */
+.rec-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: -2px 0; min-height: 26px; }
+.rec-estado { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 12.5px; font-weight: 650; color: var(--ink-2); }
+.agente-recorrido[data-etapa="listo"] .rec-estado { color: var(--accent-text); }
 .agente-recorrido[data-fase="pausa"] .rec-estado { color: color-mix(in srgb, var(--warn) 60%, var(--ink)); }
-.rec-escenas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; counter-reset: escena; }
-.rec-escena { counter-increment: escena; position: relative; padding: 7px 8px 8px 34px; border-radius: 9px;
-  transition: background .25s ease, opacity .25s ease; }
-.rec-escena .rec-marca { position: absolute; left: 8px; top: 8px; width: 18px; height: 18px; border-radius: 50%;
-  border: 1.5px solid var(--line); display: grid; place-items: center; font: 650 10.5px/1 var(--f-mono); color: var(--muted); }
+.rec-todo { flex: none; border: 0; background: none; padding: 3px 0; font: inherit; font-size: 12px; font-weight: 650;
+  color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; cursor: pointer; }
+@media (hover: hover) { .rec-todo:hover { color: var(--ink); text-decoration-color: currentColor; } }
+.rec-voz { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 3px 6px 3px 8px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font: inherit; font-size: 12px;
+  font-weight: 650; line-height: 16px; cursor: pointer; }
+.rec-voz[hidden] { display: none; }
+.rec-voz svg { width: 14px; height: 14px; }
+.rec-voz-perilla { position: relative; width: 26px; height: 16px; border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 55%, var(--surface)); transition: background .15s ease; }
+.rec-voz-perilla::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%;
+  background: #fff; transition: transform .15s ease; }
+.rec-voz[aria-checked="true"] { color: var(--accent-text); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.rec-voz[aria-checked="true"] .rec-voz-perilla { background: var(--accent); }
+.rec-voz[aria-checked="true"] .rec-voz-perilla::after { transform: translateX(10px); }
+.rec-voz[data-voz="sin_activar"] { border-style: dashed; }
+.rec-voz[data-voz="sin_voces"] { opacity: .6; }
+/* Los pasos. Resumido: el número, dónde, lo que hace (solo los íconos) y la frase en un renglón */
+.rec-escenas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; counter-reset: escena;
+  position: relative; max-height: min(240px, 42vh); max-height: min(240px, 42dvh); overflow-y: auto; scrollbar-width: thin;
+  /* una sombra arriba o abajo mientras quedan pasos por ese lado (las dos primeras capas se mueven con la lista y la tapan
+     al llegar al borde) */
+  background:
+    linear-gradient(var(--surface) 40%, transparent) top / 100% 14px no-repeat local,
+    linear-gradient(transparent, var(--surface) 60%) bottom / 100% 14px no-repeat local,
+    linear-gradient(color-mix(in srgb, var(--ink) 9%, transparent), transparent) top / 100% 6px no-repeat scroll,
+    linear-gradient(transparent, color-mix(in srgb, var(--ink) 9%, transparent)) bottom / 100% 6px no-repeat scroll; }
+.agente-recorrido.completo .rec-escenas { max-height: none; overflow: visible; background: none; }
+.rec-escenas:focus-visible { outline-offset: 2px; }
+.rec-escena { counter-increment: escena; position: relative; flex: none; display: grid; align-items: start;
+  grid-template-columns: 20px minmax(0, 1fr) auto; grid-template-areas: "marca donde chips" "marca frase frase" "marca aviso aviso";
+  column-gap: 8px; padding: 5px 8px; border-radius: 9px; transition: background .25s ease, opacity .25s ease; }
+.rec-escena .rec-marca { grid-area: marca; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line);
+  display: grid; place-items: center; font: 650 10.5px/1 var(--f-mono); color: var(--muted); }
 .rec-escena .rec-marca::before { content: counter(escena); }
 .rec-cierre .rec-marca::before { content: "∑"; }
-.rec-escena.hecha { opacity: .72; }
+.rec-donde { grid-area: donde; min-width: 0; font-size: 12px; font-weight: 700; line-height: 20px; color: var(--ink-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rec-narracion, .rec-puntos { grid-area: frase; min-width: 0; margin: 0; padding: 0; font-size: 12.5px; line-height: 1.45;
+  color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rec-puntos { list-style: none; }
+.rec-puntos li { display: inline; }
+.rec-puntos li + li::before { content: " · "; }
+.rec-chips { grid-area: chips; display: flex; gap: 3px; }
+.rec-chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 20px; height: 20px;
+  border-radius: 999px; border: 1px solid var(--line-soft); background: var(--raised); color: var(--muted);
+  font-size: 11px; line-height: 18px; }
+.rec-chip svg { width: 12px; height: 12px; flex: none; }
+.rec-chip span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.rec-aviso { grid-area: aviso; display: block; margin-top: 2px; font-size: 11.5px; color: color-mix(in srgb, var(--warn) 60%, var(--ink)); }
+.rec-aviso::before { content: "⚠ "; }
+/* Hecho: la marca */
 .rec-escena.hecha .rec-marca { background: var(--ok); border-color: var(--ok); color: #fff; }
 .rec-escena.hecha .rec-marca::before { content: "✓"; }
-.rec-escena[aria-current="step"] { background: var(--accent-soft); opacity: 1; }
+.rec-escena.hecha .rec-donde { color: var(--muted); }
+/* Abierto (el que suena, o todos con «Ver todo»): dónde y la frase enteros, y lo que hace con su nombre */
+.rec-escena.abierta { grid-template-areas: "marca donde donde" "marca frase frase" "marca chips chips" "marca aviso aviso"; padding-block: 7px 8px; }
+.rec-escena.abierta .rec-donde { white-space: normal; overflow: visible; line-height: 1.35; padding-top: 2px; }
+.rec-escena.abierta .rec-narracion, .rec-escena.abierta .rec-puntos { white-space: normal; overflow: visible; overflow-wrap: anywhere;
+  margin-top: 2px; font-size: 13.5px; color: var(--ink-2); }
+.rec-escena.abierta .rec-puntos { list-style: disc; padding-left: 18px; }
+.rec-escena.abierta .rec-puntos li { display: list-item; }
+.rec-escena.abierta .rec-puntos li + li::before { content: none; }
+.rec-escena.abierta .rec-chips { flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.rec-escena.abierta .rec-chip { padding: 0 7px 0 5px; }
+.rec-escena.abierta .rec-chip span { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+/* En curso: marcado, y la frase que suena resaltada (las ya dichas, en firme; las que faltan, tenues) */
+.rec-escena[aria-current="step"] { background: var(--accent-soft); }
 .rec-escena[aria-current="step"] .rec-marca { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
 .rec-escena[aria-current="step"][data-fase="narrando"] .rec-marca { animation: rec-latido 1.4s ease-in-out infinite; }
 @keyframes rec-latido { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 22%, transparent); } }
-.rec-donde { display: block; font-size: 12px; font-weight: 700; color: var(--ink-2); }
-.rec-narracion { margin: 2px 0 0; font-size: 13.5px; line-height: 1.42; overflow-wrap: anywhere; }
-.rec-puntos { margin: 3px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.4; }
-.rec-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
-.rec-chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px 1px 5px; border-radius: 999px;
-  border: 1px solid var(--line-soft); background: var(--raised); color: var(--muted); font-size: 11px; line-height: 18px; }
-.rec-chip svg { width: 12px; height: 12px; }
-.rec-aviso { display: block; margin-top: 4px; font-size: 11.5px; color: color-mix(in srgb, var(--warn) 60%, var(--ink)); }
-.rec-aviso::before { content: "⚠ "; }
+.rec-escena[aria-current="step"] .rec-donde { color: var(--ink); }
+.rec-escena[aria-current="step"] .rec-narracion, .rec-escena[aria-current="step"] .rec-puntos { font-size: 14px; color: var(--ink); }
+.rec-escena[aria-current="step"] .rec-chip { background: var(--surface); border-color: color-mix(in srgb, var(--accent) 22%, var(--line-soft)); color: var(--ink-2); }
+.rec-frase { border-radius: 4px; transition: background .2s ease; }
+/* (más firme con una sombra del mismo color, no con otra negrita: así el texto no cambia de renglones al pasar de frase) */
+.rec-frase.sonando { background: var(--surface); box-shadow: 0 0 0 2px var(--surface);
+  text-shadow: .35px 0 0 currentColor, -.35px 0 0 currentColor; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.rec-frase.sonando ~ .rec-frase { color: var(--muted); }
+.agente-recorrido[data-fase="pausa"] .rec-frase.sonando { text-shadow: none; }
 .rec-nota { margin: 0; font-size: 12.5px; color: var(--ink-2); background: var(--raised); border-radius: 9px; padding: 6px 10px; }
 .rec-nota[hidden], .rec-controles[hidden], .rec-final[hidden], .rec-sugerencias[hidden] { display: none; }
 .rec-controles, .rec-final, .rec-sugerencias { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -351,9 +414,19 @@ body:has(#franja-llamada) .agente-panel {
 .rec-punto { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); animation: agente-latido 1.4s ease-in-out infinite; }
 .agente-rec-barra[data-fase="pausa"] .rec-punto { animation: none; background: var(--warn); }
 .agente-rec-barra .btn svg { width: 14px; height: 14px; }
-@container (max-width: 360px) { .rec-controles .btn span { display: none; } }
-@media (max-width: 420px) { .rec-controles .btn span { display: none; } .agente-rec-barra .btn span { display: none; } }
+/* En el ancho del panel los cinco controles caben en un renglón: pasar de paso y repetir, solo con su ícono (su nombre
+   sigue en aria-label y en el título); más angosto, todos */
+@container (max-width: 480px) {
+  .rec-controles .btn:is([data-accion="anterior"], [data-accion="siguiente"], [data-accion="repetir"]) span { display: none; }
+}
+@container (max-width: 330px) { .rec-controles .btn span { display: none; } }
+@media (max-width: 420px) { .agente-rec-barra .btn span { display: none; } }
+/* Con el dedo: blancos más altos */
+@media (pointer: coarse) {
+  .rec-voz { min-height: 36px; padding-inline: 12px 10px; }
+  .rec-todo { min-height: 36px; padding-inline: 4px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .rec-punto, .rec-escena[aria-current="step"][data-fase="narrando"] .rec-marca { animation: none; }
-  .rec-avance i, .rec-escena { transition: none; }
+  .rec-avance i, .rec-escena, .rec-frase, .rec-voz-perilla, .rec-voz-perilla::after { transition: none; }
 }
