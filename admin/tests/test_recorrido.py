@@ -55,7 +55,7 @@ ENTRADA = {"op": "recorrido", "titulo": "La torre del hospital", "escenas": [
 
 
 def _armar(db=None, uid=7, entrada=ENTRADA, por="asistente"):
-    db = db or _Base()
+    db = db if db is not None else _Base()   # una base de pymongo no se puede usar como booleano
     return db, _hacer(db, uid, entrada, por=por)
 
 
@@ -451,9 +451,16 @@ def test_la_api_cierra_con_el_avance_final_y_reproduce_uno_cerrado():
     assert y["id"] == x["id"] and y["cerrado"] is True
 
 
+@pytest.fixture
+def ctx(sesion):
+    c = aa.contexto(sesion.app, sesion)
+    yield c
+    aa.correr(sesion, c.api.cerrar)
+
+
 def test_con_personas_en_la_conversacion_no_se_proyecta_texto(sesion, ctx):
     db = sesion.app.state.db
-    db.conversaciones.update_one({"_id": ctx.conversacion_id}, {"$set": {"personas": [5]}}, upsert=True)
+    db[conv_db.CONVERSACIONES].update_one({"_id": ctx.conversacion_id}, {"$set": {"personas": [5]}}, upsert=True)
     assert conv_db.tiene_personas(db, ctx.conversacion_id)
     for entrada in (ENTRADA, {"op": "explicar", "explicacion": "Una frase."},
                     {"op": "ir", "capitulo": "salud", "explicacion": "Una frase."}):
