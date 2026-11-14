@@ -95,5 +95,10 @@ html[data-pres-llena] .contenido.lleno { height: 100vh; height: 100dvh; }
 html[data-pres-llena] .presentacion .pres-barra, html[data-pres-llena] .presentacion .pres-remoto { display: none; }
 html[data-pres-llena] .presentacion .pres-marco { background: #000; }
 /* abajo a la izquierda: arriba están las herramientas de la presentación y abajo al centro su control */
-.pres-completa { position: fixed; z-index: 5; left: 14px; bottom: 14px; box-shadow: var(--sombra); }
+.pres-flotantes { position: fixed; z-index: 5; left: 14px; bottom: 14px; display: flex; gap: 8px; }
+.pres-flotantes .btn { box-shadow: var(--sombra); }
 .pres-completa[hidden] { display: none; }
+/* El botón «Voz» del recorrido narrado (la barra de la pestaña, el proyector y la pantalla en off) */
+.pres-voz[aria-pressed="true"] { color: var(--accent-text); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.pres-voz[data-voz="sin_activar"] { border-style: dashed; }
+.pres-voz:disabled { opacity: .55; }

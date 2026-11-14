@@ -32,11 +32,11 @@ docs/agente.md) que el widget aplica con `accionesMapa` o con `ir`. Por qué est
 """
 from __future__ import annotations
 
+import json
 import re
+import secrets
 import time
-import unicodedata
 from dataclasses import dataclass, field
-from datetime import date
 from typing import Annotated, Any, Literal, Union
 from urllib.parse import urlencode
 
@@ -44,6 +44,9 @@ from pydantic import AfterValidator, BeforeValidator, Field, StrictBool, field_v
 from starlette.concurrency import run_in_threadpool
 
 from ... import pantalla as pantalla_off
+from ... import recorrido as rec
+from ...proyectable import DIGITOS_MAX, MAX_EXPLICACION, numero_largo, texto_proyectable  # noqa: F401
+from .. import conversaciones as conv_db
 from .. import guion as guion_presentacion
 from .base import Contexto, ErrorHerramienta, Herramienta, Resultado
 from .gestion import (FiltrosBase, Id, IdOCero, Lugar, Nomenclatura, Perezosa, TipoLugar, _Entrada, error_de_busqueda,
@@ -671,8 +674,13 @@ async def _abrir_vista(ctx: Contexto, a: AbrirVistaEntrada) -> Resultado:
 
 # ───────────────────────────── presentacion ─────────────────────────────
 
-OPS_PRESENTACION = ("indice", "ir", "siguiente", "anterior", "explicar", "quitar_explicacion", "vista", "visual",
-                    "pantalla_completa", "estado")
+OPS_PRESENTACION = ("indice", "guion", "ir", "siguiente", "anterior", "explicar", "quitar_explicacion", "vista",
+                    "visual", "recorrido", "control_recorrido", "pantalla_completa", "estado")
+# Lo que arma un recorrido narrado (`recorrido`) y lo que lo maneja (`control_recorrido`)
+PARTES_RECORRIDO = ("titulo", "escenas", "cierre", "sugerencias")
+# Las ops que cambian lo que se ve: con un recorrido sonando, primero lo colapsan (la sala ve la escena en curso y desde
+# ahí parte la orden)
+COLAPSAN = ("ir", "siguiente", "anterior", "explicar", "quitar_explicacion", "vista", "visual")
 # Lo que dice cada operación del estado de la pantalla en off (las demás no lo cambian): `vista` y `pantalla_completa`
 PARTES_VISTA = ("panel", "indice", "fichas")
 # Lo que cambia `visual` (pantalla_off.VISUAL; `VISUAL` de mando.js y de agente-presentacion.js con los mismos valores)
@@ -680,110 +688,9 @@ PARTES_VISUAL = pantalla_off.VISUAL
 CAMARAS = pantalla_off.CAMARAS
 NOMBRE_CAMARA = {"paso": "el encuadre del paso", "aerea": "vista aérea", "oblicua": "vista oblicua",
                  "rasante": "vista rasante, casi a ras del suelo", "cerca": "más cerca", "lejos": "más lejos"}
-# Una o dos frases cortas: lo que el subtítulo de la presentación muestra entero en cualquier pantalla, del celular al
-# proyector (web/propuesta.html no lo recorta). `MAX_EXPLICACION` de agente-presentacion.js y de mando.js: una prueba
-# los compara
-MAX_EXPLICACION = 220
 MAX_PASO = guion_presentacion.MAX_PASOS
-# Lo que la explicación no puede traer: la ve una sala entera en un proyector. Caracteres que no se ven o que cambian
-# cómo se ve el resto (de control, de formato como las marcas de dirección o el espacio de ancho cero, separadores de
-# línea, sustitutos sueltos, de uso privado, sin asignar, los rellenos que se ven como nada y los selectores de
-# variante), más de dos acentos apilados, una «@» (un correo, un usuario) o un número de 7 o más dígitos (una cédula, un
-# teléfono, un código), también escrito por grupos. Las dos últimas se buscan en la forma NFKC del texto: así la «@» de
-# ancho completo (＠) o la pequeña (﹫), los dígitos de ancho completo o en superíndice y los guiones de compatibilidad
-# cuentan como los comunes. Las mismas reglas, en `explicacionVisible` de agente-presentacion.js y en `textoVisible` de
-# mando.js
-_NO_SE_VEN = frozenset({"Cc", "Cf", "Cs", "Co", "Cn", "Zl", "Zp"})
-_RELLENOS = frozenset("\U0000034f\U0000115f\U00001160\U000017b4\U000017b5\U00002800\U00003164\U0000ffa0")
-_SELECTORES = re.compile("[\U0000180b-\U0000180f\U0000fe00-\U0000fe0f\U000e0000-\U000e0fff]")
-# Una tirada de dígitos con lo que los separa al escribir un teléfono o una cédula: un espacio, un guion, una raya, el
-# signo menos o una barra (con un espacio a cada lado o sin él), un paréntesis que cierra («(604) 832 12 34»), y pegados
-# entre dos dígitos el punto, la coma, el «_», el punto medio o el paréntesis que abre («71.234.567», «1,023,456,789»).
-# Un paréntesis que abre después de un espacio no une («en 2018 (3.383)»), ni el punto o la coma seguidos de un espacio
-# («en 2031. 300 familias», «2028, 2029 y 2030»)
-_GUIONES = "\\-\u2010-\u2015\u2212"
-_TIRADA = re.compile(rf"\d+(?:(?:[.,_\u00b7(]|\) ?|\)? ?[{_GUIONES}/] ?\(?| )\d+)*")
-DIGITOS_MAX = 6
-# Lo que sí puede tener 7 dígitos o más: un periodo («2028–2031», «2028-2031», «2028/2031») y un rango de dos cifras
-# como las de la propuesta («$116.294 – 210.000 M», «1.346–1.500 kWh»), de menor a mayor. Solo con dígitos ASCII
-_PERIODO = re.compile(rf"((?:19|20)[0-9]{{2}}) ?[{_GUIONES}/] ?((?:19|20)[0-9]{{2}})")
-_CIFRA = r"[0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?"
-_RANGO = re.compile(rf"({_CIFRA}) ?[{_GUIONES}] ?({_CIFRA})")
-# Y una fecha (`minimizar._FECHAS`, que tampoco las enmascara): día/mes/año o año/mes/día, con barra, guion, raya o
-# punto (el mismo a los dos lados, con un espacio o sin él: «15/11/2026», «2026-11-15», «15 / 11 / 2026»), de 1900 a
-# 2099 y que exista en el calendario. Suma 8 dígitos y la tirada la tomaría por una cédula; el modelo las escribe con
-# naturalidad (plazos, radicaciones, reuniones). Se apartan antes de buscar las tiradas, como hace minimizar: así lo que
-# va pegado a una fecha se mira solo («el 15/11/2026 300 123 4567» sigue frenado). Solo con dígitos ASCII
-_FECHA = re.compile(rf"(?<!\d)(?:([0-9]{{4}}) ?([.{_GUIONES}/]) ?([0-9]{{1,2}}) ?\2 ?([0-9]{{1,2}})"
-                    rf"|([0-9]{{1,2}}) ?([.{_GUIONES}/]) ?([0-9]{{1,2}}) ?\6 ?([0-9]{{4}}))(?!\d)")
-# Y un monto en pesos con su signo y sus puntos de miles («$1.156.350», el costo por habitante que trae el guion): la
-# tirada va justo después de «$», en grupos de tres y con 7 cifras enteras a lo sumo, las del monto más largo del
-# guion. Sin ese tope pasaban una cédula o un teléfono escritos con «$» y puntos («$1.023.456.789», «$71.234.567»)
-_MONTO = re.compile(r"(?:[0-9]{1,3}|[0-9]\.[0-9]{3})\.[0-9]{3}(?:,[0-9]{1,2})?")
-
-
-def _cifra(t: str) -> float:
-    """«116.294» → 116294; «1,62» → 1.62 (el punto de miles y la coma decimal de la presentación)."""
-    return float(t.replace(".", "").replace(",", "."))
-
-
-def _es_fecha(m: re.Match) -> bool:
-    """¿Es `m` (de `_FECHA`) un día que existe, de 1900 a 2099? («31/02/2026» no: se mira como cualquier número)."""
-    a, mes, dia = (m.group(1), m.group(3), m.group(4)) if m.group(1) else (m.group(8), m.group(7), m.group(5))
-    try:
-        return 1900 <= date(int(a), int(mes), int(dia)).year <= 2099
-    except ValueError:
-        return False
-
-
-def numero_largo(t: str) -> str | None:
-    """La primera tirada de más de DIGITOS_MAX dígitos de `t` (ya en NFKC y con los espacios en uno) que no es un
-    periodo, un rango de cifras, una fecha ni un monto en pesos, o None. Las fechas válidas se quitan antes (cada una
-    corta la tirada)."""
-    t = _FECHA.sub(lambda m: " | " if _es_fecha(m) else m.group(0), t)
-    for m in _TIRADA.finditer(t):
-        tirada = m.group(0)
-        if len(re.findall(r"\d", tirada)) <= DIGITOS_MAX:
-            continue
-        if re.search(r"\$ ?$", t[:m.start()]) and _MONTO.fullmatch(tirada):
-            continue
-        p = _PERIODO.fullmatch(tirada)
-        if p and int(p.group(1)) <= int(p.group(2)):
-            continue
-        r = _RANGO.fullmatch(tirada)
-        if r and _cifra(r.group(1)) <= _cifra(r.group(2)):
-            continue
-        return tirada
-    return None
-
-
-def _explicacion_visible(v: str) -> str:
-    """La explicación para la pantalla: un solo renglón que se ve tal cual es (los espacios seguidos quedan en uno, como
-    los pinta el navegador), sin datos que identifiquen a nadie. Se devuelve como la escribió el modelo (sin NFKC: «m²»
-    no pasa a «m2»); la forma NFKC solo sirve para buscar la «@» y los números."""
-    marcas = 0
-    for c in v:
-        cat = unicodedata.category(c)
-        if (cat in _NO_SE_VEN and c not in "\t\n\r") or c in _RELLENOS or _SELECTORES.match(c):
-            raise ValueError("La explicación trae caracteres invisibles o de control: escríbala sin ellos")
-        marcas = marcas + 1 if cat in ("Mn", "Me") else 0
-        if marcas > 2:
-            raise ValueError("La explicación trae demasiados acentos seguidos sobre una letra")
-    v = " ".join(v.split())
-    if not v:
-        raise ValueError("La explicación está vacía")
-    k = " ".join(unicodedata.normalize("NFKC", v).split())
-    if "@" in k:
-        raise ValueError("La explicación se proyecta ante la sala: no puede llevar «@» (un correo o un usuario). "
-                         "Escríbala sin ella y, si hace falta, dé el dato en el chat")
-    if numero_largo(k):
-        raise ValueError("La explicación se proyecta ante la sala: no puede llevar números de 7 o más dígitos "
-                         "(cédulas, teléfonos o códigos como el BPIN), tampoco con espacios, puntos, guiones o barras. "
-                         "Escriba los montos como los trae el guion («$106.271 M», «$1,2 – 1,4 billones»), un periodo "
-                         "como «2028–2031» y una fecha como «15/11/2026» o «2026-11-15» (día, mes y año que existan), "
-                         "separe dos números seguidos con una palabra o una coma («en 2028, 300 viviendas») y deje los "
-                         "códigos para el chat")
-    return v
+# Las reglas de lo que se proyecta viven en app/proyectable.py (también las usan el recorrido y la pantalla en off)
+_explicacion_visible = texto_proyectable
 
 
 def _paso_id(v: str) -> str:
@@ -803,6 +710,91 @@ def _paso_no_booleano(v: Any) -> Any:
 PasoNumero = Annotated[int, Field(ge=1, le=MAX_PASO), BeforeValidator(_paso_no_booleano)]
 PasoId = Annotated[str, Field(min_length=1, max_length=40), AfterValidator(_paso_id)]
 Explicacion = Annotated[str, Field(min_length=1, max_length=MAX_EXPLICACION), AfterValidator(_explicacion_visible)]
+Rumbo = Annotated[int, Field(ge=0, le=359), BeforeValidator(_paso_no_booleano)]
+
+
+def _sin_plata(maximo: int):
+    """Un texto del recorrido: las reglas de lo que se proyecta, con su tope y sin plata (la presentación técnica no
+    muestra costos)."""
+    return lambda v: texto_proyectable(v, maximo, plata=False)
+
+
+Narracion = Annotated[str, Field(min_length=1, max_length=rec.MAX_NARRACION),
+                      AfterValidator(_sin_plata(rec.MAX_NARRACION))]
+TituloRecorrido = Annotated[str, Field(min_length=3, max_length=rec.MAX_TITULO), AfterValidator(_sin_plata(rec.MAX_TITULO))]
+PuntoCierre = Annotated[str, Field(min_length=3, max_length=rec.MAX_PUNTO), AfterValidator(_sin_plata(rec.MAX_PUNTO))]
+Sugerencia = Annotated[str, Field(min_length=3, max_length=rec.MAX_SUGERENCIA),
+                       AfterValidator(_sin_plata(rec.MAX_SUGERENCIA))]
+
+
+def _volver_al_paso(v: Any, campo: str) -> Any:
+    """«paso» (enfoque, inmersion) y «cerrar» (detalle) vuelven a lo del paso: quedan en None, pero la clave llegó."""
+    palabras = ("cerrar", "ninguna", "ninguno") if campo == "detalle" else ("paso",)
+    return None if isinstance(v, str) and guion_presentacion.clave(v) in palabras else v
+
+
+class ResaltarEntrada(_Entrada):
+    """Lo que una escena señala en pantalla mientras lo nombra: exactamente uno."""
+    cifra: Annotated[int, Field(ge=1, le=rec.RESALTAR["cifra"]), BeforeValidator(_paso_no_booleano)] | None = Field(
+        None, description="La cifra grande n del panel (desde 1, en el orden del paso)")
+    punto: Annotated[int, Field(ge=1, le=rec.RESALTAR["punto"]), BeforeValidator(_paso_no_booleano)] | None = Field(
+        None, description="El punto n de la lista del panel (en el paso de metas, la meta n)")
+    leyenda: Annotated[int, Field(ge=1, le=rec.RESALTAR["leyenda"]), BeforeValidator(_paso_no_booleano)] | None = Field(
+        None, description="La fila n de la leyenda de la maqueta")
+    especificacion: Annotated[int, Field(ge=1, le=rec.RESALTAR["especificacion"]),
+                              BeforeValidator(_paso_no_booleano)] | str | None = Field(None, description=(
+        "La especificación por su nombre («Estructura») o número: de la ficha abierta (detalle) o, sin ficha, de la hoja "
+        "del panel en un paso de componente"))
+    componente: str | None = Field(None, min_length=1, max_length=80, description=(
+        "La tarjeta de un componente (id o nombre), en el paso de componentes"))
+
+    @model_validator(mode="after")
+    def _uno(self):
+        if len(self.model_fields_set) != 1 or any(getattr(self, k) is None for k in self.model_fields_set):
+            raise ValueError("resaltar lleva exactamente una de: cifra, punto, leyenda, especificacion o componente")
+        return self
+
+
+class EscenaEntrada(_Entrada):
+    """Una escena del recorrido: una idea, lo que se dice y lo que se ve mientras se dice (un cambio sobre la escena
+    anterior; al cambiar de paso lo visual vuelve a lo del paso)."""
+    narracion: Narracion = Field(..., description=(
+        "Lo que se dice mientras se ve esta escena: se proyecta y se lee en voz alta. Una o dos frases habladas (hasta "
+        "220 caracteres), sobre lo que la escena muestra; sin costos, «@» ni números de 7 o más dígitos"))
+    capitulo: str | None = Field(None, min_length=2, max_length=60, description=(
+        "Id o nombre del capítulo (obligatorio en la primera escena; las demás siguen en el de la anterior)"))
+    paso: PasoNumero | PasoId | None = Field(None, description="Número del paso desde 1 o su id; sin él, el mismo paso")
+    panel: StrictBool | None = Field(None, description="false deja solo la maqueta 3D («Solo 3D»); se hereda")
+    enfoque: str | None = Field(None, min_length=1, max_length=80, description=(
+        "La cámara va a un componente con lugar en la maqueta (id o nombre); paso vuelve al encuadre del paso"))
+    detalle: str | None = Field(None, min_length=1, max_length=80, description=(
+        "Abre la ficha técnica de un componente (id o nombre); cerrar la cierra"))
+    comparar: Literal["hoy", "proyecto"] | None = Field(None, description=(
+        "hoy: el sitio como está, sin el proyecto, en el mismo encuadre; proyecto lo devuelve"))
+    camara: Literal[CAMARAS] | None = Field(None, description="paso, aerea, oblicua, rasante, cerca o lejos")
+    rumbo: Rumbo | None = Field(None, description="Desde dónde se mira, en grados desde el norte (180: el norte arriba)")
+    girar: StrictBool | None = Field(None, description="true: la cámara gira despacio")
+    inmersion: str | None = Field(None, min_length=1, max_length=80, description=(
+        "Un modelo 3D del atlas del catálogo (id o nombre); maqueta lo cierra; paso, lo que diga el paso"))
+    resaltar: ResaltarEntrada | None = Field(None, description="Señala en pantalla lo que la narración nombra")
+    sostener: float | None = Field(None, ge=0, le=8, description=(
+        "Segundos que la imagen se queda después de narrar (por omisión 1,1, o 2,7 si hay algo que mirar)"))
+
+    @field_validator("enfoque", "inmersion", "detalle", mode="before")
+    @classmethod
+    def _volver(cls, v, info):
+        return _volver_al_paso(v, info.field_name)
+
+
+class CierreEntrada(_Entrada):
+    puntos: list[PuntoCierre] = Field(..., min_length=1, max_length=rec.MAX_PUNTOS, description=(
+        "Dos o tres ideas que quedan en la sala al final (hasta 80 caracteres cada una)"))
+
+    @model_validator(mode="after")
+    def _largo(self):
+        if sum(len(x) for x in self.puntos) > rec.MAX_CIERRE:
+            raise ValueError(f"Los puntos del cierre juntos pasan de {rec.MAX_CIERRE} caracteres: acórtelos")
+        return self
 
 
 class PresentacionEntrada(_Entrada):
@@ -846,12 +838,20 @@ class PresentacionEntrada(_Entrada):
         "pisos, por dentro, el laboratorio, el simulador sísmico, el modelo BIM, el relleno hoy y el parque); maqueta "
         "vuelve a la maqueta en un paso que muestra un modelo; paso, lo que diga el paso"))
     tema: Literal["claro", "oscuro"] | None = Field(None, description="visual: el tema de la pantalla (para el proyector)")
+    titulo: TituloRecorrido | None = Field(None, description="recorrido: el título que se ve en la sala (3 a 80)")
+    escenas: list[EscenaEntrada] | None = Field(None, min_length=1, max_length=rec.MAX_ESCENAS, description=(
+        "recorrido: de 3 a 6 escenas (hasta 8), una idea cada una"))
+    cierre: CierreEntrada | None = Field(None, description="recorrido: dos o tres ideas que quedan en la sala")
+    sugerencias: list[Sugerencia] | None = Field(None, max_length=rec.MAX_SUGERENCIAS, description=(
+        "recorrido: hasta 3 próximos pasos, solo para el chat (no se proyectan)"))
+    accion: Literal[rec.CONTROLES] | None = Field(None, description=(
+        "control_recorrido: pausar, continuar, siguiente, anterior, repetir, reproducir (otra vez, desde el comienzo) o "
+        "detener"))
 
     @field_validator("enfoque", "inmersion", "detalle", mode="before")
     @classmethod
     def _volver_al_paso(cls, v, info):
-        palabras = ("cerrar", "ninguna", "ninguno") if info.field_name == "detalle" else ("paso",)
-        return None if isinstance(v, str) and guion_presentacion.clave(v) in palabras else v
+        return _volver_al_paso(v, info.field_name)
 
     def partes_visuales(self) -> dict:
         """Las partes de `visual` que llegaron (también las que llegaron en null: vuelven a lo del paso)."""
@@ -860,7 +860,14 @@ class PresentacionEntrada(_Entrada):
     @model_validator(mode="after")
     def _segun_op(self):
         vista, completa, visual = PARTES_VISTA, ("activar",), PARTES_VISUAL
+        propias = {"recorrido": PARTES_RECORRIDO, "control_recorrido": ("accion",)}.get(self.op, ())
+        ajenas = [k for k in (*PARTES_RECORRIDO, "accion") if k not in propias and getattr(self, k) is not None]
+        if ajenas:
+            raise ValueError(f"La operación {self.op} no usa: {', '.join(ajenas)}")
         sobran = {"indice": ("capitulo", "paso", "explicacion", *vista, *completa),
+                  "guion": ("explicacion", *vista, *completa),
+                  "recorrido": ("capitulo", "paso", "explicacion", *vista, *completa),
+                  "control_recorrido": ("capitulo", "paso", "explicacion", *vista, *completa),
                   "quitar_explicacion": ("capitulo", "paso", "explicacion", *vista, *completa),
                   "estado": ("capitulo", "paso", "explicacion", *vista, *completa),
                   "explicar": ("capitulo", "paso", *vista, *completa),
@@ -895,16 +902,26 @@ class PresentacionEntrada(_Entrada):
                              "panel), o ninguno de los dos")
         if self.op == "explicar" and self.explicacion is None:
             raise ValueError("Para explicar, escriba la explicacion")
+        if self.op == "guion" and self.capitulo is None:
+            raise ValueError("Para guion, indique el capítulo (id o nombre, del índice)")
+        if self.op == "recorrido" and (self.titulo is None or not self.escenas):
+            raise ValueError("Para recorrido, escriba el titulo y las escenas (de 3 a 6, una idea cada una)")
+        if self.op == "recorrido" and self.escenas[0].capitulo is None:
+            raise ValueError("La primera escena del recorrido dice su capitulo")
+        if self.op == "control_recorrido" and self.accion is None:
+            raise ValueError("Para control_recorrido, diga la accion: pausar, continuar, siguiente, anterior, repetir, "
+                             "reproducir o detener")
         return self
 
 
 def _esquema_presentacion() -> dict:
     """El esquema de la entrada sin la rama «null» del paso (número o id): el modelo simplemente omite la clave."""
     s = esquema(PresentacionEntrada)
-    paso = s["properties"]["paso"]
-    if "anyOf" in paso:
-        paso["anyOf"] = [r for r in paso["anyOf"] if r != {"type": "null"}]
-        paso.pop("default", None)
+    escena = s["properties"]["escenas"].get("items") or {}
+    for paso in (s["properties"]["paso"], (escena.get("properties") or {}).get("paso") or {}):
+        if "anyOf" in paso:
+            paso["anyOf"] = [r for r in paso["anyOf"] if r != {"type": "null"}]
+            paso.pop("default", None)
     return s
 
 
@@ -992,7 +1009,11 @@ def _estado_para_modelo(doc: dict | None, e: dict, g: guion_presentacion.Guion, 
            "indice": e["indice"], "fichas": e["fichas"], "llena_la_ventana": e["completa"],
            "visual": {k: e[k] for k in PARTES_VISUAL}}
     if doc and doc.get("por") in pantalla_off.ORIGENES:
-        out["cambiada_por"] = "el asistente del panel" if doc["por"] == "asistente" else "un agente por MCP"
+        out["cambiada_por"] = {"asistente": "el asistente del panel", "mcp": "un agente por MCP",
+                               "panel": "los controles del panel"}[doc["por"]]
+    r = pantalla_off.resumen_recorrido(doc, g)
+    if r:
+        out["recorrido"] = {**r, "muestra": pantalla_off.describir_recorrido(r)}
     return out
 
 
@@ -1017,10 +1038,22 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
         return Resultado({**g.indice(), "nota": (
             "Para mostrar un paso, op ir con su capitulo (id) y paso (número desde 1). Lo que se ve en cada paso le "
             "llega al ir.")}, f"Índice de la presentación ({len(g)} capítulos)")
+    if a.op == "guion":
+        ci = _resolver_capitulo(g, a.capitulo)
+        c = g.capitulos[ci]
+        return Resultado({**g.capitulo_para_leer(ci), "nota": NOTA_GUION},
+                         f"Guion de {c['nombre']} · {len(c['pasos'])} pasos, {len(c.get('componentes') or [])} componentes")
     doc = await run_in_threadpool(pantalla_off.leer, db, uid)
-    e = pantalla_off.estado(doc, g)
     abierta = pantalla_off.conectada(doc)
     desde_pantalla = abierta or por == "mcp"
+    if a.op == "recorrido":
+        return await _recorrido(db, uid, g, a, por, abierta)
+    if a.op == "control_recorrido":
+        return await _control_recorrido(db, uid, g, a, por, abierta)
+    if a.op in COLAPSAN:
+        # con un recorrido sonando, la orden parte de la escena que la sala está viendo (y el recorrido se cierra)
+        doc = await run_in_threadpool(pantalla_off.colapsar, db, uid, g, por) or doc
+    e = pantalla_off.estado(doc, g)
     if a.op == "estado":
         return Resultado({"pantalla": _estado_para_modelo(doc, e, g, abierta), "nota": (
             NOTA_PANTALLA_ABIERTA if abierta else NOTA_SIN_PANTALLA)},
@@ -1165,8 +1198,295 @@ def _visual(g: guion_presentacion.Guion, e: dict, a: PresentacionEntrada, desde_
     return contenido, "La presentación muestra " + ", ".join(dicho), cambios
 
 
+# ───────────────────────────── el recorrido narrado ─────────────────────────────
+
+NOTA_GUION = (
+    "Para presentar, arme UN recorrido (op recorrido) de 3 a 6 escenas con este arco, omitiendo lo que no aplique: "
+    "1) ubicar (el paso, cámara aerea u oblicua); 2) cómo está hoy (comparar hoy o la inmersión de hoy); 3) qué se "
+    "construye (comparar proyecto, enfoque, resaltar la leyenda); 4) cómo funciona o el dato clave (detalle con la "
+    "especificación resaltada, una inmersión, un punto de la lista); 5) qué cambia y cuándo (la meta o la cifra "
+    "resaltada); y un cierre de 2 o 3 ideas. Cada escena: una idea, una o dos frases habladas que nombran lo que se ve "
+    "en ese momento, con las cifras tal como vienen aquí y sin costos. Lo que se puede resaltar en cada paso está en "
+    "«resaltable». Ejemplo: {\"op\":\"recorrido\",\"titulo\":\"La torre del hospital\",\"escenas\":[{\"capitulo\":"
+    "\"salud\",\"paso\":\"torre\",\"camara\":\"oblicua\",\"narracion\":\"…\"},{\"detalle\":\"torre\",\"resaltar\":"
+    "{\"especificacion\":\"Estructura\"},\"narracion\":\"…\"}],\"cierre\":{\"puntos\":[\"…\",\"…\"]}}")
+NOTA_RECORRIDO = (
+    "La sala ya lo está viendo y oyendo, escena por escena. En el chat no repita la narración: complemente en 3 a 6 líneas "
+    "con datos del guion que no se dijeron y termine con una pregunta. Si la persona escribe, el recorrido se pausa: "
+    "responda breve y siga con control_recorrido (continuar) o arme otro recorrido.")
+HACE = {"paso": "cambia de paso", "camara": "mueve la cámara", "enfoque": "enfoca una obra", "ficha": "abre una ficha",
+        "hoy": "muestra hoy", "proyecto": "muestra el proyecto", "modelo": "abre un modelo del atlas",
+        "resaltar": "resalta", "solo3d": "solo 3D", "girar": "gira"}
+_NUMERO = re.compile(r"\d[\d.,]*\d|\d")
+
+
+def _con_escena(e: ErrorHerramienta, n: int) -> ErrorHerramienta:
+    """El error de una escena, con su número al comienzo y en el detalle (el modelo corrige esa)."""
+    return ErrorHerramienta(f"Escena {n}: {e}", e.codigo, estado=e.estado, detalle={"escena": n, **(e.detalle or {})})
+
+
+def _resolver_resaltar(g: guion_presentacion.Guion, ci: int, pi: int, visual: dict, panel: bool,
+                       r: ResaltarEntrada | None) -> dict | None:
+    """El resaltado absoluto de una escena (`recorrido.RESALTAR_TIPOS`), contra lo que muestra el paso o la ficha."""
+    if r is None:
+        return None
+    tipo = next(iter(r.model_fields_set))
+    valor = getattr(r, tipo)
+    hay = g.resaltable(ci, pi)
+    titulo = g.capitulos[ci]["pasos"][pi]["titulo"]
+    if not panel and tipo not in ("leyenda", "especificacion"):
+        raise ErrorHerramienta("Con «Solo 3D» (panel false) solo se resalta la leyenda o la ficha técnica.", "invalido",
+                               estado=422)
+    if tipo == "componente":
+        x = g.componente(ci, valor)
+        if x is None or x["id"] not in hay.get("componentes", []):
+            raise ErrorHerramienta("Las tarjetas de componentes solo están en el paso «componentes» del capítulo: "
+                                   "para señalar una obra en otro paso use enfoque o detalle.", "invalido", estado=422,
+                                   detalle={"componentes": hay.get("componentes", [])})
+        return {"tipo": "componente", "id": x["id"]}
+    if tipo == "especificacion":
+        en = "ficha" if visual["detalle"] else "panel"
+        nombres = g.especificaciones(ci, visual["detalle"]) if en == "ficha" else hay["especificaciones"]
+        if not panel and en == "panel":
+            raise ErrorHerramienta("Con «Solo 3D» la hoja del panel no se ve: abra la ficha (detalle).", "invalido",
+                                   estado=422)
+        if isinstance(valor, int):
+            n = valor if valor <= len(nombres) else None
+        else:
+            n = next((i + 1 for i, x in enumerate(nombres) if guion_presentacion.clave(x) == guion_presentacion.clave(valor)),
+                     None)
+        if n is None:
+            donde = "la ficha abierta" if en == "ficha" else f"el panel del paso «{titulo}»"
+            raise ErrorHerramienta(f"{donde[0].upper()}{donde[1:]} no tiene la especificación «{valor}»; tiene "
+                                   f"{', '.join(nombres) or 'ninguna (abra una ficha con detalle)'}.", "invalido",
+                                   estado=422, detalle={"especificaciones": nombres})
+        return {"tipo": "especificacion", "n": n, "en": en}
+    cuantos = {"cifra": hay["cifras"], "punto": hay["puntos"], "leyenda": hay["leyenda"]}[tipo]
+    if valor > cuantos:
+        raise ErrorHerramienta(f"El paso «{titulo}» tiene {cuantos} {tipo}{'s' if cuantos != 1 else ''} para resaltar, "
+                               f"no la {valor}.", "invalido", estado=422, detalle={"resaltable": hay})
+    return {"tipo": tipo, "n": valor}
+
+
+def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> dict:
+    """Las escenas del modelo (cada una un cambio sobre la anterior) como recorrido absoluto, resueltas contra el guion
+    con los mismos resolutores de ir y visual. Todo o nada: el primer error, con su número de escena."""
+    escenas: list[dict] = []
+    ci = pi = None
+    panel, visual = True, dict(rec.VISUAL_INICIAL)
+    for n, x in enumerate(a.escenas, 1):
+        try:
+            if x.capitulo is not None:
+                nci = _resolver_capitulo(g, x.capitulo)
+                npi = _resolver_paso(g, nci, x.paso)
+            elif x.paso is not None:
+                nci, npi = ci, _resolver_paso(g, ci, x.paso)
+            else:
+                nci, npi = ci, pi
+            if (nci, npi) != (ci, pi):
+                visual = dict(rec.VISUAL_INICIAL)   # otro paso: lo visual vuelve a lo del paso (visual.js, pantalla)
+            ci, pi = nci, npi
+            partes = {k: getattr(x, k) for k in rec.VISUAL if k in x.model_fields_set}
+            for k in ("enfoque", "detalle"):
+                if partes.get(k) is not None:
+                    partes[k] = _resolver_componente(g, ci, partes[k], con_lugar=k == "enfoque")["id"]
+            if partes.get("inmersion") is not None:
+                i = _resolver_inmersion(g, partes["inmersion"])
+                partes["inmersion"] = i["id"] if i else "maqueta"
+            nulos = [k for k in ("camara", "rumbo", "girar", "comparar") if k in partes and partes[k] is None]
+            if nulos:
+                raise ErrorHerramienta(f"{', '.join(nulos)} no va vacío: diga el valor.", "invalido", estado=422)
+            if partes.get("camara") == "paso" and "rumbo" not in partes:
+                partes["rumbo"] = None
+            visual = {**visual, **partes}
+            if x.panel is not None:
+                panel = x.panel
+            resaltar = _resolver_resaltar(g, ci, pi, visual, panel, x.resaltar)
+        except ErrorHerramienta as e:
+            raise _con_escena(e, n) from None
+        esc = {"capitulo": g.capitulos[ci]["id"], "paso": pi + 1, "panel": panel, "visual": dict(visual),
+               "resaltar": resaltar, "frases": rec.partir_frases(x.narracion), "sostener_ms": 0}
+        esc["sostener_ms"] = int(round(x.sostener * 1000)) if x.sostener is not None else             rec.sostener_por_omision(esc, escenas[-1] if escenas else None, g)
+        escenas.append(esc)
+    return {"id": secrets.token_hex(6), "titulo": a.titulo, "escenas": escenas,
+            "cierre": {"puntos": list(a.cierre.puntos)} if a.cierre else None}
+
+
+def _digitos(t: str) -> str:
+    return re.sub(r"\D", "", t)
+
+
+def _avisos(g: guion_presentacion.Guion, r: dict) -> list[str]:
+    """Lo que no impide el recorrido pero conviene corregir la próxima vez (no bloquea)."""
+    out = []
+    usados = {e["capitulo"] for e in r["escenas"]}
+    texto_guion = json.dumps([c for c in g.capitulos if c["id"] in usados], ensure_ascii=False)
+    del_guion = {_digitos(m) for m in _NUMERO.findall(texto_guion)}
+    for n, e in enumerate(r["escenas"], 1):
+        narracion = " ".join(e["frases"])
+        fuera = [m for m in _NUMERO.findall(narracion) if len(_digitos(m)) >= 2 and _digitos(m) not in del_guion]
+        if fuera:
+            out.append(f"escena {n}: {', '.join(dict.fromkeys(fuera))} no está en el guion de lo que muestra: las cifras, "
+                       "tal como las trae el guion")
+        if len(narracion) > 200:
+            out.append(f"escena {n}: la narración pasa de 200 caracteres (mejor una idea más corta)")
+    quieta = 1
+    for a, b in zip(r["escenas"], r["escenas"][1:]):
+        igual = all(a[k] == b[k] for k in ("capitulo", "paso", "panel", "visual")) and not b["resaltar"]
+        quieta = quieta + 1 if igual else 1
+        if quieta == 3:
+            out.append("la pantalla no cambia en tres escenas seguidas: cada escena debería mostrar algo")
+    if len(r["escenas"]) >= 4 and not r["cierre"]:
+        out.append("un recorrido de 4 escenas o más sin cierre: dos o tres ideas que queden en la sala")
+    return out
+
+
+def _hace(g: guion_presentacion.Guion, esc: dict, anterior: dict | None) -> list[str]:
+    """Lo que hace una escena, de la lista fija `HACE` (los chips de la tarjeta del chat)."""
+    v, a = esc["visual"], (anterior or {}).get("visual") or rec.VISUAL_INICIAL
+    out = []
+    if not anterior or (anterior["capitulo"], anterior["paso"]) != (esc["capitulo"], esc["paso"]):
+        out.append("paso")
+    if v["camara"] != a["camara"] or v["rumbo"] != a["rumbo"]:
+        out.append("camara")
+    if v["enfoque"] and v["enfoque"] != a["enfoque"]:
+        out.append("enfoque")
+    if v["detalle"] and v["detalle"] != a["detalle"]:
+        out.append("ficha")
+    if v["comparar"] != a["comparar"]:
+        out.append(v["comparar"])
+    if rec.abre_atlas(esc, anterior, g):
+        out.append("modelo")
+    if esc["resaltar"]:
+        out.append("resaltar")
+    if not esc["panel"] and (not anterior or anterior["panel"]):
+        out.append("solo3d")
+    if v["girar"] and not a["girar"]:
+        out.append("girar")
+    return out
+
+
+def _donde(g: guion_presentacion.Guion, esc: dict) -> str:
+    c = g.capitulos[g.por_id(esc["capitulo"])]
+    return f"{c['nombre']} · {c['pasos'][esc['paso'] - 1]['titulo']}"
+
+
+def _muestra(g: guion_presentacion.Guion, esc: dict) -> str:
+    """Lo que ve la sala en una escena, para el modelo: «Salud · paso 3 de 10 (Una torre…) · vista oblicua · ficha de…»."""
+    c = g.capitulos[g.por_id(esc["capitulo"])]
+    v = esc["visual"]
+    nombres = {x["id"]: x["nombre"] for x in c.get("componentes") or []}
+    inm = {i["id"]: i.get("nombre") for i in g.inmersiones}
+    partes = [f"{c['nombre']} · paso {esc['paso']} de {len(c['pasos'])} ({c['pasos'][esc['paso'] - 1]['titulo']})"]
+    if not esc["panel"]:
+        partes.append("solo 3D")
+    if v["camara"] != "paso":
+        partes.append(NOMBRE_CAMARA[v["camara"]])
+    if v["rumbo"] is not None:
+        partes.append(f"rumbo {v['rumbo']}°")
+    if v["girar"]:
+        partes.append("girando")
+    if v["enfoque"]:
+        partes.append(f"cámara en {nombres.get(v['enfoque'], v['enfoque'])}")
+    if v["detalle"]:
+        partes.append(f"ficha de {nombres.get(v['detalle'], v['detalle'])}")
+    if v["comparar"] == "hoy":
+        partes.append("el sitio hoy")
+    i = rec.inmersion_de(esc, g)
+    if i:
+        partes.append(f"modelo del atlas: {inm.get(i, i)}")
+    if esc["resaltar"]:
+        r = esc["resaltar"]
+        partes.append(f"resalta {r['tipo']} {r.get('n') or nombres.get(r.get('id'), r.get('id'))}")
+    return " · ".join(partes)
+
+
+DONDE_SUENA = {"vista": "la vista Presentación de la pestaña del chat (o el proyector, si hay uno abierto)",
+               "pantalla_off": "la pantalla en off"}
+
+
+async def _recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: PresentacionEntrada, por: str,
+                     abierta: bool) -> Resultado:
+    """La op `recorrido`: compone, valida todo o nada, guarda y devuelve lo que el modelo necesita (compacto) y, al
+    asistente, las acciones (la de la presentación si suena en la pestaña o el proyector, y la de la tarjeta del chat).
+    Por MCP hace falta una pantalla en off abierta: no hay otra pantalla donde suene."""
+    if por == "mcp" and not abierta:
+        raise ErrorHerramienta("Abra la pantalla en off antes de un recorrido (la vista Presentación en modo en off, en el "
+                               "proyector): por MCP no hay otra pantalla donde se vea y se oiga. ir y visual sí quedan "
+                               "guardados.", "sin_pantalla", estado=409)
+    r = _componer(g, a)
+    problemas = rec.validar(r, g)
+    if problemas:   # no debería: _componer valida lo mismo; si pasa, mejor no reproducir nada
+        raise ErrorHerramienta("El recorrido no se puede reproducir: " + "; ".join(problemas[:4]), "invalido", estado=422)
+    ms = rec.duracion_ms(r, g)
+    if ms > rec.MAX_DURACION_MS:
+        raise ErrorHerramienta(f"El recorrido dura unos {round(ms / 1000)} s y el tope es {rec.MAX_DURACION_MS // 1000}: "
+                               "divídalo en dos (menos escenas o narraciones más cortas).", "invalido", estado=422)
+    destino = "pantalla_off" if abierta or por == "mcp" else "vista"
+    await run_in_threadpool(pantalla_off.guardar_recorrido, db, uid, r, destino, por)
+    avisos = _avisos(g, r)
+    minutos, segundos = divmod(round(ms / 1000), 60)
+    dura = f"{minutos} min {segundos} s" if minutos else f"{segundos} s"
+    contenido = {"recorrido": {"id": r["id"], "titulo": r["titulo"], "escenas": len(r["escenas"]),
+                               "cierre": bool(r["cierre"]), "duracion_estimada_s": round(ms / 1000),
+                               "se_reproduce_en": DONDE_SUENA[destino]},
+                 "escenas": [{"n": n, "muestra": _muestra(g, e), "narracion": " ".join(e["frases"])}
+                             for n, e in enumerate(r["escenas"], 1)],
+                 "nota": NOTA_RECORRIDO}
+    if avisos:
+        contenido["avisos"] = avisos
+    acciones: list[dict] = []
+    if por == "asistente":
+        if destino == "vista":
+            acciones.append({"tipo": "presentacion", "op": "recorrido", "recorrido": r})
+        acciones.append({"tipo": "recorrido", "id": r["id"], "titulo": r["titulo"], "destino": destino,
+                         "duracion_ms": ms, "cierre": r["cierre"]["puntos"] if r["cierre"] else None,
+                         "sugerencias": list(a.sugerencias or []),
+                         "escenas": [{"narracion": " ".join(e["frases"]), "donde": _donde(g, e),
+                                      "hace": _hace(g, e, r["escenas"][n - 1] if n else None)}
+                                     for n, e in enumerate(r["escenas"])]})
+    return Resultado(contenido, f"Recorrido «{r['titulo']}» · {len(r['escenas'])} escenas · ≈{dura}", acciones=acciones)
+
+
+async def _control_recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: PresentacionEntrada, por: str,
+                             abierta: bool) -> Resultado:
+    """La op `control_recorrido`: queda guardado (la pantalla en off lo aplica una vez) y, si el recorrido suena en la
+    pestaña o el proyector, va como acción al navegador del asistente. «reproducir» lo vuelve a empezar con otro id."""
+    try:
+        res = await run_in_threadpool(pantalla_off.controlar, db, uid, g, a.accion, por)
+    except ValueError:
+        raise ErrorHerramienta("No hay un recorrido sonando: arme uno con la op recorrido.", "sin_recorrido",
+                               estado=409) from None
+    r, doc = res["recorrido"], res["doc"]
+    estado = pantalla_off.resumen_recorrido(doc, g) or {}
+    acciones: list[dict] = []
+    if por == "asistente" and r and r["destino"] == "vista":
+        if a.accion == "reproducir":
+            acciones.append({"tipo": "presentacion", "op": "recorrido",
+                             "recorrido": {k: r[k] for k in ("id", "titulo", "escenas", "cierre")}})
+        else:
+            acciones.append({"tipo": "presentacion", "op": "control_recorrido", "rid": r["id"], "accion": a.accion})
+    nombres = {"pausar": "Pausé", "continuar": "Seguí con", "siguiente": "Pasé a la escena siguiente de",
+               "anterior": "Volví a la escena anterior de", "repetir": "Repetí la escena de", "reproducir": "Volví a empezar",
+               "detener": "Detuve"}
+    contenido = {"recorrido": {k: estado.get(k) for k in ("id", "titulo", "escena", "de", "fase")}, "accion": a.accion,
+                 "nota": "Se aplica en la pantalla donde suena el recorrido; el avance llega en estado y en el contexto."}
+    return Resultado(contenido, f"{nombres[a.accion]} el recorrido «{(r or {}).get('titulo', '')}»", acciones=acciones)
+
+
+# Las ops que proyectan texto escrito por el modelo: en una conversación que ya trae datos de habitantes no van
+PROYECTAN_TEXTO = ("recorrido", "explicar")
+
+
 async def _presentacion(ctx: Contexto, a: PresentacionEntrada) -> Resultado:
     exigir_permiso(ctx, "presentacion.ver", "Su rol no abre la presentación en el panel.")
+    if a.op in PROYECTAN_TEXTO or a.explicacion is not None:
+        tiene = await run_in_threadpool(conv_db.tiene_personas, ctx.db, ctx.conversacion_id)
+        if tiene:
+            raise ErrorHerramienta(
+                "Esta conversación ya trae datos de habitantes: lo que se proyecta ante la sala no puede llevar texto "
+                "escrito aquí. Para presentar con narración, abra una conversación nueva; ir y visual sí funcionan.",
+                "con_personas", estado=409)
     return await presentacion_en_pantalla(ctx.db, ctx.quien.uid, a, "asistente")
 
 
@@ -1191,19 +1511,20 @@ D_ABRIR_VISTA = (
     "para manejarla, la herramienta presentacion). Solo abre lo que su rol puede ver. No devuelve datos: después diga "
     "en una frase qué quedó en pantalla.")
 D_PRESENTACION = (
-    "Presenta la propuesta Yondó 2028–2031 en su versión técnica (lo que se construye, sin costos: portada, siete "
-    "módulos y cronograma, sobre la maqueta 3D del territorio y con modelos 3D del atlas) en el panel de la persona o "
-    "en su pantalla en off (un proyector sin controles que solo cambia con estas órdenes). indice: capítulos, títulos "
-    "de pasos, ids de componentes e inmersiones. ir: a un capítulo y paso; devuelve lo que muestra (especificaciones, "
-    "plazos, metas, 3D) para explicarlo con esos datos. siguiente/anterior: un paso (desde capitulo y paso del contexto "
-    "o desde la pantalla en off). explicar: una o dos frases en pantalla (hasta 220 caracteres); quitar_explicacion. "
-    "vista: panel, indice o fichas. visual, sin cambiar de paso y combinable: enfoque (la cámara a un componente), "
-    "detalle (su ficha técnica), comparar (hoy o proyecto), camara (paso, aerea, oblicua, rasante, cerca, lejos), rumbo "
-    "(grados desde el norte; 180 deja el norte arriba), girar, inmersion (un modelo del atlas: la torre por pisos o por "
-    "dentro, el simulador sísmico, el BIM, el relleno) y tema; devuelve la ficha de lo que muestra y vuelve a lo del "
-    "paso al cambiar de paso, salvo el tema. pantalla_completa (activar) y estado. Lo que no existe o es ambiguo no "
-    "mueve nada y vuelve con candidatos. La pantalla la ve una sala: nunca datos de habitantes, «@» ni números de 7 o "
-    "más dígitos.")
+    "Presenta la propuesta Yondó 2028–2031 en su versión técnica (lo que se construye, sin costos, sobre la maqueta 3D "
+    "del territorio y con modelos del atlas) en el panel de la persona o en su pantalla en off (un proyector sin "
+    "controles). PARA EXPLICAR, UN RECORRIDO: guion (los datos de un capítulo: pasos, lo resaltable, fichas, "
+    "inmersiones; no mueve nada) y luego recorrido, en UNA llamada: titulo, de 3 a 6 escenas y cierre {puntos}. Cada "
+    "escena es una idea: narracion (una o dos frases que se proyectan y se dicen en voz alta) y lo que se ve mientras "
+    "tanto (capitulo, paso, panel, enfoque, detalle, comparar, camara, rumbo, girar, inmersion, resaltar lo que nombra; "
+    "lo que no cambia sigue de la anterior). La pantalla lo reproduce sola, a ritmo humano. Ejemplo de escenas: "
+    "[{\"capitulo\":\"salud\",\"paso\":\"torre\",\"camara\":\"oblicua\",\"narracion\":\"…\"},{\"detalle\":\"torre\","
+    "\"resaltar\":{\"especificacion\":\"Estructura\"},\"narracion\":\"…\"}]. control_recorrido: pausar, continuar, "
+    "siguiente, anterior, repetir, reproducir, detener. Pedidos puntuales (detienen el recorrido): indice; ir (devuelve "
+    "lo que muestra el paso); siguiente/anterior; explicar (una frase en pantalla, hasta 220 caracteres) y "
+    "quitar_explicacion; vista (panel, indice, fichas); visual (enfoque, detalle, comparar, camara, rumbo, girar, "
+    "inmersion, tema); pantalla_completa; estado (qué muestra y en qué escena va). Lo que no existe vuelve con "
+    "candidatos. La sala lo ve: nunca datos de habitantes, costos, «@» ni números de 7 o más dígitos.")
 
 HERRAMIENTAS: list[Herramienta] = [
     Herramienta("mapa", D_MAPA, MapaEntrada, "interfaz", ("mapa.ver",), "Moviendo el mapa", _mapa,

@@ -33,8 +33,21 @@ class _Coleccion:
         self.docs: dict = {}
 
     @staticmethod
-    def _casa(d: dict, filtro: dict) -> bool:
-        return all(d.get(k) == v for k, v in (filtro or {}).items())
+    def _valor(d: dict, k: str):
+        for parte in k.split("."):
+            d = d.get(parte) if isinstance(d, dict) else None
+        return d
+
+    @classmethod
+    def _casa(cls, d: dict, filtro: dict) -> bool:
+        return all(cls._valor(d, k) == v for k, v in (filtro or {}).items())
+
+    @staticmethod
+    def _poner(d: dict, k: str, v) -> None:
+        *camino, ultima = k.split(".")
+        for parte in camino:
+            d = d.setdefault(parte, {})
+        d[ultima] = v
 
     def find_one(self, filtro=None, proyeccion=None):
         for d in self.docs.values():
@@ -49,7 +62,8 @@ class _Coleccion:
                 return None
             d = dict(filtro)
             self.docs[d["_id"]] = d
-        d.update(cambios.get("$set", {}))
+        for k, v in cambios.get("$set", {}).items():
+            self._poner(d, k, copy.deepcopy(v))
         for k, v in cambios.get("$inc", {}).items():
             d[k] = d.get(k, 0) + v
         return copy.deepcopy(d)
@@ -452,7 +466,8 @@ def test_la_pantalla_pregunta_por_su_estado(sesion):
     assert r.status_code == 200
     e = r.json()
     assert e == {"v": 0, "capitulo": "portada", "paso": 1, "explicacion": None, "panel": True, "indice": False,
-                 "fichas": False, "completa": False, "orden_completa": 0}
+                 "fichas": False, "completa": False, "orden_completa": 0, **pantalla.VISUAL_INICIAL, "tema": None,
+                 "recorrido": None, "control_recorrido": None, "progreso": None}
     assert sesion.get("/api/pantalla?v=0").status_code == 204
     db = sesion.app.state.db
     assert pantalla.conectada(db.pantallas.find_one({"_id": 0}))

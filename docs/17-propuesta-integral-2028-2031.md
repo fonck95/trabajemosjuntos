@@ -266,6 +266,11 @@ persona crea en su cuenta.
   que `build_propuesta.py` le calcula a cada uno: el paso que lo desarrolla, sus sitios o trazados de `geo.json`, o la
   réplica de una sede), abrir su ficha técnica, mostrar el sitio hoy frente al proyecto, la cámara aérea, oblicua o
   rasante, más cerca o más lejos, el rumbo, que gire, una inmersión y el tema claro u oscuro.
+- **Recorridos narrados** (`web/js/propuesta/mando.js`, la orden `escena`): el asistente arma de una vez varias escenas,
+  cada una con lo que se ve y lo que se dice; el panel las reproduce con su propio reloj y la presentación cambia la
+  imagen, espera a que se asiente, resalta lo que se nombra (una cifra, un punto, la leyenda, una especificación) y
+  narra frase por frase en el subtítulo, con la voz del navegador si se encendió en el panel; cierra con «En resumen» y
+  «¿Preguntas?». Ver `admin/docs/agente.md`, «Recorridos narrados».
 
 ## Ideas incorporadas de los renders del usuario
 

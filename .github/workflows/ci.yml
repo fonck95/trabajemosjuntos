@@ -27,8 +27,15 @@ jobs:
           done
       - name: La presentación no numera los capítulos
         run: |
-          if grep -nE 'padStart\(2, ?.0.\)|class="num"|\$\{c\.n\}|\$\{i \+ 1\}\.' web/js/propuesta/main.js web/js/propuesta/modulos/*.js; then
+          if grep -nE 'padStart\(2, ?.0.\)|class="num"|\$\{c\.n\}|\$\{i \+ 1\}\.' web/js/propuesta/main.js web/js/propuesta/mando.js web/js/propuesta/visual.js web/js/propuesta/modulos/*.js; then
             echo 'La presentación muestra el nombre del punto, no un número de 1 a 7'
+            exit 1
+          fi
+      - name: La presentación pública no habla
+        run: |
+          # La voz del recorrido narrado vive en el panel (admin/web/js/voz.js), tras la sesión y un gesto de la persona
+          if grep -rn 'speechSynthesis' web/js; then
+            echo 'La síntesis de voz va solo en el panel (admin/web/js/voz.js)'
             exit 1
           fi
   despliegue:

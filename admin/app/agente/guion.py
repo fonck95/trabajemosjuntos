@@ -484,6 +484,51 @@ class Guion:
                 pi = 0
         return ci, pi
 
+    def especificaciones(self, ci: int, componente: Any) -> list[str]:
+        """Los nombres de las especificaciones sin plata de un componente del capítulo (la parte antes de «:», en el orden
+        de su hoja técnica: la del panel en su paso y la de su ficha)."""
+        x = self.componente(ci, componente) if isinstance(componente, str) else None
+        return [e.split(": ", 1)[0] for e in (x or {}).get("especificaciones") or []]
+
+    def resaltable(self, ci: int, pi: int) -> dict:
+        """Lo que un recorrido puede señalar en el paso `pi` del capítulo `ci` (`resaltar` de main.js): cuántas cifras,
+        puntos (la lista o, en el de metas, las metas) y filas de la leyenda muestra, los nombres de las especificaciones
+        de la hoja del panel (en un paso de componente) y las tarjetas de componentes (en el paso de componentes)."""
+        p = self.capitulos[ci]["pasos"][pi]
+        comp = p.get("componente") if isinstance(p.get("componente"), dict) else {}
+        out = {"cifras": len(p.get("cifras") or []),
+               "puntos": len(p.get("metas") or []) if p.get("tipo") == "metas" else len(p.get("lista") or []),
+               "leyenda": len(p.get("leyenda") or []),
+               "especificaciones": [e.split(": ", 1)[0] for e in comp.get("especificaciones") or []]}
+        if p.get("tipo") == "componentes":
+            out["componentes"] = [x["id"] for x in self.componentes(ci)]
+        return out
+
+    def capitulo_para_leer(self, ci: int, tope: int = 32000) -> dict:
+        """Todo lo de un capítulo para armar un recorrido narrado, de una vez: sus pasos (con lo que muestra cada uno y
+        lo que se puede resaltar), la ficha técnica de cada componente (una sola vez: el paso dice cuál con su id) y el
+        catálogo de inmersiones. Si pasa de `tope` bytes, las fichas van sin descripción ni referentes."""
+        c = self.capitulos[ci]
+        pasos = []
+        for pi, p in enumerate(c["pasos"]):
+            x = {k: v for k, v in p.items() if k != "componente"}
+            if isinstance(p.get("componente"), dict):
+                x["componente"] = p["componente"].get("id")
+            if isinstance(p.get("inmersion"), dict):
+                x["inmersion"] = p["inmersion"].get("id")
+            pasos.append({"n": pi + 1, **x, "resaltable": self.resaltable(ci, pi)})
+        fichas = [{**{k: v for k, v in x.items() if k != "enfoque"}, "lugar_en_la_maqueta": bool(x.get("enfoque"))}
+                  for x in self.componentes(ci)]
+        out = {"capitulo": {k: c[k] for k in ("id", "nombre", "lema") if c.get(k)}, "pasos": pasos,
+               "componentes": fichas,
+               "inmersiones": [{"id": i["id"], "nombre": i.get("nombre"), "muestra": i.get("muestra")}
+                               for i in self.inmersiones]}
+        if len(json.dumps(out, ensure_ascii=False).encode("utf-8")) > tope:
+            out["componentes"] = [{k: v for k, v in x.items() if k not in ("descripcion", "proyectos_tipo")}
+                                  for x in fichas]
+            out["recortado"] = "Las fichas van sin descripción ni referentes para caber: pídalas con visual detalle."
+        return out
+
     def indice(self) -> dict:
         """Capítulos con su id, nombre, los títulos de sus pasos y los ids de sus componentes (los que la cámara enfoca
         marcados), y el catálogo de inmersiones: lo que el modelo necesita para elegir, en pocos KB."""

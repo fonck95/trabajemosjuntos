@@ -114,7 +114,7 @@ REINTENTOS = 2               # repeticiones de una ronda tras fallos pasajeros (
 TURNOS_POR_PROCESO = 4
 # Cómo termina una ronda que se cortó: con `tool_use` no se ejecuta (la entrada puede estar a medias), sin él se avisa
 CORTES = frozenset({"max_tokens", "model_context_window_exceeded", "other"})
-ACCIONES = frozenset({"navegar", "recargar", "insignias", "mapa", "presentacion"})
+ACCIONES = frozenset({"navegar", "recargar", "insignias", "mapa", "presentacion", "recorrido"})
 FLUJO = {"X-Accel-Buffering": "no", "Cache-Control": "no-store"}
 
 RECHAZADA = "La persona rechazó esta acción: no la vuelvas a proponer salvo que lo pida."
@@ -685,7 +685,10 @@ class Turno:
         # Y la pantalla en off, si hay una abierta: la dice el servidor (la maneja también un agente por MCP)
         pantalla = (await run_in_threadpool(sistema.pantalla_del_contexto, self.db, self.quien.uid)
                     if "presentacion" in self.herramientas else "")
-        contexto_panel = sistema.contexto_del_panel(contexto, _ahora(), etiquetas, guion, pantalla)
+        # Y dónde va el recorrido narrado, si hay uno sonando (o terminó hace poco), en cualquier pantalla
+        recorrido = (await run_in_threadpool(sistema.recorrido_del_contexto, self.db, self.quien.uid)
+                     if "presentacion" in self.herramientas else "")
+        contexto_panel = sistema.contexto_del_panel(contexto, _ahora(), etiquetas, guion, pantalla, recorrido)
         bloques = conv_db.limpio(bloques + [{"type": "text", "text": contexto_panel}, {"type": "text", "text": texto}])
         await self._guardar("user", bloques, texto=texto, herramientas=ui)
         historial.append({"role": "user", "content": bloques})

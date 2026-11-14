@@ -1,7 +1,8 @@
 // El asistente del panel (docs/agente.md): un botón flotante que abre una conversación con el modelo. Las respuestas
 // llegan en flujo (NDJSON, `flujo` de api.js) y se pintan por partes; lo que escribe en la base espera la aprobación de
-// la persona en una tarjeta; las acciones que pide el servidor (navegar, recargar, insignias, mapa, presentacion) se
-// validan aquí antes de hacerse. Vive en document.body, fuera de #raiz y de #vista: sobrevive a cada cambio de vista.
+// la persona en una tarjeta; las acciones que pide el servidor (navegar, recargar, insignias, mapa, presentacion,
+// recorrido) se validan aquí antes de hacerse. El recorrido narrado de la presentación tiene su tarjeta y su barra fija
+// (agente-recorrido.js). Vive en document.body, fuera de #raiz y de #vista: sobrevive a cada cambio de vista.
 //
 // Seguridad: nada de lo que escribe el modelo se pinta como HTML. Entra con textContent o como nodos de texto, y el
 // Markdown se convierte a nodos con una lista cerrada de elementos (lo demás, también «<img …>», queda como texto). Los
@@ -9,8 +10,10 @@
 // de Mnemo que da /api/agente/estado. Las plantillas `html` de este archivo solo llevan íconos de la tabla fija de ui.js.
 import { api, ErrorApi, FLUJO_CORTADO, flujo, hayCambiosSinGuardar, registrarPendiente, sesion } from './api.js';
 import { accionesMapa, estadoMapa, mapaListo } from './agente-mapa.js';
-import { accionesPresentacion, accionPresentacion, estadoPresentacion, presentacionLista, proyectorVivo }
+import { accionesPresentacion, accionPresentacion, estadoPresentacion, presentacionLista, proyectorVivo, recorridoEnCurso }
   from './agente-presentacion.js';
+import { crearTarjetaRecorrido, montarBarraRecorrido, pausaPorMensaje, recorridoDelChat, tarjetaValida }
+  from './agente-recorrido.js';
 import { sinBase, url } from './base.js';
 import { confirmar as preguntar, esMovil, fecha, html, icono, montar, num } from './ui.js';
 
@@ -651,6 +654,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   const cuerpo = $('#agente-cuerpo'), log = $('#agente-mensajes'), bajarBtn = $('#agente-bajar'), form = $('#agente-form');
   const entrada = $('#agente-texto'), enviarBtn = $('#agente-enviar'), detenerBtn = $('#agente-detener');
   const notaPendiente = $('#agente-nota-pendiente'), restantes = $('#agente-restantes');
+  // La barra fija del recorrido narrado: arriba de la conversación mientras suena uno
+  montarBarraRecorrido(cuerpo, { el, ico });
 
   // ── Estado ──
   let info = null;            // GET /api/agente/estado, normalizado
@@ -1105,6 +1110,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       if (estado === 'inicio') ronda.partes.push(c);
     }
     pintarChip(c, etiqueta, estado, resumen);
+    pildoraPreparando({ nombre: texto(ev.nombre, 64), estado, resumen });
     const t = tarjetas.get(id);
     if (t) estadoTarjeta(t, estado, resumen);
     // Los resultados llegan al cerrar una ronda: lo que venga después es de la ronda siguiente
@@ -1257,6 +1263,57 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     else if (a.tipo === 'insignias') { try { insignias(); } catch (e) { console.error(e); } }
     else if (a.tipo === 'mapa') mapa(a);
     else if (a.tipo === 'presentacion') presentacion(a);
+    else if (a.tipo === 'recorrido') tarjetaRecorrido(a);
+  }
+
+  // ── El recorrido narrado: la tarjeta del chat (agente-recorrido.js) ──
+  // Los recorridos que llegaron a esta pestaña (los últimos 3), para volver a reproducirlos o reanudarlos
+  const recorridosGuardados = new Map();
+  function guardarRecorrido(r) {
+    recorridosGuardados.delete(r.id);
+    recorridosGuardados.set(r.id, r);
+    while (recorridosGuardados.size > 3) recorridosGuardados.delete(recorridosGuardados.keys().next().value);
+  }
+  function tarjetaRecorrido(a) {
+    const v = tarjetaValida(a);
+    if (!v) {
+      nota('El asistente armó un recorrido que no se puede mostrar aquí.', 'alerta');
+      return;
+    }
+    const t = crearTarjetaRecorrido(v, {
+      el, ico,
+      // una sugerencia se envía como mensaje de la persona (con un turno en curso, queda escrita para enviarla)
+      alSugerencia: (s) => {
+        if (turno) { entrada.value = s; entrada.focus(); entrada.dispatchEvent(new Event('input')); } else enviar(s);
+      },
+      reproducir: (rid, desde) => {
+        const r = recorridosGuardados.get(rid);
+        if (!r) return false;
+        presentacion({ tipo: 'presentacion', op: 'recorrido', recorrido: r, ...(desde > 1 ? { desde } : {}) });
+        return true;
+      },
+    });
+    enAsistente().append(t.el);
+    ultima = null;
+    programar();
+  }
+
+  // La píldora «El asistente prepara la explicación…» en la presentación: cuando el asistente leyó el guion de un
+  // capítulo (va a armar un recorrido, unos segundos), si la presentación está a la vista y no suena nada. Se apaga
+  // sola con la narración, a los 25 s o al terminar el turno
+  let pildora = false;
+  function pildoraPreparando(ev) {
+    if (ev.nombre !== 'presentacion' || ev.estado !== 'ok' || !texto(ev.resumen).startsWith('Guion de ')) return;
+    if (!(presentacionLista() || proyectorVivo()) || recorridoEnCurso() || recorridoDelChat()) return;
+    pildora = true;
+    accionesPresentacion([{ tipo: 'presentacion', op: 'preparando', activar: true }]).catch(() => {});
+  }
+  function apagarPildora() {
+    if (!pildora) return;
+    pildora = false;
+    if (presentacionLista() || proyectorVivo()) {
+      accionesPresentacion([{ tipo: 'presentacion', op: 'preparando', activar: false }]).catch(() => {});
+    }
   }
 
   function navegar(a) {
@@ -1343,6 +1400,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       nota('El asistente pidió algo que la presentación no hace: no lo apliqué.', 'alerta');
       return;
     }
+    if (p.op === 'recorrido') { guardarRecorrido(p.recorrido); pildora = false; }
     // Detrás de las que ya esperan en este turno, aunque ahora se pudiera: se aplican en el orden en que llegaron
     if (presEnEspera && turno && presEnEspera.turno === turno) {
       presEnEspera.lista.push(p);
@@ -1463,6 +1521,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     }
     vaciar();
     turno = null;
+    apagarPildora();
     t.msj?.classList.remove('trabajando');
     ponerEstado();
     cerrarTurno(t, terminado);
@@ -1496,6 +1555,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       burbuja = agregarUsuario(t);
       nuevoAsistente();
     }
+    // Un recorrido que suena se pausa al terminar la frase: la sala no sigue oyendo mientras se pregunta otra cosa
+    pausaPorMensaje();
     // Lo pendiente que no se decidió queda sin aprobar: el servidor lo rechaza al recibir el mensaje (y lo avisa)
     const sinAprobar = pendientesSinEnviar();
     for (const x of sinAprobar) x.enviada = true;

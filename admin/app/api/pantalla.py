@@ -2,6 +2,10 @@
 
 * `GET /api/pantalla?v=N`: la vista Presentación en modo en off pregunta cada poco. Con la versión que ya tiene, 204 sin
   cuerpo; si cambió, el estado entero. Cada pregunta deja la pantalla como abierta (`visto`).
+* El recorrido narrado (`app/recorrido.py`): `POST /api/pantalla/progreso` (el avance que manda la página que lo
+  reproduce: la pestaña, el proyector o la pantalla en off; no sube la versión ni marca la pantalla como abierta),
+  `POST /api/pantalla/recorrido/control` (los botones de la tarjeta del chat cuando suena en otra pantalla) y
+  `GET /api/pantalla/recorrido` (la tarjeta lo sigue; solo lectura, tampoco marca `visto`).
 * `GET`, `POST` y `DELETE /api/pantalla/clave`: la clave MCP de la persona (una por persona; crear otra reemplaza la
   anterior). Se muestra una sola vez, al crearla: en la base queda su SHA-256 y la huella de la sesión de ese momento,
   así cambiar la clave del panel (o la credencial del administrador) la anula, como a las sesiones."""
@@ -11,12 +15,16 @@ import hashlib
 import secrets
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Query, Request, Response
+from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.concurrency import run_in_threadpool
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from pymongo.database import Database
 
 from .. import db as bd
 from .. import pantalla
+from .. import recorrido as rec
 from ..acceso import Quien, requiere
 from ..agente import guion as guion_presentacion
 from ..seguridad import base_de, huella, huella_usuario, obtener_db
@@ -57,7 +65,70 @@ def estado_pantalla(v: int | None = Query(None, ge=-1, le=2 ** 31), db: Database
     g = guion_presentacion.cargar()
     if g is None:
         return Response(status_code=404)
-    return pantalla.para_pantalla(pantalla.estado(doc, g))
+    return pantalla.para_pantalla(pantalla.estado(doc, g), doc, g)
+
+
+# ───────────────────────────── El recorrido narrado ─────────────────────────────
+
+class ProgresoEntrada(BaseModel):
+    """El avance del reproductor (admin/web/js/reproductor.js): la forma exacta, con listas cerradas."""
+    model_config = ConfigDict(extra="forbid")
+    rid: str = Field(..., pattern=r"^[0-9a-f]{12}$")
+    n: StrictInt = Field(..., ge=1, le=rec.MAX_ESCENAS)
+    de: StrictInt = Field(..., ge=1, le=rec.MAX_ESCENAS)
+    fase: Literal[rec.FASES]
+    frase: StrictInt = Field(0, ge=0, le=rec.MAX_FRASES - 1)
+    voz: Literal[rec.VOCES]
+    motivo: Literal[rec.MOTIVOS] | None = None
+    aviso: Literal[rec.AVISOS] | None = None
+    t_ms: StrictInt = Field(0, ge=0, le=600_000)
+
+
+class ControlEntrada(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    rid: str = Field(..., pattern=r"^[0-9a-f]{12}$")
+    accion: Literal[rec.CONTROLES]
+
+
+def _guion():
+    g = guion_presentacion.cargar()
+    if g is None:
+        raise HTTPException(404, "La presentación no está en este servidor")
+    return g
+
+
+@r.post("/pantalla/progreso", status_code=204)
+def progreso(p: ProgresoEntrada, db: Database = Depends(obtener_db),
+             quien: Quien = Depends(requiere("presentacion.ver"))):
+    if p.n > p.de:
+        raise HTTPException(422, "La escena pasa del total")
+    if not pantalla.guardar_progreso(db, quien.uid, p.model_dump(exclude_none=True)):
+        raise HTTPException(409, "Ese recorrido ya no es el vigente")
+    return Response(status_code=204)
+
+
+@r.post("/pantalla/recorrido/control")
+def control_recorrido(c: ControlEntrada, db: Database = Depends(obtener_db),
+                      quien: Quien = Depends(requiere("presentacion.ver"))):
+    g = _guion()
+    try:
+        res = pantalla.controlar(db, quien.uid, g, c.accion, "panel", rid=c.rid)
+    except ValueError:
+        raise HTTPException(409, "No hay un recorrido sonando con ese id") from None
+    x = pantalla.resumen_recorrido(res["doc"], g) or {}
+    return {k: x.get(k) for k in ("id", "titulo", "escena", "de", "fase", "cerrado")}
+
+
+@r.get("/pantalla/recorrido")
+def ver_recorrido(db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("presentacion.ver"))):
+    """Dónde va el recorrido (para la tarjeta del chat cuando suena en otra pantalla). Solo lectura: no marca `visto`."""
+    g = _guion()
+    doc = pantalla.leer(db, quien.uid)
+    x = pantalla.resumen_recorrido(doc, g)
+    pr = pantalla.progreso_de(doc, pantalla.recorrido_de(doc, g)) or {}
+    return {"recorrido": x and {k: x[k] for k in ("id", "titulo", "destino", "cerrado", "escena", "de", "fase",
+                                                    "motivo", "voz", "hace_s")},
+            "frase": pr.get("frase"), "avisos": (x or {}).get("avisos", [])}
 
 
 def _info(doc: dict | None, request: Request) -> dict:
