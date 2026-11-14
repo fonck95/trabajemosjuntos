@@ -25,6 +25,8 @@ import { MAX_CIERRE, MAX_ESCENAS, MAX_EXPLICACION, MAX_PUNTO, MAX_TITULO, TERMIN
 const SONDEO_MS = 1500;
 const SONDEO_MAX_MS = 15 * 60 * 1000;   // sin ningún cambio en esto: sonando, lo da por detenido; en pausa, pregunta
 const SONDEO_LENTO_MS = 10000;          // más despacio (cada SONDEO_LENTO_MS)
+const VOLVER_ESPERA_MS = 20000;         // lo que «Volver a reproducir» espera el primer avance del id nuevo antes de
+                                        // ofrecerse otra vez (la vista no llegó a reproducirlo)
 const SIN_NOTICIAS_S = 60;              // sonando y sin un avance en esto, la pantalla en off dejó de responder (la
                                         // espera más larga sin avisar es el cierre: el resumen, lo que se sostiene y
                                         // «¿Preguntas?», unos 35 s)
@@ -124,6 +126,11 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   let quitar = () => {};
   let escuchando = false;   // la pantalla en off: el sondeo sigue (en una pausa larga se detiene hasta el próximo control)
   let sondeos = 0;          // el sondeo vigente (uno que se reemplazó no toca `escuchando`)
+  // Los plazos de la pantalla en off corren desde que existe este id, no desde cada sondeo: un control (la pausa que
+  // sale con cada mensaje) vuelve a preguntar enseguida, pero no los reinicia
+  let desdeRid = Date.now();
+  let sinPantallaDesde = null;   // desde cuándo el servidor dice que la pantalla en off no está abierta
+  let volviendo = false;         // «Volver a reproducir» ya pidió el id nuevo y espera su primer avance
 
   const art = el('article', 'agente-recorrido');
   art.dataset.destino = a.destino;
@@ -216,6 +223,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
 
   function pintar(p) {
     ultimo = p;
+    if (volviendo) { volviendo = false; bOtra.disabled = false; }
     const de = a.escenas.length;
     const n = Math.min(Math.max(p.n || 1, 1), de);
     const fase = p.fase in FASE ? p.fase : 'preparando';
@@ -266,7 +274,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     else if (fase === 'detenido' && p.motivo === 'sin_respuesta') nota('Se detuvo: la pantalla en off dejó de responder.');
     else if (pausado && p.motivo === 'mensaje') nota('En pausa mientras responde el asistente.');
     else if (pausado && p.motivo === 'persona') nota('En pausa: movieron la imagen. Al continuar, la escena vuelve.');
-    else if (!terminado && donde === 'proyector' && p.voz === 'sin_activar') nota('Toque el botón «Voz» o el subtítulo en la ventana del proyector para activar la voz (tocar la maqueta pausa el recorrido).');
+    else if (!terminado && donde === 'proyector' && p.voz === 'sin_activar') nota('Toque el botón «Voz» (abajo a la izquierda) en la ventana del proyector para activar la voz; tocar la maqueta pausa el recorrido.');
     else if (!terminado && donde === 'aqui' && p.voz === 'sin_activar') nota('Toque «Voz» en la barra de la presentación para oírla.');
     else if (!pausado) nota('');
     if (terminado) soltar();
@@ -294,10 +302,8 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
       // El tope corre desde el último cambio (otra escena, otra fase u otra frase), no desde que se creó la tarjeta: una
       // pausa larga para preguntas no la congela. Al vencer en pausa sigue preguntando más despacio; sonando, o sin
       // noticias de la pantalla (no está en pausa y no avisa, o ya no pregunta por su estado), lo da por detenido
-      const inicio = Date.now();
-      let hasta = inicio + SONDEO_MAX_MS;
+      let hasta = Date.now() + SONDEO_MAX_MS;
       let visto = null;
-      let sinPantallaDesde = null;   // desde cuándo el servidor dice que la pantalla en off no está abierta
       let parar = false;
       let reloj = 0;
       const mio = ++sondeos;
@@ -338,7 +344,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
           if (r.conectada === false) sinPantallaDesde ??= Date.now();
           else if (r.conectada === true) sinPantallaDesde = null;
           const cerrada = sinPantallaDesde !== null && Date.now() - sinPantallaDesde > SIN_NOTICIAS_S * 1000;
-          const mudo = !TERMINALES.includes(p.fase) && (cerrada || (x.fase === 'sin_avance' ? Date.now() - inicio > SIN_EMPEZAR_MS
+          const mudo = !TERMINALES.includes(p.fase) && (cerrada || (x.fase === 'sin_avance' ? Date.now() - desdeRid > SIN_EMPEZAR_MS
             : x.fase !== 'pausa' && Number.isInteger(x.hace_s) && x.hace_s > SIN_NOTICIAS_S));
           pintar(mudo ? { ...p, fase: 'detenido', motivo: 'sin_respuesta' } : p);
           if (mudo || TERMINALES.includes(p.fase)) { fin(); return; }
@@ -362,7 +368,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     try {
       if (a.destino === 'pantalla_off') {
         const r = await api.post('/api/pantalla/recorrido/control', { rid, accion });
-        if (accion === 'reproducir' && r?.id && RID.test(r.id)) { rid = r.id; terminado = false; escuchar(); }
+        if (accion === 'reproducir' && r?.id && RID.test(r.id)) { rid = r.id; terminado = false; desdeRid = Date.now(); sinPantallaDesde = null; escuchar(); }
         else escuchar();   // vuelve a preguntar enseguida (en una pausa larga preguntaba despacio, o ya no preguntaba)
       } else {
         const r = await controlRecorrido(rid, accion, { suave });
@@ -383,6 +389,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   // reproducía con el viejo, sin pasar por el servidor, y su avance rebotaba (409), el asistente no lo veía y sus
   // controles iban a otro recorrido. Si el asistente armó otro después, este ya no se puede volver a reproducir
   bOtra.addEventListener('click', async () => {
+    if (bOtra.disabled) return;
     const enVista = a.destino !== 'pantalla_off';
     if (enVista && guardado && !guardado(rid)) {
       nota('No se pudo volver a reproducir: el recorrido ya no está en este navegador.');
@@ -405,17 +412,28 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     rid = nuevo;
     terminado = false;
     ultimo = null;
+    desdeRid = Date.now();
+    sinPantallaDesde = null;
     bOtra.disabled = false;
     for (const li of art.querySelectorAll('.rec-aviso')) li.remove();
     if (!enVista) {
       pintar({ rid, n: 1, de: a.escenas.length, fase: 'preparando' });
       escuchar();
-    } else if (!reproducir?.(viejo, 1, nuevo)) {
-      pintar({ rid, n: 1, de: a.escenas.length, fase: 'detenido' });
-      nota('No se pudo volver a reproducir: el recorrido ya no está en este navegador.');
+    } else {
+      // En la pestaña o el proyector no pinta «preparando» todavía: lo pinta el primer avance del reproductor (si la
+      // vista no llega a reproducirlo, por cambios sin guardar en otra vista, la tarjeta no queda «preparando» con la
+      // barra puesta). Mientras tanto, ni otro «Volver a reproducir» (armaría otro id) ni «Reanudar» (iría encima)
+      volviendo = true;
+      bOtra.disabled = true;
+      bReanudar.hidden = true;
+      estadoEl.textContent = 'Volviendo a empezar…';
+      if (!reproducir?.(viejo, 1, nuevo)) {
+        volviendo = false;
+        bOtra.disabled = false;
+        pintar({ rid, n: 1, de: a.escenas.length, fase: 'detenido' });
+        nota('No se pudo volver a reproducir: el recorrido ya no está en este navegador.');
+      } else setTimeout(() => { if (volviendo) { volviendo = false; bOtra.disabled = false; } }, VOLVER_ESPERA_MS);
     }
-    // en la pestaña o el proyector no pinta «preparando» todavía: lo pinta el primer avance del reproductor (si la vista
-    // no llega a reproducirlo, por cambios sin guardar en otra vista, la tarjeta no queda «preparando» con la barra puesta)
   });
   // Reanudar (se cerró el proyector que lo reproducía): el mismo recorrido, con el mismo id, sigue en esta pestaña desde la
   // escena donde quedó; para el servidor nunca se cortó
@@ -423,13 +441,16 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   // su primer avance (409)
   bReanudar.addEventListener('click', async () => {
     const k = Number(bReanudar.dataset.desde) || 1;
+    // el que suena es por fuerza más nuevo (el servidor solo acepta el último): este ya no se reanuda
     const otro = recorridoEnCurso();
-    if (otro && otro.rid !== rid) { nota('Hay otro recorrido sonando: deténgalo antes de reanudar este.'); return; }
-    let x = null;
-    try { x = (await api.get('/api/pantalla/recorrido'))?.recorrido; } catch { /* sin conexión: se intenta igual */ }
-    if (x && (x.id !== rid || x.cerrado)) {
+    if (otro && otro.rid !== rid) { bReanudar.hidden = true; nota('Ya no se puede reanudar: hay un recorrido más nuevo.'); return; }
+    // el vigente del servidor (`vigente`, no el resumen: ese deja de nombrar uno cerrado o terminado a los dos minutos)
+    let resp = null;
+    try { resp = await api.get('/api/pantalla/recorrido'); } catch { /* sin conexión: se intenta igual */ }
+    const v = resp?.vigente;
+    if (resp && (!v || v.id !== rid || v.cerrado)) {
       bReanudar.hidden = true;
-      nota(x.id !== rid ? 'Ya no se puede reanudar: hay un recorrido más nuevo.' : 'Ya no se puede reanudar: se cerró. Use «Volver a reproducir».');
+      nota(v && v.id === rid ? 'Ya no se puede reanudar: se cerró. Use «Volver a reproducir».' : 'Ya no se puede reanudar: hay un recorrido más nuevo.');
       return;
     }
     if (!reproducir?.(rid, k)) nota('No se pudo reanudar: el recorrido ya no está en este navegador.');

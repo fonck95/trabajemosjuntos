@@ -226,6 +226,9 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       if (!res?.ok) {
         fallas++;
         if (res?.sinRespuesta || fallas >= MAX_FALLAS) {
+          // sin narración propia todavía, lo que quede en la presentación (la escena en vuelo, que narraría al asentarse,
+          // o la narración del recorrido anterior) se deja atrás sin esperar: puede que no esté respondiendo
+          if (!narrando) mandar({ orden: 'quitar_explicacion' });
           await terminar(g, 'error', res?.sinRespuesta ? 'sin_respuesta' : 'escena_fallida', { quitar: narrando });
           return;
         }

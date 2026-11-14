@@ -374,6 +374,10 @@ llamadas.length = 0;
 boton(A, 'reproducir').click();
 await dormir(30);
 r.volver = { llamadas: llamadas.slice(), reproducidos: A.reproducidos, id: A.id(), ...ver(A) };
+// otro clic antes del primer avance no arma otro id
+boton(A, 'reproducir').click();
+await dormir(30);
+r.volver_otra_vez = { llamadas: llamadas.length, deshabilitado: boton(A, 'reproducir').disabled };
 av('bbbbbbbbbbb2', 1, 'narrando');
 r.sigue_al_nuevo = ver(A);
 av('bbbbbbbbbbb2', 2, 'fin');
@@ -456,6 +460,9 @@ get = off('111122223333', 'sin_avance', null);
 const H = crear('111122223333', 'pantalla_off');
 await dormir(100);
 r.sin_empezar = ver(H);
+// un control (la pausa que sale con cada mensaje) vuelve a preguntar, pero no reinicia ese plazo
+boton(H, 'pausar')?.click();
+await dormir(100);
 desfase += 91 * 1000;
 await dormir(1700);
 r.nunca_empezo = ver(H);
@@ -479,7 +486,8 @@ def test_la_tarjeta_vuelve_a_reproducir_por_el_servidor_y_sigue_al_que_suena(tar
     assert r["volver"]["reproducidos"] == [["aaaaaaaaaaa1", 1, "bbbbbbbbbbb2"]] and r["volver"]["id"] == "bbbbbbbbbbb2", r
     # sin pintar «preparando» antes de que suene: lo pinta el primer avance (si la vista no llega a reproducirlo, la
     # tarjeta no queda «preparando» con la barra puesta)
-    assert r["volver"]["estado"] == "Terminó" and r["volver"]["sonando"] is False, r
+    assert r["volver"]["estado"] == "Volviendo a empezar…" and r["volver"]["sonando"] is False, r
+    assert r["volver_otra_vez"] == {"llamadas": 1, "deshabilitado": True}, r
     assert r["sigue_al_nuevo"]["estado"] == "Escena 1 de 2 · Narrando", r
     assert r["mas_nuevo"] == {"estado": "Terminó", "nota": "Ya no se puede volver a reproducir: hay un recorrido más nuevo.",
                               "sonando": False, "deshabilitado": True, "reproducidos": 0}, r

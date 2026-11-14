@@ -248,8 +248,8 @@ lo que se nombra y después lo oye o lo lee, frase por frase.
   primero; después es-419, es-MX, es-US, es-ES), con las siglas y unidades dichas como se leen (NSR-10, m², «24 h»). Se
   enciende con el botón **Voz** de esa ventana (la barra de la vista, el botón flotante del proyector o la barra de la
   pantalla en off): el navegador solo deja hablar a una página que alguien tocó. En el proyector, con la preferencia ya
-  encendida en ese navegador, también la activan tocar el subtítulo o el panel de texto, una tecla o el control de la
-  presentación (tocar la maqueta 3D es tomar la cámara: pausa el recorrido). La preferencia queda en ese navegador.
+  encendida en ese navegador, también la activan tocar el panel de texto, una tecla o el control de la presentación
+  (tocar la maqueta 3D, también a través del subtítulo, es tomar la cámara: pausa el recorrido). La preferencia queda en ese navegador.
   Sin voz, sin voces en español o si falla, cada frase se lee en pantalla con el mismo ritmo.
 - **Manejarlo.** La tarjeta del recorrido en el chat muestra las escenas (dónde, qué hace y qué dice), el avance en
   vivo y los controles: Pausa/Continuar, Anterior, Siguiente, Repetir y Detener; al terminar, **Volver a reproducir** y
@@ -278,7 +278,7 @@ lo que se nombra y después lo oye o lo lee, frase por frase.
   detuvo o falló) lo cierra en el servidor, con la imagen donde quedó; el traspaso de la pestaña al proyector no. Un
   avance de un recorrido que el servidor ya cerró o reemplazó responde 409 y la página lo detiene. El contexto lo
   nombra dos minutos después de terminar y deja de nombrarlo si en media hora no llega ningún avance ni control (la
-  página que lo reproducía se cerró).
+  página que lo reproducía se cerró); en pausa con la pantalla en off abierta, lo sigue nombrando.
 - **Con personas en la conversación**, la presentación no proyecta texto (`explicar`, `ir` con explicación ni
   `recorrido`): responde `con_personas`. Se muestra en una conversación sin datos de habitantes.
 

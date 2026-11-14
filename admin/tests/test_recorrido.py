@@ -339,9 +339,25 @@ def test_un_control_tras_una_pausa_larga_revive_el_recorrido():
     _avance(db, 7, rid, 2, "pausa", motivo="mensaje")
     viejo = ahora - timedelta(minutes=31)
     db.pantallas.update_one({"_id": 7}, {"$set": {"progreso.en": viejo, "recorrido.creado": viejo, "actualizada": viejo}})
+    # Con la pantalla en off abierta, una pausa no se abandona: la sala la tiene delante (y la tarjeta la sigue)
+    assert pantalla.resumen_recorrido(db.pantallas.find_one({"_id": 7}), G)["fase"] == "pausa"
+    quien = SimpleNamespace(uid=7)
+    assert api_pantalla.ver_recorrido(db=db, quien=quien)["vigente"] == {"id": rid, "cerrado": False}
+    # La pantalla se cerró hace rato: abandonado para el contexto, pero sigue siendo el vigente
+    db.pantallas.update_one({"_id": 7}, {"$set": {"visto": ahora - timedelta(minutes=5)}})
     assert pantalla.resumen_recorrido(db.pantallas.find_one({"_id": 7}), G) is None
+    x = api_pantalla.ver_recorrido(db=db, quien=quien)
+    assert x["recorrido"] is None and x["vigente"] == {"id": rid, "cerrado": False}
+    # Otra escritura de la pantalla (la pantalla completa no lo cierra) no lo revive para el modelo
+    _hacer(db, 7, {"op": "pantalla_completa", "activar": True}, por="asistente")
+    d = db.pantallas.find_one({"_id": 7})
+    assert d["recorrido"]["cerrado"] is False and pantalla.resumen_recorrido(d, G) is None
+    # Un control de ese recorrido sí
     pantalla.controlar(db, 7, G, "continuar", "panel", rid=rid)
     assert pantalla.resumen_recorrido(db.pantallas.find_one({"_id": 7}), G)["fase"] == "pausa"
+    # Y uno cerrado deja de ser reanudable
+    _hacer(db, 7, {"op": "ir", "capitulo": "aguas"}, por="asistente")
+    assert api_pantalla.ver_recorrido(db=db, quien=quien)["vigente"] == {"id": rid, "cerrado": True}
 
 
 def test_un_recorrido_para_la_pantalla_en_off_detiene_el_que_suena_en_la_pestana():

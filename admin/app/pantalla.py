@@ -278,7 +278,8 @@ def controlar(db: Database, uid: int, guion: Any, accion: str, por: str, rid: st
     n = n + 1 if isinstance(n, int) and not isinstance(n, bool) else 1
     doc = db.pantallas.find_one_and_update(
         {"_id": uid, "recorrido.id": r["id"], "recorrido.cerrado": False},
-        {"$set": {"control_recorrido": {"accion": accion, "n": n, "rid": r["id"]}, "actualizada": _ahora(), "por": por},
+        {"$set": {"control_recorrido": {"accion": accion, "n": n, "rid": r["id"], "en": _ahora()},
+                  "actualizada": _ahora(), "por": por},
          "$inc": {"v": 1}}, return_document=ReturnDocument.AFTER)
     if doc is None:   # entre la lectura y la escritura llegó otro recorrido (o este se cerró): el control no era para él
         raise ValueError("sin_recorrido")
@@ -300,10 +301,15 @@ def resumen_recorrido(doc: dict | None, guion: Any, ahora: datetime | None = Non
     final = r["cerrado"] or pr.get("fase") in rec.TERMINALES
     if final and (not en or ahora - en > MOSTRAR_TERMINADO):
         return None
-    # lo último que pasó: un avance, la creación o una escritura de la pantalla (un control también cuenta: tras una
-    # pausa larga, «continuar» lo revive antes de que llegue el avance del que lo reproduce)
-    vivo = max((t for t in (en, _aware(r.get("creado")), _aware((doc or {}).get("actualizada"))) if t), default=ahora)
-    if not final and ahora - vivo > ABANDONADO:
+    # Lo último que pasó: un avance, la creación o un control de ESTE recorrido (tras una pausa larga, «continuar» lo
+    # revive antes de que llegue el avance del que lo reproduce). Otra escritura de la pantalla (la pantalla completa)
+    # no cuenta: reviviría para el modelo uno que nadie oye. En pausa con la pantalla en off abierta no hay abandono:
+    # la sala lo tiene delante, aunque en pausa no lleguen avances
+    c = (doc or {}).get("control_recorrido")
+    control = _aware(c.get("en")) if isinstance(c, dict) and c.get("rid") == r["id"] else None
+    vivo = max((t for t in (en, _aware(r.get("creado")), control) if t), default=ahora)
+    en_pausa_viva = r["destino"] == "pantalla_off" and pr.get("fase") == "pausa" and conectada(doc, ahora)
+    if not final and not en_pausa_viva and ahora - vivo > ABANDONADO:
         return None
     n = escena_actual(doc, r)
     esc = r["escenas"][n - 1]

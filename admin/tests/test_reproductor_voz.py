@@ -218,6 +218,22 @@ for (const tarda of [300, 3000]) {
   await reloj.avanzar(4000);
   out[`detener_preparando_${tarda}`] = { detuvo: await detuvo, ordenes, ultimo: avances.at(-1) };
 }
+// El camino de error también deja atrás lo que quede en la presentación: la primera escena que no responde (narraría al
+// asentarse) y la narración del recorrido anterior cuando las escenas del nuevo fallan
+{
+  const { reloj, ordenes, avances, rep } = armar({ respuesta: (o) => (o.orden === 'escena' ? { ok: false, sinRespuesta: true } : { ok: true }) });
+  rep.iniciar(rec('g'));
+  await reloj.avanzar(500);
+  out.error_sin_respuesta = { ordenes, ultimo: avances.at(-1) };
+}
+{
+  const { reloj, ordenes, avances, rep } = armar({ respuesta: (o) => (o.orden === 'escena' && o.rid[0] === 'i' ? { ok: false } : { ok: true }) });
+  rep.iniciar(rec('h'));
+  await reloj.avanzar(1000);
+  rep.iniciar(rec('i'));
+  await reloj.avanzar(1000);
+  out.error_tras_reemplazo = { ordenes: ordenes.slice(ordenes.lastIndexOf('escena:1')), ultimo: avances.at(-1) };
+}
 // Una pausa pedida apenas arranca: la primera escena se prepara, pero queda en pausa (y al seguir, narra)
 {
   const { reloj, ordenes, avances, rep } = armar();
@@ -275,6 +291,10 @@ def test_el_reproductor_pausa_reemplazo_voz_que_falla_y_cierre(tmp_path):
         x = r[f"detener_preparando_{tarda}"]
         assert x["detuvo"] is True and x["ultimo"] == "e1/detenido!boton", (tarda, x)
         assert x["ordenes"] == ["escena:1", "quitar_explicacion"], (tarda, x)
+    # El error deja atrás la escena que no respondió y la narración del recorrido anterior
+    assert r["error_sin_respuesta"] == {"ordenes": ["escena:1", "quitar_explicacion"], "ultimo": "g1/error!sin_respuesta"}
+    e = r["error_tras_reemplazo"]
+    assert e["ordenes"] == ["escena:1", "escena:2", "quitar_explicacion"] and e["ultimo"] == "i2/error!escena_fallida", e
     # La pausa pedida al arrancar no se pierde cuando la primera escena empieza a prepararse
     p = r["pausa_al_arrancar"]
     assert p["enPausa"]["estado"]["fase"] == "pausa" and p["enPausa"]["estado"]["pausado"] is True, p

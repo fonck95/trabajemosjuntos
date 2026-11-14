@@ -130,12 +130,16 @@ def ver_recorrido(db: Database = Depends(obtener_db), quien: Quien = Depends(req
     g = _guion()
     doc = pantalla.leer(db, quien.uid)
     x = pantalla.resumen_recorrido(doc, g)
-    pr = pantalla.progreso_de(doc, pantalla.recorrido_de(doc, g)) or {}
+    v = pantalla.recorrido_de(doc, g)
+    pr = pantalla.progreso_de(doc, v) or {}
     return {"recorrido": x and {k: x[k] for k in ("id", "titulo", "destino", "cerrado", "escena", "de", "fase",
                                                     "motivo", "voz", "hace_s")},
             "frase": pr.get("frase"), "avisos": (x or {}).get("avisos", []),
             # la pantalla en off sigue abierta (preguntó hace poco): en pausa no hay avances, esto dice si alguien la oye
-            "conectada": pantalla.conectada(doc)}
+            "conectada": pantalla.conectada(doc),
+            # el último recorrido guardado, aunque el resumen ya no lo nombre (terminó hace rato, quedó abandonado): la
+            # tarjeta lo mira antes de reanudar uno que se cortó
+            "vigente": v and {"id": v["id"], "cerrado": v["cerrado"]}}
 
 
 def _info(doc: dict | None, request: Request) -> dict:

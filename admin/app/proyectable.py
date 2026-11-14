@@ -121,7 +121,7 @@ def texto_proyectable(v: str, maximo: int = MAX_EXPLICACION) -> str:
     # La plata antes que los números: un monto («$1.156.350») se frena por lo que es, con el mensaje que lo dice
     if PLATA.search(k):
         raise ValueError("La presentación técnica no muestra costos: escriba el texto sin montos («$», «COP», «pesos», "
-                         "«millones de pesos»); la plata, si hace falta, en el chat")
+                         "«billones de», «billón de», «millones de pesos»); la plata, si hace falta, en el chat")
     if numero_largo(k):
         raise ValueError("La explicación se proyecta ante la sala: no puede llevar números de 7 o más dígitos "
                          "(cédulas, teléfonos o códigos como el BPIN), tampoco con espacios, puntos, guiones, barras o "
