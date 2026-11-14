@@ -425,6 +425,9 @@ def problemas(g: dict) -> list[str]:
 
 # ───────────────────────────── El guion en el panel ─────────────────────────────
 
+_VACIAS = frozenset("el la los las de del un una y en al lo".split())
+
+
 def parecido(lista: list[dict], texto: Any) -> dict | None:
     """El elemento de `lista` ({id, nombre}) que se pidió con `texto`: el que tiene ese id o ese nombre (sin tildes ni
     mayúsculas) o, si ninguno es igual, el único que tiene todas las palabras pedidas al comienzo de alguna de las de
@@ -432,12 +435,24 @@ def parecido(lista: list[dict], texto: Any) -> dict | None:
     k = clave(texto)
     if not k:
         return None
-    igual = next((x for x in lista if k in (clave(x["id"]), clave(x.get("nombre")))), None)
-    if igual is not None:
-        return igual
-    pedidas = k.split()
+
+    def igual(k: str) -> dict | None:
+        return next((x for x in lista if k in (clave(x["id"]), clave(x.get("nombre")))), None)
+
+    x = igual(k)
+    if x is not None:
+        return x
+    # Sin las palabras vacías («la torre» es `torre`); una palabra corta tiene que estar entera («red» no es «reducción»):
+    # resolver en silencio a lo que no se pidió es peor que decir que no está
+    pedidas = [p for p in k.split() if p not in _VACIAS]
+    if not pedidas:
+        return None
+    x = igual(" ".join(pedidas))
+    if x is not None:
+        return x
     parecidos = [x for x in lista
-                 if all(any(s.startswith(p) for s in clave(f"{x['id']} {x.get('nombre') or ''}").split()) for p in pedidas)]
+                 if all(any(s == p if len(p) < 4 else s.startswith(p)
+                            for s in clave(f"{x['id']} {x.get('nombre') or ''}").split()) for p in pedidas)]
     return parecidos[0] if len(parecidos) == 1 else None
 
 

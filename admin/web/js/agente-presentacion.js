@@ -457,10 +457,11 @@ export function ordenesHacia(antes, e) {
     const previo = antesVisual[k] === undefined ? (k === 'tema' ? null : VISUAL_INICIAL[k]) : antesVisual[k];
     if (!igual(valor, previo) && !(k === 'tema' && valor === null)) visual[k] = copia(valor);
   }
-  // las acciones (un movimiento de la cámara, repetir la animación del paso) van una vez: cuando el estado las trae y
-  // no son las que ya se hicieron en este paso
-  if (e.mover && (otroPaso || !igual(e.mover, antes.mover ?? null))) visual.mover = { ...e.mover };
-  if (e.animar === true && (otroPaso || antes.animar !== true)) visual.animar = true;
+  // `mover` y `animar` (un movimiento de la cámara, repetir la animación del paso) son acciones, no estado: valen una vez por cada versión nueva de la pantalla (la misma pedida
+  // dos veces se hace dos veces) y nunca al abrir o recargar (no se repite una vieja)
+  const nueva = !!antes && antes.v !== e.v;
+  if (e.mover && nueva) visual.mover = { ...e.mover };
+  if (e.animar === true && nueva) visual.animar = true;
   if (Object.keys(visual).length) out.push({ orden: 'visual', ...visual });
   return out;
 }
@@ -893,7 +894,9 @@ export function controlRecorrido(rid, accion, { suave = false } = {}) {
   if (!a) return Promise.reject(new Error('Control no válido'));
   const p = elegido();
   if (p) return alProyector([a], p.id).then((r) => r?.[0] || { ok: false });
-  if (control) return enOrden([a]).then((r) => r?.[0] || { ok: false });
+  // Sin cola: detrás del plan que arranca (su acción no resuelve hasta que el primer paso está a la vista), un
+  // «Siguiente» o un «Detener» dados en «Plan listo» llegaban tarde: saltaban el paso 1 o no evitaban que se aplicara
+  if (control) return Promise.resolve().then(() => control.aplicar([a])).then((r) => r?.[0] || { ok: false });
   return Promise.reject(new Error('No hay una presentación abierta'));
 }
 

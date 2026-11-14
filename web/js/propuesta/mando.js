@@ -726,7 +726,10 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       if (['pausa', 'voz', 'preparando'].some((k) => m[k] !== undefined && typeof m[k] !== 'boolean')) return fallo('pausa, voz y preparando van con verdadero o falso');
       if ((m.pausa !== undefined || m.voz !== undefined) && !narracion) return fallo('No hay una narración en pantalla');
       if (m.frase !== undefined) { narracion.frase = m.frase; sub.classList.remove('pausado'); pintarFrases(narracion.frases, m.frase); }
-      if (m.pausa !== undefined) sub.classList.toggle('pausado', m.pausa);
+      if (m.pausa !== undefined) {
+        sub.classList.toggle('pausado', m.pausa);
+        try { visual?.pausar?.(m.pausa); } catch { /* una capa visual de antes: la cámara termina su viaje */ }
+      }
       if (m.voz !== undefined) { sub.classList.toggle('con-voz', m.voz); sub.setAttribute('aria-live', m.voz ? 'off' : 'polite'); }
       if (m.preparando !== undefined) preparando(m.preparando);
       return responder(id, 'estado', origen);
@@ -818,7 +821,12 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     abrirFichas(false);
     const dir = m.orden === 'avanzar' ? m.d : ci < estado.ci || (ci === estado.ci && pi < estado.pi) ? -1 : 1;
     aplicando++;
-    try { await ir(ci, pi, { dir }); } finally { aplicando--; }
+    try {
+      // El paso que ya está a la vista: `ir` no haría nada, y lo que el último paso de un plan aisló, ocultó o quitó se
+      // quedaría (el servidor, al atender este `ir`, ya guarda lo visual como lo dice el paso)
+      if (visual && ci === estado.ci && pi === estado.pi) await visual.aplicar({ ...VISUAL_INICIAL, mostrar: [], ocultar: [], sin: [] });
+      else await ir(ci, pi, { dir });
+    } finally { aplicando--; }
     return responder(id, 'estado', origen);
   }
 

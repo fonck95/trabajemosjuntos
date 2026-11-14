@@ -263,7 +263,11 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
   la cámara viaja lo que dura la narración del paso. Lo único que se espera es la carga de un modelo del atlas. Y la
   imagen nunca queda quieta: un paso que no le pide nada a la cámara (el mismo paso del capítulo, el mismo encuadre y
   sin `mover`) recibe un movimiento suave (gira de 10 a 14 grados, alternando el sentido, y se acerca un poco); no
-  dentro de un modelo del atlas ni con la cámara girando sola.
+  dentro de un modelo del atlas ni con la cámara girando sola. La cámara **sigue desde donde la dejó el paso
+  anterior** mientras ningún paso cambie la cámara pedida: un giro tras otro se suman, y el movimiento suave que viene
+  después de un `mover` solo gira. La pausa también detiene el viaje de la cámara y al seguir lo retoma; detener lo
+  corta. Los controles de la tarjeta valen desde «Plan listo»: «Siguiente» empieza ya y «Detener» evita que el
+  primer paso se aplique.
 - **Manipular la maqueta.** Además de los seis encuadres, el asistente maneja la elevación, el acercamiento, a qué
   apunta la cámara y su viaje (`mover`), y las piezas del [catálogo de la maqueta](#la-presentación-técnica) de cada
   capítulo: aislar una obra, mostrar u ocultar otras, quitarle partes («la torre sin la cubierta»), repetir la

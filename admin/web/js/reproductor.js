@@ -347,8 +347,10 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       n = 0;
       fase = 'preparando';
       t0 = reloj.ahora();
+      // si el plan anterior dejó su narración pintada (o una escena en vuelo), un detener antes de la primera escena
+      // de este también tiene que quitarla
+      mandoEscena = narrando || mandoEscena;
       narrando = false;
-      mandoEscena = false;
       motivoPausa = null;
       saltar(Math.min(Math.max(1, desde | 0), de()), { previa: Number.isFinite(previa) && previa > 0 ? Math.min(previa, 30000) : 0 });
       return primera;

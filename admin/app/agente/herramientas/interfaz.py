@@ -872,7 +872,29 @@ class EscenaEntrada(_Entrada):
 
 def _cierre_a_su_manera(v: Any) -> Any:
     """El cierre también puede llegar como la lista de sus puntos, o como uno solo."""
-    return {"puntos": v} if isinstance(v, list) else {"puntos": [v]} if isinstance(v, str) else v
+    v = {"puntos": v} if isinstance(v, list) else {"puntos": [v]} if isinstance(v, str) else v
+    if isinstance(v, dict) and isinstance(v.get("puntos"), list) and len(v["puntos"]) > rec.MAX_PUNTOS:
+        v = {**v, "puntos": v["puntos"][:rec.MAX_PUNTOS]}   # ideas de más: quedan las primeras
+    return v
+
+
+def _sugerencias_a_su_manera(v: Any) -> Any:
+    """Las sugerencias son solo para el chat: una sola como texto vale, y las que no sirven (muy cortas, muy largas o
+    con algo que no se muestra) se descartan en vez de tumbar el plan."""
+    if isinstance(v, str):
+        v = [v]
+    if not isinstance(v, list):
+        return v
+    buenas: list[str] = []
+    for x in v:
+        t = " ".join(x.split()) if isinstance(x, str) else ""
+        if not 3 <= len(t) <= rec.MAX_SUGERENCIA:
+            continue
+        try:
+            buenas.append(texto_proyectable(t, rec.MAX_SUGERENCIA))
+        except ValueError:
+            continue
+    return buenas[:rec.MAX_SUGERENCIAS]
 
 
 def _hasta_doce(v: Any) -> Any:
@@ -958,8 +980,7 @@ class PresentacionEntrada(_Entrada):
     escenas: Pasos | None = Field(None, description="Lo mismo que pasos")
     cierre: Annotated[CierreEntrada, BeforeValidator(_cierre_a_su_manera)] | None = Field(None, description=(
         "recorrido: dos o tres ideas que quedan en la sala"))
-    sugerencias: Annotated[list[Sugerencia], BeforeValidator(
-        lambda v: v[:rec.MAX_SUGERENCIAS] if isinstance(v, list) else v)] | None = Field(
+    sugerencias: Annotated[list[Sugerencia], BeforeValidator(_sugerencias_a_su_manera)] | None = Field(
         None, max_length=rec.MAX_SUGERENCIAS, description="recorrido: hasta 3 próximos pasos, solo para el chat (no se proyectan)")
     accion: Literal[rec.CONTROLES] | None = Field(None, description=(
         "control_recorrido: pausar, continuar, siguiente, anterior, repetir, reproducir (otra vez, desde el comienzo) o "
@@ -1278,6 +1299,8 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
     # Ya resuelta (nada más puede fallar): cierra el recorrido que sonaba, con la escena en curso como base, y encima
     # guarda lo pedido
     detener = await _colapsar(db, uid, g, doc, por) if a.op in COLAPSAN else []
+    if a.op != "visual":   # `mover` y `animar` son de la orden `visual` que los trajo: cualquier otra los deja en nada
+        cambios = {**cambios, **pantalla_off.ACCIONES_INICIALES}
     await run_in_threadpool(pantalla_off.guardar, db, uid, cambios, por)
     if desde_pantalla:
         contenido["pantalla"] = NOTA_PANTALLA_ABIERTA if abierta else NOTA_SIN_PANTALLA
@@ -1399,8 +1422,14 @@ def _resolver_maqueta(g: guion_presentacion.Guion, ci: int, llegaron: dict, visu
     for k in ("mostrar", "ocultar"):
         if k not in llegaron:
             continue
+        crudo = llegaron[k].crudo if isinstance(llegaron[k], NoVale) else llegaron[k]
+        nombres = _nombres(llegaron[k])
+        if crudo is not None and (not isinstance(crudo, (list, str)) or (isinstance(crudo, list) and len(nombres) < len(crudo))):
+            avisar(f"{k} lleva nombres de pieza (una lista de textos): no se usó «{_ver(crudo)}»")
+            if not nombres:
+                continue   # la lista sigue como estaba
         lista, malos = [], []
-        for t in _nombres(llegaron[k]):
+        for t in nombres:
             x = g.pieza(ci, t)
             if x:
                 lista.append(x["id"])
@@ -1442,6 +1471,8 @@ def _resolver_maqueta(g: guion_presentacion.Guion, ci: int, llegaron: dict, visu
     ocultar = [x for x in nuevo["ocultar"]
                if x != out.get("aislar") and (x not in out.get("mostrar", ()) or "ocultar" in out)]
     mostrar = [x for x in nuevo["mostrar"] if x not in ocultar]
+    if "aislar" not in out and nuevo["aislar"] and "ocultar" in out and nuevo["aislar"] in ocultar:
+        out["aislar"] = None   # la aislada en un paso anterior que ahora se pide ocultar: deja de estar aislada
     for k, lista in (("ocultar", ocultar), ("mostrar", mostrar)):
         if lista != nuevo[k]:
             out[k] = lista
@@ -1737,6 +1768,7 @@ def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> tuple[dict
     avisos: list[str] = []
     textos_malos: dict[str, list[int]] = {}
     suaves: set[int] = set()
+    zoom_fin: float | None = None   # el acercamiento con que terminó el último `mover` (la cámara sigue desde ahí)
     ci = pi = None
     panel, visual = True, rec.visual_inicial()
     for n, x in enumerate(a.plan(), 1):
@@ -1790,7 +1822,7 @@ def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> tuple[dict
             if camara in CAMARAS:
                 partes["camara"] = camara
                 if camara == "paso":   # el encuadre del paso es también su rumbo, su elevación y su acercamiento
-                    partes.update(rumbo=None, elevacion=None, zoom=None)
+                    partes.update({k: None for k in ("rumbo", "elevacion", "zoom") if k not in dado})
             else:
                 avisar(f"camara «{_ver(v)}» no es de la lista ({', '.join(CAMARAS)}): se ignoró")
         if "rumbo" in dado:
@@ -1869,12 +1901,23 @@ def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> tuple[dict
                "resaltar": resaltar, "mover": mover, "animar": x.animar is True,
                "frases": rec.partir_frases(texto) if texto else ["…"], "sostener_ms": 0}
         # Que nunca quede quieta: sin nada para la cámara (el mismo paso, el mismo encuadre y sin `mover`), un viaje suave
-        quieta = not otro and mover is None and all(visual[k] == antes[k] for k in DE_LA_CAMARA)
+        # (también el primer paso, si no trae nada para la cámara: la pantalla puede estar ya en ese paso). La cámara
+        # sigue desde donde la dejó el `mover` anterior mientras ningún paso cambie la cámara pedida: ahí el viaje suave
+        # solo gira (con otro acercamiento reabriría el encuadre o se acumularía de paso en paso)
+        misma_camara = all(visual[k] == antes[k] for k in DE_LA_CAMARA)
+        if otro or not misma_camara:
+            zoom_fin = None
+        quieta = (not otro or not escenas) and mover is None and misma_camara
         if quieta and not visual["girar"] and rec.inmersion_de(esc, g) is None:
             giro = GIROS_SUAVES[len(suaves) % len(GIROS_SUAVES)] * (-1 if len(suaves) % 2 else 1)
-            desde = visual["zoom"] or ZOOM_DE_CAMARA.get(visual["camara"], 1)
-            esc["mover"] = {"giro": giro, "zoom": round(min(rec.ZOOM[1], desde * ZOOM_SUAVE), 2)}
+            if zoom_fin is not None:
+                esc["mover"] = {"giro": giro}
+            else:
+                desde = visual["zoom"] or ZOOM_DE_CAMARA.get(visual["camara"], 1)
+                esc["mover"] = {"giro": giro, "zoom": round(min(rec.ZOOM[1], desde * ZOOM_SUAVE), 2)}
             suaves.add(n)
+        if esc["mover"] and esc["mover"].get("zoom") is not None:
+            zoom_fin = esc["mover"]["zoom"]
         segundos, tocado = _acotar(x.sostener, 0, rec.MAX_SOSTENER_MS / 1000, 3) if x.sostener is not None else (None, False)
         if x.sostener is not None and (segundos is None or tocado):
             avisar(f"sostener «{_ver(x.sostener)}» va de 0 a {rec.MAX_SOSTENER_MS // 1000} segundos: "
@@ -2182,10 +2225,9 @@ D_PRESENTACION = (
     "ejecuta sola; lo que no exista se descarta con un aviso. Ejemplo de pasos: [{\"capitulo\":"
     "\"salud\",\"paso\":\"torre\",\"camara\":\"oblicua\",\"mover\":{\"giro\":40},\"dice\":\"…\"},{\"aislar\":\"torre\","
     "\"sin\":[\"torre.cubierta\"],\"dice\":\"…\"}]. control_recorrido: pausar, continuar, siguiente, anterior, repetir, "
-    "reproducir, detener. Pedidos puntuales (detienen el plan): indice; ir (devuelve lo que muestra); "
-    "siguiente/anterior; explicar y quitar_explicacion; vista (panel, indice, fichas); visual (lo mismo de un paso, y "
-    "tema); pantalla_completa; estado. La sala lo ve: nunca datos de habitantes, costos, «@» ni números de 7 o más "
-    "dígitos.")
+    "reproducir, detener. Pedidos puntuales: indice, estado y pantalla_completa; y, deteniendo el plan, ir (devuelve lo "
+    "que muestra); siguiente/anterior; explicar y quitar_explicacion; vista (panel, indice, fichas); visual (lo de un "
+    "paso, y tema). La sala lo ve: nunca datos de habitantes, costos, «@» ni números de 7 o más dígitos.")
 
 HERRAMIENTAS: list[Herramienta] = [
     Herramienta("mapa", D_MAPA, MapaEntrada, "interfaz", ("mapa.ver",), "Moviendo el mapa", _mapa,

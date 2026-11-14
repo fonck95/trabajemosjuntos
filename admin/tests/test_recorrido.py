@@ -391,9 +391,11 @@ def test_doce_pasos_y_los_nombres_de_antes():
 
 
 def test_un_paso_que_no_le_pide_nada_a_la_camara_recibe_un_movimiento_suave():
-    """Que la imagen nunca quede quieta mientras se habla: sin cambio de paso ni de encuadre y sin `mover`, la cámara
-    gira unos grados (de 10 a 14, alternando el sentido) y se acerca un poco. No dentro de un modelo del atlas, ni con
-    la cámara girando sola, ni cuando el paso ya le pide algo a la cámara."""
+    """Que la imagen nunca quede quieta mientras se habla: sin cambio de encuadre y sin `mover`, la cámara gira unos
+    grados (de 10 a 14, alternando el sentido) y, la primera vez sobre un encuadre, se acerca un poco; después sigue
+    desde donde quedó y solo gira (con otro acercamiento reabriría el encuadre o se acumularía). También el primer
+    paso, si no trae nada para la cámara. No dentro de un modelo del atlas, ni con la cámara girando sola, ni cuando
+    el paso ya le pide algo a la cámara."""
     _, r = _armar(entrada={"op": "recorrido", "titulo": "La cámara", "pasos": [
         {"capitulo": "salud", "paso": "torre", "dice": "Uno."},
         {"dice": "Dos."}, {"comparar": "hoy", "dice": "Tres."}, {"aislar": "torre", "dice": "Cuatro."},
@@ -402,11 +404,11 @@ def test_un_paso_que_no_le_pide_nada_a_la_camara_recibe_un_movimiento_suave():
         {"inmersion": "maqueta", "mover": {"elevacion": 70}, "dice": "Once."}, {"paso": "torre_pisos", "dice": "Doce."}]})
     e = r.acciones[0]["recorrido"]["escenas"]
     mover = [x["mover"] for x in e]
-    assert mover[0] is None                                       # el primer paso: la cámara viaja al encuadre del paso
-    assert mover[1:4] == [{"giro": 10, "zoom": 1.06}, {"giro": -12, "zoom": 1.06}, {"giro": 14, "zoom": 1.06}]
+    assert mover[0] == {"giro": 10, "zoom": 1.06}                 # el primer paso llega a su encuadre y termina girando
+    assert mover[1:4] == [{"giro": -12}, {"giro": 14}, {"giro": -10}]   # siguen desde ahí: solo giran
     assert mover[4] is None                                       # pidió un encuadre: la cámara ya viaja
-    assert mover[5] == {"giro": -10, "zoom": 2.01}                # el mismo encuadre otra vez: parte del acercamiento de «cerca»
-    assert mover[6] is None and mover[7] == {"giro": 12, "zoom": 3}   # el acercamiento no pasa de su tope
+    assert mover[5] == {"giro": 12, "zoom": 2.01}                 # el mismo encuadre otra vez: parte del acercamiento de «cerca»
+    assert mover[6] is None and mover[7] == {"giro": -14, "zoom": 3}   # el acercamiento no pasa de su tope
     assert mover[8] is None and mover[9] is None                  # girando sola; dentro de un modelo del atlas
     assert mover[10] == {"elevacion": 70} and mover[11] is None   # el que pide el paso; otro paso del capítulo
     assert all(rec.mover_valido(m) for m in mover) and rec.validar(r.acciones[0]["recorrido"], G) == []
@@ -674,6 +676,57 @@ def test_el_contexto_deja_de_nombrar_un_recorrido_terminado_o_abandonado():
     db, r = _armar()
     _avance(db, 7, r.acciones[0]["recorrido"]["id"], 2, "detenido", motivo="proyector")
     assert pantalla.resumen_recorrido(db.pantallas.find_one({"_id": 7}), G, ahora + timedelta(minutes=3)) is None
+
+
+def test_lo_que_dejo_la_verificacion_del_plan_guiado():
+    """Casos que la verificación adversaria del plan encontró: la cámara sigue desde donde la dejó el `mover` anterior,
+    y varios descartes que pasaban sin aviso o tumbaban el plan."""
+    pasos = lambda r: r.acciones[0]["recorrido"]["escenas"]   # noqa: E731
+    # Después de un `mover` con acercamiento, el movimiento suave solo gira (no reabre el encuadre ni acumula zoom)
+    _, r = _armar(entrada={"op": "recorrido", "titulo": "Sigue", "pasos": [
+        {"capitulo": "salud", "paso": "torre", "camara": "oblicua", "mover": {"zoom": 2, "elevacion": 60}, "dice": "Uno."},
+        {"sin": ["torre.cubierta"], "dice": "Dos."}, {"camara": "aerea", "dice": "Tres."}, {"dice": "Cuatro."}]})
+    assert [e["mover"] for e in pasos(r)] == [{"zoom": 2, "elevacion": 60}, {"giro": 10}, None, {"giro": -12, "zoom": 1.06}]
+    # «camara: paso» con su elevación y su acercamiento en el mismo paso: se respetan (como en la op visual)
+    _, r = _armar(entrada={"op": "recorrido", "titulo": "Paso", "pasos": [
+        {"capitulo": "salud", "paso": "torre", "camara": "aerea", "zoom": 2, "dice": "Uno."},
+        {"camara": "paso", "elevacion": 50, "zoom": 1.5, "dice": "Dos."}]})
+    v = pasos(r)[1]["visual"]
+    assert (v["camara"], v["elevacion"], v["zoom"]) == ("paso", 50, 1.5) and "avisos" not in r.contenido
+    # Un cierre con ideas de más se recorta; las sugerencias que no sirven se descartan (son solo para el chat)
+    _, r = _armar(entrada={"op": "recorrido", "titulo": "Cierre", "pasos": [{"capitulo": "salud", "paso": "torre", "dice": "Uno."}],
+                           "cierre": {"puntos": ["Idea una", "Idea dos", "Idea tres", "Idea cuatro"]},
+                           "sugerencias": ["x", "s" * 70, "¿Y la telesalud?", "Cuesta $ 5"]})
+    assert r.acciones[0]["recorrido"]["cierre"] == {"puntos": ["Idea una", "Idea dos", "Idea tres"]}
+    assert r.acciones[1]["sugerencias"] == ["¿Y la telesalud?"]
+    assert _armar(entrada={"op": "recorrido", "titulo": "Una", "pasos": [{"capitulo": "salud", "paso": "torre", "dice": "Uno."}],
+                           "sugerencias": "Ver el laboratorio"})[1].acciones[1]["sugerencias"] == ["Ver el laboratorio"]
+    # Una lista mal formada no vacía la que venía de antes, y lo dice
+    _, r = _armar(entrada={"op": "recorrido", "titulo": "Lista", "pasos": [
+        {"capitulo": "salud", "paso": "torre", "mostrar": ["telesalud"], "dice": "Uno."}, {"mostrar": {"a": 1}, "dice": "Dos."}]})
+    assert pasos(r)[1]["visual"]["mostrar"] == ["telesalud"]
+    assert any("Paso 2" in a and "mostrar" in a for a in r.contenido["avisos"]), r.contenido["avisos"]
+    # La pieza aislada en un paso anterior que ahora se pide ocultar deja de estar aislada
+    _, r = _armar(entrada={"op": "recorrido", "titulo": "Aislar", "pasos": [
+        {"capitulo": "salud", "paso": "torre", "aislar": "torre", "dice": "Uno."}, {"ocultar": ["torre"], "dice": "Dos."}]})
+    v = pasos(r)[1]["visual"]
+    assert v["aislar"] is None and v["ocultar"] == ["torre"]
+    # Los nombres parecidos: sin palabras vacías, y una palabra corta tiene que estar entera
+    lista = [{"id": "torre", "nombre": "Torre nueva de cuatro pisos"}, {"id": "reduccion", "nombre": "Reducción de pérdidas"},
+             {"id": "red", "nombre": "Red de telesalud"}]
+    assert guion_presentacion.parecido(lista, "la torre")["id"] == "torre"
+    assert guion_presentacion.parecido(lista, "red")["id"] == "red"
+    assert guion_presentacion.parecido(lista[:2], "red") is None and guion_presentacion.parecido(lista, "de la") is None
+    assert guion_presentacion.parecido(lista, "reduc")["id"] == "reduccion"
+    # En la pantalla en off, `mover` y `animar` son de la orden `visual` que los trajo: otra orden los deja en nada
+    db = _Base()
+    _hacer(db, 7, {"op": "ir", "capitulo": "salud", "paso": "torre"})
+    _hacer(db, 7, {"op": "visual", "mover": {"giro": 40}, "animar": True})
+    d = db.pantallas.find_one({"_id": 7})
+    assert d["mover"] == {"giro": 40} and d["animar"] is True
+    _hacer(db, 7, {"op": "explicar", "explicacion": "Una frase."})
+    d = db.pantallas.find_one({"_id": 7})
+    assert d["mover"] is None and d["animar"] is False
 
 
 def test_un_control_tras_una_pausa_larga_revive_el_recorrido():

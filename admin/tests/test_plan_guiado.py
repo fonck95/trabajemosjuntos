@@ -618,10 +618,12 @@ r.cambia_una_lista = P.ordenesHacia(e1, P.estadoDePantalla({ ...conPiezas, mostr
 r.vuelve = P.ordenesHacia(e1, e0);
 r.otro_paso = P.ordenesHacia(e1, P.estadoDePantalla({ ...conPiezas, paso: 3 }));
 r.otro_paso_limpio = P.ordenesHacia(e1, P.estadoDePantalla({ ...base, paso: 3 }));
-// las acciones van una vez: con el estado que las trae, y no otra vez si siguen ahí
-const conMover = P.estadoDePantalla({ ...conPiezas, mover: { giro: 90 }, animar: true });
-r.acciones = [P.ordenesHacia(e1, conMover), P.ordenesHacia(conMover, P.estadoDePantalla({ ...conPiezas, mover: { giro: 90 }, animar: true })),
-  P.ordenesHacia(conMover, P.estadoDePantalla({ ...conPiezas, mover: { giro: -90 }, animar: true }))];
+// las acciones no son estado: van una vez por cada versión nueva de la pantalla que las trae (la misma pedida otra vez
+// se hace otra vez), no con la misma versión leída de nuevo, y nunca al abrir o recargar la pantalla
+const conMover = P.estadoDePantalla({ ...conPiezas, v: 4, mover: { giro: 90 }, animar: true });
+r.acciones = [P.ordenesHacia(e1, conMover), P.ordenesHacia(conMover, P.estadoDePantalla({ ...conPiezas, v: 4, mover: { giro: 90 }, animar: true })),
+  P.ordenesHacia(conMover, P.estadoDePantalla({ ...conPiezas, v: 5, mover: { giro: 90 }, animar: true })),
+  P.ordenesHacia(null, conMover).filter((o) => o.mover !== undefined || o.animar !== undefined)];
 
 // El avance: doce pasos y el aviso `parcial`
 const pr = { rid: 'abcdef123456', n: 12, de: 12, fase: 'narrando', frase: 0, voz: 'activa', t_ms: 10 };
@@ -707,7 +709,7 @@ def test_el_puente_en_la_pantalla_en_off_el_avance_y_la_voz(tmp_path):
                                "ocultar": ["puestos"], "sin": ["torre.cubierta"]}], r["otro_paso"]
     assert r["otro_paso_limpio"] == [{"orden": "ir", "capitulo": "salud", "paso": 3}], r["otro_paso_limpio"]
     assert r["acciones"] == [[{"orden": "visual", "mover": {"giro": 90}, "animar": True}], [],
-                             [{"orden": "visual", "mover": {"giro": -90}}]], r["acciones"]
+                             [{"orden": "visual", "mover": {"giro": 90}, "animar": True}], []], r["acciones"]
     assert r["progreso"] == ["parcial", 12, None, None] and r["estado_doce"] == {"rid": "abcdef123456", "n": 12, "de": 12}
     assert r["avisos"] == ["atlas", "resaltar", "asiento", "voz", "parcial"]
     # la voz: null sin vista; con ella, el estado en que quedó; null si no es un estado, si falla o si manda un proyector

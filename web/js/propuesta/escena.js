@@ -421,9 +421,12 @@ export function crearEscena(el, datos) {
     if (ctl) y1 = Math.min(y1, ctl.top - r.top - 6);
     const p = elPanel(), oculto = document.getElementById('pres')?.classList.contains('sin-panel');
     if (p && !oculto) {
-      const b = p.getBoundingClientRect();
-      if (b.width < W * 0.7) x0 = Math.max(x0, b.right - r.left + 16);
-      else y1 = Math.min(y1, b.top - r.top - 8);
+      // dónde QUEDA el panel, no dónde va en este instante: es position: fixed (offsetLeft y offsetTop son de la
+      // ventana y no llevan el transform con que entra). Medido a mitad de su entrada, un viaje que arranca en ese
+      // momento se calculaba para la pantalla entera y dejaba la obra debajo del panel toda la frase
+      const ancho = p.offsetWidth;
+      if (ancho < W * 0.7) x0 = Math.max(x0, p.offsetLeft + ancho - r.left + 16);
+      else y1 = Math.min(y1, p.offsetTop - r.top - 8);
     }
     const riel = document.querySelector('.riel')?.getBoundingClientRect();
     if (riel && riel.width > W * 0.7) { y0 = Math.max(y0, riel.bottom - r.top + 4); yTecho = Math.max(yTecho, riel.bottom - r.top + 4); }

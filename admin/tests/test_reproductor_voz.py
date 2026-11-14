@@ -257,6 +257,19 @@ for (const tarda of [300, 3000]) {
   await reloj.avanzar(1000);
   out.error_tras_reemplazo = { ordenes: ordenes.slice(ordenes.lastIndexOf('escena:1')), ultimo: avances.at(-1) };
 }
+// Un plan nuevo reemplaza a uno que narraba y se detiene antes de su primera escena (en la espera previa): igual se
+// quita la narración del anterior, que seguía pintada
+{
+  const { reloj, ordenes, avances, rep } = armar();
+  rep.iniciar(rec('j'));
+  await reloj.avanzar(1000);
+  rep.iniciar(rec('k'), { previa: 1800 });
+  await reloj.avanzar(200);
+  const antes = ordenes.length;
+  const detuvo = rep.detener('boton');
+  await reloj.avanzar(3000);
+  out.detener_en_la_previa = { detuvo: await detuvo, ordenes: ordenes.slice(antes), ultimo: avances.at(-1) };
+}
 // Una pausa pedida apenas arranca: la primera escena se prepara, pero queda en pausa (y al seguir, narra)
 {
   const { reloj, ordenes, avances, rep } = armar();
@@ -325,6 +338,8 @@ def test_el_reproductor_pausa_reemplazo_voz_que_falla_y_cierre(tmp_path):
     assert r["error_sin_respuesta"] == {"ordenes": ["escena:1", "quitar_explicacion"], "ultimo": "g1/error!sin_respuesta"}
     e = r["error_tras_reemplazo"]
     assert e["ordenes"] == ["escena:1", "escena:2", "quitar_explicacion"] and e["ultimo"] == "i2/error!escena_fallida", e
+    # Detenido en la espera previa de un plan que reemplazó a otro: se quita la narración del anterior
+    assert r["detener_en_la_previa"] == {"detuvo": True, "ordenes": ["quitar_explicacion"], "ultimo": "k1/detenido!boton"}
     # La pausa pedida al arrancar no se pierde cuando la primera escena empieza a prepararse
     p = r["pausa_al_arrancar"]
     assert p["enPausa"]["estado"]["fase"] == "pausa" and p["enPausa"]["estado"]["pausado"] is True, p

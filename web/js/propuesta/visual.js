@@ -567,15 +567,19 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
     // la animación: la que se pide o, como siempre, la del paso que desarrolla el componente al que se va con un vuelo
     const otroPaso = enf && pasoCapas(c) !== paso();
     const conAnimacion = animar === true || (animar === undefined && !dur && otroPaso);
-    // 1) qué hay que encuadrar (antes de que arranque una animación: las piezas a medio crecer miden menos)
-    if (camara || dur) { movido = null; fijarBase(); }
+    // 1) qué hay que encuadrar (antes de que arranque una animación: las piezas a medio crecer miden menos). Si esta
+    // orden no cambia la cámara pedida y la anterior la dejó en otro sitio con `mover`, el viaje SIGUE desde ahí: cada
+    // paso de un plan parte del anterior (si volviera a la base, un giro repetido no movería nada y el movimiento suave
+    // por omisión desharía el viaje anterior mientras se dice otra frase). La persona que tomó la cámara lo reinicia
+    const sigue = !!dur && !camara && !!movido && !st.userMoved;
+    if ((camara || dur) && !sigue) { movido = null; fijarBase(); }
     // 2) lo que se ve, en el acto y sin vuelo: capas, piezas, partes, hoy/proyecto y el estado de los módulos
     if (comparo && inm.abierta) irAtlas(vis.comparar === 'hoy' ? 'hoy' : inm.actual?.modo).catch(() => {});
     if (enf || comparo || piezas || conAnimacion) pintar({ animar: conAnimacion });
     // 3) la ficha, antes de calcular a dónde va la cámara: le quita ancho a la zona libre
     if (limpio.detalle !== undefined) verDetalle(vis.detalle, { reencuadre: !(camara || dur) });
     // 4) la cámara: un paseo de lo que dura la frase o, sin `ms`, un vuelo corto si cambió a dónde mira
-    if (dur) viajar(dur, mov);
+    if (dur) viajar(dur, mov, { desdeAqui: sigue });
     else if (camara) { pendiente = false; volar(); }
     // el modelo del atlas tarda en cargar la primera vez: no se espera (la orden responde enseguida) y, si no carga, la
     // ventana lo dice
@@ -586,7 +590,10 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   }
 
   /** Con una narración en pantalla (un plan guiado) los módulos no mueven la cámara por su cuenta: la lleva el plan. */
-  function guiado(activo) { escena.guiado = !!activo; }
+  function guiado(activo) { escena.guiado = !!activo; if (!activo && st.paseo) st.stopFlight(); }
+  /** La pausa del plan también detiene el viaje de la cámara, y al seguir lo retoma: si no, la imagen terminaba sola el
+   * movimiento del paso y lo que faltaba de la frase se decía sobre la imagen quieta. */
+  function pausar(v) { const t = st.paseo; if (!t) return; if (v) t.pause(); else t.resume(); }
 
   function estadoVisual() {
     return { enfoque: vis.enfoque, camara: vis.camara, rumbo: vis.rumbo, elevacion: vis.elevacion, zoom: vis.zoom, mirar: vis.mirar, girar: vis.girar,
@@ -634,7 +641,7 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   // un modelo del atlas pedido que todavía carga (la escena espera a que esté antes de narrar)
   const cargando = () => inm.abierta && !capaInm.classList.contains('lista') && !inm.fallo;
 
-  return { aplicar, mover, guiado, depurar, estado: estadoVisual, alPaso, validar, cargando,
+  return { aplicar, mover, guiado, pausar, depurar, estado: estadoVisual, alPaso, validar, cargando,
     // para pasar3D (main.js): lo que el asistente muestra, oculta o aísla encima del paso, y la vista del paso sin vuelo
     ajustar, efectos, deshacer, enSeco,
     // repite el encuadre pedido (cámara, enfoque, mirar o el final del último movimiento); false si no hay ninguno
