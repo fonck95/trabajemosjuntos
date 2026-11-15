@@ -14,8 +14,13 @@
 //    `sin_transcriptor`) o si no hay `MediaRecorder`. Con ella el audio lo transcribe el servicio de voz del fabricante
 //    del navegador: el texto de `textoDeEstado` lo dice. Corta sola (el servicio detecta el final de la frase) y a los
 //    TOPE_MS. Hay navegadores que lo anuncian y no lo tienen (un Chromium sin el servicio de voz): si en SIN_ARRANQUE_MS
-//    no empezó a oír ni dio un error, se da por no disponible (`sin_soporte`). Un 409 llega con la pregunta ya grabada, que el navegador no puede transcribir después: se pasa a esta
-//    vía en el acto y se pide repetirla (`repetir`).
+//    no empezó a oír ni dio un error, se da por no disponible (`sin_soporte`). Un 409 `sin_transcriptor` (o un 409 sin
+//    código) llega con la pregunta ya grabada, que el navegador no puede transcribir después: queda en `error` con un
+//    aviso que pide tocar el micrófono y repetirla, y el toque siguiente va por esta vía. El micrófono no se vuelve a
+//    abrir solo: la persona ya terminó de hablar, no eligió que su voz vaya al servicio del navegador, y lo que se
+//    dijera después en la sala se enviaría como pregunta. Con `servidor` como función, la vía 1 vuelve en cuanto diga
+//    que el panel ya transcribe. Cualquier otro error del panel (también con un código que aquí no se conoce) muestra
+//    su `mensaje`.
 //
 // Estados (`estado()` y `alEstado`): `inactivo`, `pidiendo` (el permiso), `escuchando` (con `nivel` de 0 a 1 y, en la
 // vía 2, `parcial`), `transcribiendo` y `error` (con `motivo`: `permiso`, `sin_microfono`, `sin_soporte`, `vacio` o
@@ -86,16 +91,19 @@ const ERRORES = {
   vacio: 'No oí nada. Toque el micrófono y hable.',
   fallo: 'No se pudo transcribir. Intente de nuevo o escriba su pregunta.',
 };
+// Tras un 409: la grabación se perdió y la próxima la transcribe el navegador
+const REPETIR = 'El panel no pudo transcribir esa grabación. Toque el micrófono y repita su pregunta: la transcribirá el '
+  + 'servicio de voz de su navegador.';
 
 /** Lo que se le dice a la persona en cada estado (una línea). En la vía 2 dice que transcribe el servicio del navegador. */
 export function textoDeEstado(e) {
   switch (e?.estado) {
-    case 'pidiendo': return 'Permita el micrófono para preguntar por voz…';
+    // En la vía 2 el aviso va antes de que el audio salga (el permiso se pide con el reconocimiento ya pedido)
+    case 'pidiendo': return e.via === 'navegador'
+      ? 'Permita el micrófono. Aquí la voz la transcribe el servicio de voz de su navegador, no el panel…'
+      : 'Permita el micrófono para preguntar por voz…';
     case 'escuchando':
-      if (e.via === 'navegador') {
-        return `${e.repetir ? 'El panel no pudo transcribir esa grabación. Repita su pregunta: ahora' : 'Escuchando… Aquí'} `
-          + 'la transcribe el servicio de voz de su navegador.';
-      }
+      if (e.via === 'navegador') return 'Escuchando… Aquí la transcribe el servicio de voz de su navegador.';
       return e.medidor === false ? 'Escuchando… Toque el micrófono para terminar.'
         : 'Escuchando… Termina sola cuando deje de hablar.';
     case 'transcribiendo': return 'Transcribiendo…';
@@ -106,18 +114,21 @@ export function textoDeEstado(e) {
 
 /**
  * El dictado de una pregunta.
- * `transcribir(blob, {signal, duracion_ms})` → el texto (o `{texto}`); si lanza un error con `codigo`
- * 'sin_transcriptor' (o `estado` 409), se pasa a la vía 2; cualquier otro queda en `error` con `motivo` «fallo» (y su
- * `mensaje`, si trae uno para la persona). `servidor`: ¿el panel puede transcribir? (un booleano o una función; es una
- * pista: sin reconocimiento en el navegador se intenta igual). `alEstado(estado)` en cada cambio (y en cada medida del
- * nivel); `alTexto(texto, {via})` con lo transcrito.
+ * `transcribir(blob, {signal, duracion_ms})` → el texto (o `{texto}`); `signal` se aborta si se cancela mientras
+ * transcribe (quien sube el audio corta la petición). Si lanza un error con `codigo` 'sin_transcriptor' (o `estado` 409
+ * sin `codigo`), queda en `error` (`fallo`, vía 2, con el aviso de repetir; o `sin_soporte` sin reconocimiento) y el
+ * toque siguiente va por la vía 2; cualquier otro (también un código que aquí no se conoce) queda en `error` con
+ * `motivo` «fallo» y su `mensaje`, si trae uno para la persona. `servidor`: ¿el panel puede transcribir? (un booleano
+ * o una función; es una pista: sin reconocimiento en el navegador se intenta igual; una función manda también después
+ * de un 409). `alEstado(estado)` en cada cambio (y en cada medida del nivel); `alTexto(texto, {via})` con lo transcrito.
  */
 export function crearDictado({ ventana = globalThis, transcribir = null, alEstado = () => {}, alTexto = () => {},
   servidor = true, reloj = relojDelNavegador } = {}) {
   let actual = { estado: 'inactivo' };
   let gen = 0;               // cambia con cada intento y con cada cancelación: lo que llegue tarde no cuenta
   let vivo = true;
-  let sinServidor = false;   // el panel ya respondió que no puede transcribir: de aquí en adelante, la vía 2
+  let sinServidor = false;   // el panel respondió que no puede transcribir: la vía 2, salvo que `servidor` (una función)
+                             // diga después que ya puede (el panel se recupera: Mnemo se volvió a conectar)
   let cortar = null;         // lo que suelta el intento en curso (el micrófono, el medidor, el reconocimiento)
   let parar = null;          // lo que termina de oír en el intento en curso
 
@@ -137,9 +148,13 @@ export function crearDictado({ ventana = globalThis, transcribir = null, alEstad
     const m = typeof e?.mensaje === 'string' ? limpiar(e.mensaje).slice(0, 300) : '';
     return m ? { mensaje: m } : {};
   };
+  // Con `servidor` como función manda ella (quien la da la mantiene al día: agente.js la apaga con el 409 y la vuelve a
+  // encender con el estado del panel); el cerrojo del 409 solo vale para quien da un booleano
+  const cerrado = () => sinServidor && typeof servidor !== 'function';
   const puedeServidor = () => {
-    if (sinServidor || typeof transcribir !== 'function') return false;
-    try { return (typeof servidor === 'function' ? servidor() : servidor) !== false; } catch { return true; }
+    if (typeof transcribir !== 'function' || cerrado()) return false;
+    if (typeof servidor !== 'function') return servidor !== false;
+    try { return servidor() !== false; } catch { return true; }
   };
 
   // ── Vía 1: grabar y transcribir en el servidor ──
@@ -258,7 +273,11 @@ export function crearDictado({ ventana = globalThis, transcribir = null, alEstad
       const tipoFinal = (typeof grabadora.mimeType === 'string' && grabadora.mimeType) || tipo || 'audio/webm';
       soltarMedios();   // el micrófono queda libre antes de transcribir
       cortar = parar = null;
-      if (porque === 'sin_voz' || duracion < MINIMO_MS) { fallar('vacio', { via }); return; }
+      // Sin voz no se transcribe nada: tampoco si la grabadora paró sola (el micrófono se desconectó) antes de oírla
+      if (porque === 'sin_voz' || duracion < MINIMO_MS || (porque === 'grabadora' && midio && !oyoVoz)) {
+        fallar('vacio', { via });
+        return;
+      }
       const B = ventana.Blob || globalThis.Blob;
       const blob = new B(trozos, { type: tipoFinal });
       if (!blob.size) { fallar('vacio', { via }); return; }
@@ -271,11 +290,13 @@ export function crearDictado({ ventana = globalThis, transcribir = null, alEstad
       } catch (e) {
         if (g !== gen) return;
         cortar = null;
-        if (e?.codigo === 'sin_transcriptor' || e?.estado === 409) {
+        // Un 409 sin código cuenta como `sin_transcriptor`; con otro código es otro error, que dice su propio mensaje
+        if (e?.codigo === 'sin_transcriptor' || (e?.estado === 409 && !e?.codigo)) {
           // El panel no puede transcribir (Mnemo sin conectar, sin el permiso o sin un modelo que transcriba): la
-          // grabación ya no sirve, y la pregunta se repite con el reconocimiento del navegador
+          // grabación ya no sirve. El micrófono no se reabre solo: se pide otro toque, que irá por el reconocimiento
+          // del navegador (con el aviso a la vista y con el gesto de la persona)
           sinServidor = true;
-          if (soporteDeDictado(ventana).reconocer) reconocer({ repetir: true });
+          if (soporteDeDictado(ventana).reconocer) fallar('fallo', { via: 'navegador', mensaje: REPETIR });
           else fallar('sin_soporte', { via, ...mensajeDe(e) });
           return;
         }
@@ -327,7 +348,7 @@ export function crearDictado({ ventana = globalThis, transcribir = null, alEstad
   }
 
   // ── Vía 2: el reconocimiento del navegador ──
-  function reconocer({ repetir = false } = {}) {
+  function reconocer() {
     const g = ++gen;
     const via = 'navegador';
     const SR = ventana.SpeechRecognition || ventana.webkitSpeechRecognition;
@@ -339,7 +360,7 @@ export function crearDictado({ ventana = globalThis, transcribir = null, alEstad
     r.maxAlternatives = 1;
     let finales = '', parcial = '', error = null, hablando = false, tope = null, oyendo = false;
     const emitir = () => poner({ estado: 'escuchando', via, nivel: hablando ? 0.7 : 0.15,
-      parcial: limpiar(`${finales} ${parcial}`), ...(repetir ? { repetir: true } : {}) });
+      parcial: limpiar(`${finales} ${parcial}`) });
     const quitarTope = () => { if (tope !== null) { reloj.cancelar(tope); tope = null; } };
     const alTope = (f, ms) => { quitarTope(); tope = reloj.programar(() => { tope = null; f(); }, ms); };
     r.onstart = () => {
@@ -380,7 +401,7 @@ export function crearDictado({ ventana = globalThis, transcribir = null, alEstad
       try { r.abort(); } catch { /* ya paró */ }
     };
     parar = () => { try { r.stop(); } catch { /* ya paró */ } };
-    poner({ estado: 'pidiendo', via, ...(repetir ? { repetir: true } : {}) });
+    poner({ estado: 'pidiendo', via });
     // Si ni empieza a oír ni da un error, este navegador anuncia el reconocimiento pero no lo tiene
     alTope(() => {
       if (g !== gen || oyendo) return;
@@ -402,7 +423,7 @@ export function crearDictado({ ventana = globalThis, transcribir = null, alEstad
   function empezar() {
     if (!vivo || (actual.estado !== 'inactivo' && actual.estado !== 'error')) return false;
     const s = soporteDeDictado(ventana);
-    const puedeGrabar = s.grabar && typeof transcribir === 'function' && !sinServidor;
+    const puedeGrabar = s.grabar && typeof transcribir === 'function' && !cerrado();
     if (puedeGrabar && (puedeServidor() || !s.reconocer)) grabar();
     else if (s.reconocer) reconocer();
     else { fallar('sin_soporte'); return false; }

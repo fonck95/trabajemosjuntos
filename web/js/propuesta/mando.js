@@ -19,10 +19,12 @@
 //   rumbo, elevacion, zoom, mirar, girar), la obra que enfoca (enfoque), hoy o con el proyecto (comparar), la ficha
 //   técnica de un componente (detalle), un modelo del atlas a pantalla completa (inmersion), las piezas de la maqueta
 //   que se suman, se quitan o se aíslan (mostrar, ocultar, aislar), las partes que se le quitan a una pieza (sin) y el
-//   tema; y dos acciones que no son estado: `mover` (la cámara gira, se acerca o sube durante `ms`, por omisión
-//   MOVER_MS) y `animar` (repite la animación del paso). Aquí se revisa la forma de cada valor (los ids, las listas, los
-//   rangos); que la pieza o el componente existan en el capítulo, o la inmersión en el catálogo, lo dice visual.js
-//   (`depurar`). Es tolerante: la parte que no vale se descarta, lo demás se aplica y la respuesta lo dice (`aviso:
+//   tema; y tres acciones que no son estado: `mover` (la cámara gira, se acerca o sube durante `ms`, por omisión
+//   MOVER_MS), `animar` (repite la animación del paso) y `simular` (de 1 a MAX_SIMULAR controles de adentro del modelo
+//   del atlas a la vista, en orden: [{control, valor?}], que visual.js acciona con __escenario.simular de
+//   js/escenario.js). Aquí se revisa la forma de cada valor (los ids, las listas, los rangos); que la pieza o el
+//   componente existan en el capítulo, o la inmersión en el catálogo, lo dice visual.js (`depurar`), y que el control
+//   exista en el modelo y su valor le sirva, el atlas (lo que no acepta en SIMULAR_ESPERA_MS vuelve como descartado). Es tolerante: la parte que no vale se descarta, lo demás se aplica y la respuesta lo dice (`aviso:
 //   'parcial'` y `descartadas`); solo si no queda nada que aplicar responde `error`.
 // * El plan guiado (el recorrido narrado de admin/web/js/reproductor.js, en la página del panel que enmarca la
 //   presentación): `escena` es un paso del plan (el paso de la presentación, «Solo 3D», lo visual, el resaltado, el
@@ -32,7 +34,8 @@
 //   muestra ocurre MIENTRAS se explica. Lo único que espera es un modelo del atlas (hasta ASIENTO_ATLAS_MS): mientras
 //   carga no hay nada que mirar. Falla entera solo por lo que se proyecta (el título, las frases), el avance, el id del
 //   plan, un capítulo o un paso que no existen o `panel` sin verdadero o falso; todo lo demás (lo visual, el
-//   resaltado, `mover`, `animar`) se descarta por partes, como en `visual`. `narracion` ilumina una frase (cuando la voz
+//   resaltado, `mover`, `animar`, `simular`) se descarta por partes, como en `visual`. La simulación se acciona cuando
+//   el modelo del atlas de la escena ya cargó, y la escena espera sus respuestas a lo sumo SIMULAR_ESPERA_MS. `narracion` ilumina una frase (cuando la voz
 //   empieza a decirla), marca la pausa, dice si hay voz o muestra la píldora «El asistente prepara la explicación…»;
 //   `cierre`, el resumen y «¿Preguntas?». Mientras hay una narración en pantalla, los módulos de la maqueta no mueven
 //   la cámara por su cuenta (`visual.guiado`). Mientras suena
@@ -82,6 +85,11 @@ const MS_MAX = 120000;            // el tope de `ms` (lo que dura la narración 
 const MOVER_MS = 6000;            // lo que dura `mover` en la orden `visual` si no trae `ms`
 const MAX_LISTA = 8;              // piezas o partes por lista (mostrar, ocultar, sin)
 const MAX_DESCARTADAS = 8;
+// `simular`: los controles por orden (`MAX_SIMULAR` de app/recorrido.py y del puente: una prueba los compara) y lo que se
+// esperan las respuestas del atlas antes de responder (un control que tarda —Reproducir hasta que termine el primer
+// cálculo— se acciona igual, después: solo no se cuenta)
+const MAX_SIMULAR = 4;
+const SIMULAR_ESPERA_MS = 2000;
 // Lo que dura la narración de una escena si la orden no lo dice (`lecturaMs` y ENTRE_FRASES_MS de reproductor.js)
 const ENTRE_FRASES_MS = 250;
 const lecturaMs = (t) => Math.min(16000, Math.max(3200, 1500 + 62 * [...String(t)].length));
@@ -153,8 +161,8 @@ const ESCALAS = [1, 0.93, 0.86, 0.8, 0.75];
 const CLAVES = new Map([
   ['ir', ['capitulo', 'paso', 'explicacion']], ['avanzar', ['d', 'explicacion']], ['explicar', ['explicacion']],
   ['quitar_explicacion', []], ['estado', []], ['vista', ['panel', 'indice', 'fichas', 'controles']],
-  ['visual', [...Object.keys(VISUAL), 'mover', 'animar', 'ms']],
-  ['escena', ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'mover', 'animar', 'frases', 'titulo', 'n', 'de', 'voz', 'rid', 'ms']],
+  ['visual', [...Object.keys(VISUAL), 'mover', 'animar', 'simular', 'ms']],
+  ['escena', ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'mover', 'animar', 'simular', 'frases', 'titulo', 'n', 'de', 'voz', 'rid', 'ms']],
   ['narracion', ['frase', 'pausa', 'voz', 'preparando']],
   ['cierre', ['puntos', 'rid']],
 ]);
@@ -283,6 +291,24 @@ function moverTolerante(m, descartadas) {
 function animarTolerante(v, descartadas) {
   if (v !== undefined && typeof v !== 'boolean') descartadas.push({ clave: 'animar', motivo: 'va con verdadero o falso' });
   return v === true;
+}
+
+/** `simular` con tolerancia: los controles con la forma {control, valor?} (el control, un id; el valor, un número, el id
+ * de una opción o verdadero o falso), hasta MAX_SIMULAR; lo que no la tiene se anota y no va. null si no queda nada. */
+function simularTolerante(s, descartadas) {
+  if (s === undefined || s === null) return null;
+  if (!Array.isArray(s)) { descartadas.push({ clave: 'simular', motivo: 'no es una lista de controles' }); return null; }
+  const out = [];
+  for (const x of s) {
+    const v = x?.valor;
+    const ok = !!x && typeof x === 'object' && !Array.isArray(x) && typeof x.control === 'string' && ID_PIEZA.test(x.control)
+      && Object.keys(x).every((k) => k === 'control' || k === 'valor')
+      && (v === undefined || typeof v === 'boolean' || (typeof v === 'number' && Number.isFinite(v)) || (typeof v === 'string' && ID_PIEZA.test(v)));
+    if (!ok) descartadas.push({ clave: 'simular', motivo: 'un control sin la forma {control, valor}' });
+    else if (out.length >= MAX_SIMULAR) descartadas.push({ clave: `simular.${x.control}`, motivo: `pasa de ${MAX_SIMULAR} controles` });
+    else out.push(v === undefined ? { control: x.control } : { control: x.control, valor: v });
+  }
+  return out.length ? out : null;
 }
 
 /** Las descartadas como salen en la respuesta: hasta MAX_DESCARTADAS, cada una {clave, motivo} con textos cortos. */
@@ -616,8 +642,24 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     return false;
   }
 
+  // La simulación (`visual.simular`): lo que el atlas rechaza en SIMULAR_ESPERA_MS se anota en `descartadas` (lo que
+  // sigue esperando se acciona solo, después). Sin esa capa (una de antes), todo descartado. Devuelve cuántos se
+  // descartaron. Nunca lanza
+  async function simularEnAtlas(lista, descartadas) {
+    if (!lista) return 0;
+    let malos;
+    if (typeof visual.simular !== 'function') malos = lista.map((x) => ({ clave: `simular.${x.control}`, motivo: 'esta presentación no acciona simulaciones' }));
+    else {
+      try { malos = await visual.simular(lista, { tope: SIMULAR_ESPERA_MS }); } catch { malos = null; }
+      if (!Array.isArray(malos)) malos = lista.map((x) => ({ clave: `simular.${x.control}`, motivo: 'la presentación no pudo accionarlo' }));
+    }
+    descartadas.push(...malos.filter(Boolean));
+    return malos.filter(Boolean).length;
+  }
+
   // La orden `escena`: solo esto la hace fallar entera (lo que se proyecta, el avance, el id, un capítulo o un paso que
-  // no existen, `panel` sin verdadero o falso). Lo visual, el resaltado, `mover` y `animar` se descartan por partes
+  // no existen, `panel` sin verdadero o falso). Lo visual, el resaltado, `mover`, `animar` y `simular` se descartan por
+  // partes
   function escenaInvalida(m) {
     const ci = typeof m.capitulo === 'string' && ID.test(m.capitulo) ? caps.findIndex((c) => c.id === m.capitulo) : -1;
     if (ci < 0) return 'La presentación no tiene ese capítulo';
@@ -655,6 +697,7 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     }
     const mover = moverTolerante(m.mover, descartadas);
     const animar = animarTolerante(m.animar, descartadas);
+    const simulacion = simularTolerante(m.simular, descartadas);
     // lo que durará la narración: lo dice el reproductor; si no, la lectura de sus frases
     const ms = entero(m.ms, 1, MS_MAX) ? m.ms
       : m.frases.reduce((a, f) => a + lecturaMs(f), 0) + ENTRE_FRASES_MS * (m.frases.length - 1);
@@ -684,13 +727,18 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       if (error) descartadas.push({ clave: 'visual', motivo: error });
       let aviso = null;
       if (senal && !senalar(senal, () => !superada() && narracion?.rid === m.rid && narracion.n === m.n)) aviso = 'resaltar';
-      if (descartadas.length) aviso = 'parcial';
       let asento = true;
       if (atlas || visual.cargando?.()) {
         asento = await asentada({ tope: ASIENTO_ATLAS_MS });
         if (superada()) return { reemplazada: true };
-        if (!asento) aviso = visual.cargando?.() ? 'atlas' : 'asiento';
       }
+      // la simulación, con el modelo del atlas ya cargado (si no cargó a tiempo, visual.js espera por su cuenta)
+      if (simulacion) {
+        await simularEnAtlas(simulacion, descartadas);
+        if (superada()) return { reemplazada: true };
+      }
+      if (descartadas.length) aviso = 'parcial';
+      if (!asento) aviso = visual.cargando?.() ? 'atlas' : 'asiento';
       return { asentada: asento, ms: Date.now() - t0, ...(aviso ? { aviso } : {}),
         ...(descartadas.length ? { descartadas: cortas(descartadas) } : {}) };
     } finally {
@@ -765,31 +813,41 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       if (m.controles !== undefined) { pres?.classList.toggle('sin-controles', !m.controles); sinTeclado = !m.controles; }
       return responder(id, 'estado', origen);
     }
-    // Lo visual, sin cambiar de paso: solo las partes que vienen, cada una con un valor de su lista, y las dos acciones
-    // (`mover`, que dura `ms` o MOVER_MS, y `animar`). Con tolerancia: la parte que no tiene la forma, o que no existe
+    // Lo visual, sin cambiar de paso: solo las partes que vienen, cada una con un valor de su lista, y las tres acciones
+    // (`mover`, que dura `ms` o MOVER_MS, `animar` y `simular`, que se acciona después de lo demás). Con tolerancia: la parte que no tiene la forma, o que no existe
     // en el capítulo a la vista, se descarta y lo demás se aplica (`aviso: 'parcial'` y `descartadas`). Si no queda
     // nada, es un error con su porqué
     if (m.orden === 'visual') {
       if (!visual) return fallo('Esta presentación no tiene la capa visual: es la de la presentación técnica (?modo=tecnica)');
       const partes = Object.keys(VISUAL).filter((k) => m[k] !== undefined);
       const pideMover = m.mover !== undefined && m.mover !== null, pideAnimar = m.animar !== undefined && m.animar !== false;
-      if (!partes.length && !pideMover && !pideAnimar) return fallo('La orden visual no dice qué cambiar');
+      const pideSimular = m.simular !== undefined && m.simular !== null;
+      if (!partes.length && !pideMover && !pideAnimar && !pideSimular) return fallo('La orden visual no dice qué cambiar');
       const descartadas = [];
       const validas = partesValidas(m, partes, descartadas);
       const mover = moverTolerante(m.mover, descartadas);
       const animar = animarTolerante(m.animar, descartadas);
+      const simulacion = simularTolerante(m.simular, descartadas);
       const sinForma = [...new Set(descartadas.map((d) => d.clave))];
       const cambios = visualParcial(validas, descartadas);
-      if (!Object.keys(cambios).length && !mover && !animar) {
+      const algoVisual = Object.keys(cambios).length || mover || animar;
+      if (!algoVisual && !simulacion) {
         return fallo((sinForma.length ? `Valor que la presentación no admite en: ${sinForma.join(', ')}`
           : cortas(descartadas)[0]?.motivo || 'La orden visual no dice qué cambiar').slice(0, 160));
       }
-      const conMs = entero(m.ms, 1, MS_MAX);
-      const opciones = { ...(mover ? { mover, ms: conMs ? m.ms : MOVER_MS } : conMs ? { ms: m.ms } : {}), ...(animar ? { animar: true } : {}) };
-      // solo el movimiento, desde donde está la cámara (`visual.mover`); si la capa no lo tiene, por `aplicar`
-      const error = textoDeError(mover && !animar && !Object.keys(cambios).length && typeof visual.mover === 'function'
-        ? await visual.mover(mover, opciones.ms) : await visual.aplicar(cambios, opciones));
-      if (error) return fallo(error.slice(0, 160));
+      if (algoVisual) {
+        const conMs = entero(m.ms, 1, MS_MAX);
+        const opciones = { ...(mover ? { mover, ms: conMs ? m.ms : MOVER_MS } : conMs ? { ms: m.ms } : {}), ...(animar ? { animar: true } : {}) };
+        // solo el movimiento, desde donde está la cámara (`visual.mover`); si la capa no lo tiene, por `aplicar`
+        const error = textoDeError(mover && !animar && !Object.keys(cambios).length && typeof visual.mover === 'function'
+          ? await visual.mover(mover, opciones.ms) : await visual.aplicar(cambios, opciones));
+        if (error) return fallo(error.slice(0, 160));
+      }
+      // la simulación, después de lo demás (una inmersión que abre esta misma orden ya va en camino): si era lo único y
+      // el atlas no aceptó ningún control, es un error con su porqué
+      if (simulacion && await simularEnAtlas(simulacion, descartadas) === simulacion.length && !algoVisual) {
+        return fallo(`No se pudo accionar en el modelo del atlas: ${cortas(descartadas.slice(-simulacion.length))[0]?.motivo || 'ningún control'}`.slice(0, 160));
+      }
       return responder(id, 'estado', origen, descartadas.length ? { aviso: 'parcial', descartadas: cortas(descartadas) } : {});
     }
     if (m.orden === 'explicar' || m.orden === 'quitar_explicacion') {

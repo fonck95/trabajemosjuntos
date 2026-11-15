@@ -122,10 +122,22 @@ def test_la_narracion_real_es_la_primera_frase_cortada_donde_termina_una_idea():
     assert dice("vivienda", "portadilla").endswith("sobre todo de madera o tabla.")
     assert dice("urbanismo", "componentes") == ("Las seis piezas se presentan al nivel central como un solo proyecto por "
                                                 "etapas que funcionan solas.")
-    # sin dónde cortarla (solo comas: se partiría una enumeración), el título con su punto
-    assert dice("salud", "portadilla") == "Un solo hospital para 22.429 habitantes."
-    # la frase que habla de la plata no se narra: el título
-    assert "costo" in SALUD["pasos"][1]["texto"] and dice("salud", "componentes") == "Cinco piezas, una sola red."
+    # sin dónde cortarla (lo que cabe antes del punto y coma pasa de 180), y el título es solo un rótulo: la primera
+    # idea corta del texto (la parte que sigue al punto y coma), con mayúscula y punto
+    assert dice("salud", "portadilla") == "Los 5 puestos rurales están abandonados o en mal estado, sin habilitar."
+    # la frase que habla de la plata no se narra, y el título es un rótulo: la otra idea de la misma frase
+    assert "costo" in SALUD["pasos"][1]["texto"]
+    assert dice("salud", "componentes") == ("La telesalud, los EBS, los puestos y las ambulancias llevan la atención a "
+                                            "la zona rural, donde vive el 47 % de la población.")
+    # un título que ya es una frase se dice tal cual (no se busca otra)
+    assert dice("saneamiento", "residuos") == "Menos basura a la celda: ECA y compostaje en el mismo predio."
+    # el paso de metas nombra la primera meta de su módulo, resumida (su texto es el mismo en los siete)
+    assert dice("salud", "metas") == "La primera meta: sedes rurales de salud habilitadas en el REPS, de 0 a 5 en 2031."
+    assert dice("aguas", "metas") == ("La primera meta: horas de servicio al día en la red urbana, de 9 h a 24 h en el "
+                                      "sector piloto en 2029 y en todo el casco en 2030.")
+    metas = [dice(c["id"], "metas") for c in G.capitulos if any(p["id"] == "metas" for p in c["pasos"])]
+    assert len(metas) == 7 and len(set(metas)) == 7 and all(m.startswith("La primera meta") for m in metas)
+    assert not any("Cada meta parte" in m or "→" in m or "(" in m for m in metas)
     # si el guion trae una escrita a mano, es esa la que se dice (hoy ninguna: la prueba la cuida cuando se escriba)
     for ci, c in enumerate(G.capitulos):
         for pi, p in enumerate(c["pasos"]):
@@ -184,6 +196,49 @@ def test_la_narracion_escrita_a_mano_la_primera_frase_o_el_titulo():
     assert plan["escenas"][5]["frases"] == ["Esta frase la escribió alguien.", "Y esta también."]
     # el último capítulo (el cronograma, sin texto) dice su título
     assert _narracion(automatica.plan_del_capitulo(g, len(g) - 1)["escenas"][0]) == "Cronograma de obra."
+
+
+def test_la_primera_meta_resumida():
+    def meta(*metas):
+        return automatica.primera_meta({"metas": list(metas)})
+    assert meta("Camas de hospitalización: 9 (REPS, 2022) → 15 en la torre (2031)") == \
+        "La primera meta: camas de hospitalización, de 9 a 15 en la torre en 2031."
+    # de la línea base, solo el dato; una sigla al empezar no pasa a minúscula; sin línea base, solo la meta
+    assert meta("PSMV vigente aprobado por Corantioquia: Vencido; aprobado en 2014 (2026) → PSMV nuevo aprobado (2028)") \
+        == "La primera meta: PSMV vigente aprobado por Corantioquia, de vencido a PSMV nuevo aprobado en 2028."
+    assert meta("Laboratorio clínico: — → propio, 24 horas (2031)") == \
+        "La primera meta, laboratorio clínico: propio, 24 horas en 2031."
+    # muy larga con la línea base: solo la meta
+    larga = "Algo: " + "una línea base muy larga " * 8 + "(2026) → 5 (2031)"
+    assert meta(larga) == "La primera meta, algo: 5 en 2031."
+    # solo la primera: si no se puede decir (sin meta, de costos, con una «@», sin flecha), nada (se sigue con el texto)
+    for mala in ("Ahorro: — → —", "Inversión del módulo: 0 → 5 (2031)", "Escriba a a@b.co: 0 → 1 (2031)",
+                 "Sin flecha: 0 (2026)", "X: 1 → 2 → 3", None, 7):
+        assert meta(mala, "Camas: 9 (2022) → 15 (2031)") == "", mala
+    assert automatica.primera_meta({}) == automatica.primera_meta({"metas": "x"}) == automatica.primera_meta({"metas": []}) == ""
+
+
+def test_la_frase_corta_de_un_paso_con_titulo_breve():
+    corta = automatica.frase_corta
+    texto = ("Una frase demasiado larga " * 9 + "para decirla sola; la segunda parte sí cabe y se dice como frase. "
+             "Otra frase.")
+    assert corta({"texto": texto}) == "La segunda parte sí cabe y se dice como frase."
+    # nunca partida dentro de un paréntesis; lo que habla de costos o es muy corto no sirve: la primera cifra
+    assert corta({"texto": "Corta. Lleva el 80 % del costo del módulo y se paga en dos años sin falta.",
+                  "cifras": [{"v": "3.763 t", "l": "de residuos dispuestos en 2024, unas 10,3 t por día"}]}) == \
+        "3.763 t de residuos dispuestos en 2024, unas 10,3 t por día."
+    assert corta({"texto": "Solo (una parte; dentro) del paréntesis " + "y sigue " * 30 + "hasta el final."}) == ""
+    assert corta({"cifras": [{"v": True, "l": "no es un valor"}, "no es una cifra"]}) == corta({}) == ""
+    # en la narración: solo si el título es un rótulo (corto); uno que ya es una frase se dice tal cual
+    derivado = guion_presentacion.derivar({**DATOS, "modulos": [{"id": "agua", "nombre": "Agua", "pasos": [
+        {"id": "rotulo", "tipo": "texto", "titulo": "Un solo pozo", "texto": SOLO_COMAS + " El pozo da agua a todo el "
+                                                                                          "casco urbano, día y noche."},
+        {"id": "frase", "tipo": "texto", "titulo": "Lo que va en el predio de la planta, de norte a sur, junto al caño",
+         "texto": SOLO_COMAS + " El pozo da agua a todo el casco urbano, día y noche."}]}]})
+    g = guion_presentacion.Guion.desde(derivado)
+    agua = g.por_id("agua")
+    assert automatica.narracion_del_paso(g, agua, 0) == "El pozo da agua a todo el casco urbano, día y noche."
+    assert automatica.narracion_del_paso(g, agua, 1) == "Lo que va en el predio de la planta, de norte a sur, junto al caño."
 
 
 def test_resumir():
@@ -398,6 +453,114 @@ def test_detener_y_el_control_detener_la_apagan_y_pausar_no():
     assert _avance(db, "detenido", 1, motivo="reemplazo") and _auto(db)["activa"] is True and _auto(db)["rid"]
     assert _avance(db, "detenido", 1, motivo="tecla")
     assert _doc(db)["auto"]["activa"] is False and _doc(db)["auto"]["rid"] is None and _doc(db)["recorrido"]["cerrado"] is True
+    # El botón de esa pantalla, igual
+    pantalla.iniciar_auto(db, UID, G, "panel")
+    assert _avance(db, "detenido", 1, motivo="boton") and _doc(db)["auto"]["activa"] is False
+    assert pantalla.DETIENEN_AUTO == ("tecla", "boton") and set(pantalla.DETIENEN_AUTO) <= set(rec.MOTIVOS)
+
+
+def test_encenderla_o_apagarla_no_repite_la_simulacion_de_la_ultima_orden():
+    """Encender o apagar la automática sube la versión: la simulación (y el viaje de la cámara, la animación) de la última
+    orden `visual` queda en nada, o la pantalla en off, que ya la hizo, la haría otra vez con la versión nueva."""
+    db = _abierta()
+    _hacer(db, {"op": "automatica", "accion": "iniciar"}, por="mcp")
+    _hacer(db, {"op": "visual", "inmersion": "torre_sismo", "mover": {"giro": 30},
+                "simular": [{"control": "magnitud", "valor": 7.5}, {"control": "calcular"}]}, por="mcp")
+    x = api.estado_pantalla(v=None, db=db, quien=QUIEN)   # la pantalla la recibe y la hace
+    assert x["simular"] == [{"control": "magnitud", "valor": 7.5}, {"control": "calcular"}] and x["mover"] == {"giro": 30}
+    # el botón «Presentación automática» de la pantalla la apaga: la versión nueva ya no trae la simulación
+    assert api.presentacion_automatica(api.AutoEntrada(accion="detener"), db=db, quien=QUIEN)["auto"]["activa"] is False
+    y = api.estado_pantalla(v=x["v"], db=db, quien=QUIEN)
+    assert y["v"] > x["v"] and (y["simular"], y["mover"], y["animar"]) == (None, None, False)
+    # encenderla tampoco (su primera escritura, antes de armar el plan: sin pantalla abierta no lo arma, y se ve sola)
+    db = _Base()
+    _hacer(db, {"op": "ir", "capitulo": "salud", "paso": "torre_sismo"}, por="mcp")
+    _hacer(db, {"op": "visual", "simular": [{"control": "calcular"}], "animar": True}, por="mcp")
+    assert _doc(db)["simular"] == [{"control": "calcular"}]
+    d = pantalla.iniciar_auto(db, UID, G, "panel")
+    assert (d["simular"], d["mover"], d["animar"]) == (None, None, False) and _auto(db)["activa"] is True
+
+
+def test_salir_de_la_vista_en_off_no_la_apaga():
+    # La vista en off se desmonta (salir del modo en off, ir a otra vista del panel): detiene su reproductor con
+    # «otra_orden». Eso suelta el plan, pero la automática sigue encendida en ese paso y retoma desde ahí
+    db = _abierta()
+    pantalla.iniciar_auto(db, UID, G, "panel", G.por_id("vivienda"))
+    assert _avance(db, "narrando", 2)
+    assert _avance(db, "detenido", 2, motivo="otra_orden")
+    d = _doc(db)
+    assert d["recorrido"]["cerrado"] is True and (d["capitulo"], d["paso"]) == ("vivienda", 2)
+    assert _auto(db) == {"activa": True, "capitulo": "vivienda", "paso": 2, "rid": None, "vueltas": 0, "fallas": 0}
+    plan = pantalla.siguiente_auto(db, UID, G)
+    assert plan["titulo"] == "Vivienda" and plan["escenas"][0]["paso"] == 2
+    # cualquier otro motivo que no sea una tecla o un botón de esa pantalla, tampoco
+    for motivo in ("sin_respuesta", "persona", None):
+        extra = {"motivo": motivo} if motivo else {}
+        assert _avance(db, "detenido", 1, **extra) and _auto(db)["activa"] is True, motivo
+        assert pantalla.siguiente_auto(db, UID, G) is not None
+
+
+def test_detener_su_plan_con_la_automatica_encendida_le_dice_al_modelo_que_sigue():
+    db = _abierta()
+    pantalla.iniciar_auto(db, UID, G, "panel", G.por_id("salud"))
+    assert _avance(db, "narrando", 3)
+    _hacer(db, TORRE)
+    assert _avance(db, "narrando", 1)
+    x = _hacer(db, {"op": "control_recorrido", "accion": "detener"})
+    assert x.contenido["plan"]["fase"] == "detenido" and _auto(db)["activa"] is True
+    assert x.contenido["automatica"] == ("La presentación automática sigue encendida: en unos segundos retoma sola en "
+                                         "Salud, paso 3 de 10. Si la persona quiere silencio, apáguela con op "
+                                         "automatica (accion detener).")
+    # «pausar» no lo dice, ni «detener» con la automática apagada
+    _hacer(db, TORRE)
+    assert "automatica" not in _hacer(db, {"op": "control_recorrido", "accion": "pausar"}).contenido
+    pantalla.detener_auto(db, UID, G, "panel")
+    _hacer(db, TORRE)
+    assert "automatica" not in _hacer(db, {"op": "control_recorrido", "accion": "detener"}).contenido
+    # Sin una pantalla en off abierta (el plan sonó en la pestaña): retoma cuando se abra una
+    db = _Base()
+    pantalla.iniciar_auto(db, UID, G, "panel")
+    _hacer(db, TORRE)
+    x = _hacer(db, {"op": "control_recorrido", "accion": "detener"})
+    assert "retoma sola cuando se abra una pantalla en off, en Portada, paso 1 de 2" in x.contenido["automatica"]
+
+
+def test_volver_a_reproducir_la_respuesta_con_la_automatica_encendida():
+    db = _abierta()
+    pantalla.iniciar_auto(db, UID, G, "panel")
+    assert _avance(db, "narrando", 2)
+    _hacer(db, TORRE)
+    rid = _doc(db)["recorrido"]["id"]
+    assert _avance(db, "fin", 3)
+
+    def reproducir(r):
+        return api.control_recorrido(api.ControlEntrada(rid=r, accion="reproducir"), db=db, quien=QUIEN)
+    # A los 5 s la pantalla pide el siguiente: el plan automático reemplaza al del asistente, que queda guardado
+    plan = pantalla.siguiente_auto(db, UID, G)
+    assert plan["titulo"] == "Portada" and _doc(db)["recorrido_previo"]["id"] == rid
+    # «Volver a reproducir» de su tarjeta lo trae con un id nuevo: interrumpe a la automática, que sigue en su paso
+    x = reproducir(rid)
+    assert x["titulo"] == "La torre del hospital" and x["id"] != rid and x["cerrado"] is False
+    d = _doc(db)
+    assert d["recorrido"]["auto"] is False and d["recorrido"]["destino"] == "pantalla_off" and d["por"] == "panel"
+    assert _auto(db) == {"activa": True, "capitulo": "portada", "paso": 2, "rid": None, "vueltas": 0, "fallas": 0}
+    # el id viejo ya no: la tarjeta sigue al nuevo (y ese, cuando la automática vuelva a seguir, sigue sirviendo)
+    with pytest.raises(HTTPException) as e:
+        reproducir(rid)
+    assert e.value.status_code == 409
+    nuevo = x["id"]
+    assert _avance(db, "fin", 3) and pantalla.siguiente_auto(db, UID, G) is not None
+    assert reproducir(nuevo)["titulo"] == "La torre del hospital"
+    # Llega otro plan que no es de la automática: el anterior ya no se puede volver a reproducir
+    otro = _doc(db)["recorrido"]["id"]
+    _hacer(db, {**TORRE, "titulo": "Otra respuesta"})
+    assert _avance(db, "fin", 3) and pantalla.siguiente_auto(db, UID, G) is not None
+    with pytest.raises(HTTPException):
+        reproducir(otro)
+    # Con la automática apagada después, el último del asistente sigue sirviendo
+    previo = _doc(db)["recorrido_previo"]["id"]
+    pantalla.detener_auto(db, UID, G, "panel")
+    assert reproducir(previo)["titulo"] == "Otra respuesta" and _auto(db)["activa"] is False
 
 
 def test_un_error_no_la_apaga_pero_tres_seguidos_si():

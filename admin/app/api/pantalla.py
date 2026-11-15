@@ -1,7 +1,8 @@
 """La pantalla en off (app/pantalla.py) y la clave con que un agente la maneja por MCP (app/api/mcp.py).
 
 * `GET /api/pantalla?v=N`: la vista Presentación en modo en off pregunta cada poco. Con la versión que ya tiene, 204 sin
-  cuerpo; si cambió, el estado entero. Cada pregunta deja la pantalla como abierta (`visto`).
+  cuerpo; si cambió, el estado entero. Cada pregunta deja la pantalla como abierta (`visto`) y la versión vigente como
+  entregada (`pantalla.entregar`): hasta entonces, una orden siguiente no pisa las acciones que esa versión trae.
 * El recorrido narrado (`app/recorrido.py`): `POST /api/pantalla/progreso` (el avance que manda la página que lo
   reproduce: la pestaña, el proyector o la pantalla en off; no marca la pantalla como abierta; uno final lo cierra y,
   si el recorrido ya no es el vigente o está cerrado, 409: la página que todavía lo reproduce lo detiene),
@@ -63,10 +64,15 @@ def _ahora() -> datetime:
 
 
 @r.get("/pantalla")
-def estado_pantalla(v: int | None = Query(None, ge=-1, le=2 ** 31), db: Database = Depends(obtener_db),
-                    quien: Quien = Depends(requiere("presentacion.ver"))):
-    doc = pantalla.marcar_vista(db, quien.uid)
-    if v is not None and v == int(doc.get("v") or 0):
+def estado_pantalla(v: int | None = Query(None, ge=-1, le=2 ** 31), latido: bool = Query(False),
+                    db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("presentacion.ver"))):
+    # Un latido (la pantalla en off mientras carga o en una espera larga) solo dice que sigue abierta: no se le entrega
+    # nada, porque no aplica la respuesta, y marcar su versión como entregada perdería las acciones que trae
+    if latido is True:   # (llamada directa, sin FastAPI, el valor por omisión es el objeto Query)
+        pantalla.marcar_vista(db, quien.uid)
+        return Response(status_code=204)
+    doc = pantalla.entregar(db, quien.uid, v)
+    if doc is None:
         return Response(status_code=204)
     g = guion_presentacion.cargar()
     if g is None:

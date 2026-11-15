@@ -7,8 +7,10 @@ Mnemo ni se usa un micrófono de verdad.
   botón no cuentan como voz), tiene un tope de 60 s, descarta lo muy corto y lo que nunca tuvo voz (sin transcribir
   nada), suelta el micrófono antes de transcribir, se cancela (oyendo o transcribiendo) y dice por qué no pudo (el
   permiso negado, sin micrófono, un error del panel con su mensaje). La vía 2 usa `es-CO` con resultados parciales, y
-  se llega a ella si el panel dice que no transcribe, si no hay `MediaRecorder` o tras un 409 `sin_transcriptor` (la
-  pregunta se repite, y la próxima vez va directo). Sin medidor de nivel no hay corte solo.
+  se llega a ella si el panel dice que no transcribe, si no hay `MediaRecorder` o tras un 409 `sin_transcriptor` (el
+  micrófono no se reabre solo: un aviso pide tocarlo y repetir, y el toque siguiente va por el navegador; cuando el
+  panel vuelve a decir que transcribe, vuelve la vía 1). Sin medidor de nivel no hay corte solo, y una grabadora que
+  para sola antes de oír voz no manda nada.
 * `app/agente/dictado.py` y `POST /api/agente/transcribir`, con un Mnemo falso (el MCP falso de ayudas_mcp.py con la
   herramienta `mnemo_transcribe`, detrás de un `ClienteMnemo` de verdad): la respuesta, lo que se le manda a Mnemo, y
   409 `sin_transcriptor` (sin conexión, sin el alcance, sin la herramienta, `no_transcriber`), 413, 415, 422, 402, 429 y
@@ -17,7 +19,9 @@ Mnemo ni se usa un micrófono de verdad.
   y test_agente_conexion.py). Aquí sí se comprueba que la ruta declara ese permiso.
 * `mnemo_transcribe` no se le ofrece al modelo (`NUNCA` de herramientas/mnemo.py), ni con `*` ni nombrada.
 * El panel: el micrófono del cuadro de escribir, lo que hace con el texto y la franja de la presentación automática
-  (lo estático de agente.js y agente-recorrido.js, y la franja con un DOM mínimo).
+  (lo estático de agente.js y agente-recorrido.js, y la franja con un DOM mínimo); y api.js con un `fetch` falso:
+  cancelar mientras se transcribe corta la subida (la señal de dictado.js), sin abrir el ingreso por una respuesta
+  que ya nadie espera. Un código de error que dictado.js no conoce muestra el mensaje del panel.
 * Lo que la voz necesita del resto del panel y no es de estos archivos (`app/seguridad.py`): que la política de
   permisos deje usar el micrófono a la propia página y que la guardia deje pasar un audio de hasta 2 MB. Mientras no
   esté, esas dos pruebas quedan marcadas como fallo esperado.
@@ -291,13 +295,18 @@ const out = { tiempos: { SILENCIO_MS, TOPE_MS, MINIMO_MS, SIN_VOZ_MS, TICK_MS },
   out.via2b = { aMano: [x.reg.sr[0].paradas, x.textos], tope: [antes, y.reg.sr[0].paradas, y.d.estado()],
     cancelada: [z.reg.sr[0].abortos, z.textos.length, z.d.estado().estado], errores, callada: callada.d.estado() };
 }
-// 11. El 409: el panel no puede transcribir. Se pasa a la vía 2 pidiendo repetir, y la próxima vez va directo
+// 11. El 409: el panel no puede transcribir. El micrófono NO se reabre solo (sin un toque, al servicio del navegador): un
+// aviso pide tocarlo y repetir; el toque siguiente va por la vía 2, y los demás también
 {
   const sin = () => Promise.reject(Object.assign(new Error('x'), { codigo: 'sin_transcriptor', estado: 409, mensaje: 'El panel no puede transcribir la voz: Mnemo no está conectado.' }));
   const x = armar({ nivel: voz([300, 1500]) }, { transcribir: sin });
   x.d.empezar();
   await x.reloj.avanzar(4000);
   const tras = x.d.estado();
+  await x.reloj.avanzar(3000);
+  const srSolo = x.reg.sr.length;   // nadie tocó: no hay reconocimiento
+  x.d.empezar();                    // el toque siguiente
+  await x.reloj.avanzar(10);
   x.reg.sr[0].resultado([['la pregunta repetida', true]]);
   x.reg.sr[0].fin();
   x.d.empezar();
@@ -306,8 +315,30 @@ const out = { tiempos: { SILENCIO_MS, TOPE_MS, MINIMO_MS, SIN_VOZ_MS, TICK_MS },
   y.d.empezar();
   await y.reloj.avanzar(4000);
   const sinReconocer = [y.estados.at(-1), y.d.estado(), textoDeEstado(y.d.estado()), y.d.empezar(), y.reg.pedidos];
-  out.paso = { tras, aviso: textoDeEstado(tras), estados: x.estados, textos: x.textos, enviados: x.enviados.length, pedidos: x.reg.pedidos, sr: x.reg.sr.length,
+  out.paso = { tras, srSolo, aviso: textoDeEstado(tras), estados: x.estados, textos: x.textos, enviados: x.enviados.length, pedidos: x.reg.pedidos, sr: x.reg.sr.length,
     despues: x.d.estado().via, sinReconocer };
+}
+// 11b. Con `servidor` como función, el 409 no es para siempre: cuando el panel vuelve a decir que transcribe (Mnemo se
+// volvió a conectar), vuelve la vía 1. Con reconocimiento y sin él (ahí, antes, el micrófono quedaba muerto)
+{
+  const vuelve = async (reconocer) => {
+    let puede = true, n = 0;
+    const x = armar({ nivel: voz([300, 1500], [4300, 5500]), reconocer }, { servidor: () => puede, transcribir: () => {
+      n++;
+      if (n === 1) { puede = false; return Promise.reject(Object.assign(new Error('x'), { codigo: 'sin_transcriptor', estado: 409 })); }
+      return 'de nuevo por el panel';
+    } });
+    x.d.empezar();
+    await x.reloj.avanzar(4000);
+    const tras = x.d.estado();
+    puede = true;   // el estado del panel dice otra vez `dictado: true`
+    const arranca = x.d.empezar();
+    await x.reloj.avanzar(10);
+    const via = x.d.estado().via;
+    await x.reloj.avanzar(4000);
+    return { tras: [tras.estado, tras.motivo, tras.via], arranca, via, textos: x.textos, pedidos: x.reg.pedidos, sr: x.reg.sr.length };
+  };
+  out.vuelve = { conReconocer: await vuelve(true), sinReconocer: await vuelve(false) };
 }
 // 12. Otro error del panel (sin créditos): queda en «fallo» con su mensaje; y una transcripción vacía, en «vacío»
 {
@@ -323,6 +354,27 @@ const out = { tiempos: { SILENCIO_MS, TOPE_MS, MINIMO_MS, SIN_VOZ_MS, TICK_MS },
   await z.reloj.avanzar(4000);
   out.errores = { creditos: [x.d.estado(), textoDeEstado(x.d.estado()), x.reg.sr.length], vacia: y.d.estado(), rota: [z.d.estado(), textoDeEstado(z.d.estado())] };
 }
+// 12b. Un código que dictado.js no conoce dice su `mensaje`, también en un 409 (solo `sin_transcriptor`, o un 409 sin
+// código, pasan al navegador); y la pregunta siguiente vuelve a ir por el panel
+{
+  const raro = (estado) => () => Promise.reject(Object.assign(new Error('x'), { codigo: 'un_codigo_nuevo', estado,
+    mensaje: `Mensaje propio del panel (${estado}).` }));
+  const desconocidos = {};
+  for (const estado of [400, 409, 429]) {
+    const x = armar({ nivel: voz([300, 1500], [4300, 5500]) }, { transcribir: raro(estado) });
+    x.d.empezar();
+    await x.reloj.avanzar(4000);
+    const tras = x.d.estado();
+    const aviso = textoDeEstado(tras);
+    x.d.empezar();
+    await x.reloj.avanzar(10);
+    desconocidos[estado] = { tras, aviso, sr: x.reg.sr.length, siguiente: x.d.estado().via };
+  }
+  const sinCodigo = armar({ nivel: voz([300, 1500]) }, { transcribir: () => Promise.reject(Object.assign(new Error('x'), { estado: 409 })) });
+  sinCodigo.d.empezar();
+  await sinCodigo.reloj.avanzar(4000);
+  out.desconocidos = { ...desconocidos, sinCodigo: sinCodigo.d.estado() };
+}
 // 13. Sin medidor (el audio del navegador suspendido, o sin AudioContext): no corta sola ni a los 10 s; sí a los 60
 for (const [clave, audio] of [['suspendido', 'suspended'], ['sin_contexto', null]]) {
   const x = armar({ audio, nivel: () => 0.002 });
@@ -331,6 +383,21 @@ for (const [clave, audio] of [['suspendido', 'suspended'], ['sin_contexto', null
   const a15 = x.d.estado();
   await x.reloj.avanzar(46000);
   out[clave] = { a15, texto: textoDeEstado(a15), enviados: x.enviados.map((e) => e.ms), textos: x.textos.length };
+}
+// 13b. La grabadora para sola (el micrófono se desconectó, la pista terminó) antes de oír voz: no se transcribe el
+// silencio. Con voz ya oída, sí lo oído
+{
+  const x = armar({ nivel: () => 0.002 });
+  x.d.empezar();
+  await x.reloj.avanzar(1500);
+  x.reg.grabadoras[0].stop();
+  await x.reloj.avanzar(100);
+  const y = armar({ nivel: voz([300, 5000]) });
+  y.d.empezar();
+  await y.reloj.avanzar(1500);
+  y.reg.grabadoras[0].stop();
+  await y.reloj.avanzar(100);
+  out.paro_sola = { callada: [x.d.estado(), x.enviados.length, x.textos.length, x.reg.pistasParadas], hablando: [y.enviados.length, y.textos.length] };
 }
 // 14. Lo que puede este navegador, y sin nada: no arranca
 {
@@ -354,6 +421,7 @@ for (const [clave, audio] of [['suspendido', 'suspended'], ['sin_contexto', null
 }
 // 15. Los textos y la limpieza
 out.textos = { inactivo: textoDeEstado({ estado: 'inactivo' }), pidiendo: textoDeEstado({ estado: 'pidiendo' }),
+  pidiendoNavegador: textoDeEstado({ estado: 'pidiendo', via: 'navegador' }), pidiendoServidor: textoDeEstado({ estado: 'pidiendo', via: 'servidor' }),
   servidor: textoDeEstado({ estado: 'escuchando', via: 'servidor', nivel: 0.2 }), transcribiendo: textoDeEstado({ estado: 'transcribiendo' }),
   navegador: textoDeEstado({ estado: 'escuchando', via: 'navegador' }), raro: textoDeEstado(null) };
 out.limpiar = [limpiar('  hola\u0000\n\tmundo  '), limpiar(null), limpiar('a'.repeat(MAX_TEXTO + 50)).length, limpiar('<b>hola</b>')];
@@ -499,11 +567,17 @@ def test_la_via_del_navegador_terminar_tope_cancelar_y_errores(node):
 
 def test_un_409_pasa_a_la_via_del_navegador(node):
     r = node["paso"]
-    # La grabación ya no sirve: se pide repetir la pregunta, ahora con el reconocimiento del navegador
-    assert r["tras"] == {"estado": "escuchando", "via": "navegador", "nivel": 0.15, "parcial": "", "repetir": True}
-    assert "Repita su pregunta" in r["aviso"] and "servicio de voz de su navegador" in r["aviso"]
-    assert r["estados"] == ["pidiendo", "escuchando", "transcribiendo", "pidiendo", "escuchando", "texto", "inactivo",
-                            "pidiendo", "escuchando"]
+    # La grabación ya no sirve: un aviso pide tocar el micrófono y repetir la pregunta, que irá al servicio de voz del
+    # navegador. El micrófono NO se reabre solo (la persona ya terminó y no eligió esa vía; lo que se dijera en la sala
+    # se enviaría como pregunta)
+    assert r["tras"] == {"estado": "error", "motivo": "fallo", "via": "navegador", "mensaje": (
+        "El panel no pudo transcribir esa grabación. Toque el micrófono y repita su pregunta: la transcribirá el servicio "
+        "de voz de su navegador.")}
+    assert r["aviso"] == r["tras"]["mensaje"]
+    assert r["srSolo"] == 0
+    # El toque siguiente va por el navegador
+    assert r["estados"] == ["pidiendo", "escuchando", "transcribiendo", "error:fallo", "pidiendo", "escuchando", "texto",
+                            "inactivo", "pidiendo", "escuchando"]
     assert r["textos"] == [["la pregunta repetida", "navegador", "escuchando"]]
     # La vez siguiente va directo al navegador: una sola grabación y una sola petición al panel
     assert r["enviados"] == 1 and r["pedidos"] == 1 and r["sr"] == 2 and r["despues"] == "navegador"
@@ -511,7 +585,28 @@ def test_un_409_pasa_a_la_via_del_navegador(node):
     ultimo, final, texto, otra, pedidos = r["sinReconocer"]
     assert ultimo == "error:sin_soporte" and final["motivo"] == "sin_soporte"
     assert texto == "El panel no puede transcribir la voz: Mnemo no está conectado."
-    assert otra is False and pedidos == 1   # y no se vuelve a grabar para nada
+    assert otra is False and pedidos == 1   # y no se vuelve a grabar para nada (sin `servidor` que diga otra cosa)
+
+
+def test_tras_un_409_vuelve_la_via_del_panel_cuando_el_panel_puede(node):
+    # `servidor` como función manda también después de un 409: el panel se recupera (Mnemo se volvió a conectar) y su
+    # estado vuelve a decir `dictado: true`. Antes, un cerrojo lo impedía hasta recargar la página
+    con = node["vuelve"]["conReconocer"]
+    assert con["tras"] == ["error", "fallo", "navegador"] and con["sr"] == 0
+    assert con["arranca"] is True and con["via"] == "servidor" and con["pedidos"] == 2
+    assert con["textos"] == [["de nuevo por el panel", "servidor", "transcribiendo"]]
+    # Sin reconocimiento en el navegador, el micrófono no queda muerto
+    sin = node["vuelve"]["sinReconocer"]
+    assert sin["tras"] == ["error", "sin_soporte", "servidor"]
+    assert sin["arranca"] is True and sin["via"] == "servidor" and sin["pedidos"] == 2
+    assert sin["textos"] == [["de nuevo por el panel", "servidor", "transcribiendo"]]
+
+
+def test_la_grabadora_que_para_sola_sin_voz_no_transcribe(node):
+    final, enviados, textos, pistas = node["paro_sola"]["callada"]
+    assert final == {"estado": "error", "motivo": "vacio", "via": "servidor"} and enviados == 0 and textos == 0
+    assert pistas == 1   # y el micrófono quedó libre
+    assert node["paro_sola"]["hablando"] == [1, 1]   # con voz ya oída, se transcribe lo oído
 
 
 def test_los_errores_del_panel_y_la_transcripcion_vacia(node):
@@ -521,6 +616,22 @@ def test_los_errores_del_panel_y_la_transcripcion_vacia(node):
     assert node["errores"]["vacia"] == {"estado": "error", "motivo": "vacio", "via": "servidor"}
     final, texto = node["errores"]["rota"]
     assert final == {"estado": "error", "motivo": "fallo", "via": "servidor"} and texto.startswith("No se pudo transcribir")
+
+
+@pytest.mark.parametrize("estado", ["400", "409", "429"])
+def test_un_codigo_que_no_conoce_dice_el_mensaje_del_panel(node, estado):
+    # Los códigos nuevos de la ruta (400 `cortada` y `lenta`, 429 `volumen` y `frecuencia`…) no necesitan nada aquí: se
+    # muestra su `mensaje`. Un 409 con otro código tampoco pasa al navegador (agente.js solo apaga `dictado` con
+    # `sin_transcriptor`, así que el aviso de repetir por el navegador diría algo falso)
+    r = node["desconocidos"][estado]
+    mensaje = f"Mensaje propio del panel ({estado})."
+    assert r["tras"] == {"estado": "error", "motivo": "fallo", "via": "servidor", "mensaje": mensaje}
+    assert r["aviso"] == mensaje and r["sr"] == 0 and r["siguiente"] == "servidor"
+
+
+def test_un_409_sin_codigo_sigue_siendo_sin_transcriptor(node):
+    assert node["desconocidos"]["sinCodigo"]["via"] == "navegador"
+    assert node["desconocidos"]["sinCodigo"]["mensaje"].startswith("El panel no pudo transcribir esa grabación.")
 
 
 @pytest.mark.parametrize("caso", ["suspendido", "sin_contexto"])
@@ -550,7 +661,10 @@ def test_lo_que_puede_el_navegador(node):
 def test_los_textos_y_la_limpieza(node):
     t = node["textos"]
     assert t["inactivo"] == t["raro"] == ""
-    assert t["pidiendo"].startswith("Permita el micrófono")
+    assert t["pidiendo"].startswith("Permita el micrófono") and t["pidiendoServidor"] == t["pidiendo"]
+    # En la vía del navegador, el aviso de a quién va la voz se ve ANTES de que salga (mientras se pide el permiso)
+    assert t["pidiendoNavegador"].startswith("Permita el micrófono")
+    assert "servicio de voz de su navegador" in t["pidiendoNavegador"] and "no el panel" in t["pidiendoNavegador"]
     assert t["servidor"] == "Escuchando… Termina sola cuando deje de hablar."
     assert t["transcribiendo"] == "Transcribiendo…"
     assert t["navegador"] == "Escuchando… Aquí la transcribe el servicio de voz de su navegador."
@@ -926,6 +1040,118 @@ def _funcion(texto: str, nombre: str) -> str:
     return texto[i:i + 10 + (fin.start() if fin else len(texto))]
 
 
+NODE_API = r"""
+// api.js con un `fetch` falso: la señal de quien llama (dictado.js, por agente.js) corta la petición
+globalThis.window = globalThis;
+globalThis.document = { querySelector: () => null, documentElement: {} };
+const reg = { reingresos: 0, expiradas: 0, pendientes: 0 };
+let responder = null;    // lo que hace el servidor falso en cada caso: (ok, o) => …
+let sorda = false;       // un fetch que no se entera del abort (la respuesta ya venía en camino)
+let ultimo = null;
+globalThis.fetch = (u, o) => {
+  const f = ultimo = { senal: o.signal ?? null, abortada: false };
+  return new Promise((ok, mal) => {
+    const abortar = () => { f.abortada = true; mal(new DOMException('abort', 'AbortError')); };
+    if (!sorda) {
+      if (o.signal?.aborted) { abortar(); return; }
+      o.signal?.addEventListener('abort', abortar);
+    }
+    responder(ok, o);
+  });
+};
+const { api, configurar, ErrorApi } = await import(process.argv[2]);
+configurar({ token: 't', usuario: 'p', uid: 1, rol: 'coordinador', permisos: [],
+  reingresar: async () => { reg.reingresos++; return {}; }, expira: () => { reg.expiradas++; } });
+const json = (estado, cuerpo) => new Response(JSON.stringify(cuerpo), { status: estado, headers: { 'content-type': 'application/json' } });
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+const resultado = (p) => p.then((d) => ({ ok: d }), (e) => ({ estado: e?.estado, codigo: e?.codigo ?? null, esApi: e instanceof ErrorApi }));
+const subir = (op) => api.subir('/api/agente/transcribir', new Blob(['audio'], { type: 'audio/webm' }),
+  { cabeceras: { 'Content-Type': 'audio/webm' }, ...op });
+const out = {};
+// 1. Se cancela mientras el servidor transcribe: el fetch se aborta y no se espera la respuesta
+{
+  let tarde = false;
+  responder = (ok) => setTimeout(() => { tarde = true; ok(json(200, { texto: 'tarde' })); }, 300);
+  const c = new AbortController();
+  const p = resultado(subir({ timeout: 75000, signal: c.signal }));
+  await esperar(30);
+  c.abort();
+  const r = await p;
+  out.mitad = { ...r, abortada: ultimo.abortada, propia: ultimo.senal !== c.signal, antesDeTerminar: !tarde };
+  await esperar(320);
+}
+// 2. Con la señal ya cancelada al llamar
+{
+  responder = (ok) => ok(json(200, { texto: 'x' }));
+  const c = new AbortController();
+  c.abort();
+  out.antes = { ...(await resultado(subir({ signal: c.signal }))), abortada: ultimo.abortada };
+}
+// 3. Se cancela mientras llega el cuerpo de la respuesta
+{
+  responder = (ok, o) => ok(new Response(new ReadableStream({ start(ctl) {
+    ctl.enqueue(new TextEncoder().encode('{"texto": "a me'));
+    o.signal.addEventListener('abort', () => ctl.error(new DOMException('abort', 'AbortError')));
+  } }), { status: 200, headers: { 'content-type': 'application/json' } }));
+  const c = new AbortController();
+  const p = resultado(subir({ signal: c.signal }));
+  await esperar(30);
+  c.abort();
+  out.cuerpo = await p;
+}
+// 4. Un 401 que llega con la petición ya cancelada no abre el ingreso ni recarga
+{
+  sorda = true;
+  const c = new AbortController();
+  responder = (ok) => setTimeout(() => { c.abort(); ok(json(401, { detail: 'La sesión terminó' })); }, 20);
+  out.sesion = { ...(await resultado(subir({ signal: c.signal }))), reingresos: reg.reingresos, expiradas: reg.expiradas };
+  sorda = false;
+}
+// 5. Lo de siempre no cambia: sin señal ni plazo (subir) no hay señal; un 401 sin cancelar reingresa y reintenta
+{
+  responder = (ok) => ok(json(200, { texto: 'hola' }));
+  out.sinSenal = { ...(await resultado(subir({}))), senal: ultimo.senal };
+  out.conPlazo = { ...(await resultado(api.post('/api/algo', { a: 1 }))), senal: ultimo.senal !== null };
+  let n = 0;
+  responder = (ok) => ok(++n === 1 ? json(401, { detail: 'La sesión terminó' }) : json(200, { texto: 'de nuevo' }));
+  const c = new AbortController();
+  out.reintento = { ...(await resultado(subir({ signal: c.signal }))), reingresos: reg.reingresos, pedidas: n };
+}
+// 6. Al terminar, la señal de quien llama queda sin el oyente que le puso api.js
+{
+  const c = new AbortController();
+  let puestos = 0, quitados = 0;
+  const poner = c.signal.addEventListener.bind(c.signal), quitar = c.signal.removeEventListener.bind(c.signal);
+  c.signal.addEventListener = (t, f, o) => { if (t === 'abort') puestos++; return poner(t, f, o); };
+  c.signal.removeEventListener = (t, f, o) => { if (t === 'abort') quitados++; return quitar(t, f, o); };
+  responder = (ok) => ok(json(422, { detail: { codigo: 'audio', mensaje: 'No se pudo leer la grabación.' } }));
+  out.oyentes = { ...(await resultado(subir({ signal: c.signal }))), puestos, quitados };
+}
+console.log(JSON.stringify(out));
+"""
+
+
+@requiere_node
+def test_cancelar_corta_la_subida_de_la_voz(tmp_path):
+    # agente.js le pasa a api.subir la señal de dictado.js (cancelar mientras se transcribe); api.js la respeta: el
+    # fetch se aborta (el servidor deja de esperar a Mnemo y suelta el turno de la persona), y la respuesta que llegue
+    # igual no abre el ingreso ni recarga por algo que la persona ya canceló
+    (tmp_path / "prueba.mjs").write_text(NODE_API, encoding="utf-8")
+    p = subprocess.run(["node", str(tmp_path / "prueba.mjs"), (JS / "api.js").as_uri()], capture_output=True, text=True,
+                       timeout=60)
+    assert p.returncode == 0, p.stderr
+    r = json.loads(p.stdout.strip().splitlines()[-1])
+    cancelada = {"estado": 0, "codigo": "cancelada", "esApi": True}
+    assert r["mitad"] == {**cancelada, "abortada": True, "propia": True, "antesDeTerminar": True}
+    assert r["antes"] == {**cancelada, "abortada": True}
+    assert r["cuerpo"] == cancelada
+    assert r["sesion"] == {**cancelada, "reingresos": 0, "expiradas": 0}
+    assert r["sinSenal"] == {"ok": {"texto": "hola"}, "senal": None}
+    assert r["conPlazo"] == {"ok": {"texto": "hola"}, "senal": True}
+    assert r["reintento"] == {"ok": {"texto": "de nuevo"}, "reingresos": 1, "pedidas": 2}
+    assert r["oyentes"] == {"estado": 422, "codigo": "audio", "esApi": True, "puestos": 1, "quitados": 1}
+
+
 def test_el_microfono_del_cuadro_de_escribir():
     # El botón: junto a «Enviar», con nombre, marcado mientras oye y oculto hasta saber que se puede
     assert ('<button type="button" class="btn agente-voz" id="agente-voz" aria-label="Preguntar por voz" '
@@ -944,15 +1170,25 @@ def test_el_microfono_del_cuadro_de_escribir():
             in AGENTE_JS)
     assert "dictado: o.dictado === true," in AGENTE_JS
     subir = _funcion(AGENTE_JS, "transcribirVoz")
-    assert "api.subir('/api/agente/transcribir', blob, { cabeceras: { 'Content-Type': tipo }, timeout: ESPERA_VOZ_MS })" in subir
+    # con la señal de dictado.js: cancelar corta la subida (que api.js la respete lo prueba
+    # test_cancelar_corta_la_subida_de_la_voz)
+    assert "function transcribirVoz(blob, { signal = null } = {})" in subir
+    assert ("api.subir('/api/agente/transcribir', blob, { cabeceras: { 'Content-Type': tipo }, timeout: ESPERA_VOZ_MS, "
+            "signal })") in subir
     assert "e.estado === 409 && e.codigo === 'sin_transcriptor' && info) info.dictado = false" in subir
+    # El nombre del botón dice quién transcribe si no es el panel (antes de dar el permiso)
+    nombre = _funcion(AGENTE_JS, "nombrarVoz")
+    assert "soporteVoz.grabar && info?.dictado === true ? base : `${base} (la transcribe el servicio de voz del navegador)`" in nombre
+    assert "vozBtn.setAttribute('aria-label', n)" in nombre
+    assert "nombrarVoz('Preguntar por voz')" in pintar and "nombrarVoz('Preguntar por voz')" in _funcion(AGENTE_JS, "aplicarVoz")
 
 
 def test_el_texto_dictado_se_envia_solo_si_el_cuadro_estaba_vacio():
     f = _funcion(AGENTE_JS, "textoDeVoz")
     assert "const habia = entrada.value.trim();" in f
     assert "entrada.value = (habia ? `${entrada.value.replace(/\\s+$/, '')} ${t}` : t).slice(0, MAX_TEXTO);" in f
-    assert "vozEnviada = !habia && !turno && !cargando && !!info?.disponible;" in f
+    # y con acciones esperando aprobación, tampoco: las dejaría sin aprobar (queda en el cuadro y Enter lo manda)
+    assert "vozEnviada = !habia && !turno && !cargando && !!info?.disponible && pendientesSinEnviar().length === 0;" in f
     assert "try { enviarDelCompositor(); } finally { vozEntregando = false; }" in f
     assert "innerHTML" not in f
     # Y un mensaje enviado a mano mientras se oía descarta lo que se dictaba (no llega después como otra pregunta)
@@ -973,10 +1209,19 @@ def test_un_toque_empieza_otro_termina_y_escape_cancela():
     # La pausa: el plan del chat, en el acto (no al terminar la frase); sin tarjeta, el que suene en la pantalla en off
     pausa = RECORRIDO_JS[RECORRIDO_JS.index("export function pausaPorVoz()"):RECORRIDO_JS.index("// ── La presentación automática")]
     assert "t.controlar('pausar', { nota: 'En pausa mientras usted pregunta.' });" in pausa and "suave" not in pausa
-    assert "if (!enviada) pausa.then(() => { if (t.sonando()) t.controlar('continuar'); });" in pausa
+    assert "mia && !enviada && t.sonando() ? t.controlar('continuar') : null" in pausa
     assert "api.get('/api/pantalla/recorrido')" in pausa
     assert "api.post('/api/pantalla/recorrido/control', { rid: r.id, accion: 'pausar' })" in pausa
-    assert "api.post('/api/pantalla/recorrido/control', { rid, accion: 'continuar' })" in pausa
+    # El «continuar» con keepalive (la página que se va no deja la sala en pausa), y cada pregunta detrás del
+    # «continuar» de la anterior: la fase vieja del servidor (`pausa` hasta que la pantalla avisa) no la confunde con
+    # una pausa a mano
+    assert "api.post('/api/pantalla/recorrido/control', { rid, accion: 'continuar' }, { keepalive: true })" in pausa
+    assert "const antes = ordenDeVoz;" in pausa and "await antes;" in pausa
+    assert "if (r.fase === 'pausa' && !nuestra) return;" in pausa
+    assert "r.fase === 'pausa' ||" not in pausa
+    # La página que se va mientras se oye cancela (y así continúa lo pausado); la pestaña oculta grabando, también
+    assert "window.addEventListener('pagehide', () => { if (vozActiva()) dictado.cancelar(); });" in AGENTE_JS
+    assert "document.hidden && e.estado === 'escuchando' && e.via === 'servidor'" in AGENTE_JS
 
 
 def test_los_estilos_del_microfono():
@@ -1088,9 +1333,8 @@ def test_la_politica_de_permisos_deja_usar_el_microfono_a_la_propia_pagina():
     app.add_middleware(seguridad.CabecerasSeguras)
     app.state.cfg = SimpleNamespace(origen_sitio="", cookie_segura=False)
     cabecera = TestClient(app).get("/").headers["permissions-policy"]
-    microfono = re.search(r"microphone=\(([^)]*)\)", cabecera)
-    assert microfono is None or "self" in microfono.group(1), cabecera
-    assert "camera=()" in cabecera   # la cámara sigue cerrada
+    # Exacta: solo las propias páginas del panel tienen micrófono (ni `*` ni otro origen); la cámara sigue cerrada
+    assert cabecera == "camera=(), microphone=(self), geolocation=(self)", cabecera
 
 
 def test_la_guardia_deja_pasar_un_audio_de_dos_megas():

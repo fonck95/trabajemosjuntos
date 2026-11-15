@@ -18,9 +18,26 @@ Por qué está hecho así:
 
 * El audio llega crudo en el cuerpo (no en JSON ni en un formulario): hasta `MAX_AUDIO` (2 MB; un minuto de voz en opus
   pesa menos de 200 kB), con uno de los tipos de `TIPOS` (de la cabecera `Content-Type`, sin sus parámetros). Se lee
-  por partes y se corta al pasar del tope.
+  por partes y se corta al pasar del tope. Leerlo tiene plazo (el servidor web no corta un cuerpo que deja de llegar):
+  `PLAZO_SUBIDA_S` en total y `SUBIDA_CALLADA_S` sin que llegue nada (el celular perdió la señal sin cerrar la
+  conexión); si no, 400 `lenta`.
 * Un tope de frecuencia por persona (`FRECUENCIA_MAX` por minuto, en memoria, por proceso): cada transcripción gasta
-  créditos de la cuenta de Mnemo conectada, y nadie hace más de una pregunta cada tres segundos.
+  créditos de la cuenta de Mnemo conectada, y nadie hace más de una pregunta cada tres segundos. Cuenta después del
+  `turno`: un reintento rechazado porque la anterior sigue en camino no gasta.
+* Dos topes de cuántas van a la vez, separados. `turno`: una por persona, desde que llega la petición hasta que se
+  responde (leer el audio incluido). `cupo`: `A_LA_VEZ` llamadas a Mnemo en todo el proceso, solo mientras Mnemo
+  transcribe (leer el audio no usa sus modelos: una subida lenta o estancada no deja sin voz al resto del panel). Mnemo
+  atiende a lo sumo 4 llamadas a sus modelos a la vez por conexión, compartidas entre `mnemo_transcribe` y
+  `mnemo_model_complete` (el modelo del asistente): las transcripciones nunca ocupan más de dos y el asistente sigue
+  respondiendo. Sin cupo, la grabación ya recibida espera hasta `ESPERA_CUPO_S` a que se libere uno (transcribir tarda
+  segundos) y después responde 429 `frecuencia`.
+* Si la persona se va mientras se transcribe (canceló, cerró la página: la conexión se cierra), se deja de esperar a
+  Mnemo (`mientras_siga`): la llamada se cancela, el turno y el cupo quedan libres en el acto (la pregunta que repite
+  enseguida no rebota) y se responde 400 `cortada`, que nadie lee.
+* Un tope diario por persona (`diarias`: `DIARIAS_POR_MENSAJE` veces sus mensajes del día, en memoria, por proceso)
+  y nada con los mensajes del día agotados (la pregunta transcrita rebotaría en `/api/agente/mensajes`). El tamaño no
+  acota lo que dura (quien graba elige la calidad: 2 MB en opus a 8 kbps son más de media hora; Mnemo corta a los 10
+  minutos): lo que se acota es cuántas.
 * Lo que no deja transcribir por Mnemo responde 409 `sin_transcriptor`, y el panel pasa al reconocimiento de voz del
   navegador: Mnemo sin conectar o con la conexión caída, la conexión sin `mnemo:model`, un Mnemo que todavía no ofrece
   `mnemo_transcribe`, un plan que no lo incluye, una cuenta sin un modelo que transcriba (`NO_TRANSCRIBER`) o cuyo
@@ -31,12 +48,16 @@ Por qué está hecho así:
 * Una grabación en la que Mnemo no oye nada (`INVALID_ARGUMENT` con `reason: "empty"`) no es un error: responde el
   texto vacío, como cuando el modelo no transcribe nada, y el panel dice «No oí nada».
 * Los demás errores: 402 `mnemo_creditos` (se acabaron los créditos), 429 `frecuencia` (el tope de aquí o el de Mnemo),
-  422 `audio` (Mnemo no pudo leer la grabación) y 502 (Mnemo no respondió, falló o respondió algo ilegible). Los
-  mensajes son propios: nunca el texto de Mnemo ni el del proveedor.
+  429 `volumen` (el tope diario), 422 `audio` (Mnemo no pudo leer la grabación), 400 `cortada` (la subida se cortó a
+  mitad: el celular perdió la señal, se cerró la pestaña; o la persona se fue mientras se transcribía), 400 `lenta`
+  (la grabación no terminó de llegar a tiempo; no 408, que Chromium repite solo, con el audio entero, si llega por una
+  conexión reusada) y 502 (Mnemo no respondió, falló o respondió algo ilegible). Los mensajes son propios: nunca el
+  texto de Mnemo ni el del proveedor.
 * Nada se guarda ni se registra: ni el audio, ni el texto, ni cuánto duró. Al registro solo van códigos.
 """
 from __future__ import annotations
 
+import asyncio
 import base64
 import logging
 import math
@@ -44,11 +65,15 @@ import re
 import threading
 import time
 from collections import deque
-from typing import Any
+from contextlib import asynccontextmanager, contextmanager
+from typing import Any, AsyncIterator, Awaitable, Iterator, TypeVar
 
 from fastapi import HTTPException
 from fastapi.concurrency import run_in_threadpool
+from starlette.requests import ClientDisconnect
 
+from .. import modelo
+from . import conversaciones as conv_db
 from . import mnemo_cliente as mc
 from . import mnemo_conexion
 from .herramientas.base import ErrorHerramienta
@@ -68,8 +93,21 @@ VOCABULARIO = ("Yondó, Antioquia, Trabajemos juntos, Casabe, Barrancabermeja, K
                "PTAR, PTAP, EBAR, ECA, telesalud, sóftbol, relleno sanitario, agroindustria, Sisbén, hospital Héctor Abad "
                "Gómez, parque lineal, alameda, matadero, trilladora")
 PLAZO_S = 60.0                 # un minuto de audio se transcribe en segundos
+# Lo que puede tardar en llegar la grabación: en total (un minuto de voz pesa unos 200 kB: llega en 30 s aun por una
+# red de 60 kbps) y sin que llegue nada (la subida se estancó)
+PLAZO_SUBIDA_S = 30.0
+SUBIDA_CALLADA_S = 10.0
 MAX_TEXTO = 4_000              # el tope de un mensaje al asistente (`MensajeIn.texto`)
 FRECUENCIA_MAX, FRECUENCIA_S = 20, 60
+# Cuántas transcripciones van a la vez en el proceso (una por persona): Mnemo deja 4 llamadas a sus modelos a la vez
+# por conexión, y las otras dos quedan para el modelo del asistente
+A_LA_VEZ = 2
+ESPERA_TURNO_S = 3
+ESPERA_CUPO_S = 10.0           # lo que una grabación ya recibida espera un cupo libre
+VIGILA_S = 0.25                # cada cuánto se mira si se liberó un cupo
+# Cuántas transcripciones por día puede pedir una persona: este número por sus mensajes del día
+# (`politica.mensajes_diarios`). Cada pregunta por voz es un mensaje; el doble deja repetir las que no se oyeron
+DIARIAS_POR_MENSAJE = 2
 OLVIDO_S = 3600.0              # lo que se recuerda que este Mnemo no transcribe
 
 SIN_TRANSCRIPTOR = "sin_transcriptor"
@@ -87,6 +125,13 @@ MENSAJE_MODELO_CAIDO = ("El panel no puede transcribir la voz: el modelo de la c
 MENSAJE_CREDITOS = ("Se acabaron los créditos de Mnemo de esta semana de la cuenta conectada: no se pudo transcribir. "
                     "Escriba su pregunta.")
 MENSAJE_FRECUENCIA = "Demasiadas preguntas por voz seguidas. Espere un momento o escriba su pregunta."
+MENSAJE_A_LA_VEZ = "Todavía se está atendiendo su pregunta anterior por voz. Espere un momento o escriba su pregunta."
+MENSAJE_OCUPADO = ("El panel está transcribiendo otras preguntas por voz. Espere un momento y repítala, o escriba su "
+                   "pregunta.")
+MENSAJE_DIARIAS = "Llegó al tope de preguntas por voz por hoy. Escriba su pregunta o siga mañana."
+MENSAJE_SIN_MENSAJES = "Llegó al tope de {maximo} mensajes al asistente por hoy. Podrá seguir mañana."
+MENSAJE_CORTADA = "La grabación no llegó completa. Intente de nuevo."
+MENSAJE_LENTA = "La grabación tardó demasiado en llegar. Intente de nuevo o escriba su pregunta."
 MENSAJE_FRECUENCIA_MNEMO = "Mnemo está recibiendo demasiadas peticiones. Espere un momento o escriba su pregunta."
 MENSAJE_TIPO = "El panel no reconoce ese tipo de audio: tiene que ser webm, ogg, mp4, mp3 o wav."
 MENSAJE_GRANDE = "La grabación es demasiado grande (más de 2 MB). Haga una pregunta más corta."
@@ -97,6 +142,7 @@ MENSAJE_FALLO = "No se pudo transcribir. Intente de nuevo o escriba su pregunta.
 
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]+")
 _ESPACIOS = re.compile(r"\s+")
+T = TypeVar("T")
 
 
 class ErrorDictado(HTTPException):
@@ -141,21 +187,139 @@ def frecuencia(base: str, uid: Any) -> None:
         v.append(ahora)
 
 
+_en_curso: set[tuple[str, Any]] = set()       # las personas con una pregunta por voz en camino (`turno`)
+_transcribiendo: set[object] = set()          # las llamadas a Mnemo en curso (`cupo`)
+_diarias: dict[tuple[str, Any], tuple[str, int]] = {}
+
+
+@contextmanager
+def turno(base: str, uid: Any) -> Iterator[None]:
+    """La pregunta por voz de una persona (y base) mientras dura el bloque: llegar el audio, esperar el cupo y
+    transcribirlo. Una a la vez por persona: si ya tiene una en camino, 429 `frecuencia` con `Retry-After`. Al salir
+    del bloque, pase lo que pase, queda libre. No acota a las demás personas: eso es `cupo`, solo mientras Mnemo
+    transcribe."""
+    clave = (base, uid)
+    with _candado:
+        if clave in _en_curso:
+            raise ErrorDictado(429, "frecuencia", MENSAJE_A_LA_VEZ, espera=ESPERA_TURNO_S)
+        _en_curso.add(clave)
+    try:
+        yield
+    finally:
+        with _candado:
+            _en_curso.discard(clave)
+
+
+@asynccontextmanager
+async def cupo() -> AsyncIterator[None]:
+    """Uno de los `A_LA_VEZ` cupos del proceso para llamar a Mnemo, mientras dura el bloque (las transcripciones nunca
+    ocupan más de dos de las cuatro llamadas a sus modelos que Mnemo deja a la vez). Si no hay, espera hasta
+    `ESPERA_CUPO_S` a que se libere uno (la grabación ya llegó y transcribir tarda segundos) y si no, 429 `frecuencia`
+    con `Retry-After`. Al salir del bloque, pase lo que pase (también si se cancela), queda libre."""
+    ficha = object()
+    hasta = time.monotonic() + ESPERA_CUPO_S
+    while True:
+        with _candado:
+            if len(_transcribiendo) < A_LA_VEZ:
+                _transcribiendo.add(ficha)
+                break
+        if time.monotonic() >= hasta:
+            raise ErrorDictado(429, "frecuencia", MENSAJE_OCUPADO, espera=ESPERA_TURNO_S)
+        await asyncio.sleep(VIGILA_S)
+    try:
+        yield
+    finally:
+        with _candado:
+            _transcribiendo.discard(ficha)
+
+
+def diarias(base: str, uid: Any, maximo: int) -> None:
+    """Cuenta una transcripción en el día de la persona (hora de Colombia, como sus mensajes): a lo sumo `maximo`; si
+    no, 429 `volumen`. En memoria y por proceso, como `frecuencia`."""
+    dia = modelo.hoy_local().isoformat()
+    with _candado:
+        if len(_diarias) > 5000:  # se olvidan los días que ya pasaron
+            for k in [k for k, v in _diarias.items() if v[0] != dia]:
+                del _diarias[k]
+        d, n = _diarias.get((base, uid), (dia, 0))
+        n = n if d == dia else 0
+        if n >= maximo:
+            raise ErrorDictado(429, "volumen", MENSAJE_DIARIAS)
+        _diarias[(base, uid)] = (dia, n + 1)
+
+
+def exigir_mensajes(db: Any, uid: Any, maximo: int) -> None:
+    """429 `volumen` si la persona ya gastó sus `maximo` mensajes del día: la pregunta transcrita no se podría enviar
+    (`/api/agente/mensajes` la rechazaría) y transcribirla gastaría créditos para nada. Lee MongoDB: desde código
+    asíncrono, con `run_in_threadpool`. Si el uso no se puede leer, no frena: los demás topes siguen."""
+    try:
+        usados = conv_db.uso_de(db, uid)
+    except Exception as e:  # noqa: BLE001 - es un tope de cortesía: el de cada mensaje lo cuenta `bucle._contar`
+        log.warning("Dictado: no se pudo leer el uso del día (%s)", type(e).__name__)
+        return
+    if usados >= maximo:
+        raise ErrorDictado(429, "volumen", MENSAJE_SIN_MENSAJES.format(maximo=maximo))
+
+
 async def leer_audio(request: Any) -> bytes:
     """El cuerpo de la petición, leído por partes: 413 si pasa de `MAX_AUDIO` (por su `Content-Length` o contando lo
-    que llega) y 422 si viene vacío."""
+    que llega), 400 `cortada` si la subida se corta a mitad (sin la traza de una excepción sin atrapar en el registro),
+    400 `lenta` si no termina de llegar en `PLAZO_SUBIDA_S` o deja de llegar durante `SUBIDA_CALLADA_S` (el servidor
+    web espera para siempre un cuerpo estancado), y 422 si viene vacío."""
     largo = request.headers.get("content-length", "")
     if largo.isdigit() and int(largo) > MAX_AUDIO:
         raise ErrorDictado(413, "grande", MENSAJE_GRANDE)
     partes, total = [], 0
-    async for trozo in request.stream():
-        total += len(trozo)
-        if total > MAX_AUDIO:
-            raise ErrorDictado(413, "grande", MENSAJE_GRANDE)
-        partes.append(trozo)
+    trozos = request.stream().__aiter__()
+    try:
+        async with asyncio.timeout(PLAZO_SUBIDA_S):
+            while True:
+                try:
+                    trozo = await asyncio.wait_for(anext(trozos), SUBIDA_CALLADA_S)
+                except StopAsyncIteration:
+                    break
+                total += len(trozo)
+                if total > MAX_AUDIO:
+                    raise ErrorDictado(413, "grande", MENSAJE_GRANDE)
+                partes.append(trozo)
+    except ClientDisconnect:
+        raise ErrorDictado(400, "cortada", MENSAJE_CORTADA) from None
+    except TimeoutError:
+        log.info("Dictado: no se transcribió (lenta)")
+        raise ErrorDictado(400, "lenta", MENSAJE_LENTA) from None
     if not total:
         raise ErrorDictado(422, "vacio", MENSAJE_VACIO)
     return b"".join(partes)
+
+
+async def _se_fue(request: Any) -> bool:
+    """Espera a que la persona se vaya (cierre la conexión) y responde True. Con el cuerpo ya leído, lo único que puede
+    llegar es `http.disconnect` (al irse o al terminar la respuesta). False si este servidor no lo sabe decir."""
+    try:
+        mensaje = await request.receive()
+    except Exception:  # noqa: BLE001 - sin ese aviso, se espera a Mnemo como siempre
+        return False
+    return isinstance(mensaje, dict) and mensaje.get("type") == "http.disconnect"
+
+
+async def mientras_siga(request: Any, trabajo: Awaitable[T]) -> T:
+    """El resultado de `trabajo` (esperar el cupo y transcribir), si la persona sigue ahí para recibirlo. Si se va
+    antes (canceló, cerró la página), lo cancela, espera a que suelte lo que tenga tomado (el cupo) y responde 400
+    `cortada`, que nadie lee: así su turno queda libre en el acto, y la pregunta que repite enseguida no rebota.
+    Con el cuerpo de la petición ya leído."""
+    tarea = asyncio.ensure_future(trabajo)
+    vigia = asyncio.ensure_future(_se_fue(request))
+    try:
+        await asyncio.wait({tarea, vigia}, return_when=asyncio.FIRST_COMPLETED)
+        if not tarea.done() and vigia.result():
+            log.info("Dictado: no se transcribió (cortada)")
+            raise ErrorDictado(400, "cortada", MENSAJE_CORTADA)
+        return await tarea
+    finally:
+        for t in (tarea, vigia):
+            if not t.done():
+                t.cancel()
+        await asyncio.gather(tarea, vigia, return_exceptions=True)
 
 
 # ───────────────────────────── ¿Se puede? ─────────────────────────────
@@ -264,3 +428,9 @@ async def transcribir(app: Any, audio: bytes, mime: str) -> str:
         raise error from None
     _recordar(app, conexion, False)
     return texto_de(res)
+
+
+async def transcribir_con_cupo(app: Any, audio: bytes, mime: str) -> str:
+    """`transcribir` con uno de los cupos del proceso tomado (`cupo`): lo que la ruta le pasa a `mientras_siga`."""
+    async with cupo():
+        return await transcribir(app, audio, mime)

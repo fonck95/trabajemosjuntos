@@ -125,9 +125,10 @@ def test_el_recorrido_se_arma_absoluto_y_llega_a_la_pestana_y_a_la_tarjeta():
     assert e4["visual"]["detalle"] == "torre" and e4["resaltar"]["tipo"] == "especificacion" and e4["resaltar"]["en"] == "ficha"
     assert e5["paso"] == 4 and e5["resaltar"] == {"tipo": "punto", "n": 1}
     assert all(set(e["visual"]) == set(rec.VISUAL) for e in absoluto["escenas"])
-    # la forma absoluta de la escena, siempre con todas sus claves y en este orden (`mover` y `animar` no son estado)
-    assert all(list(e) == ["capitulo", "paso", "panel", "visual", "resaltar", "mover", "animar", "frases", "sostener_ms"]
-               for e in absoluto["escenas"])
+    # la forma absoluta de la escena, siempre con todas sus claves y en este orden (`mover`, `animar` y `simular` no son
+    # estado)
+    assert all(list(e) == ["capitulo", "paso", "panel", "visual", "resaltar", "mover", "animar", "simular", "frases",
+                           "sostener_ms"] for e in absoluto["escenas"])
     assert all(list(e["visual"]) == list(rec.VISUAL) for e in absoluto["escenas"])
     assert [e["animar"] for e in absoluto["escenas"]] == [False] * 5 and e1["mover"] is None
     assert e1["sostener_ms"] == rec.SOSTENER_MS == 1300 and e2["sostener_ms"] == rec.SOSTENER_MIRAR_MS
@@ -282,7 +283,9 @@ def test_la_op_guion_trae_la_maqueta_y_los_ejemplos_son_planes_que_corren():
     assert list(r.contenido) == ["capitulo", "pasos", "componentes", "maqueta", "inmersiones", "nota"]
     assert [x["id"] for x in r.contenido["maqueta"]] == ["hospital_hoy", "torre", "telesalud", "puestos"]
     assert [p["id"] for p in r.contenido["maqueta"][1]["partes"]] == ["cubierta", "equipos", "jardines"]
-    assert r.contenido["nota"] == hi.NOTA_GUION and len(r.texto_para_modelo()) < 30000
+    # (con los controles de las simulaciones de sus modelos del atlas: el simulador sísmico, el BIM… por debajo del tope
+    # de lo que recibe el modelo, MAX_CONTENIDO)
+    assert r.contenido["nota"] == hi.NOTA_GUION and len(r.texto_para_modelo()) < 36000
     assert r.resumen == "Guion de Salud · 10 pasos, 5 componentes"
     nota = hi.NOTA_GUION
     for palabra in ("UN plan", "De 6 a 10 pasos (hasta 12)", "UNA frase hablada (dice)", "MIENTRAS se dice", "mover {giro, zoom, "
@@ -975,12 +978,12 @@ def test_las_cinco_copias_de_lo_visual():
     # El servidor: el recorrido, la pantalla (con el tema, que no vuelve al cambiar de paso) y la herramienta
     assert list(rec.VISUAL) == orden and rec.VISUAL_INICIAL == inicial and list(rec.VISUAL_INICIAL) == orden
     assert pantalla.VISUAL_INICIAL == inicial and list(pantalla.VISUAL) == [*orden, "tema"]
-    assert hi.PARTES_VISUAL == pantalla.VISUAL and hi.ACCIONES_VISUAL == pantalla.ACCIONES == ("mover", "animar")
+    assert hi.PARTES_VISUAL == pantalla.VISUAL and hi.ACCIONES_VISUAL == pantalla.ACCIONES == ("mover", "animar", "simular")
     assert pantalla.CAMPOS == ("capitulo", "paso", "explicacion", "panel", "indice", "fichas", "completa",
-                               "orden_completa", *orden, "tema", "mover", "animar")
+                               "orden_completa", *orden, "tema", "mover", "animar", "simular")
     assert set(pantalla.VISUAL) | set(pantalla.ACCIONES) <= set(hi.PresentacionEntrada.model_fields)
     paso = hi.EscenaEntrada.model_fields
-    assert set(orden) | {"mover", "animar", "resaltar", "dice", "capitulo", "paso", "panel", "sostener"} <= set(paso)
+    assert set(orden) | {"mover", "animar", "simular", "resaltar", "dice", "capitulo", "paso", "panel", "sostener"} <= set(paso)
     assert rec.MOVER == ("giro", "zoom", "elevacion") == tuple(hi.MoverEntrada.model_fields)
     assert (rec.ELEVACION, rec.ZOOM, rec.GIRO, rec.MAX_LISTA) == ((8, 85), (0.3, 3), (-360, 360), 8)
     # El navegador: mando.js, el puente y visual.js
@@ -1170,7 +1173,7 @@ def test_el_reproductor_con_un_reloj_falso(tmp_path):
     assert [e["animar"] for e in x["escenas"]] == [e["animar"] for e in plan["escenas"]]
     assert [e["visual"] for e in x["escenas"]] == [e["visual"] for e in plan["escenas"]]
     assert x["escenas"][0]["claves"] == sorted(["orden", "rid", "n", "de", "titulo", "capitulo", "paso", "panel", "visual",
-                                                "resaltar", "mover", "animar", "frases", "voz", "ms"])
+                                                "resaltar", "mover", "animar", "simular", "frases", "voz", "ms"])
     # Y dura lo que el servidor estima: sin lo que se le suma por el cambio de paso y la carga del atlas (aquí la
     # presentación responde en el acto) ni el margen del final, la cuenta es exacta
     corrido = rec.PREVIA_MS + sum(rec.RESPIRO_MS + rec.narracion_ms(e["frases"]) + e["sostener_ms"] for e in plan["escenas"]) \

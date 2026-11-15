@@ -386,10 +386,18 @@ def test_la_vista_cablea_el_boton_el_sondeo_y_la_barra():
     assert "automatica?.fijar(!!a?.activa);" in vista
     assert "automatica.alTerminar({ auto: pr.rid === ridAuto, fase: pr.fase });" in vista
     assert "if (ordenes.length && aplicado) automatica.alOrden();" in sondeo
-    # el plan de la automática: se reconoce por `auto`, no espera la previa y esa clave no llega al reproductor
+    # el plan de la automática: se reconoce por `auto` y no espera la previa. Esa clave SÍ llega al reproductor: con ella
+    # no espera el «¿Preguntas?» del final (reproductor.js, `cerrar`); antes se la quitaba y esperaba 12 s en cada
+    # capítulo (test_asistente_ventana.py lo prueba con el reproductor de verdad)
     assert "const esAuto = x.auto === true;" in vista and "if (esAuto) {\n        ridAuto = x.id;" in vista
-    assert "const { edad_s: _edad, auto: _auto, ...r } = x;" in vista
+    assert "const { edad_s: _edad, ...r } = x;" in vista and "auto: _auto" not in vista
+    rec = vista[vista.index("async function recorridoDeLaPantalla(e)"):vista.index("const enSuEscena")]
+    assert rec.index("const { edad_s: _edad, ...r } = x;") < rec.index("await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde }")
     assert "previa: nuevo && !pr && !esAuto }" in vista
+    # la vista que se va (otra vista del panel) no le avisa al servidor el «detenido» del plan automático: lo cerraba y
+    # apagaba la automática para todos (y cortaba a otra pantalla en off que la narrara)
+    assert "limpiezas.push(() => { seFue = true; rep.detener('otra_orden'); voz.callar(); });" in vista
+    assert "if (!(seFue && pr.rid === ridAuto)) enviarAvance(pr);" in vista
     # con ella encendida no queda callado un plan que el servidor da por sonando: el suyo se retoma siempre; el del
     # asistente, con un avance de hace menos de VIGENCIA_RECORRIDO_S (apagada, como antes: REANUDAR_S)
     assert "const reanudar = !sigue ? REANUDAR_S : esAuto ? Infinity : VIGENCIA_RECORRIDO_S;" in vista

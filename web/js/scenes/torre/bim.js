@@ -14,6 +14,9 @@
 // (torre.panel.bim), ficha (torre.ficha.modo), tarjeta (torre.bim) y tablas (torre.bim.tablas), datos { indice, leer,
 // url }, textos { limpio, esc, escH }, exterior.ocultar(on), sismo.ultimo(), abrirModo(m) y alSalir(). Solo escribe en
 // esos contenedores. Modelo de prefactibilidad: no reemplaza los diseños firmados.
+// En la presentación técnica (el atlas como escenario, js/escenario.js) lo que se ve se proyecta, y lo proyectado nunca
+// lleva costos: ahí no se escribe ninguna cifra en pesos (SIN_PLATA) y la leyenda del 5D nombra solo los capítulos. El
+// panel marca cuándo el modelo terminó de cargar (data-bim-listo): el escenario espera esa marca antes de accionar algo.
 import { THREE, tokens, onTheme, engine, reducedMotion } from '../../core.js';
 import { crearModelo3D, crearTerreno, DISCIPLINAS, solidosDe } from './bim3d.js';
 import { crearRefuerzo3D, crearBandas, FAMILIAS, familia, polilineas } from './bim_refuerzo.js';
@@ -56,8 +59,9 @@ const PSET = {
 const nombrePset = (k) => { const b = k.replace(/^Pset_/, ''); return PSET[b] ? `Propiedades de ${PSET[b]}` : b.replace(/([a-z])([A-Z])/g, '$1 $2'); };
 const n = (v, d = 2) => (Number.isFinite(+v) ? (+v).toLocaleString('es-CO', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—');
 const n0 = (v) => n(v, 0);
-const cop = (v) => (Number.isFinite(+v) ? `$${(+v).toLocaleString('es-CO', { maximumFractionDigits: 0 })}` : '—');
-const millones = (v) => (Number.isFinite(+v) ? `${+v < 0 ? '−' : ''}$${n(Math.abs(v) / 1e6, 1)} millones` : '—');
+const SIN_PLATA = document.documentElement.hasAttribute('data-escenario');
+const cop = (v) => (!SIN_PLATA && Number.isFinite(+v) ? `$${(+v).toLocaleString('es-CO', { maximumFractionDigits: 0 })}` : '—');
+const millones = (v) => (!SIN_PLATA && Number.isFinite(+v) ? `${+v < 0 ? '−' : ''}$${n(Math.abs(v) / 1e6, 1)} millones` : '—');
 const conSigno = (t, v) => (+v > 0 ? `+${t}` : t);
 const cota = (z) => `${z > 0.004 ? '+' : z < -0.004 ? '−' : '±'}${n(Math.abs(z), 2)}`;
 const fechaTxt = (d) => new Date(`${d}T12:00:00`).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -129,6 +133,7 @@ export async function montar(ctx) {
     construirArbol();
     aplicar();
     estado('');
+    elPanel.dataset.bimListo = '';   // ya se puede manejar (js/escenario.js espera esta marca)
     return true;
   }
   const grupo = new THREE.Group(); grupo.name = 'bim';
@@ -256,7 +261,7 @@ export async function montar(ctx) {
       <div class="bim-acciones">${conRef ? '<button type="button" class="btn" data-acc="ref">Ver refuerzo</button>' : ''}${/IfcColumn|IfcBeam|IfcSlab|IfcWall|IfcFooting|IfcPile|IfcStair/.test(e.clase) ? '<button type="button" class="btn ghost" data-acc="corte">Vista de corte</button>' : ''}${an.elementos?.length ? '<button type="button" class="btn ghost" data-acc="sismo">Abrir en el simulador</button>' : ''}<button type="button" class="btn ghost" data-acc="aislar">${S.aislados ? 'Mostrar todo' : 'Aislar'}</button><button type="button" class="btn ghost" data-acc="ocultar">Ocultar</button></div>
       <div data-b="despiece"></div>
       ${fi.TipoDato || fi.Fuente || fi.Norma ? `<h5>Norma, fuente y tipo de dato</h5><dl class="kv">${kvFila('Tipo de dato', esc(fi.TipoDato))}${kvFila('Fuente', esc(fi.Fuente))}${kvFila('Norma', esc(fi.Norma))}${kvFila('Numeral', esc(fi.Numeral))}</dl>${fi.Nota ? `<p class="note">${esc(fi.Nota)}</p>` : ''}` : ''}
-      ${costo ? `<h5>Costo (5D)</h5><ul class="tight bim-costo">${costo}</ul><p class="note">Cantidad del modelo × valor unitario del presupuesto (pesos de 2026; cálculo propio con precios estimados).</p>` : ''}
+      ${costo && !SIN_PLATA ? `<h5>Costo (5D)</h5><ul class="tight bim-costo">${costo}</ul><p class="note">Cantidad del modelo × valor unitario del presupuesto (pesos de 2026; cálculo propio con precios estimados).</p>` : ''}
       ${f ? `<h5>Fase de obra (4D)</h5><p class="note"><b>${esc(f.nombre)}</b><br>${fechaTxt(f.inicio)} a ${fechaTxt(f.fin)} · etapa ${f.etapa}: ${esc(f.etapa_nombre)} <span class="bim-tipo">(estimación con el cronograma del proyecto)</span></p>` : ''}
       ${anal ? `<h5>Análisis estructural</h5>${anal}` : ''}
       ${qto}${ps}`;
@@ -777,8 +782,11 @@ export async function montar(ctx) {
     S.color5d = orden;
     aplicar();
     const nombre = (k) => esc(nombreCapitulo(k));
-    ley(`<p class="bim-ley-t">Capítulo del presupuesto (valor del modelo)</p><ul class="bim-ley-l">${orden.slice(0, 12).map(([k, c], i) => `<li><i style="background:${PAL5D[i % PAL5D.length]}"></i>${/^\d+$/.test(k) ? `${k}. ` : ''}${nombre(k)}: ${millones(c.valor)}</li>`).join('')}</ul><p class="bim-ley-n">Cantidad del modelo × valor unitario del presupuesto (cálculo propio; precios estimados de 2026). El acero de refuerzo va aparte.</p>`);
-    chip('Modelo coloreado por capítulo del presupuesto (5D)');
+    // proyectada (SIN_PLATA), la leyenda nombra los capítulos sin su valor
+    const fila = ([k, c], i) => `<li><i style="background:${PAL5D[i % PAL5D.length]}"></i>${/^\d+$/.test(k) ? `${k}. ` : ''}${nombre(k)}${SIN_PLATA ? '' : `: ${millones(c.valor)}`}</li>`;
+    ley(SIN_PLATA ? `<p class="bim-ley-t">Capítulo de obra</p><ul class="bim-ley-l">${orden.slice(0, 12).map(fila).join('')}</ul>`
+      : `<p class="bim-ley-t">Capítulo del presupuesto (valor del modelo)</p><ul class="bim-ley-l">${orden.slice(0, 12).map(fila).join('')}</ul><p class="bim-ley-n">Cantidad del modelo × valor unitario del presupuesto (cálculo propio; precios estimados de 2026). El acero de refuerzo va aparte.</p>`);
+    chip(SIN_PLATA ? 'Modelo coloreado por capítulo de obra' : 'Modelo coloreado por capítulo del presupuesto (5D)');
     return orden.length;
   }
 

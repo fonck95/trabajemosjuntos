@@ -10,15 +10,20 @@
 // El avance llega en vivo:
 // * si suena en esta pestaña o en el proyector, del puente (`escucharRecorrido`: el reproductor de la vista o el canal
 //   del proyector);
-// * si suena en la pantalla en off (otro equipo), de GET /api/pantalla/recorrido cada SONDEO_MS mientras no termine. Una
+// * si suena en la pantalla en off, de GET /api/pantalla/recorrido cada SONDEO_MS mientras no termine; y si esa pantalla
+//   en off es ESTA ventana (el asistente abierto al lado de la presentación), además del puente, en el acto
+//   (`escucharRecorrido`, desde 'aqui'): mientras lleguen esos avances, mandan ellos (el sondeo trae lo mismo con
+//   retraso) y la tarjeta no lo da por «sin respuesta». Una
 //   pantalla que deja de dar noticias sin estar en pausa (se apagó, perdió la red) lo deja «detenido» por falta de
 //   respuesta: si no, la tarjeta y la barra quedaban sonando para siempre y cada mensaje mandaba una pausa que nadie
 //   aplicaba. En pausa no hay avances: la tarjeta mira si la pantalla sigue abierta (`conectada`) y, si se cerró, también
 //   lo da por detenido. Una pausa larga se sigue preguntando, más despacio (SONDEO_LENTO_MS), así se ve el «continuar»
 //   que mande el asistente.
-// Los controles van adonde suena (el puente o POST /api/pantalla/recorrido/control). El interruptor de voz dice cómo
-// está la voz donde suena (`voz` del avance) y la enciende o la apaga si suena en esta pestaña (`alternarVozRecorrido`
-// del puente: el clic es el gesto que el navegador pide); si suena en otra ventana, dice dónde se enciende. Al terminar
+// Los controles van adonde suena (el puente o POST /api/pantalla/recorrido/control, en orden y con `keepalive`; después
+// `pedirPantalla()` del puente, para que la pantalla en off de esta ventana, si la hay, lo aplique sin esperar su
+// sondeo). El interruptor de voz dice cómo está la voz donde suena (`voz` del avance) y la enciende o la apaga si suena
+// en esta pestaña o en la pantalla en off de esta ventana (`alternarVozRecorrido` del puente: el clic es el gesto que el
+// navegador pide); si suena en otra ventana, dice dónde se enciende. Al terminar
 // ofrece volver a reproducirlo y las sugerencias como botones (al tocar una, se envía como mensaje de la persona).
 // Volver a reproducirlo pasa siempre por el servidor, que lo vuelve a armar con un id nuevo (también uno que otra orden
 // cerró): así el asistente lo ve y lo controla, y su avance no rebota. Si el asistente armó otro después, ya no se
@@ -42,15 +47,18 @@ const SIN_NOTICIAS_S = 60;              // sonando y sin un avance en esto, la p
 const SIN_EMPEZAR_MS = 90000;           // y sin ningún avance en esto, no lo va a narrar (`VIGENCIA_RECORRIDO_S` de la vista)
 const NOTA_PROPIA_MS = 7000;            // lo que dura una nota que pidió la persona (dónde se enciende la voz) aunque
                                         // llegue otro avance
+const ORDEN_PROPIA_MS = 5000;           // lo que vale una pausa o un «continuar» propio que el avance todavía no refleja
+                                        // (la pantalla en off lo aplica en su próximo sondeo, y avisa después)
 const RID = /^[0-9a-f]{12}$/;
-// Lo que hace cada paso (`HACE` de la herramienta): el nombre y el ícono de ui.js
+// Lo que hace cada paso (`HACE` de la herramienta): el nombre y el ícono de ui.js. `simular`: el paso acciona los
+// controles de una simulación del modelo del atlas abierto (el sismo, los pisos, el BIM…)
 export const HACE = {
   paso: ['Cambia de paso', 'siguiente'], camara: ['Mueve la cámara', 'gps'], enfoque: ['Enfoca una obra', 'buscar'],
   ficha: ['Abre una ficha', 'info'], hoy: ['Muestra hoy', 'reloj'], proyecto: ['Muestra el proyecto', 'presentacion'],
   modelo: ['Abre un modelo del atlas', 'zona'], resaltar: ['Resalta', 'pin'], solo3d: ['Solo 3D', 'pantalla'],
   girar: ['Gira', 'repetir'], capas: ['Muestra u oculta piezas', 'capas'], aislar: ['Aísla una obra', 'aislar'],
   partes: ['Quita partes', 'partes'], mover: ['Recorre con la cámara', 'recorrer'], mirar: ['Apunta la cámara', 'mirar'],
-  animar: ['Anima la obra', 'animar'],
+  animar: ['Anima la obra', 'animar'], simular: ['Maneja la simulación', 'ajustes'],
 };
 const FASE = { preparando: 'Preparando', narrando: 'Narrando', sosteniendo: 'Mirando', cierre: 'En resumen', pausa: 'En pausa',
   fin: 'Terminó', detenido: 'Detenido', error: 'Detenido por un error', sin_avance: 'Preparando' };
@@ -175,30 +183,62 @@ export function pausaPorMensaje() {
  * deja de oír: continúa lo que esta llamada pausó. El plan del chat, solo si la pregunta no se envió (se canceló, no
  * se oyó nada): si se envió, sigue en pausa mientras responde el asistente, como al escribir. El de la pantalla en
  * off, siempre: la sala no se queda en silencio mientras el asistente piensa, y el plan con que responda lo reemplaza. */
+//
+// Cada pregunta va detrás del «continuar» de la anterior (`ordenDeVoz`): si la persona vuelve a tocar el micrófono
+// enseguida (tras «No oí nada», un fallo o un cancelar), la pausa nueva no se adelanta al «continuar» viejo. Y lo que
+// dice si ya estaba en pausa tiene en cuenta ese «continuar» propio: la fase del servidor es la del último avance de la
+// pantalla (no la del último control) y sigue diciendo `pausa` hasta que la pantalla lo aplica y avisa (`vozEnOff`; en
+// la tarjeta, `pausado()`). Si no, se tomaba por una pausa a mano, no se pausaba y la sala narraba con el micrófono
+// abierto. El «continuar» va con `keepalive`: si la página se va mientras se oye (agente.js cancela en `pagehide`), la
+// sala no se queda en pausa para siempre.
+let ordenDeVoz = Promise.resolve();
+let vozEnOff = null;   // el último «continuar» de una pregunta a la pantalla en off sin tarjeta: {rid, en}
 export function pausaPorVoz() {
+  const antes = ordenDeVoz;
   const t = recorridoDelChat();
   if (t) {
-    if (t.pausado()) return () => {};
+    let mia = false;
+    const pausa = antes.then(() => {
+      if (t.pausado() || !t.sonando()) return null;   // una pausa a mano no la continúa una pregunta
+      mia = true;
+      return t.controlar('pausar', { nota: 'En pausa mientras usted pregunta.' });
+    });
+    ordenDeVoz = pausa;
     // «continuar» va detrás de la pausa (si se deja de oír enseguida, no la adelanta)
-    const pausa = t.controlar('pausar', { nota: 'En pausa mientras usted pregunta.' });
-    return (enviada = false) => { if (!enviada) pausa.then(() => { if (t.sonando()) t.controlar('continuar'); }); };
+    return (enviada = false) => {
+      ordenDeVoz = pausa.then(() => (mia && !enviada && t.sonando() ? t.controlar('continuar') : null));
+    };
   }
   let rid = null;
   const pausa = (async () => {
     try {
+      await antes;
       const d = await api.get('/api/pantalla/recorrido');
       const r = d?.recorrido;
       if (!r || typeof r !== 'object' || r.destino !== 'pantalla_off' || r.cerrado || d.conectada !== true) return;
-      if (typeof r.id !== 'string' || !RID.test(r.id) || r.fase === 'pausa' || TERMINALES.includes(r.fase)) return;
+      if (typeof r.id !== 'string' || !RID.test(r.id) || TERMINALES.includes(r.fase)) return;
+      const nuestra = !!vozEnOff && vozEnOff.rid === r.id && Date.now() - vozEnOff.en < ORDEN_PROPIA_MS;
+      if (r.fase === 'pausa' && !nuestra) return;   // en pausa a mano: no se toca
       await api.post('/api/pantalla/recorrido/control', { rid: r.id, accion: 'pausar' });
       rid = r.id;
+      pedirPantalla();
     } catch { /* sin permiso para la presentación, o ya no suena: no hay nada que pausar */ }
   })();
+  ordenDeVoz = pausa;
   return () => {
-    pausa.then(() => {
-      if (rid) api.post('/api/pantalla/recorrido/control', { rid, accion: 'continuar' }).catch(() => {});
+    ordenDeVoz = pausa.then(() => {
+      if (!rid) return null;
+      vozEnOff = { rid, en: Date.now() };
+      return api.post('/api/pantalla/recorrido/control', { rid, accion: 'continuar' }, { keepalive: true })
+        .then(pedirPantalla, () => {});
     });
   };
+}
+
+/** Que la pantalla en off de esta ventana (si la hay) pregunte ya por lo que cambió en el servidor, sin esperar su
+ * sondeo (`pedirPantalla` del puente; nunca lanza). */
+function pedirPantalla() {
+  try { puente.pedirPantalla?.(); } catch { /* el puente sin esa función: la pantalla lo verá en su sondeo */ }
 }
 
 // ── La presentación automática: la franja de la acción `automatica` ──
@@ -252,6 +292,7 @@ export function crearFranjaAutomatica(v, { el, ico }) {
         await api.post('/api/pantalla/auto', { accion: 'detener' });
         quitarBoton();
         decir(false);
+        pedirPantalla();
       } catch (e) {
         enviando = false;
         const porque = e instanceof ErrorApi && e.message && e.message !== 'Error inesperado' ? e.message : 'intente de nuevo';
@@ -298,6 +339,14 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   let vozSabida = null;          // cómo está la voz donde suena (del avance o del interruptor)
   let notaPropia = 0;            // hasta cuándo se queda la nota que pidió la persona
   let notaDeVoz = false;         // la nota que se ve habla de la voz
+  // La pantalla en off de ESTA ventana lo narra: cuándo llegó su último avance por el puente, y cuándo cambió
+  let localEn = 0;
+  let localCambio = 0;
+  let localClave = null;
+  let ordenPropia = null;        // la pausa o el «continuar» de esta tarjeta que el avance todavía no refleja: {pausa, en}
+  let colaControl = Promise.resolve();   // los controles a la pantalla en off, uno detrás de otro
+  /** ¿La narra la pantalla en off de esta ventana? (sus avances llegan por el puente) */
+  const local = () => a.destino === 'pantalla_off' && Date.now() - localEn < SIN_NOTICIAS_S * 1000;
 
   const art = el('article', 'agente-recorrido');
   art.dataset.destino = a.destino;
@@ -501,9 +550,10 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     bVoz.hidden = terminado;
   }
   bVoz.addEventListener('click', () => {
-    // Solo si suena en esta pestaña: con el plan en la pantalla en off, la vista de aquí (si está abierta) no es la que habla
+    // Solo si suena en esta pestaña o en la pantalla en off de esta ventana (el puente usa la voz que esa vista
+    // registró): con el plan en otra pantalla en off, la vista de aquí (si está abierta) no es la que habla
     let e = null;
-    if (donde === 'aqui') { try { e = puente.alternarVozRecorrido?.() ?? null; } catch { e = null; } }
+    if (donde === 'aqui' || local()) { try { e = puente.alternarVozRecorrido?.() ?? null; } catch { e = null; } }
     if (!VOCES.includes(e)) {
       notaDeLaPersona(VOZ_ALLA[donde === 'aqui' && proyectorVivo() ? 'proyector' : donde]);
       return;
@@ -524,6 +574,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     const enCierre = fase === 'cierre' || (fase === 'pausa' && p.enCierre);
     const fin = fase === 'fin';
     terminado = TERMINALES.includes(fase);
+    if (ordenPropia && (terminado || (fase === 'pausa') === ordenPropia.pausa)) ordenPropia = null;
     // «Plan listo»: llegó entero y todavía no empieza (la espera de antes del primer paso, o la pantalla en off que aún no avisa)
     if (fase !== 'preparando' || n > 1) empezo = true;
     const listo = !empezo;
@@ -597,7 +648,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     else if (pausado && p.motivo === 'persona') nota('En pausa: movieron la imagen. Al continuar, el paso vuelve.');
     else if (Date.now() < notaPropia && !terminado) { /* la que pidió la persona se queda un momento */ }
     else if (!terminado && donde === 'proyector' && p.voz === 'sin_activar') nota('Toque el botón «Voz» (abajo a la izquierda) en la ventana del proyector para activar la voz; tocar la maqueta pausa el plan.', true);
-    else if (!terminado && donde === 'pantalla_off' && p.voz === 'sin_activar') nota('Toque la pantalla en off (o su botón «Voz») para activar la voz.', true);
+    else if (!terminado && donde === 'pantalla_off' && p.voz === 'sin_activar') nota(local() ? 'Toque «Activar voz» (o la presentación) para oír el plan.' : 'Toque la pantalla en off (o su botón «Voz») para activar la voz.', true);
     else if (!terminado && donde === 'aqui' && p.voz === 'sin_activar') nota('Toque «Activar voz» para oír el plan.', true);
     else if (!pausado) nota('');
     if (terminado) soltar();
@@ -621,12 +672,21 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   }
 
   // ── De dónde llega el avance ──
+  const conCierre = (p) => ({ ...p, enCierre: p.fase === 'cierre' || (p.fase === 'pausa' && ultimo?.fase === 'cierre') || (p.fase === 'pausa' && !!ultimo?.enCierre) });
   const delPuente = (p, de) => {
     if (p.rid !== rid) return;
     // el reproductor de aquí lo soltó para pasárselo al proyector que se abrió: sigue allá (lo dirá el proyector)
     if (de === 'aqui' && p.fase === 'detenido' && p.motivo === 'proyector') return;
     if (de === 'proyector' || de === 'aqui') { const antes = donde; donde = de; if (antes !== donde) pintarMeta(); }
-    pintar({ ...p, enCierre: p.fase === 'cierre' || (p.fase === 'pausa' && ultimo?.fase === 'cierre') || (p.fase === 'pausa' && !!ultimo?.enCierre) });
+    pintar(conCierre(p));
+  };
+  // La pantalla en off de esta misma ventana avisa su avance en el acto: se pinta sin esperar al sondeo
+  const delLocal = (p, de) => {
+    if (de !== 'aqui' || p.rid !== rid || terminado) return;
+    localEn = Date.now();
+    const clave = `${p.n}/${p.fase}/${p.frase}`;
+    if (clave !== localClave) { localClave = clave; localCambio = localEn; }
+    pintar(conCierre(p));
   };
   function escuchar() {
     quitar();
@@ -642,9 +702,11 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
       let reloj = 0;
       const mio = ++sondeos;
       const fin = () => { if (sondeos === mio) escuchando = false; };
+      const quitarLocal = escucharRecorrido(delLocal);
       const vuelta = async () => {
         if (parar || !art.isConnected) { fin(); return; }
         let espera = SONDEO_MS;
+        if (local()) hasta = Math.max(hasta, localCambio + SONDEO_MAX_MS);   // cambia en esta ventana: no está quieto
         if (Date.now() > hasta) {
           if (terminado || ultimo?.fase !== 'pausa') {
             fin();
@@ -678,14 +740,17 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
           if (r.conectada === false) sinPantallaDesde ??= Date.now();
           else if (r.conectada === true) sinPantallaDesde = null;
           const cerrada = sinPantallaDesde !== null && Date.now() - sinPantallaDesde > SIN_NOTICIAS_S * 1000;
-          const mudo = !TERMINALES.includes(p.fase) && (cerrada || (x.fase === 'sin_avance' ? Date.now() - desdeRid > SIN_EMPEZAR_MS
+          // Con la pantalla en off de esta ventana narrándolo, sus avances mandan: el sondeo trae lo mismo, con retraso
+          // (pintado, haría retroceder la tarjeta), y no está mudo. Lo terminal sí se pinta
+          const aqui = local();
+          const mudo = !aqui && !TERMINALES.includes(p.fase) && (cerrada || (x.fase === 'sin_avance' ? Date.now() - desdeRid > SIN_EMPEZAR_MS
             : x.fase !== 'pausa' && Number.isInteger(x.hace_s) && x.hace_s > SIN_NOTICIAS_S));
-          pintar(mudo ? { ...p, fase: 'detenido', motivo: 'sin_respuesta' } : p);
+          if (!aqui || TERMINALES.includes(p.fase)) pintar(mudo ? { ...p, fase: 'detenido', motivo: 'sin_respuesta' } : p);
           if (mudo || TERMINALES.includes(p.fase)) { fin(); return; }
         } catch { espera = Math.max(espera, SONDEO_MS * 3); }
         reloj = setTimeout(vuelta, espera);
       };
-      quitar = () => { parar = true; clearTimeout(reloj); fin(); };
+      quitar = () => { parar = true; clearTimeout(reloj); fin(); quitarLocal(); };
       escuchando = true;
       // la primera, en la vuelta siguiente: al crearse, la tarjeta todavía no está en el chat (`isConnected` daría falso
       // y el sondeo no arrancaba nunca)
@@ -699,17 +764,25 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
 
   async function controlar(accion, { suave = false, nota: t = null } = {}) {
     if (terminado) return;
+    // Lo propio cuenta desde ya para `pausado()`: el avance que lo refleja llega después
+    const propia = accion === 'pausar' || accion === 'continuar' ? { pausa: accion === 'pausar', en: Date.now() } : null;
+    if (propia) ordenPropia = propia;
     try {
       if (a.destino === 'pantalla_off') {
-        const r = await api.post('/api/pantalla/recorrido/control', { rid, accion });
+        // En orden (una pausa no se adelanta al «continuar» anterior) y con `keepalive` (la página puede irse)
+        const envio = colaControl.then(() => api.post('/api/pantalla/recorrido/control', { rid, accion }, { keepalive: true }));
+        colaControl = envio.catch(() => {});
+        const r = await envio;
         if (accion === 'reproducir' && r?.id && RID.test(r.id)) { rid = r.id; terminado = false; desdeRid = Date.now(); sinPantallaDesde = null; escuchar(); }
         else escuchar();   // vuelve a preguntar enseguida (en una pausa larga preguntaba despacio, o ya no preguntaba)
+        pedirPantalla();   // la pantalla en off de esta ventana, si la hay, lo aplica ya
       } else {
         const r = await controlRecorrido(rid, accion, { suave });
         if (r && r.ok === false) throw new Error(r.error || 'No se pudo');
       }
       if (t) nota(t);
     } catch (e) {
+      if (ordenPropia === propia) ordenPropia = null;
       nota(`No se pudo: ${String(e?.message || 'la presentación no está abierta').slice(0, 140)}.`);
     }
   }
@@ -753,6 +826,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     if (!enVista) {
       pintar({ rid, n: 1, de: a.escenas.length, fase: 'preparando' });
       escuchar();
+      pedirPantalla();
     } else {
       // En la pestaña o el proyector no pinta «preparando» todavía: lo pinta el primer avance del reproductor (si la
       // vista no llega a reproducirlo, por cambios sin guardar en otra vista, la tarjeta no queda «preparando» con la
@@ -796,7 +870,8 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     titulo: a.titulo,
     sonando: () => art.isConnected && !terminado && !!ultimo,
     viejo: () => { if (art.isConnected) return false; quitar(); return true; },
-    pausado: () => ultimo?.fase === 'pausa',
+    // Con una pausa o un «continuar» propio reciente, ese manda: el avance que lo refleja todavía no llegó
+    pausado: () => (ordenPropia && Date.now() - ordenPropia.en < ORDEN_PROPIA_MS ? ordenPropia.pausa : ultimo?.fase === 'pausa'),
     avance: () => ultimo,
     controlar,
   };
@@ -805,12 +880,15 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   // El plan pudo empezar antes de que existiera su tarjeta (su primer avance ya pasó, y el siguiente llega con el primer
   // paso): lo que el puente sabe de él se pinta en cuanto la tarjeta está en el chat. Así la barra y la pausa al
   // escribir ya lo cuentan, y el interruptor de voz dice cómo está
-  if (a.destino === 'vista') {
-    setTimeout(() => {
-      const ya = ultimo || !art.isConnected ? null : recorridoEnCurso();
-      if (ya && ya.rid === rid) { const { donde: de, ...p } = ya; delPuente(p, de); }
-    }, 0);
-  }
+  // (La pantalla en off de esta ventana también: el chat le pide que pregunte en cuanto llega el resultado de la
+  // herramienta, antes que esta acción)
+  setTimeout(() => {
+    const ya = ultimo || !art.isConnected ? null : recorridoEnCurso();
+    if (!ya || ya.rid !== rid) return;
+    const { donde: de, ...p } = ya;
+    if (a.destino === 'vista') delPuente(p, de);
+    else delLocal(p, de);
+  }, 0);
   return t;
 }
 

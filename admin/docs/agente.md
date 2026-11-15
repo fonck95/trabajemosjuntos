@@ -153,8 +153,9 @@ y sigue igual.
   rango de cifras de menor a mayor («1.346–1.500 kWh»). «Siguiente» y «anterior» siguen desde el paso que dice el
   contexto. La barra de la vista muestra el capítulo y el paso, avanza y retrocede, pone la
   presentación a **Pantalla completa** y la **Abre en otra pantalla**: una ventana del panel
-  (`/presentacion?pantalla=1`) sin menú ni asistente, para el proyector, que arranca en el capítulo, el paso y con la
-  explicación de la pestaña del chat. Mientras esa ventana está abierta, manda ella: el asistente (y los botones de la
+  (`/presentacion?pantalla=1`) sin menú, para el proyector, que arranca en el capítulo, el paso y con la
+  explicación de la pestaña del chat (el asistente también se abre ahí: ver
+  [El asistente en la misma ventana](#el-asistente-en-la-misma-ventana)). Mientras esa ventana está abierta, manda ella: el asistente (y los botones de la
   vista) la manejan desde la pestaña del chat, que ya no cambia de vista; la barra de la vista muestra su paso y la
   presentación de la pestaña del chat la sigue, con la explicación que se ve allá, también cuando el paso cambia allá
   (el control remoto, el teclado), y lo que se haga en la de aquí va allá. Sigue respondiendo aunque quede detrás de la
@@ -189,32 +190,63 @@ y sigue igual.
 
 En el cuadro de escribir hay un botón de micrófono, **Preguntar por voz**: no hace falta escribir.
 
-- **Cómo se usa.** Un toque empieza y otro termina; **Escape** cancela. Mientras escucha se ve el nivel del micrófono y
-  «Escuchando…». El texto transcrito entra al cuadro y, si el cuadro estaba vacío, **se envía solo**; si ya había algo
-  escrito, se agrega y no se envía. Al empezar a escuchar, el plan que suena en esa pestaña se pausa (como al
-  escribir), para que la narración no entre al micrófono. El estado se anuncia de forma discreta a los lectores de
+- **Cómo se usa.** Un toque empieza y otro termina; **Escape** (o «Cancelar», junto al estado) cancela, también
+  mientras se transcribe. Mientras escucha se ve el nivel del micrófono y «Escuchando…». El texto transcrito entra al
+  cuadro y, si el cuadro estaba vacío, **se envía solo**; si ya había algo escrito, se agrega y no se envía. Tampoco
+  se envía solo si hay acciones del asistente esperando aprobación (las dejaría sin aprobar): queda en el cuadro y
+  Enter lo manda. Al empezar a escuchar, el plan que suena en esa pestaña se pausa (como al escribir), para que la
+  narración no entre al micrófono. Salir de la página mientras escucha o transcribe (recargar, cerrar la pestaña,
+  seguir un enlace) cancela, y lo pausado continúa; dejar oculta la pestaña mientras graba para el panel también
+  cancela (si no, seguía grabando y lo enviaba solo). El estado se anuncia de forma discreta a los lectores de
   pantalla y nada de lo transcrito entra como HTML.
 - **Grabar y transcribir en el servidor** (la vía de siempre). El navegador graba (`MediaRecorder`, opus) y corta
   solo: termina a los 1,6 s de silencio después de haber oído voz y a los 60 s como mucho, y descarta lo que dure
   menos de 0,4 s. Manda el audio crudo a `POST /api/agente/transcribir` (`audio/webm`, `audio/ogg`, `audio/mp4`,
-  `audio/mpeg` o `audio/wav`, hasta 2 MB), con la sesión y el permiso del asistente y un tope de 20 por minuto por
-  persona. El servidor se lo pasa a Mnemo (`mnemo_transcribe`, en español) y responde `{texto, via: "mnemo"}`. No guarda
-  ni registra el audio ni el texto. Errores: 409 `sin_transcriptor` (no hay Mnemo conectado, la conexión no tiene el
-  alcance o Mnemo no tiene un modelo que transcriba), 413 (muy grande), 415 (tipo), 422 (vacío), 402 (créditos) y 502.
+  `audio/mpeg` o `audio/wav`, hasta 2 MB), con la sesión y el permiso del asistente. El servidor se lo pasa a Mnemo
+  (`mnemo_transcribe`, en español) y responde `{texto, via: "mnemo"}`. No guarda ni registra el audio ni el texto
+  (al registro solo van códigos). Cancelar mientras se transcribe corta la subida (la petición se aborta): el
+  servidor lo nota, deja de esperar a Mnemo (cancela su llamada) y la persona puede volver a preguntar enseguida.
+- **Errores** de la ruta, todos `{codigo, mensaje}`: 409 `sin_transcriptor` (no hay Mnemo conectado, la conexión no
+  tiene el alcance o Mnemo no tiene un modelo que transcriba), 413 `grande`, 415 `tipo`, 422 `vacio` o `audio` (Mnemo
+  no pudo leerla), 400 `cortada` (la subida se cortó a mitad: el celular perdió la señal o se cerró la pestaña; o la
+  persona se fue mientras se transcribía, y esa respuesta ya no la lee nadie; sin traza en el registro), 400 `lenta`
+  (la grabación no terminó de llegar en 30 s, o dejó de llegar durante 10 s: el servidor web esperaría para siempre
+  un cuerpo estancado), 429 `frecuencia` y `volumen` (los topes de abajo), 402 `mnemo_creditos` y 502. El panel
+  muestra el `mensaje` de cualquier código que no conoce: solo `sin_transcriptor` cambia de vía.
+- **Topes** (cada transcripción gasta créditos de la cuenta de Mnemo conectada, y Mnemo atiende a lo sumo 4 llamadas a
+  sus modelos a la vez por conexión, compartidas con el modelo del asistente):
+  - una pregunta a la vez por persona, desde que empieza a llegar el audio hasta la respuesta (429 `frecuencia`, «su
+    pregunta anterior»);
+  - 20 por minuto por persona (429 `frecuencia`); un reintento rechazado por el tope anterior no cuenta;
+  - como mucho el doble de los mensajes del día de la persona, y ninguna con sus mensajes del día ya gastados (429
+    `volumen`: la pregunta no se podría enviar);
+  - dos llamadas a Mnemo a la vez en todo el panel, solo mientras Mnemo transcribe (así el asistente sigue
+    respondiendo). Mientras el audio llega no se ocupa ese cupo: una subida lenta o estancada no deja sin voz al
+    resto. La tercera espera hasta 10 s a que se libere uno (transcribir tarda segundos) y después responde 429
+    `frecuencia` («el panel está transcribiendo otras preguntas»).
+
+  Todos son en memoria, por proceso. El tamaño no acota cuánto dura una grabación (quien graba elige la calidad, y
+  Mnemo corta a los 10 minutos): lo que se acota es cuántas.
 - **El reconocimiento del navegador** (`SpeechRecognition`, `es-CO`, con resultados parciales) se usa si el servidor
-  no puede transcribir (409 `sin_transcriptor`) o el navegador no tiene `MediaRecorder`. El panel avisa que en esa vía
-  transcribe el servicio del navegador.
+  no puede transcribir (`dictado` en falso, o un 409 `sin_transcriptor`) o el navegador no tiene `MediaRecorder`. El
+  panel avisa que en esa vía transcribe el servicio del navegador. El 409 llega con la pregunta ya grabada, que el
+  navegador no puede transcribir después, y **el micrófono no se reabre solo** (la persona ya terminó de hablar, no
+  eligió esa vía, y lo que se dijera después en la sala se enviaría como pregunta): queda un aviso que pide tocar el
+  micrófono y repetirla, y el toque siguiente va al navegador. Cuando el estado del panel vuelve a decir que
+  transcribe (Mnemo se volvió a conectar), vuelve la vía del servidor.
 - **Estados.** Inactivo, pidiendo el permiso del micrófono, escuchando, transcribiendo y error (sin permiso, sin
-  micrófono, sin soporte, no se oyó nada o falló).
+  micrófono, sin soporte, no se oyó nada o falló, con el mensaje del panel si trae uno).
 - `GET /api/agente/estado` dice si esta instalación puede transcribir por Mnemo (`dictado`). `mnemo_transcribe` nunca
-  es una herramienta para el modelo: solo la usa esa ruta.
+  es una herramienta para el modelo: solo la usa esa ruta (tampoco vuelve en una conversación guardada con un panel
+  anterior o con `MNEMO_HERRAMIENTAS=*`: al rehacer sus herramientas se descartan esa y `mnemo_model_complete`).
 - **Detalles que conviene saber.** Si en 10 segundos no se oye voz, termina con «No oí nada» y no transcribe (no gasta
-  créditos en silencio). Pasar de 20 por minuto responde 429. Cuando Mnemo dice que no puede transcribir, el servidor
-  lo recuerda una hora y `dictado` sale en falso (una transcripción buena lo borra): así la pregunta siguiente va
-  directo al reconocimiento del navegador. Con el audio se manda un vocabulario fijo de la propuesta (Yondó, PTAR,
-  telesalud…) para que los nombres se escriban bien; no lleva datos de personas. Si el plan suena en la pantalla en
-  off (también el automático), empezar a escuchar lo pausa allá y al terminar sigue; la pausa tarda hasta unos dos
-  segundos en llegar. El panel solo deja usar el micrófono a sus propias páginas (`Permissions-Policy:
+  créditos en silencio). Cuando Mnemo dice que no puede transcribir, el servidor lo recuerda una hora y `dictado` sale
+  en falso (una transcripción buena lo borra): así la pregunta siguiente va directo al reconocimiento del navegador.
+  Con el audio se manda un vocabulario fijo de la propuesta (Yondó, PTAR, telesalud…) para que los nombres se
+  escriban bien; no lleva datos de personas. Si el plan suena en la pantalla en off (también el automático), empezar
+  a escuchar lo pausa allá y al terminar sigue; la pausa tarda hasta unos dos segundos en llegar. Una transcripción
+  cancelada a mitad puede costarle créditos a la cuenta de Mnemo igual (el panel corta la llamada, pero Mnemo pudo
+  haberla empezado). El panel solo deja usar el micrófono a sus propias páginas (`Permissions-Policy:
   microphone=(self)`); si un despliegue lo bloquea, el botón no se muestra.
 
 ## La presentación técnica
@@ -261,15 +293,67 @@ maqueta 3D del territorio real, con lo que se agrega para presentar cada detalle
   `paso` vuelve); `mostrar` y `ocultar` (piezas de la maqueta que se ven además de las del paso, o que se ocultan
   aunque el paso las muestre: hasta 8 cada una), `aislar` (solo esa pieza: el resto del capítulo se apaga o queda en
   gris; `nada` lo quita) y `sin` (partes que se le quitan a una pieza, como `pieza.parte`: `torre.cubierta` deja ver las
-  losas; `[]` las devuelve). Todo vuelve a lo del paso al cambiar de paso. Y dos **acciones que no son estado**:
+  losas; `[]` las devuelve). Todo vuelve a lo del paso al cambiar de paso. Y tres **acciones que no son estado**:
   `mover` (`{giro, zoom, elevacion}`: la cámara gira esos grados alrededor de lo que mira y termina con ese
-  acercamiento y esa elevación; en un plan dura lo que dura la frase, suelta dura unos segundos) y `animar` (repite la
-  animación propia del paso: la obra crece). La pantalla las hace una vez: no quedan guardadas como lo que se ve.
+  acercamiento y esa elevación; en un plan dura lo que dura la frase, suelta dura unos segundos), `animar` (repite la
+  animación propia del paso: la obra crece) y `simular` ([las simulaciones del atlas](#las-simulaciones-del-atlas)).
+  La pantalla las hace una vez: no quedan guardadas como lo que se ve.
 - **El catálogo de piezas** está en `data/propuesta/general.json` (`tecnica.maqueta`: por capítulo, cada pieza con su
   id, su nombre, las capas que enciende y las partes que se le pueden quitar; cuando la pieza es un componente del
   capítulo lleva su mismo id). build_propuesta.py lo copia a `web/data/propuesta.json` y lo revisa; la presentación lo
   lee de ahí y el guion del asistente (`app/agente/guion.py`) solo se queda con los ids y los nombres: el modelo conoce
   «la torre» y «su cubierta», no capas ni nodos. Se piden por id o por nombre (sin tildes ni mayúsculas).
+
+### Las simulaciones del atlas
+
+El asistente y los agentes por MCP también **manejan los controles de adentro de un modelo del atlas** abierto como
+inmersión, como los maneja una persona: en el simulador sísmico, la magnitud, el escenario, la profundidad, la
+distancia, el suelo, la escala, el instante, la velocidad, la exageración, qué colorea, los equipos sobre la losa…,
+**Calcular**, **Hacer temblar la torre** (reproducir) y **Cancelar**; en «Pisos por servicio», el piso; en el
+recorrido y el laboratorio, el nivel, subir y bajar, el mapa, el espectador y las capas; en el modelo BIM, la
+herramienta, la vista, cada disciplina, los cortes, la cimentación, construir en 4D y su fecha; en la torre en su
+sitio, el proyecto tipo. El parque no tiene controles. Nada que enseñe plata: el coloreado por presupuesto (5D) y la
+pestaña de costos del BIM no están en el catálogo, `build_propuesta.py` avisa (y con `--estricto` falla) si un control
+o una opción habla de costos, presupuesto o valor, y en el atlas enmarcado el BIM no escribe cifras en pesos.
+
+- **El catálogo** está en `data/propuesta/simulaciones.json` (`{inmersión: [control…]}`): cada control con su `id`, su
+  `nombre`, su `tipo` (`accion`, `numero`, `opcion` o `si_no`), el rango, el paso y la unidad de un número, las
+  opciones (`{id, nombre}`) y una frase de `ayuda`. `scripts/build_propuesta.py` lo revisa (también que el atlas sepa
+  accionar cada control) y lo copia a cada inmersión de `tecnica.inmersiones` como `controles`; `--estricto` lo lleva al
+  guion del asistente (`app/agente/guion.py`: `Guion.controles` y `Guion.control`, por id o por nombre). El modelo los
+  ve en `indice` (los ids), en `guion` (enteros, los de las inmersiones que muestran los pasos del capítulo; si el
+  capítulo pesa demasiado, primero sin las descripciones de las fichas y después sin la ayuda), al ir a un paso de
+  inmersión y al abrir un modelo con `visual`.
+- **`simular`**: de 1 a 4 `{control, valor}` en orden (sin `valor` para una acción; en un número, uno de su rango; en
+  una opción, su id o su nombre; en sí o no, `true` o `false`, y sin valor es sí). Va en un **paso del plan** (junto a
+  `mover`, `animar` y `resaltar`) y en la op **`visual`** suelta. Es una acción, no estado: se aplica cuando llega,
+  sobre el modelo que queda abierto en ese paso (el que abre `inmersion`, el que había o el del paso de inmersión; de
+  otro capítulo que el de la pantalla, solo el que abre la misma orden). Cambiar un valor no recalcula, igual que en la
+  página: el plan manda después `calcular`; al terminar un cálculo pedido la torre tiembla sola (no el primer cálculo
+  al entrar ni con movimiento reducido: ahí, `reproducir` con `true`).
+- **Tolerante, con avisos legibles.** El servidor resuelve cada control por id o por nombre contra los del modelo que
+  queda abierto; un número fuera de su rango se recorta y se ajusta a su paso («simular «profundidad» 900 quedó en 200
+  (va de 5 a 200 km)»); un control que no existe, un valor que no sirve, un paso sin modelo del atlas o uno sin
+  controles se descartan con su aviso y los controles que sí hay; de más de 4, quedan los primeros. La escena absoluta
+  lleva `simular` (None o la lista exacta); una de antes, o de la presentación automática, no lo trae y vale igual. En
+  la op `visual`, si la simulación era lo único y no queda nada, es un error con los controles del modelo.
+- **En la pantalla.** La pantalla en off guarda la lista como `mover` (`pantalla.ACCIONES`: una vez por versión nueva,
+  nunca al abrir o recargar). La API anota la última versión que le entregó a la pantalla (`entregada_v`; un latido,
+  `?latido=1`, no cuenta): mientras la pantalla no reciba una orden con acciones, la siguiente las junta con las
+  pendientes en vez de pisarlas (`simular` se suma detrás si el modelo no cambia y caben 4; si no caben, la orden
+  espera hasta 3 s a que la pantalla pregunte), así dos llamadas seguidas o en paralelo por MCP se hacen las dos. Un
+  cambio de paso, otra orden ya recibida o encender o apagar la automática las dejan en nada. Mientras corre un cálculo
+  del sismo, «reproducir» y «instante» esperan su resultado; en el BIM, los controles esperan a que cargue el modelo 3D.
+  La op `visual` suelta acepta además el `paso` de partida (el del contexto del panel), para saber qué modelo está
+  abierto en la pestaña; con la pantalla en off o por MCP tiene que ser el de la pantalla. El puente (`agente-presentacion.js`) la valida en
+  el plan, en la acción `visual` y en el estado de la pantalla en off; el reproductor la manda en la orden `escena`; la
+  presentación (`mando.js`) la revisa y `visual.js` la pasa al marco del atlas con `__escenario.simular`
+  (`web/js/escenario.js`), que acciona el control de la página como la persona y espera hasta 25 s a que aparezca o se
+  habilite (Reproducir antes del primer cálculo). La escena acciona cuando el modelo ya cargó y espera las respuestas a
+  lo sumo 2 s: lo que el atlas rechaza en ese tiempo vuelve como descartado (el aviso `parcial`); lo que sigue
+  esperando se acciona solo después. Si la escena se vuelve a aplicar (repetir, o seguir después de que la persona
+  movió la imagen), la simulación se acciona otra vez. En la presentación, el simulador muestra en su barra el sismo
+  puesto («Mw 7,0 · 150 km de profundidad · calculando 40 %»): la sala ve lo que cambió el asistente.
 
 ### El plan guiado (recorridos narrados)
 
@@ -280,8 +364,9 @@ Cada paso es **una frase** (`dice`: se proyecta en el subtítulo y se lee en voz
 ocurre en pantalla mientras se dice**: el paso del capítulo, la cámara (un encuadre con nombre, su rumbo, su elevación,
 su acercamiento, a qué apunta y cómo viaja durante la frase), las piezas de la maqueta que se muestran, se ocultan o se
 aíslan y las partes que se les quitan, la obra enfocada, su ficha, hoy o con el proyecto, un modelo del atlas, «Solo
-3D», la animación del paso y lo que se resalta (una cifra, un punto, una entrada de la leyenda, una especificación o
-un componente). Al final, un cierre «En resumen» de uno a tres puntos y, en el chat, sugerencias para seguir. En el
+3D», la animación del paso, los controles de la simulación del modelo del atlas (`simular`: la magnitud del simulador
+sísmico, calcular, hacerlo temblar) y lo que se resalta (una cifra, un punto, una entrada de la leyenda, una
+especificación o un componente). Al final, un cierre «En resumen» de uno a tres puntos y, en el chat, sugerencias para seguir. En el
 chat el asistente escribe **antes** una línea que anuncia el plan y **después** solo una pregunta corta: la explicación
 es la narración, no se repite.
 
@@ -307,9 +392,9 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
 - **Tolerante.** El servidor (`app/agente/herramientas/interfaz.py`, `_componer`) resuelve cada paso contra el guion
   heredando lo del anterior (los nombres e ids de pasos, componentes, piezas, partes e inmersiones, y lo que se
   resalta, contra lo que muestra ese paso) y deja el plan **absoluto**: cada escena trae lo visual completo (una que
-  repite el capítulo sin decir el paso sigue en el mismo paso), su `mover` y su `animar`. Lo opcional que no resuelve
-  (una pieza mal escrita, una parte que no existe, un componente sin lugar, un modelo que no está, un resaltado
-  imposible, el capítulo o el paso de un paso que no es el primero, un valor sin la forma o una clave que no existe)
+  repite el capítulo sin decir el paso sigue en el mismo paso), su `mover`, su `animar` y su `simular`. Lo opcional que
+  no resuelve (una pieza mal escrita, una parte que no existe, un componente sin lugar, un modelo que no está, un
+  control de la simulación que no existe, un resaltado imposible, el capítulo o el paso de un paso que no es el primero, un valor sin la forma o una clave que no existe)
   **se descarta**, y un número fuera de su rango **se recorta**; cada cosa deja un aviso legible con el número del
   paso y los candidatos («Paso 3: la pieza «tore» no está en Salud (aislar); piezas: hospital_hoy, torre, telesalud,
   puestos») y el plan corre con lo demás. La presentación hace lo mismo con lo que le llega (el aviso `parcial`:
@@ -339,7 +424,9 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
   su frase), el paso en curso marcado y abierto con su frase resaltada mientras suena, el avance en vivo y los
   controles: Pausa/Continuar, Anterior, Siguiente, Repetir y Detener; al terminar, **Volver a reproducir** y las
   sugerencias como botones. Volver a reproducir (y `control_recorrido` reproducir del asistente) pasa por el
-  servidor: lo registra con un id nuevo y la tarjeta sigue a ese; solo se puede con el último plan. Mientras suena,
+  servidor: lo registra con un id nuevo y la tarjeta sigue a ese; solo se puede con el último plan (con la
+  [presentación automática](#presentación-automática) encendida, también con el último que ella reemplazó al
+  seguir). Mientras suena,
   una barra fija arriba de la conversación lo deja a mano. En la presentación, las flechas, la barra espaciadora y los
   botones de su control pasan de paso, P pausa y Escape detiene. Si la persona mueve la maqueta o cambia de paso a
   mano, se pausa; al seguir, el paso vuelve. Si escribe en el chat, se pausa al terminar la frase. Cualquier otra
@@ -364,8 +451,8 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
   avance de un plan que el servidor ya cerró o reemplazó responde 409 y la página lo detiene. El contexto lo nombra
   dos minutos después de terminar y deja de nombrarlo si en media hora no llega ningún avance ni control (la página
   que lo reproducía se cerró); en pausa con la pantalla en off abierta, lo sigue nombrando.
-- **Lo que quedó guardado de antes.** Un recorrido guardado antes del plan guiado (sus escenas sin `mover` ni
-  `animar`, lo visual con siete partes) se lee con lo que le falta en lo del paso (`recorrido.al_dia`): se puede
+- **Lo que quedó guardado de antes.** Un recorrido guardado antes del plan guiado (sus escenas sin `mover`, `animar`
+  ni `simular`, lo visual con siete partes) se lee con lo que le falta en lo del paso (`recorrido.al_dia`): se puede
   cerrar, reanudar y volver a reproducir.
 - **Con personas en la conversación**, la presentación no proyecta texto (`explicar`, `ir` con explicación ni
   `recorrido`): responde `con_personas`. Se muestra en una conversación sin datos de habitantes.
@@ -379,7 +466,8 @@ o el celular) o a un agente externo por MCP (Claude, Mnemo u otro cliente MCP). 
 
 - **Abrirla.** En la vista **Presentación**, el botón **Pantalla en off** (o la dirección `/panel/presentacion?off=1`),
   en el navegador del proyector con la sesión de la persona. Arriba dice que no tiene controles y si está conectada;
-  **Salir del modo en off** vuelve a la vista de siempre. No hay asistente en esa ventana: se le habla desde otra.
+  **Salir del modo en off** vuelve a la vista de siempre. El asistente se abre en esa misma ventana, al lado de la
+  presentación ([El asistente en la misma ventana](#el-asistente-en-la-misma-ventana)), o se le habla desde otra.
 - **Qué hace.** Pregunta cada segundo y medio por su estado (`GET /api/pantalla?v=`) y aplica solo lo que cambió: el
   capítulo y el paso, la explicación en pantalla, lo que se ve (el panel de texto o «Solo 3D», el índice, las fichas),
   lo visual de la presentación técnica (la cámara, a qué apunta, la obra enfocada, la ficha técnica, hoy o con el
@@ -425,6 +513,39 @@ o el celular) o a un agente externo por MCP (Claude, Mnemo u otro cliente MCP). 
   `isError`, para que el agente los corrija. La ruta no usa la sesión del panel, pero sí sus protecciones: el tope del
   cuerpo, los cupos del servicio único y el 503 mientras MongoDB no responde.
 
+### El asistente en la misma ventana
+
+En la pantalla en off (`/presentacion?off=1`) y en la ventana del proyector (`/presentacion?pantalla=1`) el asistente
+se abre **ahí mismo**, al lado de la presentación, con todo lo que tiene en el panel: escribir, preguntar por voz, la
+tarjeta del plan con su avance y sus controles y la franja de la presentación automática. No hace falta ir a otra
+ventana para ver el plan.
+
+- **Cerrado por omisión.** La ventana abre como siempre, con la presentación entera; solo se ve el botón del
+  asistente. En la pantalla en off va en su barra de arriba, a la derecha (como en la vista normal). En el proyector,
+  que no tiene barra, y en la pantalla en off cuando llena la ventana, flota arriba a la derecha: tras 3 segundos sin
+  mover el ratón ni tocar se atenúa para no distraer a la sala, y vuelve a verse al mover el ratón o tocar.
+- **Abierto.** En escritorio (desde 901 px) la presentación le deja libre su ancho, como en la vista normal: nada queda
+  tapado y la maqueta 3D se reencuadra sola. En el celular se superpone, como siempre. Se cierra con su botón o con
+  Escape (salvo mientras graba una pregunta por voz: ahí Escape cancela la grabación).
+- **En tiempo real.** En la pantalla en off, los planes del asistente siguen yendo a la pantalla en off (el servidor no
+  cambia) y los narra la vista de esa misma ventana; cuando llega el resultado de una orden de la presentación (un
+  plan, un control o cualquier op que cambie lo que se ve), el chat le pide a la vista que pregunte por su estado en el
+  acto, sin esperar el segundo y medio del sondeo. La tarjeta del plan recibe el avance de la vista de esa ventana en
+  el acto (y no lo da por «sin respuesta» mientras sigan llegando); sus controles van al servidor, así valen también
+  para otra pantalla en off abierta, y después piden la vuelta inmediata. El interruptor de voz de la tarjeta enciende
+  o apaga la voz de esa misma ventana. En el proyector, el chat de esa ventana aplica todo en la vista de ahí; la
+  pestaña del panel, si también está abierta, sigue viendo el avance por el canal del proyector.
+- **El teclado del proyector sigue siendo de la presentación.** Al cerrar el chat el foco vuelve a la presentación (no
+  al botón), y las flechas, AvPág, RePág y la barra espaciadora la mueven aunque el foco esté en otro lado; lo que se
+  escribe en el chat no le llega. Si la persona ya escribe en el chat mientras la presentación carga, el foco no salta
+  a la presentación.
+- **La pantalla en off cuenta como abierta desde que se monta**, no desde que termina de cargar: un plan pedido en el
+  chat de esa ventana en ese rato va igual a la pantalla en off. En el celular, cuando el plan empieza, el chat se
+  pliega para que se vea la presentación.
+- Los pasos que manejan una simulación del atlas llevan en la tarjeta el chip «Maneja la simulación».
+- Los enlaces **Abrir en otra pantalla** y **Pantalla en off** de la vista lo dicen en su descripción: ahí también se
+  abre el asistente.
+
 ### Presentación automática
 
 Con la presentación automática encendida, la pantalla en off **recorre sola toda la presentación**, capítulo por
@@ -437,16 +558,27 @@ cuesta nada: la narración sale del guion (`app/automatica.py`).
   con la misma op. El chat muestra una franja («Presentación automática encendida · empieza en Salud») con **Detener**.
   Por dentro, `POST /api/pantalla/auto` (`{accion, capitulo?}`, con el permiso `presentacion.ver`). Sin una pantalla en
   off abierta queda encendida y empieza cuando se abra una: solo corre allá.
-- **Qué dice en cada paso** (`narracion_del_paso`): la narración escrita a mano si la hay; si no, la primera frase del
-  texto del paso (hasta unos 180 caracteres: una más larga se corta en su último punto y coma o dos puntos, donde
-  termina una idea; nunca en una coma); si no hay dónde cortarla, o si esa frase habla de costos, el título del paso.
-  Todo pasa las reglas de lo que se proyecta; un paso sin nada que decir se salta. Hoy son 52 pasos en 9 capítulos y
-  la vuelta completa dura unos 10 minutos: entre capítulo y capítulo no hay cierre ni espera de preguntas (eso es de
-  los planes del asistente), solo un segundo y medio.
+- **Qué dice en cada paso** (`narracion_del_paso`), lo primero que sirva de:
+  1. la narración escrita a mano;
+  2. en el paso de metas, su **primera meta**, resumida (`primera_meta`): el indicador, el dato de la línea base y la
+     meta con su año, sin las fuentes ni las aclaraciones entre paréntesis («La primera meta: sedes rurales de salud
+     habilitadas en el REPS, de 0 a 5 en 2031.»); si así no cabe, solo la meta. La frase de su texto («Cada meta parte
+     de una línea base…») es la misma en los siete módulos;
+  3. la primera frase del texto del paso (hasta unos 180 caracteres: una más larga se corta en su último punto y coma
+     o dos puntos, donde termina una idea; nunca en una coma), salvo que hable de costos;
+  4. si el título es solo un rótulo (menos de 50 caracteres: «Cinco piezas, una sola red»), una **frase corta** del
+     paso (`frase_corta`, de 40 a 180 caracteres): la primera idea del texto que quepa, frase por frase y, en una
+     larga, cada parte separada por punto y coma (con mayúscula y punto), y si ninguna, la primera cifra del paso con
+     su leyenda;
+  5. el título del paso (uno largo ya es una frase y se dice tal cual).
+
+  Todo pasa las reglas de lo que se proyecta y nada habla de costos; un paso sin nada que decir se salta. Hoy son 52
+  pasos en 9 capítulos (solo dos dicen su título, que ya es una frase) y la vuelta completa dura unos 10 minutos y
+  medio: entre capítulo
+  y capítulo no hay cierre ni espera de preguntas (eso es de los planes del asistente), solo un segundo y medio.
 - **Escribir una narración a mano.** En `data/propuesta/general.json`, `tecnica.narracion` es
   `{capítulo: {id del paso: "frase"}}` (hasta 220 caracteres, sin costos); `python3 scripts/build_propuesta.py` la
-  lleva al guion del asistente (queda en el paso como `narracion`). Sirve, por ejemplo, para el paso de metas, cuya
-  primera frase es la misma en los siete módulos.
+  lleva al guion del asistente (queda en el paso como `narracion`) y manda sobre todo lo demás.
 - **Cómo corre.** El servidor arma un [plan](#el-plan-guiado-recorridos-narrados) por capítulo
   (`plan_del_capitulo`): un paso del plan por cada paso del capítulo, con lo visual y la animación propios del paso
   y un movimiento suave de la cámara, sin cierre. La pantalla lo narra como cualquier otro (subtítulo y voz), sin la
@@ -458,10 +590,19 @@ cuesta nada: la narración sale del guion (`app/automatica.py`).
   en el paso que se estaba diciendo (si ya estaba en «¿Preguntas?», con el capítulo siguiente). Una orden suelta
   (`ir`, `visual`, `explicar`) también la interrumpe y después sigue desde ahí.
 - **Pausar y detener.** `control_recorrido` funciona sobre el plan automático como sobre cualquiera: en pausa espera
-  (no pide otro plan); `detener` además apaga la automática, lo mismo que detenerlo en esa pantalla. Si la pantalla se
-  recarga o se cierra a mitad, a los 30 segundos sin noticias el servidor da el plan por caído y arma otro desde ese
-  paso. Un plan que termina en error se salta o se reintenta; al tercero seguido se apaga sola (la presentación no
-  responde).
+  (no pide otro plan); `detener` además apaga la automática, lo mismo que detenerlo a propósito en esa pantalla (una
+  tecla o un botón: los «detenido» con `motivo` `tecla` o `boton`). Salir de la vista en off (**Salir del modo en
+  off**, otra vista del menú) no la apaga: suelta el plan y la automática queda encendida en ese paso; la próxima
+  pantalla en off que se abra sigue desde ahí. Si la pantalla se recarga o se cierra a mitad, a los 30 segundos sin
+  noticias el servidor da el plan por caído y arma otro desde ese paso. Un plan que termina en error se salta o se
+  reintenta; al tercero seguido se apaga sola (la presentación no responde). Detener un plan del asistente no la
+  apaga: cuando el asistente detiene el suyo, el resultado le dice que la automática sigue encendida y en qué paso
+  retoma, para que no le diga a la persona que la sala quedó en silencio (si la persona lo quiere, se apaga con
+  `automatica` `detener`).
+- **Volver a reproducir una respuesta.** Cuando la automática sigue después de un plan del asistente, el servidor
+  guarda ese plan (`recorrido_previo`): **Volver a reproducir** de su tarjeta (o `control_recorrido` `reproducir`
+  con su id) lo trae con un id nuevo, la interrumpe y, al terminar, ella sigue desde su paso. Sirve hasta que llegue
+  otro plan que no sea de la automática, como sin ella.
 - **El estado** va con la pantalla (`pantallas`, clave `auto`): `{activa, capitulo, paso, rid, vueltas, fallas}`. `paso`
   es el que se está narrando o el próximo; `rid`, el id de su plan mientras suena. `GET /api/pantalla` lo trae como
   `auto: {activa, capitulo, paso}` (o `null` si nunca se encendió; encenderla o apagarla sube la versión) y su plan
@@ -895,7 +1036,7 @@ se suba.
 | `web/js/propuesta/mando.js` (del sitio) | En la presentación: recibe las órdenes del panel (también `vista`), le avisa cada cambio de paso y pinta el subtítulo |
 | `app/pantalla.py`, `app/api/pantalla.py` | La pantalla en off de cada persona (su estado, `GET /api/pantalla`), su clave MCP (`/api/pantalla/clave`), el recorrido narrado: guardarlo, colapsarlo, el avance (`POST /api/pantalla/progreso`), los controles (`POST /api/pantalla/recorrido/control`) y dónde va (`GET /api/pantalla/recorrido`), y el estado de la [presentación automática](#presentación-automática) (`POST /api/pantalla/auto` y `/auto/siguiente`) |
 | `app/automatica.py` | La presentación automática por dentro: qué se dice en cada paso, el plan de cada capítulo y por dónde sigue (sin modelo: sale del guion) |
-| `app/recorrido.py`, `app/proyectable.py` | El plan guiado por dentro (el recorrido: sus topes, la forma absoluta de la escena con `mover` y `animar`, las frases, los tiempos, la validación contra el guion) y las reglas de lo que se proyecta (también sin costos) |
+| `app/recorrido.py`, `app/proyectable.py` | El plan guiado por dentro (el recorrido: sus topes, la forma absoluta de la escena con `mover`, `animar` y `simular`, las frases, los tiempos, la validación contra el guion, también de los controles de la simulación) y las reglas de lo que se proyecta (también sin costos) |
 | `web/js/reproductor.js`, `web/js/voz.js` | El reproductor del plan (el reloj de la explicación, la espera inicial, pausas, saltos, cierre) y la voz del navegador |
 | `web/js/agente-recorrido.js` | La tarjeta del plan en el chat y su barra fija |
 | `app/api/mcp.py` | El servidor MCP de la presentación (`POST /api/mcp`): la herramienta `presentacion` para un agente externo |
@@ -939,7 +1080,7 @@ se suba.
 | `progreso`, `texto` | Trozos de una nota de progreso o de la respuesta |
 | `texto_ronda` | `texto`: el texto final de la ronda en curso cuando no coincide con lo que llegó por partes (con Mnemo, los trozos son un adelanto). Reemplaza el de la ronda |
 | `herramienta` | `id`, `nombre`, `etiqueta`, `estado` (`inicio`, `ok`, `error`, `pendiente`, `aprobada`, `rechazada`) y `resumen` |
-| `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias`, `mapa` (acciones del mapa) o `presentacion` (`op`: `ir` con `capitulo` y `paso` desde 1, `siguiente`, `anterior`, `explicar` o `quitar_explicacion`; `explicacion`, la frase para la pantalla, en todas salvo la última; `vista` con `panel`, `indice` o `fichas`; `visual` con `enfoque`, `camara`, `rumbo`, `elevacion`, `zoom`, `mirar`, `girar`, `comparar`, `detalle`, `inmersion`, `mostrar`, `ocultar`, `aislar`, `sin` o `tema`, y las acciones `mover` y `animar`; `pantalla_completa` con `activar`; `recorrido` con el recorrido absoluto (cada escena: `capitulo`, `paso`, `panel`, `visual`, `resaltar`, `mover`, `animar`, `frases` y `sostener_ms`); `control_recorrido` con `rid` y `accion`) o `recorrido` (la tarjeta del plan en el chat: `id`, `titulo`, `destino`, `duracion_ms`, `cierre`, `sugerencias` y por escena `narracion`, `donde` y `hace`) |
+| `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias`, `mapa` (acciones del mapa) o `presentacion` (`op`: `ir` con `capitulo` y `paso` desde 1, `siguiente`, `anterior`, `explicar` o `quitar_explicacion`; `explicacion`, la frase para la pantalla, en todas salvo la última; `vista` con `panel`, `indice` o `fichas`; `visual` con `enfoque`, `camara`, `rumbo`, `elevacion`, `zoom`, `mirar`, `girar`, `comparar`, `detalle`, `inmersion`, `mostrar`, `ocultar`, `aislar`, `sin` o `tema`, y las acciones `mover`, `animar` y `simular`; `pantalla_completa` con `activar`; `recorrido` con el recorrido absoluto (cada escena: `capitulo`, `paso`, `panel`, `visual`, `resaltar`, `mover`, `animar`, `simular` (puede faltar), `frases` y `sostener_ms`); `control_recorrido` con `rid` y `accion`) o `recorrido` (la tarjeta del plan en el chat: `id`, `titulo`, `destino`, `duracion_ms`, `cierre`, `sugerencias` y por escena `narracion`, `donde` y `hace`) |
 | `confirmar` | La tarjeta de una escritura: `id`, `titulo`, `detalle` (pares etiqueta y valor, enteros: el widget no recorta nada, y si llegan más de 40 o uno de más de 4.000 caracteres no ofrece **Aprobar**) y `aviso`. Lo pendiente al abrir una conversación lleva lo mismo y, si lo guardó una versión anterior del panel, `vieja` (tampoco ofrece **Aprobar**) |
 | `descartar` | La ronda se repite tras un error pasajero: se borra lo que se pintó de ella |
 | `aviso` | `texto` y `nivel` (`info` o `alerta`): un rechazo del modelo, el paso a un modelo de respaldo |

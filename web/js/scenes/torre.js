@@ -14,6 +14,7 @@ import { THREE, Stage, tokens, onTheme, mat, box, fmtN, fmtCOP, gsap, solidBox, 
 import { progressiveLOD } from '../assets.js';
 import { EDIFICIOS } from '../data.js';
 import { limpio, esc, escH } from './torre/textos.js';
+import { registrarControl } from '../escenario.js';
 
 const TEXTOS = { limpio, esc, escH };   // lo que reciben los módulos de C, D y E en ctx.textos (13.6)
 // módulos de los modos y tarjetas nuevos. Si el del equipo dueño todavía no está (404) o no carga, se usa el relleno; un
@@ -236,7 +237,7 @@ export function mount(root) {
       const tit = tituloPiso(p, [c[0] + 1.5, 1.6, -c[1]], g);
       gPisos.add(g);
       seleccionable(g, p);
-      pisos.push({ piso, g, tit, nivel: +nivel.z || 0, servicios });
+      pisos.push({ piso, g, tit, nivel: +nivel.z || 0, servicios, datos: p });
     });
     conPlanta = true;
     cajaPisos = [x0, y0, x1, y1].every(Number.isFinite) ? { x0, y0, x1, y1 } : { x0: XW[0] - 8, y0: -24, x1: XN[1] + 6, y1: 21 };
@@ -264,7 +265,7 @@ export function mount(root) {
       const tit = tituloPiso(p, [XN[1] + 1, 2.4, -(y0 + y1) / 2], g);
       gPisos.add(g);
       seleccionable(g, p);
-      pisos.push({ piso, g, tit, nivel: +p.nivel_piso_terminado_m || 0, servicios });
+      pisos.push({ piso, g, tit, nivel: +p.nivel_piso_terminado_m || 0, servicios, datos: p });
     });
     cajaPisos = { x0: XW[0] - 8, y0: -24, x1: XN[1] + 6, y1: 21 };
   }
@@ -300,6 +301,20 @@ export function mount(root) {
       </tbody></table></div>`;
     if (gsap) gsap.from(ficha, { opacity: 0, y: 8, duration: 0.3 });
   }
+
+  // en la presentación técnica (js/escenario.js) un piso se elige como cuando se toca en el 3D: su ficha y todos sus
+  // servicios rotulados (desde arriba los pisos de encima lo tapan: la cámara no se mueve, salvo en el teléfono, como al
+  // tocarlo); «todos» vuelve a los cuatro pisos sin piso elegido
+  registrarControl('torre', 'pisos', 'piso', {
+    listo: () => modo === 'pisos' && pisos.length > 0 && sep > 0.99,
+    hacer(v) {
+      if (v === 'todos') { selPiso = null; ficha.innerHTML = nota0; etiquetas(); return true; }
+      const p = pisos.find((x) => String(x.piso) === String(v));
+      if (!p) return `La torre no tiene el piso ${v}`;
+      fichaPiso(p.datos);
+      return true;
+    },
+  });
 
   const modeBtns = root.querySelectorAll('[data-modo-torre]');
   modeBtns.forEach((b) => b.addEventListener('click', () => cambiarModo(b.dataset.modoTorre)));

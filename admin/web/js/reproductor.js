@@ -2,8 +2,8 @@
 // narrados»).
 //
 // El asistente arma en una sola llamada un plan de pasos (por dentro, un recorrido de escenas: app/recorrido.py lo
-// valida y lo deja absoluto: cada escena trae su paso, lo visual, lo que se resalta, cómo se mueve la cámara y la
-// narración en frases). Este módulo lo reproduce en la página que enmarca la presentación (la pestaña del chat, la
+// valida y lo deja absoluto: cada escena trae su paso, lo visual, lo que se resalta, cómo se mueve la cámara, los
+// controles de la simulación del modelo del atlas que acciona y la narración en frases). Este módulo lo reproduce en la página que enmarca la presentación (la pestaña del chat, la
 // ventana del proyector o la pantalla en off), con órdenes a mando.js: la escena, la frase que suena, la pausa y el
 // cierre. La escena ya no espera a que la imagen se asiente: la presentación pinta la narración y empieza a mover la
 // cámara, las piezas y la ficha en el acto, durante lo que dura la narración (`ms`). Así la sala ve lo que se nombra
@@ -223,9 +223,11 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
     frase = 0;
     emitir();
     mandoEscena = true;
-    // `mover` y `animar` son de la escena (un recorrido de antes no los trae: sin movimiento propio ni animación)
+    // `mover`, `animar` y `simular` son de la escena (un recorrido de antes, o uno de la presentación automática, no los
+    // trae: sin movimiento propio, animación ni simulación). La simulación se vuelve a accionar si la escena se repite
     const res = await mandar({ orden: 'escena', capitulo: esc.capitulo, paso: esc.paso, panel: esc.panel,
-      visual: esc.visual, resaltar: esc.resaltar, mover: esc.mover ?? null, animar: esc.animar === true, frases: esc.frases,
+      visual: esc.visual, resaltar: esc.resaltar, mover: esc.mover ?? null, animar: esc.animar === true,
+      simular: esc.simular ?? null, frases: esc.frases,
       titulo: r.titulo, n: k, de: de(), voz: voz.estado() === 'activa', rid: r.id, ms: narracionMs(esc.frases) },
     { plazo: ESPERA_ESCENA_MS });
     if (!vigente(g)) return null;

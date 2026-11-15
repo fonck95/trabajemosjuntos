@@ -8,8 +8,13 @@
 // * Se habla con ella por postMessage (web/js/propuesta/mando.js): solo con su ventana y su origen, nunca con '*', y lo
 //   que responde se valida. La vista se registra en el puente del asistente (agente-presentacion.js) recién cuando la
 //   presentación avisa que cargó (`listo`): lo que el asistente pidió antes espera en la cola del puente.
-// * /presentacion?pantalla=1 es el modo proyector: sin menú ni asistente, la presentación ocupa toda la ventana y la
-//   ventana se anuncia al resto de las pestañas (el puente): el asistente de la pestaña del chat la maneja desde ahí.
+// * /presentacion?pantalla=1 es el modo proyector: sin menú, la presentación ocupa toda la ventana y la ventana se
+//   anuncia al resto de las pestañas (el puente): el asistente de la pestaña del chat la maneja desde ahí. El asistente
+//   también se abre en esta ventana (su botón flota con los de la ventana y se atenúa con el ratón quieto:
+//   data-pres-quieto), y lo que pide se aplica aquí mismo (en la ventana del proyector el puente no elige otro proyector).
+//   El teclado y el control remoto son de la presentación: el asistente le devuelve el foco al cerrarse y, con el foco
+//   fuera de ella (en el botón del asistente, en la página), sus teclas de avanzar y retroceder la mueven igual y el
+//   foco vuelve a ella; al cargar no le quita el foco al chat donde la persona ya escribe.
 //   Mientras viva, manda ella: la barra de la pestaña del chat muestra su paso, sus botones le mandan la orden solo a
 //   ella y el iframe de aquí la sigue (también cuando el paso cambia allá, con el teclado o el control remoto); lo que
 //   se haga en el iframe de aquí (su control, su índice) va allá. Con dos ventanas de proyector manda la última que se
@@ -20,7 +25,12 @@
 //   desde cualquier navegador con su sesión, y no tiene controles. Sigue el estado que dejan en el servidor el asistente
 //   del panel y un agente por MCP (`GET /api/pantalla?v=`, cada POLL_MS): solo cambia cuando se le pide algo concreto a
 //   un agente. La presentación queda inerte (ni clics ni teclado) y sin sus botones (mando.js, vista {controles:
-//   false}); no se anuncia al puente ni al proyector, y en esa ventana no está el asistente. Con `completa` llena la
+//   false}); no se anuncia al puente ni al proyector. El asistente se puede abrir al lado, en la misma ventana (su botón
+//   va en la barra; con `completa`, flotando como en el proyector): sus planes siguen yendo al servidor y los narra esta
+//   vista; cuando el chat cambia algo, el puente lo avisa (`pantalla:pedir`) y se pregunta en el acto, sin esperar el
+//   sondeo; el avance le llega a la tarjeta por el puente (`avisarRecorrido`) y su interruptor de voz maneja la de aquí
+//   (`registrarVozLocal`). Cuenta como abierta desde que se monta (avisa con un latido mientras la presentación carga):
+//   un plan pedido en el chat de aquí antes de eso iba a la pestaña y no lo narraba nadie. Con `completa` llena la
 //   ventana, sin el menú ni las barras del panel; Escape la devuelve hasta la próxima orden de pantalla completa.
 // * En la pestaña del chat, `pantalla_completa` del asistente hace lo mismo con esta vista (el botón del asistente queda
 //   a mano para seguir hablando); Escape la devuelve.
@@ -43,15 +53,18 @@
 //   servidor arma, sin modelo, un plan por capítulo con un paso por cada paso de la presentación y una frase muy corta, y
 //   esta pantalla se los pide uno tras otro (`crearAutomatica`: POST /api/pantalla/auto/siguiente cuando el reproductor
 //   se queda sin plan). El plan llega por el sondeo con `auto: true` y se narra como cualquier otro, sin la espera de
-//   «Plan listo». Un plan del asistente (la respuesta a una pregunta) lo reemplaza; al terminar, la automática sigue
+//   «Plan listo»; el reproductor recibe esa clave y no espera el «¿Preguntas?» del final (sigue con el capítulo
+//   siguiente). Un plan del asistente (la respuesta a una pregunta) lo reemplaza; al terminar, la automática sigue
 //   donde iba (repite el paso que se estaba diciendo). Otra orden suelta la hace esperar más. La barra dice dónde va.
+//   La vista que se va (otra vista del panel) suelta el plan automático sin avisar el «detenido» al servidor (`seFue`):
+//   ese aviso lo cerraba y apagaba la automática para todos, también para otra pantalla en off que la narrara.
 // * Los estilos (css/presentacion.css) los carga la vista, como agente.js los suyos.
 import { ErrorApi, api } from '../api.js';
 import { BASE, url } from '../base.js';
 import { $, html, icono, montar } from '../ui.js';
 import { AVISOS, CANAL, TERMINALES, VERSION, accionPresentacion, accionesPresentacion, avisarEstado, avisarRecorrido,
   controlRecorrido, estadoDePantalla, estadoPresentacion, estadoValido, ordenesHacia, presentacionNoDisponible,
-  proyectorVivo, recorridoEnCurso, registrarPresentacion } from '../agente-presentacion.js';
+  proyectorVivo, recorridoEnCurso, registrarPresentacion, registrarVozLocal } from '../agente-presentacion.js';
 import { PREVIA_MS, crearReproductor } from '../reproductor.js';
 import { crearVoz } from '../voz.js';
 
@@ -68,6 +81,8 @@ export const ESPERA_AUTO_MS = 1500;          // desde que terminó un plan autom
 export const ESPERA_TRAS_PLAN_MS = 5000;     // desde que terminó un plan del asistente (la pregunta que la interrumpió)
 export const ESPERA_TRAS_ORDEN_MS = 45000;   // desde otra orden suelta: lo que se pidió ver se queda un rato a la vista
 export const REINTENTO_AUTO_MS = 5000;       // el servidor no tenía nada que armar (204) o no respondió: se vuelve a pedir
+const QUIETO_MS = 3000;          // el botón flotante del asistente se atenúa tras esto sin mover el ratón ni tocar
+const PEDIR_PANTALLA = 'pantalla:pedir';   // el puente (`pedirPantalla`): la pantalla en off pregunta ya
 const TEXTO_VOZ = { activa: 'Voz activa', apagada: 'Voz', sin_activar: 'Toque para activar la voz', sin_voces: 'Sin voces en español' };
 const SITIO = /^(https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?|http:\/\/(127\.0\.0\.1|localhost)(:\d{1,5})?)(\/[A-Za-z0-9._~%-]*)*$/;
 
@@ -226,7 +241,7 @@ export async function vistaPresentacion(el, { q } = {}) {
           <a class="btn" id="pres-salir-off" href="${url('/presentacion')}">${icono('cerrar')}<span>Salir del modo en off</span></a>
         </div>
       </div>
-      <p class="pres-remoto pres-off-aviso" role="note">${icono('agente')}<span>Esta pantalla no tiene controles: solo cambia cuando le pide algo concreto al asistente del panel (desde otro equipo o el celular) o a un agente por MCP. Con «Presentación automática» recorre sola toda la presentación, muy resumida; una pregunta al asistente la interrumpe y después sigue. Pídale «pantalla completa» para que llene la ventana; Escape la devuelve aquí.</span></p>` : ''}
+      <p class="pres-remoto pres-off-aviso" role="note">${icono('agente')}<span>Esta pantalla no tiene controles: solo cambia cuando le pide algo concreto al asistente del panel (con su botón, aquí al lado, o desde otro equipo o el celular) o a un agente por MCP. Con «Presentación automática» recorre sola toda la presentación, muy resumida; una pregunta al asistente la interrumpe y después sigue. Pídale «pantalla completa» para que llene la ventana; Escape la devuelve aquí.</span></p>` : ''}
       <div class="pres-barra" role="toolbar" aria-label="Presentación"${off ? ' hidden' : ''}>
         <div class="pres-donde"><b id="pres-capitulo">Presentación de la propuesta</b><small id="pres-paso">Cargando la presentación…</small></div>
         <div class="pres-botones">
@@ -234,14 +249,14 @@ export async function vistaPresentacion(el, { q } = {}) {
           <button type="button" class="btn primario" id="pres-siguiente" aria-label="Paso siguiente" title="Paso siguiente" disabled><span>Siguiente</span>${icono('siguiente')}</button>
           ${off ? '' : html`<button type="button" class="btn pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta pestaña (la del navegador)">${icono('voz')}<span>Voz</span></button>`}
           ${conPantalla ? html`<button type="button" class="btn" id="pres-pantalla" aria-label="Pantalla completa" title="Pantalla completa">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
-          <a class="btn" id="pres-otra" href="${url('/presentacion?pantalla=1')}" target="_blank" rel="noopener" aria-label="Abrir en otra pantalla (proyector)" title="Abre la presentación en otra ventana para el proyector: el asistente la sigue manejando desde aquí">${icono('proyector')}<span>Abrir en otra pantalla</span></a>
-          <a class="btn" id="pres-off" href="${url('/presentacion?off=1')}" target="_blank" rel="noopener" aria-label="Pantalla en off" title="Una pantalla sin controles para el proyector o un televisor, en este equipo o en otro: solo cambia cuando se le pide al asistente o a un agente por MCP">${icono('agente')}<span>Pantalla en off</span></a>
+          <a class="btn" id="pres-otra" href="${url('/presentacion?pantalla=1')}" target="_blank" rel="noopener" aria-label="Abrir en otra pantalla (proyector)" title="Abre la presentación en otra ventana para el proyector: el asistente la sigue manejando desde aquí, y en esa ventana también se abre el asistente, al lado de la presentación">${icono('proyector')}<span>Abrir en otra pantalla</span></a>
+          <a class="btn" id="pres-off" href="${url('/presentacion?off=1')}" target="_blank" rel="noopener" aria-label="Pantalla en off" title="Una pantalla sin controles para el proyector o un televisor, en este equipo o en otro: solo cambia cuando se le pide al asistente o a un agente por MCP. En esa ventana también se abre el asistente, al lado de la presentación">${icono('agente')}<span>Pantalla en off</span></a>
         </div>
       </div>
       <p class="pres-remoto" id="pres-remoto" role="status" hidden>${icono('proyector')}<span>La presentación se está mostrando en otra pantalla: el asistente, estos botones y la presentación de aquí la manejan allá.</span></p>
       <div class="pres-marco" id="pres-marco"></div>
       ${proyector ? html`<div class="pres-flotantes">
-        ${conPantalla ? html`<button type="button" class="btn oscuro pres-completa" id="pres-completa">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
+        ${conPantalla ? html`<button type="button" class="btn oscuro pres-completa" id="pres-completa" title="Pantalla completa">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
         <button type="button" class="btn oscuro pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta ventana (la del navegador)">${icono('voz')}<span>Voz</span></button>
       </div>` : ''}
     </section>`);
@@ -252,6 +267,9 @@ export async function vistaPresentacion(el, { q } = {}) {
   const limpiezas = [() => { if (proyector) delete raiz.dataset.proyector; if (off) delete raiz.dataset.presOff; },
     () => { delete raiz.dataset.presLlena; }];
   const limpiar = () => { for (const f of limpiezas.splice(0)) { try { f(); } catch { /* nada */ } } };
+  let actividad = () => {};   // el ratón, un toque o una tecla (el proyector y la pantalla en off: el botón flotante)
+  let enganchar = () => {};   // y los oyentes de eso sobre la presentación (su ventana, si es del mismo origen)
+  let latidoPrevio = 0;       // la pantalla en off avisa que está abierta mientras la presentación carga
 
   const d = await direccion();
   if (!d) {
@@ -288,6 +306,7 @@ export async function vistaPresentacion(el, { q } = {}) {
   };
 
   function sinPresentacion(titulo, detalle) {
+    clearInterval(latidoPrevio);   // (sin presentación no hay quien narre aquí: no cuenta como abierta)
     montar(marco, html`<div class="vacio pres-sin"><b>${titulo}</b>${detalle}</div>`);
     pasoEl.textContent = titulo;
     anterior.disabled = siguiente.disabled = true;
@@ -306,8 +325,8 @@ export async function vistaPresentacion(el, { q } = {}) {
     const alla = !aqui || !rep.activo() ? recorridoEnCurso() : null;
     // (hacia la persona es un «plan» con «pasos»; por dentro, un recorrido con escenas)
     if (rep.activo() && aqui && rep.recorrido().id === ridAuto) {
-      // el plan de la presentación automática: el capítulo y el paso de la presentación que se está diciendo (y al
-      // final, mientras la presentación pregunta «¿Preguntas?», que el capítulo terminó)
+      // el plan de la presentación automática: el capítulo y el paso de la presentación que se está diciendo (y en su
+      // cierre, que no espera preguntas y dura un instante, que el capítulo terminó)
       const esc = rep.recorrido().escenas[aqui.n - 1];
       pasoEl.textContent = `${dondeAuto(esc.capitulo, esc.paso, { fin: aqui.fase === 'cierre' })}${aqui.pausado ? ' · en pausa' : ''}`;
     } else if (rep.activo() && aqui) {
@@ -354,7 +373,8 @@ export async function vistaPresentacion(el, { q } = {}) {
   // Llenar la ventana: sin el menú ni las barras del panel (css/presentacion.css, html[data-pres-llena]). Escape la
   // devuelve; en la pantalla en off, hasta la próxima orden de pantalla completa
   const llenar = (v) => { if (v && !proyector) raiz.dataset.presLlena = ''; else delete raiz.dataset.presLlena; };
-  const alTecla = (e) => { if (e.key === 'Escape' && 'presLlena' in raiz.dataset) llenar(false); };
+  // (un Escape que ya usó el asistente abierto al lado, para cerrarse o cancelar la grabación de voz, no la devuelve)
+  const alTecla = (e) => { if (e.key === 'Escape' && !e.defaultPrevented && 'presLlena' in raiz.dataset) llenar(false); };
   document.addEventListener('keydown', alTecla);
   limpiezas.push(() => document.removeEventListener('keydown', alTecla));
 
@@ -384,16 +404,20 @@ export async function vistaPresentacion(el, { q } = {}) {
     avanceEnVuelo = false;
   }
   let alTerminarRecorrido = null;   // la pantalla en off deja `aplicado` en la escena donde quedó
+  // La vista se va (otra vista del panel, desde el menú): el plan de la presentación automática se suelta aquí
+  // sin avisarle el «detenido» al servidor, que lo cerraba y la apagaba para todos (y cortaba otra pantalla en off que la
+  // estuviera narrando). Así queda encendida, como al cerrar o recargar la pestaña: la retoma quien siga
+  let seFue = false;
   const rep = crearReproductor({
     orden, voz,
     avisar: (pr) => {
       avisarRecorrido(pr);
       pintarEstado();
-      enviarAvance(pr);
+      if (!(seFue && pr.rid === ridAuto)) enviarAvance(pr);
       if (TERMINALES.includes(pr.fase)) { try { alTerminarRecorrido?.(pr); } catch { /* nada */ } }
     },
   });
-  limpiezas.push(() => { rep.detener('otra_orden'); voz.callar(); });
+  limpiezas.push(() => { seFue = true; rep.detener('otra_orden'); voz.callar(); });
   limpiezas.push(() => voz.soltar());   // sus oyentes de la ventana y de la síntesis: si no, cada montaje sumaría otros
   const botonesVoz = [...el.querySelectorAll('.pres-voz')];
   const pintarVoz = () => {
@@ -414,6 +438,9 @@ export async function vistaPresentacion(el, { q } = {}) {
     return voz.estado();
   };
   for (const b of botonesVoz) b.addEventListener('click', alternarVoz);
+  // La pantalla en off no se registra como presentación en el puente: su voz sí, para el interruptor de la tarjeta del
+  // chat abierto en esta misma ventana
+  if (off) limpiezas.push(registrarVozLocal(alternarVoz));
   // Con una narración en pantalla, la presentación también lo sabe (las barras de la voz, quién lee el subtítulo); sin
   // narración responde un error que no importa
   let hablaba = voz.estado() === 'activa';
@@ -478,6 +505,16 @@ export async function vistaPresentacion(el, { q } = {}) {
     if (!lista) pasoEl.textContent = 'La presentación está tardando en cargar… (si no aparece, recargue la página)';
   }, ESPERA_LISTO_MS);
   limpiezas.push(() => clearTimeout(tListo));
+  // La pantalla en off cuenta como abierta para el servidor desde que se monta, no desde que la presentación termina de
+  // cargar (entonces empieza a seguirlo): el chat de esta misma ventana se usa antes, y un plan pedido en ese hueco
+  // salía para la pestaña (`destino: vista`), que aquí no narraba nadie. Avisa cada LATIDO_MS hasta que el sondeo toma
+  // la posta (o hasta saber que no hay presentación); la respuesta no se usa (`latido`: no es lo que la vista aplicó)
+  if (off) {
+    const latir = () => { api.get('/api/pantalla?v=-1&latido=1').catch(() => {}); };
+    latir();
+    latidoPrevio = setInterval(latir, LATIDO_MS);
+    limpiezas.push(() => clearInterval(latidoPrevio));
+  }
   // Y se le pregunta en qué paso está al cargar y cada poco hasta que conteste: si su `listo` salió antes de que esta
   // vista escuchara (o se perdió), la respuesta a «estado» la da por lista igual
   let tPedir = 0;
@@ -490,15 +527,17 @@ export async function vistaPresentacion(el, { q } = {}) {
 
   function alMensaje(e) {
     if (e.source !== iframe.contentWindow || e.origin !== d.origen) return;
+    enganchar();   // (su documento ya existe: su `listo` llega antes que el `load` del iframe)
     const m = e.data;
     if (!m || typeof m !== 'object' || Array.isArray(m) || m.canal !== CANAL || m.v !== VERSION) return;
     // Un toque o una tecla de la persona sobre la presentación: enciende la voz que ya estaba elegida (en el proyector es
     // el único gesto que hay: el iframe ocupa la ventana). La activación del usuario dentro del iframe vale también aquí
-    if (m.tipo === 'gesto') { voz.gesto(); return; }
+    if (m.tipo === 'gesto') { voz.gesto(); actividad(); return; }
     // La presentación sin controles (la pantalla en off) no atiende el teclado: Escape devuelve aquí la ventana. Con un
     // recorrido sonando, las teclas y los botones de la presentación lo manejan. Las que no son Escape también son un
     // gesto (Escape no le da al navegador la activación del usuario: con él la voz no podría hablar)
     if (m.tipo === 'tecla') {
+      actividad();
       if (m.tecla !== 'Escape' && m.tecla !== 'detener') voz.gesto();
       if (m.tecla === 'Escape' && 'presLlena' in raiz.dataset) llenar(false);
       else if (rep.activo()) {
@@ -535,7 +574,9 @@ export async function vistaPresentacion(el, { q } = {}) {
           soltarRecorrido: (motivo) => rep.detener(motivo),
           alternarVoz,   // el interruptor de voz de la tarjeta del chat (`alternarVozRecorrido` del puente)
           ...(proyector ? { proyector: true } : {}) });
-        if (proyector) iframe.focus({ preventScroll: true });   // las flechas del teclado van a la presentación
+        // las flechas del teclado van a la presentación (salvo que la persona ya esté en el chat de esta ventana: lo que
+        // sigue escribiendo iría a la presentación, delante de la sala)
+        if (proyector && !document.activeElement?.closest?.('#agente-panel')) iframe.focus({ preventScroll: true });
       }
     }
     if (nuevo && !off) avisarEstado();
@@ -642,7 +683,9 @@ export async function vistaPresentacion(el, { q } = {}) {
       if (pr) desde = !TERMINALES.includes(pr.fase) && (pr.fase === 'pausa' || pr.hace_s < reanudar) ? pr.n : 0;
       else if (x.edad_s < VIGENCIA_RECORRIDO_S || (sigue && esAuto)) desde = 1;
       if (desde) {
-        const { edad_s: _edad, auto: _auto, ...r } = x;
+        // `auto` llega al reproductor: con ella el plan de la automática no espera el «¿Preguntas?» del final (sin ella
+        // esperaba 12 s en cada capítulo). `esNuevo` no la mira, y en esta pantalla el plan no pasa por el puente
+        const { edad_s: _edad, ...r } = x;
         // el que esta pantalla retoma (ya tuvo avance) o ya reprodujo no espera; el que le llega nuevo, sí (el de la
         // automática, nunca: nadie lo está leyendo en el chat)
         const nuevo = esNuevo(r);
@@ -682,7 +725,7 @@ export async function vistaPresentacion(el, { q } = {}) {
           // Las esperas largas (la primera escena, hasta PRIMERA_ESCENA_MS; cada orden, hasta ESPERA_ORDEN_MS) no dejan de
           // avisar que la pantalla sigue abierta: si no, el servidor la daba por cerrada (VIVA_S) y un recorrido que el
           // asistente armaba en ese hueco salía para la pestaña. La respuesta no se usa: la próxima vuelta vuelve a leer
-          const latido = setInterval(() => { api.get(`/api/pantalla?v=${versionVista}`).catch(() => {}); }, LATIDO_MS);
+          const latido = setInterval(() => { api.get(`/api/pantalla?v=${versionVista}&latido=1`).catch(() => {}); }, LATIDO_MS);
           let meta;
           try {
             await recorridoDeLaPantalla(e);
@@ -719,9 +762,17 @@ export async function vistaPresentacion(el, { q } = {}) {
       if (enVuelta) pronto = true;
       else if (iframe.isConnected) { clearTimeout(tPoll); vuelta(); }
     };
+    clearInterval(latidoPrevio);   // desde aquí avisa el sondeo (y sus latidos en las esperas largas)
     vuelta();
   }
   limpiezas.push(() => clearTimeout(tPoll));
+  // El chat abierto en esta misma ventana acaba de cambiar algo en el servidor (un plan, un control: `pedirPantalla` del
+  // puente): se pregunta ya, sin esperar POLL_MS (una pregunta a la vez; antes de empezar a seguirlo, nada)
+  if (off) {
+    const alPedir = () => { adelantarSondeo?.(); };
+    window.addEventListener(PEDIR_PANTALLA, alPedir);
+    limpiezas.push(() => window.removeEventListener(PEDIR_PANTALLA, alPedir));
+  }
 
   window.addEventListener('message', alMensaje);
   limpiezas.push(() => window.removeEventListener('message', alMensaje));
@@ -749,9 +800,33 @@ export async function vistaPresentacion(el, { q } = {}) {
   };
   anterior.addEventListener('click', () => mover('anterior'));
   siguiente.addEventListener('click', () => mover('siguiente'));
+  // En el proyector el teclado (y el control remoto: AvPág y RePág) es de la presentación, que ocupa la ventana. El
+  // asistente, al cerrarse, le devuelve el foco (agente.js); pero con el foco fuera de ella (un clic en el botón del
+  // asistente o en la ventana) las flechas no le llegaban y la barra espaciadora volvía a abrir el chat delante de la
+  // sala: esas teclas la mueven igual (con un plan sonando, de paso del plan, como las suyas) y el foco vuelve a ella.
+  // Lo que se escribe en el chat o en un campo no se toca, ni el espacio sobre los otros botones de la ventana («Voz»,
+  // «Pantalla completa»), que los pulsa
+  if (proyector) {
+    const TECLA_FUERA = { ArrowRight: 'siguiente', PageDown: 'siguiente', ' ': 'siguiente', ArrowLeft: 'anterior',
+      PageUp: 'anterior', Backspace: 'anterior' };
+    const alTeclaFuera = (e) => {
+      const op = TECLA_FUERA[e.key];
+      if (!op || !lista || e.defaultPrevented || e.isComposing || e.altKey || e.ctrlKey || e.metaKey) return;
+      const t = e.target;
+      if (t?.closest?.('#agente-panel, input, textarea, select, [contenteditable], dialog')) return;
+      if (e.key === ' ' && t?.closest?.('button:not(#agente-boton), a')) return;
+      e.preventDefault();
+      iframe.focus({ preventScroll: true });
+      mover(op);
+    };
+    document.addEventListener('keydown', alTeclaFuera);
+    limpiezas.push(() => document.removeEventListener('keydown', alTeclaFuera));
+  }
+  // En el proyector, la ventana entera (es lo mismo: no tiene menú ni barra), así el asistente sigue a mano en pantalla
+  // completa; con solo el marco, quedaba fuera. En la pestaña, el marco: el menú y la barra no van
   const pantalla = () => {
     if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
-    else marco.requestFullscreen?.().catch(() => {});
+    else (proyector ? document.documentElement : marco).requestFullscreen?.().catch(() => {});
   };
   $('#pres-pantalla', el)?.addEventListener('click', pantalla);
   const completa = $('#pres-completa', el);
@@ -760,6 +835,66 @@ export async function vistaPresentacion(el, { q } = {}) {
     const alCambiar = () => { completa.hidden = !!document.fullscreenElement; };
     document.addEventListener('fullscreenchange', alCambiar);
     limpiezas.push(() => document.removeEventListener('fullscreenchange', alCambiar));
+  }
+
+  // El botón del asistente flotando sobre la presentación (el proyector; la pantalla en off a pantalla completa): tras
+  // QUIETO_MS sin mover el ratón ni tocar se atenúa (css/presentacion.css: html[data-pres-quieto]) para no distraer a
+  // la sala, y vuelve al mover el ratón, tocar o con una tecla, también sobre la presentación: su `gesto` y su `tecla` y,
+  // si es del mismo origen, su ratón (en el proyector el iframe ocupa la ventana y lo que pasa sobre él no llega aquí;
+  // de otro origen, el botón vuelve igual al pasarle el ratón por encima: css)
+  if (proyector || off) {
+    let ultima = 0, tQuieto = 0, ventanaIframe = null, docIframe = null;
+    const mirarQuieto = () => {
+      const falta = ultima + QUIETO_MS - Date.now();
+      if (falta > 0) { tQuieto = setTimeout(mirarQuieto, falta); return; }
+      tQuieto = 0;
+      raiz.dataset.presQuieto = '';
+    };
+    actividad = () => {
+      ultima = Date.now();
+      if ('presQuieto' in raiz.dataset) delete raiz.dataset.presQuieto;
+      if (!tQuieto) tQuieto = setTimeout(mirarQuieto, QUIETO_MS);
+    };
+    // El ratón cuenta si se movió de verdad: el navegador repite el último movimiento cuando cambia lo que hay debajo
+    // del ratón quieto (los rótulos de la maqueta se mueven con la cámara), y eso no es la persona
+    let ratonX = null, ratonY = null;
+    const alRaton = (e) => {
+      if (e.screenX === ratonX && e.screenY === ratonY) return;
+      ratonX = e.screenX;
+      ratonY = e.screenY;
+      actividad();
+    };
+    const tipos = [['pointermove', alRaton], ['pointerdown', () => actividad()], ['keydown', () => actividad()], ['wheel', () => actividad()]];
+    const opciones = { capture: true, passive: true };
+    const escuchar = (w, si) => {
+      if (!w) return;
+      for (const [t, f] of tipos) {
+        try { if (si) w.addEventListener(t, f, opciones); else w.removeEventListener(t, f, opciones); } catch { return; }   // de otro origen
+      }
+    };
+    // Sobre cada documento de la presentación, una vez: al llegar su primer mensaje (`listo` sale antes que el `load`
+    // del iframe, que espera la maqueta y las imágenes) y en cada `load` (se recargó). De otro origen no hay documento
+    enganchar = () => {
+      let doc = null;
+      try { doc = iframe.contentDocument; } catch { doc = null; }
+      if (!doc || doc === docIframe) return;
+      docIframe = doc;
+      try { ventanaIframe = iframe.contentWindow; } catch { ventanaIframe = null; }
+      escuchar(ventanaIframe, true);
+    };
+    const alCargar = () => enganchar();
+    escuchar(window, true);
+    iframe.addEventListener('load', alCargar);
+    actividad();
+    limpiezas.push(() => {
+      escuchar(window, false);
+      escuchar(ventanaIframe, false);
+      iframe.removeEventListener('load', alCargar);
+      clearTimeout(tQuieto);
+      actividad = () => {};
+      enganchar = () => {};
+      delete raiz.dataset.presQuieto;
+    });
   }
 
   // En la pestaña del chat: si hay una ventana de proyector viva, se dice (los botones y el asistente la manejan allá) y

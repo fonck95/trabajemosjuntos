@@ -289,7 +289,10 @@ def test_el_guion_trae_las_fichas_los_enfoques_y_las_inmersiones():
     assert len(json.dumps(indice, ensure_ascii=False).encode("utf-8")) < 9000
     agro = next(c for c in indice["capitulos"] if c["id"] == "agroindustria")
     assert "trilladora" in agro["componentes"] and "capital (sin lugar en la maqueta)" in agro["componentes"]
-    assert {"id": "torre_sismo", "nombre": "Simulador sísmico"} in indice["inmersiones"]
+    # (con los ids de los controles de su simulación, los que acciona `simular`; una sin controles va sin esa clave)
+    sismo = next(i for i in indice["inmersiones"] if i["id"] == "torre_sismo")
+    assert sismo["nombre"] == "Simulador sísmico" and {"magnitud", "calcular", "reproducir"} <= set(sismo["controles"])
+    assert {"id": "torre_hoy", "nombre": "El predio hoy"} in indice["inmersiones"]
 
 
 @pytest.mark.skipif(not PROPUESTA_JSON.is_file(), reason="Sin web/data/propuesta.json (el panel desplegado aparte)")
@@ -1329,8 +1332,9 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
                             "accionesPresentacion", "alternarVozRecorrido", "avisarEstado", "avisarRecorrido",
                             "controlRecorrido",
                             "escucharRecorrido", "estadoDePantalla", "estadoPresentacion", "estadoValido",
-                            "ordenesHacia", "presentacionLista", "presentacionNoDisponible", "progresoValido",
-                            "proyectorVivo", "recorridoEnCurso", "recorridoValido", "registrarPresentacion"]
+                            "ordenesHacia", "pedirPantalla", "presentacionLista", "presentacionNoDisponible",
+                            "progresoValido", "proyectorVivo", "recorridoEnCurso", "recorridoValido",
+                            "registrarPresentacion", "registrarVozLocal"]
     assert r["navegadas"] == ["/presentacion"] and r["en_cola"] == 2 and r["lista_antes"] is False
     assert r["estado_sin_vista"] is None and r["registro_invalido"] == "function"
     assert r["aplicadas"] == [["ir"], ["explicar"], ["siguiente"]]

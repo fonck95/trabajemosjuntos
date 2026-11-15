@@ -7,12 +7,15 @@ lo que se ve (el panel de texto o «Solo 3D», el índice, las fichas), si llena
 técnica (`VISUAL`: la cámara con su encuadre, su rumbo, su elevación, su acercamiento y a qué apunta, la obra enfocada,
 hoy o con el proyecto, la ficha técnica abierta, la inmersión en un modelo del atlas, las piezas de la maqueta que se
 muestran, se ocultan o se aíslan, las partes que se les quitan y el tema). Al cambiar de paso lo visual vuelve a lo del
-paso, salvo el tema. Y dos acciones que NO son estado (`ACCIONES`): `mover` (el viaje de la cámara que pidió la última
-orden `visual`) y `animar` (repetir la animación del paso); la pantalla las hace una vez y cualquier otra orden, un
-cambio de paso o el cierre de un recorrido las deja en nada. Solo la cambian las órdenes de
-un agente: lo que se toca a mano en la vista del panel no la mueve. La versión `v` sube con cada cambio; la pantalla
-pregunta cada poco por ella (`GET /api/pantalla?v=`) y aplica solo lo nuevo. Cada pregunta deja `visto`: así un agente
-sabe si hay una pantalla abierta (`conectada`).
+paso, salvo el tema. Y tres acciones que NO son estado (`ACCIONES`) y pidió la última orden `visual`: `mover` (el viaje
+de la cámara), `animar` (repetir la animación del paso) y `simular` (los controles de la simulación del modelo del atlas
+a la vista, `recorrido.MAX_SIMULAR` a lo sumo); la pantalla las hace una vez, con la versión que las trae. La API anota
+la última versión que le entregó (`entregada_v`, `entregar`): ya recibidas, cualquier otra orden, un cambio de paso o el
+cierre de un recorrido las deja en nada; mientras la pantalla abierta no las recibe, la orden siguiente no las pisa
+(`guardar_orden`): se juntan con las suyas (dos órdenes seguidas, o en paralelo, de un agente se hacen las dos), salvo
+que cambie de paso. Solo la cambian las órdenes de un agente: lo que se toca a mano en la vista del panel no la mueve.
+La versión `v` sube con cada cambio; la pantalla pregunta cada poco por ella (`GET /api/pantalla?v=`) y aplica solo lo
+nuevo. Cada pregunta deja `visto`: así un agente sabe si hay una pantalla abierta (`conectada`).
 
 Y el recorrido narrado (`app/recorrido.py`): el último que armó un agente, con su destino (la vista de la pestaña o
 el proyector, o la pantalla en off: donde suena, en un solo lugar), el último control que le mandaron (`control_recorrido`,
@@ -27,7 +30,9 @@ por donde va, cuál es su plan y cuántas vueltas lleva), la pantalla en off rec
 por capítulo con una frase muy resumida por paso, que arma el servidor sin modelo. La pantalla los pide uno tras otro
 (`siguiente_auto`) cuando no suena ninguno. Un plan de un agente la interrumpe (suelta el suyo: `auto.rid` queda en
 None y la posición se queda) y, cuando termina, sigue en el paso que se estaba diciendo. Se apaga con `detener_auto`,
-con el control «detener» sobre su plan o cuando la pantalla lo detiene.
+con el control «detener» sobre su plan o cuando alguien lo detiene a propósito en la pantalla (una tecla, un botón:
+salir de la vista en off no la apaga). Cuando arma su plan guarda el último plan que no era suyo
+(`recorrido_previo`): «Volver a reproducir» de esa tarjeta sigue sirviendo.
 
 No guarda datos de personas: el guion de la propuesta es público y todo texto para la pantalla pasa antes por las reglas
 de lo que se proyecta (`app/proyectable.py`): sin «@», números de 7 o más dígitos ni costos."""
@@ -56,8 +61,9 @@ VISUAL_INICIAL = {"enfoque": None, "camara": "paso", "rumbo": None, "elevacion":
                   "ocultar": [], "aislar": None, "sin": []}
 VISUAL = (*VISUAL_INICIAL, "tema")
 CAMARAS = ("paso", "aerea", "oblicua", "rasante", "cerca", "lejos")
-# Lo que no es estado: el movimiento de la cámara y la animación del paso que pidió la última orden `visual`
-ACCIONES_INICIALES = {"mover": None, "animar": False}
+# Lo que no es estado: el movimiento de la cámara, la animación del paso y la simulación del modelo del atlas que pidió
+# la última orden `visual`
+ACCIONES_INICIALES = {"mover": None, "animar": False, "simular": None}
 ACCIONES = tuple(ACCIONES_INICIALES)
 CAMPOS = ("capitulo", "paso", "explicacion", "panel", "indice", "fichas", "completa", "orden_completa", *VISUAL,
           *ACCIONES)
@@ -70,6 +76,10 @@ ORIGENES = ("asistente", "mcp", "panel", "auto")
 # Los «detenido» que no cierran el recorrido: el traspaso de la pestaña al proyector (sigue allá, con el mismo id) y el
 # reemplazo (la página empezó otro: si es el mismo id, es ese el que sigue)
 NO_CIERRAN = ("proyector", "reemplazo")
+# Los «detenido» del plan automático que además apagan la presentación automática: los que alguien hizo a propósito en
+# esa pantalla (una tecla, un botón; `motivo` de reproductor.js). Cualquier otro (una vista que se desmonta,
+# `otra_orden`) solo suelta el plan: sigue encendida y con su posición
+DETIENEN_AUTO = ("tecla", "boton")
 # Cuánto dice el contexto que un recorrido terminó (o se cerró), y cuándo se da por abandonado uno que nunca terminó: un
 # recorrido dura a lo sumo 5 minutos, pero en pausa no llegan avances y una ronda de preguntas puede ser larga
 MOSTRAR_TERMINADO = timedelta(minutes=2)
@@ -139,7 +149,8 @@ def _entero(v: Any, lo: int, hi: int) -> bool:
 def _visual_valido(e: dict, guion: Any) -> None:
     """Lo visual guardado, con los valores que admite la presentación: lo que no cumple (o un componente o una pieza de
     la maqueta que ya no está en el capítulo, una inmersión que ya no está en el catálogo, si el guion cambió) vuelve a
-    lo del paso; de una lista (mostrar, ocultar, sin) solo se va lo que no vale. Y las dos acciones, con su forma."""
+    lo del paso; de una lista (mostrar, ocultar, sin) solo se va lo que no vale. Y las tres acciones, con su forma
+    (`simular`, contra los controles del modelo del atlas que queda a la vista: si alguno no vale, no va ninguno)."""
     ci = guion.por_id(e["capitulo"])
     ids = {x["id"] for x in guion.capitulos[ci].get("componentes") or []} if ci is not None else set()
     lugar = {x["id"] for x in guion.capitulos[ci].get("componentes") or [] if x.get("enfoque")} if ci is not None else set()
@@ -168,6 +179,10 @@ def _visual_valido(e: dict, guion: Any) -> None:
     if e["mover"] is not None and not rec.mover_valido(e["mover"]):
         e["mover"] = None
     e["animar"] = e["animar"] is True
+    controles = getattr(guion, "controles", lambda _i: [])
+    if e["simular"] is not None and rec.simular_problemas(
+            e["simular"], controles(rec.inmersion_en(e["capitulo"], e["paso"], e["inmersion"], guion))):
+        e["simular"] = None
 
 
 def conectada(doc: dict | None, ahora: datetime | None = None) -> bool:
@@ -339,12 +354,19 @@ def controlar(db: Database, uid: int, guion: Any, accion: str, por: str, rid: st
     cerrado, si es el último: «Volver a reproducir» de la tarjeta pasa por aquí y sigue al id nuevo). Devuelve
     {"recorrido", "doc"}; ValueError «sin_recorrido» si no hay uno (o `rid` no es el suyo, o entre la lectura y la
     escritura llegó otro). Sobre el plan de la presentación automática: «detener» además la apaga (pausar, no) y
-    «reproducir» lo vuelve a empezar como plan automático."""
+    «reproducir» lo vuelve a empezar como plan automático. Con la automática encendida, «reproducir» con el id del
+    último plan que no era suyo (`recorrido_previo`: la automática lo reemplazó al seguir) lo vuelve a empezar con un
+    id nuevo, como antes de que ella armara el suyo: la interrumpe y, cuando termine, ella sigue desde su paso."""
     if accion not in rec.CONTROLES or por not in ORIGENES:
         raise ValueError("pantalla.controlar")
     doc = leer(db, uid)
     r = recorrido_de(doc, guion)
     if not r or (rid is not None and r["id"] != rid) or (r["cerrado"] and accion != "reproducir"):
+        previo = recorrido_previo(doc, guion) if accion == "reproducir" and rid is not None else None
+        if previo and previo["id"] == rid:
+            nuevo = {**{k: previo[k] for k in ("titulo", "escenas", "cierre")}, "id": secrets.token_hex(6)}
+            doc = guardar_recorrido(db, uid, nuevo, previo["destino"], por)
+            return {"recorrido": recorrido_de(doc, guion), "doc": doc}
         raise ValueError("sin_recorrido")
     a = auto_de(doc, guion)
     es_auto = bool(a and a["activa"] and a["rid"] == r["id"])
@@ -484,28 +506,49 @@ def plan_sonando(doc: dict | None, guion: Any, ahora: datetime | None = None) ->
     return vivo is not None and ahora - vivo < timedelta(seconds=plazo)
 
 
-def _guardar_plan_auto(db: Database, uid: int, plan: dict, a: dict, si: dict | None = None) -> dict | None:
+def _guardar_plan_auto(db: Database, uid: int, plan: dict, a: dict, si: dict | None = None,
+                       previo: dict | None = None) -> dict | None:
     """Guarda `plan` como el de la presentación automática (para la pantalla en off, `por` = auto) y deja la posición
     en su primer paso, en una sola escritura. Solo si sigue encendida y, con `si`, si el documento sigue como se leyó
-    (su versión): un plan o una orden que llegó entretanto manda. Devuelve el documento nuevo, o None si no se guardó."""
+    (su versión): un plan o una orden que llegó entretanto manda. Con `previo` (el recorrido que reemplaza, si no era
+    de la automática), lo guarda como `recorrido_previo`: «Volver a reproducir» de su tarjeta lo trae (`controlar`).
+    Devuelve el documento nuevo, o None si no se guardó."""
     esc = plan["escenas"][0]
     return db.pantallas.find_one_and_update(
         {"_id": uid, "auto.activa": True, **(si or {})},
         {"$set": {**_poner_recorrido(plan, "pantalla_off", "auto"),
                   "auto": {"activa": True, "capitulo": esc["capitulo"], "paso": esc["paso"], "rid": plan["id"],
-                           "vueltas": a["vueltas"], "fallas": a["fallas"]}},
+                           "vueltas": a["vueltas"], "fallas": a["fallas"]},
+                  **({"recorrido_previo": previo} if previo else {})},
          "$inc": {"v": 1}}, return_document=ReturnDocument.AFTER)
 
 
 def _armar_auto(db: Database, uid: int, guion: Any, doc: dict | None, si: dict | None = None) -> dict | None:
     """Arma el plan que sigue desde la posición de `doc` (`automatica.plan_desde`: el capítulo desde ese paso o, si ahí
-    no queda nada que narrar, el siguiente) y lo guarda. Devuelve el documento nuevo, o None si no hay nada que armar."""
+    no queda nada que narrar, el siguiente) y lo guarda. Si el recorrido que reemplaza no era de la automática (un plan
+    del asistente o del panel), queda como `recorrido_previo`. Devuelve el documento nuevo, o None si no hay nada que
+    armar."""
     a = auto_de(doc, guion)
     x = automatica.plan_desde(guion, guion.por_id(a["capitulo"]), a["paso"]) if a and a["activa"] else None
     if x is None:
         return None
     plan, vueltas = x
-    return _guardar_plan_auto(db, uid, plan, {**a, "vueltas": a["vueltas"] + vueltas}, si)
+    r = (doc or {}).get("recorrido")
+    previo = r if isinstance(r, dict) and r.get("auto") is not True and isinstance(r.get("id"), str) else None
+    return _guardar_plan_auto(db, uid, plan, {**a, "vueltas": a["vueltas"] + vueltas}, si, previo)
+
+
+def recorrido_previo(doc: dict | None, guion: Any) -> dict | None:
+    """El último plan que no era de la presentación automática, si después de él solo sonaron planes suyos (el
+    recorrido guardado es uno de la automática) y sigue valiendo contra el guion vigente (`recorrido_de`); si no, None.
+    Así «Volver a reproducir» de su tarjeta sirve con la automática encendida como sin ella: hasta que llegue otro plan
+    que no sea de la automática."""
+    actual = recorrido_de(doc, guion)
+    previo = (doc or {}).get("recorrido_previo")
+    if not actual or not actual["auto"] or not isinstance(previo, dict):
+        return None
+    r = recorrido_de({"recorrido": previo}, guion)
+    return r if r and not r["auto"] else None
 
 
 def iniciar_auto(db: Database, uid: int, guion: Any, por: str, ci: int = 0, ahora: datetime | None = None) -> dict:
@@ -515,9 +558,10 @@ def iniciar_auto(db: Database, uid: int, guion: Any, por: str, ci: int = 0, ahor
     if por not in ORIGENES or por == "auto":
         raise ValueError("pantalla.iniciar_auto")
     a = {"activa": True, "capitulo": guion.capitulos[ci]["id"], "paso": 1, "rid": None, "vueltas": 0, "fallas": 0}
+    # (sube la versión: las acciones de la última orden `visual` quedan en nada, o la pantalla las haría otra vez)
     doc = db.pantallas.find_one_and_update(
-        {"_id": uid}, {"$set": {"auto": a, "actualizada": _ahora(), "por": por}, "$inc": {"v": 1}}, upsert=True,
-        return_document=ReturnDocument.AFTER)
+        {"_id": uid}, {"$set": {"auto": a, **ACCIONES_INICIALES, "actualizada": _ahora(), "por": por}, "$inc": {"v": 1}},
+        upsert=True, return_document=ReturnDocument.AFTER)
     return (_armar_auto(db, uid, guion, doc) if conectada(doc, ahora) else None) or doc
 
 
@@ -536,16 +580,18 @@ def siguiente_auto(db: Database, uid: int, guion: Any, ahora: datetime | None = 
 def detener_auto(db: Database, uid: int, guion: Any, por: str) -> dict | None:
     """Apaga la presentación automática (sube la versión) y, si su plan sonaba, lo cierra con la escena en curso como
     base. La posición se queda. Primero la apaga: así la pantalla no alcanza a pedir otro plan entre una cosa y la
-    otra. Devuelve el documento (el mismo si ya estaba apagada o nunca se encendió)."""
+    otra. Como toda orden que sube la versión, deja las acciones (`ACCIONES`) en nada. Devuelve el documento (el mismo
+    si ya estaba apagada o nunca se encendió)."""
     if por not in ORIGENES or por == "auto":
         raise ValueError("pantalla.detener_auto")
     doc = leer(db, uid)
     a = auto_de(doc, guion)
     if not a or not a["activa"]:
         return doc
+    # (sube la versión: las acciones de la última orden `visual` quedan en nada, o la pantalla las haría otra vez)
     doc = db.pantallas.find_one_and_update(
-        {"_id": uid}, {"$set": {"auto.activa": False, "auto.rid": None, "actualizada": _ahora(), "por": por},
-                       "$inc": {"v": 1}}, return_document=ReturnDocument.AFTER)
+        {"_id": uid}, {"$set": {"auto.activa": False, "auto.rid": None, **ACCIONES_INICIALES, "actualizada": _ahora(),
+                                "por": por}, "$inc": {"v": 1}}, return_document=ReturnDocument.AFTER)
     return (colapsar(db, uid, guion, por, rid=a["rid"]) if a["rid"] else None) or doc
 
 
@@ -555,7 +601,9 @@ def _auto_tras_avance(a: dict, r: dict, p: dict, guion: Any, cierra: bool) -> di
       plan (`automatica.posicion`: el primero del capítulo siguiente o, después del último, el de la presentación, con
       una vuelta más); en pausa o detenido, se queda;
     * «fin»: suelta el plan (`rid` en None); la pantalla pedirá el siguiente;
-    * «detenido» (que cierra: lo detuvo la pantalla): se apaga;
+    * «detenido» (que cierra): suelta el plan y, si lo detuvo alguien a propósito en esa pantalla (DETIENEN_AUTO: una
+      tecla o un botón), se apaga. El de una vista que se desmonta (salir del modo en off, ir a otra vista del panel:
+      `otra_orden`) no la apaga: queda encendida en ese paso y la pantalla que se abra después sigue desde ahí;
     * «error»: suelta el plan; si la escena falló, la salta; al tercero seguido sin haber vuelto a narrar
       (MAX_FALLAS_AUTO) se apaga: no insiste sobre una presentación que no responde."""
     fase = p["fase"]
@@ -583,8 +631,8 @@ def _auto_tras_avance(a: dict, r: dict, p: dict, guion: Any, cierra: bool) -> di
     elif fase == "error":
         fallas = (a["fallas"] if _entero(a.get("fallas"), 0, MAX_FALLAS_AUTO) else 0) + 1
         out.update({"auto.rid": None, "auto.fallas": fallas, **({"auto.activa": False} if fallas >= MAX_FALLAS_AUTO else {})})
-    elif cierra:
-        out.update({"auto.rid": None, "auto.activa": False})
+    elif cierra:   # solo un detener a propósito la apaga; la vista que se va (`otra_orden`) solo suelta el plan
+        out.update({"auto.rid": None, **({"auto.activa": False} if p.get("motivo") in DETIENEN_AUTO else {})})
     elif fase == "narrando" and a.get("fallas"):
         out["auto.fallas"] = 0   # volvió a narrar: los errores de antes ya no cuentan
     return out
@@ -619,20 +667,95 @@ def leer(db: Database, uid: int) -> dict | None:
     return db.pantallas.find_one({"_id": uid})
 
 
-def guardar(db: Database, uid: int, cambios: dict, por: str) -> dict:
-    """Aplica `cambios` (solo campos de CAMPOS) y sube la versión. Devuelve el documento nuevo."""
+def guardar(db: Database, uid: int, cambios: dict, por: str, si: dict | None = None) -> dict | None:
+    """Aplica `cambios` (solo campos de CAMPOS) y sube la versión. Devuelve el documento nuevo. Con `si`, solo si el
+    documento sigue así (esos campos con esos valores; un campo que falta vale None): si no, no escribe y devuelve None."""
     malos = set(cambios) - set(CAMPOS)
     if malos or por not in ORIGENES:
         raise ValueError(f"pantalla.guardar: {sorted(malos) or por}")
     return db.pantallas.find_one_and_update(
-        {"_id": uid}, {"$set": {**cambios, "actualizada": _ahora(), "por": por}, "$inc": {"v": 1}},
-        upsert=True, return_document=ReturnDocument.AFTER)
+        {"_id": uid, **(si or {})}, {"$set": {**cambios, "actualizada": _ahora(), "por": por}, "$inc": {"v": 1}},
+        upsert=si is None, return_document=ReturnDocument.AFTER)
+
+
+def acciones_pendientes(doc: dict | None, ahora: datetime | None = None) -> dict:
+    """Las acciones guardadas (`ACCIONES`, solo las que hacen algo) que la pantalla en off abierta todavía no recibió:
+    las de una versión posterior a la última que le entregó la API (`entregada_v`). {} si no hay, si ya las recibió o si
+    no hay una pantalla abierta (la que se abre después no hace las de antes: no tiene con qué compararlas)."""
+    if not doc or not conectada(doc, ahora):
+        return {}
+    v, dada = doc.get("v"), doc.get("entregada_v")
+    if isinstance(dada, int) and not isinstance(dada, bool) and isinstance(v, int) and dada >= v:
+        return {}
+    return {k: doc[k] for k in ACCIONES if doc.get(k) not in (None, False)}
+
+
+def juntar_acciones(doc: dict, pendientes: dict, cambios: dict) -> dict | None:
+    """Las acciones de una orden (`cambios`) junto con las que la pantalla todavía no recibió (`pendientes`), para que no
+    se pierdan: la simulación se suma detrás, en orden, si la orden no cambia de modelo del atlas (si abre otro, las de
+    antes ya no tienen dónde hacerse y se van) y si juntas no pasan de `recorrido.MAX_SIMULAR`; la animación vale si
+    alguna la pide; el viaje de la cámara, el que haya (dos no se pueden juntar). Devuelve las tres acciones, o None si
+    no caben juntas (dos viajes de la cámara o demasiados controles): hay que esperar a que la pantalla reciba las de
+    antes."""
+    out = {k: cambios.get(k, ACCIONES_INICIALES[k]) for k in ACCIONES}
+    if pendientes.get("mover") is not None:
+        if out["mover"] is not None:
+            return None
+        out["mover"] = pendientes["mover"]
+    out["animar"] = out["animar"] is True or pendientes.get("animar") is True
+    previa = pendientes.get("simular")
+    if previa and cambios.get("inmersion", doc.get("inmersion")) == doc.get("inmersion"):
+        juntos = [*previa, *(out["simular"] or [])]
+        if len(juntos) > rec.MAX_SIMULAR:
+            return None
+        out["simular"] = juntos
+    return out
+
+
+def guardar_orden(db: Database, uid: int, cambios: dict, por: str, esperar: bool = True) -> dict | None:
+    """`guardar` para la orden de un agente (`cambios` con sus `ACCIONES`). Con una pantalla en off abierta, las acciones
+    que todavía no recibió (`acciones_pendientes`) no se pisan: se juntan con las de la orden (`juntar_acciones`), salvo
+    que la orden cambie de paso (ya no tienen dónde hacerse). Y la escritura solo vale sobre el documento como se leyó
+    (su versión y lo entregado): si entretanto llegó otra orden (dos en paralelo) o la pantalla recibió las de antes,
+    devuelve None y quien llama vuelve a intentar con el documento nuevo. También None si no caben juntas y `esperar`:
+    hay que dar tiempo a que la pantalla las reciba (sin `esperar`, las de antes se pierden). Sin pantalla abierta es
+    `guardar`, como siempre. Devuelve el documento nuevo."""
+    doc = leer(db, uid)
+    if not conectada(doc):
+        return guardar(db, uid, cambios, por)
+    pendientes = acciones_pendientes(doc)
+    if pendientes and not any(k in cambios and cambios[k] != doc.get(k) for k in ("capitulo", "paso")):
+        juntas = juntar_acciones(doc, pendientes, cambios)
+        if juntas is None and esperar:
+            return None
+        cambios = {**cambios, **(juntas or {})}
+    return guardar(db, uid, cambios, por, si={"v": doc.get("v"), "entregada_v": doc.get("entregada_v")})
 
 
 def marcar_vista(db: Database, uid: int) -> dict | None:
     """La pantalla preguntó: queda `visto` (está abierta). Devuelve el documento (None si nunca recibió una orden)."""
     return db.pantallas.find_one_and_update({"_id": uid}, {"$set": {"visto": _ahora()}}, upsert=True,
                                             return_document=ReturnDocument.AFTER)
+
+
+def entregar(db: Database, uid: int, v: int | None) -> dict | None:
+    """La pantalla en off pregunta, con la versión `v` que ya tiene (`GET /api/pantalla`): queda como abierta (`visto`)
+    y la versión vigente, como entregada (`entregada_v`: desde ahí sus acciones ya no son pendientes). Devuelve el
+    documento a entregar, o None si es la versión que ya tiene. La marca vale solo sobre la versión que se leyó: si en
+    medio llegó una orden, se vuelve a leer y se entrega esa (así unas acciones que la orden juntó con otras todavía no
+    entregadas no llegan dos veces)."""
+    doc = marcar_vista(db, uid)
+    for _ in range(5):
+        vigente, dada = int(doc.get("v") or 0), doc.get("entregada_v")
+        if isinstance(dada, int) and not isinstance(dada, bool) and dada >= vigente:
+            break
+        marcado = db.pantallas.find_one_and_update({"_id": uid, "v": doc.get("v")}, {"$set": {"entregada_v": vigente}},
+                                                   return_document=ReturnDocument.AFTER)
+        if marcado is not None:
+            doc = marcado
+            break
+        doc = leer(db, uid) or doc
+    return None if v is not None and v == int(doc.get("v") or 0) else doc
 
 
 def describir(e: dict, guion: Any) -> str:

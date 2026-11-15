@@ -1,0 +1,200 @@
+{
+  "torre": [
+    {"id": "proyecto_tipo", "nombre": "Área del puesto de salud tipo", "tipo": "si_no", "ayuda": "Muestra junto a la torre, a la misma escala, el área del puesto de salud tipo del DNP (un piso de 320,6 m²)."}
+  ],
+  "torre_pisos": [
+    {"id": "piso", "nombre": "Piso elegido", "tipo": "opcion", "opciones": [
+      {"id": "todos", "nombre": "Los cuatro pisos"},
+      {"id": "1", "nombre": "Piso 1"},
+      {"id": "2", "nombre": "Piso 2"},
+      {"id": "3", "nombre": "Piso 3"},
+      {"id": "4", "nombre": "Piso 4"}
+    ], "ayuda": "Elige un piso como al tocarlo en el 3D: se rotulan todos sus servicios, también los pequeños; «todos» vuelve a los cuatro pisos sin piso elegido."}
+  ],
+  "torre_recorrido": [
+    {"id": "nivel", "nombre": "Ir a un nivel", "tipo": "opcion", "opciones": [
+      {"id": "ext", "nombre": "Exteriores"},
+      {"id": "p1", "nombre": "Piso 1"},
+      {"id": "p2", "nombre": "Piso 2"},
+      {"id": "p3", "nombre": "Piso 3"},
+      {"id": "p4", "nombre": "Piso 4"},
+      {"id": "bt", "nombre": "Bloque técnico"},
+      {"id": "cub", "nombre": "Cubierta"}
+    ], "ayuda": "Lleva el recorrido a la entrada de ese nivel de la torre."},
+    {"id": "laboratorio", "nombre": "Ir a la puerta del laboratorio", "tipo": "accion", "ayuda": "Lleva el recorrido a la puerta del laboratorio clínico del piso 2, mirando hacia adentro."},
+    {"id": "subir", "nombre": "Subir un nivel", "tipo": "accion", "ayuda": "Sube al nivel de arriba, como el ascensor."},
+    {"id": "bajar", "nombre": "Bajar un nivel", "tipo": "accion", "ayuda": "Baja al nivel de abajo, como el ascensor."},
+    {"id": "mapa", "nombre": "Minimapa", "tipo": "si_no", "ayuda": "Muestra u oculta el plano del nivel con el punto donde se está."},
+    {"id": "espectador", "nombre": "Modo espectador", "tipo": "si_no", "ayuda": "La cámara vuela y atraviesa muros y losas en vez de caminar."},
+    {"id": "faltantes", "nombre": "Capa de faltantes", "tipo": "si_no", "ayuda": "Muestra en 3D las unidades del cierre de brechas y los recintos con exigencias que faltan."},
+    {"id": "cumplimiento", "nombre": "Capa de cumplimiento", "tipo": "si_no", "ayuda": "Colorea el piso de cada recinto según su cumplimiento en dotación e infraestructura."},
+    {"id": "contraste", "nombre": "Comparar con el proyecto tipo", "tipo": "si_no", "ayuda": "Colorea el piso de cada recinto según el contraste con el proyecto tipo del DNP."},
+    {"id": "infraestructura", "nombre": "Infraestructura normativa", "tipo": "si_no", "ayuda": "Lavamanos, tomas de gases, extintores, señalización y demás infraestructura que piden las normas."}
+  ],
+  "torre_laboratorio": [
+    {"id": "nivel", "nombre": "Ir a un nivel", "tipo": "opcion", "opciones": [
+      {"id": "ext", "nombre": "Exteriores"},
+      {"id": "p1", "nombre": "Piso 1"},
+      {"id": "p2", "nombre": "Piso 2"},
+      {"id": "p3", "nombre": "Piso 3"},
+      {"id": "p4", "nombre": "Piso 4"},
+      {"id": "bt", "nombre": "Bloque técnico"},
+      {"id": "cub", "nombre": "Cubierta"}
+    ], "ayuda": "Lleva el recorrido a la entrada de ese nivel de la torre."},
+    {"id": "laboratorio", "nombre": "Ir a la puerta del laboratorio", "tipo": "accion", "ayuda": "Lleva el recorrido a la puerta del laboratorio clínico del piso 2, mirando hacia adentro."},
+    {"id": "subir", "nombre": "Subir un nivel", "tipo": "accion", "ayuda": "Sube al nivel de arriba, como el ascensor."},
+    {"id": "bajar", "nombre": "Bajar un nivel", "tipo": "accion", "ayuda": "Baja al nivel de abajo, como el ascensor."},
+    {"id": "mapa", "nombre": "Minimapa", "tipo": "si_no", "ayuda": "Muestra u oculta el plano del nivel con el punto donde se está."},
+    {"id": "espectador", "nombre": "Modo espectador", "tipo": "si_no", "ayuda": "La cámara vuela y atraviesa muros y losas en vez de caminar."},
+    {"id": "faltantes", "nombre": "Capa de faltantes", "tipo": "si_no", "ayuda": "Muestra en 3D las unidades del cierre de brechas y los recintos con exigencias que faltan."},
+    {"id": "cumplimiento", "nombre": "Capa de cumplimiento", "tipo": "si_no", "ayuda": "Colorea el piso de cada recinto según su cumplimiento en dotación e infraestructura."},
+    {"id": "contraste", "nombre": "Comparar con el proyecto tipo", "tipo": "si_no", "ayuda": "Colorea el piso de cada recinto según el contraste con el proyecto tipo del DNP."},
+    {"id": "infraestructura", "nombre": "Infraestructura normativa", "tipo": "si_no", "ayuda": "Lavamanos, tomas de gases, extintores, señalización y demás infraestructura que piden las normas."}
+  ],
+  "torre_sismo": [
+    {"id": "calcular", "nombre": "Calcular el sismo", "tipo": "accion", "ayuda": "Calcula cómo responde la torre al sismo con la magnitud, la profundidad y lo demás que esté puesto; al terminar, la torre tiembla con el resultado."},
+    {"id": "reproducir", "nombre": "Hacer temblar la torre", "tipo": "si_no", "ayuda": "Sí: reproduce el sismo calculado y la torre se mueve paso a paso con el cálculo; no: lo pausa donde va."},
+    {"id": "magnitud", "nombre": "Magnitud de momento (Mw)", "tipo": "numero", "min": 4, "max": 8, "paso": 0.1, "ayuda": "La magnitud del sismo; cuenta en el siguiente cálculo."},
+    {"id": "escenario", "nombre": "Escenario sísmico", "tipo": "opcion", "opciones": [
+      {"id": "nido_frecuente", "nombre": "Nido de Bucaramanga, sismo frecuente (Mw 5,0)"},
+      {"id": "nido_2015", "nombre": "Nido de Bucaramanga, como el del 10 de marzo de 2015 (Mw 6,2)"},
+      {"id": "nido_max_hip", "nombre": "Nido de Bucaramanga, máximo hipotético (Mw 7,0)"},
+      {"id": "cimitarra", "nombre": "Falla de Cimitarra, sismo cortical cercano (Mw 6,5)"},
+      {"id": "la_salina", "nombre": "Falla de La Salina (Mw 6,5)"},
+      {"id": "palestina", "nombre": "Falla de Palestina (Mw 7,0)"},
+      {"id": "bucaramanga_sm", "nombre": "Falla Bucaramanga-Santa Marta (Mw 7,0)"},
+      {"id": "local_hip", "nombre": "Sismo local hipotético bajo Yondó (Mw 6,0)"}
+    ], "ayuda": "Pone la magnitud, la profundidad y la distancia de un sismo de referencia; cuenta en el siguiente cálculo."},
+    {"id": "profundidad", "nombre": "Profundidad del foco", "tipo": "numero", "min": 5, "max": 200, "paso": 1, "unidad": "km", "ayuda": "A qué profundidad nace el sismo; cambia la distancia al foco y el tipo de sismo."},
+    {"id": "distancia", "nombre": "Distancia epicentral", "tipo": "numero", "min": 0, "max": 300, "paso": 1, "unidad": "km", "ayuda": "A qué distancia de la torre está el epicentro."},
+    {"id": "tipo_sismo", "nombre": "Tipo de sismo", "tipo": "opcion", "opciones": [
+      {"id": "auto", "nombre": "Automático (según la profundidad)"},
+      {"id": "cortical", "nombre": "Cortical"},
+      {"id": "intraplaca_profunda", "nombre": "Intraplaca profunda"}
+    ], "ayuda": "El régimen de la fuente; en automático sale de la profundidad."},
+    {"id": "suelo", "nombre": "Suelo (Vs30)", "tipo": "numero", "min": 150, "max": 760, "paso": 10, "unidad": "m/s", "ayuda": "Velocidad de las ondas de corte en los primeros 30 m; un suelo más blando amplifica el movimiento."},
+    {"id": "escala", "nombre": "Escala del registro", "tipo": "opcion", "opciones": [
+      {"id": "fisica", "nombre": "×1 (físico)"},
+      {"id": "nsr10", "nombre": "Nivel de diseño NSR-10"}
+    ], "ayuda": "Físico: el sismo tal como sale de la fuente; NSR-10: el registro se multiplica hasta el espectro de diseño de Yondó (escenario hipotético)."},
+    {"id": "instante", "nombre": "Instante del sismo", "tipo": "numero", "min": 0, "max": 100, "paso": 1, "unidad": "%", "ayuda": "Lleva el sismo calculado a ese punto de su duración (0 el inicio, 100 el final) y lo deja quieto ahí."},
+    {"id": "velocidad", "nombre": "Velocidad de reproducción", "tipo": "opcion", "opciones": [
+      {"id": "lenta", "nombre": "0,25× (cámara lenta)"},
+      {"id": "real", "nombre": "1× (tiempo real)"}
+    ], "ayuda": "A qué ritmo se reproduce el sismo calculado."},
+    {"id": "exageracion", "nombre": "Exageración de la deformada", "tipo": "opcion", "opciones": [
+      {"id": "auto", "nombre": "Automática"},
+      {"id": "1", "nombre": "×1 (escala real)"},
+      {"id": "2", "nombre": "×2"},
+      {"id": "5", "nombre": "×5"},
+      {"id": "10", "nombre": "×10"},
+      {"id": "20", "nombre": "×20"},
+      {"id": "50", "nombre": "×50"},
+      {"id": "100", "nombre": "×100"},
+      {"id": "200", "nombre": "×200"}
+    ], "ayuda": "Cuántas veces se agranda el movimiento dibujado para que se vea; ×1 es a escala real."},
+    {"id": "colorear", "nombre": "Colorear por", "tipo": "opcion", "opciones": [
+      {"id": "max", "nombre": "Máximo de los tres"},
+      {"id": "flexion", "nombre": "Flexión"},
+      {"id": "cortante", "nombre": "Cortante"},
+      {"id": "rotacion", "nombre": "Rotación plástica"}
+    ], "ayuda": "Qué esfuerzo pinta los elementos, de verde (holgado) a rojo (supera la capacidad esperada)."},
+    {"id": "leyenda", "nombre": "Leyenda de colores", "tipo": "si_no", "ayuda": "Abre o cierra la leyenda de colores sobre el modelo."},
+    {"id": "equipos", "nombre": "Equipos de la dotación sobre la losa", "tipo": "opcion", "opciones": [
+      {"id": "ninguno", "nombre": "Ninguno"},
+      {"id": "1", "nombre": "Piso 1"},
+      {"id": "2", "nombre": "Piso 2"},
+      {"id": "3", "nombre": "Piso 3"},
+      {"id": "4", "nombre": "Piso 4"},
+      {"id": "bt", "nombre": "Bloque técnico"},
+      {"id": "cub", "nombre": "Cubierta"}
+    ], "ayuda": "Pone sobre su losa los equipos de ese piso, coloreados por lo que les pasó en el sismo (estables, deslizan o se balancean)."},
+    {"id": "muros", "nombre": "Muros no estructurales", "tipo": "opcion", "opciones": [
+      {"id": "aislados", "nombre": "Aislados de la estructura"},
+      {"id": "confinados", "nombre": "Sin aislar (pegados a la estructura)"}
+    ], "ayuda": "Si los muros de mampostería se mueven aparte o trabajan con la estructura; cuenta en el siguiente cálculo."},
+    {"id": "histeresis", "nombre": "Comportamiento de las rótulas", "tipo": "opcion", "opciones": [
+      {"id": "bilineal", "nombre": "Bilineal"},
+      {"id": "clough", "nombre": "Clough (rigidez que se degrada)"}
+    ], "ayuda": "El modelo de las rótulas plásticas; cuenta en el siguiente cálculo."},
+    {"id": "direccion", "nombre": "Dirección de la componente 1", "tipo": "numero", "min": 0, "max": 180, "paso": 5, "unidad": "°", "ayuda": "Ángulo antihorario desde el este con que llega la primera componente del movimiento; cuenta en el siguiente cálculo."},
+    {"id": "semilla", "nombre": "Semilla del movimiento", "tipo": "numero", "min": 0, "max": 999999, "paso": 1, "ayuda": "Misma semilla, mismo sismo; otra semilla arma otro registro con la misma física; cuenta en el siguiente cálculo."},
+    {"id": "calidad", "nombre": "Calidad del cálculo", "tipo": "opcion", "opciones": [
+      {"id": "normal", "nombre": "Normal (paso de 0,005 s)"},
+      {"id": "baja", "nombre": "Baja (paso de 0,01 s, más rápido)"}
+    ], "ayuda": "Un paso más largo calcula más rápido y con menos precisión; cuenta en el siguiente cálculo."},
+    {"id": "cancelar", "nombre": "Cancelar el cálculo", "tipo": "accion", "ayuda": "Detiene el cálculo en curso; queda a la vista el resultado anterior."}
+  ],
+  "torre_bim": [
+    {"id": "herramienta", "nombre": "Herramienta del modelo BIM", "tipo": "opcion", "opciones": [
+      {"id": "modelo", "nombre": "Modelo por disciplinas"},
+      {"id": "cortes", "nombre": "Cortes"},
+      {"id": "cimentacion", "nombre": "Cimentación"},
+      {"id": "refuerzo", "nombre": "Refuerzo"},
+      {"id": "comportamiento", "nombre": "Comportamiento en el sismo"},
+      {"id": "4d", "nombre": "4D: obra en el tiempo"},
+      {"id": "interferencias", "nombre": "Interferencias"},
+      {"id": "ifc", "nombre": "Descarga del IFC"}
+    ], "ayuda": "Abre esa pestaña del panel del modelo BIM; la de 4D muestra la barra del cronograma."},
+    {"id": "vista", "nombre": "Vista rápida", "tipo": "opcion", "opciones": [
+      {"id": "todo", "nombre": "Todo"},
+      {"id": "estructura", "nombre": "Estructura"},
+      {"id": "arquitectura", "nombre": "Arquitectura"},
+      {"id": "dotacion", "nombre": "Dotación y equipos"}
+    ], "ayuda": "Muestra el modelo entero o solo lo de una disciplina, y lo encuadra."},
+    {"id": "arquitectura", "nombre": "Disciplina: Arquitectura", "tipo": "opcion", "opciones": [
+      {"id": "ver", "nombre": "Ver"},
+      {"id": "transparente", "nombre": "Transparente"},
+      {"id": "ocultar", "nombre": "Ocultar"},
+      {"id": "aislar", "nombre": "Aislar (solo esta)"}
+    ], "ayuda": "Cómo se ve arquitectura en el modelo."},
+    {"id": "estructura", "nombre": "Disciplina: Estructura", "tipo": "opcion", "opciones": [
+      {"id": "ver", "nombre": "Ver"},
+      {"id": "transparente", "nombre": "Transparente"},
+      {"id": "ocultar", "nombre": "Ocultar"},
+      {"id": "aislar", "nombre": "Aislar (solo esta)"}
+    ], "ayuda": "Cómo se ve estructura en el modelo."},
+    {"id": "cimentacion", "nombre": "Disciplina: Cimentación", "tipo": "opcion", "opciones": [
+      {"id": "ver", "nombre": "Ver"},
+      {"id": "transparente", "nombre": "Transparente"},
+      {"id": "ocultar", "nombre": "Ocultar"},
+      {"id": "aislar", "nombre": "Aislar (solo esta)"}
+    ], "ayuda": "Cómo se ve cimentación en el modelo."},
+    {"id": "equipamiento_fijo", "nombre": "Disciplina: Equipamiento fijo", "tipo": "opcion", "opciones": [
+      {"id": "ver", "nombre": "Ver"},
+      {"id": "transparente", "nombre": "Transparente"},
+      {"id": "ocultar", "nombre": "Ocultar"},
+      {"id": "aislar", "nombre": "Aislar (solo esta)"}
+    ], "ayuda": "Cómo se ve equipamiento fijo en el modelo."},
+    {"id": "dotacion", "nombre": "Disciplina: Dotación", "tipo": "opcion", "opciones": [
+      {"id": "ver", "nombre": "Ver"},
+      {"id": "transparente", "nombre": "Transparente"},
+      {"id": "ocultar", "nombre": "Ocultar"},
+      {"id": "aislar", "nombre": "Aislar (solo esta)"}
+    ], "ayuda": "Cómo se ve dotación en el modelo."},
+    {"id": "espacios", "nombre": "Espacios como volúmenes", "tipo": "si_no", "ayuda": "Muestra los recintos como volúmenes."},
+    {"id": "mostrar_todo", "nombre": "Mostrar todo el modelo", "tipo": "accion", "ayuda": "Vuelve a mostrar todo lo oculto o aislado."},
+    {"id": "corte", "nombre": "Corte horizontal por nivel", "tipo": "opcion", "opciones": [
+      {"id": "cim", "nombre": "Cimentación"},
+      {"id": "p1", "nombre": "Piso 1"},
+      {"id": "p2", "nombre": "Piso 2"},
+      {"id": "p3", "nombre": "Piso 3"},
+      {"id": "p4", "nombre": "Piso 4"},
+      {"id": "cub", "nombre": "Cubierta"}
+    ], "ayuda": "Corta el modelo con un plano horizontal en ese nivel; la sección se rellena con su rayado."},
+    {"id": "quitar_corte", "nombre": "Quitar el corte", "tipo": "accion", "ayuda": "Quita el plano de corte (si hay uno)."},
+    {"id": "ver_cimentacion", "nombre": "Ver la cimentación", "tipo": "si_no", "ayuda": "Muestra los pilotes, los dados y las vigas de amarre bajo el terreno; no: vuelve al modelo."},
+    {"id": "terreno", "nombre": "Terreno", "tipo": "opcion", "opciones": [
+      {"id": "cortado", "nombre": "Cortado"},
+      {"id": "semi", "nombre": "Semitransparente"},
+      {"id": "opaco", "nombre": "Opaco"}
+    ], "ayuda": "Cómo se dibuja el terreno alrededor de la cimentación."},
+    {"id": "construir", "nombre": "Construir la torre en el tiempo (4D)", "tipo": "si_no", "ayuda": "Sí: reproduce el cronograma de obra y la torre se levanta fase por fase; no: lo pausa."},
+    {"id": "fecha_obra", "nombre": "Fecha del cronograma de obra", "tipo": "numero", "min": 0, "max": 100, "paso": 1, "unidad": "%", "ayuda": "Lleva el 4D a ese punto del cronograma (0 el inicio de la obra, 100 el final)."},
+    {"id": "colorear_sismo", "nombre": "Colorear con el último sismo calculado", "tipo": "opcion", "opciones": [
+      {"id": "dc", "nombre": "Demanda/capacidad"},
+      {"id": "rotulas", "nombre": "Rótulas"}
+    ], "ayuda": "Pinta la estructura con el último cálculo del simulador sísmico de esta visita (si ya se calculó uno)."},
+    {"id": "leyenda", "nombre": "Leyenda", "tipo": "si_no", "ayuda": "Abre o cierra la leyenda sobre el modelo, cuando la vista tiene una."}
+  ]
+}

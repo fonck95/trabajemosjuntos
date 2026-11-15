@@ -3,7 +3,13 @@
    * En escritorio (desde 901 px), con el asistente abierto, el iframe le deja libre su ancho (el panel del asistente no
      tapa la presentación; entre 901 y 1199 px se acopla más angosto) y el botón del asistente va a la barra de la vista
      (abajo a la derecha está la leyenda de la maqueta).
-   * /presentacion?pantalla=1 (modo proyector): sin menú, sin barra y sin asistente; la presentación ocupa la ventana. */
+   * /presentacion?pantalla=1 (modo proyector): sin menú y sin barra; la presentación ocupa la ventana. El asistente se
+     abre ahí mismo: su botón flota abajo a la izquierda, con los botones de la ventana (arriba a la derecha están las
+     herramientas de la presentación; en el celular, encima de su control) y, con el ratón quieto, se atenúa
+     (html[data-pres-quieto]).
+   * /presentacion?off=1 (la pantalla en off): el botón va en su barra, como en la vista normal; a pantalla completa
+     (html[data-pres-llena]), flotando arriba a la derecha y atenuado con el ratón quieto, como en el proyector.
+   * Abierto el asistente en escritorio, en las tres la presentación le deja libre su ancho; en el celular se superpone. */
 /* Contenedor: la barra se compacta por el ancho de la vista, no el de la ventana (con el asistente abierto entre 901 y
    1199 px la vista mide unos 330 a 500 px y la barra, en tres filas, le quitaba casi 200 px de alto a la presentación) */
 .presentacion { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--bg);
@@ -35,13 +41,15 @@
    panel está a 24 px del borde) y el asistente nunca tapa el paso ni su explicación. En esta vista el asistente mide
    420 px desde unos 1064 px de ancho y, más angosto, se acopla de 300 px en adelante: así entre 901 y 1199 px (un
    portátil chico, una tableta en horizontal) a la presentación le quedan al menos unos 330 px, con su diseño de
-   celular o de tableta. Los avisos del panel se corren a su izquierda, como en agente.css */
+   celular o de tableta. Los avisos del panel se corren a su izquierda, como en agente.css. Igual en la ventana del
+   proyector y en la pantalla en off (también a pantalla completa): ahí no hay menú, y el ancho se cuenta sin él
+   (--side-w: 0, más abajo); la maqueta 3D se reencuadra sola con el cambio de tamaño */
 @media (min-width: 901px) {
-  body:has(#vista .presentacion:not(.proyector)) { --pres-agente-w: min(420px, max(300px, 100vw - var(--side-w) - 408px)); }
-  body:has(#vista .presentacion:not(.proyector)) .agente-panel { width: var(--pres-agente-w); }
-  body:has(#vista .presentacion:not(.proyector)):has(#agente-panel:not([hidden])) #avisos {
+  body:has(#vista .presentacion) { --pres-agente-w: min(420px, max(300px, 100vw - var(--side-w) - 408px)); }
+  body:has(#vista .presentacion) .agente-panel { width: var(--pres-agente-w); }
+  body:has(#vista .presentacion):has(#agente-panel:not([hidden])) #avisos {
     right: calc(var(--pres-agente-w) + 40px); }
-  body:has(#agente-panel:not([hidden])) #vista .presentacion:not(.proyector) { padding-right: calc(var(--pres-agente-w) + 36px); }
+  body:has(#agente-panel:not([hidden])) #vista .presentacion { padding-right: calc(var(--pres-agente-w) + 36px); }
 }
 /* En el celular (o con la vista angosta), una sola fila: la presentación trae abajo su propio control (anterior y
    siguiente), así que aquí solo quedan el capítulo y los dos botones de pantalla, sin texto */
@@ -74,16 +82,66 @@
   .pres-botones .btn span { display: none; }
 }
 
-/* Modo proyector: la ventana entera es la presentación */
-html[data-proyector] .lateral, html[data-proyector] .barra-movil, html[data-proyector] #agente { display: none; }
+/* Modo proyector: la ventana entera es la presentación (y el asistente, si se abre) */
+html[data-proyector] .lateral, html[data-proyector] .barra-movil { display: none; }
 html[data-proyector] .app { grid-template-columns: 1fr; }
 html[data-proyector] .contenido.lleno { height: 100vh; height: 100dvh; }
 .presentacion.proyector .pres-barra, .presentacion.proyector .pres-remoto { display: none; }
 .presentacion.proyector .pres-marco { background: #000; }
-/* La pantalla en off (/presentacion?off=1): su barra dice que no tiene controles; la de los botones no se ve, ni el
-   asistente (se le habla desde otro equipo o el celular) */
+/* Sin el menú de lado (el proyector, la presentación a pantalla completa) lo que se mide desde él no lo descuenta: el
+   ancho del asistente abierto, los avisos, la franja de la cuenta pendiente */
+html[data-proyector], html[data-pres-llena] { --side-w: 0px; }
+/* El botón del asistente flotando sobre la presentación (sin barra donde ponerlo). En la presentación a pantalla
+   completa, arriba a la derecha (lo pone ahí la regla de la barra, más arriba): en la pantalla en off la presentación no
+   tiene sus herramientas (mando.js, sin controles) y esa esquina queda libre. En el proyector esa esquina es de las
+   herramientas de la presentación (Índice, Fichas, Atlas…: el botón tapaba «Atlas»), así que va abajo a la izquierda,
+   primero de los botones flotantes de la ventana («Pantalla completa», «Voz»), que se corren a su derecha. Lleno y con
+   sombra, no el transparente de la barra del celular: va sobre la presentación */
+html[data-proyector] #agente #agente-boton { top: auto; right: auto; left: 14px; bottom: 14px; width: 42px; height: 42px; }
+html[data-proyector] #agente #agente-boton svg { width: 22px; height: 22px; }
+html[data-proyector] body:has(#agente-boton:not([hidden])) .pres-flotantes { left: 64px; }
+/* Sin lugar para el texto de «Pantalla completa» y «Voz», solo sus íconos (el texto queda para el lector de pantalla y
+   en su title): con el asistente abierto, que se lleva el ancho y la presentación corre su control abajo al centro
+   hacia ellos (le tapaban «anterior»); y hasta 1200 px, donde con el botón del asistente delante y su texto («Toque para
+   activar la voz») llegaban al control de la presentación, centrado abajo (en un proyector de 1024 × 768 le tapaban
+   «anterior») */
+html[data-proyector] body:has(#agente-panel:not([hidden])) .pres-flotantes .btn span {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 1200px) {
+  html[data-proyector] body:has(#agente-boton:not([hidden])) .pres-flotantes .btn span {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+/* En el celular (de pie, y acostado: ahí el control va abajo a la izquierda, al pie del panel) el control de la
+   presentación (anterior · capítulo · siguiente) ocupa el pie de la ventana: el botón del asistente y los de la ventana
+   van encima de él, no sobre él. Atenuado, el botón dejaba ver «anterior» a través y el toque abría el chat. Las mismas
+   condiciones que en la presentación (web/propuesta.html); su control mide 52 px desde 14 (o el borde seguro) */
+@media (max-width: 640px), (max-width: 1080px) and (orientation: landscape) and (max-height: 560px) {
+  html[data-proyector] #agente #agente-boton, html[data-proyector] .pres-flotantes {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+}
+html[data-proyector] #agente #agente-boton, html[data-pres-llena] #agente #agente-boton {
+  background: var(--ink); border: 0; box-shadow: var(--sombra); }
+html[data-proyector] #agente .agente-senal, html[data-pres-llena] #agente .agente-senal { border-color: var(--ink); }
+/* Tras unos segundos sin mover el ratón ni tocar (la vista pone data-pres-quieto) se atenúa para no distraer a la sala;
+   vuelve al moverlo, al tocar, al pasarle por encima o con el foco del teclado */
+html[data-proyector] #agente #agente-boton, html[data-pres-off][data-pres-llena] #agente #agente-boton {
+  transition: opacity .5s ease, transform .15s ease, box-shadow .15s ease; }
+html[data-proyector][data-pres-quieto] #agente #agente-boton:not(:hover):not(:focus-visible),
+html[data-pres-off][data-pres-llena][data-pres-quieto] #agente #agente-boton:not(:hover):not(:focus-visible) { opacity: .18; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-proyector] #agente #agente-boton, html[data-pres-off][data-pres-llena] #agente #agente-boton { transition: none; }
+}
+/* En el celular el asistente abierto se superpone, como siempre: sin la barra de arriba, desde el borde de la ventana */
+@media (max-width: 900px) {
+  html[data-proyector] body:not(:has(#franja-llamada)) #agente #agente-panel,
+  html[data-pres-llena] body:not(:has(#franja-llamada)) #agente #agente-panel { top: 0; }
+}
+/* La pantalla en off (/presentacion?off=1): su barra dice que no tiene controles; la de los botones no se ve. El
+   asistente se abre en esta misma ventana (su botón va en la barra, como en la vista normal) */
 .pres-barra[hidden] { display: none; }
-html[data-pres-off] #agente { display: none; }
+/* Con el asistente abierto al lado, el aviso de cómo se maneja sobra (se le está hablando) y su alto es de la
+   presentación, que ya le dejó el ancho */
+@media (min-width: 901px) { body:has(#agente-panel:not([hidden])) .presentacion.en-off .pres-off-aviso { display: none; } }
 .pres-off-chip { display: inline-flex; align-items: center; gap: 6px; }
 .pres-off-chip svg { width: 16px; height: 16px; }
 .pres-off-aviso[hidden] { display: none; }
@@ -123,6 +181,9 @@ html[data-pres-llena] .presentacion .pres-marco { background: #000; }
 /* abajo a la izquierda: arriba están las herramientas de la presentación y abajo al centro su control */
 .pres-flotantes { position: fixed; z-index: 5; left: 14px; bottom: 14px; display: flex; gap: 8px; }
 .pres-flotantes .btn { box-shadow: var(--sombra); }
+/* El proyector en pantalla completa es la ventana entera (para que el asistente siga a mano): sus botones de abajo no
+   se ven, como cuando lo que iba a pantalla completa era solo el marco */
+html[data-proyector]:fullscreen .pres-flotantes { display: none; }
 .pres-completa[hidden] { display: none; }
 /* El botón «Voz» del recorrido narrado (la barra de la pestaña, el proyector y la pantalla en off) */
 .pres-voz[aria-pressed="true"] { color: var(--accent-text); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }

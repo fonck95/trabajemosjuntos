@@ -128,15 +128,19 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
             "en ese momento: la cámara (`camara` aerea u oblicua, `rumbo`, `elevacion`, `zoom`, `mirar` una pieza, o un "
             "viaje con `mover`: rodear la obra, acercarse, subir), las piezas de la maqueta (`aislar` una obra, "
             "`mostrar`, `ocultar`, quitarle partes con `sin`: «torre.cubierta» deja ver las losas), `enfoque`, la ficha "
-            "(`detalle`) con la especificación resaltada, `comparar` hoy y proyecto, un modelo del atlas (`inmersion`), "
-            "`animar`, y `resaltar` la cifra o el punto que nombras. Cada paso parte del anterior: di solo lo que "
+            "(`detalle`) con la especificación resaltada, `comparar` hoy y proyecto, un modelo del atlas (`inmersion`) "
+            "y sus controles (`simular`: hasta 4 `{control, valor}` en orden, los «controles» de ese modelo en `guion`: "
+            "la magnitud del simulador sísmico y después `calcular`, que hace temblar la torre; cambiar un valor no "
+            "recalcula), `animar`, y `resaltar` la cifra o el punto que nombras. Cada paso parte del anterior: di solo lo que "
             "cambia. Un arco que sirve: ubicar con una vista amplia; cómo está hoy; qué se construye, pieza por pieza; "
             "cómo funciona o el dato clave; qué cambia y cuándo; y el cierre con 2 o 3 ideas.",
             "- Cifras solo del guion, tal como vienen; en pantalla nunca costos, datos de habitantes, «@» ni números de "
             "7 o más dígitos. Usa los ids del guion (pasos, componentes, piezas, partes, modelos): lo opcional que no "
             "exista se descarta con un aviso y el plan corre igual; no lo mandes otra vez por un aviso.",
             "- `ir`, `visual` y `explicar` sueltos son para pedidos puntuales («pasa al siguiente», «vista aérea», "
-            "«quítale la cubierta», «abre la ficha del matadero»): detienen el plan que esté en curso. Si la persona "
+            "«quítale la cubierta», «abre la ficha del matadero», «sube la magnitud a 7 y haz temblar la torre»: "
+            "`visual` con `simular`; sin pantalla en off, `visual` lleva el `capitulo` y el `paso` del contexto): "
+            "detienen el plan que esté en curso. Si la persona "
             "escribe durante un plan, queda en pausa (lo dice el contexto): responde breve y sigue con "
             "`control_recorrido` (continuar), o arma un plan corto. Si el contexto dice que hay una pantalla en off "
             "abierta, la sala ve esa: no la muevas por tu cuenta.",

@@ -14,6 +14,9 @@ import { api, ErrorApi, FLUJO_CORTADO, flujo, hayCambiosSinGuardar, registrarPen
 import { accionesMapa, estadoMapa, mapaListo } from './agente-mapa.js';
 import { accionesPresentacion, accionPresentacion, estadoPresentacion, presentacionLista, proyectorVivo, recorridoEnCurso }
   from './agente-presentacion.js';
+// Lo que el puente puede no tener todavía (`pedirPantalla`), por el espacio de nombres: un import con nombre que no
+// existe rompería la carga del módulo entero
+import * as puente from './agente-presentacion.js';
 import { automaticaValida, crearFranjaAutomatica, crearTarjetaRecorrido, montarBarraRecorrido, pausaPorMensaje,
   pausaPorVoz, recorridoDelChat, tarjetaValida } from './agente-recorrido.js';
 import { sinBase, url } from './base.js';
@@ -860,7 +863,13 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     boton.setAttribute('aria-expanded', 'false');
     guardar();
     senal();
-    if (foco && !boton.hidden) boton.focus({ preventScroll: true });
+    if (foco && !boton.hidden) {
+      // En la ventana del proyector (vistas/presentacion.js) el teclado y el control remoto son de la presentación, que
+      // ocupa la ventana: el foco vuelve a ella y no al botón (desde ahí las flechas no le llegaban, el espacio volvía a
+      // abrir el chat delante de la sala y, con el foco a la vista, el botón no se atenuaba)
+      const pres = 'proyector' in document.documentElement.dataset ? document.getElementById('pres-iframe') : null;
+      (pres?.isConnected ? pres : boton).focus({ preventScroll: true });
+    }
   }
 
   /** En el celular el panel tapa la vista: se pliega para que se vea lo que hizo el asistente (o la vista que se abrió). */
@@ -1138,6 +1147,14 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     programar();
   }
 
+  /** Un resultado que llega en el turno (no al repintar una conversación guardada). El de la herramienta `presentacion`
+   * (ir, visual, un plan, un control, la automática…) ya quedó guardado para la pantalla en off: si esa pantalla es
+   * esta ventana (el asistente abierto al lado de la presentación), pregunta ya en vez de esperar su sondeo. */
+  function resultadoEnVivo(ev) {
+    if (ev?.estado !== 'ok' || ev.nombre !== 'presentacion') return;
+    try { puente.pedirPantalla?.(); } catch (e) { console.error(e); }
+  }
+
   // ── Tarjetas de aprobación ──
   const pendientesSinEnviar = () => [...tarjetas.values()].filter((t) => !t.final && !t.enviada);
 
@@ -1336,6 +1353,10 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     // ahí están sus pasos y sus controles. Después el chat no se mueve solo por él: la lista de pasos de la tarjeta
     // tiene su propio desplazamiento
     alFinal(true);
+    // El plan suena en la pantalla en off de ESTA ventana (el asistente abierto al lado de ella): en el celular el panel
+    // la tapa entera, así que se pliega, como cuando suena en la pestaña (`aplicarPresentacion`). Solo en vivo: al
+    // repintar una conversación guardada no se llega aquí
+    if (v.destino === 'pantalla_off' && 'presOff' in document.documentElement.dataset) plegar();
   }
 
   // La píldora «El asistente prepara la explicación…» en la presentación: cuando el asistente leyó el guion de un
@@ -1497,7 +1518,10 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
         break;
       }
       case 'texto_ronda': if (typeof ev.texto === 'string') textoRonda(texto(ev.texto, MAX_TEXTO_RONDA)); break;
-      case 'herramienta': alHerramienta(ev); break;
+      case 'herramienta':
+        alHerramienta(ev);
+        resultadoEnVivo(ev);
+        break;
       case 'accion':
         accion(ev.accion);
         nuevaRonda();
@@ -2038,8 +2062,9 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   // ── Preguntas por voz (dictado.js) ──
   // Un toque al micrófono empieza a oír y otro termina (también termina sola cuando la persona deja de hablar); Escape
   // o «Cancelar» lo descartan. Lo transcrito entra al cuadro y, si estaba vacío, se envía solo: así no hace falta
-  // escribir. Si ya había algo escrito, se agrega y no se envía. Mientras se oye, el plan que suena se pausa
-  // (`pausaPorVoz`), para que la narración no entre al micrófono. Todo llega como texto (`value`, textContent).
+  // escribir. Si ya había algo escrito, o hay acciones esperando aprobación, se agrega y no se envía (Enter lo manda).
+  // Salir de la página (o dejar oculta la pestaña que graba para el panel) cancela. Mientras se oye, el plan que suena
+  // se pausa (`pausaPorVoz`), para que la narración no entre al micrófono. Todo llega como texto (`value`, textContent).
   const soporteVoz = soporteDeDictado(window);
   let seguirPlan = null;      // continúa el plan que se pausó para oír
   let vozEnviada = false;     // la última pregunta dictada se envió sola
@@ -2061,21 +2086,32 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     // Si se oculta con el foco puesto, el foco pasa a la conversación (en <body>, Escape ya no cerraría el panel)
     const tenia = document.activeElement === vozBtn;
     vozBtn.hidden = !puede;
+    if (!vozOyendo()) nombrarVoz('Preguntar por voz');
     if (!puede && tenia && abierto) log.focus({ preventScroll: true });
     entrada.placeholder = puede ? 'Escriba o dicte su pregunta…' : 'Escriba su pregunta…';
     if (ayuda) ayuda.textContent = `Enter envía · Mayús+Enter, otra línea${puede ? ' · el micrófono, por voz' : ''}`;
     if (!puede && vozActiva()) dictado.cancelar();
   }
 
-  /** El audio grabado, al panel (que se lo pide a Mnemo): el texto. El cuerpo es el audio tal cual, con su tipo. */
-  async function transcribirVoz(blob) {
+  /** El nombre del micrófono (title y aria-label). Si la voz no la va a transcribir el panel (no puede, o este navegador
+   * no graba), lo dice antes de que la persona dé el permiso: va al servicio de voz del navegador. */
+  function nombrarVoz(base) {
+    const n = soporteVoz.grabar && info?.dictado === true ? base : `${base} (la transcribe el servicio de voz del navegador)`;
+    vozBtn.title = n;
+    vozBtn.setAttribute('aria-label', n);
+  }
+
+  /** El audio grabado, al panel (que se lo pide a Mnemo): el texto. El cuerpo es el audio tal cual, con su tipo.
+   * `signal` (de dictado.js) corta la subida si la persona cancela. */
+  async function transcribirVoz(blob, { signal = null } = {}) {
     try {
       const tipo = texto(blob?.type, 60).split(';')[0].trim() || 'audio/webm';
-      const d = await api.subir('/api/agente/transcribir', blob, { cabeceras: { 'Content-Type': tipo }, timeout: ESPERA_VOZ_MS });
+      const d = await api.subir('/api/agente/transcribir', blob, { cabeceras: { 'Content-Type': tipo }, timeout: ESPERA_VOZ_MS, signal });
       return texto(d?.texto, MAX_TEXTO);
     } catch (e) {
       if (!(e instanceof ErrorApi)) throw e;
-      // El panel no puede transcribir por Mnemo: de aquí en adelante, el reconocimiento del navegador
+      // El panel no puede transcribir por Mnemo: de aquí en adelante, el reconocimiento del navegador (hasta que el
+      // estado del panel diga otra cosa)
       if (e.estado === 409 && e.codigo === 'sin_transcriptor' && info) info.dictado = false;
       throw Object.assign(new Error('transcribir'), { codigo: e.codigo, estado: e.estado, mensaje: explicarVoz(e) });
     }
@@ -2093,7 +2129,9 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     const habia = entrada.value.trim();
     entrada.value = (habia ? `${entrada.value.replace(/\s+$/, '')} ${t}` : t).slice(0, MAX_TEXTO);
     autoAltura();
-    vozEnviada = !habia && !turno && !cargando && !!info?.disponible;
+    // Con acciones esperando aprobación no se envía solo (las dejaría sin aprobar): queda en el cuadro, con la nota
+    // que lo explica, y Enter lo manda
+    vozEnviada = !habia && !turno && !cargando && !!info?.disponible && pendientesSinEnviar().length === 0;
     if (vozEnviada) {
       vozEntregando = true;
       try { enviarDelCompositor(); } finally { vozEntregando = false; }
@@ -2105,7 +2143,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     const activa = oyendo || e.estado === 'transcribiendo';
     vozBtn.setAttribute('aria-pressed', oyendo ? 'true' : 'false');
     vozBtn.dataset.estado = e.estado;
-    vozBtn.title = oyendo ? 'Terminar de hablar' : 'Preguntar por voz';
+    if (oyendo) { vozBtn.title = 'Terminar de hablar'; vozBtn.setAttribute('aria-label', 'Terminar de hablar'); } else nombrarVoz('Preguntar por voz');
     if (e.estado === 'transcribiendo') vozBtn.setAttribute('aria-disabled', 'true');
     else vozBtn.removeAttribute('aria-disabled');
     form.style.setProperty('--voz-nivel', (e.estado === 'escuchando' && Number.isFinite(e.nivel) ? e.nivel : 0).toFixed(2));
@@ -2142,6 +2180,16 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   });
   // «Cancelar» se oculta al cancelar: el foco pasa al micrófono (en <body>, Escape ya no cerraría el panel)
   vozCancelar.addEventListener('click', () => { dictado.cancelar(); vozBtn.focus({ preventScroll: true }); });
+  // La página se va mientras se oye o se transcribe (recargar, cerrar la pestaña, seguir un enlace): se cancela, y lo
+  // que se pausó para oír continúa (el «continuar» va con `keepalive`); si no, la sala quedaba en pausa para siempre.
+  // Y la pestaña que queda oculta mientras se graba para el panel también: si no, seguía grabando hasta el silencio o
+  // el minuto y lo enviaba solo. (El reconocimiento del navegador lo corta el navegador; y en el celular, su ventana
+  // del permiso no debe cancelarlo: solo cuenta `escuchando` con la vía del panel)
+  window.addEventListener('pagehide', () => { if (vozActiva()) dictado.cancelar(); });
+  document.addEventListener('visibilitychange', () => {
+    const e = dictado.estado();
+    if (document.hidden && e.estado === 'escuchando' && e.via === 'servidor') dictado.cancelar();
+  });
 
   // ── Eventos ──
   boton.addEventListener('click', () => abrir());

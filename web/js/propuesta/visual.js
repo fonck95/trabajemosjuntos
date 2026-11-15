@@ -21,8 +21,11 @@
 //   inmersión; null, lo del paso.
 // * tema: claro u oscuro (para el proyector), también en el atlas enmarcado.
 // Todo vuelve a como lo dice el paso al cambiar de paso, salvo el tema.
-// Y dos acciones que no son estado: `mover` (la cámara gira, se acerca o cambia de elevación despacio, lo que dure la
-// frase) y `animar` (repite la animación propia del paso). Con `ms`, `aplicar` cambia en el acto lo que se ve y lleva la
+// Y tres acciones que no son estado: `mover` (la cámara gira, se acerca o cambia de elevación despacio, lo que dure la
+// frase), `animar` (repite la animación propia del paso) y `simular` (acciona los controles de adentro del modelo del
+// atlas a la vista —la magnitud del simulador sísmico, hacerlo temblar, el piso, el 4D del BIM— con
+// `__escenario.simular` de js/escenario.js, como los acciona la persona; lo que el atlas no acepta vuelve como
+// descartado). Con `ms`, `aplicar` cambia en el acto lo que se ve y lleva la
 // cámara a su postura con un PASEO de esa duración (Stage.pasear de core.js: no es un vuelo, nada lo espera): así el
 // asistente muestra MIENTRAS explica. Con una narración en pantalla (`guiado`) los módulos no mueven la cámara.
 // Las comprobaciones de forma (tipos, listas) las hace mando.js; aquí, las que dependen de lo que hay (`depurar` quita lo
@@ -387,7 +390,8 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   const reencuadrarSiQuieto = () => { if (!st.userMoved) reencuadrar(); };
 
   // ---------------------------------------------------------------- inmersión en un modelo del atlas
-  const inm = { abierta: false, actual: null, marco: null, puente: null, fallo: false };
+  // `abriendo`: la promesa del último aplicarInmersion (la simulación espera a que el modelo pedido esté)
+  const inm = { abierta: false, actual: null, marco: null, puente: null, fallo: false, abriendo: Promise.resolve() };
   const capaInm = document.createElement('div');
   capaInm.className = 'inmersion';
   capaInm.hidden = true;
@@ -478,11 +482,40 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
     const p = paso();
     return p?.tipo === 'inmersion' ? p.inmersion : null;
   }
-  async function aplicarInmersion() {
+  function aplicarInmersion() {
     const id = inmersionVigente();
-    if (!id) { cerrarInmersion(); return; }
-    if (inm.actual?.id === id && inm.abierta) return;
-    await abrirInmersion(id);
+    inm.abriendo = !id ? Promise.resolve(cerrarInmersion())
+      : inm.actual?.id === id && inm.abierta ? inm.abriendo.catch(() => {}) : abrirInmersion(id);
+    return inm.abriendo;
+  }
+
+  // ---------------------------------------------------------------- la simulación del modelo del atlas
+  /** Acciona en el modelo del atlas a la vista los controles de `lista` ([{ control, valor? }], la forma ya revisada por
+   * mando.js), en orden, con `__escenario.simular` (js/escenario.js: como los acciona la persona; un control que todavía
+   * no está o está deshabilitado lo espera). Antes espera a que termine de abrirse el modelo pedido. Devuelve lo que no se
+   * pudo, [{ clave, valor, motivo }], a más tardar en `tope` ms: lo que el atlas todavía espera entonces (Reproducir
+   * hasta que termine el primer cálculo) sigue solo y no se cuenta. Nunca lanza. */
+  async function simular(lista, { tope = 2000 } = {}) {
+    if (!Array.isArray(lista) || !lista.length) return [];
+    const fuera = (x, motivo) => ({ clave: `simular.${x?.control ?? ''}`.slice(0, 40), valor: x?.valor, motivo });
+    const pedida = inmersionVigente();
+    const vence = new Promise((ok) => { const t = setTimeout(() => ok(undefined), tope); t?.unref?.(); });
+    const todo = (async () => {
+      try { await inm.abriendo; } catch { /* el modelo no cargó: lo dice abajo */ }
+      if (!pedida || inmersionVigente() !== pedida || !inm.abierta || inm.actual?.id !== pedida) {
+        return lista.map(() => (pedida ? 'se cambió de modelo antes de accionarlo' : 'no hay un modelo del atlas a la vista'));
+      }
+      let p;
+      try { p = await puente(); } catch { return lista.map(() => 'el modelo del atlas no cargó'); }
+      if (typeof p.simular !== 'function') return lista.map(() => 'este atlas no acciona simulaciones');
+      // todas seguidas: escenario.js las encadena en orden, detrás del ir() que abrió el modelo
+      return lista.map((x) => Promise.resolve().then(() => p.simular(x.control, x.valor)).catch((e) => String(e?.message || e)));
+    })();
+    const res = await Promise.race([todo, vence]);
+    if (!Array.isArray(res)) return [];   // venció antes de que el modelo estuviera: sigue solo
+    const hechos = await Promise.all(res.map((r) => Promise.race([Promise.resolve(r), vence])));
+    return hechos.map((r, i) => (r === true || r === undefined ? null : fuera(lista[i], typeof r === 'string' && r ? r : 'el atlas no pudo accionarlo')))
+      .filter(Boolean);
   }
 
   // ---------------------------------------------------------------- tema
@@ -641,7 +674,7 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   // un modelo del atlas pedido que todavía carga (la escena espera a que esté antes de narrar)
   const cargando = () => inm.abierta && !capaInm.classList.contains('lista') && !inm.fallo;
 
-  return { aplicar, mover, guiado, pausar, depurar, estado: estadoVisual, alPaso, validar, cargando,
+  return { aplicar, mover, simular, guiado, pausar, depurar, estado: estadoVisual, alPaso, validar, cargando,
     // para pasar3D (main.js): lo que el asistente muestra, oculta o aísla encima del paso, y la vista del paso sin vuelo
     ajustar, efectos, deshacer, enSeco,
     // repite el encuadre pedido (cámara, enfoque, mirar o el final del último movimiento); false si no hay ninguno

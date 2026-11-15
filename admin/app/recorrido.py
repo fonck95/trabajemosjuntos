@@ -8,15 +8,17 @@ en el guion: el de un capítulo). Un recorrido son de 1 a MAX_ESCENAS escenas. C
 se dice: el paso, «Solo 3D», la cámara (un encuadre con nombre o su rumbo, su elevación y su acercamiento, a qué apunta
 y cómo viaja durante la frase: `mover`), las piezas de la maqueta que se muestran, se ocultan o se aíslan y las partes
 que se les quitan, la obra enfocada, la ficha técnica, hoy o con el proyecto, un modelo del atlas, la animación del
-paso (`animar`) y un resaltado de lo que se nombra. Nada espera a que la imagen se asiente (salvo la carga de un modelo
-del atlas). Al final, un cierre de hasta tres ideas que queda en la sala con «¿Preguntas?».
+paso (`animar`), un resaltado de lo que se nombra y los controles de la simulación del modelo del atlas que queda a la
+vista (`simular`: la magnitud del simulador sísmico, hacerlo temblar…). Nada espera a que la imagen se asiente (salvo la
+carga de un modelo del atlas). Al final, un cierre de hasta tres ideas que queda en la sala con «¿Preguntas?».
 
 Aquí está su forma absoluta (la que viaja al navegador y se guarda con la pantalla, `app/pantalla.py`): cada escena con
 su estado completo (no un cambio sobre la anterior), así cualquier pantalla puede empezar, reanudar o saltar a cualquier
 escena. Y las reglas que la validan, puras: `validar` corre al crearla (`agente/herramientas/interfaz.py`) y cada vez que
 se lee de la base, contra el guion vigente. Los mismos topes, listas y tiempos están en web/js/propuesta/mando.js, en
-web/js/agente-presentacion.js y en web/js/reproductor.js; una prueba los compara. `mover` y `animar` son acciones de
-la escena, no estado: lo que queda de una escena (`estado_de_escena`) no las trae.
+web/js/agente-presentacion.js y en web/js/reproductor.js; una prueba los compara. `mover`, `animar` y `simular` son
+acciones de la escena, no estado: lo que queda de una escena (`estado_de_escena`) no las trae. Una escena puede no traer
+`simular` (la de un plan de antes, o la de la presentación automática): no acciona nada.
 
 Solo usa la biblioteca estándar y `app/proyectable.py`: no importa nada del panel."""
 from __future__ import annotations
@@ -79,6 +81,12 @@ GIRO = (-360, 360)
 # plan guiado (`_componer` de agente/herramientas/interfaz.py) y la presentación automática (app/automatica.py)
 GIROS_SUAVES = (10, 12, 14)
 ZOOM_SUAVE = 1.06
+# `simular` (no es estado): los controles de la simulación del modelo del atlas que la escena deja a la vista, que se
+# accionan cuando llega, en orden, como los acciona la persona (`controles` de cada inmersión en el guion, de
+# data/propuesta/simulaciones.json; web/js/escenario.js los acciona). None, o de 1 a MAX_SIMULAR {control, valor?}: el
+# valor según el tipo del control (un número en su rango, el id de una opción, verdadero o falso); una acción, sin valor
+MAX_SIMULAR = 4
+TIPOS_CONTROL = ("accion", "numero", "opcion", "si_no")
 # Un recorrido nuevo se narra en la pantalla en off si llega a tiempo; uno viejo (la pantalla se abrió después) se aplica
 # en silencio en su última escena. Y una pantalla que se recargó a mitad reanuda si su avance es reciente
 VIGENCIA_RECORRIDO_S = 90
@@ -138,24 +146,30 @@ def inmersion_de(esc: dict | None, guion: Any) -> str | None:
     """La inmersión que muestra una escena: la pedida, la del paso (un paso de inmersión) o ninguna."""
     if not esc:
         return None
-    v = esc["visual"]["inmersion"]
-    if v == "maqueta":
+    return inmersion_en(esc["capitulo"], esc["paso"], esc["visual"]["inmersion"], guion)
+
+
+def inmersion_en(capitulo: Any, paso: Any, inmersion: Any, guion: Any) -> str | None:
+    """La inmersión a la vista con `inmersion` pedida (lo visual) en el paso `paso` del capítulo `capitulo`: la pedida,
+    la del paso si es de inmersión (sin pedir otra) o ninguna ('maqueta' la cierra). Sin guion, o en un paso que no
+    existe, solo la pedida."""
+    if inmersion == "maqueta":
         return None
-    if v:
-        return v
-    ci = guion.por_id(esc["capitulo"]) if guion is not None else None
-    if ci is None:
+    if inmersion:
+        return inmersion
+    ci = guion.por_id(capitulo) if guion is not None and isinstance(capitulo, str) else None
+    if ci is None or not _entero(paso, 1, len(guion.capitulos[ci]["pasos"])):
         return None
-    p = guion.capitulos[ci]["pasos"][esc["paso"] - 1]
+    p = guion.capitulos[ci]["pasos"][paso - 1]
     return (p.get("inmersion") or {}).get("id") if p.get("tipo") == "inmersion" else None
 
 
 def sostener_por_omision(esc: dict, anterior: dict | None, guion: Any) -> int:
-    """Lo que se sostiene la imagen después de narrar: más si hay algo que mirar (un modelo del atlas que se abre, el
-    antes y después, la cámara que empieza a girar)."""
+    """Lo que se sostiene la imagen después de narrar: más si hay algo que mirar (un modelo del atlas que se abre o una
+    simulación que se acciona, el antes y después, la cámara que empieza a girar)."""
     ant = anterior["visual"] if anterior else VISUAL_INICIAL
-    mirar = abre_atlas(esc, anterior, guion) or esc["visual"]["comparar"] != ant["comparar"] or \
-        (esc["visual"]["girar"] and not ant["girar"])
+    mirar = abre_atlas(esc, anterior, guion) or bool(esc.get("simular")) or \
+        esc["visual"]["comparar"] != ant["comparar"] or (esc["visual"]["girar"] and not ant["girar"])
     return SOSTENER_MIRAR_MS if mirar else SOSTENER_MS
 
 
@@ -192,23 +206,25 @@ def copia_visual(v: dict) -> dict:
 
 def estado_de_escena(esc: dict) -> dict:
     """Los campos de la pantalla (`pantalla.CAMPOS`) donde queda una escena: su paso, «Solo 3D» y lo visual, sin
-    explicación ni índice ni fichas abiertos. `mover` y `animar` no son estado: el movimiento y la animación de la
-    escena ya pasaron (quedan en None y False; `baseDeEscena` de vistas/presentacion.js hace lo mismo)."""
+    explicación ni índice ni fichas abiertos. `mover`, `animar` y `simular` no son estado: el movimiento, la animación
+    y la simulación de la escena ya pasaron (quedan en None, False y None; `baseDeEscena` de vistas/presentacion.js hace
+    lo mismo)."""
     return {"capitulo": esc["capitulo"], "paso": esc["paso"], "explicacion": None, "panel": esc["panel"],
-            "indice": False, "fichas": False, **copia_visual(esc["visual"]), "mover": None, "animar": False}
+            "indice": False, "fichas": False, **copia_visual(esc["visual"]), "mover": None, "animar": False,
+            "simular": None}
 
 
 def al_dia(r: Any) -> Any:
-    """Un recorrido guardado antes del plan guiado (sus escenas sin `mover` ni `animar`, lo visual con siete partes),
-    con lo que le falta en lo del paso: así el que estaba en la base al desplegar se sigue pudiendo cerrar, reanudar o
-    volver a reproducir. Lo demás queda igual (lo dice `validar`); el que ya está al día vuelve tal cual."""
+    """Un recorrido guardado antes del plan guiado (sus escenas sin `mover`, `animar` ni `simular`, lo visual con siete
+    partes), con lo que le falta en lo del paso: así el que estaba en la base al desplegar se sigue pudiendo cerrar,
+    reanudar o volver a reproducir. Lo demás queda igual (lo dice `validar`); el que ya está al día vuelve tal cual."""
     if not isinstance(r, dict) or not isinstance(r.get("escenas"), list):
         return r
     escenas = []
     for esc in r["escenas"]:
         if isinstance(esc, dict) and isinstance(esc.get("visual"), dict):
             esc = {**esc, "visual": {**visual_inicial(), **esc["visual"]}, "mover": esc.get("mover"),
-                   "animar": esc.get("animar", False)}
+                   "animar": esc.get("animar", False), "simular": esc.get("simular")}
         escenas.append(esc)
     return {**r, "escenas": escenas}
 
@@ -240,6 +256,58 @@ def mover_valido(m: Any) -> bool:
         return False
     return ("giro" not in m or _entero(m["giro"], *GIRO)) and ("zoom" not in m or zoom_valido(m["zoom"])) and \
         ("elevacion" not in m or _entero(m["elevacion"], *ELEVACION))
+
+
+def _es_numero(v: Any) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and v == v and abs(v) != float("inf")
+
+
+def valor_problema(c: dict, x: dict) -> str | None:
+    """Lo que impide accionar el control `c` (del guion) con el paso de simular `x` ({control, valor?}), o None: una
+    acción va sin valor; un número, en su rango; una opción, con el id de una de las suyas; sí o no, verdadero o falso."""
+    tipo, hay, v = c.get("tipo"), "valor" in x, x.get("valor")
+    if tipo == "accion":
+        return "es una acción: va sin valor" if hay else None
+    if not hay:
+        return "le falta el valor"
+    if tipo == "si_no":
+        return None if isinstance(v, bool) else "va con verdadero o falso"
+    if tipo == "numero":
+        lo, hi = c.get("min"), c.get("max")
+        if not _es_numero(v):
+            return "va con un número"
+        return None if (lo is None or v >= lo) and (hi is None or v <= hi) else f"va de {lo:g} a {hi:g}"
+    if tipo == "opcion":
+        return None if isinstance(v, str) and v in {o["id"] for o in c.get("opciones") or []} else "no es una de sus opciones"
+    return "tiene un tipo que no se conoce"
+
+
+def simular_problemas(s: Any, controles: list[dict] | None = None) -> list[str]:
+    """Lo que impide accionar `simular` (vacío si nada): None, o de 1 a MAX_SIMULAR objetos {control} o {control,
+    valor}, el control un id y el valor un número, el id de una opción o verdadero o falso. Con `controles` (los de la
+    inmersión a la vista, del guion; [] si no hay una o no tiene), que cada control exista y su valor le sirva."""
+    if s is None:
+        return []
+    if not isinstance(s, list) or not 1 <= len(s) <= MAX_SIMULAR:
+        return [f"simular lleva de 1 a {MAX_SIMULAR} controles"]
+    out = []
+    suyos = {c["id"]: c for c in controles} if controles is not None else None
+    for x in s:
+        if not isinstance(x, dict) or not {"control"} <= set(x) <= {"control", "valor"} or \
+                not isinstance(x["control"], str) or not ID_PIEZA.fullmatch(x["control"]):
+            out.append("simular: un control sin la forma {control, valor?}")
+            continue
+        v = x.get("valor")
+        if "valor" in x and not (isinstance(v, bool) or _es_numero(v) or (isinstance(v, str) and ID_PIEZA.fullmatch(v))):
+            out.append(f"simular: el valor de «{x['control']}» no es un número, una opción ni verdadero o falso")
+            continue
+        if suyos is None:
+            continue
+        c = suyos.get(x["control"])
+        malo = valor_problema(c, x) if c else "no es un control del modelo del atlas a la vista"
+        if malo:
+            out.append(f"simular: «{x['control']}» {malo}")
+    return out
 
 
 def mover_suave(k: int, desde: float | None = 1) -> dict:
@@ -352,7 +420,8 @@ def _resaltar(r: Any, guion: Any, ci: int | None, pi: int | None, esc: dict) -> 
 def validar(r: Any, guion: Any = None) -> list[str]:
     """Lo que impide reproducir el recorrido absoluto `r` (vacío si nada): la forma exacta, los textos con las reglas de
     lo que se proyecta (sin plata, como todo lo de la presentación técnica), los topes y, con `guion`, que cada capítulo,
-    paso, componente, pieza de la maqueta, parte, inmersión y resaltado exista en el guion vigente. Pura: la usan la
+    paso, componente, pieza de la maqueta, parte, inmersión y resaltado exista en el guion vigente, y que lo que acciona
+    `simular` sea un control del modelo del atlas que la escena deja a la vista, con un valor que le sirva. Pura: la usan la
     herramienta al crearlo (ya compuesto: lo opcional que no resolvía se descartó antes, con su aviso) y la pantalla al
     leerlo de la base."""
     if not isinstance(r, dict) or set(r) != {"id", "titulo", "escenas", "cierre"}:
@@ -367,7 +436,8 @@ def validar(r: Any, guion: Any = None) -> list[str]:
         return [*out, f"el recorrido lleva de 1 a {MAX_ESCENAS} escenas"]
     claves = {"capitulo", "paso", "panel", "visual", "resaltar", "mover", "animar", "frases", "sostener_ms"}
     for n, esc in enumerate(escenas, 1):
-        if not isinstance(esc, dict) or set(esc) != claves:
+        # (`simular` puede faltar: la escena de un plan de antes o de la presentación automática no acciona nada)
+        if not isinstance(esc, dict) or not claves <= set(esc) <= claves | {"simular"}:
             out.append(f"escena {n}: no tiene la forma")
             continue
         ci = guion.por_id(esc["capitulo"]) if guion is not None and isinstance(esc["capitulo"], str) else None
@@ -388,6 +458,12 @@ def validar(r: Any, guion: Any = None) -> list[str]:
             out.append(f"escena {n}: mover no tiene la forma (giro, zoom o elevacion)")
         if not isinstance(esc["animar"], bool):
             out.append(f"escena {n}: animar es verdadero o falso")
+        if esc.get("simular") is not None:
+            # contra los controles del modelo del atlas que la escena deja a la vista (sin uno, ninguno vale)
+            con_visual = pi is not None and isinstance(esc["visual"], dict) and set(esc["visual"]) == set(VISUAL)
+            del_guion = getattr(guion, "controles", None)
+            controles = del_guion(inmersion_de(esc, guion)) if del_guion is not None and con_visual else None
+            out += [f"escena {n}: {x}" for x in simular_problemas(esc["simular"], controles)]
         frases = esc["frases"]
         if not isinstance(frases, list) or not 1 <= len(frases) <= MAX_FRASES or \
                 not all(_texto(f, MAX_NARRACION) for f in frases) or \
