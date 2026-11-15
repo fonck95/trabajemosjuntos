@@ -106,6 +106,7 @@ EXPLICACIONES = {
     "RATE_LIMITED": "Demasiadas llamadas a Mnemo en el último minuto: hay que esperar un momento",
     "FORBIDDEN": "Mnemo no permite esto con esta conexión",
     "UNAVAILABLE": "Eso no está disponible en este Mnemo",
+    "NO_TRANSCRIBER": "Esta cuenta de Mnemo no tiene un modelo que transcriba audio",
     "TIMEOUT": "Mnemo tardó demasiado en hacerlo",
     "FAILED": "Mnemo no pudo completarlo",
     "INTERNAL": "Mnemo falló por un error interno",

@@ -38,6 +38,13 @@
 //   acción lo detiene antes. El avance va al puente (la tarjeta del chat), a la barra y al servidor (POST
 //   /api/pantalla/progreso), así el asistente y los agentes por MCP saben dónde va; si el servidor ya no lo tiene por
 //   vigente (otra orden lo cerró, otro recorrido lo reemplazó), se detiene aquí también.
+// * La presentación automática (app/automatica.py), solo en la pantalla en off: el botón «Presentación automática» de su
+//   barra la enciende o la apaga (POST /api/pantalla/auto; también la enciende el asistente). Con ella encendida el
+//   servidor arma, sin modelo, un plan por capítulo con un paso por cada paso de la presentación y una frase muy corta, y
+//   esta pantalla se los pide uno tras otro (`crearAutomatica`: POST /api/pantalla/auto/siguiente cuando el reproductor
+//   se queda sin plan). El plan llega por el sondeo con `auto: true` y se narra como cualquier otro, sin la espera de
+//   «Plan listo». Un plan del asistente (la respuesta a una pregunta) lo reemplaza; al terminar, la automática sigue
+//   donde iba (repite el paso que se estaba diciendo). Otra orden suelta la hace esperar más. La barra dice dónde va.
 // * Los estilos (css/presentacion.css) los carga la vista, como agente.js los suyos.
 import { ErrorApi, api } from '../api.js';
 import { BASE, url } from '../base.js';
@@ -56,6 +63,11 @@ const LATIDO_MS = 4000;          // durante una espera larga, la pantalla en off
 const PRIMERA_ESCENA_MS = 10000; // al aceptar un recorrido se espera a que la primera escena esté a la vista (o esto)
 const VIGENCIA_RECORRIDO_S = 90; // la pantalla en off narra un recorrido nuevo; uno viejo se aplica en silencio
 const REANUDAR_S = 20;           // y reanuda uno a medias si su último avance es de hace menos que esto
+// La presentación automática (la pantalla en off): cuánto se espera antes de pedirle al servidor el plan siguiente
+export const ESPERA_AUTO_MS = 1500;          // desde que terminó un plan automático (el del capítulo siguiente)
+export const ESPERA_TRAS_PLAN_MS = 5000;     // desde que terminó un plan del asistente (la pregunta que la interrumpió)
+export const ESPERA_TRAS_ORDEN_MS = 45000;   // desde otra orden suelta: lo que se pidió ver se queda un rato a la vista
+export const REINTENTO_AUTO_MS = 5000;       // el servidor no tenía nada que armar (204) o no respondió: se vuelve a pedir
 const TEXTO_VOZ = { activa: 'Voz activa', apagada: 'Voz', sin_activar: 'Toque para activar la voz', sin_voces: 'Sin voces en español' };
 const SITIO = /^(https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?|http:\/\/(127\.0\.0\.1|localhost)(:\d{1,5})?)(\/[A-Za-z0-9._~%-]*)*$/;
 
@@ -105,6 +117,77 @@ function esNuevo(r) {
 
 const dormir = (ms) => new Promise((ok) => { setTimeout(ok, ms); });
 
+const relojDelNavegador = {
+  ahora: () => (globalThis.performance?.now ? performance.now() : Date.now()),
+  programar: (f, ms) => setTimeout(f, ms),
+  cancelar: (h) => clearTimeout(h),
+};
+
+/**
+ * El reloj de la presentación automática: decide cuándo la pantalla en off le pide al servidor el plan siguiente.
+ * pedir() → Promise<boolean>: POST /api/pantalla/auto/siguiente; true si el servidor armó un plan (llega por el sondeo).
+ * ocupado() → ¿el reproductor tiene un plan? (sonando o en pausa: mientras tanto no se pide nada).
+ * alArmar(): el servidor acaba de armar uno (la vista adelanta su sondeo para recibirlo ya).
+ * Solo pide con la automática encendida y el reproductor sin plan, una petición a la vez: enseguida al encenderla; a los
+ * ESPERA_AUTO_MS de terminar un plan automático; a los ESPERA_TRAS_PLAN_MS de terminar uno del asistente (o uno
+ * automático que no llegó a su final: se cortó o falló); a los ESPERA_TRAS_ORDEN_MS de otra orden suelta. Manda lo último
+ * que pasó. Si el servidor no arma nada (204), falla, o el plan que armó no llega, vuelve a pedir a los REINTENTO_AUTO_MS.
+ * Sin DOM: el reloj llega por parámetro (admin/tests/test_automatica_panel.py lo prueba con uno de mentira).
+ */
+export function crearAutomatica({ pedir, ocupado, alArmar = () => {}, reloj = relojDelNavegador }) {
+  let activa = false, pidiendo = false, suelta = false;
+  let noAntes = 0;   // el siguiente no se pide antes de este momento
+  let cita = null;   // el reloj pendiente
+  const programar = () => {
+    if (cita !== null) { reloj.cancelar(cita); cita = null; }
+    if (!activa || pidiendo || suelta) return;
+    cita = reloj.programar(tocar, Math.max(0, noAntes - reloj.ahora()));
+  };
+  const esperar = (ms) => { noAntes = reloj.ahora() + ms; programar(); };
+  async function tocar() {
+    cita = null;
+    if (!activa || pidiendo || suelta) return;
+    if (reloj.ahora() < noAntes) { programar(); return; }
+    // con un plan en el reproductor no se pide: cuando termine, `alTerminar` pone la espera que toca (y por si ese aviso
+    // no llegara, se vuelve a mirar)
+    if (ocupado()) { esperar(REINTENTO_AUTO_MS); return; }
+    pidiendo = true;
+    let armo = false;
+    try { armo = (await pedir()) === true; } catch { armo = false; }
+    pidiendo = false;
+    // lo que pasó mientras tanto (una orden suelta, un plan que terminó) ya dejó su espera: vale la más larga
+    noAntes = Math.max(noAntes, reloj.ahora() + REINTENTO_AUTO_MS);
+    programar();
+    if (armo && activa && !suelta) { try { alArmar(); } catch { /* nada */ } }
+  }
+  return {
+    /** Lo que dice el servidor (o el botón): encendida o apagada. Al encenderla pide enseguida. */
+    fijar(v) {
+      if ((v === true) === activa) return;
+      activa = v === true;
+      if (activa) esperar(0); else programar();
+    },
+    /** Terminó un plan en esta pantalla: `auto`, si era el de la automática; `fase`, cómo terminó (TERMINALES). */
+    alTerminar({ auto = false, fase = 'fin' } = {}) { esperar(auto && fase === 'fin' ? ESPERA_AUTO_MS : ESPERA_TRAS_PLAN_MS); },
+    /** Llegó otra orden suelta (algo concreto que no es un plan). */
+    alOrden() { esperar(ESPERA_TRAS_ORDEN_MS); },
+    activa: () => activa,
+    /** {activa, pidiendo, en_ms}: `en_ms` es lo que falta para la próxima petición (null si no hay ninguna prevista). */
+    estado: () => ({ activa, pidiendo, en_ms: cita === null ? null : Math.max(0, Math.round(noAntes - reloj.ahora())) }),
+    soltar() { suelta = true; programar(); },
+  };
+}
+
+/** Lo que responde POST /api/pantalla/auto ({activa, capitulo, nombre, paso, de}), solo con la forma esperada, o null.
+ * `nombre` y `de` (el nombre del capítulo y cuántos pasos tiene) son para la barra: si no vienen bien, quedan en null. */
+function autoRespondida(a) {
+  if (!a || typeof a !== 'object' || Array.isArray(a) || typeof a.activa !== 'boolean') return null;
+  if (typeof a.capitulo !== 'string' || !/^[a-z_]{2,40}$/.test(a.capitulo) || !Number.isSafeInteger(a.paso) || a.paso < 1) return null;
+  const nombre = typeof a.nombre === 'string' ? a.nombre.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 80) : '';
+  return { activa: a.activa, capitulo: a.capitulo, paso: a.paso, nombre: nombre || null,
+    de: Number.isInteger(a.de) && a.de >= a.paso && a.de <= 60 ? a.de : null };
+}
+
 /** La orden para mando.js de una acción del puente (ya validada por `accionPresentacion`). */
 function ordenDe(p) {
   if (p.op === 'visual') {
@@ -137,12 +220,13 @@ export async function vistaPresentacion(el, { q } = {}) {
       ${off ? html`<div class="pres-barra" role="status" aria-label="Pantalla en off">
         <div class="pres-donde"><b id="pres-off-capitulo">Pantalla en off</b><small id="pres-off-paso">Cargando la presentación…</small></div>
         <div class="pres-botones">
-          <span class="chip borde pres-off-chip">${icono('agente')}<span id="pres-off-estado">Esperando al asistente</span></span>
+          <span class="chip borde pres-off-chip" title="La manejan el asistente del panel y los agentes por MCP">${icono('agente')}<span id="pres-off-estado">Esperando al asistente</span></span>
+          <button type="button" class="btn pres-auto" id="pres-auto" aria-pressed="false" aria-label="Presentación automática" title="Recorre sola toda la presentación, muy resumida. Una pregunta al asistente la interrumpe y, al terminar la respuesta, sigue donde iba" disabled>${icono('animar')}<span>Presentación automática</span></button>
           <button type="button" class="btn pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta pantalla (la del navegador)">${icono('voz')}<span>Voz</span></button>
           <a class="btn" id="pres-salir-off" href="${url('/presentacion')}">${icono('cerrar')}<span>Salir del modo en off</span></a>
         </div>
       </div>
-      <p class="pres-remoto pres-off-aviso" role="note">${icono('agente')}<span>Esta pantalla no tiene controles: solo cambia cuando le pide algo concreto al asistente del panel (desde otro equipo o el celular) o a un agente por MCP. Pídale «pantalla completa» para que llene la ventana; Escape la devuelve aquí.</span></p>` : ''}
+      <p class="pres-remoto pres-off-aviso" role="note">${icono('agente')}<span>Esta pantalla no tiene controles: solo cambia cuando le pide algo concreto al asistente del panel (desde otro equipo o el celular) o a un agente por MCP. Con «Presentación automática» recorre sola toda la presentación, muy resumida; una pregunta al asistente la interrumpe y después sigue. Pídale «pantalla completa» para que llene la ventana; Escape la devuelve aquí.</span></p>` : ''}
       <div class="pres-barra" role="toolbar" aria-label="Presentación"${off ? ' hidden' : ''}>
         <div class="pres-donde"><b id="pres-capitulo">Presentación de la propuesta</b><small id="pres-paso">Cargando la presentación…</small></div>
         <div class="pres-botones">
@@ -191,6 +275,17 @@ export async function vistaPresentacion(el, { q } = {}) {
   let quitarRegistro = null;
   let nro = 0;
   const pendientes = new Map();   // id de la orden → resolver
+  // La presentación automática (solo la pantalla en off): lo último que dijo el servidor ({activa, capitulo, paso} o
+  // null), el plan suyo que esta pantalla recibió y lo que se sabe de cada capítulo para la barra (su nombre y cuántos
+  // pasos tiene: lo dicen la presentación al pasar por él, el título del plan automático y la respuesta del botón)
+  let auto = null, ridAuto = null;
+  const capitulosVistos = new Map();
+  const dondeAuto = (capitulo, paso, { sigue = false, fin = false } = {}) => {
+    const c = capitulosVistos.get(capitulo);
+    const nombre = c?.nombre || capitulo.replace(/_/g, ' ');
+    if (fin) return `Presentación automática · ${nombre} · fin del capítulo`;
+    return `Presentación automática · ${sigue ? 'sigue en ' : ''}${nombre} · paso ${paso}${c?.total >= paso ? ` de ${c.total}` : ''}`;
+  };
 
   function sinPresentacion(titulo, detalle) {
     montar(marco, html`<div class="vacio pres-sin"><b>${titulo}</b>${detalle}</div>`);
@@ -204,16 +299,25 @@ export async function vistaPresentacion(el, { q } = {}) {
   function pintarEstado() {
     const e = (!proyector && !off && estadoPresentacion()) || estado;
     if (!e) return;
+    capitulosVistos.set(e.capitulo, { nombre: e.nombre || capitulosVistos.get(e.capitulo)?.nombre || null, total: e.total });
     capituloEl.textContent = e.nombre || e.capitulo;
     // con un recorrido sonando (aquí o en el proyector), la barra dice dónde va
     const aqui = rep.estado();
     const alla = !aqui || !rep.activo() ? recorridoEnCurso() : null;
     // (hacia la persona es un «plan» con «pasos»; por dentro, un recorrido con escenas)
-    if (rep.activo() && aqui) {
+    if (rep.activo() && aqui && rep.recorrido().id === ridAuto) {
+      // el plan de la presentación automática: el capítulo y el paso de la presentación que se está diciendo (y al
+      // final, mientras la presentación pregunta «¿Preguntas?», que el capítulo terminó)
+      const esc = rep.recorrido().escenas[aqui.n - 1];
+      pasoEl.textContent = `${dondeAuto(esc.capitulo, esc.paso, { fin: aqui.fase === 'cierre' })}${aqui.pausado ? ' · en pausa' : ''}`;
+    } else if (rep.activo() && aqui) {
       const donde = aqui.fase === 'cierre' ? 'en resumen' : `paso ${aqui.n} de ${aqui.de}`;
-      pasoEl.textContent = `Plan · ${rep.recorrido().titulo} · ${donde}${aqui.pausado ? ' · en pausa' : ''}`;
+      pasoEl.textContent = `Plan · ${rep.recorrido().titulo} · ${donde}${aqui.pausado ? ' · en pausa' : ''}${auto?.activa ? ' · después sigue la automática' : ''}`;
     } else if (alla?.donde === 'proyector') {
       pasoEl.textContent = `Plan en el proyector · paso ${alla.n} de ${alla.de}${alla.fase === 'pausa' ? ' · en pausa' : ''}`;
+    } else if (auto?.activa) {
+      // entre un plan y el siguiente (o mientras se ve lo que pidió otra orden): por dónde sigue
+      pasoEl.textContent = dondeAuto(auto.capitulo, auto.paso, { sigue: true });
     } else {
       pasoEl.textContent = `Paso ${e.paso} de ${e.total}${e.titulo ? ` · ${e.titulo}` : ''}`;
     }
@@ -440,35 +544,109 @@ export async function vistaPresentacion(el, { q } = {}) {
   // pregunta a la vez). Lo que tarda la presentación (el telón de un capítulo) no se pisa: la siguiente pregunta sale
   // cuando termina la anterior
   let tPoll = 0, versionVista = -1, aplicado = null, siguiendo = false;
+  let adelantarSondeo = null;   // la automática acaba de armar un plan: la próxima pregunta al servidor sale ya
   const offEstado = $('#pres-off-estado', el);
   // El recorrido en la pantalla en off: el que vio por última vez (id) y el último control que aplicó (n)
   let ridOff = null, controlOff = 0;
+  // La presentación automática: su reloj (cuándo se le pide al servidor el plan siguiente) y su botón
+  const automatica = off ? crearAutomatica({
+    pedir: async () => { const r = await api.post('/api/pantalla/auto/siguiente'); return !!r && typeof r === 'object'; },
+    ocupado: () => rep.activo(),
+    alArmar: () => adelantarSondeo?.(),
+  }) : null;
+  limpiezas.push(() => automatica?.soltar());
+  const botonAuto = $('#pres-auto', el);
+  // Lo que dice la barra de la conexión; `avisoAuto`, lo que no se pudo con el botón (se ve unos segundos). Con la
+  // automática encendida, corto: que está encendida lo dicen el botón y el paso, que necesita el ancho
+  let conexion = null, avisoAuto = null, tAvisoAuto = 0;
+  function pintarAuto() {
+    const activa = !!auto?.activa;
+    if (botonAuto) botonAuto.setAttribute('aria-pressed', String(activa));
+    if (off) $('.presentacion', el)?.toggleAttribute('data-auto', activa);   // (css: el paso se lleva más ancho de la barra)
+    if (offEstado && (conexion || avisoAuto)) {
+      offEstado.textContent = avisoAuto || (conexion !== 'ok' ? conexion
+        : activa ? 'Conectada' : 'Conectada: asistente y agentes por MCP');
+    }
+    pintarEstado();
+  }
+  /** La automática como la dice el servidor (en el estado de la pantalla o al responder el botón). */
+  function alAuto(a) {
+    auto = a;
+    automatica?.fijar(!!a?.activa);
+    pintarAuto();
+  }
   if (off) {
     alTerminarRecorrido = (pr) => {
       const r = rep.recorrido();
       if (r && pr.rid === r.id) aplicado = baseDeEscena(aplicado, r.escenas[pr.n - 1]);
+      // la automática sigue sola: el del capítulo siguiente, o donde iba si lo que terminó fue un plan del asistente
+      automatica.alTerminar({ auto: pr.rid === ridAuto, fase: pr.fase });
     };
+    let cambiandoAuto = false;
+    botonAuto.addEventListener('click', async () => {
+      voz.gesto();   // el clic es además el gesto que deja hablar a la voz en esta ventana
+      if (cambiandoAuto) return;
+      cambiandoAuto = true;
+      botonAuto.setAttribute('aria-busy', 'true');
+      const encender = !auto?.activa;
+      clearTimeout(tAvisoAuto);
+      avisoAuto = null;
+      try {
+        const r = await api.post('/api/pantalla/auto', { accion: encender ? 'iniciar' : 'detener' });
+        const a = autoRespondida(r?.auto);
+        if (a?.nombre) capitulosVistos.set(a.capitulo, { nombre: a.nombre, total: a.de ?? capitulosVistos.get(a.capitulo)?.total ?? null });
+        // (sin la forma esperada, vale lo pedido: el estado de la pantalla trae enseguida lo que quedó)
+        alAuto(a ? { activa: a.activa, capitulo: a.capitulo, paso: a.paso } : auto && { ...auto, activa: encender });
+        // al apagarla, su plan se calla ya (el servidor lo cerró; si no, seguiría hasta la próxima pregunta al servidor)
+        if (!auto?.activa && rep.activo() && rep.recorrido()?.id === ridAuto) rep.detener('otra_orden').catch(() => {});
+        adelantarSondeo?.();   // al encenderla el servidor ya armó el primer plan: que llegue ya
+      } catch (err) {
+        avisoAuto = err instanceof ErrorApi && err.estado === 0 ? 'Sin conexión: no se pudo cambiar la presentación automática'
+          : err instanceof ErrorApi && err.estado === 404 ? 'Este servidor no tiene la presentación automática'
+            : `No se pudo ${encender ? 'encender' : 'apagar'} la presentación automática`;
+        tAvisoAuto = setTimeout(() => { avisoAuto = null; pintarAuto(); }, 6000);
+        pintarAuto();
+      }
+      botonAuto.removeAttribute('aria-busy');
+      cambiandoAuto = false;
+    });
+    limpiezas.push(() => clearTimeout(tAvisoAuto));
   }
   // Un recorrido que esta pantalla ve por primera vez (se abrió o se recargó con él en el servidor). Si ya tuvo avance,
   // decide el avance: uno terminado no se vuelve a narrar; uno en pausa se retoma en su escena y en pausa (en pausa no
   // hay avances y su antigüedad no dice nada: antes se lo daba por viejo, la pantalla saltaba a la última escena y no
   // atendía el «continuar»); uno a medias con un avance reciente (la pantalla se recargó) sigue en su escena, y uno sin
   // noticias hace rato (la pantalla se cerró) no se narra. Sin avance, se narra si es nuevo: una pantalla que se abre
-  // después no narra uno viejo. El que no se narra se queda en la escena de su último avance (`enSuEscena`)
+  // después no narra uno viejo. El que no se narra se queda en la escena de su último avance (`enSuEscena`).
+  // Con la presentación automática encendida la pantalla no deja callado un plan que el servidor da por sonando (si no,
+  // no armaría el siguiente y la automática se quedaría parada hasta que lo diera por perdido): el suyo (`auto`) se
+  // retoma siempre, desde su último avance o desde el comienzo, por viejo que sea; el del asistente, si su último avance
+  // es de hace menos de VIGENCIA_RECORRIDO_S (lo mismo que espera el servidor, `plan_sonando`; uno más viejo no se
+  // narra: la automática sigue). El plan de la automática no espera la previa
   async function recorridoDeLaPantalla(e) {
     const x = e.recorrido;
     if (x && x.id !== ridOff) {
       ridOff = x.id;
       controlOff = e.control_recorrido?.n || 0;
+      const esAuto = x.auto === true;
+      if (esAuto) {
+        ridAuto = x.id;
+        // su título es el nombre del capítulo
+        const c = x.escenas[0].capitulo;
+        capitulosVistos.set(c, { nombre: x.titulo, total: capitulosVistos.get(c)?.total ?? null });
+      }
       const pr = e.progreso;   // del mismo recorrido: `estadoDePantalla` descarta el de otro
+      const sigue = !!auto?.activa;
+      const reanudar = !sigue ? REANUDAR_S : esAuto ? Infinity : VIGENCIA_RECORRIDO_S;
       let desde = 0;
-      if (pr) desde = !TERMINALES.includes(pr.fase) && (pr.fase === 'pausa' || pr.hace_s < REANUDAR_S) ? pr.n : 0;
-      else if (x.edad_s < VIGENCIA_RECORRIDO_S) desde = 1;
+      if (pr) desde = !TERMINALES.includes(pr.fase) && (pr.fase === 'pausa' || pr.hace_s < reanudar) ? pr.n : 0;
+      else if (x.edad_s < VIGENCIA_RECORRIDO_S || (sigue && esAuto)) desde = 1;
       if (desde) {
-        const { edad_s: _edad, ...r } = x;
-        // el que esta pantalla retoma (ya tuvo avance) o ya reprodujo no espera; el que le llega nuevo, sí
+        const { edad_s: _edad, auto: _auto, ...r } = x;
+        // el que esta pantalla retoma (ya tuvo avance) o ya reprodujo no espera; el que le llega nuevo, sí (el de la
+        // automática, nunca: nadie lo está leyendo en el chat)
         const nuevo = esNuevo(r);
-        await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde }, { enPausa: pr?.fase === 'pausa', previa: nuevo && !pr });
+        await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde }, { enPausa: pr?.fase === 'pausa', previa: nuevo && !pr && !esAuto });
       }
     } else if (!x && rep.activo()) {
       // el asistente pidió otra cosa o lo detuvo: el servidor lo cerró
@@ -489,13 +667,18 @@ export async function vistaPresentacion(el, { q } = {}) {
     if (siguiendo) return;
     siguiendo = true;
     await orden({ orden: 'vista', controles: false });
+    if (botonAuto) botonAuto.disabled = false;
+    let enVuelta = false, pronto = false;
     const vuelta = async () => {
       if (!iframe.isConnected) return;
+      enVuelta = true;
       let espera = POLL_MS;
       try {
         const r = await api.get(`/api/pantalla?v=${versionVista}`);
         const e = estadoDePantalla(r);
         if (e) {
+          // antes que el plan: `recorridoDeLaPantalla` mira si la automática está encendida
+          alAuto(e.auto);
           // Las esperas largas (la primera escena, hasta PRIMERA_ESCENA_MS; cada orden, hasta ESPERA_ORDEN_MS) no dejan de
           // avisar que la pantalla sigue abierta: si no, el servidor la daba por cerrada (VIVA_S) y un recorrido que el
           // asistente armaba en ese hueco salía para la pestaña. La respuesta no se usa: la próxima vuelta vuelve a leer
@@ -505,7 +688,11 @@ export async function vistaPresentacion(el, { q } = {}) {
             await recorridoDeLaPantalla(e);
             // mientras suena un recorrido, lo que se ve lo pone él (solo la pantalla completa se aplica igual)
             meta = rep.activo() ? null : enSuEscena(e);
-            for (const o of meta ? ordenesHacia(aplicado, meta) : []) {
+            const ordenes = meta ? ordenesHacia(aplicado, meta) : [];
+            // Otra orden suelta (algo concreto que no es un plan cambió lo que se ve; no al abrir, que es ponerse al día):
+            // la automática le deja su rato a la vista antes de seguir
+            if (ordenes.length && aplicado) automatica.alOrden();
+            for (const o of ordenes) {
               const res = await orden(o);
               if (!res.ok) console.warn('La pantalla en off no pudo aplicar', o.orden, res.error);
             }
@@ -517,12 +704,20 @@ export async function vistaPresentacion(el, { q } = {}) {
           else aplicado = meta;
           versionVista = e.v;
         }
-        if (offEstado) offEstado.textContent = 'Conectada: la manejan el asistente y los agentes por MCP';
+        conexion = 'ok';
       } catch (err) {
         espera = POLL_ERROR_MS;
-        if (offEstado) offEstado.textContent = err instanceof ErrorApi && err.estado === 0 ? 'Sin conexión: reintentando…' : 'No se pudo leer la pantalla: reintentando…';
+        conexion = err instanceof ErrorApi && err.estado === 0 ? 'Sin conexión: reintentando…' : 'No se pudo leer la pantalla: reintentando…';
       }
-      if (iframe.isConnected) tPoll = setTimeout(vuelta, espera);
+      pintarAuto();
+      enVuelta = false;
+      if (iframe.isConnected) tPoll = setTimeout(vuelta, pronto ? 0 : espera);
+      pronto = false;
+    };
+    // (una pregunta a la vez: con una en curso, que pudo salir antes de lo nuevo, la que le sigue sale sin esperar)
+    adelantarSondeo = () => {
+      if (enVuelta) pronto = true;
+      else if (iframe.isConnected) { clearTimeout(tPoll); vuelta(); }
     };
     vuelta();
   }

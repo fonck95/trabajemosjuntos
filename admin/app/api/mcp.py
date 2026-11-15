@@ -59,7 +59,11 @@ INSTRUCCIONES = (
     "lo que ocurre en pantalla mientras se dice) y un cierre; la pantalla en off lo ejecuta sola, paso a paso, con "
     "subtítulo y voz, mostrando mientras explica; estado dice por qué paso va y control_recorrido lo pausa, salta o "
     "detiene (uno que suena en la pestaña del panel de la persona se maneja desde ahí). La explicación es la "
-    "narración del plan: no la repitas. Hace falta la pantalla en off abierta. Cambia la "
+    "narración del plan: no la repitas. Hace falta la pantalla en off abierta. Si la persona quiere que la "
+    "presentación corra sola, automatica con accion iniciar (y capitulo, si quiere empezar en uno): la pantalla en off "
+    "recorre sola toda la presentación, capítulo por capítulo, con una frase muy resumida por paso, sin que escribas "
+    "nada; estado dice por dónde va, un plan corto (3 a 5 pasos) la interrumpe para responder una pregunta y, cuando "
+    "termina, sigue sola; se apaga con accion detener. Cambia la "
     "pantalla solo cuando la persona pide algo concreto. Lo que pones en pantalla lo ve una sala: nunca datos de "
     "personas, costos, «@» ni números de 7 o más dígitos.")
 D_MCP = D_PRESENTACION.replace("en el panel de la persona o en su pantalla en off", "en la pantalla en off de la persona")

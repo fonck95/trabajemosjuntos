@@ -1,9 +1,10 @@
 // El asistente del panel (docs/agente.md): un botón flotante que abre una conversación con el modelo. Las respuestas
 // llegan en flujo (NDJSON, `flujo` de api.js) y se pintan por partes; lo que escribe en la base espera la aprobación de
 // la persona en una tarjeta; las acciones que pide el servidor (navegar, recargar, insignias, mapa, presentacion,
-// recorrido) se validan aquí antes de hacerse. El plan guiado de la presentación (el recorrido narrado) tiene su tarjeta
-// y su barra fija (agente-recorrido.js). Vive en document.body, fuera de #raiz y de #vista: sobrevive a cada cambio de
-// vista.
+// recorrido, automatica) se validan aquí antes de hacerse. El plan guiado de la presentación (el recorrido narrado)
+// tiene su tarjeta y su barra fija, y la presentación automática su franja (agente-recorrido.js). Las preguntas se
+// escriben o se dicen: el micrófono del cuadro de escribir las transcribe (dictado.js). Vive en document.body, fuera
+// de #raiz y de #vista: sobrevive a cada cambio de vista.
 //
 // Seguridad: nada de lo que escribe el modelo se pinta como HTML. Entra con textContent o como nodos de texto, y el
 // Markdown se convierte a nodos con una lista cerrada de elementos (lo demás, también «<img …>», queda como texto). Los
@@ -13,9 +14,10 @@ import { api, ErrorApi, FLUJO_CORTADO, flujo, hayCambiosSinGuardar, registrarPen
 import { accionesMapa, estadoMapa, mapaListo } from './agente-mapa.js';
 import { accionesPresentacion, accionPresentacion, estadoPresentacion, presentacionLista, proyectorVivo, recorridoEnCurso }
   from './agente-presentacion.js';
-import { crearTarjetaRecorrido, montarBarraRecorrido, pausaPorMensaje, recorridoDelChat, tarjetaValida }
-  from './agente-recorrido.js';
+import { automaticaValida, crearFranjaAutomatica, crearTarjetaRecorrido, montarBarraRecorrido, pausaPorMensaje,
+  pausaPorVoz, recorridoDelChat, tarjetaValida } from './agente-recorrido.js';
 import { sinBase, url } from './base.js';
+import { crearDictado, soporteDeDictado, textoDeEstado } from './dictado.js';
 import { confirmar as preguntar, esMovil, fecha, html, icono, montar, num } from './ui.js';
 
 // El validador de la acción `presentacion` (forma estricta, op en lista blanca, capítulo como id, paso de 1 a 60 y una
@@ -29,6 +31,8 @@ const REINTENTO_ESTADO_MS = 30 * 1000;    // si no se pudo leer, no se insiste e
 // El aviso de que el estado cambió: lo manda Ajustes (vistas/ajustes.js) al conectar o desconectar Mnemo y al guardar
 // los ajustes del asistente, y el estado se vuelve a pedir en el acto (si no, valdría el de antes hasta 5 minutos)
 const EVENTO_ESTADO = 'agente:estado';
+const ESPERA_VOZ_MS = 75 * 1000;          // lo que se espera la transcripción de una pregunta por voz (el panel le da 60 s a Mnemo)
+const AVISO_VOZ_MS = 8 * 1000;            // lo que se queda a la vista un error del micrófono
 const ESTADOS = new Set(['inicio', 'ok', 'error', 'pendiente', 'aprobada', 'rechazada']);
 // Errores del turno que no se arreglan repitiendo el mismo mensaje. Los de Mnemo como modelo: la conexión se cayó, el
 // plan no incluye el chat o no quedan créditos; `proveedor`, la conversación es de un proveedor del modelo que ya no
@@ -637,9 +641,16 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       </div>
       <form id="agente-form" class="agente-compositor" novalidate>
         <p class="agente-nota-pendiente" id="agente-nota-pendiente" hidden>Hay acciones esperando su aprobación. Si escribe otro mensaje, quedan sin aprobar.</p>
+        <div class="agente-voz-estado" id="agente-voz-estado" hidden>
+          <span class="agente-voz-onda" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          <p class="agente-voz-linea"><span id="agente-voz-texto"></span><span class="agente-voz-parcial" id="agente-voz-parcial" hidden></span></p>
+          <button type="button" class="btn fantasma chico agente-voz-cancelar" id="agente-voz-cancelar" hidden>Cancelar</button>
+        </div>
+        <span class="sr" id="agente-voz-vivo" role="status" aria-live="polite"></span>
         <div class="agente-fila">
           <label class="sr" for="agente-texto">Mensaje para el asistente</label>
           <textarea id="agente-texto" rows="1" maxlength="4000" placeholder="Escriba su pregunta…" enterkeyhint="send" autocomplete="off" spellcheck="true"></textarea>
+          <button type="button" class="btn agente-voz" id="agente-voz" aria-label="Preguntar por voz" title="Preguntar por voz" aria-pressed="false" hidden>${icono('microfono')}</button>
           <button type="submit" class="btn primario agente-enviar" id="agente-enviar" aria-label="Enviar" title="Enviar">${icono('enviar')}</button>
           <button type="button" class="btn agente-detener" id="agente-detener" hidden>${icono('detener')}<span>Detener</span></button>
         </div>
@@ -655,6 +666,9 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   const cuerpo = $('#agente-cuerpo'), log = $('#agente-mensajes'), bajarBtn = $('#agente-bajar'), form = $('#agente-form');
   const entrada = $('#agente-texto'), enviarBtn = $('#agente-enviar'), detenerBtn = $('#agente-detener');
   const notaPendiente = $('#agente-nota-pendiente'), restantes = $('#agente-restantes');
+  const vozBtn = $('#agente-voz'), vozEstado = $('#agente-voz-estado'), vozTexto = $('#agente-voz-texto');
+  const vozParcial = $('#agente-voz-parcial'), vozCancelar = $('#agente-voz-cancelar'), vozVivo = $('#agente-voz-vivo');
+  const ayuda = $('.agente-ayuda');
   // La barra fija del recorrido narrado: arriba de la conversación mientras suena uno
   montarBarraRecorrido(cuerpo, { el, ico });
 
@@ -724,6 +738,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       escritura: o.escritura !== false,
       limite: { usados: entero(limite.usados), maximo: entero(limite.maximo) },
       mnemo: { activo: o.mnemo?.activo === true, origen: origenSeguro(o.mnemo?.origen) },
+      // ¿el panel puede transcribir por Mnemo las preguntas por voz? (si no, las transcribe el navegador)
+      dictado: o.dictado === true,
       conexion: c && ['sin_conectar', 'conectada', 'caida'].includes(c.estado)
         ? { estado: c.estado, motivo: texto(c.motivo, 40) || null, modelo: c.modelo === true,
           ofreceModelo: c.ofrece_modelo !== false } : null,
@@ -790,6 +806,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     }
     form.hidden = !info.disponible || historialAbierto;
     nuevaBtn.hidden = verHistBtn.hidden = !info.disponible;
+    aplicarVoz();
   }
 
   async function mostrar() {
@@ -809,6 +826,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   function ocultar() {
     visible = false;
     turno?.control.abort();
+    dictado.cancelar();   // ni se sigue oyendo ni se espera una transcripción
     caja.removeAttribute('data-usable');
     boton.hidden = true;
     if (abierto) cerrar();
@@ -835,6 +853,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   function cerrar({ foco = false } = {}) {
+    if (vozOyendo()) dictado.cancelar();   // con el panel cerrado no se sigue oyendo
     abierto = false;
     panel.hidden = true;
     boton.hidden = !(visible && usable());
@@ -1265,6 +1284,16 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     else if (a.tipo === 'mapa') mapa(a);
     else if (a.tipo === 'presentacion') presentacion(a);
     else if (a.tipo === 'recorrido') tarjetaRecorrido(a);
+    else if (a.tipo === 'automatica') franjaAutomatica(a);
+  }
+
+  // ── La presentación automática: la franja con «Detener» (agente-recorrido.js) ──
+  function franjaAutomatica(a) {
+    const v = automaticaValida(a);
+    if (!v) return;   // el chip de la herramienta ya dice qué se hizo
+    enAsistente().append(crearFranjaAutomatica(v, { el, ico }).el);
+    ultima = null;
+    programar();
   }
 
   // ── El plan guiado (el recorrido narrado): la tarjeta del chat (agente-recorrido.js) ──
@@ -1556,6 +1585,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       nota(`El mensaje es demasiado largo: el máximo es ${num(MAX_TEXTO)} caracteres.`, 'alerta');
       return;
     }
+    // Un mensaje enviado a mano mientras se oía: lo que se dictaba se descarta (si no, llegaría después como otra pregunta)
+    if (!vozEntregando && vozActiva()) dictado.cancelar();
     if (historialAbierto) verHistorial(false);
     if (log.querySelector('.agente-bienvenida')) log.replaceChildren();
     let burbuja = reusar?.burbuja;
@@ -1871,6 +1902,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   async function verHistorial(si) {
+    if (si && vozOyendo()) dictado.cancelar();   // el cuadro de escribir se oculta: no se sigue oyendo
     historialAbierto = si;
     historial.hidden = !si;
     cuerpo.hidden = si;
@@ -2003,6 +2035,114 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     if (!log.children.length) pintarBienvenida();
   }
 
+  // ── Preguntas por voz (dictado.js) ──
+  // Un toque al micrófono empieza a oír y otro termina (también termina sola cuando la persona deja de hablar); Escape
+  // o «Cancelar» lo descartan. Lo transcrito entra al cuadro y, si estaba vacío, se envía solo: así no hace falta
+  // escribir. Si ya había algo escrito, se agrega y no se envía. Mientras se oye, el plan que suena se pausa
+  // (`pausaPorVoz`), para que la narración no entre al micrófono. Todo llega como texto (`value`, textContent).
+  const soporteVoz = soporteDeDictado(window);
+  let seguirPlan = null;      // continúa el plan que se pausó para oír
+  let vozEnviada = false;     // la última pregunta dictada se envió sola
+  let vozEntregando = false;  // se está enviando lo dictado (ese envío no cancela el dictado que lo trajo)
+  let vozReloj = 0;           // quita de la vista un error del micrófono
+  let vozDicho = '';          // lo último que se anunció (aria-live): no se repite en cada medida del nivel
+  const dictado = crearDictado({ ventana: window, servidor: () => info?.dictado === true, transcribir: transcribirVoz,
+    alEstado: pintarVoz, alTexto: textoDeVoz });
+  const vozActiva = () => ['pidiendo', 'escuchando', 'transcribiendo'].includes(dictado.estado().estado);
+  function vozOyendo() {
+    const e = dictado.estado().estado;
+    return e === 'pidiendo' || e === 'escuchando';
+  }
+
+  /** El micrófono se ofrece si este navegador puede reconocer la voz o, al menos, grabarla para que el panel la
+   * transcriba por Mnemo. */
+  function aplicarVoz() {
+    const puede = !!info?.disponible && (soporteVoz.reconocer || (soporteVoz.grabar && info.dictado));
+    // Si se oculta con el foco puesto, el foco pasa a la conversación (en <body>, Escape ya no cerraría el panel)
+    const tenia = document.activeElement === vozBtn;
+    vozBtn.hidden = !puede;
+    if (!puede && tenia && abierto) log.focus({ preventScroll: true });
+    entrada.placeholder = puede ? 'Escriba o dicte su pregunta…' : 'Escriba su pregunta…';
+    if (ayuda) ayuda.textContent = `Enter envía · Mayús+Enter, otra línea${puede ? ' · el micrófono, por voz' : ''}`;
+    if (!puede && vozActiva()) dictado.cancelar();
+  }
+
+  /** El audio grabado, al panel (que se lo pide a Mnemo): el texto. El cuerpo es el audio tal cual, con su tipo. */
+  async function transcribirVoz(blob) {
+    try {
+      const tipo = texto(blob?.type, 60).split(';')[0].trim() || 'audio/webm';
+      const d = await api.subir('/api/agente/transcribir', blob, { cabeceras: { 'Content-Type': tipo }, timeout: ESPERA_VOZ_MS });
+      return texto(d?.texto, MAX_TEXTO);
+    } catch (e) {
+      if (!(e instanceof ErrorApi)) throw e;
+      // El panel no puede transcribir por Mnemo: de aquí en adelante, el reconocimiento del navegador
+      if (e.estado === 409 && e.codigo === 'sin_transcriptor' && info) info.dictado = false;
+      throw Object.assign(new Error('transcribir'), { codigo: e.codigo, estado: e.estado, mensaje: explicarVoz(e) });
+    }
+  }
+
+  function explicarVoz(e) {
+    if (e.estado === 0) return 'Sin conexión: no se pudo transcribir. Intente de nuevo o escriba su pregunta.';
+    if (e.estado === 401) return 'La sesión terminó. Ingrese de nuevo y repita su pregunta.';
+    if (e.estado === 413) return 'La grabación es demasiado grande. Haga una pregunta más corta.';
+    return e.message && e.message !== 'Error inesperado' ? texto(e.message, 300) : '';
+  }
+
+  /** Lo transcrito: al cuadro de escribir. Con el cuadro vacío se envía solo (si ahora no se puede, queda escrito). */
+  function textoDeVoz(t) {
+    const habia = entrada.value.trim();
+    entrada.value = (habia ? `${entrada.value.replace(/\s+$/, '')} ${t}` : t).slice(0, MAX_TEXTO);
+    autoAltura();
+    vozEnviada = !habia && !turno && !cargando && !!info?.disponible;
+    if (vozEnviada) {
+      vozEntregando = true;
+      try { enviarDelCompositor(); } finally { vozEntregando = false; }
+    } else if (abierto && !esMovil()) entrada.focus({ preventScroll: true });   // en el celular abriría el teclado
+  }
+
+  function pintarVoz(e) {
+    const oyendo = e.estado === 'pidiendo' || e.estado === 'escuchando';
+    const activa = oyendo || e.estado === 'transcribiendo';
+    vozBtn.setAttribute('aria-pressed', oyendo ? 'true' : 'false');
+    vozBtn.dataset.estado = e.estado;
+    vozBtn.title = oyendo ? 'Terminar de hablar' : 'Preguntar por voz';
+    if (e.estado === 'transcribiendo') vozBtn.setAttribute('aria-disabled', 'true');
+    else vozBtn.removeAttribute('aria-disabled');
+    form.style.setProperty('--voz-nivel', (e.estado === 'escuchando' && Number.isFinite(e.nivel) ? e.nivel : 0).toFixed(2));
+    const linea = textoDeEstado(e);
+    vozEstado.hidden = !linea;
+    vozEstado.dataset.estado = e.estado;
+    if (vozTexto.textContent !== linea) vozTexto.textContent = linea;
+    const parcial = e.estado === 'escuchando' ? texto(e.parcial, 300) : '';
+    vozParcial.hidden = !parcial;
+    if (vozParcial.textContent !== parcial) vozParcial.textContent = parcial;
+    vozCancelar.hidden = !activa;
+    // Para los lectores de pantalla: solo lo que cambia (escuchando, transcribiendo, un error), una vez
+    const dicho = e.estado === 'escuchando' ? 'Escuchando' : e.estado === 'pidiendo' ? '' : linea;
+    if (dicho !== vozDicho) vozDicho = vozVivo.textContent = dicho;
+    clearTimeout(vozReloj);
+    if (e.estado === 'inactivo' || e.estado === 'error') {
+      // Se dejó de oír: lo que se pausó para oír continúa (el plan del chat, solo si la pregunta no se envió)
+      const seguir = seguirPlan;
+      seguirPlan = null;
+      try { seguir?.(vozEnviada); } catch (x) { console.error(x); }
+      vozEnviada = false;
+      aplicarVoz();   // el panel pudo decir que no transcribe: sin reconocimiento en el navegador, el micrófono se va
+    }
+    if (e.estado === 'error') {
+      vozReloj = setTimeout(() => { if (dictado.estado().estado === 'error') dictado.cancelar(); }, AVISO_VOZ_MS);
+    }
+  }
+
+  vozBtn.addEventListener('click', () => {
+    const e = dictado.estado().estado;
+    if (e === 'transcribiendo') return;
+    if (e === 'pidiendo' || e === 'escuchando') { dictado.terminar(); return; }
+    if (dictado.empezar()) seguirPlan = pausaPorVoz();
+  });
+  // «Cancelar» se oculta al cancelar: el foco pasa al micrófono (en <body>, Escape ya no cerraría el panel)
+  vozCancelar.addEventListener('click', () => { dictado.cancelar(); vozBtn.focus({ preventScroll: true }); });
+
   // ── Eventos ──
   boton.addEventListener('click', () => abrir());
   cerrarBtn.addEventListener('click', () => cerrar({ foco: true }));
@@ -2041,6 +2181,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   panel.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || e.isComposing || document.querySelector('dialog[open]')) return;
     e.preventDefault();
+    if (vozActiva()) { dictado.cancelar(); return; }   // primero, lo que se está oyendo o transcribiendo
     if (historialAbierto) { verHistorial(false); verHistBtn.focus({ preventScroll: true }); } else cerrar({ foco: true });
   });
 

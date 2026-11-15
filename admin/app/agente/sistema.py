@@ -140,6 +140,12 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
             "escribe durante un plan, queda en pausa (lo dice el contexto): responde breve y sigue con "
             "`control_recorrido` (continuar), o arma un plan corto. Si el contexto dice que hay una pantalla en off "
             "abierta, la sala ve esa: no la muevas por tu cuenta.",
+            "- Presentación automática: si piden que la presentación corra sola («preséntala completa», «déjala en "
+            "automático»), `presentacion` op `automatica` con `accion` iniciar (y `capitulo`, si quieren empezar en "
+            "uno): la pantalla en off recorre sola toda la presentación, muy resumida, sin que escribas la narración; "
+            "se apaga con `accion` detener. Con ella encendida (lo dice el contexto), una pregunta la interrumpe: "
+            "respóndela con un plan CORTO (de 3 a 5 `pasos` y su `cierre`) que muestre lo que preguntan; cuando "
+            "termina, la automática sigue sola donde iba. No la detengas ni la reinicies por una pregunta.",
         ]
     lineas.append("- Enlaza a las personas y reuniones que nombres: [Nombre](/personas/123), [Reunión](/reuniones/45). "
                   "Solo rutas internas del panel.")
@@ -305,13 +311,19 @@ def recorrido_del_contexto(db: Any, uid: Any) -> str:
     """Dónde va el plan guiado de la persona (el recorrido narrado: «Plan «…» en la pestaña…: paso 3 de 8 del plan,
     narrando»), si hay uno sonando o terminó hace poco (`pantalla.resumen_recorrido`:
     uno terminado hace más de 2 minutos o abandonado hace media hora ya no se nombra; el título sale de la base, nunca
-    del navegador), o «» (correr con `run_in_threadpool`)."""
+    del navegador), o «» (correr con `run_in_threadpool`). Y, en otro renglón, la presentación automática si está
+    encendida (`pantalla.describir_auto`): dónde va y que una pregunta la interrumpe con un plan corto. Su plan no se
+    nombra como un plan del asistente: no lo armó él ni tiene tarjeta en el chat."""
     if not isinstance(uid, int) or isinstance(uid, bool):
         return ""
     guion = guion_del_contexto()
     if guion is None:
         return ""
-    return pantalla_off.describir_recorrido(pantalla_off.resumen_recorrido(pantalla_off.leer(db, uid), guion))
+    doc = pantalla_off.leer(db, uid)
+    plan = pantalla_off.resumen_recorrido(doc, guion)
+    lineas = ("" if plan and plan["auto"] else pantalla_off.describir_recorrido(plan),
+              pantalla_off.describir_auto(doc, guion))
+    return "\n".join(x for x in lineas if x)
 
 
 def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int] | None = None,
@@ -319,7 +331,8 @@ def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int]
     """El bloque de texto con el contexto del panel para el comienzo del mensaje de la persona. `etiquetas`: las que
     pueden ir en el filtro de etiqueta (`etiquetas_del_contexto`); sin ellas, ese filtro no va (ante la duda, no se
     manda). `guion`: el de la presentación (`guion_del_contexto`); sin él, la presentación abierta no va. `pantalla`: lo
-    que muestra la pantalla en off abierta (`pantalla_del_contexto`), que lo dice el servidor, no el navegador."""
+    que muestra la pantalla en off abierta (`pantalla_del_contexto`), que lo dice el servidor, no el navegador.
+    `recorrido`: dónde va el plan guiado y la presentación automática (`recorrido_del_contexto`: hasta dos renglones)."""
     c = contexto if isinstance(contexto, dict) else {}
     lineas = [f"Fecha y hora en Colombia: {_fecha(ahora)}"]
     ruta = _ruta(c.get("ruta"))

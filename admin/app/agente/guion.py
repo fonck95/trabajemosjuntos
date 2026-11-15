@@ -30,6 +30,9 @@ Por qué está hecho así:
   capas, los grupos y los nodos de cada pieza no vienen: son de la presentación (visual.js), al modelo no le sirven.
   Cuando la pieza es un componente del capítulo lleva su mismo id. Si la propuesta no trae catálogo, el capítulo queda
   sin `maqueta` y la herramienta descarta con un aviso lo que se pida de ella.
+* Un paso puede traer su `narracion`: la frase muy resumida, escrita a mano, que dice la presentación automática en
+  ese paso (`tecnica.narracion[capítulo][id del paso]` de general.json; app/automatica.py). Es opcional: sin ella, la
+  automática dice la primera frase del texto del paso. Sin plata, como todo lo demás.
 * Nada se acorta: la herramienta le dice al modelo que explique «con esos datos (no invente otros)». El único tope es
   lo que pesa un paso para el modelo (`MAX_BYTES_PASO`): si una propuesta nueva lo pasa, `problemas` lo dice y
   build_propuesta.py --estricto falla, para decidir qué se saca en vez de cortar en silencio.
@@ -305,7 +308,18 @@ def _paso(datos: dict, c: dict, p: dict, inmersiones: dict[str, dict]) -> dict:
     leyenda = _leyenda(p.get("leyenda"))
     if leyenda:
         out["leyenda"] = leyenda
+    narracion = plano(sin_plata(_narracion(datos, c.get("id"), p.get("id"))))
+    if narracion:
+        out["narracion"] = narracion
     return out
+
+
+def _narracion(datos: dict, capitulo: Any, paso: Any) -> Any:
+    """La narración escrita a mano de un paso para la presentación automática (`tecnica.narracion[capítulo][paso]`), o
+    None. Defensivo: lo que no es un objeto de objetos no trae ninguna."""
+    tec = datos.get("tecnica") if isinstance(datos.get("tecnica"), dict) else {}
+    del_capitulo = (tec.get("narracion") or {}).get(capitulo) if isinstance(tec.get("narracion"), dict) else None
+    return del_capitulo.get(paso) if isinstance(del_capitulo, dict) and isinstance(paso, str) else None
 
 
 def _maqueta(piezas: Any) -> list[dict]:

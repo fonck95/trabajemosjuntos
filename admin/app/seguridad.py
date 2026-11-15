@@ -54,6 +54,10 @@ ESPERA_MAX_S = 60
 METODOS_SEGUROS = {"GET", "HEAD", "OPTIONS"}
 MB = 1 << 20
 LIMITE_JSON = 256 * 1024  # el JSON más grande del panel (una ficha o una reunión) cabe de sobra
+# El audio de una pregunta por voz (`app/agente/dictado.py`, MAX_AUDIO: un minuto de voz pesa mucho menos; Safari
+# graba en audio/mp4, que pesa más). La ruta vuelve a contarlo al leerlo
+LIMITE_AUDIO = 2 * 1024 * 1024 + 4096
+RUTA_AUDIO = "/api/agente/transcribir"
 # El servidor MCP de la presentación (app/api/mcp.py) tampoco usa la sesión: lo autentica su clave, en la ruta
 RUTAS_SIN_SESION = {"/api/login", "/api/yo", "/api/mcp"}
 # Con la clave temporal sin cambiar o el compromiso sin aceptar, un usuario solo llega a estas rutas (3.5)
@@ -511,7 +515,8 @@ class GuardiaApi:
             return await self.app(scope, receive, send)
         app, ruta = scope["app"], ruta_interna(scope)
         # Importar acepta hasta 6 Excel de max_subida_mb cada uno; el resto es JSON pequeño
-        limite = (app.state.cfg.max_subida_mb * 6 + 1) * MB if ruta == "/api/importar" else LIMITE_JSON
+        limite = (app.state.cfg.max_subida_mb * 6 + 1) * MB if ruta == "/api/importar" else \
+            LIMITE_AUDIO if ruta == RUTA_AUDIO else LIMITE_JSON
         largo = Headers(scope=scope).get("content-length", "")
         if largo.isdigit() and int(largo) > limite:
             return await JSONResponse({"detail": "La petición es demasiado grande"}, 413)(scope, receive, send)
@@ -590,7 +595,9 @@ class CabecerasSeguras(BaseHTTPMiddleware):
         h["X-Frame-Options"] = "DENY"
         h["Referrer-Policy"] = "no-referrer"
         h["X-Robots-Tag"] = "noindex, nofollow"
-        h["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(self)"
+        # el micrófono, solo para las páginas del propio panel (las preguntas por voz del asistente): ningún marco de
+        # otro origen lo hereda
+        h["Permissions-Policy"] = "camera=(), microphone=(self), geolocation=(self)"
         h["Cross-Origin-Opener-Policy"] = "same-origin"
         if request.app.state.cfg.cookie_segura:
             h["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"

@@ -394,7 +394,17 @@ export function estadoValido(e) {
 
 // ───────── La pantalla en off (vistas/presentacion.js ?off=1, app/pantalla.py) ─────────
 
-/** El estado de la pantalla en off que manda el servidor, o null si no tiene la forma exacta (lo aplica un iframe). */
+/** La presentación automática como la dice el servidor (app/automatica.py): {activa, capitulo, paso} o null. `paso` es el
+ * que se está narrando o el próximo. Lo que no tiene la forma es null: la pantalla la da por apagada. */
+function autoValida(a) {
+  if (!a || typeof a !== 'object' || Array.isArray(a) || typeof a.activa !== 'boolean') return null;
+  if (typeof a.capitulo !== 'string' || !ID.test(a.capitulo) || !Number.isSafeInteger(a.paso) || a.paso < 1) return null;
+  return { activa: a.activa, capitulo: a.capitulo, paso: a.paso };
+}
+
+/** El estado de la pantalla en off que manda el servidor, o null si no tiene la forma exacta (lo aplica un iframe).
+ * `auto` es la presentación automática ({activa, capitulo, paso} o null) y `recorrido.auto` (solo cuando es true) dice
+ * que ese plan lo armó ella, no el asistente. */
 export function estadoDePantalla(e) {
   if (!e || typeof e !== 'object' || Array.isArray(e)) return null;
   const { v, capitulo, paso, explicacion } = e;
@@ -421,7 +431,8 @@ export function estadoDePantalla(e) {
   const x = e.recorrido;
   if (x && typeof x === 'object' && entero(x.edad_s, 0, 1e9)) {
     const r = recorridoValido({ id: x.id, titulo: x.titulo, escenas: x.escenas, cierre: x.cierre });
-    if (r) recorrido = { ...r, edad_s: x.edad_s };
+    // (`auto`: el plan de la presentación automática; la clave solo viaja cuando lo es, y solo vale `true`)
+    if (r) recorrido = { ...r, edad_s: x.edad_s, ...(x.auto === true ? { auto: true } : {}) };
   }
   const c = e.control_recorrido;
   if (recorrido && c && typeof c === 'object' && c.rid === recorrido.id && (CONTROLES.includes(c.accion) || c.accion === 'reproducir')
@@ -430,7 +441,8 @@ export function estadoDePantalla(e) {
   if (recorrido && pr && typeof pr === 'object' && pr.rid === recorrido.id && entero(pr.de, 1, MAX_ESCENAS) && entero(pr.n, 1, pr.de)
       && FASES.includes(pr.fase) && entero(pr.hace_s, 0, 1e9)) progreso = { rid: pr.rid, n: pr.n, de: pr.de, fase: pr.fase, hace_s: pr.hace_s };
   return { v, capitulo, paso, explicacion, panel: e.panel, indice: e.indice, fichas: e.fichas, completa: e.completa,
-    orden_completa: e.orden_completa, ...visual, ...acciones, recorrido, control_recorrido: control, progreso };
+    orden_completa: e.orden_completa, ...visual, ...acciones, recorrido, control_recorrido: control, progreso,
+    auto: autoValida(e.auto) };
 }
 
 /** Las órdenes para mando.js que llevan la presentación de `antes` (lo último que se aplicó, o null) a `e`. La pantalla

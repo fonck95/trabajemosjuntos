@@ -270,6 +270,14 @@ for (const tarda of [300, 3000]) {
   await reloj.avanzar(3000);
   out.detener_en_la_previa = { detuvo: await detuvo, ordenes: ordenes.slice(antes), ultimo: avances.at(-1) };
 }
+// La presentación automática (un plan por capítulo, sin cierre, marcado `auto`) no espera preguntas al terminar: sigue
+// enseguida con el capítulo siguiente. Uno del asistente sin cierre sí las espera
+for (const [clave, auto] of [['auto_sin_preguntas', true], ['plan_sin_cierre', false]]) {
+  const { reloj, ordenes, avances, rep } = armar();
+  rep.iniciar({ ...rec('m', { cierre: null, escenas: [esc(1, ['Frase uno.'])] }), ...(auto ? { auto: true } : {}) });
+  await reloj.avanzar(lecturaMs('Frase uno.') + 3000);
+  out[clave] = { ultimo: avances.at(-1), preguntas: ordenes.includes('cierre:preguntas') };
+}
 // Una pausa pedida apenas arranca: la primera escena se prepara, pero queda en pausa (y al seguir, narra)
 {
   const { reloj, ordenes, avances, rep } = armar();
@@ -340,6 +348,9 @@ def test_el_reproductor_pausa_reemplazo_voz_que_falla_y_cierre(tmp_path):
     assert e["ordenes"] == ["escena:1", "escena:2", "quitar_explicacion"] and e["ultimo"] == "i2/error!escena_fallida", e
     # Detenido en la espera previa de un plan que reemplazó a otro: se quita la narración del anterior
     assert r["detener_en_la_previa"] == {"detuvo": True, "ordenes": ["quitar_explicacion"], "ultimo": "k1/detenido!boton"}
+    # El plan automático termina sin la espera de preguntas; el del asistente sin cierre la hace
+    assert r["auto_sin_preguntas"] == {"ultimo": "m1/fin", "preguntas": False}, r["auto_sin_preguntas"]
+    assert r["plan_sin_cierre"] == {"ultimo": "m1/cierre", "preguntas": True}, r["plan_sin_cierre"]
     # La pausa pedida al arrancar no se pierde cuando la primera escena empieza a prepararse
     p = r["pausa_al_arrancar"]
     assert p["enPausa"]["estado"]["fase"] == "pausa" and p["enPausa"]["estado"]["pausado"] is True, p

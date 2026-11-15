@@ -294,6 +294,8 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
     fase = 'cierre';
     frase = 0;
     emitir();
+    // la presentación automática (un plan por capítulo, sin cierre) no espera preguntas: sigue con el capítulo siguiente
+    if (r.auto === true && !r.cierre) { await terminar(g, 'fin'); return; }
     if (r.cierre) {
       await mandar({ orden: 'cierre', puntos: r.cierre.puntos, rid: r.id });
       if (!vigente(g)) return;

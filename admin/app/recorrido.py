@@ -74,6 +74,11 @@ ZOOM = (0.3, 3)
 # mira (positivo, el rumbo crece); `zoom` y `elevacion`: con cuáles TERMINA. None, o al menos una de las tres
 MOVER = ("giro", "zoom", "elevacion")
 GIRO = (-360, 360)
+# El `mover` suave de una escena que no le pide nada a la cámara (que la imagen nunca quede quieta mientras se habla):
+# gira unos grados alrededor de lo que mira, alternando el sentido, y se acerca un poco (`mover_suave`). Lo usan el
+# plan guiado (`_componer` de agente/herramientas/interfaz.py) y la presentación automática (app/automatica.py)
+GIROS_SUAVES = (10, 12, 14)
+ZOOM_SUAVE = 1.06
 # Un recorrido nuevo se narra en la pantalla en off si llega a tiempo; uno viejo (la pantalla se abrió después) se aplica
 # en silencio en su última escena. Y una pantalla que se recargó a mitad reanuda si su avance es reciente
 VIGENCIA_RECORRIDO_S = 90
@@ -235,6 +240,16 @@ def mover_valido(m: Any) -> bool:
         return False
     return ("giro" not in m or _entero(m["giro"], *GIRO)) and ("zoom" not in m or zoom_valido(m["zoom"])) and \
         ("elevacion" not in m or _entero(m["elevacion"], *ELEVACION))
+
+
+def mover_suave(k: int, desde: float | None = 1) -> dict:
+    """El movimiento suave número `k` (desde 0) de un recorrido: gira GIROS_SUAVES[k] grados, a la derecha los pares y
+    a la izquierda los impares, y termina un poco más cerca que `desde` (el acercamiento del que parte; 1, el encuadre
+    del paso). Con `desde` None solo gira: la cámara sigue desde donde la dejó el movimiento anterior."""
+    giro = GIROS_SUAVES[k % len(GIROS_SUAVES)] * (-1 if k % 2 else 1)
+    if desde is None:
+        return {"giro": giro}
+    return {"giro": giro, "zoom": round(min(ZOOM[1], desde * ZOOM_SUAVE), 2)}
 
 
 def _texto(v: Any, maximo: int) -> bool:

@@ -168,6 +168,104 @@ export function pausaPorMensaje() {
   if (t && !t.pausado()) t.controlar('pausar', { suave: true, nota: 'En pausa mientras responde el asistente.' });
 }
 
+/** La persona le va a hablar al micrófono (las preguntas por voz, dictado.js): lo que suena se pausa en el acto, sin
+ * esperar el final de la frase, para que la narración no entre a la grabación. El plan del chat (el de la tarjeta que
+ * suena), como al escribir; y si no hay ninguno, el que suene en la pantalla en off sin tarjeta en este chat (el de la
+ * presentación automática): se le pregunta al servidor y se pausa allá. Devuelve `seguir(enviada)`, para cuando se
+ * deja de oír: continúa lo que esta llamada pausó. El plan del chat, solo si la pregunta no se envió (se canceló, no
+ * se oyó nada): si se envió, sigue en pausa mientras responde el asistente, como al escribir. El de la pantalla en
+ * off, siempre: la sala no se queda en silencio mientras el asistente piensa, y el plan con que responda lo reemplaza. */
+export function pausaPorVoz() {
+  const t = recorridoDelChat();
+  if (t) {
+    if (t.pausado()) return () => {};
+    // «continuar» va detrás de la pausa (si se deja de oír enseguida, no la adelanta)
+    const pausa = t.controlar('pausar', { nota: 'En pausa mientras usted pregunta.' });
+    return (enviada = false) => { if (!enviada) pausa.then(() => { if (t.sonando()) t.controlar('continuar'); }); };
+  }
+  let rid = null;
+  const pausa = (async () => {
+    try {
+      const d = await api.get('/api/pantalla/recorrido');
+      const r = d?.recorrido;
+      if (!r || typeof r !== 'object' || r.destino !== 'pantalla_off' || r.cerrado || d.conectada !== true) return;
+      if (typeof r.id !== 'string' || !RID.test(r.id) || r.fase === 'pausa' || TERMINALES.includes(r.fase)) return;
+      await api.post('/api/pantalla/recorrido/control', { rid: r.id, accion: 'pausar' });
+      rid = r.id;
+    } catch { /* sin permiso para la presentación, o ya no suena: no hay nada que pausar */ }
+  })();
+  return () => {
+    pausa.then(() => {
+      if (rid) api.post('/api/pantalla/recorrido/control', { rid, accion: 'continuar' }).catch(() => {});
+    });
+  };
+}
+
+// ── La presentación automática: la franja de la acción `automatica` ──
+const CAPITULO = /^[a-z0-9][a-z0-9_-]{0,39}$/;
+let franjaAuto = null;   // la última franja: solo ella conserva su «Detener»
+
+/** La acción `automatica` ({tipo, activa, capitulo, nombre, paso, de}) con lo que la franja usa, copiado, o null. */
+export function automaticaValida(a) {
+  if (!a || typeof a !== 'object' || Array.isArray(a) || a.tipo !== 'automatica' || typeof a.activa !== 'boolean') return null;
+  if (typeof a.capitulo !== 'string' || !CAPITULO.test(a.capitulo) || !cadena(a.nombre, 80)) return null;
+  if (![a.paso, a.de].every((n) => Number.isInteger(n) && n >= 1 && n <= 60) || a.paso > a.de) return null;
+  return { activa: a.activa, capitulo: a.capitulo, nombre: a.nombre.trim(), paso: a.paso, de: a.de };
+}
+
+/** La franja de la presentación automática `v` (ya validada con `automaticaValida`): «Presentación automática
+ * encendida · empieza en Salud» con «Detener» (POST /api/pantalla/auto), o «Presentación automática apagada». Una
+ * franja más nueva le quita el botón a la anterior. deps: {el, ico}. Devuelve {el}. */
+export function crearFranjaAutomatica(v, { el, ico }) {
+  const caja = el('div', 'agente-auto');
+  caja.dataset.activa = v.activa ? 'si' : 'no';
+  const texto = el('span', 'agente-auto-texto');
+  const decir = (activa) => {
+    const donde = v.paso > 1 ? `sigue en ${v.nombre}, paso ${v.paso} de ${v.de}` : `empieza en ${v.nombre}`;
+    texto.textContent = activa ? `Presentación automática encendida · ${donde}` : 'Presentación automática apagada';
+    caja.dataset.activa = activa ? 'si' : 'no';
+  };
+  decir(v.activa);
+  caja.append(ico('presentacion'), texto);
+  let boton = null, enviando = false;
+  // Si el foco estaba en el botón, pasa a la franja: en <body>, Escape ya no cerraría el panel del asistente
+  const quitarBoton = () => {
+    if (!boton) return;
+    const tenia = typeof boton.contains === 'function' && boton.contains(globalThis.document?.activeElement ?? null);
+    boton.remove();
+    boton = null;
+    if (tenia) { caja.tabIndex = -1; caja.focus?.({ preventScroll: true }); }
+  };
+  if (v.activa) {
+    boton = el('button', 'btn chico agente-auto-detener');
+    boton.type = 'button';
+    boton.append(ico('detener'), el('span', null, 'Detener'));
+    boton.setAttribute('aria-label', 'Detener la presentación automática');
+    const error = el('small', 'agente-auto-error');
+    error.setAttribute('role', 'alert');
+    error.hidden = true;
+    boton.addEventListener('click', async () => {
+      if (!boton || enviando) return;
+      enviando = true;
+      error.hidden = true;
+      try {
+        await api.post('/api/pantalla/auto', { accion: 'detener' });
+        quitarBoton();
+        decir(false);
+      } catch (e) {
+        enviando = false;
+        const porque = e instanceof ErrorApi && e.message && e.message !== 'Error inesperado' ? e.message : 'intente de nuevo';
+        error.textContent = `No se pudo detener: ${String(porque).slice(0, 140)}`;
+        error.hidden = false;
+      }
+    });
+    caja.append(boton, error);
+  }
+  franjaAuto?.caducar();
+  franjaAuto = { caducar: quitarBoton };
+  return { el: caja };
+}
+
 const sinMovimiento = () => {
   try { return !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
 };

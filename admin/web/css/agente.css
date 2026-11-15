@@ -1,5 +1,5 @@
-/* Asistente del panel (web/js/agente.js): botón flotante, conversación, tarjetas de aprobación e historial. Lo carga
-   agente.js. Usa los tokens de app.css, así sigue el tema claro u oscuro sin reglas propias.
+/* Asistente del panel (web/js/agente.js): botón flotante, conversación, tarjetas de aprobación, historial y el
+   micrófono de las preguntas por voz. Lo carga agente.js. Usa los tokens de app.css, así sigue el tema claro u oscuro sin reglas propias.
    Capa 28: debajo del velo (29) y del menú lateral (30) del celular, para que el menú abierto tape al asistente y
    «Cerrar sesión» siempre se alcance; encima de la barra del celular (25) y de los paneles del mapa (5-6). */
 
@@ -210,6 +210,35 @@ body:has(#franja-llamada) .agente-panel {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 10%, transparent); }
 .btn.agente-enviar { width: 44px; height: 44px; padding: 0; border-radius: 12px; flex: none; }
 .btn.agente-enviar svg { width: 20px; height: 20px; }
+/* Preguntar por voz (web/js/dictado.js): el micrófono, junto a «Enviar». Mientras oye va marcado (aria-pressed) y un
+   halo crece con lo que suena (--voz-nivel, de 0 a 1, lo pone agente.js en el formulario) */
+.btn.agente-voz { position: relative; width: 44px; height: 44px; padding: 0; border-radius: 12px; flex: none; }
+.btn.agente-voz svg { width: 20px; height: 20px; position: relative; }
+.btn.agente-voz::before { content: ""; position: absolute; inset: 3px; border-radius: 9px; background: var(--accent);
+  opacity: 0; transform: scale(.6); transition: transform .12s ease-out, opacity .12s ease-out; }
+.btn.agente-voz[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-text); }
+.btn.agente-voz[aria-pressed="true"]::before { opacity: calc(.14 + var(--voz-nivel, 0) * .3);
+  transform: scale(calc(.72 + var(--voz-nivel, 0) * .5)); }
+.btn.agente-voz[data-estado="pidiendo"]::before { animation: agente-puntos 1.2s ease-in-out infinite; }
+.btn.agente-voz[aria-disabled="true"] { opacity: .55; cursor: progress; }
+/* La línea de estado de la voz, encima del cuadro: la onda (cinco barras que suben con lo que suena), lo que pasa
+   («Escuchando…», «Transcribiendo…», un error) y «Cancelar». En la vía del navegador, además, lo que va oyendo */
+.agente-voz-estado { display: flex; align-items: center; gap: 9px; margin: 0 0 8px; padding: 6px 6px 6px 10px; border-radius: 10px;
+  background: var(--accent-soft); color: var(--ink); font-size: 12.5px; line-height: 1.4; }
+.agente-voz-linea { flex: 1; min-width: 0; margin: 0; display: flex; flex-direction: column; gap: 1px; font-weight: 650; }
+.agente-voz-parcial { font-weight: 500; color: var(--ink-2); overflow-wrap: anywhere; }
+.agente-voz-cancelar { flex: none; }
+.agente-voz-onda { flex: none; display: flex; align-items: center; gap: 2px; height: 18px; }
+.agente-voz-onda i { width: 3px; height: 100%; border-radius: 3px; background: var(--accent); transform-origin: center;
+  transform: scaleY(calc(.18 + var(--voz-nivel, 0) * var(--peso, .8))); transition: transform .12s ease-out; }
+.agente-voz-onda i:nth-child(1), .agente-voz-onda i:nth-child(5) { --peso: .45; }
+.agente-voz-onda i:nth-child(2), .agente-voz-onda i:nth-child(4) { --peso: .7; }
+.agente-voz-estado[data-estado="transcribiendo"] .agente-voz-onda i,
+.agente-voz-estado[data-estado="pidiendo"] .agente-voz-onda i { transform: scaleY(.5); animation: agente-puntos 1.2s ease-in-out infinite; }
+.agente-voz-estado[data-estado="transcribiendo"] .agente-voz-onda i:nth-child(even) { animation-delay: .3s; }
+.agente-voz-estado[data-estado="error"] { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--ink-2); font-weight: 500; }
+.agente-voz-estado[data-estado="error"] .agente-voz-linea { font-weight: 500; }
+.agente-voz-estado[data-estado="error"] .agente-voz-onda { display: none; }
 .btn.agente-detener { height: 44px; border-radius: 12px; flex: none; }
 .agente-pie { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2px 10px; margin: 6px 2px 0;
   font-size: 11.5px; color: var(--muted); }
@@ -274,6 +303,7 @@ body:has(#franja-llamada) .agente-panel {
   body:has(#agente-panel:not([hidden])) #avisos { bottom: calc(100px + env(safe-area-inset-bottom)); right: 16px; left: 16px; }
   .btn.agente-icono { width: 44px; height: 44px; }
   .agente-fila textarea { font-size: 16px; } /* menos de 16 px y iOS amplía la página */
+  .agente-voz-cancelar, .agente-auto-detener { min-height: 36px; }
   .agente-compositor { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
   .agente-mensajes { padding: 14px 14px 10px; }
   .agente-sugerencia, .agente-tarjeta-botones .btn { min-height: 44px; }
@@ -295,7 +325,20 @@ body:has(#franja-llamada) .agente-panel {
   .agente-boton[data-senal="trabajando"] .agente-senal { animation: none; }
   .agente-giro { animation-duration: 2.4s; }
   .agente-msj.agente-respuesta.trabajando::after { animation: none; }
+  .btn.agente-voz::before, .agente-voz-onda i { transition: none; animation: none; }
 }
+
+/* ───────── La presentación automática: la franja de la acción `automatica` (agente-recorrido.js) ───────── */
+.agente-auto { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 9px; padding: 8px 10px 8px 12px; border-radius: 12px;
+  border: 1px solid var(--line-soft); border-left: 4px solid var(--accent); background: var(--surface); font-size: 13px; }
+.agente-auto[data-activa="no"] { border-left-color: var(--line); color: var(--muted); }
+.agente-auto > svg { flex: none; width: 17px; height: 17px; color: var(--accent-text); }
+.agente-auto[data-activa="no"] > svg { color: var(--muted); }
+.agente-auto-texto { flex: 1 1 180px; min-width: 0; font-weight: 650; overflow-wrap: anywhere; }
+.agente-auto-detener { flex: none; }
+.agente-auto-detener svg { width: 14px; height: 14px; }
+.agente-auto-error { flex: 1 1 100%; color: var(--crit); font-size: 12px; }
+.agente-auto:focus-visible { outline-offset: 2px; }
 
 /* ───────── El plan guiado de la presentación (agente-recorrido.js) ─────────
    La tarjeta: «Plan · título», cuántos pasos, cuánto dura y dónde suena; el avance; el estado con «Ver todo» y el

@@ -87,6 +87,32 @@ html[data-pres-off] #agente { display: none; }
 .pres-off-chip { display: inline-flex; align-items: center; gap: 6px; }
 .pres-off-chip svg { width: 16px; height: 16px; }
 .pres-off-aviso[hidden] { display: none; }
+/* El botón «Presentación automática» de la pantalla en off: encendida, lleno (se tiene que ver desde el fondo de la
+   sala); mientras el servidor responde, atenuado */
+.pres-auto[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.pres-auto[aria-busy="true"] { opacity: .7; }
+/* Sus botones van en una sola fila y, si no caben, lo que se recorta (con puntos suspensivos) es el estado de la
+   conexión: con el botón nuevo, en un proyector de 1280 px se partían en dos filas y le quitaban alto a la presentación
+   (y en el celular la barra se salía por la derecha) */
+.presentacion.en-off .pres-botones { flex-wrap: nowrap; min-width: 0; }
+.presentacion.en-off .pres-botones .btn { flex: none; }
+.pres-off-chip { flex: 0 1 auto; min-width: 34px; }
+.pres-off-chip svg { flex: none; }
+.pres-off-chip > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Con la automática encendida el paso («Presentación automática · Salud · paso 3 de 10») necesita más ancho: si no lo
+   tiene al lado de los botones, la barra se parte en dos filas en vez de recortarle el número del paso */
+.presentacion.en-off[data-auto] .pres-donde { flex-basis: 340px; }
+/* y con la vista más angosta (una tableta de pie, media pantalla), los botones sin texto, como en el celular */
+@container (max-width: 820px) {
+  .presentacion.en-off .pres-botones .btn { padding: 8px 10px; }
+  .presentacion.en-off .pres-botones .btn span { display: none; }
+}
+/* En una sola fila (el celular) los botones no ceden y el estado mide como mucho una parte del ancho: lo que se
+   recorta es el texto del paso (si los botones cedieran, se saldrían de la barra) */
+@container (max-width: 640px) {
+  .presentacion.en-off .pres-botones { flex: none; }
+  .pres-off-chip { max-width: 22cqw; }
+}
 /* La presentación llena la ventana (la pantalla completa del asistente y de la pantalla en off): sin el menú ni las
    barras del panel. En la pestaña del chat el botón del asistente sigue a mano (arriba a la derecha) */
 html[data-pres-llena] .lateral, html[data-pres-llena] .barra-movil { display: none; }

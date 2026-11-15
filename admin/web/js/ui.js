@@ -213,6 +213,8 @@ const P = {
   agente: '<path d="M10 2.5 12 8l5.5 2L12 12l-2 5.5L8 12l-5.5-2L8 8zM18 13l1.1 2.9L22 17l-2.9 1.1L18 21l-1.1-2.9L14 17l2.9-1.1z"/>',
   enviar: '<path d="M12 19V5m0 0-6 6m6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
   detener: '<rect x="6.5" y="6.5" width="11" height="11" rx="2"/>',
+  // preguntar por voz (web/js/dictado.js)
+  microfono: '<path d="M12 3.5a3 3 0 0 0-3 3V11a3 3 0 0 0 6 0V6.5a3 3 0 0 0-3-3zM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21m-3.5 0h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   // el recorrido narrado de la presentación (la tarjeta del chat y la barra de la vista)
   voz: '<path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5zM15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   pausa: '<rect x="6.5" y="5" width="3.6" height="14" rx="1"/><rect x="13.9" y="5" width="3.6" height="14" rx="1"/>',
