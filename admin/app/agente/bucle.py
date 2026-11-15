@@ -114,7 +114,7 @@ REINTENTOS = 2               # repeticiones de una ronda tras fallos pasajeros (
 TURNOS_POR_PROCESO = 4
 # Cómo termina una ronda que se cortó: con `tool_use` no se ejecuta (la entrada puede estar a medias), sin él se avisa
 CORTES = frozenset({"max_tokens", "model_context_window_exceeded", "other"})
-ACCIONES = frozenset({"navegar", "recargar", "insignias", "mapa", "presentacion", "recorrido"})
+ACCIONES = frozenset({"navegar", "recargar", "insignias", "mapa", "presentacion", "recorrido", "automatica"})
 FLUJO = {"X-Accel-Buffering": "no", "Cache-Control": "no-store"}
 
 RECHAZADA = "La persona rechazó esta acción: no la vuelvas a proponer salvo que lo pida."

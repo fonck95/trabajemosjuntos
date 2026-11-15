@@ -26,7 +26,9 @@ docs/agente.md) que el widget aplica con `accionesMapa` o con `ir`. Por qué est
   técnica de lo que se muestra. Y con `recorrido` arma un PLAN guiado (hasta 12 pasos: lo que se dice y lo que ocurre
   mientras se dice: la cámara que viaja, las piezas de la maqueta que se muestran, se ocultan o se aíslan, las partes
   que se quitan) que la pantalla ejecuta sola; ahí la composición es TOLERANTE: lo opcional que no resuelve se
-  descarta o se recorta con un aviso legible y el plan corre igual (`_componer`). Lo único que guarda es la
+  descarta o se recorta con un aviso legible y el plan corre igual (`_componer`). Y con `automatica` enciende o
+  apaga la presentación automática (`app/automatica.py`): la pantalla en off recorre sola toda la presentación, muy
+  resumida, sin que el modelo escriba nada; un plan del asistente la interrumpe y después sigue. Lo único que guarda es la
   pantalla en off de la persona (`app/pantalla.py`: capítulo, paso, explicación y lo que se ve, sin datos de nadie), que
   manejan este asistente y un agente por MCP (`app/api/mcp.py`) con la misma herramienta (`presentacion_en_pantalla`). Lo que el
   modelo escribe para la pantalla (`explicacion`) se proyecta ante otras personas: se rechaza con caracteres que no se
@@ -48,6 +50,7 @@ from pydantic import (AfterValidator, BeforeValidator, ConfigDict, Field, Strict
                       model_validator)
 from starlette.concurrency import run_in_threadpool
 
+from ... import automatica
 from ... import pantalla as pantalla_off
 from ... import recorrido as rec
 from ...proyectable import DIGITOS_MAX, MAX_EXPLICACION, numero_largo, texto_proyectable  # noqa: F401
@@ -680,7 +683,9 @@ async def _abrir_vista(ctx: Contexto, a: AbrirVistaEntrada) -> Resultado:
 # ───────────────────────────── presentacion ─────────────────────────────
 
 OPS_PRESENTACION = ("indice", "guion", "ir", "siguiente", "anterior", "explicar", "quitar_explicacion", "vista",
-                    "visual", "recorrido", "control_recorrido", "pantalla_completa", "estado")
+                    "visual", "recorrido", "control_recorrido", "automatica", "pantalla_completa", "estado")
+# Lo que se le pide a la presentación automática (`automatica`): encenderla (desde un capítulo, si se dice) o apagarla
+ACCIONES_AUTO = ("iniciar", "detener")
 # Lo que arma un plan guiado (`recorrido`: hacia el modelo y la persona, un «plan» con «pasos»; por dentro, un recorrido
 # con escenas) y lo que lo maneja (`control_recorrido`). `pasos` y `escenas` son lo mismo: llega uno de los dos
 PARTES_RECORRIDO = ("titulo", "pasos", "escenas", "cierre", "sugerencias")
@@ -699,9 +704,9 @@ NOMBRE_CAMARA = {"paso": "el encuadre del paso", "aerea": "vista aérea", "oblic
 # El acercamiento que implica cada encuadre con nombre (`PRESET` de visual.js): de ahí parte el `mover` por omisión
 ZOOM_DE_CAMARA = {"rasante": 1.1, "cerca": 1.9, "lejos": 0.5}
 # El `mover` suave de un paso del plan que no le pide nada a la cámara (que la imagen nunca quede quieta): gira unos
-# grados alrededor de lo que mira, alternando el sentido, y se acerca un poco
-GIROS_SUAVES = (10, 12, 14)
-ZOOM_SUAVE = 1.06
+# grados alrededor de lo que mira, alternando el sentido, y se acerca un poco (`rec.mover_suave`)
+GIROS_SUAVES = rec.GIROS_SUAVES
+ZOOM_SUAVE = rec.ZOOM_SUAVE
 MAX_AVISOS = 12
 MAX_PASO = guion_presentacion.MAX_PASOS
 # Las reglas de lo que se proyecta viven en app/proyectable.py (también las usan el recorrido y la pantalla en off): la
@@ -927,7 +932,8 @@ class PresentacionEntrada(_Entrada):
         "cortas en pantalla; quitar_explicacion: la quita; vista: lo que se ve sin cambiar de paso (panel, indice, "
         "fichas); visual: la cámara, las piezas de la maqueta y lo demás, sin cambiar de paso; pantalla_completa: la "
         "presentación llena la ventana (activar) o vuelve a la vista con el menú; estado: qué muestra la pantalla en "
-        "off, si está abierta y por qué paso va el plan"))
+        "off, si está abierta y por qué paso va el plan; automatica: la pantalla en off recorre sola toda la "
+        "presentación, muy resumida (accion iniciar o detener; capitulo: dónde empieza)"))
     capitulo: str | None = Field(None, min_length=2, max_length=60, description=(
         "Id o nombre del capítulo (del índice o del contexto del panel)"))
     paso: PasoNumero | PasoId | None = Field(None, description="Número del paso desde 1, o su id (del índice)")
@@ -982,9 +988,9 @@ class PresentacionEntrada(_Entrada):
         "recorrido: dos o tres ideas que quedan en la sala"))
     sugerencias: Annotated[list[Sugerencia], BeforeValidator(_sugerencias_a_su_manera)] | None = Field(
         None, max_length=rec.MAX_SUGERENCIAS, description="recorrido: hasta 3 próximos pasos, solo para el chat (no se proyectan)")
-    accion: Literal[rec.CONTROLES] | None = Field(None, description=(
+    accion: Literal[(*rec.CONTROLES, "iniciar")] | None = Field(None, description=(
         "control_recorrido: pausar, continuar, siguiente, anterior, repetir, reproducir (otra vez, desde el comienzo) o "
-        "detener"))
+        "detener. automatica: iniciar o detener"))
 
     @field_validator("enfoque", "inmersion", "detalle", "mirar", "aislar", mode="before")
     @classmethod
@@ -1006,7 +1012,8 @@ class PresentacionEntrada(_Entrada):
     @model_validator(mode="after")
     def _segun_op(self):
         vista, completa, visual = PARTES_VISTA, ("activar",), PARTES_VISUAL
-        propias = {"recorrido": PARTES_RECORRIDO, "control_recorrido": ("accion",)}.get(self.op, ())
+        propias = {"recorrido": PARTES_RECORRIDO, "control_recorrido": ("accion",),
+                   "automatica": ("accion",)}.get(self.op, ())
         ajenas = [k for k in (*PARTES_RECORRIDO, "accion") if k not in propias and getattr(self, k) is not None]
         if ajenas:
             raise ValueError(f"La operación {self.op} no usa: {', '.join(ajenas)}")
@@ -1014,6 +1021,7 @@ class PresentacionEntrada(_Entrada):
                   "guion": ("explicacion", *vista, *completa),
                   "recorrido": ("capitulo", "paso", "explicacion", *vista, *completa),
                   "control_recorrido": ("capitulo", "paso", "explicacion", *vista, *completa),
+                  "automatica": ("paso", "explicacion", *vista, *completa),
                   "quitar_explicacion": ("capitulo", "paso", "explicacion", *vista, *completa),
                   "estado": ("capitulo", "paso", "explicacion", *vista, *completa),
                   "explicar": ("capitulo", "paso", *vista, *completa),
@@ -1054,9 +1062,12 @@ class PresentacionEntrada(_Entrada):
             raise ValueError("pasos y escenas son lo mismo: mande solo pasos")
         if self.op == "recorrido" and not self.plan():
             raise ValueError("Para recorrido, escriba el titulo y los pasos del plan (de 6 a 10, una frase cada uno)")
-        if self.op == "control_recorrido" and self.accion is None:
+        if self.op == "control_recorrido" and self.accion not in rec.CONTROLES:
             raise ValueError("Para control_recorrido, diga la accion: pausar, continuar, siguiente, anterior, repetir, "
                              "reproducir o detener")
+        if self.op == "automatica" and self.accion not in ACCIONES_AUTO:
+            raise ValueError("Para automatica, diga la accion: iniciar (la pantalla en off recorre sola toda la "
+                             "presentación; con capitulo, desde ese) o detener")
         return self
 
 
@@ -1166,10 +1177,13 @@ def _estado_para_modelo(doc: dict | None, e: dict, g: guion_presentacion.Guion, 
            "visual": {k: e[k] for k in PARTES_VISUAL}}
     if doc and doc.get("por") in pantalla_off.ORIGENES:
         out["cambiada_por"] = {"asistente": "el asistente del panel", "mcp": "un agente por MCP",
-                               "panel": "los controles del panel"}[doc["por"]]
+                               "panel": "los controles del panel", "auto": "la presentación automática"}[doc["por"]]
+    auto = pantalla_off.auto_de(doc, g)
+    if auto:
+        out["automatica"] = {**pantalla_off.auto_para_persona(doc, g), "vueltas": auto["vueltas"]}
     r = pantalla_off.resumen_recorrido(doc, g)
     if r:
-        out["plan"] = _plan_para_modelo(r)
+        out["plan"] = {**_plan_para_modelo(r), **({"automatico": True} if r["auto"] else {})}
     return out
 
 
@@ -1218,6 +1232,8 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
         return await _recorrido(db, uid, g, a, por, abierta, doc)
     if a.op == "control_recorrido":
         return await _control_recorrido(db, uid, g, a, por, abierta)
+    if a.op == "automatica":
+        return await _automatica(db, uid, g, a, por, abierta, doc)
     e = pantalla_off.estado(pantalla_off.a_la_vista(doc, g), g)
     if a.op == "estado":
         return Resultado({"pantalla": _estado_para_modelo(doc, e, g, abierta), "nota": (
@@ -1909,12 +1925,8 @@ def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> tuple[dict
             zoom_fin = None
         quieta = (not otro or not escenas) and mover is None and misma_camara
         if quieta and not visual["girar"] and rec.inmersion_de(esc, g) is None:
-            giro = GIROS_SUAVES[len(suaves) % len(GIROS_SUAVES)] * (-1 if len(suaves) % 2 else 1)
-            if zoom_fin is not None:
-                esc["mover"] = {"giro": giro}
-            else:
-                desde = visual["zoom"] or ZOOM_DE_CAMARA.get(visual["camara"], 1)
-                esc["mover"] = {"giro": giro, "zoom": round(min(rec.ZOOM[1], desde * ZOOM_SUAVE), 2)}
+            esc["mover"] = rec.mover_suave(len(suaves), None if zoom_fin is not None else
+                                           visual["zoom"] or ZOOM_DE_CAMARA.get(visual["camara"], 1))
             suaves.add(n)
         if esc["mover"] and esc["mover"].get("zoom") is not None:
             zoom_fin = esc["mover"]["zoom"]
@@ -2102,6 +2114,7 @@ async def _recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: Presenta
                                "divídalo en dos (menos pasos o frases más cortas).", "invalido", estado=422)
     destino = "pantalla_off" if abierta or por == "mcp" else "vista"
     previo = pantalla_off.recorrido_de(doc, g)
+    auto = pantalla_off.auto_de(doc, g)
     await run_in_threadpool(pantalla_off.guardar_recorrido, db, uid, r, destino, por)
     avisos = [*descartado, *_avisos(g, r, suaves)]
     minutos, segundos = divmod(round(ms / 1000), 60)
@@ -2115,6 +2128,11 @@ async def _recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: Presenta
     if avisos:
         contenido["avisos"] = avisos[:MAX_AVISOS] + (
             [f"y {len(avisos) - MAX_AVISOS} avisos más"] if len(avisos) > MAX_AVISOS else [])
+    if auto and auto["activa"]:
+        c = g.capitulos[g.por_id(auto["capitulo"])]
+        contenido["automatica"] = (
+            "La presentación automática está encendida: este plan la interrumpe y, cuando termine, sigue sola en "
+            f"{c['nombre']}, paso {auto['paso']} de {len(c['pasos'])}. No hace falta reiniciarla.")
     acciones: list[dict] = []
     if por == "asistente":
         if destino == "pantalla_off" and previo and not previo["cerrado"] and previo["destino"] == "vista":
@@ -2160,21 +2178,76 @@ async def _control_recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: 
     r, doc = res["recorrido"], res["doc"]
     estado = pantalla_off.resumen_recorrido(doc, g) or {}
     acciones: list[dict] = []
+    apagada = bool(r and r["auto"] and a.accion == "detener")   # era el plan de la presentación automática
     if por == "asistente" and r:
         if a.accion == "reproducir":
             if r["destino"] == "vista":
                 acciones.append({"tipo": "presentacion", "op": "recorrido",
                                  "recorrido": {k: r[k] for k in ("id", "titulo", "escenas", "cierre")}})
-            acciones.append(_tarjeta(g, r, r["destino"], rec.duracion_ms(r, g), []))
+            if not r["auto"]:   # el plan automático no tiene tarjeta en el chat
+                acciones.append(_tarjeta(g, r, r["destino"], rec.duracion_ms(r, g), []))
         elif r["destino"] == "vista":
             acciones.append({"tipo": "presentacion", "op": "control_recorrido", "rid": r["id"], "accion": a.accion})
+        if apagada:
+            acciones.append({"tipo": "automatica", **pantalla_off.auto_para_persona(doc, g)})
     nombres = {"pausar": "Pausé", "continuar": "Seguí con", "siguiente": "Pasé al paso siguiente de",
                "anterior": "Volví al paso anterior de", "repetir": "Repetí el paso de", "reproducir": "Volví a empezar",
                "detener": "Detuve"}
     contenido = {"plan": {"id": estado.get("id"), "titulo": estado.get("titulo"), "paso": estado.get("escena"),
                           "de": estado.get("de"), "fase": estado.get("fase")}, "accion": a.accion,
                  "nota": "Se aplica en la pantalla donde suena el plan; el avance llega en estado y en el contexto."}
+    if apagada:
+        contenido["automatica"] = ("Era el plan de la presentación automática: quedó apagada. Vuelve con la op "
+                                   "automatica (accion iniciar).")
     return Resultado(contenido, f"{nombres[a.accion]} el plan «{(r or {}).get('titulo', '')}»", acciones=acciones)
+
+
+NOTA_AUTOMATICA = (
+    "La pantalla en off recorre sola toda la presentación: un plan por capítulo, con una frase muy resumida por paso "
+    "(sale del guion: no la escribe usted), y al terminar la vuelta vuelve a empezar. No la narre ni la repita en el "
+    "chat: diga en una línea que ya empezó. Si la persona pregunta algo, respóndale con un plan CORTO (recorrido de 3 a "
+    "5 pasos): la interrumpe y, cuando termina, sigue sola desde el paso donde iba. Se apaga con accion detener.")
+NOTA_AUTOMATICA_SIN_PANTALLA = (
+    "Quedó encendida, pero no hay ninguna pantalla en off abierta: empieza sola cuando la persona abra la vista "
+    "Presentación en modo en off (botón «Pantalla en off» de la vista, en el proyector o en otra pantalla). La "
+    "presentación automática solo corre en la pantalla en off.")
+NOTA_AUTOMATICA_APAGADA = ("La presentación automática quedó apagada: la pantalla se queda en el paso donde iba. Vuelve "
+                           "con accion iniciar (desde el comienzo, o desde un capitulo).")
+
+
+async def _automatica(db: Any, uid: int, g: guion_presentacion.Guion, a: PresentacionEntrada, por: str,
+                      abierta: bool, doc: dict | None) -> Resultado:
+    """La op `automatica`: enciende la presentación automática (desde el primer paso del capítulo que se diga o, sin
+    capítulo, desde la portada) o la apaga (`app/pantalla.py`, `app/automatica.py`). La narra la pantalla en off, con
+    planes que arma el servidor desde el guion: aquí no se escribe nada para la sala. Devuelve el estado y una nota y,
+    al asistente, la acción para el chat ({tipo: automatica, activa, capitulo, nombre, paso, de}); si al encenderla
+    con una pantalla abierta sonaba un plan en la pestaña o el proyector (`doc`, la pantalla antes), lo detiene allá."""
+    acciones: list[dict] = []
+    if a.accion == "iniciar":
+        ci = _resolver_capitulo(g, a.capitulo) if a.capitulo else 0
+        previo = pantalla_off.recorrido_de(doc, g)
+        nuevo = await run_in_threadpool(pantalla_off.iniciar_auto, db, uid, g, por, ci)
+        if por == "asistente" and abierta and previo and not previo["cerrado"] and previo["destino"] == "vista":
+            acciones.append({"tipo": "presentacion", "op": "control_recorrido", "rid": previo["id"], "accion": "detener",
+                             "motivo": "otra_orden"})
+    else:
+        if a.capitulo is not None:
+            raise ErrorHerramienta("Para detener la presentación automática no va capitulo.", "invalido", estado=422)
+        nuevo = await run_in_threadpool(pantalla_off.detener_auto, db, uid, g, por)
+    x = pantalla_off.auto_para_persona(nuevo, g)
+    estaba = bool((pantalla_off.auto_de(doc, g) or {}).get("activa"))
+    contenido: dict[str, Any] = {"automatica": x, "pantalla_en_off_abierta": abierta}
+    if a.accion == "iniciar":
+        minutos = max(1, round(automatica.duracion_de_la_vuelta_ms(g) / 60000))
+        contenido["recorre"] = {"capitulos": len(g), "pasos": g.total_pasos(), "vuelta_completa_min": minutos}
+        contenido["nota"] = NOTA_AUTOMATICA if abierta else NOTA_AUTOMATICA_SIN_PANTALLA
+        resumen = f"Presentación automática encendida · empieza en {x['nombre']}"
+    else:
+        contenido["nota"] = NOTA_AUTOMATICA_APAGADA if estaba else "La presentación automática no estaba encendida."
+        resumen = "Presentación automática apagada"
+    if por == "asistente":
+        acciones.append({"tipo": "automatica", **x})
+    return Resultado(contenido, resumen, acciones=acciones)
 
 
 # Las ops que proyectan texto escrito por el modelo: en una conversación que ya trae datos de habitantes no van
@@ -2215,19 +2288,20 @@ D_ABRIR_VISTA = (
     "en una frase qué quedó en pantalla.")
 D_PRESENTACION = (
     "Presenta la propuesta Yondó 2028–2031 en su versión técnica (lo que se construye, sin costos, sobre la maqueta 3D "
-    "del territorio y con modelos del atlas) en el panel de la persona o en su pantalla en off (un proyector sin "
-    "controles). PARA EXPLICAR, PRIMERO UN PLAN: guion (los datos de un capítulo: pasos, fichas, piezas de la maqueta, "
-    "inmersiones; no mueve nada) y luego recorrido, en UNA llamada: titulo, pasos (de 6 a 10, hasta 12) y cierre "
-    "{puntos}. Cada paso: dice (UNA frase, hasta 220 caracteres, que se proyecta y se lee en voz "
+    "y los modelos del atlas) en el panel de la persona o en su pantalla en off. PARA EXPLICAR, PRIMERO UN PLAN: guion "
+    "(los datos de un capítulo; no mueve nada) y luego recorrido, en UNA llamada: titulo, pasos (de 6 a 10, hasta 12) "
+    "y cierre {puntos}. Cada paso: dice (UNA frase, hasta 220 caracteres, que se proyecta y se lee en voz "
     "alta) y lo que ocurre MIENTRAS se dice: capitulo, paso, la cámara (camara, rumbo, elevacion, zoom, mirar, mover "
     "{giro, zoom, elevacion}), las piezas (aislar, mostrar, ocultar, sin «pieza.parte»), enfoque, detalle, comparar, "
-    "inmersion, animar, resaltar; lo que no cambia sigue del paso anterior. El chat muestra el plan y la pantalla lo "
-    "ejecuta sola; lo que no exista se descarta con un aviso. Ejemplo de pasos: [{\"capitulo\":"
+    "inmersion, animar, resaltar; lo que no cambia sigue del paso anterior. La pantalla lo ejecuta sola; lo que no "
+    "exista se descarta con un aviso. Ejemplo de pasos: [{\"capitulo\":"
     "\"salud\",\"paso\":\"torre\",\"camara\":\"oblicua\",\"mover\":{\"giro\":40},\"dice\":\"…\"},{\"aislar\":\"torre\","
-    "\"sin\":[\"torre.cubierta\"],\"dice\":\"…\"}]. control_recorrido: pausar, continuar, siguiente, anterior, repetir, "
-    "reproducir, detener. Pedidos puntuales: indice, estado y pantalla_completa; y, deteniendo el plan, ir (devuelve lo "
-    "que muestra); siguiente/anterior; explicar y quitar_explicacion; vista (panel, indice, fichas); visual (lo de un "
-    "paso, y tema). La sala lo ve: nunca datos de habitantes, costos, «@» ni números de 7 o más dígitos.")
+    "\"sin\":[\"torre.cubierta\"],\"dice\":\"…\"}]. control_recorrido lo pausa, salta o detiene. automatica (accion "
+    "iniciar o detener): la pantalla en off recorre sola toda la presentación, muy resumida; un plan corto la "
+    "interrumpe y después sigue sola. Pedidos puntuales: indice, estado y pantalla_completa; y, deteniendo el plan, ir "
+    "(devuelve lo que muestra); siguiente/anterior; explicar y quitar_explicacion; vista (panel, indice, fichas); "
+    "visual (lo de un paso, y tema). La sala lo ve: nunca datos de habitantes, costos, «@» ni números de 7 o más "
+    "dígitos.")
 
 HERRAMIENTAS: list[Herramienta] = [
     Herramienta("mapa", D_MAPA, MapaEntrada, "interfaz", ("mapa.ver",), "Moviendo el mapa", _mapa,

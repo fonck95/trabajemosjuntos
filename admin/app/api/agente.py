@@ -5,12 +5,14 @@
   nueva (`proveedor`: «mnemo», «anthropic» o None; ver `agente/proveedores.py`). Para el administrador y el
   coordinador trae además la conexión con Mnemo (`mnemo.conexion`, `mnemo_conexion.vista`; al coordinador, sin la
   cuenta personal de Mnemo del administrador ni la dirección sugerida); conectarla y desconectarla está en
-  `api/agente_mnemo.py`.
+  `api/agente_mnemo.py`. Y `dictado`: si esta instalación puede transcribir por Mnemo las preguntas por voz.
 * GET /api/agente/conversaciones, GET y DELETE /api/agente/conversaciones/{cid} — las conversaciones propias: solo
   su dueño las ve o las borra (de otra persona es un 404, como si no existiera).
 * POST /api/agente/mensajes y POST /api/agente/confirmaciones — un turno en flujo (NDJSON, `bucle.py`). Lo que impide
   el turno sale antes como JSON normal (503, 403, 404, 409, 429); entre ellos, 409 `proveedor` si la conversación es
   de un proveedor del modelo que ya no está.
+* POST /api/agente/transcribir — una pregunta por voz: el cuerpo es el audio crudo que grabó el panel y la respuesta,
+  su texto (`agente/dictado.py`, que se lo pide a la cuenta de Mnemo conectada). No guarda nada.
 
 El módulo del bucle (y con él el catálogo de herramientas) se importa al usarlo: `crear_app` no depende de que cada
 herramienta cargue, y una herramienta rota deja sin asistente, no sin panel."""
@@ -20,6 +22,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field, StrictBool, field_validator
 from pymongo.database import Database
 
@@ -91,6 +94,17 @@ def _mnemo_activo(quien: Quien, agente: dict, cfg: Any, conexion: dict) -> bool:
         return False
 
 
+def _dictado(app: Any, conexion: dict) -> bool:
+    """¿Esta instalación puede transcribir por Mnemo las preguntas por voz? (`dictado.puede`). Sin eso el panel usa el
+    reconocimiento de voz del navegador. El estado nunca falla por esto."""
+    try:
+        from ..agente import dictado
+        return dictado.puede(app, conexion)
+    except Exception as e:  # noqa: BLE001
+        log.warning("Asistente: no se pudo saber si se puede transcribir por Mnemo (%s)", type(e).__name__)
+        return False
+
+
 def _etiquetas(conv: dict) -> dict[str, str]:
     """La etiqueta (en gerundio) de cada herramienta de la conversación, para pintar el historial."""
     try:
@@ -115,7 +129,9 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
     lectura en Ajustes), `"conexion"`: `mnemo_conexion.vista(db, cfg)` (`estado`, `motivo`, `url`, `cuenta`,
     `alcances`, `modelo`, `ofrece_modelo`, `desde` y `url_sugerida`). Al coordinador le llegan `cuenta` y
     `url_sugerida` en None: la cuenta es la personal del administrador (nombre y correo) y la dirección sugerida solo
-    le sirve a quien conecta."""
+    le sirve a quien conecta. `dictado`: True si las preguntas por voz se pueden transcribir por Mnemo (hay una
+    conexión con `mnemo:model` y Mnemo no dijo hace poco que no transcribe); con False el panel usa el reconocimiento
+    de voz del navegador."""
     cfg = request.app.state.cfg
     ajustes, agente = politica.leer(db)
     sesion = (request.scope.get("state") or {}).get("sesion")
@@ -129,7 +145,7 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
     return {"disponible": motivo is None, "motivo": motivo, "configurado": proveedor is not None,
             "proveedor": proveedor, "es_admin": quien.es_admin, "escritura": agente["escritura"],
             "limite": {"usados": conv_db.uso_de(db, quien.uid), "maximo": politica.mensajes_diarios(ajustes, quien.rol)},
-            "mnemo": mnemo,
+            "mnemo": mnemo, "dictado": _dictado(request.app, conexion),
             "sugerencias": politica.sugerencias(quien.rol) if motivo is None else []}
 
 
@@ -177,3 +193,25 @@ async def confirmaciones(cuerpo: ConfirmacionIn, request: Request, quien: Quien 
     from ..agente import bucle
     return await bucle.abrir_confirmacion(request, quien, cuerpo.conversacion,
                                           {d.id: d.aprobar for d in cuerpo.decisiones})
+
+
+@r.post("/agente/transcribir")
+async def transcribir(request: Request, quien: Quien = Depends(requiere("agente.usar"))):
+    """Una pregunta por voz. El cuerpo es el audio crudo (`Content-Type`: `audio/webm`, `audio/ogg`, `audio/mp4`,
+    `audio/mpeg` o `audio/wav`; hasta 2 MB) y la respuesta, `{"texto": lo transcrito ("" si no se oyó nada), "via":
+    "mnemo"}`. Con la sesión y el permiso del asistente (503 sin proveedor del modelo, 403 con el rol apagado) y como
+    mucho 20 por minuto por persona (429 `frecuencia`). Errores, todos `{codigo, mensaje}`: 415 `tipo`, 413 `grande`,
+    422 `vacio` (sin cuerpo) o `audio` (Mnemo no pudo leerlo), 409 `sin_transcriptor` (Mnemo sin conectar, la conexión
+    sin `mnemo:model`, o Mnemo sin un modelo que transcriba: el panel pasa al reconocimiento del navegador), 402
+    `mnemo_creditos` y 502. No guarda ni registra el audio ni el texto."""
+    from ..agente import dictado
+    app = request.app
+    db, cfg = app.state.db, app.state.cfg
+    _, agente = await run_in_threadpool(politica.leer, db)
+    await run_in_threadpool(politica.exigir, quien, cfg, agente, db)
+    mime = dictado.tipo_de(request.headers.get("content-type"))
+    if mime is None:
+        raise dictado.ErrorDictado(415, "tipo", dictado.MENSAJE_TIPO)
+    dictado.frecuencia(db.name, quien.uid)
+    audio = await dictado.leer_audio(request)
+    return {"texto": await dictado.transcribir(app, audio, mime), "via": "mnemo"}

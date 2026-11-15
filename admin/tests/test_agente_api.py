@@ -64,6 +64,7 @@ def test_cada_ruta_declara_un_solo_requiere(cliente):
     assert set(rutas) == {("GET", "/api/agente/estado"), ("GET", "/api/agente/conversaciones"),
                           ("GET", "/api/agente/conversaciones/{cid}"), ("DELETE", "/api/agente/conversaciones/{cid}"),
                           ("POST", "/api/agente/mensajes"), ("POST", "/api/agente/confirmaciones"),
+                          ("POST", "/api/agente/transcribir"),
                           ("POST", "/api/agente/mnemo/conectar"), ("POST", "/api/agente/mnemo/volver"),
                           ("DELETE", "/api/agente/mnemo")}
     for (m, ruta), r in rutas.items():
@@ -93,7 +94,8 @@ def test_estado_sin_clave(sesion):
     e = sesion.get("/api/agente/estado").json()
     assert e == {"disponible": False, "motivo": "sin_configurar", "configurado": False, "proveedor": None,
                  "es_admin": True, "escritura": True, "limite": {"usados": 0, "maximo": 300},
-                 "mnemo": {"activo": False, "origen": None, "conexion": SIN_CONECTAR}, "sugerencias": []}
+                 "mnemo": {"activo": False, "origen": None, "conexion": SIN_CONECTAR}, "sugerencias": [],
+                 "dictado": False}
 
 
 def test_estado_con_clave_y_tope_diario(sesion, falsas):

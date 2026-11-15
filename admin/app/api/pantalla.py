@@ -8,6 +8,10 @@
   `POST /api/pantalla/recorrido/control` (los botones de la tarjeta del chat cuando suena en otra pantalla, y «Volver a
   reproducir» en cualquier destino: vuelve con el id del nuevo) y `GET /api/pantalla/recorrido` (la tarjeta lo sigue;
   solo lectura, tampoco marca `visto`).
+* La presentación automática (`app/automatica.py`): `POST /api/pantalla/auto` la enciende (desde un capítulo, si se
+  dice) o la apaga (el botón «Automática» de la pantalla en off y la franja del chat), y
+  `POST /api/pantalla/auto/siguiente` es lo que pide la pantalla en off cuando no narra nada: si está encendida y no
+  suena ningún plan, el servidor arma el del capítulo que sigue (200 con su id; si no hay nada que hacer, 204).
 * `GET`, `POST` y `DELETE /api/pantalla/clave`: la clave MCP de la persona (una por persona; crear otra reemplaza la
   anterior). Se muestra una sola vez, al crearla: en la base queda su SHA-256 y la huella de la sesión de ese momento,
   así cambiar la clave del panel (o la credencial del administrador) la anula, como a las sesiones."""
@@ -92,6 +96,13 @@ class ControlEntrada(BaseModel):
     accion: Literal[rec.CONTROLES]
 
 
+class AutoEntrada(BaseModel):
+    """Encender o apagar la presentación automática; al encenderla, el capítulo (su id) donde empieza."""
+    model_config = ConfigDict(extra="forbid")
+    accion: Literal["iniciar", "detener"]
+    capitulo: str | None = Field(None, pattern=r"^[a-z_]{2,40}$")
+
+
 def _guion():
     g = guion_presentacion.cargar()
     if g is None:
@@ -99,12 +110,21 @@ def _guion():
     return g
 
 
+def _guion_o_nada():
+    """El guion, o None si no está o no se puede leer (el avance de un recorrido se guarda igual)."""
+    try:
+        return guion_presentacion.cargar()
+    except ValueError:
+        return None
+
+
 @r.post("/pantalla/progreso", status_code=204)
 def progreso(p: ProgresoEntrada, db: Database = Depends(obtener_db),
              quien: Quien = Depends(requiere("presentacion.ver"))):
     if p.n > p.de:
         raise HTTPException(422, "La escena pasa del total")
-    if not pantalla.guardar_progreso(db, quien.uid, p.model_dump(exclude_none=True)):
+    # (con el guion: si el plan es el de la presentación automática, su posición queda en un paso que existe)
+    if not pantalla.guardar_progreso(db, quien.uid, p.model_dump(exclude_none=True), _guion_o_nada()):
         raise HTTPException(409, "Ese recorrido ya no es el vigente")
     return Response(status_code=204)
 
@@ -135,11 +155,39 @@ def ver_recorrido(db: Database = Depends(obtener_db), quien: Quien = Depends(req
     return {"recorrido": x and {k: x[k] for k in ("id", "titulo", "destino", "cerrado", "escena", "de", "fase",
                                                     "motivo", "voz", "hace_s")},
             "frase": pr.get("frase"), "avisos": (x or {}).get("avisos", []),
+            # la presentación automática ({activa, capitulo, paso} o null), como en `GET /api/pantalla`
+            "auto": pantalla.auto_para_pantalla(doc, g),
             # la pantalla en off sigue abierta (preguntó hace poco): en pausa no hay avances, esto dice si alguien la oye
             "conectada": pantalla.conectada(doc),
             # el último recorrido guardado, aunque el resumen ya no lo nombre (terminó hace rato, quedó abandonado): la
             # tarjeta lo mira antes de reanudar uno que se cortó
             "vigente": v and {"id": v["id"], "cerrado": v["cerrado"]}}
+
+
+# ───────────────────────────── La presentación automática ─────────────────────────────
+
+@r.post("/pantalla/auto")
+def presentacion_automatica(a: AutoEntrada, db: Database = Depends(obtener_db),
+                            quien: Quien = Depends(requiere("presentacion.ver"))):
+    """La enciende (desde el primer paso del capítulo que se diga; sin capítulo, desde la portada) o la apaga. Responde
+    {auto: {activa, capitulo, nombre, paso, de}}."""
+    g = _guion()
+    if a.accion == "iniciar":
+        ci = g.por_id(a.capitulo) if a.capitulo is not None else 0
+        if ci is None:
+            raise HTTPException(422, "Ese capítulo no está en la presentación")
+        doc = pantalla.iniciar_auto(db, quien.uid, g, "panel", ci)
+    else:
+        doc = pantalla.detener_auto(db, quien.uid, g, "panel")
+    return {"auto": pantalla.auto_para_persona(doc, g)}
+
+
+@r.post("/pantalla/auto/siguiente")
+def siguiente_automatico(db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("presentacion.ver"))):
+    """Lo que pide la pantalla en off cuando no narra nada. 200 con el id del plan que armó (le llega en su próxima
+    pregunta por el estado, con `auto: true`), o 204 si no había nada que hacer: está apagada o suena otro plan."""
+    plan = pantalla.siguiente_auto(db, quien.uid, _guion())
+    return {"id": plan["id"]} if plan else Response(status_code=204)
 
 
 def _info(doc: dict | None, request: Request) -> dict:

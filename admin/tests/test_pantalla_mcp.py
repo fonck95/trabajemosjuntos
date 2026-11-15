@@ -249,7 +249,7 @@ def test_visual_con_la_camara_libre_las_piezas_y_las_partes():
     assert (d["mover"], d["animar"], d["aislar"], d["zoom"]) == ({"giro": 90, "zoom": 2, "elevacion": 30}, True, "torre", 1.5)
     x = pantalla.para_pantalla(pantalla.estado(d, G), d, G)
     assert (x["mover"], x["animar"], x["aislar"]) == ({"giro": 90, "zoom": 2, "elevacion": 30}, True, "torre")
-    assert list(x) == ["v", *pantalla.CAMPOS, "recorrido", "control_recorrido", "progreso"]
+    assert list(x) == ["v", *pantalla.CAMPOS, "recorrido", "control_recorrido", "progreso", "auto"]
     _hacer(db, 7, {"op": "visual", "ocultar": ["hospital_hoy", "telesalud"], "mostrar": "puestos"})
     d = db.pantallas.find_one({"_id": 7})
     assert (d["mover"], d["animar"], d["ocultar"], d["mostrar"]) == (None, False, ["hospital_hoy", "telesalud"], ["puestos"])
@@ -399,7 +399,7 @@ def test_el_estado_guardado_se_corrige_si_el_guion_cambio():
     assert pantalla.para_pantalla(pantalla.estado(None, G), None, G) == {
         "v": 0, "capitulo": "portada", "paso": 1, "explicacion": None, "panel": True, "indice": False, "fichas": False,
         "completa": False, "orden_completa": 0, **pantalla.VISUAL_INICIAL, "tema": None, "mover": None, "animar": False,
-        "recorrido": None, "control_recorrido": None, "progreso": None}
+        "recorrido": None, "control_recorrido": None, "progreso": None, "auto": None}
     # (las listas de lo que vale en cada paso no se comparten: cambiar las de un estado no toca las del módulo)
     pantalla.estado(None, G)["sin"].append("x")
     assert pantalla.VISUAL_INICIAL["sin"] == [] and pantalla.inicial(G)["sin"] == []
@@ -601,7 +601,8 @@ def test_la_pantalla_pregunta_por_su_estado(sesion):
     e = r.json()
     assert e == {"v": 0, "capitulo": "portada", "paso": 1, "explicacion": None, "panel": True, "indice": False,
                  "fichas": False, "completa": False, "orden_completa": 0, **pantalla.VISUAL_INICIAL, "tema": None,
-                 "mover": None, "animar": False, "recorrido": None, "control_recorrido": None, "progreso": None}
+                 "mover": None, "animar": False, "recorrido": None, "control_recorrido": None, "progreso": None,
+                 "auto": None}
     assert sesion.get("/api/pantalla?v=0").status_code == 204
     db = sesion.app.state.db
     assert pantalla.conectada(db.pantallas.find_one({"_id": 0}))
