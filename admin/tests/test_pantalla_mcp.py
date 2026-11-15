@@ -9,6 +9,7 @@ import copy
 import json
 import shutil
 import subprocess
+import threading
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -31,6 +32,9 @@ VIVIENDA = G.capitulos[G.por_id("vivienda")]
 class _Coleccion:
     def __init__(self):
         self.docs: dict = {}
+        # cada escritura es atómica, como en MongoDB (la herramienta escribe desde los hilos de run_in_threadpool: dos
+        # órdenes en paralelo no deben pasar el mismo filtro a la vez)
+        self._candado = threading.RLock()
 
     @staticmethod
     def _valor(d: dict, k: str):
@@ -56,17 +60,18 @@ class _Coleccion:
         return None
 
     def find_one_and_update(self, filtro, cambios, upsert=False, return_document=None):
-        d = next((x for x in self.docs.values() if self._casa(x, filtro)), None)
-        if d is None:
-            if not upsert:
-                return None
-            d = dict(filtro)
-            self.docs[d["_id"]] = d
-        for k, v in cambios.get("$set", {}).items():
-            self._poner(d, k, copy.deepcopy(v))
-        for k, v in cambios.get("$inc", {}).items():
-            d[k] = d.get(k, 0) + v
-        return copy.deepcopy(d)
+        with self._candado:
+            d = next((x for x in self.docs.values() if self._casa(x, filtro)), None)
+            if d is None:
+                if not upsert:
+                    return None
+                d = dict(filtro)
+                self.docs[d["_id"]] = d
+            for k, v in cambios.get("$set", {}).items():
+                self._poner(d, k, copy.deepcopy(v))
+            for k, v in cambios.get("$inc", {}).items():
+                d[k] = d.get(k, 0) + v
+            return copy.deepcopy(d)
 
     def update_one(self, filtro, cambios, upsert=False):
         self.find_one_and_update(filtro, cambios, upsert)
@@ -359,7 +364,7 @@ def test_entradas_que_no_valen():
                        ({"op": "visual"}, "diga qué cambiar"), ({"op": "visual", "camara": "cenital"}, "camara"),
                        ({"op": "visual", "rumbo": 360}, "rumbo"), ({"op": "visual", "rumbo": True}, "rumbo"),
                        ({"op": "visual", "comparar": "ayer"}, "comparar"), ({"op": "visual", "camara": None}, "no va vacío"),
-                       ({"op": "visual", "enfoque": "torre", "paso": 2}, "no usa"),
+                       ({"op": "visual", "enfoque": "torre", "explicacion": "x"}, "no usa"),
                        ({"op": "ir", "capitulo": "salud", "enfoque": "torre"}, "no usa"),
                        ({"op": "vista", "panel": True, "tema": "oscuro"}, "no usa")]:
         with pytest.raises(ValueError) as e:
@@ -399,7 +404,7 @@ def test_el_estado_guardado_se_corrige_si_el_guion_cambio():
     assert pantalla.para_pantalla(pantalla.estado(None, G), None, G) == {
         "v": 0, "capitulo": "portada", "paso": 1, "explicacion": None, "panel": True, "indice": False, "fichas": False,
         "completa": False, "orden_completa": 0, **pantalla.VISUAL_INICIAL, "tema": None, "mover": None, "animar": False,
-        "recorrido": None, "control_recorrido": None, "progreso": None, "auto": None}
+        "simular": None, "recorrido": None, "control_recorrido": None, "progreso": None, "auto": None}
     # (las listas de lo que vale en cada paso no se comparten: cambiar las de un estado no toca las del módulo)
     pantalla.estado(None, G)["sin"].append("x")
     assert pantalla.VISUAL_INICIAL["sin"] == [] and pantalla.inicial(G)["sin"] == []
@@ -601,8 +606,8 @@ def test_la_pantalla_pregunta_por_su_estado(sesion):
     e = r.json()
     assert e == {"v": 0, "capitulo": "portada", "paso": 1, "explicacion": None, "panel": True, "indice": False,
                  "fichas": False, "completa": False, "orden_completa": 0, **pantalla.VISUAL_INICIAL, "tema": None,
-                 "mover": None, "animar": False, "recorrido": None, "control_recorrido": None, "progreso": None,
-                 "auto": None}
+                 "mover": None, "animar": False, "simular": None, "recorrido": None, "control_recorrido": None,
+                 "progreso": None, "auto": None}
     assert sesion.get("/api/pantalla?v=0").status_code == 204
     db = sesion.app.state.db
     assert pantalla.conectada(db.pantallas.find_one({"_id": 0}))

@@ -25,7 +25,7 @@ docs/agente.md) que el widget aplica con `accionesMapa` o con `ir`. Por qué est
   componentes y las inmersiones se resuelven aquí contra el guion (por id o por nombre) y al modelo le vuelve la ficha
   técnica de lo que se muestra. Y con `recorrido` arma un PLAN guiado (hasta 12 pasos: lo que se dice y lo que ocurre
   mientras se dice: la cámara que viaja, las piezas de la maqueta que se muestran, se ocultan o se aíslan, las partes
-  que se quitan) que la pantalla ejecuta sola; ahí la composición es TOLERANTE: lo opcional que no resuelve se
+  que se quitan, los controles de la simulación de un modelo del atlas: `simular`) que la pantalla ejecuta sola; ahí la composición es TOLERANTE: lo opcional que no resuelve se
   descarta o se recorta con un aviso legible y el plan corre igual (`_componer`). Y con `automatica` enciende o
   apaga la presentación automática (`app/automatica.py`): la pantalla en off recorre sola toda la presentación, muy
   resumida, sin que el modelo escriba nada; un plan del asistente la interrumpe y después sigue. Lo único que guarda es la
@@ -37,6 +37,7 @@ docs/agente.md) que el widget aplica con `accionesMapa` o con `ir`. Por qué est
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import math
 import re
@@ -695,7 +696,8 @@ COLAPSAN = ("ir", "siguiente", "anterior", "explicar", "quitar_explicacion", "vi
 # Lo que dice cada operación del estado de la pantalla en off (las demás no lo cambian): `vista` y `pantalla_completa`
 PARTES_VISTA = ("panel", "indice", "fichas")
 # Lo que cambia `visual` (pantalla_off.VISUAL; `VISUAL` de mando.js y de agente-presentacion.js con los mismos valores) y
-# sus dos acciones, que no son estado (`mover`: el viaje de la cámara; `animar`: repetir la animación del paso)
+# sus tres acciones, que no son estado (`mover`: el viaje de la cámara; `animar`: repetir la animación del paso;
+# `simular`: los controles de la simulación del modelo del atlas a la vista)
 PARTES_VISUAL = pantalla_off.VISUAL
 ACCIONES_VISUAL = pantalla_off.ACCIONES
 CAMARAS = pantalla_off.CAMARAS
@@ -821,6 +823,31 @@ class MoverEntrada(_Entrada):
     elevacion: Elevacion | None = Field(None, description="Grados sobre el horizonte con que termina")
 
 
+def _simular_a_su_manera(v: Any) -> Any:
+    """Un control de `simular` también puede llegar como su solo nombre («calcular»)."""
+    return {"control": v} if isinstance(v, str) else v
+
+
+def _simulares_a_su_manera(v: Any) -> Any:
+    """`simular` también puede llegar como un solo control (un objeto o su nombre) en vez de la lista."""
+    return [v] if isinstance(v, (dict, str)) else v
+
+
+class SimularEntrada(_Entrada):
+    # Un control de la simulación del modelo del atlas abierto (los `controles` de su inmersión, en guion o al abrirlo),
+    # accionado como lo haría la persona. (Sin docstring: el esquema va en cada pedido al modelo, dos veces)
+    control: Annotated[str, Field(min_length=1, max_length=80)] = Field(..., description="Su id o su nombre")
+    valor: StrictBool | int | float | Annotated[str, Field(max_length=80)] | None = Field(None, description=(
+        "Número de su rango, opción (id o nombre) o true/false; nada si es acción"))
+
+
+# Cada control es tolerante por separado (uno que no tiene la forma no tumba los demás) y lo que pasa de MAX_SIMULAR se
+# recorta con un aviso (`_resolver_simular`)
+Simulares = Annotated[list[Annotated[SimularEntrada | None, BeforeValidator(_simular_a_su_manera),
+                                     WrapValidator(_tolerar)]],
+                      BeforeValidator(_simulares_a_su_manera), Field(json_schema_extra={"maxItems": rec.MAX_SIMULAR})]
+
+
 class EscenaEntrada(_Entrada):
     """Un paso del plan: UNA frase (dice) y lo que ocurre en pantalla MIENTRAS se dice. Cada paso parte del anterior (lo
     que no nombra sigue igual); al cambiar de paso del capítulo, lo visual vuelve a lo de ese paso."""
@@ -864,6 +891,9 @@ class EscenaEntrada(_Entrada):
     inmersion: Tol(Nombre) = Field(None, description=(
         "Un modelo 3D del atlas del catálogo (id o nombre); maqueta lo cierra; paso, lo que diga el paso"))
     animar: Tol(StrictBool) = Field(None, description="true: repite la animación propia del paso (la obra crece) mientras se dice")
+    simular: Tol(Simulares) = Field(None, description=(
+        "Hasta 4 controles del modelo del atlas abierto, en orden (de guion): la magnitud del simulador sísmico y "
+        "luego calcular, que lo hace temblar"))
     girar: Tol(StrictBool) = Field(None, description="true: la cámara gira despacio sin parar; se hereda")
     resaltar: Tol(ResaltarEntrada) = Field(None, description="Señala en pantalla lo que la frase nombra")
     sostener: Tol(Annotated[float, Field(ge=0, le=8)]) = Field(None, description=(
@@ -936,7 +966,8 @@ class PresentacionEntrada(_Entrada):
         "presentación, muy resumida (accion iniciar o detener; capitulo: dónde empieza)"))
     capitulo: str | None = Field(None, min_length=2, max_length=60, description=(
         "Id o nombre del capítulo (del índice o del contexto del panel)"))
-    paso: PasoNumero | PasoId | None = Field(None, description="Número del paso desde 1, o su id (del índice)")
+    paso: PasoNumero | PasoId | None = Field(None, description=(
+        "Número del paso desde 1, o su id (del índice); en visual, el de partida (el del contexto del panel)"))
     explicacion: Explicacion | None = Field(None, description=(
         "Una o dos frases cortas para la pantalla (se proyecta; hasta 220 caracteres): sin datos de habitantes, costos, "
         "«@» ni números de 7 o más dígitos"))
@@ -980,6 +1011,8 @@ class PresentacionEntrada(_Entrada):
     sin: Tol(Nombres) = Field(None, description="visual: partes quitadas, como «pieza.parte» («torre.cubierta»); [] las devuelve")
     mover: Tol(MoverEntrada) = Field(None, description="visual: la cámara viaja unos segundos desde donde está")
     animar: Tol(StrictBool) = Field(None, description="visual: true repite la animación propia del paso")
+    simular: Tol(Simulares) = Field(None, description=(
+        "visual: hasta 4 controles del modelo del atlas abierto (o del que abre inmersion), en orden"))
     titulo: TituloRecorrido | None = Field(None, description="recorrido: el título del plan, que se ve en la sala (3 a 80)")
     pasos: Pasos | None = Field(None, description=(
         "recorrido: el plan, de 6 a 10 pasos (hasta 12): cada uno UNA frase y lo que ocurre en pantalla mientras se dice"))
@@ -1002,7 +1035,7 @@ class PresentacionEntrada(_Entrada):
         return {k: getattr(self, k) for k in PARTES_VISUAL if k in self.model_fields_set}
 
     def acciones_visuales(self) -> dict:
-        """Las acciones de `visual` que llegaron con algo (`mover`, `animar`): no son estado."""
+        """Las acciones de `visual` que llegaron con algo (`mover`, `animar`, `simular`): no son estado."""
         return {k: getattr(self, k) for k in ACCIONES_VISUAL if getattr(self, k) not in (None, False)}
 
     def plan(self) -> list[EscenaEntrada]:
@@ -1026,7 +1059,7 @@ class PresentacionEntrada(_Entrada):
                   "estado": ("capitulo", "paso", "explicacion", *vista, *completa),
                   "explicar": ("capitulo", "paso", *vista, *completa),
                   "vista": ("capitulo", "paso", "explicacion", *completa),
-                  "visual": ("paso", "explicacion", *vista, *completa),
+                  "visual": ("explicacion", *vista, *completa),
                   "pantalla_completa": ("capitulo", "paso", "explicacion", *vista)}.get(self.op, (*vista, *completa))
         malos = [k for k in sobran if getattr(self, k) is not None]
         if self.op != "visual":
@@ -1037,7 +1070,8 @@ class PresentacionEntrada(_Entrada):
             partes = self.partes_visuales()
             if not partes and not self.acciones_visuales():
                 raise ValueError("Para visual, diga qué cambiar: enfoque, camara, rumbo, elevacion, zoom, mirar, mover, "
-                                 "girar, comparar, detalle, inmersion, mostrar, ocultar, aislar, sin, animar o tema")
+                                 "girar, comparar, detalle, inmersion, mostrar, ocultar, aislar, sin, animar, simular o "
+                                 "tema")
             nulos = [k for k in ("camara", "rumbo", "girar", "comparar", "tema") if k in partes and partes[k] is None]
             if nulos:
                 raise ValueError(f"En visual, {', '.join(nulos)} no va vacío: diga el valor (camara: paso vuelve al "
@@ -1074,12 +1108,23 @@ class PresentacionEntrada(_Entrada):
 def _esquema_presentacion() -> dict:
     """El esquema de la entrada para el modelo: sin la rama «null» del paso (número o id; el modelo simplemente omite la
     clave), sin los nombres de antes (`escenas`, `narracion`: se siguen aceptando, pero el plan se pide con `pasos` y
-    `dice`; repetirlos doblaría el esquema) y con `dice` como lo único obligatorio de un paso del plan."""
+    `dice`; repetirlos doblaría el esquema), con `dice` como lo único obligatorio de un paso del plan y con cada control
+    de `simular` como un objeto."""
     s = esquema(PresentacionEntrada)
     s["properties"].pop("escenas", None)
     del_plan = s["properties"]["pasos"].get("items") or {}
     (del_plan.get("properties") or {}).pop("narracion", None)
     del_plan["required"] = ["dice"]
+    # `simular` (en visual y en cada paso del plan): cada control es un objeto (la rama «null» de su tolerancia no le
+    # dice nada al modelo) y su valor, un número, un texto o verdadero o falso
+    for sim in (s["properties"].get("simular"), (del_plan.get("properties") or {}).get("simular")):
+        items = (sim or {}).get("items") or {}
+        objeto = next((r for r in items.get("anyOf", []) if r.get("type") == "object"), None)
+        if objeto:
+            valor = objeto["properties"]["valor"]
+            valor["anyOf"] = [r for r in valor.get("anyOf", []) if r.get("type") not in ("null", "integer")]
+            valor.pop("default", None)
+            sim["items"] = objeto
     for paso in (s["properties"]["paso"], (del_plan.get("properties") or {}).get("paso") or {}):
         if "anyOf" in paso:
             paso["anyOf"] = [r for r in paso["anyOf"] if r != {"type": "null"}]
@@ -1166,6 +1211,10 @@ def _paso_para_modelo(g: guion_presentacion.Guion, ci: int, pi: int) -> dict:
         # lo que se puede mostrar, ocultar o aislar de la maqueta (y las partes que se quitan con sin: «pieza.parte»)
         out["maqueta"] = [{"id": x["id"], "nombre": x["nombre"],
                            **({"partes": [p["id"] for p in x["partes"]]} if x["partes"] else {})} for x in piezas]
+    controles = g.controles(rec.inmersion_en(c["id"], pi + 1, None, g))
+    if controles:
+        # lo que se puede accionar con simular en el modelo del atlas de este paso
+        out["controles"] = controles
     return out
 
 
@@ -1266,8 +1315,9 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
         accion = {"tipo": "presentacion", "op": "vista", **pedido}
     elif a.op == "visual":
         contenido, resumen, cambios, acciones_visuales = _visual(g, e, a, desde_pantalla)
-        # al navegador, lo que cambia y lo que hace una vez (`mover`, `animar`); en la pantalla en off quedan las dos
-        # acciones de ESTA orden (las de la anterior se van): no son estado, la pantalla las hace una vez
+        # al navegador, lo que cambia y lo que hace una vez (`mover`, `animar`, `simular`); en la pantalla en off quedan
+        # las de ESTA orden (las de la anterior, ya recibidas, se van; las que todavía no recibió se juntan con estas:
+        # `_guardar_en_pantalla`): no son estado, la pantalla las hace una vez
         accion = {"tipo": "presentacion", "op": "visual", **cambios, **acciones_visuales}
         cambios = {**cambios, **pantalla_off.ACCIONES_INICIALES, **acciones_visuales}
     elif a.op == "pantalla_completa":
@@ -1315,13 +1365,33 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
     # Ya resuelta (nada más puede fallar): cierra el recorrido que sonaba, con la escena en curso como base, y encima
     # guarda lo pedido
     detener = await _colapsar(db, uid, g, doc, por) if a.op in COLAPSAN else []
-    if a.op != "visual":   # `mover` y `animar` son de la orden `visual` que los trajo: cualquier otra los deja en nada
+    if a.op != "visual":   # las acciones son de la orden `visual` que las trajo: cualquier otra las deja en nada
         cambios = {**cambios, **pantalla_off.ACCIONES_INICIALES}
-    await run_in_threadpool(pantalla_off.guardar, db, uid, cambios, por)
+    await _guardar_en_pantalla(db, uid, cambios, por)
     if desde_pantalla:
         contenido["pantalla"] = NOTA_PANTALLA_ABIERTA if abierta else NOTA_SIN_PANTALLA
     return Resultado(contenido, resumen,
                      acciones=[*detener, *([accion] if accion and not abierta and por == "asistente" else [])])
+
+
+# Cuánto espera una orden a que la pantalla en off abierta reciba las acciones de la anterior cuando no caben con las
+# suyas (dos viajes de la cámara, más de MAX_SIMULAR controles): la pantalla pregunta cada 1,5 s
+ESPERA_ENTREGA_S = 3.0
+
+
+async def _guardar_en_pantalla(db: Any, uid: int, cambios: dict, por: str) -> dict:
+    """Guarda la orden en la pantalla en off (`pantalla.guardar_orden`) sin pisar las acciones que la pantalla abierta
+    todavía no recibió: con otra orden que llegó entretanto (dos en paralelo) vuelve a leer y a juntar; si no caben
+    juntas, espera a que la pantalla las reciba, hasta ESPERA_ENTREGA_S (después, las de antes se pierden: la pantalla
+    no está preguntando)."""
+    hasta = time.monotonic() + ESPERA_ENTREGA_S
+    for _ in range(60):
+        esperar = time.monotonic() < hasta
+        doc = await run_in_threadpool(pantalla_off.guardar_orden, db, uid, cambios, por, esperar)
+        if doc is not None:
+            return doc
+        await asyncio.sleep(0.15 if esperar else 0)
+    return await run_in_threadpool(pantalla_off.guardar, db, uid, cambios, por)
 
 
 async def _colapsar(db: Any, uid: int, g: guion_presentacion.Guion, doc: dict | None, por: str) -> list[dict]:
@@ -1532,8 +1602,11 @@ def _visual(g: guion_presentacion.Guion, e: dict, a: PresentacionEntrada,
             desde_pantalla: bool) -> tuple[dict, str, dict, dict]:
     """La op `visual`: resuelve contra el guion lo que se pidió (los componentes y las piezas de la maqueta del capítulo,
     por id o por nombre, y la inmersión del catálogo) y devuelve (lo que recibe el modelo, el resumen, los cambios
-    exactos de lo visual para la pantalla y el navegador, y las acciones que no son estado: `mover` y `animar`). El
-    capítulo es el que se indicó (el del contexto del panel) o el de la pantalla en off. Un componente o una inmersión
+    exactos de lo visual para la pantalla y el navegador, y las acciones que no son estado: `mover`, `animar` y
+    `simular`, este contra los controles del modelo del atlas que queda abierto). El
+    capítulo es el que se indicó (el del contexto del panel) o el de la pantalla en off, y el paso, el que se indicó
+    (el de la pestaña: lo que la persona toca a mano en la vista del panel no mueve la pantalla en off) o el de la
+    pantalla; con una pantalla en off (o por MCP) los dos tienen que ser los suyos. Un componente o una inmersión
     que no existe vuelve con su error y sus candidatos, como siempre; lo que suma el plan guiado (la elevación, el
     acercamiento, a qué apunta la cámara, las piezas, las partes, el movimiento) es tolerante: lo que no resuelve se
     descarta con un aviso y lo demás se aplica, y solo es un error si no queda nada que hacer."""
@@ -1549,6 +1622,15 @@ def _visual(g: guion_presentacion.Guion, e: dict, a: PresentacionEntrada,
                 detalle={"en_pantalla": _cap_para_modelo(g.capitulos[ci])})
         ci = pedido
     c = g.capitulos[ci]
+    # el paso de partida: el que se indicó (el de la pestaña) o, en el capítulo de la pantalla, el suyo
+    paso = _resolver_paso(g, ci, a.paso) + 1 if a.paso is not None else None
+    if desde_pantalla and paso is not None and paso != e["paso"]:
+        raise ErrorHerramienta(
+            f"La pantalla muestra el paso {e['paso']} de {c['nombre']}, no el {paso}: vaya primero a ese paso con ir.",
+            "invalido", estado=409, detalle={"en_pantalla": {"capitulo": c["id"], "paso": e["paso"]}})
+    mismo = ci == g.por_id(e["capitulo"]) and paso in (None, e["paso"])
+    if paso is None and mismo:
+        paso = e["paso"]
     contenido: dict[str, Any] = {"capitulo": _cap_para_modelo(c)}
     cambios: dict[str, Any] = {}
     dicho: list[str] = []
@@ -1579,8 +1661,9 @@ def _visual(g: guion_presentacion.Guion, e: dict, a: PresentacionEntrada,
     for k in ("camara", "rumbo", "girar", "comparar", "tema"):
         if k in partes:
             cambios[k] = partes[k]
-    # El capítulo puede ser otro que el de la pantalla (el de la pestaña del chat): entonces lo visual parte de lo del paso
-    base = {k: e[k] for k in rec.VISUAL} if ci == g.por_id(e["capitulo"]) else rec.visual_inicial()
+    # El capítulo o el paso pueden ser otros que los de la pantalla (los de la pestaña del chat): entonces lo visual parte
+    # de lo del paso
+    base = {k: e[k] for k in rec.VISUAL} if mismo else rec.visual_inicial()
     cambios.update(_resolver_maqueta(g, ci, partes, {**base, **{k: v for k, v in cambios.items() if k in rec.VISUAL}},
                                      avisos.append))
     if cambios.get("camara") == "paso":   # el encuadre del paso es también su rumbo, su elevación y su acercamiento
@@ -1623,19 +1706,43 @@ def _visual(g: guion_presentacion.Guion, e: dict, a: PresentacionEntrada,
         dicho.append("la animación del paso otra vez")
     elif isinstance(a.animar, NoVale):
         avisos.append("animar es true o false: se ignoró")
+    # La simulación: en el modelo del atlas que queda abierto (el que abre esta orden, el que había o el del paso de
+    # inmersión, el de la pestaña si se indicó o el de la pantalla; de otro capítulo que el de la pantalla y sin el paso,
+    # solo el que abre esta orden)
+    modelo = None
+    if a.simular is not None:
+        pedida = cambios["inmersion"] if "inmersion" in cambios else base["inmersion"]
+        modelo = rec.inmersion_en(c["id"], paso, pedida, g)
+        if a.simular == []:
+            avisos.append("simular vino vacío: diga qué controles accionar, [{control, valor}] (de «controles»)")
+        # (sin pantalla en off, el modelo puede estar en la pestaña, en un paso que la persona abrió a mano)
+        simular = _resolver_simular(g, modelo, a.simular, avisos.append, "" if desde_pantalla or a.paso is not None else
+                                    ", o diga capitulo y paso: los del contexto del panel")
+        if simular:
+            acciones["simular"] = simular
+            dicho.append(f"en «{(g.inmersion(modelo) or {}).get('nombre') or modelo}»: {_simular_dicho(g, modelo, simular)}")
+            contenido["simulacion"] = SIMULACION
     if not cambios and not acciones:
-        raise ErrorHerramienta("No quedó nada que mostrar: " + "; ".join(avisos[:4]) + ".", "no_existe", estado=404,
-                               detalle={"capitulo": c["id"], "maqueta": _maqueta_para_modelo(g, ci)})
+        raise ErrorHerramienta("No quedó nada que mostrar: " + ("; ".join(avisos[:4]) or "lo pedido no cambia nada") + ".",
+                               "no_existe", estado=404,
+                               detalle={"capitulo": c["id"], "maqueta": _maqueta_para_modelo(g, ci),
+                                        **({"controles": g.controles(modelo)} if g.controles(modelo) else {})})
     if avisos:
         contenido["avisos"] = avisos[:MAX_AVISOS]
     contenido["nota"] = (
         "Cambia lo que se ve sin cambiar de paso; al pasar a otro paso vuelve a lo del paso (salvo el tema). Explique "
         "en el chat con los datos de la ficha (no invente otros)." + (
             " Lo de «avisos» no se pudo mostrar; lo demás sí." if avisos else "") + (
-            "" if desde_pantalla or a.capitulo is not None else
-            " Sin el capítulo de partida se tomó el de la pantalla en off: si la presentación de la pestaña está en "
-            "otro capítulo, indique capitulo (el del contexto del panel)."))
+            "" if desde_pantalla or (a.capitulo is not None and a.paso is not None) else
+            " Sin el capítulo y el paso de partida se tomaron los de la pantalla en off: si la presentación de la "
+            "pestaña está en otro, indique capitulo y paso (los del contexto del panel)."))
     return contenido, "La presentación muestra " + ", ".join(dicho or ["lo mismo"]), cambios, acciones
+
+
+# Lo que el modelo recibe cuando `visual` acciona una simulación
+SIMULACION = ("Se acciona en el modelo del atlas como lo haría la persona, en orden; lo que tarda en aparecer (el modelo "
+              "carga, un cálculo en curso) se espera unos segundos. Un valor cambiado no recalcula: si el control dice "
+              "que cuenta en el siguiente cálculo, después la acción que calcula.")
 
 
 def _mover_dicho(m: dict) -> str:
@@ -1643,6 +1750,113 @@ def _mover_dicho(m: dict) -> str:
     return ", ".join(x for x in (f"gira {m['giro']}°" if "giro" in m else "",
                                  f"termina con zoom {m['zoom']:g}" if "zoom" in m else "",
                                  f"termina a {m['elevacion']}° sobre el horizonte" if "elevacion" in m else "") if x)
+
+
+def _cifra(v: float) -> str:
+    """Un número como se dice en la sala: «6,5», «200»."""
+    return f"{v:g}".replace(".", ",")
+
+
+def _valor_de_control(c: dict, x: SimularEntrada) -> tuple[Any, str | None, bool]:
+    """El valor exacto para el control `c` (del guion) a partir de lo que pidió el modelo, tolerante: (valor, aviso, si
+    se acciona). Una acción va sin valor (el que traiga se ignora); sí o no acepta true/false, «sí»/«no» y, sin valor,
+    es sí; un número (también «6,5») se recorta a su rango y se ajusta a su paso, como el deslizador; una opción, por su
+    id o su nombre."""
+    tipo, v, dado = c["tipo"], x.valor, "valor" in x.model_fields_set and x.valor is not None
+    if tipo == "accion":
+        return None, ("es una acción: va sin valor (se accionó igual)" if dado else None), True
+    if tipo == "si_no":
+        if not dado:
+            return True, None, True
+        w = v if isinstance(v, bool) else {"si": True, "true": True, "1": True, "no": False, "false": False,
+                                            "0": False}.get(guion_presentacion.clave(str(v)))
+        return (w, None, True) if w is not None else (None, f"va con true o false, no «{_ver(v)}»: se ignoró", False)
+    if tipo == "numero":
+        lo, hi, paso = c.get("min"), c.get("max"), c.get("paso")
+        unidad = f" {c['unidad']}" if c.get("unidad") else ""
+        rango = f"de {_cifra(lo)} a {_cifra(hi)}{unidad}"
+        w, _ = _acotar(v, -math.inf, math.inf, 6) if dado else (None, True)
+        if w is None:
+            return None, f"va con un número {rango}" + (f", no «{_ver(v)}»" if dado else "") + ": se ignoró", False
+        ajustado = min(hi, max(lo, w))
+        if paso:
+            dec = len(f"{paso:g}".split(".")[1]) if "." in f"{paso:g}" else 0
+            ajustado = round(lo + round((ajustado - lo) / paso) * paso, dec)
+            ajustado = min(hi, max(lo, ajustado))
+        if isinstance(ajustado, float) and ajustado.is_integer():
+            ajustado = int(ajustado)
+        aviso = f"{_cifra(w)} quedó en {_cifra(ajustado)} (va {rango})" if not lo <= w <= hi else None
+        return ajustado, aviso, True
+    opciones = c.get("opciones") or []
+    if dado and not isinstance(v, bool):
+        texto = _cifra(v).replace(",", ".") if isinstance(v, (int, float)) else v
+        o = guion_presentacion.parecido(opciones, texto)
+        if o:
+            return o["id"], None, True
+    return None, (f"no tiene la opción «{_ver(v)}»" if dado else "le falta cuál opción") + \
+        f": se ignoró; opciones: {_lista([o['id'] for o in opciones], 12)}", False
+
+
+def _resolver_simular(g: guion_presentacion.Guion, inmersion: str | None, crudo: Any, avisar: Any,
+                      abrir: str = "") -> list[dict] | None:
+    """`simular` (de un paso del plan o de `visual`) resuelto contra los controles del modelo del atlas que queda a la
+    vista (`inmersion`): cada control por su id o su nombre y su valor exacto (`_valor_de_control`). TOLERANTE: lo que
+    no resuelve se descarta con un aviso legible (con los controles que sí hay) y lo demás se acciona en orden; sin un
+    modelo del atlas a la vista, o en uno sin controles, no se acciona nada (`abrir`: qué más decir de cómo abrirlo). None
+    si no queda nada."""
+    if crudo is None:
+        return None
+    if isinstance(crudo, NoVale) or not isinstance(crudo, list):
+        avisar("simular es una lista de {control, valor}: no se accionó nada")
+        return None
+    if not crudo:
+        return None
+    nombre_inm = (g.inmersion(inmersion) or {}).get("nombre") or inmersion
+    if inmersion is None:
+        avisar(f"simular acciona los controles del modelo del atlas abierto y ahí no hay uno (ábralo con inmersion{abrir}): "
+               "no se accionó nada")
+        return None
+    controles = g.controles(inmersion)
+    if not controles:
+        con = [i["id"] for i in g.inmersiones if i.get("controles")]
+        avisar(f"«{nombre_inm}» no tiene controles que accionar: no se accionó nada; los tienen: {_lista(con)}")
+        return None
+    if len(crudo) > rec.MAX_SIMULAR:
+        avisar(f"simular lleva hasta {rec.MAX_SIMULAR} controles por orden: quedaron los primeros {rec.MAX_SIMULAR}")
+        crudo = crudo[:rec.MAX_SIMULAR]
+    out: list[dict] = []
+    for x in crudo:
+        if not isinstance(x, SimularEntrada):
+            avisar(f"simular: «{_ver(x)}» no es un {{control, valor}}: se ignoró")
+            continue
+        c = g.control(inmersion, x.control)
+        if c is None:
+            avisar(f"«{nombre_inm}» no tiene el control «{_ver(x.control)}»: se ignoró; controles: "
+                   f"{_lista([k['id'] for k in controles], 25)}")
+            continue
+        valor, aviso, sirve = _valor_de_control(c, x)
+        if aviso:
+            avisar(f"simular «{c['id']}» {aviso}")
+        if sirve:
+            out.append({"control": c["id"], **({"valor": valor} if c["tipo"] != "accion" else {})})
+    return out or None
+
+
+def _simular_dicho(g: guion_presentacion.Guion, inmersion: str | None, s: list[dict]) -> str:
+    """«Magnitud de momento (Mw) 6,5; Calcular el sismo»: lo que acciona `simular`, con los nombres de sus controles."""
+    partes = []
+    for x in s:
+        c = g.control(inmersion, x["control"]) or {"nombre": x["control"], "tipo": "accion"}
+        v = x.get("valor")
+        if c["tipo"] == "numero":
+            partes.append(f"{c['nombre']} {_cifra(v)}{' ' + c['unidad'] if c.get('unidad') else ''}")
+        elif c["tipo"] == "opcion":
+            partes.append(f"{c['nombre']}: {next((o['nombre'] for o in c.get('opciones') or [] if o['id'] == v), v)}")
+        elif c["tipo"] == "si_no":
+            partes.append(f"{c['nombre']}: {'sí' if v else 'no'}")
+        else:
+            partes.append(c["nombre"])
+    return "; ".join(partes)
 
 
 def _maqueta_para_modelo(g: guion_presentacion.Guion, ci: int) -> list[dict]:
@@ -1658,7 +1872,8 @@ NOTA_GUION = (
     "frase hablada (dice) y algo que ocurre en pantalla MIENTRAS se dice: la cámara (camara, rumbo, elevacion, zoom, "
     "mirar, o un viaje con mover {giro, zoom, elevacion}), las piezas de «maqueta» (aislar una, mostrar, ocultar, o "
     "quitarle partes con sin «pieza.parte»), enfoque, detalle (la ficha) con resaltar, comparar hoy o proyecto, una "
-    "inmersion, animar. Cada paso parte del anterior: lo que no nombra sigue igual, y al cambiar de paso del capítulo "
+    "inmersion y sus controles (simular [{control, valor}], de «controles» en inmersiones: la magnitud del simulador "
+    "sísmico y luego calcular, que la hace temblar), animar. Cada paso parte del anterior: lo que no nombra sigue igual, y al cambiar de paso del capítulo "
     "lo visual vuelve a lo de ese paso. Un arco que sirve: ubicar con una vista amplia; cómo está hoy; qué se construye "
     "(aislar la obra, quitarle la cubierta, rodearla con mover); el dato clave (la ficha con la especificación "
     "resaltada, un modelo del atlas); qué cambia y cuándo (la meta o la cifra resaltada); y un cierre de 2 o 3 ideas. "
@@ -1677,7 +1892,7 @@ HACE = {"paso": "cambia de paso", "camara": "mueve la cámara", "enfoque": "enfo
         "hoy": "muestra hoy", "proyecto": "muestra el proyecto", "modelo": "abre un modelo del atlas",
         "resaltar": "resalta", "solo3d": "solo 3D", "girar": "gira", "capas": "muestra u oculta piezas",
         "aislar": "aísla una obra", "partes": "quita partes", "mover": "recorre con la cámara",
-        "mirar": "apunta la cámara", "animar": "anima la obra"}
+        "mirar": "apunta la cámara", "animar": "anima la obra", "simular": "maneja la simulación"}
 _NUMERO = re.compile(r"\d[\d.,]*\d|\d")
 # Lo que la cámara puede traer en un paso del plan: si nada de esto cambia (ni el paso), el paso no le pide nada
 DE_LA_CAMARA = ("camara", "rumbo", "elevacion", "zoom", "mirar", "enfoque")
@@ -1773,8 +1988,9 @@ def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> tuple[dict
     Devuelve (el recorrido, los avisos y los números de los pasos que recibieron el movimiento de cámara por omisión).
 
     TOLERANTE: lo opcional que no resuelve (una pieza de la maqueta, una parte, a qué apunta la cámara, un componente,
-    una inmersión, lo que se resalta, el capítulo o el paso de un paso que no es el primero, un valor sin la forma o
-    una clave que no existe) se descarta, y un número fuera de su rango se recorta; cada cosa deja un aviso legible con
+    una inmersión, lo que se resalta, un control de la simulación del modelo del atlas, el capítulo o el paso de un paso
+    que no es el primero, un valor sin la forma o una clave que no existe) se descarta, y un número fuera de su rango se
+    recorta; cada cosa deja un aviso legible con
     el número del paso y los candidatos, y el plan corre con lo demás. Solo es un error (y entonces no se guarda nada)
     que el primer paso no tenga un capítulo que resuelva o que un texto no se pueda proyectar: esas reglas no se
     relajan, y el error dice en qué paso. Un paso que no le pide nada a la cámara recibe un movimiento suave
@@ -1914,8 +2130,11 @@ def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> tuple[dict
         if isinstance(x.animar, NoVale):
             avisar("animar es true o false: se ignoró")
         esc = {"capitulo": c["id"], "paso": pi + 1, "panel": panel, "visual": rec.copia_visual(visual),
-               "resaltar": resaltar, "mover": mover, "animar": x.animar is True,
+               "resaltar": resaltar, "mover": mover, "animar": x.animar is True, "simular": None,
                "frases": rec.partir_frases(texto) if texto else ["…"], "sostener_ms": 0}
+        # Los controles de la simulación del modelo del atlas que este paso deja a la vista
+        if x.simular is not None:
+            esc["simular"] = _resolver_simular(g, rec.inmersion_de(esc, g), x.simular, avisar)
         # Que nunca quede quieta: sin nada para la cámara (el mismo paso, el mismo encuadre y sin `mover`), un viaje suave
         # (también el primer paso, si no trae nada para la cámara: la pantalla puede estar ya en ese paso). La cámara
         # sigue desde donde la dejó el `mover` anterior mientras ningún paso cambie la cámara pedida: ahí el viaje suave
@@ -1970,7 +2189,7 @@ def _avisos(g: guion_presentacion.Guion, r: dict, suaves: set[int] | frozenset[i
     quieta = 1
     for n, (a, b) in enumerate(zip(r["escenas"], r["escenas"][1:]), 2):
         igual = all(a[k] == b[k] for k in ("capitulo", "paso", "panel", "visual")) and not b["resaltar"] and \
-            not b["animar"] and (b["mover"] is None or n in suaves)
+            not b["animar"] and not b.get("simular") and (b["mover"] is None or n in suaves)
         quieta = quieta + 1 if igual else 1
         if quieta == 3:
             out.append(f"Pasos {n - 2} a {n}: la pantalla no muestra nada nuevo en tres pasos seguidos (solo la cámara se "
@@ -2021,6 +2240,8 @@ def _hace(g: guion_presentacion.Guion, esc: dict, anterior: dict | None) -> list
         out.append("modelo")
     if esc.get("animar"):
         out.append("animar")
+    if esc.get("simular"):   # acciona controles del modelo del atlas abierto (el sismo, los pisos, el BIM…)
+        out.append("simular")
     if esc["resaltar"]:
         out.append("resaltar")
     if not esc["panel"] and (not anterior or anterior["panel"]):
@@ -2082,6 +2303,8 @@ def _muestra(g: guion_presentacion.Guion, esc: dict, suave: bool = False, anteri
         partes.append("la cámara se mueve un poco sola" if suave else f"la cámara {_mover_dicho(esc['mover'])}")
     if esc.get("animar"):
         partes.append("anima la obra")
+    if esc.get("simular"):
+        partes.append(f"acciona: {_simular_dicho(g, i, esc['simular'])}")
     if esc["resaltar"]:
         r = esc["resaltar"]
         partes.append(f"resalta {r['tipo']} {r.get('n') or nombres.get(r.get('id'), r.get('id'))}")
@@ -2159,7 +2382,9 @@ async def _control_recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: 
     pestaña o el proyector, va como acción al navegador del asistente. «reproducir» lo vuelve a empezar con otro id: al
     asistente le vuelve también la tarjeta del nuevo (la del anterior sigue el avance de su id, y el nuevo quedaría sin
     avance, sin barra en el chat y sin pausa al escribir). Por MCP, uno que suena en la pestaña o el proyector del panel
-    no se controla: solo la pantalla en off lee los controles guardados, y la pestaña no sabría nada."""
+    no se controla: solo la pantalla en off lee los controles guardados, y la pestaña no sabría nada. Con la
+    presentación automática encendida, «detener» sobre otro plan no la apaga: el resultado lo dice (`automatica`), para
+    que el modelo no le prometa silencio a la persona."""
     sin_recorrido = ErrorHerramienta("No hay un plan en curso: arme uno con la op recorrido.", "sin_recorrido",
                                      estado=409)
     if por == "mcp":
@@ -2199,6 +2424,13 @@ async def _control_recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: 
     if apagada:
         contenido["automatica"] = ("Era el plan de la presentación automática: quedó apagada. Vuelve con la op "
                                    "automatica (accion iniciar).")
+    elif a.accion == "detener" and (pantalla_off.auto_de(doc, g) or {}).get("activa"):
+        # detuvo un plan suyo (o del panel) con la automática encendida: la sala la volverá a oír sola
+        x = pantalla_off.auto_para_persona(doc, g)
+        cuando = "en unos segundos retoma sola" if abierta else "retoma sola cuando se abra una pantalla en off,"
+        contenido["automatica"] = (f"La presentación automática sigue encendida: {cuando} en {x['nombre']}, paso "
+                                   f"{x['paso']} de {x['de']}. Si la persona quiere silencio, apáguela con op "
+                                   "automatica (accion detener).")
     return Resultado(contenido, f"{nombres[a.accion]} el plan «{(r or {}).get('titulo', '')}»", acciones=acciones)
 
 
@@ -2287,20 +2519,20 @@ D_ABRIR_VISTA = (
     "para manejarla, la herramienta presentacion). Solo abre lo que su rol puede ver. No devuelve datos: después diga "
     "en una frase qué quedó en pantalla.")
 D_PRESENTACION = (
-    "Presenta la propuesta Yondó 2028–2031 en su versión técnica (lo que se construye, sin costos, sobre la maqueta 3D "
+    "Presenta la propuesta Yondó 2028–2031 en su versión técnica (lo que se construye, sin costos, en la maqueta 3D "
     "y los modelos del atlas) en el panel de la persona o en su pantalla en off. PARA EXPLICAR, PRIMERO UN PLAN: guion "
-    "(los datos de un capítulo; no mueve nada) y luego recorrido, en UNA llamada: titulo, pasos (de 6 a 10, hasta 12) "
-    "y cierre {puntos}. Cada paso: dice (UNA frase, hasta 220 caracteres, que se proyecta y se lee en voz "
+    "(datos de un capítulo; no mueve nada) y luego recorrido, en UNA llamada: titulo, pasos (de 6 a 10, hasta 12) "
+    "y cierre {puntos}. Cada paso: dice (UNA frase de hasta 220 caracteres, proyectada y leída en voz "
     "alta) y lo que ocurre MIENTRAS se dice: capitulo, paso, la cámara (camara, rumbo, elevacion, zoom, mirar, mover "
     "{giro, zoom, elevacion}), las piezas (aislar, mostrar, ocultar, sin «pieza.parte»), enfoque, detalle, comparar, "
-    "inmersion, animar, resaltar; lo que no cambia sigue del paso anterior. La pantalla lo ejecuta sola; lo que no "
-    "exista se descarta con un aviso. Ejemplo de pasos: [{\"capitulo\":"
+    "inmersion y simular [{control, valor}] (sus controles: el sismo), animar, resaltar; lo demás sigue. La "
+    "pantalla lo ejecuta sola; lo que no exista se descarta con aviso. Ejemplo de pasos: [{\"capitulo\":"
     "\"salud\",\"paso\":\"torre\",\"camara\":\"oblicua\",\"mover\":{\"giro\":40},\"dice\":\"…\"},{\"aislar\":\"torre\","
     "\"sin\":[\"torre.cubierta\"],\"dice\":\"…\"}]. control_recorrido lo pausa, salta o detiene. automatica (accion "
     "iniciar o detener): la pantalla en off recorre sola toda la presentación, muy resumida; un plan corto la "
-    "interrumpe y después sigue sola. Pedidos puntuales: indice, estado y pantalla_completa; y, deteniendo el plan, ir "
-    "(devuelve lo que muestra); siguiente/anterior; explicar y quitar_explicacion; vista (panel, indice, fichas); "
-    "visual (lo de un paso, y tema). La sala lo ve: nunca datos de habitantes, costos, «@» ni números de 7 o más "
+    "interrumpe y luego sigue. Pedidos puntuales: indice, estado, pantalla_completa y, deteniendo el plan, ir "
+    "(dice lo que muestra); siguiente/anterior; explicar y quitar_explicacion; vista (panel, indice, fichas); "
+    "visual (lo de un paso, simular y tema). La sala lo ve: nunca datos de habitantes, costos, «@» ni números de 7 o más "
     "dígitos.")
 
 HERRAMIENTAS: list[Herramienta] = [

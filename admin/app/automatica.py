@@ -9,9 +9,12 @@ pantalla en off (`app/pantalla.py`, clave `auto`); la pantalla pide los planes u
 termina, sigue en el paso que se estaba diciendo.
 
 Qué se dice en un paso, en este orden: la narración escrita a mano (`tecnica.narracion[capítulo][id del paso]` de
-data/propuesta/general.json, que `guion.derivar` deja en el paso como `narracion`); si no hay, la primera frase del
-texto del paso (`resumir`); si no sirve, su título. Todo pasa por las reglas de lo que se proyecta
-(`app/proyectable.py`): lo que no pasa no se dice, y un paso sin nada que decir se salta.
+data/propuesta/general.json, que `guion.derivar` deja en el paso como `narracion`); en un paso de metas, la primera
+meta, resumida (`primera_meta`: la frase de su texto es la misma en todos los módulos); si no, la primera frase del
+texto del paso (`resumir`); si no sirve y el título es breve (un rótulo como «Cinco piezas, una sola red»), una
+frase corta del texto o de las cifras del paso (`frase_corta`); y si nada de eso, su título. Todo pasa por las reglas
+de lo que se proyecta (`app/proyectable.py`) y nada habla de costos: lo que no pasa no se dice, y un paso sin nada que
+decir se salta.
 
 Solo usa la biblioteca estándar, `app/recorrido.py` y `app/proyectable.py`: no importa nada del panel."""
 from __future__ import annotations
@@ -40,6 +43,19 @@ _PAUSA = re.compile(r"[;:](?= )")
 # plata sin nombrar una cifra en pesos («la torre se lleva el 76 % del costo del módulo»). Esa no se narra: va el título
 _DE_COSTOS = re.compile(r"\bcost[oa]s?\b|\binversi[oó]n(?:es)?\b|\bpresupuest|\bfinanciaci[oó]n\b", re.I)
 _CIERRA = (".", "!", "?", "…")
+# Un título de menos de TITULO_BREVE caracteres es un rótulo («Un solo hospital para 22.429 habitantes», «Cinco piezas,
+# una sola red»), no una frase que diga algo sola: antes de decirlo se busca una frase corta del paso (`frase_corta`).
+# Uno más largo ya es una frase («Menos basura a la celda: ECA y compostaje en el mismo predio») y se dice tal cual
+_TITULO_BREVE = 50
+# Donde se parte una frase en ideas para `frase_corta`: un punto y coma seguido de un espacio (lo que va antes y lo
+# que va después son dos oraciones). En los dos puntos no: lo que sigue suele ser una lista o un detalle sin sujeto
+_PUNTO_Y_COMA = re.compile(r";(?= )")
+# Una meta del paso de metas: «Indicador: línea base → meta (año)». Al resumirla se quitan los paréntesis (la fuente
+# y el año de la línea base, las aclaraciones), salvo el año de la meta, que queda dicho: «(2031)» → «en 2031»
+_FLECHA = "→"
+_ANIO = re.compile(r"\s*\(((?:19|20)[0-9]{2})\)")
+_PARENTESIS = re.compile(r"\s*\([^()]*\)")
+_SIN_DATO = re.compile(r"^(?:[—–-]+|sin dato\b.*)$", re.I)
 
 
 def _proyectable(t: Any, maximo: int = rec.MAX_NARRACION) -> str | None:
@@ -80,15 +96,109 @@ def _con_punto(t: Any) -> str:
     return t if not t or t.endswith(_CIERRA) else t + "."
 
 
+def _como_frase(t: str) -> str:
+    """Un trozo de texto como frase: sin la puntuación suelta de los bordes, con mayúscula inicial y punto final."""
+    t = " ".join(t.split()).strip(" ,;:")
+    return _con_punto(t[:1].upper() + t[1:]) if t else ""
+
+
+def _minuscula(t: str) -> str:
+    """`t` con minúscula inicial para ir dentro de una frase («Sedes rurales…» → «sedes rurales…»), salvo si empieza
+    por una sigla o un número («PSMV vigente…», «EBAR y PTAR…», «0 %»)."""
+    return t[0].lower() + t[1:] if len(t) > 1 and t[0].isupper() and t[1].islower() else t
+
+
+def _ideas(frase: str) -> list[str]:
+    """Las partes de `frase` separadas por punto y coma, cada una como frase (`_como_frase`); nunca partida dentro de
+    un paréntesis o de unas comillas. Sin punto y coma, ninguna: la frase entera ya se miró."""
+    cortes = [m.start() for m in _PUNTO_Y_COMA.finditer(frase) if _equilibrado(frase[:m.start()])]
+    if not cortes:
+        return []
+    return [_como_frase(frase[a:b]) for a, b in zip([0, *(c + 1 for c in cortes)], [*cortes, len(frase)])]
+
+
+def _decible(t: str, minimo: int, maximo: int) -> str | None:
+    """`t` como se proyecta si mide entre `minimo` y `maximo` caracteres, no deja un paréntesis ni unas comillas a
+    medias, no habla de costos y pasa las reglas de lo que se proyecta; si no, None."""
+    if not minimo <= len(t) <= maximo or not _equilibrado(t) or _DE_COSTOS.search(t):
+        return None
+    return _proyectable(t, maximo)
+
+
+def frase_corta(p: dict) -> str:
+    """Una frase corta (de MIN_CORTE a MAX_AUTO caracteres) para un paso cuyo título es solo un rótulo y cuya primera
+    frase no sirve (muy larga sin dónde cortarla, o habla de costos): la primera idea del texto que quepa, en orden
+    (cada frase entera o, si es larga, cada una de sus partes separadas por punto y coma) y, si ninguna, la primera
+    cifra del paso (su valor y su leyenda: «1 sede pública de salud habilitada…»). Sin costos y pasando las reglas de
+    lo que se proyecta. «» si no hay ninguna (entonces se dice el título)."""
+    ideas: list[str] = []
+    texto = p.get("texto")
+    if isinstance(texto, str) and texto.strip():
+        for frase in rec.partir_frases(texto):
+            ideas += [frase, *_ideas(frase)]
+    for c in p.get("cifras") if isinstance(p.get("cifras"), list) else ():
+        v, leyenda = (c.get("v"), c.get("l")) if isinstance(c, dict) else (None, None)
+        if isinstance(v, (str, int, float)) and not isinstance(v, bool) and isinstance(leyenda, str):
+            ideas.append(_como_frase(f"{v} {leyenda}"))
+    return next((t for t in (_decible(x, MIN_CORTE, MAX_AUTO) for x in ideas) if t), "")
+
+
+def _sin_parentesis(t: str, anio: bool = False) -> str:
+    """`t` sin lo que va entre paréntesis (también anidados), con los espacios en uno; con `anio`, el de un año queda
+    dicho («5 (2031)» → «5 en 2031»)."""
+    if anio:
+        t = _ANIO.sub(r" en \1", t)
+    previo = None
+    while previo != t:
+        previo, t = t, _PARENTESIS.sub("", t)
+    return " ".join(t.split()).strip(" ,;:")
+
+
+def primera_meta(p: dict) -> str:
+    """Lo que se dice en un paso de metas (`metas`: «Indicador: línea base → meta (año)»): su primera meta, resumida,
+    sin los paréntesis salvo el año de la meta: «La primera meta: sedes rurales de salud habilitadas en el REPS, de 0 a
+    5 en 2031.» Si con la línea base pasa de MAX_AUTO + HOLGURA caracteres (o no hay línea base), solo la meta: «La
+    primera meta, laboratorio clínico: propio, 24 horas…». Sin costos y pasando las reglas de lo que se proyecta. «» si
+    el paso no trae metas o la primera no se puede decir (entonces se sigue con su texto)."""
+    metas = p.get("metas")
+    m = metas[0] if isinstance(metas, list) and metas else None
+    if not isinstance(m, str) or m.count(_FLECHA) != 1:
+        return ""
+    antes, _, despues = m.partition(_FLECHA)
+    nombre, dos_puntos, base = antes.partition(": ")
+    # de la línea base, solo el dato: lo que sigue a una coma, un punto y coma o dos puntos es una aclaración
+    # («9 h, de 4:00 a 13:00» → «9 h»; «0 %: licencia vencida…» → «0 %»)
+    base = re.split(r"[,;:](?= )", _sin_parentesis(base), maxsplit=1)[0]
+    nombre, base, meta = _sin_parentesis(nombre), _sin_parentesis(base), _sin_parentesis(despues, anio=True)
+    if not dos_puntos or not nombre or not meta or _SIN_DATO.match(meta):
+        return ""
+    nombre, meta = _minuscula(nombre), _minuscula(meta)
+    formas = [f"La primera meta: {nombre}, de {_minuscula(base)} a {meta}"] if base and not _SIN_DATO.match(base) else []
+    formas.append(f"La primera meta, {nombre}: {meta}")
+    return next((t for t in (_decible(_con_punto(x), 10, MAX_AUTO + HOLGURA) for x in formas) if t), "")
+
+
+def _candidatas(p: dict):
+    """Lo que se puede decir en el paso `p`, en el orden de `narracion_del_paso`; cada una se calcula solo si la
+    anterior no sirvió."""
+    yield p.get("narracion")
+    yield primera_meta(p)
+    frase = resumir(p.get("texto"))
+    yield "" if _DE_COSTOS.search(frase) else frase
+    titulo = _con_punto(p.get("titulo"))
+    if len(titulo) < _TITULO_BREVE:
+        yield frase_corta(p)
+    yield titulo
+
+
 def narracion_del_paso(g: Any, ci: int, pi: int) -> str | None:
     """Lo que la presentación automática dice en el paso `pi` (desde 0) del capítulo `ci`: una frase muy resumida. La
-    escrita a mano si el guion la trae (`narracion`); si no, la primera frase de su texto (`resumir`), salvo que hable
-    de costos; si no, su título. La primera de las tres que pase las reglas de lo que se proyecta; None si ninguna
-    (ese paso se salta)."""
+    escrita a mano si el guion la trae (`narracion`); en un paso de metas, la primera meta (`primera_meta`); si no, la
+    primera frase de su texto (`resumir`), salvo que hable de costos; si no y el título es breve, una frase corta del
+    texto o de las cifras del paso (`frase_corta`); si no, su título. La primera que pase las reglas de lo que se
+    proyecta; None si ninguna (ese paso se salta)."""
     p = g.capitulos[ci]["pasos"][pi]
-    frase = resumir(p.get("texto"))
-    candidatas = (p.get("narracion"), "" if _DE_COSTOS.search(frase) else frase, _con_punto(p.get("titulo")))
-    return next((t for t in map(_proyectable, candidatas) if t), None)
+    return next((t for t in map(_proyectable, _candidatas(p)) if t), None)
 
 
 def plan_del_capitulo(g: Any, ci: int, desde: int = 1) -> dict | None:

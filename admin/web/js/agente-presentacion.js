@@ -38,8 +38,8 @@
 //
 // El plan guiado (el recorrido narrado: reproductor.js, docs/agente.md): la acción `recorrido` trae las escenas (los
 // pasos del plan) ya absolutas, cada una con lo visual (la cámara, las piezas que se muestran, se ocultan o se aíslan,
-// las partes que se quitan), cómo se mueve la cámara mientras se dice (`mover`) y si repite la animación del paso
-// (`animar`), y se
+// las partes que se quitan), cómo se mueve la cámara mientras se dice (`mover`), si repite la animación del paso
+// (`animar`) y los controles de la simulación del modelo del atlas que acciona (`simular`), y se
 // valida aquí entera (`recorridoValido`) antes de reproducirse en la vista o en el proyector. El avance que va
 // diciendo el reproductor (`avisarRecorrido`) llega a los oyentes de esta pestaña (la tarjeta del chat) y, si esta
 // ventana es el proyector, a las demás por el canal (`recorrido`), aceptado solo del que manda. Los controles de la
@@ -47,6 +47,12 @@
 // desde la escena en curso (`sincronizar`); si el proyector que lo reproducía se cierra, la tarjeta lo sabe y ofrece
 // reanudarlo. Mientras suena en el proyector, la persona que mueve la presentación de esta pestaña lo pausa allá (no se
 // le lleva su paso: eso lo detendría como si el asistente hubiera pedido otra cosa).
+//
+// La pantalla en off (/presentacion?off=1) no se registra aquí: la manejan el servidor y su sondeo. Pero el asistente
+// también se abre en esa ventana, al lado de ella: su reproductor avisa el avance igual (`avisarRecorrido`, la tarjeta lo
+// sigue en el acto), registra su voz (`registrarVozLocal`, para el interruptor de la tarjeta) y escucha `pedirPantalla`
+// (el chat acaba de cambiar algo en el servidor: que pregunte ya, sin esperar su sondeo). En la ventana del proyector,
+// el chat de esa ventana aplica en su propia vista: allí `elegido()` es null.
 //
 // Solo importa base.js y `navegar` (el `ir` de app.js) llega por parámetro: así no depende de app.js y se prueba con
 // Node (admin/tests/test_agente_presentacion.py).
@@ -104,16 +110,19 @@ const VISUAL_INICIAL = Object.freeze({ enfoque: null, camara: 'paso', rumbo: nul
   aislar: null, sin: Object.freeze([]) });
 // las partes de antes del plan guiado: una escena siempre las trae (las demás, si faltan, son lo del paso)
 const VISUAL_BASE = ['enfoque', 'camara', 'rumbo', 'girar', 'comparar', 'detalle', 'inmersion'];
-// Las dos acciones que no son estado (van en la escena, junto a `resaltar`, y en la orden `visual`): `mover`, lo que
-// hace la cámara mientras dura la frase (cuánto gira alrededor de lo que mira y con qué zoom y elevación termina), y
-// `animar`, que repite la animación del paso. `ms`: lo que dura el movimiento de una orden `visual` suelta
+// Las tres acciones que no son estado (van en la escena, junto a `resaltar`, y en la orden `visual`): `mover`, lo que
+// hace la cámara mientras dura la frase (cuánto gira alrededor de lo que mira y con qué zoom y elevación termina),
+// `animar`, que repite la animación del paso, y `simular`, los controles de la simulación del modelo del atlas a la
+// vista (de 1 a MAX_SIMULAR {control, valor?}: el control, un id; el valor, un número, el id de una opción o verdadero
+// o falso; `MAX_SIMULAR` de app/recorrido.py y de mando.js). `ms`: lo que dura el movimiento de una orden `visual` suelta
 const MOVER = {
   giro: (v) => Number.isInteger(v) && v >= -360 && v <= 360,
   zoom: zoomValido,
   elevacion: (v) => Number.isInteger(v) && v >= 8 && v <= 85,
 };
 const MS_MAX = 120000;
-const ACCIONES_VISUAL = ['mover', 'animar', 'ms'];
+const MAX_SIMULAR = 4;
+const ACCIONES_VISUAL = ['mover', 'animar', 'simular', 'ms'];
 const DEL_RECORRIDO = ['recorrido', 'desde', 'rid', 'accion', 'suave', 'motivo'];
 const CLAVES = new Set(['tipo', 'op', 'capitulo', 'paso', 'explicacion', 'panel', 'indice', 'fichas', 'activar', ...PARTES_VISUAL,
   ...ACCIONES_VISUAL, ...DEL_RECORRIDO]);
@@ -162,7 +171,7 @@ export const AVISOS = ['atlas', 'resaltar', 'asiento', 'voz', 'parcial'];
 const RID = /^[0-9a-f]{12}$/;
 const VISUAL_ESCENA = Object.keys(VISUAL_INICIAL);
 const ESCENA_BASE = ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'frases', 'sostener_ms'];
-const ESCENA = [...ESCENA_BASE, 'mover', 'animar'];
+const ESCENA = [...ESCENA_BASE, 'mover', 'animar', 'simular'];
 const entero = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
 const tiene = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 const exactas = (o, claves) => !!o && typeof o === 'object' && !Array.isArray(o) && Object.keys(o).length === claves.length
@@ -185,6 +194,16 @@ function moverValido(m) {
   return claves.some((k) => m[k] !== null);
 }
 
+/** ¿Es `s` una simulación? null, o de 1 a MAX_SIMULAR {control, valor?}. */
+function simularValido(s) {
+  if (s === null) return true;
+  if (!Array.isArray(s) || !s.length || s.length > MAX_SIMULAR) return false;
+  return s.every((x) => conClaves(x, ['control'], ['control', 'valor']) && typeof x.control === 'string' && ID_PIEZA.test(x.control)
+    && (x.valor === undefined || typeof x.valor === 'boolean' || (typeof x.valor === 'number' && Number.isFinite(x.valor))
+      || (typeof x.valor === 'string' && ID_PIEZA.test(x.valor))));
+}
+const copiaSimular = (s) => (s ? s.map((x) => ({ ...x })) : null);
+
 function resaltarValido(r) {
   if (r === null) return true;
   if (!r || typeof r !== 'object' || typeof r.tipo !== 'string') return false;
@@ -195,10 +214,11 @@ function resaltarValido(r) {
 }
 
 // Una escena (un paso del plan), copiada con sus mismas claves y en su mismo orden, o null. El servidor la arma con
-// todas: {capitulo, paso, panel, visual, resaltar, mover, animar, frases, sostener_ms}, y lo visual con sus catorce
-// partes. Una de antes del plan guiado (guardada en este navegador, o de un servidor que todavía no se actualizó) no
-// trae `mover`, `animar` ni las partes nuevas de lo visual: vale igual, y quien la reproduce las da por lo del paso
-// (reproductor.js, mando.js). Lo que no puede es traer una clave de más ni un valor sin la forma
+// todas: {capitulo, paso, panel, visual, resaltar, mover, animar, simular, frases, sostener_ms}, y lo visual con sus
+// catorce partes. Una de antes del plan guiado (guardada en este navegador, o de un servidor que todavía no se
+// actualizó) no trae `mover`, `animar` ni las partes nuevas de lo visual, y una de antes de las simulaciones (o de la
+// presentación automática) no trae `simular`: vale igual, y quien la reproduce las da por lo del paso (reproductor.js,
+// mando.js). Lo que no puede es traer una clave de más ni un valor sin la forma
 function escenaValida(e) {
   if (!conClaves(e, ESCENA_BASE, ESCENA)) return null;
   if (typeof e.capitulo !== 'string' || !ID.test(e.capitulo) || !entero(e.paso, 1, 60) || typeof e.panel !== 'boolean') return null;
@@ -206,12 +226,14 @@ function escenaValida(e) {
   if (!resaltarValido(e.resaltar) || !entero(e.sostener_ms, 0, MAX_SOSTENER_MS)) return null;
   if (e.mover !== undefined && !moverValido(e.mover)) return null;
   if (e.animar !== undefined && typeof e.animar !== 'boolean') return null;
+  if (e.simular !== undefined && !simularValido(e.simular)) return null;
   const f = e.frases;
   if (!Array.isArray(f) || !f.length || f.length > MAX_FRASES || !f.every((x) => tal(x, MAX_EXPLICACION))) return null;
   if (f.reduce((a, x) => a + [...x].length, 0) + f.length - 1 > MAX_EXPLICACION) return null;
   const out = {};
   for (const k of Object.keys(e)) {
     if (k === 'visual') out.visual = Object.fromEntries(Object.entries(e.visual).map(([p, v]) => [p, copia(v)]));
+    else if (k === 'simular') out.simular = copiaSimular(e.simular);
     else out[k] = e[k] && typeof e[k] === 'object' ? (Array.isArray(e[k]) ? [...e[k]] : { ...e[k] }) : e[k];
   }
   return out;
@@ -279,8 +301,8 @@ function accionRecorrido(a) {
  * `ir`), y `explicacion` de hasta MAX_EXPLICACION caracteres que se ve tal cual y sin costos (obligatoria para
  * `explicar`). `vista` lleva solo `panel`, `indice` y `fichas` (al menos una, cada una verdadero o falso; el índice y
  * las fichas no a la vez) y `pantalla_completa` solo `activar` (verdadero o falso). `visual` lleva solo sus partes (cada
- * una con un valor de su lista) y sus acciones (`mover`, `animar` y `ms`, lo que dura el movimiento): al menos una
- * parte, un movimiento o la animación. */
+ * una con un valor de su lista) y sus acciones (`mover`, `animar`, `simular` y `ms`, lo que dura el movimiento): al
+ * menos una parte, un movimiento, la animación o la simulación. */
 export function accionPresentacion(a) {
   if (!a || typeof a !== 'object' || Array.isArray(a) || a.tipo !== 'presentacion') return null;
   if (Object.keys(a).some((k) => !CLAVES.has(k)) || typeof a.op !== 'string' || !OPS.has(a.op)) return null;
@@ -293,12 +315,14 @@ export function accionPresentacion(a) {
     if (partes.some((k) => !VISUAL[k](a[k]))) return null;
     if (a.mover !== undefined && !moverValido(a.mover)) return null;
     if (a.animar !== undefined && typeof a.animar !== 'boolean') return null;
+    if (a.simular !== undefined && !simularValido(a.simular)) return null;
     if (a.ms !== undefined && !entero(a.ms, 0, MS_MAX)) return null;
-    // al menos algo que hacer: una parte, un movimiento o la animación (`ms` solo no dice nada)
-    if (!partes.length && !a.mover && a.animar !== true) return null;
+    // al menos algo que hacer: una parte, un movimiento, la animación o la simulación (`ms` solo no dice nada)
+    if (!partes.length && !a.mover && a.animar !== true && !a.simular) return null;
     for (const k of partes) out[k] = copia(a[k]);
     if (a.mover !== undefined) out.mover = a.mover && { ...a.mover };
     if (a.animar !== undefined) out.animar = a.animar;
+    if (a.simular !== undefined) out.simular = copiaSimular(a.simular);
     if (a.ms !== undefined) out.ms = a.ms;
     return out;
   }
@@ -424,7 +448,8 @@ export function estadoDePantalla(e) {
   // vez, ver `ordenesHacia`). Sin la forma, también invalidan el estado
   if (e.mover !== undefined && !moverValido(e.mover)) return null;
   if (e.animar !== undefined && typeof e.animar !== 'boolean') return null;
-  const acciones = { mover: e.mover ? { ...e.mover } : null, animar: e.animar === true };
+  if (e.simular !== undefined && !simularValido(e.simular)) return null;
+  const acciones = { mover: e.mover ? { ...e.mover } : null, animar: e.animar === true, simular: copiaSimular(e.simular ?? null) };
   // El recorrido para esta pantalla (con su edad, que la calcula el servidor), el último control y el avance. Lo que no
   // tiene la forma se ignora (la pantalla aplica igual los campos base, que son la escena donde quedó)
   let recorrido = null, control = null, progreso = null;
@@ -469,11 +494,13 @@ export function ordenesHacia(antes, e) {
     const previo = antesVisual[k] === undefined ? (k === 'tema' ? null : VISUAL_INICIAL[k]) : antesVisual[k];
     if (!igual(valor, previo) && !(k === 'tema' && valor === null)) visual[k] = copia(valor);
   }
-  // `mover` y `animar` (un movimiento de la cámara, repetir la animación del paso) son acciones, no estado: valen una vez por cada versión nueva de la pantalla (la misma pedida
+  // `mover`, `animar` y `simular` (un movimiento de la cámara, repetir la animación del paso, accionar la simulación del
+  // modelo del atlas) son acciones, no estado: valen una vez por cada versión nueva de la pantalla (la misma pedida
   // dos veces se hace dos veces) y nunca al abrir o recargar (no se repite una vieja)
   const nueva = !!antes && antes.v !== e.v;
   if (e.mover && nueva) visual.mover = { ...e.mover };
   if (e.animar === true && nueva) visual.animar = true;
+  if (e.simular && nueva) visual.simular = copiaSimular(e.simular);
   if (Object.keys(visual).length) out.push({ orden: 'visual', ...visual });
   return out;
 }
@@ -914,17 +941,45 @@ export function controlRecorrido(rid, accion, { suave = false } = {}) {
 
 /** Enciende o apaga la voz del plan en la vista de ESTA pestaña (el interruptor de la tarjeta del chat: el clic es el
  * gesto que el navegador pide para dejarla hablar) y devuelve cómo quedó ('activa', 'apagada', 'sin_activar' o
- * 'sin_voces'). null si la voz no se maneja desde aquí: no hay una presentación abierta en esta pestaña (el plan suena
- * en la pantalla en off) o manda una ventana de proyector, que es donde suena: se enciende allá, con su botón «Voz».
+ * 'sin_voces'). La de la presentación registrada aquí (la pestaña del chat o la ventana del proyector) y, si no hay
+ * ninguna, la de la pantalla en off de esta misma ventana (`registrarVozLocal`: el chat abierto al lado de ella; el
+ * plan lo narra ella aunque haya una ventana de proyector abierta en otra pestaña). null si la voz no se maneja desde
+ * aquí: no hay ninguna de las dos en esta pestaña (el plan suena en la pantalla en off de otro equipo) o, para la
+ * presentación de aquí, manda una ventana de proyector, que es donde suena: se enciende allá, con su botón «Voz».
  * Nunca lanza. */
 export function alternarVozRecorrido() {
   try {
-    if (!control || typeof control.alternarVoz !== 'function' || elegido()) return null;
-    const e = control.alternarVoz();
+    let e;
+    if (!control && vozLocal) {
+      e = vozLocal();
+    } else {
+      if (elegido() || !control || typeof control.alternarVoz !== 'function') return null;
+      e = control.alternarVoz();
+    }
     return VOCES.includes(e) ? e : null;
   } catch {
     return null;
   }
+}
+
+// La voz de la pantalla en off de esta ventana (la vista en off no se registra como presentación: la manejan el
+// servidor y su sondeo). fn() → el estado en que quedó la voz
+let vozLocal = null;
+const EVENTO_PEDIR = 'pantalla:pedir';
+
+/** La pantalla en off de esta ventana registra su voz (lo que hace su botón «Voz»): así el interruptor de la tarjeta del
+ * chat abierto al lado la enciende o la apaga (`alternarVozRecorrido`). Devuelve cómo quitarla (al salir de la vista). */
+export function registrarVozLocal(fn) {
+  if (typeof fn !== 'function') return () => {};
+  vozLocal = fn;
+  return () => { if (vozLocal === fn) vozLocal = null; };
+}
+
+/** Que la pantalla en off de esta ventana, si la hay, le pregunte ya al servidor por su estado, sin esperar su sondeo:
+ * el chat lo llama cuando el asistente acaba de cambiar lo que se ve (un plan, un control). Dispara `pantalla:pedir` en
+ * window; sin pantalla en off no pasa nada. Nunca lanza. */
+export function pedirPantalla() {
+  try { globalThis.dispatchEvent?.(new CustomEvent(EVENTO_PEDIR)); } catch { /* sin ventana (Node) */ }
 }
 
 /** Un recorrido que esta pestaña le manda a un proyector: se guarda (los últimos 3) para pasárselo a otro que se abra. */

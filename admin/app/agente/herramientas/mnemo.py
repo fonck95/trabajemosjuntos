@@ -322,8 +322,11 @@ def _nombres(defs: list[dict]) -> list[str]:
 
 def desde_definiciones(definiciones: list[dict]) -> list[Herramienta]:
     """Las herramientas del asistente a partir de las definiciones guardadas con la conversación (o recién pedidas).
-    Lo que no sirve se descarta; el resultado depende solo de `definiciones`."""
-    defs = [d for d in (_limpia(x) for x in (definiciones if isinstance(definiciones, list) else [])) if d]
+    Lo que no sirve se descarta, y también lo de `NUNCA` (una conversación guardada con un panel anterior o con
+    `MNEMO_HERRAMIENTAS=*` puede traer `mnemo_transcribe` o `mnemo_model_complete`: nunca son herramientas del modelo);
+    el resultado depende solo de `definiciones`."""
+    defs = [d for d in (_limpia(x) for x in (definiciones if isinstance(definiciones, list) else []))
+            if d and d["name"] not in NUNCA]
     return [_herramienta(d, n) for d, n in zip(defs, _nombres(defs))]
 
 

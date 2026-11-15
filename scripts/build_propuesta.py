@@ -5,6 +5,8 @@ Entradas (data/propuesta/):
   general.json        portada, catálogo de fuentes de financiación, hoja de ruta, pedidos y el orden de los módulos
   general.json        también la sección `tecnica`: la portada, las inmersiones en los modelos del atlas, sus pasos y los
                       títulos de la presentación técnica (web/propuesta.html?modo=tecnica, la que muestra el asistente)
+  simulaciones.json   los controles de adentro de cada inmersión que el asistente acciona en el atlas (`simular`): se
+                      revisan y se copian a cada inmersión de `tecnica.inmersiones` como `controles`
   modulos/<id>.json   un archivo por módulo: diagnóstico, componentes con costo, financiación, gestión, metas y pasos
   geo.json            sitios y trazados de cada propuesta en metros del modelo (x al oriente, y al norte)
   territorio.json     río Magdalena, vías y puente (lo genera scripts/geo/territorio_propuesta.py)
@@ -141,6 +143,117 @@ for mid, extra in (tecnica.get('pasos') or {}).items():
         if e.get('id') in ids:
             aviso(f'tecnica/{mid}: el paso «{e.get("id")}» repite el id de otro paso')
         ids.add(e.get('id'))
+# Las simulaciones (data/propuesta/simulaciones.json, {inmersión: [control…]}): los controles de adentro de cada modelo del
+# atlas que el asistente acciona con `simular` (los deslizadores, las opciones y los botones del simulador sísmico, los
+# niveles y las capas del recorrido, las herramientas del modelo BIM…; web/js/escenario.js los acciona como la persona).
+# Se revisa la forma de cada control (id, nombre, tipo, rangos, opciones), que la inmersión exista y que el atlas sepa
+# accionarlo (las claves de ACCIONADORES en escenario.js para la vista y el modo de la inmersión), y se copia a cada
+# inmersión de `tecnica.inmersiones` como `controles` (una lista vacía si no tiene). Lo que se acciona se ve en la sala, y
+# lo proyectado nunca lleva costos: un control (o una de sus opciones) cuyo id o nombre hable de plata (5D, costo,
+# presupuesto, valor, precio…) se avisa, y su ayuda tampoco puede hablar de eso
+ID_CONTROL = re.compile(r'[a-z0-9_]{1,40}')
+PLATA = r'5d|costos?|presupuestos?|precios?|plata|pesos|millones|cop|apu|financiaci[oó]n|inversi[oó]n'
+PLATA_ID = re.compile(rf'(?<![a-z0-9])(?:{PLATA}|valor(?:es)?)(?![a-z0-9])|\$')
+PLATA_AYUDA = re.compile(rf'(?<![a-z0-9])(?:{PLATA})(?![a-z0-9])|\$')
+def habla_de_plata(t, regla=PLATA_ID):
+    """Si el texto (un id, con sus guiones bajos como espacios, o un nombre, sin importar las mayúsculas) nombra plata."""
+    return bool(regla.search(str(t or '').lower().replace('_', ' ')))
+TIPOS_CONTROL = {'accion', 'numero', 'opcion', 'si_no'}
+CAMPOS_CONTROL = {'id', 'nombre', 'tipo', 'min', 'max', 'paso', 'unidad', 'opciones', 'ayuda'}
+ESCENARIO_JS = R / 'web/js/escenario.js'
+def accionadores_js():
+    """{'vista:modo': {ids de control}} de la tabla ACCIONADORES de web/js/escenario.js (una entrada puede ser una
+    constante compartida, como la del recorrido y el laboratorio), o None si no se puede leer."""
+    if not ESCENARIO_JS.exists():
+        return None
+    js = ESCENARIO_JS.read_text(encoding='utf-8')
+    claves = lambda t: set(re.findall(r'^\s+([a-z0-9_]+): \{ como:', t, re.M))
+    tabla = re.search(r'^const ACCIONADORES = \{\n(.*?)^\};', js, re.M | re.S)
+    if not tabla:
+        return None
+    hay = {}
+    for m in re.finditer(r"^  '([a-z]+:[a-z0-9_]+)': (?:([A-Z_]+),|\{\n(.*?)^  \},)", tabla.group(1), re.M | re.S):
+        if m.group(2):
+            c = re.search(rf'^const {m.group(2)} = \{{\n(.*?)^\}};', js, re.M | re.S)
+            hay[m.group(1)] = claves(c.group(1)) if c else set()
+        else:
+            hay[m.group(1)] = claves(m.group(3))
+    return hay
+es_num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)
+simulaciones = load('simulaciones.json') if (D / 'simulaciones.json').exists() else {}
+if not isinstance(simulaciones, dict):
+    aviso('simulaciones.json no es un objeto {inmersión: [controles]}')
+    simulaciones = {}
+atlas_js = accionadores_js()
+if atlas_js is None and simulaciones:
+    aviso('no se pudo leer la tabla ACCIONADORES de web/js/escenario.js para revisar las simulaciones')
+controles_total = 0
+for iid, lista in simulaciones.items():
+    donde = f'simulaciones/{iid}'
+    inm = catalogo.get(iid)
+    if inm is None:
+        aviso(f'{donde}: no es una inmersión de tecnica.inmersiones')
+    if not isinstance(lista, list):
+        aviso(f'{donde}: no es una lista de controles')
+        simulaciones[iid] = []
+        continue
+    clave_atlas = f'{inm.get("vista")}:{inm.get("modo")}' if inm else None
+    if inm and atlas_js is not None and lista and clave_atlas not in atlas_js:
+        aviso(f'{donde}: el atlas no tiene con qué accionar controles en «{clave_atlas}» (ACCIONADORES de web/js/escenario.js)')
+    vistos, nombres = set(), set()
+    for c in lista:
+        if not isinstance(c, dict) or not isinstance(c.get('id'), str) or not ID_CONTROL.fullmatch(c['id']):
+            aviso(f'{donde}: un control sin id válido ([a-z0-9_], hasta 40): {c.get("id") if isinstance(c, dict) else c!r}')
+            continue
+        cid, tipo = f'{donde}/{c["id"]}', c.get('tipo')
+        controles_total += 1
+        if c['id'] in vistos:
+            aviso(f'{cid}: el id del control está repetido en la inmersión')
+        vistos.add(c['id'])
+        nombre = str(c.get('nombre') or '').strip()
+        if not nombre:
+            aviso(f'{cid}: el control no tiene nombre')
+        elif nombre.lower() in nombres:
+            aviso(f'{cid}: el nombre «{nombre}» se repite en la inmersión (el asistente también los pide por nombre)')
+        nombres.add(nombre.lower())
+        for k in sorted(set(c) - CAMPOS_CONTROL):
+            aviso(f'{cid}: el campo «{k}» no es de la forma de un control')
+        if tipo not in TIPOS_CONTROL:
+            aviso(f'{cid}: el tipo «{tipo}» no es accion, numero, opcion ni si_no')
+        if c.get('ayuda') is not None and (not isinstance(c['ayuda'], str) or not c['ayuda'].strip()):
+            aviso(f'{cid}: la ayuda no es un texto')
+        if habla_de_plata(c['id']) or habla_de_plata(nombre) or habla_de_plata(c.get('ayuda'), PLATA_AYUDA):
+            aviso(f'{cid}: el control habla de plata (5D, costo, presupuesto, valor…), y lo que se proyecta nunca lleva '
+                  'costos: quítelo del catálogo')
+        if tipo == 'numero':
+            mn, mx, paso = c.get('min'), c.get('max'), c.get('paso')
+            if not es_num(mn) or not es_num(mx) or mn >= mx:
+                aviso(f'{cid}: un número pide min y max, con min < max')
+            elif paso is not None and (not es_num(paso) or paso <= 0 or paso > mx - mn):
+                aviso(f'{cid}: el paso debe ser positivo y no mayor que el rango')
+            if c.get('unidad') is not None and not isinstance(c['unidad'], str):
+                aviso(f'{cid}: la unidad no es un texto')
+        elif any(k in c for k in ('min', 'max', 'paso', 'unidad')):
+            aviso(f'{cid}: min, max, paso y unidad son solo de los controles de tipo numero')
+        if tipo == 'opcion':
+            ops, vistas_op = c.get('opciones'), set()
+            if not isinstance(ops, list) or not ops:
+                aviso(f'{cid}: una opción pide su lista de opciones')
+                ops = []
+            for o in ops:
+                if not isinstance(o, dict) or not isinstance(o.get('id'), str) or not ID_CONTROL.fullmatch(o['id']) or o['id'] in vistas_op:
+                    aviso(f'{cid}: una opción con id repetido o inválido: {o.get("id") if isinstance(o, dict) else o!r}')
+                    continue
+                vistas_op.add(o['id'])
+                if not str(o.get('nombre') or '').strip():
+                    aviso(f'{cid}.{o["id"]}: la opción no tiene nombre')
+                if habla_de_plata(o['id']) or habla_de_plata(o.get('nombre')):
+                    aviso(f'{cid}.{o["id"]}: la opción habla de plata (5D, costo, presupuesto, valor…), y lo que se '
+                          'proyecta nunca lleva costos: quítela del catálogo')
+        elif 'opciones' in c:
+            aviso(f'{cid}: las opciones son solo de los controles de tipo opcion')
+        if inm and atlas_js is not None and clave_atlas in atlas_js and c['id'] not in atlas_js[clave_atlas]:
+            aviso(f'{cid}: el atlas no sabe accionar este control en «{clave_atlas}» (ACCIONADORES de web/js/escenario.js)')
 # El catálogo de piezas de la maqueta (`tecnica.maqueta`): lo que el asistente puede mostrar, ocultar o aislar en cada
 # capítulo y las partes que les puede quitar (web/js/propuesta/visual.js; el guion solo le pasa al modelo ids y nombres).
 # Se revisa contra lo que existe: los capítulos de la técnica, los ids de capa (literales `esc.capa('…')` de los módulos),
@@ -273,6 +386,11 @@ def sin_cortes(v, clave=''):
     return v
 for k in ('meta', 'portada', 'modulos', 'financiacion', 'ruta', 'pedidos', 'tecnica'):
     out[k] = sin_cortes(out[k])
+# los controles de las simulaciones van tal cual (después de unir cifras y unidades): el asistente los pide por id o por
+# nombre, y el nombre debe ser el mismo en el catálogo, en el guion y en el atlas
+for i in out['tecnica'].get('inmersiones') or []:
+    if isinstance(i, dict):
+        i['controles'] = json.loads(json.dumps(simulaciones.get(i.get('id')) or []))
 
 # El Home repite en cada tarjeta el nombre y el lema del área, enlaza a su capítulo y muestra su imagen: si el módulo cambia,
 # el Home se queda atrás sin que nadie lo note. Se revisa tarjeta por tarjeta, no el archivo entero (los ids del área
@@ -338,6 +456,7 @@ print(f'propuesta_guion.json {destino_guion.stat().st_size / 1024:.0f} KB (prese
       f'{sum(1 for c in guion["capitulos"] for x in c.get("componentes", []) if x["enfoque"])} componentes con lugar en la maqueta')
 print(f'Textos con cifras unidas a su unidad: {cambios}')
 print(f'Catálogo de la maqueta: {piezas_total} piezas en {len(maqueta)} capítulos ({len(capas_js)} capas en los módulos)')
+print(f'Simulaciones del atlas: {controles_total} controles en {sum(1 for v in simulaciones.values() if v)} inmersiones')
 print(f'Avisos de la propuesta: {len(avisos)}')
 for a in avisos:
     print('  -', a)

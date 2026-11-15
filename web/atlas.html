@@ -549,6 +549,9 @@ ul.hab-unidades li { display: flex; flex-wrap: wrap; align-items: center; gap: 4
 .sismo-eq { width: 10px; height: 10px; border-radius: 3px; background: var(--c); border: 1px solid var(--line); }
 .sismo-sel { display: inline-block; width: 16px; height: 0; border-top: 4px solid var(--data); vertical-align: 2px; margin-right: 5px; }
 #v-torre .stage:has([data-slot="torre.hud.sismo"]:not([hidden])) .stage-hint { bottom: 62px; }
+/* en la presentación técnica (js/escenario.js) el panel no se ve: el sismo puesto y si falta calcularlo, sobre la barra de
+   tiempo a la derecha (arriba a la derecha va el botón de rendimiento) */
+.sismo-resumen { position: absolute; bottom: 60px; right: 10px; max-width: min(460px, calc(100% - 20px)); margin: 0; padding: 5px 10px; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 10px; font: 600 0.74rem/1.45 var(--f-mono); color: var(--ink); }
 /* etiqueta de deriva de cada entrepiso: ancla sin tamaño en el vértice; la caja se abre hacia la izquierda */
 .lbl.sismo-lbl { width: 0; height: 0; overflow: visible; }
 .sismo-lbl > .lbl-node { position: absolute; right: 4px; bottom: 2px; font-size: 10.5px; white-space: nowrap; }
@@ -587,6 +590,7 @@ svg.mr-chart .sg-cruz { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3
   .sismo-ley { max-width: calc(100% - 128px); max-height: calc(100% - 120px); }
   .sismo-bins { grid-template-columns: minmax(0, 1fr); }
   #v-torre .stage:has([data-slot="torre.hud.sismo"]:not([hidden])) .stage-hint { display: none; }
+  .sismo-resumen { top: auto; bottom: 76px; left: 8px; right: 8px; max-width: none; }
   .sismo-tabla td.ancho { min-width: 0; }
 }
 /* <<< torre-sismo */

@@ -85,7 +85,10 @@ const NO_CAMBIO = Symbol('304');
 
 // Opciones de cada petición: `clave` va como Idempotency-Key y `timeout` (ms) corta la espera con «Sin conexión» sin
 // perder lo escrito (0: sin límite). `cabeceras` se suman a las de siempre; `alResponder(r)` recibe la respuesta.
-// `keepalive` deja terminar la petición aunque la página pase al marcador (tel:) o a WhatsApp
+// `keepalive` deja terminar la petición aunque la página pase al marcador (tel:) o a WhatsApp. `signal` (un
+// AbortSignal de quien llama) corta la petición, también mientras llega la respuesta: lanza `ErrorApi(0)` con `codigo`
+// `cancelada`, sin abrir el ingreso ni avisar de una cuenta pendiente por una respuesta que ya nadie espera
+const CANCELADA = { codigo: 'cancelada', mensaje: 'Se canceló.' };
 async function pedir(metodo, ruta, cuerpo, op = {}, reintento = false) {
   const { formulario = false, clave = null, cabeceras = null, alResponder = null, keepalive = false } = op;
   const sinLimite = SIN_LIMITE.some((r) => ruta === r || ruta.startsWith(r + '?'));
@@ -101,39 +104,52 @@ async function pedir(metodo, ruta, cuerpo, op = {}, reintento = false) {
       o.body = JSON.stringify(cuerpo);
     }
   }
-  let reloj = null;
-  if (timeout > 0) {
-    const control = new AbortController();
+  const externa = op.signal || null;
+  const cancelada = () => !!externa?.aborted;
+  let reloj = null, control = null;
+  if (timeout > 0 || externa) {
+    control = new AbortController();
     o.signal = control.signal;
-    reloj = setTimeout(() => control.abort(), timeout);
   }
-  let r;
+  if (timeout > 0) reloj = setTimeout(() => control.abort(), timeout);
+  const cortar = () => control.abort();
+  if (externa) {
+    if (externa.aborted) control.abort();
+    else externa.addEventListener('abort', cortar, { once: true });
+  }
+  let r, datos;
   try {
-    r = await fetch(url(ruta), o);
-  } catch (e) {
-    // Sin señal o tiempo agotado: el formulario sigue abierto con lo escrito
-    throw new ErrorApi(0, SIN_CONEXION);
-  } finally {
-    if (reloj) clearTimeout(reloj);
-  }
-  // /api/yo sin sesión configurada es la pregunta del arranque («¿hay sesión?»), no una sesión que terminó
-  if (r.status === 401 && ruta !== '/api/login' && !(ruta === '/api/yo' && !csrf)) {
-    // Con algo escrito (o enviándolo), se ingresa de nuevo en un diálogo y se reintenta; si no, se recarga como antes
-    if (!reintento && (metodo !== 'GET' || hayPendientes()) && alReingresar) {
-      try { await reingresar(); } catch { throw new ErrorApi(401, 'La sesión terminó'); }
-      return pedir(metodo, ruta, cuerpo, op, true);
+    try {
+      r = await fetch(url(ruta), o);
+    } catch (e) {
+      // Sin señal o tiempo agotado: el formulario sigue abierto con lo escrito
+      throw new ErrorApi(0, cancelada() ? CANCELADA : SIN_CONEXION);
+    } finally {
+      if (reloj) clearTimeout(reloj);
     }
-    alExpirar();
-    throw new ErrorApi(401, 'La sesión terminó');
-  }
-  alResponder?.(r);
-  if (r.status === 304) return NO_CAMBIO;
-  const tipo = r.headers.get('content-type') || '';
-  let datos;
-  try {
-    datos = tipo.includes('json') ? await r.json() : await r.text();
-  } catch {
-    throw new ErrorApi(0, SIN_CONEXION);
+    if (cancelada()) throw new ErrorApi(0, CANCELADA);
+    // /api/yo sin sesión configurada es la pregunta del arranque («¿hay sesión?»), no una sesión que terminó
+    if (r.status === 401 && ruta !== '/api/login' && !(ruta === '/api/yo' && !csrf)) {
+      // Con algo escrito (o enviándolo), se ingresa de nuevo en un diálogo y se reintenta; si no, se recarga como antes
+      if (!reintento && (metodo !== 'GET' || hayPendientes()) && alReingresar) {
+        try { await reingresar(); } catch { throw new ErrorApi(401, 'La sesión terminó'); }
+        if (cancelada()) throw new ErrorApi(0, CANCELADA);
+        return pedir(metodo, ruta, cuerpo, op, true);
+      }
+      alExpirar();
+      throw new ErrorApi(401, 'La sesión terminó');
+    }
+    alResponder?.(r);
+    if (r.status === 304) return NO_CAMBIO;
+    const tipo = r.headers.get('content-type') || '';
+    try {
+      datos = tipo.includes('json') ? await r.json() : await r.text();
+    } catch {
+      throw new ErrorApi(0, cancelada() ? CANCELADA : SIN_CONEXION);
+    }
+    if (cancelada()) throw new ErrorApi(0, CANCELADA);
+  } finally {
+    externa?.removeEventListener('abort', cortar);
   }
   if (!r.ok) {
     const e = new ErrorApi(r.status, datos?.detail ?? datos);

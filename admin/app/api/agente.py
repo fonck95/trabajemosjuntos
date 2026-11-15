@@ -199,19 +199,31 @@ async def confirmaciones(cuerpo: ConfirmacionIn, request: Request, quien: Quien 
 async def transcribir(request: Request, quien: Quien = Depends(requiere("agente.usar"))):
     """Una pregunta por voz. El cuerpo es el audio crudo (`Content-Type`: `audio/webm`, `audio/ogg`, `audio/mp4`,
     `audio/mpeg` o `audio/wav`; hasta 2 MB) y la respuesta, `{"texto": lo transcrito ("" si no se oyó nada), "via":
-    "mnemo"}`. Con la sesión y el permiso del asistente (503 sin proveedor del modelo, 403 con el rol apagado) y como
-    mucho 20 por minuto por persona (429 `frecuencia`). Errores, todos `{codigo, mensaje}`: 415 `tipo`, 413 `grande`,
-    422 `vacio` (sin cuerpo) o `audio` (Mnemo no pudo leerlo), 409 `sin_transcriptor` (Mnemo sin conectar, la conexión
-    sin `mnemo:model`, o Mnemo sin un modelo que transcriba: el panel pasa al reconocimiento del navegador), 402
-    `mnemo_creditos` y 502. No guarda ni registra el audio ni el texto."""
+    "mnemo"}`. Con la sesión y el permiso del asistente (503 sin proveedor del modelo, 403 con el rol apagado), con
+    mensajes del día por gastar (429 `volumen`), una a la vez por persona (429 `frecuencia`), como mucho 20 por minuto
+    por persona (429 `frecuencia`), como mucho el doble de sus mensajes del día (429 `volumen`) y dos llamadas a Mnemo
+    a la vez en todo el panel (Mnemo comparte sus cupos con el modelo del asistente: la tercera espera unos segundos y
+    después, 429 `frecuencia`). Errores, todos `{codigo, mensaje}`: 415 `tipo`, 413 `grande`, 400 `cortada` (la subida
+    se cortó, o la persona se fue mientras se transcribía: se deja de esperar a Mnemo) o `lenta` (la grabación no
+    terminó de llegar a tiempo), 422 `vacio` (sin cuerpo) o `audio` (Mnemo no pudo leerlo), 409
+    `sin_transcriptor` (Mnemo sin conectar, la conexión sin `mnemo:model`, o Mnemo sin un modelo que transcriba: el
+    panel pasa al reconocimiento del navegador), 402 `mnemo_creditos` y 502. No guarda ni registra el audio ni el
+    texto."""
     from ..agente import dictado
     app = request.app
     db, cfg = app.state.db, app.state.cfg
-    _, agente = await run_in_threadpool(politica.leer, db)
+    ajustes, agente = await run_in_threadpool(politica.leer, db)
     await run_in_threadpool(politica.exigir, quien, cfg, agente, db)
     mime = dictado.tipo_de(request.headers.get("content-type"))
     if mime is None:
         raise dictado.ErrorDictado(415, "tipo", dictado.MENSAJE_TIPO)
-    dictado.frecuencia(db.name, quien.uid)
-    audio = await dictado.leer_audio(request)
-    return {"texto": await dictado.transcribir(app, audio, mime), "via": "mnemo"}
+    maximo = politica.mensajes_diarios(ajustes, quien.rol)
+    await run_in_threadpool(dictado.exigir_mensajes, db, quien.uid, maximo)
+    # El turno de la persona abarca todo (un reintento rechazado no gasta frecuencia ni tope diario); el cupo del
+    # proceso, solo la llamada a Mnemo; y si la persona se va mientras tanto, se deja de esperar
+    with dictado.turno(db.name, quien.uid):
+        dictado.frecuencia(db.name, quien.uid)
+        dictado.diarias(db.name, quien.uid, maximo * dictado.DIARIAS_POR_MENSAJE)
+        audio = await dictado.leer_audio(request)
+        texto = await dictado.mientras_siga(request, dictado.transcribir_con_cupo(app, audio, mime))
+    return {"texto": texto, "via": "mnemo"}

@@ -17,9 +17,14 @@ las reglas de lo que se proyecta, y que test_recorrido.py no cubre.
   hay uno más nuevo, 409: no se puede; si el recorrido no está en este navegador, ni lo pide); la barra y la pausa al
   escribir siguen a la tarjeta del recorrido que suena, no a la más nueva; en la pantalla en off, una pantalla que deja
   de avisar (o que nunca empezó) lo deja detenido por falta de respuesta, una pausa larga no, y un control vuelve a
-  seguirlo.
+  seguirlo. Si esa pantalla en off es ESTA ventana (el asistente abierto al lado de la presentación), su avance llega
+  por el puente en el acto y manda sobre el sondeo (que llega con retraso): no retrocede ni se da por mudo; los
+  controles van al servidor (con keepalive) y después le piden a esa pantalla que pregunte ya (`pedirPantalla`), y el
+  interruptor de voz usa la voz que ella registró. Dos preguntas por voz seguidas pausan las dos veces aunque el
+  servidor siga diciendo «pausa» por el «continuar» propio (con tarjeta y sin ella), y una pausa a mano no se toca.
 """
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -332,10 +337,12 @@ const el = (t, c, x) => { const n = new Nodo(t, c); if (x != null) n.textContent
 const ico = () => el('svg', 'ico');
 // La API: cada llamada queda anotada y `responder` decide qué vuelve
 const llamadas = [];
+const conKeepalive = [];   // las que pidieron `keepalive` (siguen aunque la página se vaya)
 let responder = () => ({ status: 404, body: { detail: 'no' } });
 globalThis.fetch = async (u, o = {}) => {
   const metodo = o.method || 'GET', cuerpo = o.body ? JSON.parse(o.body) : null;
   llamadas.push(`${metodo} ${u}${cuerpo ? ` ${cuerpo.accion}:${cuerpo.rid}` : ''}`);
+  if (o.keepalive) conKeepalive.push(llamadas.at(-1));
   const { status, body } = responder(metodo, String(u), cuerpo);
   return { status, ok: status >= 200 && status < 300, headers: { get: () => 'application/json' }, json: async () => body };
 };
@@ -360,7 +367,7 @@ const boton = (t, accion) => t.el.querySelectorAll('button').find((b) => b.datas
 const av = (rid, n, fase, extra = {}) => P.avisarRecorrido({ rid, n, de: 2, fase, frase: 0, voz: 'apagada', t_ms: 0, ...extra });
 // Una presentación abierta en esta pestaña: recibe los controles que van adonde suena
 const recibidas = [];
-P.registrarPresentacion({ estado: () => ({ capitulo: 'salud', paso: 1, total: 4 }),
+const quitarPresentacion = P.registrarPresentacion({ estado: () => ({ capitulo: 'salud', paso: 1, total: 4 }),
   aplicar: async (l) => { recibidas.push(...l.map((a) => `${a.accion}:${a.rid}${a.suave ? ':suave' : ''}`)); return l.map((a) => ({ op: a.op, ok: true })); } });
 const r = {};
 
@@ -488,6 +495,92 @@ r.nunca_empezo = ver(H);
   av(rid, 2, 'fin');
   r.plan_fin = foto();
 }
+
+// 8. La pantalla en off de ESTA ventana (el asistente abierto al lado de ella): su avance llega por el puente en el acto
+// y manda sobre el sondeo; mientras siga llegando no está muda; los controles van al servidor y después le piden que
+// pregunte ya; el interruptor de voz usa la voz que ella registró
+{
+  const pedidos = [];
+  globalThis.dispatchEvent = (e) => { pedidos.push(e.type); return true; };
+  quitarPresentacion();   // en la pantalla en off la vista no se registra como presentación
+  let voz = 'apagada';
+  const quitarVoz = P.registrarVozLocal?.(() => (voz = voz === 'activa' ? 'apagada' : 'activa')) ?? (() => {});
+  const rid = '9999aaaabbbb';
+  get = off(rid, 'sin_avance', null, 1);   // el servidor todavía no sabe nada de ella
+  responder = (m, u, c) => (m === 'GET' ? { status: 200, body: get } : { status: 200, body: { id: c.rid, escena: 2, de: 2, fase: 'pausa', cerrado: false } });
+  const K = crear(rid, 'pantalla_off');
+  await dormir(50);
+  av(rid, 1, 'narrando');
+  r.local_en_el_acto = ver(K);
+  av(rid, 2, 'narrando');
+  await dormir(1700);   // el sondeo sigue diciendo «sin avance»: no la hace retroceder
+  r.local_sin_retroceder = ver(K);
+  // el servidor dice que no avisa hace rato (sus avances le llegan tarde): con los de aquí, no está muda
+  get = off(rid, 'narrando', 120, 2);
+  av(rid, 2, 'narrando', { frase: 1 });
+  await dormir(1700);
+  r.local_no_muda = ver(K);
+  // un control: al servidor (en orden, con keepalive) y después la pantalla de aquí pregunta ya
+  pedidos.length = 0; llamadas.length = 0; conKeepalive.length = 0;
+  boton(K, 'pausar').click();
+  r.local_pausado_ya = K.pausado();   // la pausa propia cuenta antes de que el avance la refleje
+  await dormir(50);
+  r.local_control = { llamadas: llamadas.filter((x) => x.startsWith('POST')), keepalive: conKeepalive.slice(), pedidos: pedidos.slice() };
+  av(rid, 2, 'pausa', { frase: 1 });
+  r.local_en_pausa = { ...ver(K), pausado: K.pausado() };
+  K.el.querySelector('.rec-voz').click();
+  r.local_voz = { voz, nota: ver(K).nota, interruptor: K.el.querySelector('.rec-voz').dataset.voz };
+  av(rid, 2, 'fin');
+  quitarVoz();
+}
+
+// 9. Dos preguntas por voz seguidas con el plan en la pantalla en off de otro equipo (solo el sondeo): la segunda
+// también pausa aunque el sondeo siga en «pausa» (es la del «continuar» de la primera, que la pantalla no aplicó
+// todavía), y va detrás de ese «continuar»
+{
+  const rid = 'cccc9999dddd';
+  get = off(rid, 'narrando', 1);
+  const L = crear(rid, 'pantalla_off');
+  await dormir(1700);   // las tarjetas de antes ven otro id y se detienen
+  llamadas.length = 0; conKeepalive.length = 0;
+  const seguir1 = T.pausaPorVoz();
+  await dormir(50);
+  get = off(rid, 'pausa', 1);   // la pantalla aplicó la pausa
+  seguir1(false);               // la pregunta se canceló: «continuar»
+  await dormir(50);
+  const seguir2 = T.pausaPorVoz();   // el sondeo todavía dice «pausa»
+  await dormir(50);
+  r.voz_dos_veces = { controles: llamadas.filter((x) => x.startsWith('POST')), pausado: L.pausado(), keepalive: conKeepalive.slice() };
+  seguir2(false);
+  await dormir(50);
+}
+
+// 10. Lo mismo sin tarjeta (la presentación automática): se le pregunta al servidor. La pausa de una pregunta anterior
+// es propia; una pausa a mano, no se toca
+{
+  const rid = 'eeee0000ffff';
+  get = { ...off(rid, 'narrando', 1), conectada: true };
+  await dormir(1700);   // la tarjeta de antes ve otro id y se detiene: no queda ninguna sonando
+  r.sin_tarjeta = T.recorridoDelChat()?.id() ?? null;
+  llamadas.length = 0; conKeepalive.length = 0;
+  const s1 = T.pausaPorVoz();
+  await dormir(50);
+  get = { ...off(rid, 'pausa', 1), conectada: true };
+  s1();
+  await dormir(50);
+  const s2 = T.pausaPorVoz();
+  await dormir(50);
+  s2();
+  await dormir(50);
+  r.voz_sin_tarjeta = { controles: llamadas.filter((x) => x.startsWith('POST')), keepalive: conKeepalive.slice() };
+  desfase += 6000;   // ya no hay un «continuar» propio reciente: la pausa es de alguien más
+  llamadas.length = 0;
+  const s3 = T.pausaPorVoz();
+  await dormir(50);
+  s3();
+  await dormir(50);
+  r.voz_pausa_a_mano = llamadas.filter((x) => x.startsWith('POST'));
+}
 console.log(JSON.stringify(r));
 process.exit(0);
 """
@@ -540,6 +633,44 @@ def test_la_tarjeta_de_la_pantalla_en_off_no_queda_sonando_para_siempre(tarjeta)
 
 
 @requiere_node
+def test_la_tarjeta_sigue_a_la_pantalla_en_off_de_esta_misma_ventana(tarjeta):
+    r = tarjeta
+    off = "POST /api/pantalla/recorrido/control"
+    # El avance de la vista en off de esta ventana se pinta en el acto, sin esperar el sondeo
+    assert r["local_en_el_acto"]["estado"] == "Paso 1 de 2 · Narrando" and r["local_en_el_acto"]["sonando"] is True, r
+    # El sondeo, que llega con retraso, no la hace retroceder; ni la da por muda mientras sigan llegando avances aquí
+    assert r["local_sin_retroceder"]["estado"] == "Paso 2 de 2 · Narrando", r
+    assert r["local_no_muda"] == {"estado": "Paso 2 de 2 · Narrando", "nota": "", "sonando": True}, r
+    # Los controles siguen yendo al servidor (valen también para otra pantalla en off), con keepalive, y después la
+    # pantalla de esta ventana pregunta ya (`pantalla:pedir`)
+    assert r["local_pausado_ya"] is True, r
+    assert r["local_control"]["llamadas"] == [f"{off} pausar:9999aaaabbbb"], r
+    assert r["local_control"]["keepalive"] == r["local_control"]["llamadas"], r
+    assert r["local_control"]["pedidos"] == ["pantalla:pedir"], r
+    assert r["local_en_pausa"]["estado"] == "Paso 2 de 2 · En pausa" and r["local_en_pausa"]["pausado"] is True, r
+    # El interruptor de voz enciende la de la pantalla en off de esta ventana
+    assert r["local_voz"]["voz"] == "activa" and r["local_voz"]["interruptor"] == "activa", r
+
+
+@requiere_node
+def test_dos_preguntas_por_voz_seguidas_pausan_las_dos_veces(tarjeta):
+    r = tarjeta
+    off = "POST /api/pantalla/recorrido/control"
+    # Con tarjeta: pausa, «continuar» y otra pausa (antes, la fase vieja «pausa» la tomaba por una pausa a mano)
+    assert r["voz_dos_veces"]["controles"] == [f"{off} pausar:cccc9999dddd", f"{off} continuar:cccc9999dddd",
+                                               f"{off} pausar:cccc9999dddd"], r
+    assert r["voz_dos_veces"]["pausado"] is True, r
+    assert f"{off} continuar:cccc9999dddd" in r["voz_dos_veces"]["keepalive"], r
+    # Sin tarjeta, igual; y el «continuar» va con keepalive (la página que se va no deja la sala en pausa)
+    assert r["sin_tarjeta"] is None, r
+    assert r["voz_sin_tarjeta"]["controles"] == [f"{off} pausar:eeee0000ffff", f"{off} continuar:eeee0000ffff",
+                                                 f"{off} pausar:eeee0000ffff", f"{off} continuar:eeee0000ffff"], r
+    assert r["voz_sin_tarjeta"]["keepalive"] == [f"{off} continuar:eeee0000ffff"] * 2, r
+    # Una pausa que no es de una pregunta reciente no se toca (ni se continúa al terminar)
+    assert r["voz_pausa_a_mano"] == [], r
+
+
+@requiere_node
 def test_la_tarjeta_es_el_plan_y_lo_sigue_paso_a_paso(tarjeta):
     r = tarjeta
     # Antes de empezar, el plan entero y «listo»; la espera de antes del primer paso no lo cambia
@@ -553,3 +684,53 @@ def test_la_tarjeta_es_el_plan_y_lo_sigue_paso_a_paso(tarjeta):
     # El interruptor de voz, sin una vista que la encienda aquí, lo dice
     assert isinstance(r["plan_voz"], str) and "voz" in r["plan_voz"].lower(), r
     assert r["plan_fin"]["etapa"] == "final" and r["plan_fin"]["en_curso"] == -1 and r["plan_fin"]["hechas"] == 2, r
+
+
+# ───────────────────────────── Los chips de cada paso ─────────────────────────────
+
+# La tarjeta con el DOM mínimo de NODE_TARJETA (hasta su API simulada) y un paso que maneja una simulación del atlas
+NODE_CHIPS = NODE_TARJETA[:NODE_TARJETA.index("// La API: cada llamada")] + r"""
+const T = await import(tarjetaJs);
+const conIcono = (n) => Object.assign(el('svg', 'ico'), { icono: n });
+const a = { tipo: 'recorrido', id: '5151515151ab', titulo: 'El sismo', destino: 'vista', duracion_ms: 20000, cierre: null,
+  sugerencias: [], escenas: [{ narracion: 'Así tiembla la torre con magnitud 7.', donde: 'Salud · paso 6', hace: ['modelo', 'simular', 'simular'] },
+    { narracion: 'Y así queda.', donde: 'Salud · paso 6', hace: ['simular'] }] };
+const v = T.tarjetaValida(a);
+const r = { hace: v?.escenas.map((e) => e.hace) ?? null, nombre: T.HACE.simular ?? null,
+  // lo que no está en la lista no pasa (ni un nombre parecido)
+  mala: T.tarjetaValida({ ...a, escenas: [{ ...a.escenas[0], hace: ['simulacion'] }] }),
+  // todos los de la lista caben en un paso; uno más, no
+  todos: !!T.tarjetaValida({ ...a, escenas: [{ ...a.escenas[0], hace: Object.keys(T.HACE) }] }),
+  de_mas: T.tarjetaValida({ ...a, escenas: [{ ...a.escenas[0], hace: [...Object.keys(T.HACE), 'paso'] }] }) };
+const t = T.crearTarjetaRecorrido(v, { el, ico: conIcono, alSugerencia: () => {}, guardado: () => false, reproducir: () => false });
+CUERPO.append(t.el);
+r.chips = t.el.querySelectorAll('.rec-chip').map((c) => [c.title, c.textContent, c.hijos[0]?.icono ?? null]);
+console.log(JSON.stringify(r));
+process.exit(0);
+"""
+
+
+@requiere_node
+def test_un_paso_que_maneja_una_simulacion_tiene_su_chip(tmp_path):
+    """El servidor manda `simular` en los `hace` de los pasos que accionan una simulación del atlas (el sismo, los pisos,
+    el BIM…): la tarjeta lo acepta (antes descartaba el plan entero: «no se puede mostrar aquí») y lo pinta como los
+    demás, con su nombre y un ícono de ui.js."""
+    r = _node(tmp_path, NODE_CHIPS, PUENTE_JS.as_uri(), TARJETA_JS.as_uri())
+    assert r["nombre"] == ["Maneja la simulación", "ajustes"], r
+    assert r["hace"] == [["modelo", "simular"], ["simular"]], r   # (sin repetir)
+    assert r["mala"] is None and r["todos"] is True and r["de_mas"] is None, r
+    assert r["chips"] == [["Abre un modelo del atlas", "Abre un modelo del atlas", "zona"],
+                          ["Maneja la simulación", "Maneja la simulación", "ajustes"],
+                          ["Maneja la simulación", "Maneja la simulación", "ajustes"]], r
+
+
+def test_cada_chip_tiene_un_icono_que_existe():
+    """Los íconos de `HACE` son de ui.js: uno que no existe pinta un svg vacío."""
+    tarjeta = TARJETA_JS.read_text(encoding="utf-8")
+    ui = (JS / "ui.js").read_text(encoding="utf-8")
+    bloque = tarjeta[tarjeta.index("export const HACE = {"):]
+    bloque = bloque[:bloque.index("\n};")]
+    hace = dict(re.findall(r"(\w+): \['[^']+', '(\w+)'\]", bloque))
+    assert "simular" in hace and len(hace) >= 17, hace
+    iconos = set(re.findall(r"^  (\w+): '<", ui, re.M))
+    assert {i for i in hace.values() if i not in iconos} == set(), hace

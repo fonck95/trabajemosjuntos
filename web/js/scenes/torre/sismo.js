@@ -117,7 +117,8 @@ export async function montar(ctx) {
       <span class="sismo-t" data-o="t">sin cálculo</span>
       <span class="seg sismo-vel" role="group" aria-label="Velocidad de reproducción"><button type="button" data-vel="0.25" aria-pressed="false">0,25×</button><button type="button" data-vel="1" aria-pressed="true">1×</button></span>
     </div>
-    <details class="sismo-ley"${tel.matches ? '' : ' open'}><summary>Colores</summary><div data-o="leyenda"></div></details>`;
+    <details class="sismo-ley"${tel.matches ? '' : ' open'}><summary>Colores</summary><div data-o="leyenda"></div></details>
+    <p class="sismo-resumen" data-o="resumen" aria-hidden="true" hidden></p>`;
   elG.innerHTML = `<p class="note" data-o="g-estado">Las gráficas aparecen cuando termina el cálculo.</p>
     <div class="sismo-rejilla">
       <div data-g="acel"></div><div data-g="espectros"></div><div data-g="derivas"></div><div data-g="cortante"></div><div data-g="energia"></div><div data-g="fourier"></div>
@@ -133,6 +134,19 @@ export async function montar(ctx) {
   const ctl = (k) => elPanel.querySelector(`[data-c="${k}"]`) || elHud.querySelector(`[data-c="${k}"]`) || elG.querySelector(`[data-c="${k}"]`);
   const out = (k) => elPanel.querySelector(`[data-o="${k}"]`) || elHud.querySelector(`[data-o="${k}"]`) || elG.querySelector(`[data-o="${k}"]`);
   const radioV = (nombre) => elPanel.querySelector(`input[name="sismo-${nombre}"]:checked`)?.value;
+  // En la presentación técnica (el atlas como escenario, js/escenario.js) el panel no se ve: una línea sobre el recuadro
+  // dice el sismo puesto y si falta calcularlo o se está calculando, así la sala ve lo que el asistente cambió
+  const ESCENARIO = document.documentElement.hasAttribute('data-escenario');
+  let avanceEsc = null, montado = false;   // (los controles se escriben antes de que exista el estado del cálculo)
+  function resumenEscenario() {
+    if (!ESCENARIO || !montado) return;
+    const p = leerParams(), e = ESC.find((x) => x.id === ctl('escenario').value), o = out('resumen');
+    const calc = R?.params, igual = calc && +calc.Mw === p.Mw && +calc.profundidad_km === p.profundidad_km && +calc.distancia_epicentral_km === p.distancia_epicentral_km && +calc.vs30_m_s === p.vs30_m_s;
+    const fase = avanceEsc != null ? `calculando ${nv(avanceEsc * 100, 0)} %` : calc && !igual ? 'falta calcular' :!calc ? 'sin calcular' : '';
+    const t = `${e ? `${e.nombre.replace(/\s*\(por defecto\)/, '')} · ` : ''}Mw ${n(p.Mw, 1)} · ${nv(p.profundidad_km, 0)} km de profundidad · a ${nv(p.distancia_epicentral_km, 0)} km${fase ? ` · ${fase}` : ''}`;
+    if (o.textContent !== t) o.textContent = t;
+    o.hidden = false;
+  }
 
   // ================================================================ controles del sismo (8.2)
   const esc0 = ESC.find((e) => e.id === 'nido_2015');
@@ -170,6 +184,7 @@ export async function montar(ctx) {
       : 'Combinación elegida a mano. Si queda fuera de la sismicidad conocida, el cálculo lo avisa.';
     // es una región viva: se reescribe solo si cambia (si no, el lector de pantalla la repite con cada flecha de un control)
     if (html !== ultimoEscenario) { ultimoEscenario = html; out('escenario').innerHTML = html; }
+    resumenEscenario();
   }
   function aplicarEscenario(id) {
     const e = ESC.find((x) => x.id === id);
@@ -795,6 +810,7 @@ export async function montar(ctx) {
     if (progreso != null) p.value = progreso;
     d.hidden = !detalle;
     d.textContent = detalle || '';
+    if (ESCENARIO) { avanceEsc = calculando ? progreso ?? 0 : null; resumenEscenario(); }
   };
   function botones(enCurso) {
     const bC = $(elPanel, '[data-s="calcular"]'), bX = $(elPanel, '[data-s="cancelar"]'), foco = document.activeElement;
@@ -952,10 +968,12 @@ export async function montar(ctx) {
     const angosto = (st.el?.clientWidth || 800) < 560;
     st.frameBox(est3d.caja(2), new THREE.Vector3(-0.75, 0.5, 0.62), { margin: angosto ? 0.95 : 0.8, duration: 1.2, ty: angosto ? 0.42 : 0.35 });
   }
+  montado = true;
   return {
     entrar() {
       if (dentro) return;
       dentro = true;
+      resumenEscenario();
       camaraTocada = false;
       ctx.exterior.ocultar(true);
       poner(panel, elPanel); poner(hud, elHud); poner(cajaG, elG); poner(ficha, elFicha);
