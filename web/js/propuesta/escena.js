@@ -15,7 +15,9 @@ import { matT, matAgua, tex, texFachada, texFachadaLuz, ajustesMundo } from './t
 import { ambiente } from './ambiente.js';
 import { casasDeHuellas, geometrias, sembrarArboles, rejillaLineas, rejillaPoligonos, trozos } from './contexto.js';
 
-const R_SUELO = 16000;
+// el suelo llega mucho más allá de lo que se mira (60 km): en las vistas de todo el municipio (cámara a 24–30 km) el borde
+// de un disco de 16 km se veía cortado contra el cielo; ahora la bruma lo disuelve antes de llegar a él
+const R_SUELO = 60000;
 
 export function crearEscena(el, datos) {
   const terr = datos.territorio || {};
@@ -47,6 +49,8 @@ export function crearEscena(el, datos) {
   st.onFrame(() => {
     const d = st.camera.position.distanceTo(st.controls.target);
     st.fogCfg.near = Math.max(1500, d * 1.6); st.fogCfg.far = Math.max(7000, d * 5.5);
+    // de muy lejos (todo el municipio), la bruma cierra antes: el horizonte queda en el cielo y no en el borde del suelo
+    if (d > 8000) { st.fogCfg.near = d * 1.15; st.fogCfg.far = d * 2.6; }
     // en el celular, las vistas de todo el municipio (puestos rurales a 11,5 km) alejan la cámara más de 40 km: el plano
     // lejano crece con ella para que la maqueta no quede recortada
     const lejos = Math.max(40000, d * 2.5);
@@ -212,6 +216,27 @@ export function crearEscena(el, datos) {
     st.updateShadows(); st.invalidate();
   }).catch((e) => console.warn('árboles del contexto', e));
 
+  // Las réplicas del atlas traen materiales de color liso (el atlas es un esquema): aquí, los de superficie se cambian por los
+  // texturizados de la maqueta según su nombre (el predio y los pisos en concreto, el asfalto, el pasto, la teja de zinc, el
+  // ladrillo y el bloque), con un solo material nuevo por material original. Los de las adecuaciones (paneles, conexiones)
+  // y los de color con significado (advertencia, celdas, datos, potencia) no se tocan
+  const REALCE = {
+    predio: () => matT('concreto', { modo: 'xz', color: '#e6e1d6' }), piso: () => matT('concreto', { modo: 'xz', color: '#efeae0' }),
+    asfalto: () => matT('asfalto'), pasto: () => matT('cesped'), techo_zinc: (m) => matT('zinc', { color: m.color }),
+    muro_ladrillo: () => matT('ladrillo'), muro_bloque: (m) => matT('estuco', { color: m.color.clone().lerp(new THREE.Color('#ffffff'), 0.25) }),
+  };
+  const realzados = new Map();
+  function realzar(raiz) {
+    raiz.traverse((o) => {
+      if (!o.isMesh || !o.material || o.userData.realzado) return;
+      const viejo = o.material, crear = !Array.isArray(viejo) && REALCE[viejo.name];
+      o.userData.realzado = true;
+      if (!crear) return;
+      if (!realzados.has(viejo)) { const m = crear(viejo); m.name = `${viejo.name}.maqueta`; m.side = viejo.side; realzados.set(viejo, m); }
+      o.material = realzados.get(viejo);
+    });
+  }
+
   // réplicas de las sedes públicas, en su estado de hoy (sin las adecuaciones del atlas: paneles, baterías, conexiones)
   const edificios = new Map();
   let cargados = 0;   // cuántos modelos de sedes han llegado (la caja de una sede cambia cuando llega el suyo)
@@ -223,6 +248,7 @@ export function crearEscena(el, datos) {
     const it = { e, g, ph, lod: null, cargado: false, modo: { capa: 'hoy', sin: [] }, listo: [] };
     if (e.archivo) {
       it.lod = progressiveLOD([{ url: e.archivo, distance: 0 }, { url: e.archivo_lod1, distance: 300 }], (lod) => {
+        realzar(lod);
         ph.visible = false; it.cargado = true; cargados++; aplicarModo(it); st.updateShadows();
         it.listo.splice(0).forEach((fn) => fn(it));
       });
@@ -301,7 +327,14 @@ export function crearEscena(el, datos) {
     f.set(potencia, 1); flujos.push(f);
     return f;
   }
-  st.onFrame((dt) => { let n = false; flujos.forEach((f) => { let vis = true; for (let p = f.mesh; p; p = p.parent) if (!p.visible) { vis = false; break; } if (vis && f.update(dt) !== false) n = true; }); return n; });
+  // las partículas cambian de tamaño con la distancia de la cámara: de cerca no son burbujas gigantes y en los planos
+  // generales (a 1–3 km) se siguen viendo
+  st.onFrame((dt) => {
+    let n = false;
+    const k = THREE.MathUtils.clamp(st.camera.position.distanceTo(st.controls.target) / 250, 0.45, 4.5);
+    flujos.forEach((f) => { let vis = true; for (let p = f.mesh; p; p = p.parent) if (!p.visible) { vis = false; break; } if (!vis) return; f._s.setScalar(f.size * k); if (f.update(dt) !== false) n = true; });
+    return n;
+  });
 
   // Etiquetas sin encimarse y dentro de la zona libre: tiene en cuenta el ancla de cada recuadro, corre en horizontal
   // las que el panel, la leyenda o el borde cortarían, sube lo justo las que chocan y oculta las de puntos que caen
