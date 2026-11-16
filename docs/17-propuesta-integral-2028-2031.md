@@ -287,6 +287,33 @@ persona crea en su cuenta.
 Los renders no se incluyen como imágenes en la presentación porque no están en el repositorio. Si se suben, pueden
 mostrarse junto al modelo 3D.
 
+### Segunda pasada: la maqueta con el acabado de los renders
+
+La maqueta pasó de maqueta blanca a una imagen cercana a los renders de presentación, sin cambiar sitios, medidas ni
+cifras (`docs/09`, sección 7, explica cómo):
+
+- **Cancha de Sóftbol Casabe** (`piezas/softbol.js`), como en los renders: césped con franjas de corte, pista de
+  advertencia, cerca del jardín acolchada con remate amarillo, mallas eslabonadas frente a los dugouts y alrededor del
+  lote, gradería con 180 sillas y público bajo tres módulos de lona tensada, portal gris carbón con «CANCHA DE SÓFTBOL
+  CASABE» y la silueta del bateador, marcador LED en español («BOLA · STRIKE · OUT», «VISITANTE», «LOCAL»), pérgolas de
+  acero negro y listones de madera con mesas y luz LED junto a paseos de adoquín, jardineras de borde de concreto con
+  cordylines rojas, heliconias y helechos, bancas de concreto y madera, bolardos de luz, canecas, guayacanes rosados y
+  palmas, parque infantil con torres, toboganes, red y velaria, máquinas biosaludables, cancha múltiple con aros y malla
+  de 4 m, parqueadero con 13 carros, flechas, cebra y reductor, los jugadores en sus posiciones y gente en los paseos.
+  Siguen los grupos `piso`, `campo`, `obras`, `cubierta`, `luces` y `verde` del catálogo (se suma `gente`).
+- **Vivienda** (`modulos/vivienda.js` y `geo3d.casas`): los bloques VIP de 22 × 10 m llevan punto fijo al frente con
+  fachada de bloque calado y tanques, culatas y zócalo de ladrillo a la vista, balcones con antepecho terracota y ventanas
+  con marco; las casas en serie, cubierta de teja continua, puerta con alero, ventana con reja, balcón con baranda y
+  antejardín con muro bajo; las vías, andenes, árboles, alumbrado y carros; las cesiones, cancha múltiple, juegos con
+  velaria y un salón comunal con corredor; la casa rural VIVA, corredor de madera, zinc, zócalo de color, tanque elevado,
+  panel solar y huerta. Al atardecer se encienden las ventanas.
+- **El pueblo y el territorio** (`contexto.js`, `escena.js`): las 2.312 casas de las huellas llevan cubierta a dos aguas
+  de zinc o teja (o losa con pretil y tanque) y fachada con puerta, ventanas y zócalo hacia la calle; unos 11.800 árboles
+  en patios, rondas de caños, orillas del río y potreros (nunca dentro de un sitio del proyecto); calles de asfalto con
+  andén, vías destapadas de tierra, el Magdalena café con leche y caños verdosos con oleaje.
+- **La hora del día** (`ambiente.js`): el tema claro es una tarde despejada y el oscuro un atardecer con las luces
+  encendidas, con cielo de nubes, reflejos del mismo cielo y bruma del color del horizonte.
+
 ## Método, fuentes y límites
 
 - Cada cifra del panel lleva su fuente, y las que no la tienen están marcadas como estimación o cálculo propio. Los
@@ -311,6 +338,9 @@ mostrarse junto al modelo 3D.
 | `web/js/escenario.js` | El atlas como escenario de la presentación técnica (`atlas.html?escenario=1`) |
 | `web/js/propuesta/escena.js` | Escena 3D compartida: terreno, río, puente, vías, sedes y encuadre según el panel |
 | `web/js/propuesta/geo3d.js` | Geometría procedural (losas, cintas, árboles, naves, graderías, letras) y animaciones |
+| `web/js/propuesta/texturas.js` | Texturas procedurales (canvas) y `MatMundo`, el material con la textura en coordenadas del mundo |
+| `web/js/propuesta/ambiente.js` | La hora del día: cielo con nubes, sol, luz del cielo, entorno PMREM y bruma (tarde o atardecer según el tema) |
+| `web/js/propuesta/contexto.js` | Casas del pueblo a partir de las huellas (cubiertas, fachadas, tanques) y siembra de árboles del contexto |
 | `web/js/propuesta/piezas/` | Cancha de sóftbol, mirador, parque lineal, PTAR, ampliación de la PTAP, parque agroindustrial, granja solar y relleno sanitario nuevo (`relleno.js`) |
 | `web/js/propuesta/modulos/` | Lo 3D de cada capítulo: capas, vistas y animaciones por paso |
 | `data/propuesta/general.json` | Portada, catálogo de fuentes, hoja de ruta, pedidos y la sección `tecnica` (portada técnica, inmersiones y sus pasos, metas y cronograma) |

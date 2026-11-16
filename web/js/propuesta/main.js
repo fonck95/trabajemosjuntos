@@ -117,6 +117,9 @@ const cargas = caps.map(async (c) => {
     if (!/Failed to fetch|Importing a module|error loading|404/i.test(String(e))) console.warn(`3D de ${c.id}`, e);
   }
 });
+// con todas las capas armadas (y los árboles del contexto sembrados), sus shaders se compilan de a una y sin bloquear: un
+// cambio de paso que muestra muchas capas nuevas ya no congela la página (escena.precompilar)
+Promise.all(cargas).then(() => escena.listoArboles).then(() => escena.precompilar?.()).catch(() => {});
 
 // ---------------------------------------------------------------- panel
 const madurezPasos = ['Idea', 'Perfil', 'Prefactibilidad', 'Factibilidad', 'Diseños', 'Radicado'];

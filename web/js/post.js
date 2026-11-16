@@ -16,12 +16,29 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 
 const _size = new THREE.Vector2();
 
-// Copia al lienzo tal cual: el render target ya tiene lo que tendría el lienzo (colores en sRGB, alfa premultiplicado)
+// Copia al lienzo: el render target ya tiene lo que tendría el lienzo (colores en sRGB, alfa premultiplicado). Si la vista lo
+// pide (Stage.grado = { saturacion, contraste, vineta }), gradación suave de color y viñeta, como en un render de presentación;
+// sin eso la copia es exacta (el atlas no la usa)
 const SalidaShader = {
   name: 'SalidaShader',
-  uniforms: { tDiffuse: { value: null } },
+  uniforms: { tDiffuse: { value: null }, uGrado: { value: new THREE.Vector4(0, 1, 1, 0) } },
   vertexShader: 'varying vec2 vUv;\nvoid main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'uniform sampler2D tDiffuse;\nvarying vec2 vUv;\nvoid main() { gl_FragColor = texture2D(tDiffuse, vUv); }',
+  fragmentShader: `uniform sampler2D tDiffuse;
+uniform vec4 uGrado;
+varying vec2 vUv;
+void main() {
+  vec4 c = texture2D(tDiffuse, vUv);
+  if (uGrado.x > 0.5) {
+    vec3 rgb = c.a > 0.0 ? c.rgb / c.a : c.rgb;
+    float l = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+    vec3 g = mix(vec3(l), rgb, uGrado.y);
+    g = clamp((g - 0.5) * uGrado.z + 0.5, 0.0, 1.0);
+    vec2 q = vUv - 0.5;
+    g *= 1.0 - uGrado.w * smoothstep(0.18, 0.62, dot(q, q) * 2.0);
+    c.rgb = g * c.a;
+  }
+  gl_FragColor = c;
+}`,
 };
 
 // GTAO de three r160 supone que la oclusión tiene la misma resolución que la profundidad. A media resolución cada
@@ -133,6 +150,8 @@ export class Post {
   render(s) {
     this._sync();
     this._params(s);
+    const gr = s.grado, ug = this.output.uniforms.uGrado.value;
+    if (gr) ug.set(1, gr.saturacion ?? 1, gr.contraste ?? 1, gr.vineta ?? 0); else ug.set(0, 1, 1, 0);
     const scene = s.scene;
     if (this.ao.on) this._lineas(scene);
     this.scenePass.scene = scene; this.scenePass.camera = s.camera;

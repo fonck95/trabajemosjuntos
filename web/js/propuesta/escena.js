@@ -10,7 +10,10 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { progressiveLOD } from '../assets.js';
 import { EDIFICIOS, CALLES } from '../data.js';
-import { V, cinta, losa, prisma, materiales, usarMateriales, dentro } from './geo3d.js';
+import { V, cinta, losa, prisma, materiales, usarMateriales, dentro, arboles, palmas } from './geo3d.js';
+import { matT, matAgua, tex, texFachada, texFachadaLuz, ajustesMundo } from './texturas.js';
+import { ambiente } from './ambiente.js';
+import { casasDeHuellas, geometrias, sembrarArboles, rejillaLineas, rejillaPoligonos, trozos } from './contexto.js';
 
 const R_SUELO = 16000;
 
@@ -19,11 +22,16 @@ export function crearEscena(el, datos) {
   const st = new Stage(el, { cam: [-900, 1500, 1900], target: [150, 0, -250], fov: 36, minDist: 6, maxDist: 16000, fit: 0, declutter: ['lbl-p'], tone: 'aces', exposure: 1.05, sky: true, fog: { near: 3000, far: 14000 } });
   st.camera.far = 40000; st.camera.updateProjectionMatrix();
   Object.assign(st.controls, { zoomToCursor: true, screenSpacePanning: false, zoomSpeed: 1.15, maxPolarAngle: Math.PI * 0.46 });
-  // sombra: volumen de ±700 m que viaja con lo que se mira (el sol se corre con el objetivo de la cámara)
-  // sol de media tarde (más bajo y cálido que en el atlas: sombras largas que dan relieve a la maqueta)
+  // gradación de presentación en calidad alta (posproceso): algo más de color y contraste, y viñeta suave
+  st.grado = { saturacion: 1.08, contraste: 1.05, vineta: 0.3 };
+  // sin GPU (WebGL por software) se apagan el relieve y la variación de gran escala de las texturas; en calidad baja, el
+  // relieve (se fija antes del primer cuadro: forma parte de los shaders)
+  const software = /swiftshader|llvmpipe|softpipe|software|basic render/i.test(engine.gpu || '');
+  ajustesMundo.relieve = !software && engine.tier !== 'baja'; ajustesMundo.macro = !software;
+  // sombra: volumen de ±700 m que viaja con lo que se mira (el sol se corre con el objetivo de la cámara); la dirección y
+  // el color del sol los pone la hora del día (ambiente.js): tarde en el tema claro, atardecer en el oscuro
   const L = st.sunLight, sc = L.shadow.camera, SOL = new THREE.Vector3(430, 400, 250);
-  L.color.set('#ffe6c2'); L.intensity = 2.35; st.hemi.color.set('#dfe9ff'); st.hemi.groundColor.set('#5b6650');
-  Object.assign(sc, { left: -700, right: 700, top: 700, bottom: -700, near: 1, far: 2200 });
+  Object.assign(sc, { left: -700, right: 700, top: 700, bottom: -700, near: 1, far: 2400 });
   L.shadow.mapSize.set(4096, 4096); L.shadow.normalBias = 0.6;
   st.scene.add(L.target);
   const ancla = new THREE.Vector3(1e9, 0, 0);
@@ -49,72 +57,156 @@ export function crearEscena(el, datos) {
   const T = tokens(), S = st.scene, M = materiales(T);
   usarMateriales(M);
   const capa = (m, k) => Object.assign(m, { polygonOffset: true, polygonOffsetFactor: -k, polygonOffsetUnits: -k });
+  // suelo y agua con su color real (no el del tema): potrero con variación de gran escala, asfalto y andenes de concreto,
+  // vías destapadas de tierra, el Magdalena café con leche, ciénagas y caños verdosos, todos con relieve de olas
   const B = {
-    ground: mat(T.ground.clone().lerp(new THREE.Color('#7f9a5a'), 0.18)), road: capa(mat(T.ground.clone().lerp(T.ink, 0.22), { roughness: 0.95, side: THREE.DoubleSide }), 2),
-    water: capa(mat(T.water, { roughness: 0.22, metalness: 0.1, side: THREE.DoubleSide }), 1),
-    rio: capa(mat(T.water, { roughness: 0.18, metalness: 0.12, side: THREE.DoubleSide }), 1),
-    isla: capa(mat(new THREE.Color('#6f8f5a'), { roughness: 1, side: THREE.DoubleSide }), 2),
-    cano: capa(mat(T.water, { roughness: 0.25, metalness: 0.1, side: THREE.DoubleSide }), 3),
+    ground: matT('potrero'), road: capa(matT('asfalto', { side: THREE.DoubleSide }), 2),
+    tierra: capa(matT('tierra', { side: THREE.DoubleSide }), 2),
+    anden: capa(matT('concreto', { modo: 'xz', side: THREE.DoubleSide, color: '#e4e0d8' }), 1),
+    raya: capa(new THREE.MeshBasicMaterial({ color: 0xe8c547, side: THREE.DoubleSide }), 3),
+    water: capa(matAgua('#4e6658', { side: THREE.DoubleSide }), 1),
+    rio: capa(matAgua('#86734f', { side: THREE.DoubleSide, roughness: 0.16 }), 1),
+    isla: capa(matT('potrero', { color: '#b5c79c', side: THREE.DoubleSide }), 2),
+    cano: capa(matAgua('#5a6a4b', { side: THREE.DoubleSide }), 3),
   };
   const ground = new THREE.Mesh(new THREE.CircleGeometry(R_SUELO, 128), B.ground); ground.rotation.x = -Math.PI / 2; ground.position.y = -0.06; ground.receiveShadow = true; S.add(ground);
-  const vias = new THREE.Mesh(cintas([...CALLES.calles, ...(terr.vias || [])], 0.02), B.road); vias.receiveShadow = true; S.add(vias);
+  const PAV = new Set(['primary', 'trunk', 'secondary', 'secondary_link', 'tertiary', 'residential', 'service', 'living_street', 'pedestrian']);
+  const todas = [...CALLES.calles, ...(terr.vias || [])], pav = todas.filter((v) => PAV.has(v.tipo) || !v.tipo), dest = todas.filter((v) => v.tipo && !PAV.has(v.tipo));
+  const vias = new THREE.Mesh(cintas(pav, 0.02), B.road); vias.receiveShadow = true; S.add(vias);
+  const tierra = new THREE.Mesh(cintas(dest, 0.018), B.tierra); tierra.receiveShadow = true; S.add(tierra);
+  // andenes de 1,3 m a cada lado de las calles pavimentadas del casco, y la línea amarilla del centro de las vías principales
+  const andenes = new THREE.Mesh(cintas(CALLES.calles.filter((v) => ['residential', 'tertiary', 'secondary'].includes(v.tipo)).map((v) => ({ ...v, ancho: v.ancho + 2.6 })), 0.012), B.anden); andenes.receiveShadow = true; S.add(andenes);
+  const rayas = new THREE.Mesh(cintas(todas.filter((v) => v.tipo === 'secondary' || v.tipo === 'primary').map((v) => ({ ...v, ancho: 0.16 })), 0.026), B.raya); S.add(rayas);
   const canos = new THREE.Mesh(cintas(CALLES.canos, 0.04), B.cano); S.add(canos);
   CALLES.agua.forEach((a) => { const m = new THREE.Mesh(losa(a.p, 0, a.huecos || []), B.water); S.add(m); st.freeze(m); });
   if (terr.rio?.poligono) {
     const rio = new THREE.Mesh(losa(terr.rio.poligono, 0.01, terr.rio.islas || []), B.rio); rio.receiveShadow = true; S.add(rio); st.freeze(rio);
     (terr.rio.islas || []).forEach((i) => { const m = new THREE.Mesh(losa(i, 0.03), B.isla); m.receiveShadow = true; S.add(m); st.freeze(m); });
   }
-  [ground, vias, canos].forEach((o) => st.freeze(o));
+  [ground, vias, tierra, andenes, rayas, canos].forEach((o) => st.freeze(o));
 
-  // puente Guillermo Gaviria Correa: tablero a 14 m sobre el agua con pilas cada ~60 m y rampas en los estribos
+  // puente Guillermo Gaviria Correa: tablero a 14 m sobre el agua con pilas cada ~60 m, rampas en los estribos y barandas
   const puente = new THREE.Group(); S.add(puente);
   const tb = terr.puente?.tablero || [];
   if (tb.length > 1) {
     const sube = (k, n) => Math.min(14, Math.min(k, n - k) * 0.06);   // rampa de ~6 % en cada extremo
     const pts = []; for (let i = 1; i < tb.length; i++) { const [a, b] = [tb[i - 1], tb[i]], n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 10); for (let k = i > 1 ? 1 : 0; k <= n; k++) pts.push([a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n]); }
     let acc = 0; const dist = pts.map((p, i) => (acc += i ? Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) : 0)), Ltot = acc;
-    const geoT = [], geoP = [], cm = M.concreto;
+    const geoT = [], geoP = [], geoB = [], cm = M.concreto;
     for (let i = 1; i < pts.length; i++) {
       const [a, b] = [pts[i - 1], pts[i]], h0 = sube(dist[i - 1], Ltot), h1 = sube(dist[i], Ltot), L2 = Math.hypot(b[0] - a[0], b[1] - a[1]);
-      const g = new THREE.BoxGeometry(L2 + 0.4, 1.4, 13); g.rotateZ(Math.atan2(h1 - h0, L2)); g.rotateY(Math.atan2(b[1] - a[1], b[0] - a[0]));
-      g.translate((a[0] + b[0]) / 2, (h0 + h1) / 2 + 0.7, -(a[1] + b[1]) / 2); geoT.push(g);
+      const ponga = (g) => { g.rotateZ(Math.atan2(h1 - h0, L2)); g.rotateY(Math.atan2(b[1] - a[1], b[0] - a[0])); g.translate((a[0] + b[0]) / 2, (h0 + h1) / 2, -(a[1] + b[1]) / 2); return g; };
+      geoT.push(ponga(new THREE.BoxGeometry(L2 + 0.4, 1.4, 13).translate(0, 0.7, 0)));
+      [-6.3, 6.3].forEach((z) => geoB.push(ponga(new THREE.BoxGeometry(L2 + 0.4, 0.95, 0.35).translate(0, 1.85, z))));
     }
     for (let s = 60; s < Ltot - 40; s += 60) {
       const i = dist.findIndex((d) => d >= s), p = pts[i], h = sube(s, Ltot);
       const g = new THREE.BoxGeometry(3, h, 9); g.rotateY(Math.atan2(pts[i][1] - pts[i - 1][1], pts[i][0] - pts[i - 1][0])); g.translate(p[0], h / 2, -p[1]); geoP.push(g);
     }
-    const t = new THREE.Mesh(mergeGeometries(geoT.map((g) => g.toNonIndexed())), cm), p = new THREE.Mesh(mergeGeometries(geoP.map((g) => g.toNonIndexed())), cm);
+    const t = new THREE.Mesh(mergeGeometries([...geoT, ...geoB].map((g) => g.toNonIndexed())), cm), p = new THREE.Mesh(mergeGeometries(geoP.map((g) => g.toNonIndexed())), cm);
     [t, p].forEach((o) => { o.castShadow = true; o.receiveShadow = true; puente.add(o); }); st.freeze(puente);
   }
 
-  // contexto: casas y locales a partir de huellas abiertas (Microsoft, ODbL), con alturas de 1–2 pisos. Las que caen en una
-  // zona de intervención (lotes que la propuesta transforma) van en mallas aparte para poder mostrar «hoy» y «proyecto»
-  // fachadas y cubiertas con los colores de un pueblo del Magdalena Medio (zinc, fibrocemento, teja de barro, pintura)
-  const ctxMats = { wall: mat(T.wall, { roughness: 0.95, side: THREE.DoubleSide, vertexColors: true }), roof: mat(T.wall, { roughness: 0.8, side: THREE.DoubleSide, vertexColors: true }) };
-  const FACH = ['#f3f0e9', '#f5e7c9', '#e7eff2', '#f3dccf', '#e3eedb', '#efe2ec', '#f6f1d4', '#dde6f0'].map((c) => new THREE.Color(c));
-  const CUB = ['#9aa2a7', '#9aa2a7', '#b9bec0', '#b9bec0', '#a9583c', '#c6c8c2', '#8e9692', '#5f7f9c', '#b46a48'].map((c) => new THREE.Color(c));
+  // contexto: casas y locales a partir de huellas abiertas (Microsoft, ODbL), con cubiertas a dos aguas o losas y fachadas
+  // que dan a la calle (contexto.js). Las que caen en una zona de intervención (lotes que la propuesta transforma) van en
+  // mallas aparte para poder mostrar «hoy» y «proyecto»
+  const ctxMats = {
+    wall: new THREE.MeshStandardMaterial({ map: texFachada(), emissiveMap: texFachadaLuz(), emissive: new THREE.Color('#ffc884'), emissiveIntensity: 0, roughness: 0.92, side: THREE.DoubleSide, vertexColors: true }),
+    zinc: new THREE.MeshStandardMaterial({ map: tex('zinc'), roughness: 0.45, metalness: 0.45, side: THREE.DoubleSide, vertexColors: true }),
+    teja: new THREE.MeshStandardMaterial({ map: tex('teja'), roughness: 0.8, side: THREE.DoubleSide, vertexColors: true }),
+    losa: matT('concreto', { modo: 'xz', side: THREE.DoubleSide, vertexColors: true }),
+  };
+  const techos = [ctxMats.zinc, ctxMats.teja, ctxMats.losa];
+  // la hora del día: el cielo, el sol, la luz del cielo, los reflejos y la bruma; al atardecer se encienden las ventanas
+  // (alHora: los módulos se suscriben para encender lo suyo, como las ventanas de la vivienda nueva)
+  const alHora = new Set();
+  let horaActual = null;
+  const amb = ambiente(st, { sol: SOL, alCambiar: (H) => { horaActual = H; ctxMats.wall.emissiveIntensity = 0.9 * H.encendido; alHora.forEach((fn) => fn(H)); ancla.set(1e9, 0, 0); st.invalidate(true); } });
   const zonasHoy = (datos.zonas_intervencion || []).map((z) => ({ ...z, grupo: new THREE.Group() }));
   zonasHoy.forEach((z) => { z.grupo.name = `hoy.${z.id}`; S.add(z.grupo); });
   const huellas = [];
-  const listoHuellas = fetch(new URL('../../models/contexto/huellas.json', import.meta.url)).then((r) => (r.ok ? r.json() : null)).then((hu) => {
-    if (!hu?.poligonos?.length) return;
-    const boxes = EDIFICIOS.map((e) => { const [sx, , sz] = e.tamano || [20, 8, 20]; return [e.x, e.y, sx / 2 + 1, sz / 2 + 1]; });
-    const lotes = new Map([[null, { wp: [], rp: [], wc: [], rc: [] }], ...zonasHoy.map((z) => [z.id, { wp: [], rp: [], wc: [], rc: [] }])]);
-    hu.poligonos.forEach((flat, k) => {
-      const pts = []; for (let i = 0; i < flat.length; i += 2) pts.push(new THREE.Vector2(flat[i], flat[i + 1]));
-      const cx = pts.reduce((a, p) => a + p.x, 0) / pts.length, cy = pts.reduce((a, p) => a + p.y, 0) / pts.length;
-      if (boxes.some(([bx, by, hx, hy]) => Math.abs(cx - bx) < hx && Math.abs(cy - by) < hy)) return;
-      const area = Math.abs(THREE.ShapeUtils.area(pts)), h = 2.9 + (area > 160 ? 2.6 : 0) + ((k * 2654435761) % 5) * 0.25;
-      const z = zonasHoy.find((zz) => dentro([cx, cy], zz.poligono));
-      huellas.push({ pts: pts.map((p) => [p.x, p.y]), cx, cy, area, h, zona: z?.id || null });
-      const { wp, rp, wc, rc } = lotes.get(z?.id || null), cf = FACH[(k * 7919) % FACH.length], cr = CUB[(k * 104729) % CUB.length];
-      for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; wp.push(a.x, 0, -a.y, b.x, 0, -b.y, b.x, h, -b.y, a.x, 0, -a.y, b.x, h, -b.y, a.x, h, -a.y); for (let j = 0; j < 6; j++) wc.push(cf.r, cf.g, cf.b); }
-      THREE.ShapeUtils.triangulateShape(pts, []).forEach((t) => t.forEach((j) => { rp.push(pts[j].x, h, -pts[j].y); rc.push(cr.r, cr.g, cr.b); }));
+  const rejCalles = rejillaLineas(todas), rejCanos = rejillaLineas(CALLES.canos);
+  const cajasSedes = EDIFICIOS.map((e) => { const [sx, , sz] = e.tamano || [20, 8, 20]; return [e.x, e.y, sx / 2 + 1, sz / 2 + 1]; });
+  // sitios del proyecto (todos los módulos) y zonas de intervención: ahí no se siembran árboles del contexto
+  const sitiosProyecto = [...Object.values(datos.geo || {}).flatMap((g) => (g && Array.isArray(g.sitios) ? g.sitios : [])).map((s) => s.poligono).filter((p) => p?.length > 2), ...zonasHoy.map((z) => z.poligono)];
+  let conteo = null;   // árboles del contexto por tipo (para la QA)
+  let arbolesCtx = null;   // el grupo de árboles del contexto (despejar)
+  // Quita los árboles del contexto a menos de `radio` metros de unos puntos [x, y] (para que no tapen una pieza que no
+  // tiene polígono en geo.json, como las casas rurales de muestra). Llamar después de listoHuellas
+  const porDespejar = [];
+  function despejar(puntos, radio) {
+    if (!puntos.length) return 0;
+    if (!arbolesCtx) { porDespejar.push([puntos, radio]); return 0; }   // los árboles todavía se están sembrando
+    const m4 = new THREE.Matrix4(), p = new THREE.Vector3(), cero = new THREE.Matrix4().makeScale(0, 0, 0);
+    let n = 0;
+    arbolesCtx.traverse((o) => {
+      if (!o.isInstancedMesh) return;
+      let cambio = false;
+      for (let i = 0; i < o.count; i++) {
+        o.getMatrixAt(i, m4); p.setFromMatrixPosition(m4);
+        if (puntos.some(([x, y]) => Math.hypot(p.x - x, -p.z - y) < radio)) { o.setMatrixAt(i, cero); cambio = true; n++; }
+      }
+      if (cambio) o.instanceMatrix.needsUpdate = true;
     });
-    const mk = (arr, col, m, padre) => { if (!arr.length) return; const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.computeVertexNormals(); const o = new THREE.Mesh(g, m); o.castShadow = true; o.receiveShadow = true; padre.add(o); st.freeze(o); };
-    lotes.forEach(({ wp, rp, wc, rc }, id) => { const padre = id ? zonasHoy.find((z) => z.id === id).grupo : S; mk(wp, wc, ctxMats.wall, padre); mk(rp, rc, ctxMats.roof, padre); });
     st.updateShadows();
-  }).catch((e) => console.warn('huellas', e));
+    return n;
+  }
+  const listoHuellas = fetch(new URL('../../models/contexto/huellas.json', import.meta.url)).then((r) => (r.ok ? r.json() : null)).then(async (hu) => {
+    if (!hu?.poligonos?.length) return null;
+    const pueblo = new THREE.Group(); pueblo.name = 'contexto.casas';   // se agrega a la escena con sus shaders ya listos
+    const { tandas, huellas: hs, tanques } = casasDeHuellas(hu.poligonos, {
+      calles: rejCalles,
+      zonaDe: (p) => zonasHoy.find((zz) => dentro(p, zz.poligono))?.id || null,
+      saltar: ([cx, cy]) => cajasSedes.some(([bx, by, hx, hy]) => Math.abs(cx - bx) < hx && Math.abs(cy - by) < hy),
+    });
+    huellas.push(...hs);
+    tandas.forEach((b, id) => {
+      const padre = id ? zonasHoy.find((z) => z.id === id).grupo : pueblo, G = geometrias(b);
+      [['muro', ctxMats.wall], ['zinc', ctxMats.zinc], ['teja', ctxMats.teja], ['losa', ctxMats.losa]].forEach(([k, m]) => {
+        if (!G[k]) return; const o = new THREE.Mesh(G[k], m); o.castShadow = true; o.receiveShadow = true; padre.add(o); st.freeze(o);
+      });
+    });
+    // tanques de agua sobre las losas (negros, azules y grises)
+    if (tanques.length) {
+      const tg = new THREE.CylinderGeometry(1, 1, 1, 14).translate(0, 0.5, 0), im = new THREE.InstancedMesh(tg, new THREE.MeshStandardMaterial({ roughness: 0.5 }), tanques.length), m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+      tanques.forEach(([x, y, h, r, c], i) => { m4.compose(V(x, y, h), q, new THREE.Vector3(r, r * 1.9, r)); im.setMatrixAt(i, m4); im.setColorAt(i, c); });
+      im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere(); pueblo.add(im);
+    }
+    await compilarDeAPoco(pueblo);
+    S.add(pueblo);
+    st.updateShadows();
+    return hs;
+  }).catch((e) => { console.warn('huellas', e); return null; });
+  // árboles de patios, rondas, orillas y potreros, por trozos del territorio: después de las casas y por etapas que ceden el
+  // hilo (la presentación comparte hilo con el panel cuando va en un iframe; un bloque de un segundo congela los dos)
+  const pausa = () => new Promise((r) => setTimeout(r, 0));
+  const listoArboles = listoHuellas.then(async (hs) => {
+    if (!hs) return;
+    await pausa();
+    // en calidad baja (celulares y equipos modestos) se siembra menos: la mitad en el pueblo y un cuarto en el campo; con
+    // WebGL por software (sin GPU: la CPU dibuja cada triángulo) un tercio en el pueblo y un octavo en el campo
+    const ralear = (l, k) => (software ? l.filter((_, i) => i % (k * 2 - 1) === 0) : engine.tier === 'baja' ? l.filter((_, i) => i % k === 0) : l);
+    const pts0 = await sembrarArboles({ huellas: hs, calles: rejCalles, canos: rejCanos, canosLineas: CALLES.canos, agua: rejillaPoligonos(CALLES.agua.map((a) => a.p)), rio: terr.rio, excluir: rejillaPoligonos(sitiosProyecto, 80, 5), cajas: cajasSedes, pausa });
+    await pausa();
+    const pts = { pueblo: ralear(pts0.pueblo, 2), palmas: ralear(pts0.palmas, 2), rondas: ralear(pts0.rondas, 4), potrero: ralear(pts0.potrero, 4) };
+    const verde = new THREE.Group(); verde.name = 'contexto.arboles';
+    arbolesCtx = verde;
+    trozos(pts.pueblo, 500).forEach((p, i) => verde.add(arboles(p, { alto: 9, especie: 'mixto', simple: true, semilla: 300 + i })));
+    trozos(pts.palmas, 500).forEach((p, i) => verde.add(palmas(p, { alto: 10, semilla: 400 + i, simple: true })));
+    const lejos = new THREE.Group();
+    trozos(pts.rondas, 1200).forEach((p, i) => lejos.add(arboles(p, { alto: 12, simple: 'lejano', semilla: 500 + i })));
+    trozos(pts.potrero, 2000).forEach((p, i) => lejos.add(arboles(p, { alto: 11, simple: 'lejano', semilla: 600 + i, especie: 'mixto' })));
+    verde.add(lejos);
+    // los del pueblo dan sombra; los de rondas y potreros (miles, casi siempre lejos) no la dan ni la reciben
+    verde.traverse((o) => { if (o.isInstancedMesh) o.receiveShadow = false; });
+    lejos.traverse((o) => { if (o.isInstancedMesh) o.castShadow = false; });
+    conteo = { pueblo: pts.pueblo.length, palmas: pts.palmas.length, rondas: pts.rondas.length, potrero: pts.potrero.length };
+    st.freeze(verde);
+    await compilarDeAPoco(verde);   // los shaders de los árboles, antes de que aparezcan
+    S.add(verde);
+    porDespejar.splice(0).forEach(([p, r]) => despejar(p, r));
+    st.updateShadows(); st.invalidate();
+  }).catch((e) => console.warn('árboles del contexto', e));
 
   // réplicas de las sedes públicas, en su estado de hoy (sin las adecuaciones del atlas: paneles, baterías, conexiones)
   const edificios = new Map();
@@ -353,11 +445,10 @@ export function crearEscena(el, datos) {
     });
   };
   // cubiertas del contexto en gris (para que se lean los techos que resalta un paso, como los mejoramientos)
-  const colorCubierta = ctxMats.roof.color.clone();
   function contextoGris(v) {
-    const m = ctxMats.roof;
-    if (m.vertexColors === !v) return;
-    m.vertexColors = !v; m.color.copy(v ? new THREE.Color('#c4c7c8') : colorCubierta); m.needsUpdate = true; st.invalidate();
+    if (techos[0].vertexColors === !v) return;
+    techos.forEach((m) => { m.vertexColors = !v; m.color.set(v ? '#c4c7c8' : '#ffffff'); m.needsUpdate = true; });
+    st.invalidate();
   }
 
   // ---------------------------------------------------------------- partes de una capa (lo que visual.js oculta o atenúa)
@@ -505,18 +596,45 @@ export function crearEscena(el, datos) {
   function tenir(m, n, emisivo = false) { tenidos.push([m, n, emisivo]); m.color.copy(css(n)); if (emisivo && m.emissive) m.emissive.copy(css(n)); return m; }
 
   // ---------------------------------------------------------------- tema
-  onTheme((t) => {
+  // el tema solo cambia los colores de los módulos (rótulos, líneas, resaltados); la maqueta conserva sus colores reales y
+  // cambia la hora del día (ambiente.js)
+  onTheme(() => {
     tenidos.forEach(([m, n, e]) => { m.color.copy(css(n)); if (e && m.emissive) m.emissive.copy(css(n)); });
-    ctxMats.wall.color.copy(t.wall); ctxMats.roof.color.copy(t.wall); B.ground.color.copy(t.ground.clone().lerp(new THREE.Color('#7f9a5a'), 0.18)); B.road.color.copy(t.ground.clone().lerp(t.ink, 0.22));
-    B.water.color.copy(t.water); B.cano.color.copy(t.water); B.rio.color.copy(t.water); M.muro.color.copy(t.wall); M.agua.color.copy(t.water);
   });
 
+  // Precompila los shaders de las capas de los módulos (ocultas hasta su paso), una por una y cediendo el hilo entre ellas;
+  // en paralelo donde el navegador tiene KHR_parallel_shader_compile (compileAsync). Si no, el primer paso que mostraba
+  // muchas capas a la vez (la visión completa) compilaba decenas de programas en el mismo cuadro y congelaba la página
+  const enlazados = new Set();
+  async function compilarDeAPoco(g) {
+    const r = engine.renderer;
+    // (extensions.has pregunta sin avisar en la consola; compileAsync avisa en cada llamada si falta la extensión)
+    const paralelo = !!r.compileAsync && r.extensions.has('KHR_parallel_shader_compile');
+    try { if (paralelo) await r.compileAsync(g, st.camera, S); else r.compile(g, st.camera, S); } catch { /* se compila al dibujar */ }
+    // sin compilación en paralelo, el navegador termina de enlazar cada programa la primera vez que se usa: se fuerza aquí
+    // (getUniforms), uno por uno y cediendo el hilo, para no pagarlo todo en un solo cuadro
+    for (const p of r.info.programs) { if (enlazados.has(p)) continue; enlazados.add(p); try { p.getUniforms(); } catch { /* sin enlazar */ } await pausa(); }
+  }
+  async function precompilar() {
+    for (const g of [...capas.values(), ...zonasHoy.map((z) => z.grupo)]) { await compilarDeAPoco(g); await pausa(); }
+  }
+
+  // gancho de QA (como los del atlas): solo con «?qa» en la consulta de la URL, para llevar la cámara y cambiar la hora desde
+  // las pruebas en Chromium sin pantalla
+  if (new URLSearchParams(location.search).has('qa')) window.__qaPropuesta = { st, engine, ambiente: amb, arboles: () => conteo, listoArboles, precompilar };
+
   return {
-    st, S, T, M, el, edificios, huellas, listoHuellas, zonasHoy, puente,
+    st, S, T, M, el, edificios, huellas, listoHuellas, listoArboles, precompilar, zonasHoy, puente,
     capa: nuevaCapa, capas, etiqueta, linea, flujo, encuadrar, postura, zona, sincronizarEtiquetas, css, tenir, contextoGris,
     verGrupos, atenuarHermanos, restaurarGrupos,
     // ¿están en gris las cubiertas del contexto? (quien lo pone de paso, como `aislar` de visual.js, lo deja como estaba)
-    enGris: () => !ctxMats.roof.vertexColors,
+    enGris: () => !techos[0].vertexColors,
+    // la hora del día que se ve ('tarde' o 'atardecer') y sus datos (ambiente.js)
+    hora: () => amb.hora(),
+    // quita los árboles del contexto alrededor de unos puntos (ver despejar)
+    despejar,
+    // fn(H) cada vez que cambia la hora del día (y una vez al suscribirse): H.encendido es 1 al atardecer y 0 de tarde
+    alHora(fn) { alHora.add(fn); if (horaActual) fn(horaActual); return () => alHora.delete(fn); },
     // con una narración en pantalla (visual.guiado) los módulos no mueven la cámara por su cuenta: la lleva el plan
     guiado: false,
     colorModulo: (id) => css(`--m-${id}`),
