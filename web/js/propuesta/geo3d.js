@@ -392,6 +392,50 @@ export function membrana(cx, cy, w, d, h, rot = 0, { flecha = 1.6, m, mastil } =
   g.position.copy(V(cx, cy)); g.rotation.y = rot;
   return g;
 }
+// ---------------------------------------------------------------- luces: charcos de luz y encendido
+// El piso iluminado bajo las luminarias (postes, bolardos, torres LED): discos con un degradé radial que suman luz (mezcla
+// aditiva), todos con un solo material. De día no se notan; al atardecer y de noche, sí. Las caras de las luminarias usan
+// MAT.luz, que se apaga (gris del aparato, oscuro de noche) o se enciende (blanco cálido). ponerLuces lo decide para toda
+// la maqueta: { encendidas: true | false | null (según la hora), oscuridad: 0 de día … 1 de noche, auto: encendido de la hora }
+let texCharco = null, matCh = null;
+const LUCES = { encendidas: null, oscuridad: 0, auto: 0 };
+function matCharco() {
+  if (matCh) return matCh;
+  if (!texCharco) {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d'), gr = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.55)'); gr.addColorStop(0.7, 'rgba(255,255,255,0.14)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
+    texCharco = new THREE.CanvasTexture(c); texCharco.colorSpace = THREE.SRGBColorSpace;
+  }
+  matCh = new THREE.MeshBasicMaterial({ map: texCharco, color: new THREE.Color('#ffcf8f'), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -8, polygonOffsetUnits: -8, toneMapped: false });
+  matCh.visible = false;
+  return matCh;
+}
+const geoCharco = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+/** Charcos de luz: lista de [x, y, radio] (o [x, y] con el radio dado) a la altura h. Devuelve una malla instanciada. */
+export function charcos(lista, { radio = 6, h = 0.16 } = {}) {
+  const im = new THREE.InstancedMesh(geoCharco, matCharco(), Math.max(1, lista.length)), m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+  lista.forEach(([x, y, r = radio], i) => { m4.compose(V(x, y, h), q, new THREE.Vector3(r * 2, 1, r * 2)); im.setMatrixAt(i, m4); });
+  im.count = lista.length; im.renderOrder = 2; im.frustumCulled = lista.length > 0; im.name = 'charcos';
+  im.computeBoundingSphere();
+  return im;
+}
+const COLOR_LUZ = new THREE.Color('#fff1cc'), COLOR_APAGADA = new THREE.Color('#c4c8ca');
+/** Enciende o apaga las luminarias de toda la maqueta (ver LUCES). Devuelve el estado que quedó. */
+export function ponerLuces(cambio = {}) {
+  Object.assign(LUCES, cambio);
+  const on = LUCES.encendidas === null ? LUCES.auto : LUCES.encendidas ? 1 : 0, m = matCharco();
+  // los charcos: según cuánto se note la luz artificial (oscuridad), y algo aunque sea de día si se pidieron encendidas
+  m.opacity = on * Math.max(LUCES.oscuridad, LUCES.encendidas === true ? 0.18 : 0) * 0.85;
+  m.visible = m.opacity > 0.01;
+  if (MAT?.luz) MAT.luz.color.copy(COLOR_APAGADA).multiplyScalar(1 - 0.82 * LUCES.oscuridad).lerp(COLOR_LUZ, on);
+  return { encendidas: LUCES.encendidas, efectivas: on > 0.5, oscuridad: LUCES.oscuridad };
+}
+export const lucesEstado = () => ({ ...LUCES });
+/** El material de las caras de luz que se encienden y apagan con la maqueta (MAT.luz). */
+export const luzComun = () => MAT.luz;
+
 // Torres de iluminación deportiva LED: poste cónico con base, cabezal con marco y 12 proyectores inclinados hacia el foco
 export function torresLuz(puntos, h = 18, { m, luz } = {}) {
   const g = new THREE.Group(), n = puntos.length;
@@ -414,6 +458,9 @@ export function torresLuz(puntos, h = 18, { m, luz } = {}) {
   });
   [P, C].forEach((o) => { o.castShadow = true; o.computeBoundingSphere(); g.add(o); });
   L.computeBoundingSphere(); g.add(L);
+  // el campo iluminado: un charco grande entre cada torre y su foco
+  g.add(charcos(puntos.filter((p) => p[2] != null).map(([x, y, fx, fy]) => { const d = Math.hypot(fx - x, fy - y); return [x + (fx - x) * 0.55, y + (fy - y) * 0.55, d * 0.5 + 10]; }), { h: 0.2 }));
+  g.userData.luces = true;
   return g;
 }
 // Postes de luz peatonal a lo largo de una polilínea: poste delgado y luminaria LED circular (la cara de abajo y el canto brillan)
@@ -425,6 +472,7 @@ export function postes(puntos, h = 4.5, m) {
   const P = new THREE.InstancedMesh(pg, m || MAT.oscuro, n), L = new THREE.InstancedMesh(lg, MAT.luz, n), m4 = new THREE.Matrix4();
   puntos.forEach(([x, y], i) => { m4.makeTranslation(x, 0, -y); P.setMatrixAt(i, m4); L.setMatrixAt(i, m4); });
   P.castShadow = true; P.computeBoundingSphere(); L.computeBoundingSphere(); g.add(P, L);
+  g.add(charcos(puntos.map(([x, y]) => [x, y, h * 1.6])));
   return g;
 }
 // Baranda a lo largo de una polilínea a la altura h0 (pasamanos y parales cada 2 m)
@@ -554,7 +602,7 @@ const geoBanca = {
 export function bancas(lista) { return instancias([[geoBanca.base, MAT.concreto], [geoBanca.madera, MAT.madera]], lista); }
 // Bolardo de luz (0,9 m): poste negro con la franja de luz arriba
 const geoBolardo = { poste: unir([new THREE.CylinderGeometry(0.075, 0.085, 0.9, 10).translate(0, 0.45, 0), new THREE.CylinderGeometry(0.09, 0.09, 0.05, 10).translate(0, 0.93, 0)]), luz: new THREE.CylinderGeometry(0.078, 0.078, 0.14, 10).translate(0, 0.78, 0) };
-export function bolardos(lista) { return instancias([[geoBolardo.poste, MAT.oscuro], [geoBolardo.luz, MAT.luz]], lista.map(([x, y]) => [x, y, 0])); }
+export function bolardos(lista) { const g = instancias([[geoBolardo.poste, MAT.oscuro], [geoBolardo.luz, MAT.luz]], lista.map(([x, y]) => [x, y, 0])); if (lista.length) g.add(charcos(lista.map(([x, y]) => [x, y, 1.7]))); return g; }
 // Caneca con forro de madera y marco negro
 const geoCaneca = { madera: new THREE.BoxGeometry(0.46, 0.78, 0.46).translate(0, 0.43, 0), marco: unir([new THREE.BoxGeometry(0.52, 0.06, 0.52).translate(0, 0.85, 0), new THREE.BoxGeometry(0.5, 0.05, 0.5).translate(0, 0.03, 0)]) };
 export function canecas(lista) { return instancias([[geoCaneca.madera, MAT.madera], [geoCaneca.marco, MAT.oscuro]], lista); }

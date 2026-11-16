@@ -1,5 +1,6 @@
-// Portada: el casco urbano con un pin por módulo en el sitio real de cada propuesta; el segundo paso se aleja hasta
-// abarcar el territorio completo (del relleno nuevo de Kilómetro Cinco, a unos 5,5 km al suroccidente, y el acueducto, 2,3 km
+// Portada: el casco urbano con un pin por módulo en el sitio real de cada propuesta y las obras de los siete capítulos ya
+// construidas (la visión completa, como en la hoja de ruta: el estadio, la vivienda, la torre, la PTAR…), para que la vista
+// global muestre la propuesta y no solo el pueblo de hoy; el segundo paso se aleja hasta abarcar el territorio completo (del relleno nuevo de Kilómetro Cinco, a unos 5,5 km al suroccidente, y el acueducto, 2,3 km
 // al occidente, al puente sobre el Magdalena, a unos 8 km al norte).
 import { pinesDe, sitio } from './comun.js';
 
@@ -44,9 +45,9 @@ export function crear(esc, datos) {
   return {
     completo: ['portada.pines'],
     pasos: {
-      inicio: { capas: ['portada.pines'], vista: () => esc.encuadrar(casco, { rumbo: 196, elev: 44, margen: 0.92, duracion: 2.4 }) },
-      territorio: { capas: ['portada.pines', 'portada.geo'], vista: territorio },
-      '*': { capas: ['portada.pines'], vista: () => esc.encuadrar(casco, { rumbo: 196, elev: 44, margen: 0.92 }) },
+      inicio: { todos: true, capas: ['portada.pines'], vista: () => esc.encuadrar(casco, { rumbo: 196, elev: 44, margen: 0.92, duracion: 2.4 }) },
+      territorio: { todos: true, capas: ['portada.pines', 'portada.geo'], vista: territorio },
+      '*': { todos: true, capas: ['portada.pines'], vista: () => esc.encuadrar(casco, { rumbo: 196, elev: 44, margen: 0.92 }) },
     },
   };
 }

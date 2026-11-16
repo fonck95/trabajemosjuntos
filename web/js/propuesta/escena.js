@@ -10,7 +10,7 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { progressiveLOD } from '../assets.js';
 import { EDIFICIOS, CALLES } from '../data.js';
-import { V, cinta, losa, prisma, materiales, usarMateriales, dentro, arboles, palmas } from './geo3d.js';
+import { V, cinta, losa, prisma, materiales, usarMateriales, dentro, arboles, palmas, ponerLuces, lucesEstado } from './geo3d.js';
 import { matT, matAgua, tex, texFachada, texFachadaLuz, ajustesMundo } from './texturas.js';
 import { ambiente } from './ambiente.js';
 import { casasDeHuellas, geometrias, sembrarArboles, rejillaLineas, rejillaPoligonos, trozos } from './contexto.js';
@@ -121,7 +121,11 @@ export function crearEscena(el, datos) {
   // (alHora: los módulos se suscriben para encender lo suyo, como las ventanas de la vivienda nueva)
   const alHora = new Set();
   let horaActual = null;
-  const amb = ambiente(st, { sol: SOL, alCambiar: (H) => { horaActual = H; ctxMats.wall.emissiveIntensity = 0.9 * H.encendido; alHora.forEach((fn) => fn(H)); ancla.set(1e9, 0, 0); st.invalidate(true); } });
+  const amb = ambiente(st, { sol: SOL, alCambiar: (H) => {
+    horaActual = H; ctxMats.wall.emissiveIntensity = 0.9 * H.encendido;
+    ponerLuces({ oscuridad: H.oscuridad, auto: H.encendido });   // luminarias y charcos de luz según la hora (o lo pedido)
+    alHora.forEach((fn) => fn(H)); ancla.set(1e9, 0, 0); st.invalidate(true);
+  } });
   const zonasHoy = (datos.zonas_intervencion || []).map((z) => ({ ...z, grupo: new THREE.Group() }));
   zonasHoy.forEach((z) => { z.grupo.name = `hoy.${z.id}`; S.add(z.grupo); });
   const huellas = [];
@@ -633,6 +637,11 @@ export function crearEscena(el, datos) {
     hora: () => amb.hora(),
     // quita los árboles del contexto alrededor de unos puntos (ver despejar)
     despejar,
+    // la hora del día de la maqueta (ambiente.js): poner(nombre | null), ciclo({ desde, hasta, duracion }), pausar()…
+    ambiente: amb,
+    // luminarias: true (encendidas), false (apagadas) o null (según la hora); devuelve el estado que quedó
+    luces(v) { const r = ponerLuces({ encendidas: v === undefined ? lucesEstado().encendidas : v }); st.invalidate(); return r; },
+    lucesEstado,
     // fn(H) cada vez que cambia la hora del día (y una vez al suscribirse): H.encendido es 1 al atardecer y 0 de tarde
     alHora(fn) { alHora.add(fn); if (horaActual) fn(horaActual); return () => alHora.delete(fn); },
     // con una narración en pantalla (visual.guiado) los módulos no mueven la cámara por su cuenta: la lleva el plan

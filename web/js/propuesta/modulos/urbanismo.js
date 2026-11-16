@@ -190,6 +190,9 @@ export async function crear(esc, datos) {
   const piezas = capasTodo.slice(1);   // en las vistas de conjunto, solo los rótulos de las cuatro piezas
   const inv = () => esc.st.invalidate();
   const vistaCiud = () => esc.encuadrar([...ciud, ...explanada], { rumbo: 200, elev: 48, margen: 0.8 });
+  // la vista de conjunto, con el estadio a la vista: un poco más cerca y los rótulos de las piezas apartados de la cancha
+  // (antes los cuatro caían encima de ella y la tapaban)
+  const vistaConjunto = () => esc.encuadrar([...ciud, ...explanada], { rumbo: 200, elev: 46, margen: 0.9, obra: soft.userData.contorno, apartar: true, sinCruces: true });
   const vistaSoft = () => esc.encuadrar(soft.userData.contorno, { rumbo: 200, elev: 34, margen: 0.9, alto: 10 });
   const vistaCano = () => esc.encuadrar(caja(pl.userData.eje, 24), { rumbo: 118, elev: 40, margen: 0.94 });
   const vistaAla = () => esc.encuadrar(caja([...ala, ...(conector || [])], 30), { rumbo: 196, elev: 46, margen: 0.94 });
@@ -227,23 +230,33 @@ export async function crear(esc, datos) {
     crecer(P.muelle, { duracion: 0.9, retraso: 1.9, onUpdate: inv });
     P.verde.children.forEach((g, i) => brotar(g, { duracion: 1.4, retraso: 1.2 + i * 0.2, onUpdate: inv }));
   };
+  // el partido (simulación de la maqueta): se mueve en cada cuadro mientras está encendido y la cancha está a la vista
+  const partido = soft.userData.partido;
+  esc.st.onFrame((dt) => {
+    let vis = true; for (let p = soft; p; p = p.parent) if (!p.visible) { vis = false; break; }
+    return vis || !partido.activo() ? partido.paso(dt) : false;
+  });
   const hoy = (v) => (G.zonas || []).forEach((z) => esc.verHoy(z, v));
   return {
+    // las simulaciones de la maqueta que vive en este capítulo (simulacion.js): el partido en la Cancha de Sóftbol Casabe
+    simulaciones: {
+      partido: { pieza: cSoft, jugar: (v) => partido.jugar(v), activo: () => partido.activo() },
+    },
     completo: [...capasTodo, 'urb.mirador'],
     alCompleto: () => hoy(false),
-    salir: () => hoy(true),
+    salir: () => { hoy(true); partido.jugar(false); },   // fuera del capítulo la cancha no está a la vista: el partido se detiene
     // cuando el asistente muestra, oculta o aísla piezas (visual.js): si la cancha no está a la vista, su lote no queda
     // vacío (vuelven las casas de hoy), y al revés
     alAjustar: () => hoy(!cSoft.visible),
     pasos: {
       portadilla: { capas: ['urb.ciudadela', 'urb.hoy'], antes: () => hoy(true), vista: vistaCiud },
-      componentes: { capas: capasTodo, antes: () => hoy(false), vista: vistaCiud, animar: () => { animSoft(); animCano(); animAla(); animInst(); }, etiquetas: piezas },
+      componentes: { capas: capasTodo, antes: () => hoy(false), vista: vistaConjunto, animar: () => { animSoft(); animCano(); animAla(); animInst(); }, etiquetas: piezas },
       softbol: { capas: capasTodo, antes: () => hoy(false), vista: vistaSoft, animar: animSoft, etiquetas: ['urb.softbol'] },
       cano: { capas: [...capasTodo, 'urb.puentes'], antes: () => hoy(false), vista: vistaCano, animar: animCano, etiquetas: ['urb.cano', 'urb.puentes'] },
       alameda: { capas: capasTodo, antes: () => hoy(false), vista: vistaAla, animar: animAla, etiquetas: ['urb.alameda'] },
       instalaciones: { capas: capasTodo, antes: () => hoy(false), vista: vistaInst, animar: animInst, etiquetas: ['urb.instalaciones'] },
       mirador: { capas: ['urb.mirador'], vista: vistaMir, animar: animMir },
-      '*': { capas: [...capasTodo], antes: () => hoy(false), vista: vistaCiud, etiquetas: piezas },
+      '*': { capas: [...capasTodo], antes: () => hoy(false), vista: vistaConjunto, etiquetas: piezas },
     },
   };
 }
