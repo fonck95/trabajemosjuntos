@@ -329,3 +329,63 @@ Presupuesto recomendado para que funcione en teléfonos: menos de 300.000 trián
 
 - **Estética del logo "¡Trabajemos juntos!"**: titulares en tipografía condensada negra (Anton) que atraviesan un globo de diálogo de contorno rojo, con la cola del globo hacia abajo; pestaña activa con el mismo globo; paleta blanco, negro y rojo en tema claro y oscuro.
 - **GSAP**: el globo se dibuja de izquierda a derecha, el titular entra palabra por palabra, las tarjetas se escalonan, las cifras cuentan hasta su valor, la cámara vuela a su posición, las columnas de datos crecen con retraso escalonado y las vistas se cruzan con un fundido corto. Con "reducir movimiento" activado en el sistema, todo aparece sin animación.
+
+## 7. Realismo de la maqueta de la propuesta (`web/js/propuesta/`)
+
+La propuesta usa el mismo motor (un `Stage`, render bajo demanda, resolución adaptativa, tres calidades). Encima de él,
+cuatro módulos le dan el acabado de un render de presentación sin cargar ningún archivo nuevo (la CSP del sitio no deja
+traer imágenes de otro origen y el Artifact no lleva archivos aparte):
+
+- **Texturas procedurales** (`texturas.js`). Césped, potrero, tierra, asfalto, adoquín, concreto, pañete, arcilla,
+  madera, teja, zinc ondulado, ladrillo, lona, caucho EPDM, malla eslabonada (con alfa), bloque calado, follaje y
+  corteza se pintan en un canvas al pedirlos, con ruido de valor periódico (se repiten sin costura), en potencias de 2,
+  con mipmaps y filtro anisotrópico. La fachada de las casas del pueblo (puerta, ventanas con reja, zócalo) y su mapa de
+  luz nocturna, la hoja de palma y la hoja lanceolada (con alfa) también.
+- **`MatMundo`**: un `MeshStandardMaterial` que lee la textura en coordenadas del mundo y no en las UV: proyección plana
+  (pisos, vías) o triplanar (muros, cubiertas, mobiliario), con la escala real de cada material. Las piezas son cajas
+  escaladas, extrusiones y geometrías unidas sin UV, y así todas llevan textura. Suma relieve (la normal se perturba con
+  la derivada de la luminancia de la textura en pantalla, en metros, y se apaga entre 40 y 160 m para que no titile),
+  variación de gran escala con tres octavas de ruido a escalas no conmensurables (contra la repetición vista de lejos) y
+  franjas de corte de césped calculadas en el shader con borde suavizado. Las variantes se distinguen con
+  `customProgramCacheKey` y comparten programa; `clone()` conserva la proyección. `matT(tipo, opciones)` da el material
+  de cada tipo; `matAgua(color)`, agua con relieve de olas.
+- **Hora del día** (`ambiente.js`). El cielo es un shader en el plano lejano: degradé del horizonte al cenit, horizonte
+  más cálido del lado del sol, halo y disco del sol, y cúmulos de ruido fractal proyectados en un plano que se funden con
+  la bruma hacia el horizonte. El entorno PBR se genera con PMREM de ese mismo cielo (sin el disco del sol, que ya es la
+  luz direccional): los reflejos de vidrios, zinc y agua coinciden con lo que se ve. Tema claro: tarde, sol a 31°;
+  tema oscuro: atardecer, sol a 19°, cielo encendido, ventanas, bolardos y LED encendidos. La bruma toma el color del
+  horizonte. En calidad alta, el posproceso agrega gradación (saturación ×1,08, contraste ×1,05) y viñeta suave
+  (`Stage.grado`; el atlas no la usa y su salida no cambia).
+- **Contexto** (`contexto.js`). Cada huella se mide con su rectángulo mínimo: las rectangulares de hasta 15 m de fondo
+  llevan cubierta a dos aguas de zinc (pintado u oxidado) o teja, con aleros y culatas; las demás, losa con pretil y, a
+  veces, tanque de agua. Los muros llevan la fachada de la calle (puerta y ventana con reja) en el lado que da a una vía y
+  la lateral en los otros, centrada en cada muro. Todo el pueblo son cuatro mallas por tanda (muros, zinc, teja y losa: la del pueblo y la de cada zona de intervención) más los tanques. `huellas[].techo` guarda los triángulos
+  de cada cubierta para que el resaltado de los mejoramientos la siga. Los árboles se siembran en patios (lejos de muros,
+  calles y agua), rondas de caños, orillas del río y potreros, fuera de los sitios de `geo.json`, de las zonas de
+  intervención y de las sedes, en trozos de 500 a 2.000 m para que la cámara y la sombra descarten los que no ven; los
+  lejanos usan una copa de un solo volumen y no dan sombra. En calidad baja se siembra la mitad en el pueblo y un cuarto
+  en el campo. `esc.despejar(puntos, radio)` quita los del contexto alrededor de una pieza sin polígono.
+- **Vegetación y mobiliario** (`geo3d.js`). Copas de varios volúmenes deformados con una función suave de la posición y
+  normales suavizadas, más claras arriba (seis volúmenes en el proyecto, tres en el pueblo, uno lejos), con especies
+  (sombra, guayacán rosado, flamboyán, guayacán amarillo o mezcla); palmas con hojas arqueadas recortadas por el alfa
+  (sus sombras también); matas de cordyline, heliconia, helecho y arbustos; bancas, bolardos, canecas, personas y carros,
+  todos instanciados (una llamada por material), con `userData.instancias` para que `brotar` los anime.
+
+- **Sin congelar la página.** La presentación va en un iframe del mismo origen que el panel y comparte su hilo: un bloque de
+  un segundo congela los dos. Por eso las casas del pueblo y los árboles se arman después del primer cuadro y por etapas
+  que ceden el hilo (la siembra va por franjas de 420 m de pueblo, rondas, orillas y potreros; el «dentro del río» reparte
+  las 321 aristas en franjas horizontales). Los shaders de cada capa se compilan apenas se arma, una capa a la vez, con
+  `compileAsync` (en paralelo donde el navegador tiene `KHR_parallel_shader_compile`) y forzando el enlace de cada programa
+  por separado (`getUniforms`), así el paso que muestra muchas capas a la vez (la visión completa) no compila decenas de
+  programas en el mismo cuadro (`escena.precompilar`, que `main.js` llama cuando todos los módulos están armados). El
+  contexto entra a la escena con sus shaders ya listos. Sin GPU (WebGL por software), el relieve y la variación de gran
+  escala se apagan y los árboles del contexto se ralean (un tercio en el pueblo y un octavo en el campo); en calidad baja,
+  el relieve y la mitad o un cuarto de los árboles.
+- **Sin panel** («Solo 3D»), el velo que aclara la izquierda de la escena para leer el panel se quita y abajo queda uno suave.
+- Las tarjetas de urbanismo y vivienda del Home (`web/img/home/area-urbanismo.webp` y `area-vivienda.webp`) son renders de
+  esta maqueta (720 × 480, dibujados al doble y reducidos), como las demás.
+
+Presupuesto medido en Chromium (calidad alta, 1280 × 720): la vista de la cancha de sóftbol, ≈ 280 llamadas y 0,7 M de
+triángulos; la de toda la maqueta, ≈ 720 llamadas y 3,3 M (con el mapa de sombras). Con `?qa` en la URL,
+`window.__qaPropuesta` da el `Stage`, el motor, la hora y el conteo de árboles para mover la cámara desde las pruebas.
+
