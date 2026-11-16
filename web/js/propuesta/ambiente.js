@@ -109,11 +109,17 @@ function entorno(nombre) {
 }
 export const horaDelTema = () => { const t = tokens(); return 0.2126 * t.bg.r + 0.7152 * t.bg.g + 0.0722 * t.bg.b < 0.2 ? 'atardecer' : 'tarde'; };
 
+// Durante el ciclo, el mapa de sombras (4096²) se vuelve a calcular cada SOMBRAS_CICLO_S, no en cada cuadro: el sol se
+// mueve despacio y, sin GPU o en un proyector modesto, recalcularlo cuadro a cuadro tira los cuadros por segundo
+const SOMBRAS_CICLO_S = 0.25;
+
 /**
  * Pone el ambiente en el Stage de la propuesta. sol: el Vector3 que la escena suma al objetivo de la cámara para ubicar
- * la luz (se reescribe con la dirección de la hora). alCambiar(H, nombre): avisa la hora nueva (para encender ventanas y
- * luces; durante el ciclo, en cada cuadro, con la hora intermedia y el nombre de la más cercana).
- * Devuelve { hora(), datos(), aplicar(nombre), poner(nombre|null), ciclo(opciones), pausar(), enCiclo(), fijada() }.
+ * la luz (se reescribe con la dirección de la hora). alCambiar(H, nombre, sombras): avisa la hora nueva (para encender
+ * ventanas y luces; durante el ciclo, en cada cuadro, con la hora intermedia y el nombre de la más cercana; `sombras`
+ * dice si en ese cuadro se recalculan las sombras).
+ * Devuelve { hora(), datos(), horas (ORDEN_HORAS), aplicar(nombre), poner(nombre|null), ciclo(opciones), reanudar(),
+ * pausar(), enCiclo(), fijada() }.
  */
 export function ambiente(st, { sol, alCambiar } = {}) {
   if (!st.sky) { st.sky = new THREE.Mesh(geoCielo, null); Object.assign(st.sky, { name: 'cielo', frustumCulled: false, renderOrder: 1e9 }); st.scene.add(st.sky); }
@@ -121,9 +127,9 @@ export function ambiente(st, { sol, alCambiar } = {}) {
   st.sky.material?.dispose?.();
   st.sky.material = materialCielo();
   const L = st.sunLight;
-  let nombre = null, H = null, fija = null, ciclo = null, version = 0;
+  let nombre = null, H = null, fija = null, ciclo = null, pausado = null, version = 0;
   const niebla = new THREE.Color();
-  function aplicarH(h, n) {
+  function aplicarH(h, n, sombras = true) {
     nombre = n; H = h; version++;
     ponerHora(st.sky.material, h);
     const d = new THREE.Vector3(...h.sol), lejos = sol ? sol.length() || 600 : 600;
@@ -135,8 +141,8 @@ export function ambiente(st, { sol, alCambiar } = {}) {
     st.exposure = h.exposicion;
     if (engine.active === st) engine.renderer.toneMappingExposure = h.exposicion;
     st._atmK = null;   // la bruma se vuelve a poner en el próximo cuadro
-    alCambiar?.(h, n);
-    st.updateShadows();
+    alCambiar?.(h, n, sombras);
+    if (sombras) st.updateShadows();
   }
   /** Una hora fija (sin ciclo): la pedida, la fijada o la del tema. */
   function aplicar(n = fija || horaDelTema()) { aplicarH(HORAS[n] || HORAS.tarde, HORAS[n] ? n : 'tarde'); }
@@ -148,8 +154,8 @@ export function ambiente(st, { sol, alCambiar } = {}) {
   }
   // El día entero (o un tramo) en `duracion` segundos: de la hora `desde` (por omisión, la que se ve) hasta `hasta`, con el
   // sol, el cielo, la luz y las luces interpolados cuadro a cuadro. Al terminar queda fijada la última hora. Devuelve una
-  // promesa que se cumple al terminar (true) o al cortarse (false)
-  function hacerCiclo({ desde = nombre, hasta = 'noche', duracion = 24 } = {}) {
+  // promesa que se cumple al terminar (true) o al cortarse (false). `t` (de 0 a 1): por dónde empieza (reanudar)
+  function hacerCiclo({ desde = nombre, hasta = 'noche', duracion = 24, t = 0 } = {}) {
     pausar();
     let i0 = ORDEN_HORAS.indexOf(desde), i1 = ORDEN_HORAS.indexOf(hasta);
     if (i0 < 0) i0 = 0;
@@ -158,7 +164,8 @@ export function ambiente(st, { sol, alCambiar } = {}) {
     const tramos = i1 - i0, dur = Math.max(2, duracion);
     let fin;
     const promesa = new Promise((ok) => { fin = ok; });
-    const c = { t: 0, vivo: true, fin };
+    const c = { t: Math.min(0.999, Math.max(0, +t || 0)), vivo: true, fin, sombra: SOMBRAS_CICLO_S,
+      opciones: { desde: ORDEN_HORAS[i0], hasta: ORDEN_HORAS[i1], duracion: dur } };
     ciclo = c;
     const paso = (dt) => {
       // terminado o cortado, se quita de la lista de cada cuadro (después del cuadro: no se toca la lista mientras se recorre)
@@ -166,14 +173,33 @@ export function ambiente(st, { sol, alCambiar } = {}) {
       c.t = Math.min(1, c.t + dt / dur);
       const k = i0 + c.t * tramos, i = Math.min(Math.floor(k), i1 - 1), f = k - i;
       const n = ORDEN_HORAS[f < 0.5 ? i : i + 1];
-      aplicarH(mezcla(HORAS[ORDEN_HORAS[i]], HORAS[ORDEN_HORAS[i + 1]], Math.min(1, f)), n);
+      c.sombra += dt;
+      const sombras = c.sombra >= SOMBRAS_CICLO_S;
+      if (sombras) c.sombra = 0;
+      aplicarH(mezcla(HORAS[ORDEN_HORAS[i]], HORAS[ORDEN_HORAS[i + 1]], Math.min(1, f)), n, sombras);
       if (c.t >= 1) { c.vivo = false; if (ciclo === c) ciclo = null; fija = ORDEN_HORAS[i1]; aplicar(); fin(true); }
       return true;
     };
     st.onFrame(paso);
     return promesa;
   }
-  function pausar() { if (ciclo) { ciclo.vivo = false; ciclo.fin(false); ciclo = null; } }
+  // corta el ciclo donde va (queda la hora intermedia a la vista) y anota por dónde iba, para reanudarlo
+  function pausar() {
+    if (!ciclo) return;
+    const c = ciclo;
+    c.vivo = false; ciclo = null;
+    pausado = { ...c.opciones, t: c.t, H };
+    st.updateShadows();
+    c.fin(false);
+  }
+  /** Sigue el ciclo pausado desde donde quedó, si nada cambió la hora desde entonces; si no, null. */
+  function reanudar() {
+    const p = pausado;
+    pausado = null;
+    if (!p || p.H !== H || ciclo) return null;
+    const { H: _h, ...opciones } = p;
+    return hacerCiclo(opciones);
+  }
   // reemplaza el de core.js en esta vista: la bruma con el color del horizonte de la hora, no el del tema
   st._atmosfera = function () {
     const f = this.scene.fog;
@@ -188,5 +214,6 @@ export function ambiente(st, { sol, alCambiar } = {}) {
   // el botón del tema es de la persona: deja de lado la hora fijada y el ciclo, y vuelve a la del tema
   onTheme(() => { pausar(); fija = null; aplicar(); });
   aplicar();
-  return { hora: () => nombre, datos: () => H, aplicar, poner, ciclo: hacerCiclo, pausar, enCiclo: () => !!ciclo, fijada: () => fija };
+  return { hora: () => nombre, datos: () => H, horas: ORDEN_HORAS, aplicar, poner, ciclo: hacerCiclo, reanudar, pausar,
+    enCiclo: () => !!ciclo, fijada: () => fija };
 }

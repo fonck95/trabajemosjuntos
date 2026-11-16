@@ -125,10 +125,15 @@ export function crearEscena(el, datos) {
   // (alHora: los módulos se suscriben para encender lo suyo, como las ventanas de la vivienda nueva)
   const alHora = new Set();
   let horaActual = null;
-  const amb = ambiente(st, { sol: SOL, alCambiar: (H) => {
+  // (durante el ciclo del día, `sombras` dice si en este cuadro se recalcula el mapa de sombras: no en todos; la luz sí
+  // sigue al sol en cada cuadro)
+  const amb = ambiente(st, { sol: SOL, alCambiar: (H, _n, sombras = true) => {
     horaActual = H; ctxMats.wall.emissiveIntensity = 0.9 * H.encendido;
     ponerLuces({ oscuridad: H.oscuridad, auto: H.encendido });   // luminarias y charcos de luz según la hora (o lo pedido)
-    alHora.forEach((fn) => fn(H)); ancla.set(1e9, 0, 0); st.invalidate(true);
+    alHora.forEach((fn) => fn(H));
+    if (sombras) ancla.set(1e9, 0, 0);   // el próximo cuadro ubica la luz y recalcula las sombras
+    else if (ancla.x < 1e8) { L.position.copy(ancla).add(SOL); L.updateMatrixWorld(); }
+    st.invalidate(sombras);
   } });
   const zonasHoy = (datos.zonas_intervencion || []).map((z) => ({ ...z, grupo: new THREE.Group() }));
   zonasHoy.forEach((z) => { z.grupo.name = `hoy.${z.id}`; S.add(z.grupo); });

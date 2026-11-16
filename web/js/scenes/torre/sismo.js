@@ -402,6 +402,9 @@ export async function montar(ctx) {
 
   // ================================================================ tiempo: deslizador y reproducción (8.1)
   let reproduciendo = false, t0 = 0, i0 = 0, velocidad = 1;
+  // un resultado nuevo queda a la vista en su instante más informativo (el pico); la primera vez que se reproduce arranca
+  // desde el comienzo, para que se vea llegar el sismo, salvo que antes se haya elegido un instante con el deslizador
+  let desdeCero = false;
   const grafs = {};
   function irAPaso(i, desdeDeslizador = false) {
     if (!R) return;
@@ -436,11 +439,11 @@ export async function montar(ctx) {
     const b = $(elHud, '[data-s="play"]');
     b.setAttribute('aria-pressed', String(reproduciendo));
     b.textContent = reproduciendo ? 'Pausa' : 'Reproducir';
-    if (reproduciendo) { if (paso >= R.t.length - 1) irAPaso(0); i0 = paso; t0 = performance.now(); if (!rafRep) rafRep = requestAnimationFrame(bucleRep); }
+    if (reproduciendo) { if (desdeCero || paso >= R.t.length - 1) irAPaso(0); desdeCero = false; i0 = paso; t0 = performance.now(); if (!rafRep) rafRep = requestAnimationFrame(bucleRep); }
     else { cancelAnimationFrame(rafRep); rafRep = 0; st.updateShadows(); }
   }
   $(elHud, '[data-s="play"]').addEventListener('click', () => reproducir(!reproduciendo));
-  ctl('t').addEventListener('input', () => { if (reproduciendo) reproducir(false); irAPaso(+ctl('t').value, true); });
+  ctl('t').addEventListener('input', () => { if (reproduciendo) reproducir(false); desdeCero = false; irAPaso(+ctl('t').value, true); });
   elHud.querySelectorAll('[data-vel]').forEach((b) => b.addEventListener('click', () => {
     velocidad = +b.dataset.vel;
     elHud.querySelectorAll('[data-vel]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
@@ -911,14 +914,17 @@ export async function montar(ctx) {
     const fe = R.opciones?.escala === 'nsr10' && Number.isFinite(+R.factor_escala);
     out('factor').textContent = fe ? `En este cálculo el registro se multiplicó por ${n(R.factor_escala, 2)}; el ajuste del suelo dio ${nv(R.iteraciones_escala ?? 0, 0)} vueltas.` : '';
     out('g-estado').textContent = `Sismo de Mw ${n(R.params?.Mw, 1)} a ${nv(R.params?.distancia_epicentral_km, 0)} km y ${nv(R.params?.profundidad_km, 0)} km de profundidad · ${nt} pasos de ${n(R.opciones?.dt_salida_s || 0.02, 2)} s · motor: ${NOMBRE_MOTOR[motor?.tipo] || motor?.tipo}.`;
-    // paso inicial: el de mayor desplazamiento de la cubierta (el más informativo); sin movimiento reducido, se reproduce
+    // paso inicial: el de mayor desplazamiento de la cubierta (el más informativo); sin movimiento reducido, se reproduce.
+    // En la presentación técnica (el escenario) también con movimiento reducido: el cálculo lo pidió quien presenta, y la
+    // sala tiene que ver temblar la torre
     const N = NLv(), k = nivelSuperior();
     let ipk = 0, mx = -1;
     for (let i = 0; i < nt; i++) { const o = (i * N + k) * 3, v = Math.hypot(R.u[o], R.u[o + 1]); if (v > mx) { mx = v; ipk = i; } }
     irAPaso(ipk);
+    desdeCero = true;
     elegir(listo.elementos[kmax]?.id);
     estado(`Listo: ${nt} pasos calculados en ${n(dur / 1000, 1)} s (${NOMBRE_MOTOR[motor?.tipo] || motor?.tipo}).`);
-    if (!reducedMotion && !primeraVezSinAuto && dentro) { irAPaso(0); reproducir(true); }
+    if ((!reducedMotion || ESCENARIO) && !primeraVezSinAuto && dentro) { irAPaso(0); reproducir(true); }
     resumen = {
       id: R.id, escenario: ctl('escenario').value, params: R.params, opciones: R.opciones, motor: motor?.tipo, nt, N, nE: listo.elementos.length,
       escala, duracion_ms: Math.round(dur), pga_g: mov?.registro?.intensidades?.x?.pga_g ?? null,

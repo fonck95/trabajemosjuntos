@@ -4075,5 +4075,56 @@
     }
    ]
   }
- ]
+ ],
+ "maqueta": {
+  "id": "maqueta",
+  "nombre": "La maqueta 3D",
+  "controles": [
+   {
+    "id": "hora",
+    "nombre": "Hora del día",
+    "tipo": "opcion",
+    "opciones": [
+     {
+      "id": "manana",
+      "nombre": "Mañana"
+     },
+     {
+      "id": "tarde",
+      "nombre": "Tarde"
+     },
+     {
+      "id": "atardecer",
+      "nombre": "Atardecer"
+     },
+     {
+      "id": "noche",
+      "nombre": "Noche"
+     }
+    ],
+    "ayuda": "Pone la maqueta a esa hora: sol, cielo, luz y sombras; al atardecer y de noche se encienden ventanas y luminarias. Al cambiar de paso vuelve la hora del tema."
+   },
+   {
+    "id": "reproducir_dia",
+    "nombre": "Reproducir el día",
+    "tipo": "si_no",
+    "ayuda": "Sí: el sol recorre el cielo de la mañana a la noche en 24 segundos y las luces se encienden al oscurecer; no: lo pausa donde va."
+   },
+   {
+    "id": "luces",
+    "nombre": "Luces de la maqueta",
+    "tipo": "si_no",
+    "ayuda": "Sí: enciende las torres LED del estadio, los postes y los bolardos, con su luz en el piso (se nota al atardecer y de noche); no: las apaga."
+   },
+   {
+    "id": "partido",
+    "nombre": "Partido de sóftbol",
+    "tipo": "si_no",
+    "ayuda": "Sí: una jugada en la Cancha de Sóftbol Casabe (lanzamiento, elevado, doble y relevo) que se repite; no: la detiene. Solo con la cancha a la vista.",
+    "capitulos": [
+     "urbanismo"
+    ]
+   }
+  ]
+ }
 }

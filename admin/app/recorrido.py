@@ -8,9 +8,10 @@ en el guion: el de un capítulo). Un recorrido son de 1 a MAX_ESCENAS escenas. C
 se dice: el paso, «Solo 3D», la cámara (un encuadre con nombre o su rumbo, su elevación y su acercamiento, a qué apunta
 y cómo viaja durante la frase: `mover`), las piezas de la maqueta que se muestran, se ocultan o se aíslan y las partes
 que se les quitan, la obra enfocada, la ficha técnica, hoy o con el proyecto, un modelo del atlas, la animación del
-paso (`animar`), un resaltado de lo que se nombra y los controles de la simulación del modelo del atlas que queda a la
-vista (`simular`: la magnitud del simulador sísmico, hacerlo temblar…). Nada espera a que la imagen se asiente (salvo la
-carga de un modelo del atlas). Al final, un cierre de hasta tres ideas que queda en la sala con «¿Preguntas?».
+paso (`animar`), un resaltado de lo que se nombra y los controles de la simulación del modelo que queda a la vista
+(`simular`: la magnitud del simulador sísmico, hacerlo temblar… en un modelo del atlas; sin él, la hora del día, las luces
+o el partido en la maqueta 3D). Nada espera a que la imagen se asiente (salvo la carga de un modelo del atlas). Al
+final, un cierre de hasta tres ideas que queda en la sala con «¿Preguntas?».
 
 Aquí está su forma absoluta (la que viaja al navegador y se guarda con la pantalla, `app/pantalla.py`): cada escena con
 su estado completo (no un cambio sobre la anterior), así cualquier pantalla puede empezar, reanudar o saltar a cualquier
@@ -81,12 +82,17 @@ GIRO = (-360, 360)
 # plan guiado (`_componer` de agente/herramientas/interfaz.py) y la presentación automática (app/automatica.py)
 GIROS_SUAVES = (10, 12, 14)
 ZOOM_SUAVE = 1.06
-# `simular` (no es estado): los controles de la simulación del modelo del atlas que la escena deja a la vista, que se
-# accionan cuando llega, en orden, como los acciona la persona (`controles` de cada inmersión en el guion, de
-# data/propuesta/simulaciones.json; web/js/escenario.js los acciona). None, o de 1 a MAX_SIMULAR {control, valor?}: el
-# valor según el tipo del control (un número en su rango, el id de una opción, verdadero o falso); una acción, sin valor
+# `simular` (no es estado): los controles de la simulación del modelo que la escena deja a la vista, que se accionan
+# cuando llega, en orden, como los acciona la persona: los del modelo del atlas abierto (`controles` de cada inmersión en
+# el guion, de data/propuesta/simulaciones.json; web/js/escenario.js los acciona) o, sin uno, los de la maqueta 3D (la
+# hora, el día, las luces, el partido: `maqueta` del guion; web/js/propuesta/simulacion.js). None, o de 1 a MAX_SIMULAR
+# {control, valor?}: el valor según el tipo del control (un número en su rango, el id de una opción, verdadero o falso);
+# una acción, sin valor. Lo de la maqueta vuelve a lo del paso al cambiar de paso, como lo demás
 MAX_SIMULAR = 4
 TIPOS_CONTROL = ("accion", "numero", "opcion", "si_no")
+# el modelo de `simular` sin uno del atlas: la maqueta 3D (MAQUETA de agente/guion.py: una prueba las compara; aquí no se
+# importa, este archivo solo usa la biblioteca estándar)
+MAQUETA = "maqueta"
 # Un recorrido nuevo se narra en la pantalla en off si llega a tiempo; uno viejo (la pantalla se abrió después) se aplica
 # en silencio en su última escena. Y una pantalla que se recargó a mitad reanuda si su avance es reciente
 VIGENCIA_RECORRIDO_S = 90
@@ -162,6 +168,30 @@ def inmersion_en(capitulo: Any, paso: Any, inmersion: Any, guion: Any) -> str | 
         return None
     p = guion.capitulos[ci]["pasos"][paso - 1]
     return (p.get("inmersion") or {}).get("id") if p.get("tipo") == "inmersion" else None
+
+
+def simulable_en(capitulo: Any, paso: Any, inmersion: Any, guion: Any) -> str | None:
+    """El modelo en que `simular` acciona con `inmersion` pedida en el paso `paso` del capítulo `capitulo`: el del atlas
+    a la vista (`inmersion_en`) o, sin él, MAQUETA (la maqueta 3D) si el paso existe, si se pidió la maqueta o si el
+    capítulo no tiene pasos con un modelo del atlas (entonces cualquier paso es de la maqueta). None si no se sabe (un
+    paso que no se dijo en un capítulo con modelos del atlas) o el capítulo no existe."""
+    i = inmersion_en(capitulo, paso, inmersion, guion)
+    if i:
+        return i
+    ci = guion.por_id(capitulo) if guion is not None and isinstance(capitulo, str) else None
+    if ci is None:
+        return None
+    sin_atlas = not getattr(guion, "inmersiones_del_capitulo", lambda _c: [])(ci)
+    if inmersion == MAQUETA or _entero(paso, 1, len(guion.capitulos[ci]["pasos"])) or sin_atlas:
+        return MAQUETA
+    return None
+
+
+def simulable_de(esc: dict | None, guion: Any) -> str | None:
+    """El modelo en que acciona el `simular` de una escena (`simulable_en`)."""
+    if not esc:
+        return None
+    return simulable_en(esc["capitulo"], esc["paso"], esc["visual"]["inmersion"], guion)
 
 
 def sostener_por_omision(esc: dict, anterior: dict | None, guion: Any) -> int:
@@ -284,8 +314,9 @@ def valor_problema(c: dict, x: dict) -> str | None:
 
 def simular_problemas(s: Any, controles: list[dict] | None = None) -> list[str]:
     """Lo que impide accionar `simular` (vacío si nada): None, o de 1 a MAX_SIMULAR objetos {control} o {control,
-    valor}, el control un id y el valor un número, el id de una opción o verdadero o falso. Con `controles` (los de la
-    inmersión a la vista, del guion; [] si no hay una o no tiene), que cada control exista y su valor le sirva."""
+    valor}, el control un id y el valor un número, el id de una opción o verdadero o falso. Con `controles` (los del
+    modelo a la vista, del guion: los de la inmersión o los de la maqueta en el capítulo; [] si no tiene), que cada
+    control exista y su valor le sirva."""
     if s is None:
         return []
     if not isinstance(s, list) or not 1 <= len(s) <= MAX_SIMULAR:
@@ -304,7 +335,7 @@ def simular_problemas(s: Any, controles: list[dict] | None = None) -> list[str]:
         if suyos is None:
             continue
         c = suyos.get(x["control"])
-        malo = valor_problema(c, x) if c else "no es un control del modelo del atlas a la vista"
+        malo = valor_problema(c, x) if c else "no es un control del modelo a la vista (el del atlas o la maqueta)"
         if malo:
             out.append(f"simular: «{x['control']}» {malo}")
     return out
@@ -421,7 +452,8 @@ def validar(r: Any, guion: Any = None) -> list[str]:
     """Lo que impide reproducir el recorrido absoluto `r` (vacío si nada): la forma exacta, los textos con las reglas de
     lo que se proyecta (sin plata, como todo lo de la presentación técnica), los topes y, con `guion`, que cada capítulo,
     paso, componente, pieza de la maqueta, parte, inmersión y resaltado exista en el guion vigente, y que lo que acciona
-    `simular` sea un control del modelo del atlas que la escena deja a la vista, con un valor que le sirva. Pura: la usan la
+    `simular` sea un control del modelo que la escena deja a la vista (el del atlas o la maqueta), con un valor que le
+    sirva. Pura: la usan la
     herramienta al crearlo (ya compuesto: lo opcional que no resolvía se descartó antes, con su aviso) y la pantalla al
     leerlo de la base."""
     if not isinstance(r, dict) or set(r) != {"id", "titulo", "escenas", "cierre"}:
@@ -459,10 +491,11 @@ def validar(r: Any, guion: Any = None) -> list[str]:
         if not isinstance(esc["animar"], bool):
             out.append(f"escena {n}: animar es verdadero o falso")
         if esc.get("simular") is not None:
-            # contra los controles del modelo del atlas que la escena deja a la vista (sin uno, ninguno vale)
+            # contra los controles del modelo que la escena deja a la vista: el del atlas o, sin uno, la maqueta
             con_visual = pi is not None and isinstance(esc["visual"], dict) and set(esc["visual"]) == set(VISUAL)
             del_guion = getattr(guion, "controles", None)
-            controles = del_guion(inmersion_de(esc, guion)) if del_guion is not None and con_visual else None
+            controles = del_guion(simulable_de(esc, guion), esc["capitulo"]) if del_guion is not None and con_visual \
+                else None
             out += [f"escena {n}: {x}" for x in simular_problemas(esc["simular"], controles)]
         frases = esc["frases"]
         if not isinstance(frases, list) or not 1 <= len(frases) <= MAX_FRASES or \

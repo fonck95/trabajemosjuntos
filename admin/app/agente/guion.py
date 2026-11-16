@@ -36,6 +36,11 @@ Por qué está hecho así:
   a `tecnica.inmersiones`). Cada uno con su id, su nombre, su tipo (accion, numero, opcion o si_no), su rango o sus
   opciones y una frase de ayuda: el modelo los pide por id o por nombre y la herramienta los resuelve aquí
   (`Guion.control`). Una inmersión sin controles los trae vacíos.
+* La maqueta 3D también tiene los suyos (`maqueta` del guion, arriba, con la forma de una inmersión pero fuera de
+  `inmersiones`: la clave «maqueta» de simulaciones.json, que build_propuesta.py copia a `tecnica.simulaciones_maqueta`):
+  la hora del día, el día entero, las luces y el partido en la cancha. `simular` los acciona cuando no hay un modelo del
+  atlas a la vista. Un control puede valer solo en unos capítulos (`capitulos`: el partido, en urbanismo);
+  `Guion.controles(MAQUETA, capítulo)` da los de ese capítulo, sin esa clave.
 * Un paso puede traer su `narracion`: la frase muy resumida, escrita a mano, que dice la presentación automática en
   ese paso (`tecnica.narracion[capítulo][id del paso]` de general.json; app/automatica.py). Es opcional: sin ella, la
   automática dice la primera frase del texto del paso. Sin plata, como todo lo demás.
@@ -75,6 +80,10 @@ TITULO_METAS = "Lo que cambia y cómo se mide"
 TITULO_CRONOGRAMA = "Cronograma de obra"
 # Los tipos de control de una simulación del atlas (`simular`; app/recorrido.py y web/js/escenario.js los mismos)
 TIPOS_CONTROL = ("accion", "numero", "opcion", "si_no")
+# El modelo de las simulaciones cuando no hay uno del atlas a la vista: la maqueta 3D (la misma palabra que la cierra en
+# `inmersion`; app/recorrido.py tiene la misma constante: una prueba las compara). Ninguna inmersión puede llamarse así
+MAQUETA = "maqueta"
+NOMBRE_MAQUETA = "La maqueta 3D"
 
 
 # ───────────────────────────── Texto plano ─────────────────────────────
@@ -334,11 +343,12 @@ def _numero(v: Any) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool) and v == v and abs(v) != float("inf")
 
 
-def _controles(lista: Any) -> list[dict]:
+def _controles(lista: Any, capitulos: bool = False) -> list[dict]:
     """Los controles de la simulación de una inmersión para el modelo (`controles` de `tecnica.inmersiones`): id,
     nombre, tipo, el rango y la unidad de un número, las opciones (id y nombre) y la ayuda, en texto plano y en su orden.
-    Defensivo: lo que no es un control con id y un tipo conocido no va (build_propuesta.py ya lo avisó); `problemas`
-    dice después si un id no tiene la forma o se repite."""
+    Con `capitulos` (los de la maqueta), también los capítulos en que vale cada uno, si lo dice. Defensivo: lo que no es
+    un control con id y un tipo conocido no va (build_propuesta.py ya lo avisó); `problemas` dice después si un id no
+    tiene la forma o se repite."""
     out = []
     for c in lista if isinstance(lista, list) else []:
         if not isinstance(c, dict) or not isinstance(c.get("id"), str) or c.get("tipo") not in TIPOS_CONTROL:
@@ -354,6 +364,8 @@ def _controles(lista: Any) -> list[dict]:
                              if isinstance(o, dict) and isinstance(o.get("id"), str)]
         if plano(c.get("ayuda")):
             x["ayuda"] = plano(c["ayuda"])
+        if capitulos and isinstance(c.get("capitulos"), list):
+            x["capitulos"] = [k for k in c["capitulos"] if isinstance(k, str)]
         out.append(x)
     return out
 
@@ -399,19 +411,24 @@ def derivar(datos: dict) -> dict:
             cap["maqueta"] = maqueta
         cap["pasos"] = [_paso(datos, c, p, inmersiones) for p in c["pasos"]]
         capitulos.append(cap)
-    return {"version": VERSION, "modo": MODO, "fuente": "web/data/propuesta.json",
-            "inmersiones": [{"id": i["id"], "nombre": plano(i.get("nombre")), "muestra": plano(i.get("texto")),
-                             "controles": _controles(i.get("controles"))} for i in catalogo],
-            "capitulos": capitulos}
+    out = {"version": VERSION, "modo": MODO, "fuente": "web/data/propuesta.json",
+           "inmersiones": [{"id": i["id"], "nombre": plano(i.get("nombre")), "muestra": plano(i.get("texto")),
+                            "controles": _controles(i.get("controles"))} for i in catalogo],
+           "capitulos": capitulos}
+    sm = tec.get("simulaciones_maqueta")
+    if isinstance(sm, list) and sm:
+        # las simulaciones de la maqueta 3D (sin un modelo del atlas a la vista): como una inmersión, fuera del catálogo
+        out["maqueta"] = {"id": MAQUETA, "nombre": NOMBRE_MAQUETA, "controles": _controles(sm, capitulos=True)}
+    return out
 
 
 def problemas(g: dict) -> list[str]:
     """Lo que impediría usar el guion (lo revisa build_propuesta.py antes de escribirlo y `Guion.desde` al cargarlo):
     ids de capítulo, de paso, de componente, de inmersión, de pieza de la maqueta o de una de sus partes que no cumplen
     la forma que aceptan la herramienta y el navegador, repetidos, capítulos con más pasos que el tope, un paso que pesa
-    más de `MAX_BYTES_PASO` o que lleva a una inmersión que no está en el catálogo. Y los controles de cada inmersión:
-    ids que no cumplen la forma o se repiten, un tipo desconocido, un número sin un rango (min < max) o una opción sin
-    opciones (o con ids inválidos o repetidos)."""
+    más de `MAX_BYTES_PASO` o que lleva a una inmersión que no está en el catálogo. Y los controles de cada inmersión
+    y de la maqueta: ids que no cumplen la forma o se repiten, un tipo desconocido, un número sin un rango (min < max),
+    una opción sin opciones (o con ids inválidos o repetidos) o, en la maqueta, `capitulos` que no es una lista de ids."""
     out = []
     caps = g.get("capitulos") if isinstance(g, dict) else None
     if not isinstance(caps, list) or not caps:
@@ -426,6 +443,20 @@ def problemas(g: dict) -> list[str]:
     for i in inm:
         out += [f"inmersión {i.get('id') if isinstance(i, dict) else i!r}: {x}"
                 for x in _problemas_controles(i.get("controles", []) if isinstance(i, dict) else [])]
+    if MAQUETA in ids_inm:
+        out.append(f"una inmersión no puede llamarse «{MAQUETA}»")
+    if "maqueta" in g:
+        mq = g["maqueta"]
+        if not isinstance(mq, dict) or mq.get("id") != MAQUETA:
+            out.append(f"la maqueta de las simulaciones no tiene la forma {{id: {MAQUETA}, controles}}")
+        else:
+            out += [f"maqueta: {x}" for x in _problemas_controles(mq.get("controles", []))]
+            # (que esos capítulos existan lo revisa build_propuesta.py: uno que no está solo deja el control sin usar)
+            for c in mq.get("controles") if isinstance(mq.get("controles"), list) else []:
+                k = c.get("capitulos") if isinstance(c, dict) else None
+                if k is not None and (not isinstance(k, list) or not k or
+                                      any(not isinstance(x, str) or not ID.fullmatch(x) for x in k)):
+                    out.append(f"maqueta: {c.get('id')}: capitulos es una lista de ids de capítulo")
     vistos = set()
     for c in caps:
         cid = c.get("id") if isinstance(c, dict) else None
@@ -550,13 +581,16 @@ class Resolucion:
 class Guion:
     capitulos: tuple[dict, ...]
     inmersiones: tuple[dict, ...] = ()
+    # las simulaciones de la maqueta 3D ({id: MAQUETA, nombre, controles}), o None (un guion de antes)
+    maqueta: dict | None = None
 
     @classmethod
     def desde(cls, datos: Any) -> "Guion":
         malos = problemas(datos)
         if malos:
             raise ValueError("Guion de la presentación inválido: " + "; ".join(malos[:5]))
-        return cls(tuple(datos["capitulos"]), tuple(datos.get("inmersiones") or ()))
+        return cls(tuple(datos["capitulos"]), tuple(datos.get("inmersiones") or ()),
+                   datos.get("maqueta") if isinstance(datos.get("maqueta"), dict) else None)
 
     def componentes(self, ci: int) -> list[dict]:
         """Los componentes del capítulo `ci` (id, nombre y si la cámara los puede enfocar); [] si no tiene."""
@@ -601,15 +635,30 @@ class Guion:
             return None
         return next((i for i in self.inmersiones if k in (clave(i["id"]), clave(i.get("nombre")))), None)
 
-    def controles(self, inmersion: Any) -> list[dict]:
-        """Los controles de la simulación de la inmersión `inmersion` (su id), en su orden; [] si no tiene o no existe."""
-        i = next((x for x in self.inmersiones if x["id"] == inmersion), None) if isinstance(inmersion, str) else None
+    def controles(self, modelo: Any, capitulo: Any = None) -> list[dict]:
+        """Los controles de la simulación del modelo `modelo`, en su orden: los de la inmersión con ese id o, con
+        MAQUETA, los de la maqueta 3D que valen en el `capitulo` (su id o su índice), sin `capitulos` ([] sin capítulo).
+        [] si no tiene o no existe."""
+        if modelo == MAQUETA:
+            if isinstance(capitulo, int) and not isinstance(capitulo, bool) and 0 <= capitulo < len(self.capitulos):
+                capitulo = self.capitulos[capitulo]["id"]
+            if not isinstance(capitulo, str):
+                return []
+            return [{k: v for k, v in c.items() if k != "capitulos"} for c in (self.maqueta or {}).get("controles") or []
+                    if not c.get("capitulos") or capitulo in c["capitulos"]]
+        i = next((x for x in self.inmersiones if x["id"] == modelo), None) if isinstance(modelo, str) else None
         return list((i or {}).get("controles") or [])
 
-    def control(self, inmersion: Any, texto: Any) -> dict | None:
-        """El control de la inmersión `inmersion` por su id o su nombre (`parecido`: sin tildes ni mayúsculas, o el único
-        que tiene esas palabras), o None."""
-        return parecido(self.controles(inmersion), texto)
+    def control(self, modelo: Any, texto: Any, capitulo: Any = None) -> dict | None:
+        """El control del modelo `modelo` (una inmersión, o MAQUETA en `capitulo`) por su id o su nombre (`parecido`: sin
+        tildes ni mayúsculas, o el único que tiene esas palabras), o None."""
+        return parecido(self.controles(modelo, capitulo), texto)
+
+    def nombre_modelo(self, modelo: Any) -> str:
+        """El nombre del modelo de una simulación: «La maqueta 3D» o el de la inmersión (o su id)."""
+        if modelo == MAQUETA:
+            return NOMBRE_MAQUETA
+        return (self.inmersion(modelo) or {}).get("nombre") or str(modelo)
 
     def inmersiones_del_capitulo(self, ci: int) -> list[str]:
         """Los ids de las inmersiones que muestran los pasos del capítulo `ci`, en su orden y sin repetir."""
@@ -703,9 +752,10 @@ class Guion:
         muestra cada uno y lo que se puede resaltar), la ficha técnica de cada componente (una sola vez: el paso dice
         cuál con su id), las piezas de la maqueta que se pueden mostrar, ocultar, aislar o apuntar con la cámara, con
         las partes que se les pueden quitar (`maqueta`; una pieza sin partes va sin esa clave) y el catálogo de
-        inmersiones, con los controles de la simulación de las que muestran los pasos del capítulo (lo que acciona
-        `simular`). Si pasa de `tope` bytes (con la nota de la herramienta, por debajo de `MAX_CONTENIDO`), las fichas van
-        sin descripción ni referentes; si todavía pasa, los controles van sin su ayuda."""
+        inmersiones, con los controles de la simulación de las que muestran los pasos del capítulo, y los de la maqueta
+        3D en este capítulo (`controles_maqueta`: lo que acciona `simular` sin un modelo del atlas). Si pasa de `tope`
+        bytes (con la nota de la herramienta, por debajo de `MAX_CONTENIDO`), las fichas van sin descripción ni
+        referentes; si todavía pasa, los controles van sin su ayuda."""
         c = self.capitulos[ci]
         pasos = []
         for pi, p in enumerate(c["pasos"]):
@@ -721,6 +771,7 @@ class Guion:
         out = {"capitulo": {k: c[k] for k in ("id", "nombre", "lema") if c.get(k)}, "pasos": pasos,
                "componentes": fichas,
                "maqueta": [{k: v for k, v in x.items() if v or k != "partes"} for x in self.piezas(ci)],
+               "controles_maqueta": self.controles(MAQUETA, ci),
                "inmersiones": [{"id": i["id"], "nombre": i.get("nombre"), "muestra": i.get("muestra"),
                                 **({"controles": i["controles"]} if i["id"] in suyas and i.get("controles") else {})}
                                for i in self.inmersiones]}
@@ -733,14 +784,16 @@ class Guion:
             for i in out["inmersiones"]:
                 if i.get("controles"):
                     i["controles"] = [{k: v for k, v in x.items() if k != "ayuda"} for x in i["controles"]]
+            out["controles_maqueta"] = [{k: v for k, v in x.items() if k != "ayuda"} for x in out["controles_maqueta"]]
             out["recortado"] += " Los controles de las simulaciones van sin su ayuda."
         return out
 
     def indice(self) -> dict:
         """Capítulos con su id, nombre, los títulos de sus pasos, los ids de sus componentes (los que la cámara enfoca
-        marcados) y los de las piezas de su maqueta (sus nombres y sus partes, en `capitulo_para_leer`), y el catálogo
-        de inmersiones con los ids de sus controles (los que acciona `simular`; sus nombres, rangos y opciones, en
-        `capitulo_para_leer` y al abrirla): lo que el modelo necesita para elegir, en pocos KB."""
+        marcados), los de las piezas de su maqueta (sus nombres y sus partes, en `capitulo_para_leer`) y los de los
+        controles de la maqueta 3D en ese capítulo, y el catálogo de inmersiones con los ids de sus controles (los que
+        acciona `simular`; sus nombres, rangos y opciones, en `capitulo_para_leer` y al abrirla): lo que el modelo
+        necesita para elegir, en pocos KB."""
         caps = []
         for c in self.capitulos:
             cap = {"id": c["id"], "nombre": c["nombre"], "pasos": [p["titulo"] for p in c["pasos"]]}
@@ -749,6 +802,9 @@ class Guion:
                                       for x in c["componentes"]]
             if c.get("maqueta"):
                 cap["maqueta"] = [x["id"] for x in c["maqueta"]]
+            sim = self.controles(MAQUETA, c["id"])
+            if sim:
+                cap["controles_maqueta"] = [x["id"] for x in sim]
             caps.append(cap)
         return {"capitulos": caps, "total_pasos": self.total_pasos(),
                 "inmersiones": [{"id": i["id"], "nombre": i.get("nombre"),

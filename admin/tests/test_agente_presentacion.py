@@ -336,7 +336,10 @@ def test_el_guion_trae_la_maqueta_de_cada_capitulo():
     assert leer["maqueta"][1] == {"id": "torre", "nombre": "Torre nueva de cuatro pisos", "partes": [
         {"id": "cubierta", "nombre": "Cubierta y parasoles (deja ver las losas)"},
         {"id": "equipos", "nombre": "Equipos en la cubierta"}, {"id": "jardines", "nombre": "Árboles y jardines"}]}
-    assert list(leer) == ["capitulo", "pasos", "componentes", "maqueta", "inmersiones"]
+    assert list(leer) == ["capitulo", "pasos", "componentes", "maqueta", "controles_maqueta", "inmersiones"]
+    # y los controles de la maqueta 3D en el capítulo (lo que acciona simular sin un modelo del atlas): sin el partido,
+    # que es de urbanismo
+    assert [c["id"] for c in leer["controles_maqueta"]] == ["hora", "reproducir_dia", "luces"]
     for c in G.capitulos:
         assert len(json.dumps(G.capitulo_para_leer(G.por_id(c["id"])), ensure_ascii=False).encode("utf-8")) < 36000, c["id"]
     indice = {c["id"]: c for c in G.indice()["capitulos"]}

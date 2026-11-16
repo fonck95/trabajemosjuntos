@@ -20,11 +20,12 @@
 //   técnica de un componente (detalle), un modelo del atlas a pantalla completa (inmersion), las piezas de la maqueta
 //   que se suman, se quitan o se aíslan (mostrar, ocultar, aislar), las partes que se le quitan a una pieza (sin) y el
 //   tema; y tres acciones que no son estado: `mover` (la cámara gira, se acerca o sube durante `ms`, por omisión
-//   MOVER_MS), `animar` (repite la animación del paso) y `simular` (de 1 a MAX_SIMULAR controles de adentro del modelo
-//   del atlas a la vista, en orden: [{control, valor?}], que visual.js acciona con __escenario.simular de
-//   js/escenario.js). Aquí se revisa la forma de cada valor (los ids, las listas, los rangos); que la pieza o el
-//   componente existan en el capítulo, o la inmersión en el catálogo, lo dice visual.js (`depurar`), y que el control
-//   exista en el modelo y su valor le sirva, el atlas (lo que no acepta en SIMULAR_ESPERA_MS vuelve como descartado). Es tolerante: la parte que no vale se descarta, lo demás se aplica y la respuesta lo dice (`aviso:
+//   MOVER_MS), `animar` (repite la animación del paso) y `simular` (de 1 a MAX_SIMULAR controles del modelo a la vista,
+//   en orden: [{control, valor?}]: el del atlas abierto, que visual.js acciona con __escenario.simular de
+//   js/escenario.js, o, sin él, la maqueta 3D —la hora, el día, las luces, el partido— con simulacion.js). Aquí se
+//   revisa la forma de cada valor (los ids, las listas, los rangos); que la pieza o el componente existan en el
+//   capítulo, o la inmersión en el catálogo, lo dice visual.js (`depurar`), y que el control exista en el modelo y su
+//   valor le sirva, el modelo (lo que no acepta en SIMULAR_ESPERA_MS vuelve como descartado). Es tolerante: la parte que no vale se descarta, lo demás se aplica y la respuesta lo dice (`aviso:
 //   'parcial'` y `descartadas`); solo si no queda nada que aplicar responde `error`.
 // * El plan guiado (el recorrido narrado de admin/web/js/reproductor.js, en la página del panel que enmarca la
 //   presentación): `escena` es un paso del plan (el paso de la presentación, «Solo 3D», lo visual, el resaltado, el
@@ -35,7 +36,8 @@
 //   carga no hay nada que mirar. Falla entera solo por lo que se proyecta (el título, las frases), el avance, el id del
 //   plan, un capítulo o un paso que no existen o `panel` sin verdadero o falso; todo lo demás (lo visual, el
 //   resaltado, `mover`, `animar`, `simular`) se descarta por partes, como en `visual`. La simulación se acciona cuando
-//   el modelo del atlas de la escena ya cargó, y la escena espera sus respuestas a lo sumo SIMULAR_ESPERA_MS. `narracion` ilumina una frase (cuando la voz
+//   el modelo del atlas de la escena ya cargó (sin él, en la maqueta, enseguida), y la escena espera sus respuestas a lo
+//   sumo SIMULAR_ESPERA_MS. `narracion` ilumina una frase (cuando la voz
 //   empieza a decirla), marca la pausa, dice si hay voz o muestra la píldora «El asistente prepara la explicación…»;
 //   `cierre`, el resumen y «¿Preguntas?». Mientras hay una narración en pantalla, los módulos de la maqueta no mueven
 //   la cámara por su cuenta (`visual.guiado`). Mientras suena
@@ -86,8 +88,8 @@ const MOVER_MS = 6000;            // lo que dura `mover` en la orden `visual` si
 const MAX_LISTA = 8;              // piezas o partes por lista (mostrar, ocultar, sin)
 const MAX_DESCARTADAS = 8;
 // `simular`: los controles por orden (`MAX_SIMULAR` de app/recorrido.py y del puente: una prueba los compara) y lo que se
-// esperan las respuestas del atlas antes de responder (un control que tarda —Reproducir hasta que termine el primer
-// cálculo— se acciona igual, después: solo no se cuenta)
+// esperan las respuestas del modelo (el del atlas o la maqueta) antes de responder (un control que tarda —Reproducir
+// hasta que termine el primer cálculo, el partido mientras carga su capítulo— se acciona igual, después: solo no se cuenta)
 const MAX_SIMULAR = 4;
 const SIMULAR_ESPERA_MS = 2000;
 // Lo que dura la narración de una escena si la orden no lo dice (`lecturaMs` y ENTRE_FRASES_MS de reproductor.js)
@@ -642,10 +644,10 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     return false;
   }
 
-  // La simulación (`visual.simular`): lo que el atlas rechaza en SIMULAR_ESPERA_MS se anota en `descartadas` (lo que
-  // sigue esperando se acciona solo, después). Sin esa capa (una de antes), todo descartado. Devuelve cuántos se
-  // descartaron. Nunca lanza
-  async function simularEnAtlas(lista, descartadas) {
+  // La simulación (`visual.simular`, en el modelo a la vista: el del atlas o, sin él, la maqueta): lo que el modelo
+  // rechaza en SIMULAR_ESPERA_MS se anota en `descartadas` (lo que sigue esperando se acciona solo, después). Sin esa capa
+  // (una de antes), todo descartado. Devuelve cuántos se descartaron. Nunca lanza
+  async function simularEnModelo(lista, descartadas) {
     if (!lista) return 0;
     let malos;
     if (typeof visual.simular !== 'function') malos = lista.map((x) => ({ clave: `simular.${x.control}`, motivo: 'esta presentación no acciona simulaciones' }));
@@ -732,9 +734,10 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
         asento = await asentada({ tope: ASIENTO_ATLAS_MS });
         if (superada()) return { reemplazada: true };
       }
-      // la simulación, con el modelo del atlas ya cargado (si no cargó a tiempo, visual.js espera por su cuenta)
+      // la simulación, con el modelo del atlas ya cargado (si no cargó a tiempo, visual.js espera por su cuenta) o, sin
+      // él, en la maqueta
       if (simulacion) {
-        await simularEnAtlas(simulacion, descartadas);
+        await simularEnModelo(simulacion, descartadas);
         if (superada()) return { reemplazada: true };
       }
       if (descartadas.length) aviso = 'parcial';
@@ -843,10 +846,10 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
           ? await visual.mover(mover, opciones.ms) : await visual.aplicar(cambios, opciones));
         if (error) return fallo(error.slice(0, 160));
       }
-      // la simulación, después de lo demás (una inmersión que abre esta misma orden ya va en camino): si era lo único y
-      // el atlas no aceptó ningún control, es un error con su porqué
-      if (simulacion && await simularEnAtlas(simulacion, descartadas) === simulacion.length && !algoVisual) {
-        return fallo(`No se pudo accionar en el modelo del atlas: ${cortas(descartadas.slice(-simulacion.length))[0]?.motivo || 'ningún control'}`.slice(0, 160));
+      // la simulación, después de lo demás (una inmersión que abre esta misma orden ya va en camino), en el modelo a la
+      // vista (el del atlas o, sin él, la maqueta): si era lo único y no aceptó ningún control, es un error con su porqué
+      if (simulacion && await simularEnModelo(simulacion, descartadas) === simulacion.length && !algoVisual) {
+        return fallo(`No se pudo accionar la simulación: ${cortas(descartadas.slice(-simulacion.length))[0]?.motivo || 'ningún control'}`.slice(0, 160));
       }
       return responder(id, 'estado', origen, descartadas.length ? { aviso: 'parcial', descartadas: cortas(descartadas) } : {});
     }
@@ -881,9 +884,12 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     aplicando++;
     try {
       // El paso que ya está a la vista: `ir` no haría nada, y lo que el último paso de un plan aisló, ocultó o quitó se
-      // quedaría (el servidor, al atender este `ir`, ya guarda lo visual como lo dice el paso)
-      if (visual && ci === estado.ci && pi === estado.pi) await visual.aplicar({ ...VISUAL_INICIAL, mostrar: [], ocultar: [], sin: [] });
-      else await ir(ci, pi, { dir });
+      // quedaría (el servidor, al atender este `ir`, ya guarda lo visual como lo dice el paso); la simulación de la
+      // maqueta (la hora, las luces, el partido) también vuelve a lo del paso
+      if (visual && ci === estado.ci && pi === estado.pi) {
+        await visual.aplicar({ ...VISUAL_INICIAL, mostrar: [], ocultar: [], sin: [] });
+        visual.reiniciarSimulacion?.();
+      } else await ir(ci, pi, { dir });
     } finally { aplicando--; }
     return responder(id, 'estado', origen);
   }

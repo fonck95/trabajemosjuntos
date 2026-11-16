@@ -261,7 +261,15 @@ persona crea en su cuenta.
   `web/js/escenario.js`): la torre del hospital en su sitio, por pisos de servicio, por dentro, el laboratorio, el
   simulador sísmico y el modelo BIM (`docs/11`, `docs/14`, `docs/15`, `docs/16`), y el relleno Las Américas hoy y con su
   parque ecotecnológico (`docs/12`). En salud van después de la torre (pisos, recorrido, sismo y BIM) y en saneamiento,
-  después del relleno.
+  después del relleno. El asistente acciona sus controles con `simular` (la magnitud, calcular, hacer temblar la
+  torre…); sin un sismo calculado, hacer temblar la torre lo calcula antes, y con una narración en pantalla la ventana
+  del modelo queda encima del subtítulo.
+- **Simulaciones de la maqueta** (`web/js/propuesta/simulacion.js`, la clave `maqueta` de
+  `data/propuesta/simulaciones.json`): sin un modelo del atlas a la vista, `simular` pone la maqueta a una hora
+  (mañana, tarde, atardecer o noche), recorre el día entero en 24 s, enciende o apaga las luminarias (las torres LED
+  del estadio, los postes y los bolardos, con su luz en el piso) y, en Urbanismo, juega un partido en la Cancha de
+  Sóftbol Casabe. Todo vuelve a lo del paso al cambiar de paso. Ver `admin/docs/agente.md`, «Las simulaciones de la
+  maqueta».
 - **Lo que el asistente cambia sin cambiar de paso** (`web/js/propuesta/visual.js`): enfocar un componente (el `enfoque`
   que `build_propuesta.py` le calcula a cada uno: el paso que lo desarrolla, sus sitios o trazados de `geo.json`, o la
   réplica de una sede), abrir su ficha técnica, mostrar el sitio hoy frente al proyecto, la cámara aérea, oblicua o
@@ -339,7 +347,8 @@ cifras (`docs/09`, sección 7, explica cómo):
 | `web/js/propuesta/escena.js` | Escena 3D compartida: terreno, río, puente, vías, sedes y encuadre según el panel |
 | `web/js/propuesta/geo3d.js` | Geometría procedural (losas, cintas, árboles, naves, graderías, letras) y animaciones |
 | `web/js/propuesta/texturas.js` | Texturas procedurales (canvas) y `MatMundo`, el material con la textura en coordenadas del mundo |
-| `web/js/propuesta/ambiente.js` | La hora del día: cielo con nubes, sol, luz del cielo, entorno PMREM y bruma (tarde o atardecer según el tema) |
+| `web/js/propuesta/ambiente.js` | La hora del día: cielo con nubes, sol, luz del cielo, entorno PMREM y bruma (tarde o atardecer según el tema; mañana o noche, y el día entero, con `simular`) |
+| `web/js/propuesta/simulacion.js` | Las simulaciones de la maqueta que acciona `simular` sin un modelo del atlas: la hora, el día, las luces y el partido |
 | `web/js/propuesta/contexto.js` | Casas del pueblo a partir de las huellas (cubiertas, fachadas, tanques) y siembra de árboles del contexto |
 | `web/js/propuesta/piezas/` | Cancha de sóftbol, mirador, parque lineal, PTAR, ampliación de la PTAP, parque agroindustrial, granja solar y relleno sanitario nuevo (`relleno.js`) |
 | `web/js/propuesta/modulos/` | Lo 3D de cada capítulo: capas, vistas y animaciones por paso |

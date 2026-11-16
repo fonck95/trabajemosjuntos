@@ -435,6 +435,13 @@ dl.hoja dt.foco { outline: none; background: none; animation: none; color: var(-
 .inm-cerrar { flex: none; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--ink); font: 600 0.7rem var(--f-mono); cursor: pointer; }
 .inm-cerrar:hover { border-color: var(--ink); }
 .pres.con-inmersion .leyenda3d { display: none !important; }
+/* con una narración o una explicación a la vista (mando.js pone .con-sub y su alto en --sub-h), la ventana del modelo
+   termina encima del subtítulo: si no, el subtítulo tapaba el pie del modelo (la barra de tiempo del simulador sísmico:
+   Reproducir, el deslizador y el instante) */
+@media (min-width: 1081px) {
+  .pres.con-inmersion.con-sub .inm-marco { bottom: calc(var(--control) + 22px + var(--sub-h, 0px) + 10px); }
+  .pres.con-inmersion.con-sub.sub-sobre-leyenda .inm-marco { bottom: calc(var(--control) + 22px + var(--ley-h, 0px) + 10px + var(--sub-h, 0px) + 10px); }
+}
 .pres.vis-hoy .leyenda3d { opacity: 0.35; }
 /* la técnica cierra con el cronograma: su color es el del acento (el del capítulo «Hoja de ruta» es la tinta, y en el
    tema oscuro el botón «Fin» quedaba blanco sobre blanco) */
