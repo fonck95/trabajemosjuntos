@@ -52,8 +52,21 @@ export function crear(esc, datos) {
   const serv = trazado(datos, 'agroindustria', 'servidumbre_ecopetrol')?.puntos, vMuelle = trazado(datos, 'agroindustria', 'via_muelle')?.puntos;
   const vias = lotePoly ? [{ puntos: [[188, 114], [-258, 114]], ancho: 9 }, ...(serv ? [{ puntos: serv.map(aLocal), ancho: 5 }] : []), ...(vMuelle ? [{ puntos: vMuelle.map(aLocal), ancho: 7 }] : [])] : null;
   const retiro = sitio(datos, 'agroindustria', 'retiro_pozos')?.poligono;
+  // la vía del puente (en territorio.json los puntos van en `p`) y la portería: el ramal sale de la vía interna, 6 m antes
+  // de su extremo oriental, y llega al borde de la vía del puente, que pasa frente al lote
+  // (la vía viene en tramos: vale el que arranca en el estribo del puente, el que pasa junto al lote)
+  const ref = datos.territorio?.puente?.tablero?.[0] || cfg.centro, dRef = (q) => Math.min(...q.map(([x, y]) => Math.hypot(x - ref[0], y - ref[1])));
+  const via = (datos.territorio?.vias || []).filter((v) => /Barrancabermeja - Yond/.test(v.nombre || '')).map((v) => v.puntos || v.p).filter((q) => q?.length > 1).sort((x, y) => dRef(x) - dRef(y))[0];
+  const ga = vias ? Math.max(...vias[0].puntos.map((q) => q[0])) - 6 : null;
+  const bordeVia = (() => {
+    if (ga == null || !via) return null;
+    const L = via.map(aLocal), vMax = Math.max(...lotePoly.map((q) => q[1]));
+    for (let i = 1; i < L.length; i++) { const [a, b] = [L[i - 1], L[i]]; if ((a[0] - ga) * (b[0] - ga) <= 0 && a[0] !== b[0]) { const v = a[1] + ((b[1] - a[1]) * (ga - a[0])) / (b[0] - a[0]) - 4.5; if (v > vMax && v < vMax + 40) return v; } }
+    return null;
+  })();
+  const acceso = bordeVia != null ? [ga, bordeVia] : null;
   const cP = esc.capa('agro.parque'), cF = esc.capa('agro.flujos');
-  const parque = parqueAgro({ ...cfg, comps, zonas, lote: lotePoly, vias, restricciones: retiro ? [retiro.map(aLocal)] : [] }); cP.add(parque);
+  const parque = parqueAgro({ ...cfg, comps, zonas, lote: lotePoly, vias, restricciones: retiro ? [retiro.map(aLocal)] : [], acceso }); cP.add(parque);
   const P = parque.userData.aModelo;
   // rótulo de cada nave con el nombre corto (sin lo que va después de «:» o «(»)
   const CORTO = { maquinaria: 'Banco de maquinaria', muelle: 'Muelle de carga' };
@@ -84,16 +97,16 @@ export function crear(esc, datos) {
   const tb = datos.territorio?.puente?.tablero, puente = tb ? [tb[1][0], tb[1][1]] : null;
   // ruta de exportación: del frío a la vía de servicio de Ecopetrol, por ella al carril interno y por este a la portería;
   // luego por la vía del puente hasta el estribo y por el puente (el tablero sube al 6 % hasta 14 m: el flujo va encima)
-  const via = (datos.territorio?.vias || []).find((v) => /Barrancabermeja - Yond/.test(v.nombre || ''))?.puntos;
   const sv = serv ? serv.map(aLocal) : null;
   const uEn = (v) => { for (let i = 1; sv && i < sv.length; i++) { const [a, b] = [sv[i - 1], sv[i]]; if ((v - a[1]) * (v - b[1]) <= 0) return a[0] + (b[0] - a[0]) * ((v - a[1]) / (b[1] - a[1] || 1)); } return null; };
   function rutaExport() {
     const fr = comps.find((x) => x.id === 'frio');
     if (!fr || !via?.length || !tb || !lotePoly) return null;
     const u0 = uEn(fr.v), u1 = uEn(114);
+    const sale = acceso ? [[acceso[0], 114], [acceso[0], acceso[1] + 1]] : [[188, 114]];
     const local = u0 != null && u1 != null
-      ? [[fr.u, fr.v], [u0, fr.v], ...sv.filter(([, v]) => v > fr.v && v < 114).sort((a, b) => a[1] - b[1]), [u1, 114], [188, 114]]
-      : [[fr.u, fr.v], [fr.u, 114], [188, 114]];
+      ? [[fr.u, fr.v], [u0, fr.v], ...sv.filter(([, v]) => v > fr.v && v < 114).sort((a, b) => a[1] - b[1]), [u1, 114], ...sale]
+      : [[fr.u, fr.v], [fr.u, 114], ...sale];
     const interna = local.map(([u, v]) => P(u, v)), sal = interna[interna.length - 1];
     let m = { d: Infinity };
     for (let i = 1; i < via.length; i++) {
