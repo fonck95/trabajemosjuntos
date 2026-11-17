@@ -337,7 +337,7 @@ export function crearEscena(el, datos) {
   st.onFrame((dt) => {
     let n = false;
     const k = THREE.MathUtils.clamp(st.camera.position.distanceTo(st.controls.target) / 250, 0.45, 4.5);
-    flujos.forEach((f) => { let vis = true; for (let p = f.mesh; p; p = p.parent) if (!p.visible) { vis = false; break; } if (!vis) return; f._s.setScalar(f.size * k); if (f.update(dt) !== false) n = true; });
+    flujos.forEach((f) => { let vis = true; for (let p = f.mesh; p; p = p.parent) if (!p.visible) { vis = false; break; } if (!vis) return; f._s.setScalar(Math.min(f.size * k, 2.6)); if (f.update(dt) !== false) n = true; });
     return n;
   });
 
