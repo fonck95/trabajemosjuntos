@@ -337,9 +337,9 @@ def test_el_guion_trae_la_maqueta_de_cada_capitulo():
         {"id": "cubierta", "nombre": "Cubierta y parasoles (deja ver las losas)"},
         {"id": "equipos", "nombre": "Equipos en la cubierta"}, {"id": "jardines", "nombre": "Árboles y jardines"}]}
     assert list(leer) == ["capitulo", "pasos", "componentes", "maqueta", "controles_maqueta", "inmersiones"]
-    # y los controles de la maqueta 3D en el capítulo (lo que acciona simular sin un modelo del atlas): sin el partido,
-    # que es de urbanismo
-    assert [c["id"] for c in leer["controles_maqueta"]] == ["hora", "reproducir_dia", "luces"]
+    # y los controles de la maqueta 3D en el capítulo (lo que acciona simular sin un modelo del atlas): sin las luces,
+    # que son de vivienda y urbanismo (donde hay luminarias), ni el partido, que es de urbanismo
+    assert [c["id"] for c in leer["controles_maqueta"]] == ["hora", "reproducir_dia"]
     for c in G.capitulos:
         assert len(json.dumps(G.capitulo_para_leer(G.por_id(c["id"])), ensure_ascii=False).encode("utf-8")) < 36000, c["id"]
     indice = {c["id"]: c for c in G.indice()["capitulos"]}
@@ -459,8 +459,13 @@ def test_cargar_con_cache_y_archivo_danado(tmp_path):
     assert a is guion.cargar(ruta) and len(a) == len(G)  # sin cambios, la misma (caché por fecha y tamaño)
     datos = json.loads(ruta.read_text(encoding="utf-8"))
     datos["capitulos"] = datos["capitulos"][:2]
+    # (sin la maqueta 3D: sus controles nombran capítulos que ya no están, y eso no vale)
+    con_maqueta = {**datos, "maqueta": datos.pop("maqueta")}
     ruta.write_text(json.dumps(datos), encoding="utf-8")
     assert len(guion.cargar(ruta)) == 2
+    ruta.write_text(json.dumps(con_maqueta), encoding="utf-8")
+    with pytest.raises(ValueError, match="el capítulo «urbanismo» no existe"):
+        guion.cargar(ruta)
     ruta.write_text("{roto", encoding="utf-8")
     with pytest.raises(ValueError):
         guion.cargar(ruta)

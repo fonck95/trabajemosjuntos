@@ -70,7 +70,38 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   };
   const parteDe = (x, id) => (x?.partes || []).find((k) => k.id === id) || null;
   // las simulaciones de la maqueta 3D (la hora, el día, las luces, el partido): `simular` sin un modelo del atlas abierto
-  const sim = crearSimulacion({ escena, ctx3d, datos, caps, estado });
+  const sim = crearSimulacion({ escena, ctx3d, datos, caps, estado, enEncuadre });
+
+  // ¿Queda `obj` (una pieza de la maqueta) en el encuadre? Se mira desde donde queda la cámara: la postura del último
+  // encuadre (el del paso, con lo que pide lo visual: cámara, enfoque, mirar, el final de un `mover`) aunque la cámara
+  // todavía vaya de camino (el vuelo o el paseo de una escena), o donde la dejó la persona. Su caja, proyectada, tiene
+  // que caer en la zona libre (sin el panel, la ficha ni el subtítulo) con al menos ENCUADRE_MIN del ancho y del alto
+  // de esa zona, y con la mitad de la caja dentro (o llenándola, si la cámara está encima). Así el partido no se da por
+  // jugado en un paso que encuadra otra obra (las canchas cubiertas junto al CIC)
+  const ENCUADRE_MIN = 0.06;
+  function enEncuadre(obj) {
+    if (!obj?.isObject3D) return true;
+    const caja = new THREE.Box3().setFromObject(obj);
+    if (caja.isEmpty()) return false;
+    const cam = st.camera.clone(), v = new THREE.Vector3();
+    cam.far = 1e7;
+    const p = !st.userMoved && ultimo ? escena.postura(ultimo.obj, opcionesDe(ultimo.opts)) : null;
+    if (p) { cam.position.fromArray(p.pos); cam.lookAt(v.fromArray(p.tgt)); }
+    cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+    const b = [Infinity, -Infinity, Infinity, -Infinity];
+    for (let i = 0; i < 8; i++) {
+      v.set(i & 1 ? caja.max.x : caja.min.x, i & 2 ? caja.max.y : caja.min.y, i & 4 ? caja.max.z : caja.min.z)
+        .applyMatrix4(cam.matrixWorldInverse);
+      if (v.z > -cam.near) continue;   // detrás de la cámara: solo cuenta lo que tiene delante
+      v.applyMatrix4(cam.projectionMatrix);
+      b[0] = Math.min(b[0], v.x); b[1] = Math.max(b[1], v.x); b[2] = Math.min(b[2], v.y); b[3] = Math.max(b[3], v.y);
+    }
+    if (!(b[1] > b[0] && b[3] > b[2])) return false;
+    const z = escena.zona(), zw = z.x1 - z.x0, zh = z.y1 - z.y0;
+    const iw = Math.max(0, Math.min(b[1], z.x1) - Math.max(b[0], z.x0)), ih = Math.max(0, Math.min(b[3], z.y1) - Math.max(b[2], z.y0));
+    if (iw < zw * ENCUADRE_MIN || ih < zh * ENCUADRE_MIN) return false;
+    return (iw * ih) / ((b[1] - b[0]) * (b[3] - b[2])) >= 0.5 || (iw >= zw * 0.5 && ih >= zh * 0.5);
+  }
 
   // ---------------------------------------------------------------- encuadres con la cámara pedida
   // Todos los encuadres de los módulos pasan por aquí: se guarda el último (para repetirlo con otra cámara o para llevar
@@ -691,8 +722,8 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   const cargando = () => inm.abierta && !capaInm.classList.contains('lista') && !inm.fallo;
 
   return { aplicar, mover, simular, guiado, pausar, depurar, estado: estadoVisual, alPaso, validar, cargando,
-    // la simulación de la maqueta vuelve a lo del paso (un `ir` al paso que ya está) y sus controles en el capítulo
-    reiniciarSimulacion: () => sim.reiniciar(), controlesMaqueta: () => sim.controles(),
+    // los controles de la simulación de la maqueta en el capítulo a la vista
+    controlesMaqueta: () => sim.controles(),
     // para pasar3D (main.js): lo que el asistente muestra, oculta o aísla encima del paso, y la vista del paso sin vuelo
     ajustar, efectos, deshacer, enSeco,
     // repite el encuadre pedido (cámara, enfoque, mirar o el final del último movimiento); false si no hay ninguno

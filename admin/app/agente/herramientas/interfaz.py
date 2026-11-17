@@ -1753,9 +1753,9 @@ SIMULACION = ("Se acciona en el modelo del atlas como lo haría la persona, en o
               "carga, un cálculo en curso) se espera unos segundos. Un valor cambiado no recalcula: si el control dice "
               "que cuenta en el siguiente cálculo, después la acción que calcula.")
 SIMULACION_MAQUETA = ("Se acciona en la maqueta 3D en el acto y en orden. La hora, las luces y el partido quedan hasta otro "
-                      "cambio y vuelven a lo del paso al cambiar de paso (o con el tema): repítalos en el paso siguiente si "
-                      "siguen. reproducir_dia lleva el sol de la mañana a la noche en 24 s (dele dos pasos o sostener). El "
-                      "partido solo se ve con la Cancha de Sóftbol Casabe a la vista.")
+                      "cambio y vuelven a lo del paso al cambiar de paso (el tema solo devuelve la hora): repítalos en el "
+                      "paso siguiente si siguen. reproducir_dia lleva el sol de la mañana a la noche en 24 s (dele dos "
+                      "pasos o sostener). El partido solo se juega con la Cancha de Sóftbol Casabe en el encuadre.")
 
 
 def _mover_dicho(m: dict) -> str:
@@ -1940,7 +1940,8 @@ NOTA_GUION = (
     "quitarle partes con sin «pieza.parte»), enfoque, detalle (la ficha) con resaltar, comparar hoy o proyecto, una "
     "inmersion y sus controles (simular [{control, valor}], de «controles» en inmersiones: la magnitud del simulador "
     "sísmico y luego calcular, que la hace temblar; sin inmersión, los de «controles_maqueta»: hora (manana a noche), "
-    "reproducir_dia, luces y, en urbanismo, partido, que vuelven a lo del paso al cambiar de paso: repítalos), animar. "
+    "reproducir_dia, luces (vivienda y urbanismo) y partido (urbanismo), que vuelven a lo del paso al cambiar de paso: "
+    "repítalos), animar. "
     "Cada paso parte del anterior: lo que no nombra sigue igual, y al cambiar de paso del capítulo "
     "lo visual vuelve a lo de ese paso. Un arco que sirve: ubicar con una vista amplia; cómo está hoy; qué se construye "
     "(aislar la obra, quitarle la cubierta, rodearla con mover); el dato clave (la ficha con la especificación "

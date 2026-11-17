@@ -186,7 +186,8 @@ es_num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)
 # la hora del día, el día entero en unos segundos, las luminarias y el partido en la cancha, que el asistente acciona con
 # `simular` cuando no hay un modelo del atlas a la vista (web/js/propuesta/simulacion.js las acciona). Solo ellas pueden
 # decir en qué capítulos valen (`capitulos`; sin la clave, en todos). Se revisan con las mismas reglas, contra la tabla
-# ACCIONADORES de simulacion.js, y las horas contra ORDEN_HORAS de ambiente.js; se copian tal cual a
+# ACCIONADORES de simulacion.js (sus claves a 4 espacios, `id: (v) =>`, y su cierre `};` a 2: las funciones de adentro
+# pueden tener su propio `};`), y las horas contra ORDEN_HORAS de ambiente.js; se copian tal cual a
 # `tecnica.simulaciones_maqueta`
 MAQUETA = 'maqueta'
 SIMULACION_JS = R / 'web/js/propuesta/simulacion.js'
@@ -195,8 +196,8 @@ def accionadores_maqueta():
     """Los ids que sabe accionar la maqueta (las claves de ACCIONADORES en web/js/propuesta/simulacion.js), o None."""
     if not SIMULACION_JS.exists():
         return None
-    m = re.search(r'const ACCIONADORES = \{\n(.*?)\n\s*\};', SIMULACION_JS.read_text(encoding='utf-8'), re.S)
-    return set(re.findall(r'^\s{4}([a-z0-9_]+): ', m.group(1), re.M)) if m else None
+    m = re.search(r'const ACCIONADORES = \{\n(.*?)\n  \};', SIMULACION_JS.read_text(encoding='utf-8'), re.S)
+    return set(re.findall(r'^ {4}([a-z0-9_]+): ', m.group(1), re.M)) if m else None
 def horas_maqueta():
     """Las horas de la maqueta en su orden (ORDEN_HORAS de web/js/propuesta/ambiente.js), o None."""
     m = re.search(r'export const ORDEN_HORAS = \[([^\]]*)\]', AMBIENTE_JS.read_text(encoding='utf-8')) if AMBIENTE_JS.exists() else None

@@ -132,8 +132,8 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
             "y sus controles (`simular`: hasta 4 `{control, valor}` en orden, los «controles» de ese modelo en `guion`: "
             "la magnitud del simulador sísmico y después `calcular`, que hace temblar la torre; cambiar un valor no "
             "recalcula; sin un modelo del atlas, `simular` maneja la maqueta: `hora` (manana, tarde, atardecer o "
-            "noche), `reproducir_dia` (el sol de la mañana a la noche en 24 s), `luces` y, en urbanismo, `partido` en "
-            "la Cancha de Sóftbol Casabe; al cambiar de paso vuelven a lo del paso), `animar`, y `resaltar` la cifra o "
+            "noche), `reproducir_dia` (el sol de la mañana a la noche en 24 s), en vivienda y urbanismo `luces` y, en "
+            "urbanismo, `partido` en la Cancha de Sóftbol Casabe; al cambiar de paso vuelven a lo del paso), `animar`, y `resaltar` la cifra o "
             "el punto que nombras. Cada paso parte del anterior: di solo lo que "
             "cambia. Un arco que sirve: ubicar con una vista amplia; cómo está hoy; qué se construye, pieza por pieza; "
             "cómo funciona o el dato clave; qué cambia y cuándo; y el cierre con 2 o 3 ideas.",

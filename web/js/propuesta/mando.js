@@ -884,12 +884,11 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     aplicando++;
     try {
       // El paso que ya está a la vista: `ir` no haría nada, y lo que el último paso de un plan aisló, ocultó o quitó se
-      // quedaría (el servidor, al atender este `ir`, ya guarda lo visual como lo dice el paso); la simulación de la
-      // maqueta (la hora, las luces, el partido) también vuelve a lo del paso
-      if (visual && ci === estado.ci && pi === estado.pi) {
-        await visual.aplicar({ ...VISUAL_INICIAL, mostrar: [], ocultar: [], sin: [] });
-        visual.reiniciarSimulacion?.();
-      } else await ir(ci, pi, { dir });
+      // quedaría (el servidor, al atender este `ir`, ya guarda lo visual como lo dice el paso). La simulación de la
+      // maqueta (la hora, las luces, el partido) no: solo vuelve a lo del paso al cambiar de paso, igual que en la
+      // pantalla en off (que de este `ir` solo recibe lo visual que cambió)
+      if (visual && ci === estado.ci && pi === estado.pi) await visual.aplicar({ ...VISUAL_INICIAL, mostrar: [], ocultar: [], sin: [] });
+      else await ir(ci, pi, { dir });
     } finally { aplicando--; }
     return responder(id, 'estado', origen);
   }

@@ -9,12 +9,16 @@
 //  · reproducir_dia: sí recorre el día de la mañana a la noche (DURACION_DIA s, con el sol, el cielo, la luz y las
 //    luminarias cambiando cuadro a cuadro); no lo pausa donde va, y otro sí sigue desde ahí.
 //  · luces: sí enciende las luminarias de la maqueta (torres LED del estadio, postes, bolardos, LED de las pérgolas) con
-//    sus charcos de luz en el piso; no las apaga. Sin pedirlas, siguen la hora (encendidas al atardecer y de noche).
+//    sus charcos de luz en el piso; no las apaga. Sin pedirlas, siguen la hora (encendidas al atardecer y de noche). Solo
+//    en los capítulos que las tienen a la vista (vivienda y urbanismo: `capitulos` en el catálogo).
 //  · partido: sí reproduce una jugada en la Cancha de Sóftbol Casabe (lanzamiento, elevado, doble y relevo) que se repite;
-//    no la detiene. Solo con la cancha a la vista (en urbanismo, menos la portadilla y el mirador): si el capítulo todavía
-//    se arma, se espera hasta ESPERA_MAQUETA_MS; armado, se sabe en el acto (main.js pone el paso apenas llega el módulo,
+//    no la detiene. Solo con la cancha a la vista (en urbanismo, menos la portadilla y el mirador) y en el encuadre en que
+//    queda la cámara (`enEncuadre` de visual.js: no en las canchas cubiertas junto al CIC): si el capítulo todavía se
+//    arma, se espera hasta ESPERA_MAQUETA_MS; armado, se sabe en el acto (main.js pone el paso apenas llega el módulo,
 //    antes de la próxima vuelta del sondeo), así lo que no se puede vuelve como descartado dentro del tope de mando.js.
 // Como lo demás que pide el agente, todo vuelve a lo del paso al cambiar de paso (`reiniciar`, que llama visual.alPaso).
+// Un cambio de tema (el botón de la persona o `visual` con `tema`) solo devuelve la hora del tema (ambiente.js): las
+// luces y el partido siguen como estaban.
 // No guarda nada aparte: el estado es el de la escena (la hora, las luces, el partido) y `estado()` lo lee.
 import { validar } from '../escenario.js';
 
@@ -31,7 +35,8 @@ export function controlesMaqueta(datos, cid) {
     .map(({ capitulos, ...c }) => JSON.parse(JSON.stringify(c)));
 }
 
-export function crearSimulacion({ escena, ctx3d, datos, caps, estado }) {
+/** `enEncuadre(pieza)`: ¿la pieza queda en el encuadre de la cámara? (visual.js; sin ella, basta con que esté visible) */
+export function crearSimulacion({ escena, ctx3d, datos, caps, estado, enEncuadre = null }) {
   const amb = escena.ambiente;
   const visible = (o) => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return !!o; };
   const partido = () => ctx3d?.urbanismo?.simulaciones?.partido || null;
@@ -40,6 +45,7 @@ export function crearSimulacion({ escena, ctx3d, datos, caps, estado }) {
   let turno = 0;
   // ¿se tocó algo desde el último reinicio? (si no, no hay nada que devolver)
   let tocado = false;
+  // (scripts/build_propuesta.py lee sus claves, a 4 espacios, hasta el `};` a 2 que la cierra)
   const ACCIONADORES = {
     hora: (v) => (amb?.poner(v) ? true : `«${v}» no es una hora de la maqueta (${(amb?.horas || []).join(', ')})`),
     reproducir_dia: (v) => {
@@ -57,6 +63,9 @@ export function crearSimulacion({ escena, ctx3d, datos, caps, estado }) {
         const p = partido();
         if (!p) return null;
         if (!visible(p.pieza)) return 'la Cancha de Sóftbol Casabe no está a la vista (en urbanismo, menos la portadilla y el mirador)';
+        // a la vista pero lejos del encuadre (las canchas cubiertas junto al CIC, o la cámara llevada a otra obra): nadie
+        // vería la jugada, y el partido redibujaría la escena en cada cuadro para nada
+        if (enEncuadre && !enEncuadre(p.pieza)) return 'la Cancha de Sóftbol Casabe no queda en el encuadre (vaya al paso softbol o enfóquela)';
         p.jugar(true); escena.st.invalidate();
         return true;
       };
@@ -97,8 +106,9 @@ export function crearSimulacion({ escena, ctx3d, datos, caps, estado }) {
         return res && typeof res.then === 'function' ? res.catch((e) => String(e?.message || e) || 'no se pudo') : res;
       } catch (e) { return String(e?.message || e) || 'no se pudo'; }
     },
-    /** Todo vuelve a lo del paso (al cambiar de paso, o con un `ir` al mismo paso): la hora del tema, las luces según la
-     * hora y el partido quieto. Lo que esperaba se abandona. */
+    /** Todo vuelve a lo del paso (al cambiar de paso: visual.alPaso): la hora del tema, las luces según la hora y el
+     * partido quieto. Lo que esperaba se abandona. Un `ir` al paso que ya está no la llama: la pantalla en off no se
+     * entera de ese `ir` (solo de lo visual que cambió) y las dos pantallas mostrarían otra cosa. */
     reiniciar() {
       turno++;
       if (!tocado) return;

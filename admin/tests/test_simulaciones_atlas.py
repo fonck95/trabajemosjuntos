@@ -256,16 +256,23 @@ def test_la_maqueta_sabe_accionar_cada_control():
     maq = {c["id"]: c for c in _maqueta()}
     assert list(maq) == ["hora", "reproducir_dia", "luces", "partido"]
     js = SIMULACION_JS.read_text(encoding="utf-8")
-    tabla = re.search(r"const ACCIONADORES = \{\n(.*?)\n\s*\};", js, re.S)
+    tabla = re.search(r"const ACCIONADORES = \{\n(.*?)\n  \};", js, re.S)
     assert tabla, "simulacion.js no tiene la tabla ACCIONADORES"
-    assert set(maq) <= set(re.findall(r"^\s{4}([a-z0-9_]+): ", tabla.group(1), re.M))
+    claves = lambda t: set(re.findall(r"^ {4}([a-z0-9_]+): ", t.group(1), re.M))   # noqa: E731
+    assert set(maq) <= claves(tabla)
+    # la tabla se lee hasta su propio cierre (a 2 espacios), no hasta el primer `};` de una función de adentro: un
+    # control escrito después del partido también cuenta
+    otra = js.replace("\n  };\n  const controles = ", "\n    lluvia: (v) => true,\n  };\n  const controles = ", 1)
+    assert otra != js and "lluvia" in claves(re.search(r"const ACCIONADORES = \{\n(.*?)\n  \};", otra, re.S))
     assert "import { validar } from '../escenario.js';" in js   # la misma regla del valor que el atlas
     horas = re.search(r"export const ORDEN_HORAS = \[([^\]]*)\]", AMBIENTE_JS.read_text(encoding="utf-8"))
     assert horas and [o["id"] for o in maq["hora"]["opciones"]] == re.findall(r"'([a-z0-9_]+)'", horas.group(1))
     assert maq["reproducir_dia"]["tipo"] == maq["luces"]["tipo"] == maq["partido"]["tipo"] == "si_no"
     assert re.search(r"export const DURACION_DIA = (\d+);", js).group(1) == "24" and "24 segundos" in maq["reproducir_dia"]["ayuda"]
     assert maq["partido"]["capitulos"] == ["urbanismo"] and "Solo con la cancha a la vista" in maq["partido"]["ayuda"]
-    assert all("capitulos" not in c for k, c in maq.items() if k != "partido")
+    # las luces, solo donde hay luminarias que se vean (en los demás capítulos encenderlas no cambiaba nada)
+    assert maq["luces"]["capitulos"] == ["vivienda", "urbanismo"]
+    assert all("capitulos" not in c for k, c in maq.items() if k not in ("partido", "luces"))
     urb = URBANISMO_JS.read_text(encoding="utf-8")
     assert "simulaciones: {" in urb and re.search(r"^\s+partido: \{ pieza: ", urb, re.M)
     assert "maqueta" not in _inmersiones() and "export function validar(c, valor)" in ESCENARIO_JS.read_text(encoding="utf-8")

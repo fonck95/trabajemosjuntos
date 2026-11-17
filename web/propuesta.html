@@ -55,7 +55,11 @@ button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ---------- escena 3D a pantalla completa */
-.escena { position: fixed; inset: 0; background: var(--raised); touch-action: none; }
+.escena { position: fixed; inset: 0; background: var(--raised); touch-action: none;
+  /* el color del velo de los bordes (::after): el del tema; con una hora más oscura que la del tema (ambiente.js pone
+     --velo-hora, el horizonte de la hora, y --velo-k, cuánto más oscura), se tiñe de ella: de noche con el tema claro
+     los bordes no quedan blancos */
+  --velo: color-mix(in srgb, var(--velo-hora, var(--bg)) var(--velo-k, 0%), var(--bg)); }
 .escena canvas.gl { display: block; position: absolute; inset: 0; }
 .label-layer { position: absolute; inset: 0; pointer-events: none; }
 .escena > .hud-btn, .escena > .hud { display: none; }
@@ -64,8 +68,8 @@ button { font: inherit; color: inherit; }
 .escena .cargando { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font: 600 0.8rem var(--f-mono); color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
 /* velo suave en los bordes para que el panel y las barras se lean sobre cualquier fondo */
 .escena::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--bg) 55%, transparent) 0, transparent 34%),
-              linear-gradient(0deg, color-mix(in srgb, var(--bg) 50%, transparent) 0, transparent 18%); }
+  background: linear-gradient(90deg, color-mix(in srgb, var(--velo) 55%, transparent) 0, transparent 34%),
+              linear-gradient(0deg, color-mix(in srgb, var(--velo) 50%, transparent) 0, transparent 18%); }
 
 /* ---------- barra superior */
 .barra { position: fixed; z-index: 10; top: 0; left: 0; right: 0; height: var(--barra); display: flex; align-items: center; gap: 14px; padding: env(safe-area-inset-top, 0) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; }
@@ -99,7 +103,7 @@ button { font: inherit; color: inherit; }
 .panel::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--mc, var(--accent)); }
 .pres.sin-panel .panel { transform: translateX(calc(-100% - 120px)); opacity: 0; pointer-events: none; }
 /* sin el panel («Solo 3D») el velo de la izquierda sobra: la maqueta se ve entera, con un degradado suave solo bajo el control */
-.pres.sin-panel .escena::after { background: linear-gradient(0deg, color-mix(in srgb, var(--bg) 30%, transparent) 0, transparent 12%); }
+.pres.sin-panel .escena::after { background: linear-gradient(0deg, color-mix(in srgb, var(--velo) 30%, transparent) 0, transparent 12%); }
 /* la pantalla en off del panel (mando.js, vista {controles: false}): nadie la toca, así que no muestra botones; la
    ceja del control (capítulo y pasos) sigue diciendo dónde va */
 .pres.sin-controles .herr, .pres.sin-controles .control button, .pres.sin-controles .asa { display: none; }
@@ -333,8 +337,8 @@ dl.hoja dt.foco { outline: none; background: none; animation: none; color: var(-
 /* ---------- presentación técnica (?modo=tecnica: js/propuesta/tecnica.js y visual.js). La que muestran el asistente y los
    agentes por MCP: sin costos, con la ficha técnica de cada pieza, las inmersiones en los modelos del atlas, la brújula y
    la escala, y lo que el asistente cambia de lo que se ve (enfoque, hoy o con el proyecto, cámara) */
-.pres.tecnica .escena::after { background: radial-gradient(ellipse at 62% 46%, transparent 52%, color-mix(in srgb, var(--bg) 42%, transparent) 100%),
-  linear-gradient(90deg, color-mix(in srgb, var(--bg) 55%, transparent) 0, transparent 34%), linear-gradient(0deg, color-mix(in srgb, var(--bg) 50%, transparent) 0, transparent 18%); }
+.pres.tecnica .escena::after { background: radial-gradient(ellipse at 62% 46%, transparent 52%, color-mix(in srgb, var(--velo) 42%, transparent) 100%),
+  linear-gradient(90deg, color-mix(in srgb, var(--velo) 55%, transparent) 0, transparent 34%), linear-gradient(0deg, color-mix(in srgb, var(--velo) 50%, transparent) 0, transparent 18%); }
 .pres.tecnica .panel h2 { font-size: clamp(1.6rem, 2.35vw, 2.25rem); }
 .pres.tecnica .panel h3 { display: flex; align-items: center; gap: 8px; }
 .pres.tecnica .panel h3::after { content: ""; flex: 1; height: 1px; background: var(--line); }
@@ -460,6 +464,12 @@ dl.hoja dt.foco { outline: none; background: none; animation: none; color: var(-
   .inmersion { --inm-top: calc(var(--barra) + 64px); }
   .inm-txt { display: none; }
   .inm-marco { bottom: calc(var(--control) + 12px); }
+  /* con una narración o una explicación a la vista, la ventana del modelo termina encima del subtítulo, como en la
+     pantalla grande (el XGA de 1024 de un proyector, una laptop con zoom): el subtítulo va sobre la hoja o, con «Solo
+     3D», sobre el control; con la hoja grande se oculta */
+  .pres.con-inmersion.con-sub .inm-marco { bottom: calc(var(--control) + 12px + var(--hoja-ef) + 8px + var(--sub-h, 0px) + 8px); }
+  .pres.con-inmersion.con-sub.sin-panel .inm-marco { bottom: calc(var(--control) + 12px + var(--sub-h, 0px) + 8px); }
+  .pres.con-inmersion.con-sub.panel-grande .inm-marco { bottom: calc(var(--control) + 12px); }
   .riel { top: auto; bottom: auto; left: 0; right: 0; top: calc(var(--barra) + 4px); width: auto; height: 56px; flex-direction: row; justify-content: flex-start; overflow-x: auto; padding: 0 12px; scrollbar-width: none; }
   .riel::-webkit-scrollbar { display: none; }
   .riel button { flex: none; width: 46px; height: 46px; margin: 0; border-radius: 14px; }
@@ -503,7 +513,7 @@ dl.hoja dt.foco { outline: none; background: none; animation: none; color: var(-
   /* desplegada, encima de todo lo de la pantalla hasta que se vuelve a tocar: de lado baja desde la barra sobre la
      columna del panel, y debajo de él no se leían sus renglones */
   .leyenda3d.abierta { z-index: 11; }
-  .escena::after { background: linear-gradient(0deg, color-mix(in srgb, var(--bg) 55%, transparent) 0, transparent 50%); }
+  .escena::after { background: linear-gradient(0deg, color-mix(in srgb, var(--velo) 55%, transparent) 0, transparent 50%); }
   .control .donde b { max-width: 40vw; }
   /* subtítulo: sobre el borde de la hoja, que sube y baja con ella (--hoja, también al arrastrarla); con la hoja grande
      la persona está leyendo y no queda lugar: se oculta hasta que la hoja vuelve */
@@ -572,6 +582,10 @@ dl.hoja dt.foco { outline: none; background: none; animation: none; color: var(-
   .control button.sig svg { flex: none; }
   .subtitulo, .pres.sin-panel .subtitulo { left: calc(max(10px, env(safe-area-inset-left, 0px)) + min(44vw, 380px) + 16px); right: max(10px, env(safe-area-inset-right, 0px)); width: auto; margin: 0; bottom: max(14px, env(safe-area-inset-bottom, 0px)); padding: 6px 12px 7px 16px; }
   .subtitulo p { font-size: calc(0.86rem * var(--sub-esc, 1)); line-height: 1.3; }
+  /* aquí el subtítulo va al pie, a la derecha del control: la ventana del modelo termina encima de él si es más alto
+     que el control */
+  .pres.con-inmersion.con-sub .inm-marco, .pres.con-inmersion.con-sub.sin-panel .inm-marco { bottom: max(calc(var(--control) + 12px), calc(max(14px, env(safe-area-inset-bottom, 0px)) + var(--sub-h, 0px) + 8px)); }
+  .pres.con-inmersion.con-sub.panel-grande .inm-marco { bottom: calc(var(--control) + 12px); }
   .leyenda3d { top: calc(env(safe-area-inset-top, 0px) + 11px); right: calc(max(16px, env(safe-area-inset-right, 0px)) + var(--herr-w, 180px) + 10px); max-width: calc(100vw - var(--herr-w, 180px) - 120px); }
 }
 @media (prefers-reduced-motion: reduce) { .panel, .riel, .progreso i b, .comp, .subtitulo, .subtitulo.visible { transition: none; } .subtitulo { transform: none; } }

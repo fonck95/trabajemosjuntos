@@ -6,10 +6,13 @@ data/propuesta/simulaciones.json), con la misma forma y el mismo camino que los 
   se sabe de un capítulo con modelos del atlas, ninguno) y cómo la herramienta resuelve un plan en la cancha (por id o
   por nombre, «de noche», «sí»), con avisos legibles para lo que es de otro capítulo o de un modelo del atlas cerrado.
 * Node, con una escena falsa: web/js/propuesta/simulacion.js (la regla del valor del atlas, el día que se pausa y
-  sigue, el partido que espera a que se arme su capítulo, todo vuelve a lo del paso con `reiniciar`).
+  sigue, el partido que espera a que se arme su capítulo y que no se juega fuera del encuadre, las luces solo donde hay
+  luminarias, todo vuelve a lo del paso con `reiniciar`).
 * Chromium, con el sitio que arma build_site.py: una página del mismo origen enmarca propuesta.html?modo=tecnica&qa y le
-  habla como el panel (postMessage): la noche, las luces y el partido en la cancha, el día que corre, que al cambiar de
-  paso todo vuelve a lo del paso, lo que no vale (el partido en el mirador o en salud) y la escena de un plan.
+  habla como el panel (postMessage): la noche (con el velo de los bordes teñido), las luces y el partido en la cancha, el
+  día que corre con el reloj, que al cambiar de paso todo vuelve a lo del paso (y que un `ir` al mismo paso no la toca,
+  como en la pantalla en off), lo que no vale (el partido en el mirador, fuera del encuadre en las canchas cubiertas o
+  en salud) y la escena de un plan.
 """
 from __future__ import annotations
 
@@ -82,10 +85,10 @@ def test_el_plan_en_la_cancha_acciona_la_noche_las_luces_y_el_partido():
         {"simular": [{"control": "Hora del día", "valor": "de noche"}, {"control": "luces", "valor": "sí"}, "partido"],
          "dice": "De noche, con sus torres LED, sigue el partido."},
         {"simular": [{"control": "reproducir_dia", "valor": True}], "sostener": 8, "dice": "Y así pasa un día entero."},
-        {"capitulo": "salud", "paso": 1, "simular": ["partido", {"control": "hora", "valor": "amanecer"}],
+        {"capitulo": "salud", "paso": 1, "simular": ["partido", "luces", {"control": "hora", "valor": "amanecer"}],
          "dice": "En el hospital no hay partido."},
         {"simular": [{"control": "reproducir", "valor": True}], "dice": "Sin abrir el simulador no tiembla nada."},
-        {"simular": [{"control": "luces", "valor": True}, {"control": "calcular"}], "dice": "Las luces sí."},
+        {"simular": [{"control": "hora", "valor": "atardecer"}, {"control": "calcular"}], "dice": "La hora sí."},
     ), por="mcp")
     sc = pantalla.recorrido_de(db.pantallas.find_one({"_id": UID}), G)["escenas"]
     assert sc[0]["simular"] is None
@@ -93,16 +96,18 @@ def test_el_plan_en_la_cancha_acciona_la_noche_las_luces_y_el_partido():
                                 {"control": "partido", "valor": True}]
     assert sc[2]["simular"] == [{"control": "reproducir_dia", "valor": True}]
     assert sc[3]["simular"] is None and sc[4]["simular"] is None
-    assert sc[5]["simular"] == [{"control": "luces", "valor": True}]
+    assert sc[5]["simular"] == [{"control": "hora", "valor": "atardecer"}]
     assert rec.validar({k: v for k, v in pantalla.recorrido_de(db.pantallas.find_one({"_id": UID}), G).items()
                         if k in ("id", "titulo", "escenas", "cierre")}, G) == []
     avisos = " | ".join(r.contenido["avisos"])
     for x in ("Paso 4: «La maqueta 3D» no tiene el control «partido» en Salud (está en: Urbanismo): se ignoró; "
-              "controles: hora, reproducir_dia, luces",
+              "controles: hora, reproducir_dia",
+              # las luces, donde hay luminarias
+              "Paso 4: «La maqueta 3D» no tiene el control «luces» en Salud (está en: Vivienda, Urbanismo): se ignoró",
               "Paso 4: simular «hora» no tiene la opción «amanecer»",
               # «reproducir» es el del simulador sísmico (no el día): el aviso de siempre y lo que tiene la maqueta
               "Paso 5: simular acciona los controles del modelo del atlas abierto y ahí no hay uno (ábralo con inmersion): "
-              "no se accionó nada; la maqueta 3D tiene: hora, reproducir_dia, luces",
+              "no se accionó nada; la maqueta 3D tiene: hora, reproducir_dia",
               "Paso 6: «calcular» es del modelo del atlas «Simulador sísmico», que no está abierto (ábralo con inmersion): "
               "se ignoró"):
         assert x in avisos, (x, avisos)
@@ -130,7 +135,7 @@ def test_visual_en_la_maqueta_avisa_lo_que_es_de_otro_lado():
     with pytest.raises(ErrorHerramienta) as e:
         _hacer(db, UID, {"op": "visual", "simular": [{"control": "partido"}]})
     assert "no tiene el control «partido» en Salud (está en: Urbanismo)" in str(e.value)
-    assert [c["id"] for c in e.value.detalle["controles"]] == ["hora", "reproducir_dia", "luces"]
+    assert [c["id"] for c in e.value.detalle["controles"]] == ["hora", "reproducir_dia"]
     # en el simulador sísmico abierto, la hora no es un control suyo
     _hacer(db, UID, {"op": "ir", "capitulo": "salud", "paso": "torre_sismo"})
     with pytest.raises(ErrorHerramienta) as e:
@@ -153,6 +158,10 @@ def test_el_guion_dice_la_maqueta_y_no_la_mezcla_con_las_inmersiones():
     malo["maqueta"]["controles"][0]["capitulos"] = "urbanismo"
     p = " | ".join(guion_presentacion.problemas(malo))
     assert "maqueta: control repetido: hora" in p and "maqueta: hora: capitulos es una lista" in p
+    # un capítulo que no es del guion: el control quedaría fuera de todos sin que nadie lo note
+    malo = json.loads(json.dumps(g))
+    malo["maqueta"]["controles"][-1]["capitulos"] = ["urbanizmo"]
+    assert guion_presentacion.problemas(malo) == ["maqueta: partido: el capítulo «urbanizmo» no existe"]
     malo = json.loads(json.dumps(g))
     malo["inmersiones"][0]["id"] = "maqueta"
     assert "una inmersión no puede llamarse «maqueta»" in " | ".join(guion_presentacion.problemas(malo))
@@ -187,16 +196,19 @@ const capa = { visible: true, parent: { visible: true, parent: null } };
 const partido = { pieza: capa, jugar(v) { log.push(['jugar', v]); activo = v; }, activo: () => activo };
 const ctx3d = {};
 const datos = { tecnica: { simulaciones_maqueta: JSON.parse(fs.readFileSync(catalogo, 'utf8')) } };
-const caps = [{ id: 'salud', nombre: 'Salud' }, { id: 'urbanismo', nombre: 'Urbanismo' }];
+const caps = [{ id: 'vivienda', nombre: 'Vivienda' }, { id: 'urbanismo', nombre: 'Urbanismo' }, { id: 'salud', nombre: 'Salud' }];
 const estado = { ci: 0, pi: 0 };
-const sim = S.crearSimulacion({ escena, ctx3d, datos, caps, estado });
+// visual.js dice si la cancha queda en el encuadre en que queda la cámara
+let encuadrada = true;
+const sim = S.crearSimulacion({ escena, ctx3d, datos, caps, estado, enEncuadre: (p) => p === capa && encuadrada });
 const r = { constantes: [S.DURACION_DIA, S.ESPERA_MAQUETA_MS] };
 const ids = (l) => l.map((c) => c.id);
-r.catalogo = { salud: ids(S.controlesMaqueta(datos, 'salud')), urbanismo: ids(S.controlesMaqueta(datos, 'urbanismo')),
+r.catalogo = { salud: ids(S.controlesMaqueta(datos, 'salud')), vivienda: ids(S.controlesMaqueta(datos, 'vivienda')),
+  urbanismo: ids(S.controlesMaqueta(datos, 'urbanismo')),
   sin_capitulos: S.controlesMaqueta(datos, 'urbanismo').every((c) => !('capitulos' in c)), vacio: S.controlesMaqueta({}, 'salud'),
   copia: S.controlesMaqueta(datos, 'salud')[0] !== datos.tecnica.simulaciones_maqueta[0], controles: ids(sim.controles()) };
-// en salud: lo que no es de la maqueta aquí, y la regla del valor del atlas
-r.salud = { partido: sim.accionar('partido', true), noexiste: sim.accionar('explotar'), luces_texto: sim.accionar('luces', 'si'),
+// en vivienda: lo que no es de la maqueta aquí, y la regla del valor del atlas
+r.vivienda = { partido: sim.accionar('partido', true), noexiste: sim.accionar('explotar'), luces_texto: sim.accionar('luces', 'si'),
   luces_sin: sim.accionar('luces'), hora_mala: sim.accionar('hora', 'amanecer'), hora_tilde: sim.accionar('hora', 'Mañana'),
   hora: amb.hora() };
 r.sin_tocar_antes = log.length;
@@ -236,9 +248,19 @@ capa.parent.visible = false;
 r.partido_oculto = sim.accionar('partido', true);
 capa.parent.visible = true;
 r.partido_en_el_acto = sim.accionar('partido', true);
+// a la vista pero fuera del encuadre en que queda la cámara (las canchas cubiertas junto al CIC): tampoco, en el acto
+partido.jugar(false);
+encuadrada = false;
+r.partido_fuera = sim.accionar('partido', true);
+r.partido_activo_fuera = activo;
+encuadrada = true;
 // y nunca lanza
 falla = true;
 r.lanza = sim.accionar('luces', false);
+falla = false;
+// en salud no hay luminarias que se vean: las luces no son un control de ahí
+estado.ci = 2;
+r.luces_salud = sim.accionar('luces', true);
 console.log(JSON.stringify(r));
 """
 
@@ -249,11 +271,12 @@ def test_simulacion_js_con_una_escena_falsa(tmp_path):
     cat.write_text(json.dumps(_maqueta(), ensure_ascii=False), encoding="utf-8")
     r = _node(tmp_path, NODE_SIMULACION, SIMULACION_JS.as_uri(), str(cat))
     assert r["constantes"] == [24, 8000]
-    assert r["catalogo"] == {"salud": ["hora", "reproducir_dia", "luces"], "urbanismo": ["hora", "reproducir_dia", "luces", "partido"],
-                             "sin_capitulos": True, "vacio": [], "copia": True, "controles": ["hora", "reproducir_dia", "luces"]}
-    s = r["salud"]
-    assert s["partido"] == "«partido» no es un control de la maqueta en Salud; tiene: hora, reproducir_dia, luces"
-    assert s["noexiste"].startswith("«explotar» no es un control de la maqueta en Salud")
+    assert r["catalogo"] == {"salud": ["hora", "reproducir_dia"], "vivienda": ["hora", "reproducir_dia", "luces"],
+                             "urbanismo": ["hora", "reproducir_dia", "luces", "partido"], "sin_capitulos": True, "vacio": [],
+                             "copia": True, "controles": ["hora", "reproducir_dia", "luces"]}
+    s = r["vivienda"]
+    assert s["partido"] == "«partido» no es un control de la maqueta en Vivienda; tiene: hora, reproducir_dia, luces"
+    assert s["noexiste"].startswith("«explotar» no es un control de la maqueta en Vivienda")
     assert s["luces_texto"] == s["luces_sin"] == "«Luces de la maqueta» pide sí o no (true o false)"
     assert "no tiene la opción «amanecer»" in s["hora_mala"] and s["hora_tilde"] is True and s["hora"] == "manana"
     assert r["noche"] == [True, True]
@@ -269,7 +292,9 @@ def test_simulacion_js_con_una_escena_falsa(tmp_path):
     assert r["partido_no"] is True and r["partido_activo_tras_no"] is False
     assert r["partido_abandonado"] == "se cambió de paso antes de accionarlo"
     assert "no está a la vista" in r["partido_oculto"] and r["partido_en_el_acto"] is True
+    assert "no queda en el encuadre" in r["partido_fuera"] and r["partido_activo_fuera"] is False
     assert r["lanza"] == "sin luminarias"
+    assert r["luces_salud"] == "«luces» no es un control de la maqueta en Salud; tiene: hora, reproducir_dia"
 
 
 # ───────────────────────────── En Chromium: la presentación técnica, como la maneja el panel ─────────────────────────────
@@ -302,6 +327,9 @@ r.noche = corto(await orden({ orden: 'visual', simular: [{ control: 'hora', valo
 for (let i = 0; i < 40 && !r.noche.simulacion?.partido; i++) { await page.waitForTimeout(250); r.noche.simulacion = corto(await orden({ orden: 'estado' })).simulacion; }
 r.hora_noche = await qa('Q.ambiente.hora()');
 r.fijada = await qa('Q.ambiente.fijada()');
+// el velo de los bordes se tiñe de la noche (con el tema claro no quedan blancos)
+const velo = () => pres().evaluate(() => getComputedStyle(document.getElementById('escena')).getPropertyValue('--velo-k').trim());
+r.velo_noche = await velo();
 // 2. El día: corre de la mañana a la noche (el sol se mueve); no lo pausa
 r.dia = corto(await orden({ orden: 'visual', simular: [{ control: 'reproducir_dia', valor: true }] }));
 const sol1 = await qa('Q.ambiente.datos().sol.join(",")');
@@ -312,16 +340,22 @@ r.pausa = corto(await orden({ orden: 'visual', simular: [{ control: 'reproducir_
 const sol3 = await qa('Q.ambiente.datos().sol.join(",")');
 await page.waitForTimeout(1200);
 r.sol_quieto = sol3 === await qa('Q.ambiente.datos().sol.join(",")');
+// el ciclo va con el reloj, no con los cuadros: un tramo de 2 s dura unos 2 s aunque se dibujen pocos cuadros por segundo
+r.ciclo_s = await pres().evaluate(async () => { const t0 = performance.now(); await window.__qaPropuesta.ambiente.ciclo({ desde: 'manana', hasta: 'tarde', duracion: 2 }); return (performance.now() - t0) / 1000; });
 // 3. Otro paso: todo vuelve a lo del paso (la hora del tema, las luces según la hora, el partido quieto)
 r.otro_paso = corto(await orden({ orden: 'ir', capitulo: 'urbanismo', paso: 4 }));
 r.hora_otro_paso = await qa('Q.ambiente.hora()');
-// 4. El partido donde la cancha no está a la vista (el mirador) o donde no es un control (salud): un error que lo dice
+r.velo_otro_paso = await velo();
+// 4. El partido donde la cancha no está a la vista (el mirador), donde no queda en el encuadre (las canchas cubiertas
+// junto al CIC) o donde no es un control (salud): un error que lo dice
+await orden({ orden: 'ir', capitulo: 'urbanismo', paso: 6 });
+r.instalaciones = corto(await orden({ orden: 'visual', simular: [{ control: 'partido', valor: true }] }));
 await orden({ orden: 'ir', capitulo: 'urbanismo', paso: 7 });
 r.mirador = corto(await orden({ orden: 'visual', simular: [{ control: 'partido', valor: true }] }));
 r.mirador_parcial = corto(await orden({ orden: 'visual', simular: [{ control: 'hora', valor: 'atardecer' }, { control: 'partido', valor: true }] }));
 await orden({ orden: 'ir', capitulo: 'salud', paso: 1 });
 r.salud = corto(await orden({ orden: 'visual', simular: [{ control: 'partido', valor: true }] }));
-// 5. Un `ir` al paso que ya está también la devuelve
+// 5. Un `ir` al paso que ya está no la toca (la pantalla en off no se entera de ese `ir`: las dos muestran lo mismo)
 r.salud_noche = corto(await orden({ orden: 'visual', simular: [{ control: 'hora', valor: 'noche' }] }));
 r.mismo_paso = corto(await orden({ orden: 'ir', capitulo: 'salud', paso: 1 }));
 // 6. Una escena de un plan en la cancha
@@ -394,18 +428,22 @@ def test_la_maqueta_se_simula_desde_el_panel(tmp_path, marco_presentacion):
     assert n["tipo"] == "estado" and n["aviso"] is None, n
     assert n["simulacion"] == {"hora": "noche", "dia": False, "luces": True, "partido": True}, n
     assert r["hora_noche"] == "noche" and r["fijada"] == "noche"
+    assert r["velo_noche"] == "100%", r["velo_noche"]
     assert r["dia"]["simulacion"]["dia"] is True and r["dia"]["aviso"] is None and r["sol_se_mueve"], r["dia"]
     assert r["pausa"]["simulacion"]["dia"] is False and r["sol_quieto"]
+    assert 1.5 < r["ciclo_s"] < 6, r["ciclo_s"]
     o = r["otro_paso"]
     assert o["paso"] == 4 and o["simulacion"] == {"hora": tema, "dia": False, "luces": None, "partido": False}, o
-    assert r["hora_otro_paso"] == tema
+    assert r["hora_otro_paso"] == tema and r["velo_otro_paso"] == "", r["velo_otro_paso"]
+    i = r["instalaciones"]
+    assert i["tipo"] == "error" and "no queda en el encuadre" in i["error"], i
     assert r["mirador"]["tipo"] == "error" and "no está a la vista" in r["mirador"]["error"], r["mirador"]
     p = r["mirador_parcial"]
     assert p["tipo"] == "estado" and p["aviso"] == "parcial" and p["descartadas"][0]["clave"] == "simular.partido", p
     assert p["simulacion"]["hora"] == "atardecer"
     assert r["salud"]["tipo"] == "error" and "no es un control de la maqueta en Salud" in r["salud"]["error"], r["salud"]
     assert r["salud_noche"]["simulacion"]["hora"] == "noche"
-    assert r["mismo_paso"]["simulacion"]["hora"] == tema, r["mismo_paso"]
+    assert r["mismo_paso"]["simulacion"]["hora"] == "noche", r["mismo_paso"]
     e = r["escena"]
     assert e["tipo"] == "estado" and e["aviso"] is None and e["simulacion"]["partido"] is True, e
     assert e["simulacion"]["hora"] == "atardecer" and r["hora_escena"] == "atardecer"

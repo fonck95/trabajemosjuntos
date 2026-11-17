@@ -428,7 +428,8 @@ def problemas(g: dict) -> list[str]:
     la forma que aceptan la herramienta y el navegador, repetidos, capítulos con más pasos que el tope, un paso que pesa
     más de `MAX_BYTES_PASO` o que lleva a una inmersión que no está en el catálogo. Y los controles de cada inmersión
     y de la maqueta: ids que no cumplen la forma o se repiten, un tipo desconocido, un número sin un rango (min < max),
-    una opción sin opciones (o con ids inválidos o repetidos) o, en la maqueta, `capitulos` que no es una lista de ids."""
+    una opción sin opciones (o con ids inválidos o repetidos) o, en la maqueta, `capitulos` que no es una lista de ids
+    de capítulos del guion."""
     out = []
     caps = g.get("capitulos") if isinstance(g, dict) else None
     if not isinstance(caps, list) or not caps:
@@ -451,12 +452,15 @@ def problemas(g: dict) -> list[str]:
             out.append(f"la maqueta de las simulaciones no tiene la forma {{id: {MAQUETA}, controles}}")
         else:
             out += [f"maqueta: {x}" for x in _problemas_controles(mq.get("controles", []))]
-            # (que esos capítulos existan lo revisa build_propuesta.py: uno que no está solo deja el control sin usar)
+            # cada capítulo nombrado tiene que ser del guion: uno que no está dejaría el control fuera de todos, sin aviso
+            ids_caps = {c.get("id") for c in caps if isinstance(c, dict)}
             for c in mq.get("controles") if isinstance(mq.get("controles"), list) else []:
                 k = c.get("capitulos") if isinstance(c, dict) else None
                 if k is not None and (not isinstance(k, list) or not k or
                                       any(not isinstance(x, str) or not ID.fullmatch(x) for x in k)):
                     out.append(f"maqueta: {c.get('id')}: capitulos es una lista de ids de capítulo")
+                elif k is not None:
+                    out += [f"maqueta: {c.get('id')}: el capítulo «{x}» no existe" for x in k if x not in ids_caps]
     vistos = set()
     for c in caps:
         cid = c.get("id") if isinstance(c, dict) else None

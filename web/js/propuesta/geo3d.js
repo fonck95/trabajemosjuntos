@@ -397,9 +397,16 @@ export function membrana(cx, cy, w, d, h, rot = 0, { flecha = 1.6, m, mastil } =
 // aditiva), todos con un solo material. De día no se notan; al atardecer y de noche, sí. Las caras de las luminarias usan
 // MAT.luz, que se apaga (gris del aparato, oscuro de noche) o se enciende (blanco cálido). ponerLuces lo decide para toda
 // la maqueta: { encendidas: true | false | null (según la hora), oscuridad: 0 de día … 1 de noche, auto: encendido de la hora }
-let texCharco = null, matCh = null;
+let texCharco = null, matCh = null, matChTenue = null;
 const LUCES = { encendidas: null, oscuridad: 0, auto: 0 };
-function matCharco() {
+// los charcos grandes del campo (torresLuz) se pisan unos con otros y, como suman luz, con la opacidad de los demás el
+// campo de noche quedaba de un crema parejo (sin grama, arcilla ni líneas): van con un material aparte, más tenue
+const CHARCO = 0.85, CHARCO_CAMPO = 0.3;
+function matCharco(tenue = false) {
+  if (tenue) {
+    if (!matChTenue) { matChTenue = matCharco().clone(); matChTenue.visible = false; }
+    return matChTenue;
+  }
   if (matCh) return matCh;
   if (!texCharco) {
     const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -413,9 +420,10 @@ function matCharco() {
   return matCh;
 }
 const geoCharco = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
-/** Charcos de luz: lista de [x, y, radio] (o [x, y] con el radio dado) a la altura h. Devuelve una malla instanciada. */
-export function charcos(lista, { radio = 6, h = 0.16 } = {}) {
-  const im = new THREE.InstancedMesh(geoCharco, matCharco(), Math.max(1, lista.length)), m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+/** Charcos de luz: lista de [x, y, radio] (o [x, y] con el radio dado) a la altura h. Devuelve una malla instanciada.
+ * tenue: con el material de los charcos grandes que se pisan (el campo bajo las torres LED). */
+export function charcos(lista, { radio = 6, h = 0.16, tenue = false } = {}) {
+  const im = new THREE.InstancedMesh(geoCharco, matCharco(tenue), Math.max(1, lista.length)), m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
   lista.forEach(([x, y, r = radio], i) => { m4.compose(V(x, y, h), q, new THREE.Vector3(r * 2, 1, r * 2)); im.setMatrixAt(i, m4); });
   im.count = lista.length; im.renderOrder = 2; im.frustumCulled = lista.length > 0; im.name = 'charcos';
   im.computeBoundingSphere();
@@ -425,10 +433,10 @@ const COLOR_LUZ = new THREE.Color('#fff1cc'), COLOR_APAGADA = new THREE.Color('#
 /** Enciende o apaga las luminarias de toda la maqueta (ver LUCES). Devuelve el estado que quedó. */
 export function ponerLuces(cambio = {}) {
   Object.assign(LUCES, cambio);
-  const on = LUCES.encendidas === null ? LUCES.auto : LUCES.encendidas ? 1 : 0, m = matCharco();
+  const on = LUCES.encendidas === null ? LUCES.auto : LUCES.encendidas ? 1 : 0;
   // los charcos: según cuánto se note la luz artificial (oscuridad), y algo aunque sea de día si se pidieron encendidas
-  m.opacity = on * Math.max(LUCES.oscuridad, LUCES.encendidas === true ? 0.18 : 0) * 0.85;
-  m.visible = m.opacity > 0.01;
+  const k = on * Math.max(LUCES.oscuridad, LUCES.encendidas === true ? 0.18 : 0);
+  [[matCharco(), CHARCO], [matCharco(true), CHARCO_CAMPO]].forEach(([m, f]) => { m.opacity = k * f; m.visible = m.opacity > 0.01; });
   if (MAT?.luz) MAT.luz.color.copy(COLOR_APAGADA).multiplyScalar(1 - 0.82 * LUCES.oscuridad).lerp(COLOR_LUZ, on);
   return { encendidas: LUCES.encendidas, efectivas: on > 0.5, oscuridad: LUCES.oscuridad };
 }
@@ -459,7 +467,7 @@ export function torresLuz(puntos, h = 18, { m, luz } = {}) {
   [P, C].forEach((o) => { o.castShadow = true; o.computeBoundingSphere(); g.add(o); });
   L.computeBoundingSphere(); g.add(L);
   // el campo iluminado: un charco grande entre cada torre y su foco
-  g.add(charcos(puntos.filter((p) => p[2] != null).map(([x, y, fx, fy]) => { const d = Math.hypot(fx - x, fy - y); return [x + (fx - x) * 0.55, y + (fy - y) * 0.55, d * 0.5 + 10]; }), { h: 0.2 }));
+  g.add(charcos(puntos.filter((p) => p[2] != null).map(([x, y, fx, fy]) => { const d = Math.hypot(fx - x, fy - y); return [x + (fx - x) * 0.55, y + (fy - y) * 0.55, d * 0.5 + 10]; }), { h: 0.2, tenue: true }));
   g.userData.luces = true;
   return g;
 }

@@ -129,6 +129,22 @@ export function ambiente(st, { sol, alCambiar } = {}) {
   const L = st.sunLight;
   let nombre = null, H = null, fija = null, ciclo = null, pausado = null, version = 0;
   const niebla = new THREE.Color();
+  // El velo de los bordes de la maqueta (.escena::after en propuesta.html: hace legibles el panel y las barras) es del
+  // color del tema. Con una hora más oscura que la del tema (la noche con el tema claro) se tiñe del horizonte de la hora
+  // en esa medida (--velo-hora y --velo-k en el lienzo; propuesta.html los mezcla en --velo): los bordes no quedan blancos
+  // alrededor de una maqueta de noche. Se toca el estilo solo cuando la medida cambia de a 5 % (no en cada cuadro del ciclo)
+  let oscTema = null, veloK = -1;
+  function velo(h) {
+    const el = st.el;
+    if (!el?.style) return;
+    if (oscTema == null) oscTema = HORAS[horaDelTema()].oscuridad;
+    const k = Math.round(Math.min(1, Math.max(0, (h.oscuridad - oscTema) / Math.max(0.05, 1 - oscTema))) * 20) * 5;
+    if (k === veloK) return;
+    veloK = k;
+    if (!k) { el.style.removeProperty('--velo-hora'); el.style.removeProperty('--velo-k'); return; }
+    el.style.setProperty('--velo-hora', `#${new THREE.Color(h.niebla).getHexString()}`);
+    el.style.setProperty('--velo-k', `${k}%`);
+  }
   function aplicarH(h, n, sombras = true) {
     nombre = n; H = h; version++;
     ponerHora(st.sky.material, h);
@@ -141,6 +157,7 @@ export function ambiente(st, { sol, alCambiar } = {}) {
     st.exposure = h.exposicion;
     if (engine.active === st) engine.renderer.toneMappingExposure = h.exposicion;
     st._atmK = null;   // la bruma se vuelve a poner en el próximo cuadro
+    velo(h);
     alCambiar?.(h, n, sombras);
     if (sombras) st.updateShadows();
   }
@@ -154,7 +171,9 @@ export function ambiente(st, { sol, alCambiar } = {}) {
   }
   // El día entero (o un tramo) en `duracion` segundos: de la hora `desde` (por omisión, la que se ve) hasta `hasta`, con el
   // sol, el cielo, la luz y las luces interpolados cuadro a cuadro. Al terminar queda fijada la última hora. Devuelve una
-  // promesa que se cumple al terminar (true) o al cortarse (false). `t` (de 0 a 1): por dónde empieza (reanudar)
+  // promesa que se cumple al terminar (true) o al cortarse (false). `t` (de 0 a 1): por dónde empieza (reanudar). Avanza
+  // con el reloj, no con los cuadros (el dt de cada cuadro tiene un tope de 0,05 s): en un proyector que dibuja pocos
+  // cuadros por segundo el día dura lo mismo, a saltos más largos
   function hacerCiclo({ desde = nombre, hasta = 'noche', duracion = 24, t = 0 } = {}) {
     pausar();
     let i0 = ORDEN_HORAS.indexOf(desde), i1 = ORDEN_HORAS.indexOf(hasta);
@@ -164,18 +183,18 @@ export function ambiente(st, { sol, alCambiar } = {}) {
     const tramos = i1 - i0, dur = Math.max(2, duracion);
     let fin;
     const promesa = new Promise((ok) => { fin = ok; });
-    const c = { t: Math.min(0.999, Math.max(0, +t || 0)), vivo: true, fin, sombra: SOMBRAS_CICLO_S,
-      opciones: { desde: ORDEN_HORAS[i0], hasta: ORDEN_HORAS[i1], duracion: dur } };
+    const t0 = Math.min(0.999, Math.max(0, +t || 0)), inicio = performance.now();
+    const c = { t: t0, vivo: true, fin, sombra: -Infinity, opciones: { desde: ORDEN_HORAS[i0], hasta: ORDEN_HORAS[i1], duracion: dur } };
     ciclo = c;
-    const paso = (dt) => {
+    const paso = () => {
       // terminado o cortado, se quita de la lista de cada cuadro (después del cuadro: no se toca la lista mientras se recorre)
       if (!c.vivo) { setTimeout(() => { const j = st.frameFns.indexOf(paso); if (j >= 0) st.frameFns.splice(j, 1); }, 0); return false; }
-      c.t = Math.min(1, c.t + dt / dur);
+      const ahora = performance.now();
+      c.t = Math.min(1, t0 + (ahora - inicio) / 1000 / dur);
       const k = i0 + c.t * tramos, i = Math.min(Math.floor(k), i1 - 1), f = k - i;
       const n = ORDEN_HORAS[f < 0.5 ? i : i + 1];
-      c.sombra += dt;
-      const sombras = c.sombra >= SOMBRAS_CICLO_S;
-      if (sombras) c.sombra = 0;
+      const sombras = ahora - c.sombra >= SOMBRAS_CICLO_S * 1000;
+      if (sombras) c.sombra = ahora;
       aplicarH(mezcla(HORAS[ORDEN_HORAS[i]], HORAS[ORDEN_HORAS[i + 1]], Math.min(1, f)), n, sombras);
       if (c.t >= 1) { c.vivo = false; if (ciclo === c) ciclo = null; fija = ORDEN_HORAS[i1]; aplicar(); fin(true); }
       return true;
@@ -211,8 +230,9 @@ export function ambiente(st, { sol, alCambiar } = {}) {
     // color en lineal: se le entrega ya codificado para que el horizonte sea el mismo en todas las calidades
     f.color.copy(niebla); if (post) f.color.convertLinearToSRGB();
   };
-  // el botón del tema es de la persona: deja de lado la hora fijada y el ciclo, y vuelve a la del tema
-  onTheme(() => { pausar(); fija = null; aplicar(); });
+  // el botón del tema es de la persona: deja de lado la hora fijada y el ciclo, y vuelve a la del tema (las luces y el
+  // partido que pidió el agente siguen como estaban: simulacion.js). El velo vuelve a medir la hora del tema
+  onTheme(() => { pausar(); fija = null; oscTema = null; veloK = -1; aplicar(); });
   aplicar();
   return { hora: () => nombre, datos: () => H, horas: ORDEN_HORAS, aplicar, poner, ciclo: hacerCiclo, reanudar, pausar,
     enCiclo: () => !!ciclo, fijada: () => fija };

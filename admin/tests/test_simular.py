@@ -63,7 +63,9 @@ def test_el_guion_trae_los_controles_de_cada_inmersion_y_los_resuelve_por_id_o_p
     # la maqueta 3D no es una inmersión: sus controles van aparte, por capítulo (el partido, solo en urbanismo)
     assert "maqueta" not in {i["id"] for i in G.inmersiones}
     assert [c["id"] for c in G.controles("maqueta", "urbanismo")] == ["hora", "reproducir_dia", "luces", "partido"]
-    assert [c["id"] for c in G.controles("maqueta", "salud")] == ["hora", "reproducir_dia", "luces"]
+    # (las luces, solo donde hay luminarias: vivienda y urbanismo)
+    assert [c["id"] for c in G.controles("maqueta", "salud")] == ["hora", "reproducir_dia"]
+    assert [c["id"] for c in G.controles("maqueta", "vivienda")] == ["hora", "reproducir_dia", "luces"]
     assert G.controles("maqueta", G.por_id("urbanismo")) == G.controles("maqueta", "urbanismo")
     assert G.controles("maqueta") == [] and all("capitulos" not in c for c in G.controles("maqueta", "urbanismo"))
     assert G.control("maqueta", "hora del dia", "salud")["id"] == "hora" and G.control("maqueta", "partido", "salud") is None
@@ -99,7 +101,7 @@ def test_lo_que_lee_el_modelo_dice_que_controles_hay():
     r = _hacer(_Base(), UID, {"op": "ir", "capitulo": "salud", "paso": 1}, por="asistente")
     assert "controles" not in r.contenido
     # sin un modelo del atlas, los de la maqueta 3D (sin su ayuda: está en guion), y en el índice y en guion por capítulo
-    assert [c["id"] for c in r.contenido["controles_maqueta"]] == ["hora", "reproducir_dia", "luces"]
+    assert [c["id"] for c in r.contenido["controles_maqueta"]] == ["hora", "reproducir_dia"]
     assert all("ayuda" not in c for c in r.contenido["controles_maqueta"])
     r = _hacer(_Base(), UID, {"op": "ir", "capitulo": "urbanismo", "paso": "softbol"}, por="asistente")
     assert [c["id"] for c in r.contenido["controles_maqueta"]] == ["hora", "reproducir_dia", "luces", "partido"]
@@ -300,7 +302,7 @@ def test_visual_acciona_en_el_modelo_abierto_y_la_pantalla_lo_hace_una_vez():
     with pytest.raises(Exception):
         hi.PresentacionEntrada.model_validate({"op": "ir", "capitulo": "salud", "simular": ["calcular"]})
     # sin un modelo del atlas, en la maqueta 3D: la hora y las luces (por nombre, «de noche», «sí»)
-    _hacer(db, UID, {"op": "ir", "capitulo": "salud", "paso": 1})
+    _hacer(db, UID, {"op": "ir", "capitulo": "vivienda", "paso": 3})
     r = _hacer(db, UID, {"op": "visual", "simular": [{"control": "Hora del día", "valor": "de noche"},
                                                       {"control": "luces", "valor": "sí"}]})
     assert r.resumen == "La presentación muestra en «La maqueta 3D»: Hora del día: Noche; Luces de la maqueta: sí"

@@ -365,11 +365,13 @@ o una opción habla de costos, presupuesto o valor, y en el atlas enmarcado el B
 
 Sin un modelo del atlas a la vista, **`simular` maneja la maqueta 3D**, con la misma forma, los mismos topes y la misma
 tolerancia: la **hora del día** (`hora`: `manana`, `tarde`, `atardecer` o `noche`; el sol, el cielo, la luz y las
-sombras, y al atardecer y de noche las ventanas y las luminarias), **el día entero** (`reproducir_dia`: `true` lleva el
-sol de la mañana a la noche en 24 s; `false` lo pausa donde va y otro `true` sigue desde ahí), **las luces**
-(`luces`: las torres LED del estadio, los postes y los bolardos con su luz en el piso; sin pedirlas, siguen la hora) y,
-solo en Urbanismo, **un partido** en la Cancha de Sóftbol Casabe (`partido`: lanzamiento, elevado, doble y relevo, que
-se repite; solo con la cancha a la vista, no en la portadilla ni en el mirador).
+sombras, y al atardecer y de noche las ventanas y las luminarias que haya), **el día entero** (`reproducir_dia`:
+`true` lleva el sol de la mañana a la noche en 24 s de reloj, aunque la pantalla dibuje pocos cuadros; `false` lo pausa
+donde va y otro `true` sigue desde ahí), en Vivienda y Urbanismo (los capítulos con luminarias) **las luces** (`luces`:
+las torres LED del estadio, los postes y los bolardos con su luz en el piso; sin pedirlas, siguen la hora) y, solo en
+Urbanismo, **un partido** en la Cancha de Sóftbol Casabe (`partido`: lanzamiento, elevado, doble y relevo, que se
+repite; solo con la cancha en el encuadre en que queda la cámara: no en la portadilla ni en el mirador, que la ocultan,
+ni en las canchas cubiertas junto al CIC, que encuadran otra cosa).
 
 - **El catálogo** es la clave reservada `maqueta` de `data/propuesta/simulaciones.json`, con la forma de los controles
   del atlas y, solo ahí, `capitulos` (en qué capítulos vale un control; sin la clave, en todos). `build_propuesta.py`
@@ -382,11 +384,12 @@ se repite; solo con la cancha a la vista, no en la portadilla ni en el mirador).
   atlas (`calcular`, `reproducir`), el aviso de siempre («ahí no hay uno») con lo que tiene la maqueta; el partido
   fuera de Urbanismo dice dónde está.
 - **En la pantalla** la acciona `simulacion.js` (`visual.js` la usa cuando no hay una inmersión vigente), con la misma
-  regla del valor que el atlas (`validar` de `escenario.js`). Lo que no se puede (el partido con la cancha fuera de la
-  vista) vuelve como descartado; el partido espera hasta 8 s a que se arme su capítulo. Como lo demás de `visual`,
-  **vuelve a lo del paso al cambiar de paso** (y con un `ir` al mismo paso; el tema también devuelve la hora): un plan
-  la repite en el paso siguiente si debe seguir. El estado de la presentación trae lo que se ve en
-  `visual.simulacion` (`{hora, dia, luces, partido}`).
+  regla del valor que el atlas (`validar` de `escenario.js`). Lo que no se puede (el partido con la cancha oculta o
+  fuera del encuadre) vuelve como descartado; el partido espera hasta 8 s a que se arme su capítulo. Como lo demás de
+  `visual`, **vuelve a lo del paso al cambiar de paso** (un `ir` al mismo paso no la toca: la pantalla en off solo
+  recibe de él lo visual que cambió; el botón del tema devuelve la hora, no las luces ni el partido): un plan la repite
+  en el paso siguiente si debe seguir. El estado de la presentación trae lo que se ve en `visual.simulacion`
+  (`{hora, dia, luces, partido}`).
 
 ### El plan guiado (recorridos narrados)
 
