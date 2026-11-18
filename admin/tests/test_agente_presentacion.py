@@ -124,7 +124,10 @@ def test_los_capitulos_son_los_de_la_presentacion_tecnica():
     # Lo de main.js que hace falta para el control remoto
     assert "import { montarMando } from './mando.js';" in js
     assert ("montarMando({ caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel: (v) => alternarPanel(!v), "
-            "reencuadrar,\n  visual, asentada, resaltar, restaurarEncuadre });") in js
+            "reencuadrar,\n  visual, asentada, resaltar, restaurarEncuadre, presentador });") in js
+    # y el presentador (la caricatura que explica, js/presentador/), que solo se carga cuando el mando lo necesita
+    assert "import { presentadorPerezoso } from '../presentador/perezoso.js';" in js
+    assert "import('../presentador/presentador.js')" in js
     assert "dispatchEvent(new CustomEvent('propuesta:paso'" in js
     assert re.search(r"function avanzar\(d\) \{\n  if \(tlTelon\?\.isActive\(\)\) \{ tlTelon\.progress\(1\); return; \}"
                      r"\n  const \[ci, pi\] = vecino\(estado\.ci, estado\.pi, d\);", js)

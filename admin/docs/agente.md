@@ -492,6 +492,13 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
   cerrar, reanudar y volver a reproducir.
 - **Con personas en la conversación**, la presentación no proyecta texto (`explicar`, `ir` con explicación ni
   `recorrido`): responde `con_personas`. Se muestra en una conversación sin datos de habitantes.
+- **El presentador.** Mientras el plan suena (y con una explicación suelta), una caricatura en 3D del candidato se
+  para sobre el subtítulo y lo explica: saluda en el primer paso, señala lo que se resalta o presenta la obra, mueve
+  la boca mientras la voz dice cada frase (la vista le avisa con `narracion {habla}` cuándo empieza y termina), escucha
+  en pausa, cuenta con los dedos el resumen, abre los brazos en «¿Preguntas?», piensa mientras el asistente prepara y
+  se despide al quitarse la narración. No cambia nada del plan ni de las órdenes: lo decide la presentación con lo que
+  el mando ya sabe. El botón **Presentador** de la barra (también en el proyector y en la pantalla en off) lo oculta o
+  lo muestra en ese navegador. Detalles en [`docs/presentador.md`](../../docs/presentador.md).
 
 ## Pantalla en off y agentes por MCP
 

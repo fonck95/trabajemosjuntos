@@ -189,3 +189,6 @@ html[data-proyector]:fullscreen .pres-flotantes { display: none; }
 .pres-voz[aria-pressed="true"] { color: var(--accent-text); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
 .pres-voz[data-voz="sin_activar"] { border-style: dashed; }
 .pres-voz:disabled { opacity: .55; }
+/* El botón «Presentador» (la caricatura que explica lo que narra el asistente, web/js/presentador/): a la vista, como
+   la voz encendida */
+.pres-presentador[aria-pressed="true"] { color: var(--accent-text); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }

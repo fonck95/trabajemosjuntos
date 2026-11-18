@@ -11,6 +11,7 @@ import { crearEscena } from './escena.js';
 import { montarMando } from './mando.js';
 import { capsTecnica, sinPlata, cifraTecnica, especificacionTecnica, anios } from './tecnica.js';
 import { crearVisual } from './visual.js';
+import { presentadorPerezoso } from '../presentador/perezoso.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -819,5 +820,8 @@ const [ci0, pi0] = desdeHash();
 ir(ci0, pi0, { primera: true });
 // mando a distancia: dentro de la vista Presentación del panel (un iframe), el asistente lleva la presentación por
 // postMessage y muestra su explicación en el subtítulo. Fuera de un iframe no escucha nada
+// El presentador (una caricatura en 3D que explica lo que narra el asistente, js/presentador/): solo lo despierta el
+// mando, así que fuera del panel ni se descarga
+const presentador = presentadorPerezoso(() => import('../presentador/presentador.js').then((m) => m.crearPresentador()));
 montarMando({ caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel: (v) => alternarPanel(!v), reencuadrar,
-  visual, asentada, resaltar, restaurarEncuadre });
+  visual, asentada, resaltar, restaurarEncuadre, presentador });
