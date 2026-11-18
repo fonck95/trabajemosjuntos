@@ -3,21 +3,41 @@
 Una caricatura en 3D del candidato que explica, en la presentación técnica, lo que narra el asistente. Está hecha con
 three.js a partir de su foto:
 
-- **La cara**: llena y ancha en los pómulos, con la mandíbula que se angosta sin hacer punta y el mentón redondo; las
-  mejillas que sube la sonrisa, los pliegues de la nariz a la boca, los ojos almendrados entrecerrados con sus patas de
-  gallo y el pliegue del párpado, las cejas oscuras casi rectas, la nariz ancha de punta redonda y la sonrisa amplia con
-  el labio de arriba fino, el de abajo lleno y los dientes muy blancos. La piel tostada rosada, con el calor de las
-  mejillas y la nariz.
-- **El pelo**: negro, corto en cepillo, parado y peinado hacia arriba, con la línea de la frente recta y los lados cortos
-  en degradé.
-- **La ropa**: la polo carmesí con su cuello, la tapeta de dos botones (con su costura en cruz) y el jinete bordado; el
-  jean desteñido adelante; el reloj negro grande en la muñeca izquierda y la manilla roja con cuentas doradas en la
-  derecha.
+- **La cara**: un óvalo ancho, de lados casi rectos de la sien a la mejilla, con la mandíbula llena y el mentón ancho y
+  redondo (en U, no en V), la frente alta y las orejas despegadas; las mejillas que sube la sonrisa, los pliegues de la
+  nariz a la boca, los ojos almendrados entrecerrados (el párpado de abajo casi recto, el iris café oscuro) con sus
+  patas de gallo y el pliegue del párpado, las cejas castañas de borde ralo, casi rectas, con un arco suave hacia la
+  cola, bajas y cerca de los ojos, la nariz ancha y trapezoidal (la punta redonda fundida con las aletas, las fosas a la
+  vista) y la sonrisa ancha y plana, de medialuna, con el labio de abajo lleno y rosado y los dientes muy blancos. La
+  piel tostada rosada clara, con volumen (más clara en la frente, los pómulos y la nariz; más oscura hacia la mandíbula,
+  en las cuencas y en la banda del pliegue de la sonrisa), un calor suave en las mejillas y la sombra del bigote
+  rasurado. El cuello grueso, casi tan ancho como la mandíbula, y más oscuro que la cara (a la sombra de la mandíbula).
+- **El pelo**: gris muy oscuro (no negro azabache), corto en cepillo, parado y peinado hacia arriba, con las puntas que
+  se aclaran donde da la luz (el brillo del gel); la línea de la frente recta, con un piquito redondo en el medio, las
+  sienes cubiertas y los lados cortos en degradé gris.
+- **Las orejas**: grandes y despegadas, abiertas hacia adelante (de frente se les ve la concha), anchas y redondas
+  arriba y angostas hacia el lóbulo, pegado; van de entre la ceja y el ojo a entre la nariz y la boca. La derecha se
+  despega algo menos que la izquierda, como en la foto.
+- **El cuerpo**: el de un hombre adulto y robusto, aunque con la cabeza grande de caricatura (mide unas tres cabezas y
+  media): hombros anchos que bajan en pendiente suave desde el cuello, sin bultos; brazos y antebrazos fuertes y manos
+  grandes, de dedos gruesos; muslos y cadera a juego con el torso.
+- **La ropa**: la polo carmesí, suelta sobre la cadera, con el cuello grande de la foto: rodea el cuello por detrás y
+  por los lados casi hasta la mandíbula y adelante se abre en una V honda que deja ver la piel; sus bordes bajan hasta
+  juntarse sobre el botón de arriba (que queda medio tapado) y las puntas, largas, se apoyan en el pecho. La tapeta
+  larga, con dos botones blanco rosado (con su costura roja en cruz) y el pespunte abajo; las mangas rectas, algo
+  sueltas, con el puño acanalado del mismo rojo, y el jinete bordado (un caballo parado, mirando a la derecha, y el
+  jinete derecho, de azul oscuro y pantalón blanco). El jean stonewash, desteñido casi celeste en los muslos y las
+  rodillas y oscuro en los costados; el reloj negro grande en la muñeca izquierda (bisel gris, esfera gris carbón con
+  doce marcas, la fecha y la corona) y la manilla roja, fina, con cuentas color oro champaña y dos cabos que cuelgan,
+  en la derecha.
 
-Se arma entera con geometrías (sin modelos, sin imágenes y sin nada de afuera). La cabeza es una esfera esculpida (el
-óvalo y el relieve de pómulos, mejillas, cuencas, hocico, mentón y pliegues); lo que va dibujado sobre la piel (ojos,
-cejas, boca, pliegues, sombras suaves) son tiras pegadas a la superficie con una grilla de alturas que se mide una vez
-rasterizando la cara. La piel lleva sombreado suave; la ropa, por tonos, como caricatura; todo con un contorno oscuro.
+Se arma entera con geometrías (sin modelos, sin imágenes y sin nada de afuera). La cabeza es una esfera esculpida (de
+frente, una superelipse de lados casi rectos, con el relieve de pómulos, mejillas, cuencas, hocico, mentón y pliegues);
+la nariz, una sola superficie suave (la unión de cinco elipsoides); lo que va dibujado sobre la piel (ojos, cejas, boca,
+pliegues, sombras suaves) son tiras pegadas a la superficie con una grilla de alturas que se mide una vez rasterizando
+la cara. La piel lleva sombreado suave (una rampa de doce tonos, con las sombras más rojizas, como la piel de verdad);
+la ropa, por tonos, como caricatura; todo con un contorno de grosor fijo, café rojizo en la piel y casi negro en el
+pelo y la ropa.
 
 | Archivo | Qué hace |
 |---|---|
@@ -125,9 +145,18 @@ Con `prefers-reduced-motion` entra y sale sin animación y sin saltos. Si el nav
 
 ## Cómo cambiarlo
 
-- Colores: `COLORES` en `personaje.js` (piel, pelo, polo, jean…).
-- Forma de la cara: `deformarCabeza` (óvalo, pómulos, mandíbula, mentón), la línea del pelo (`limite` en `pelo`) y las
-  medidas de ojos, cejas, nariz y boca en `construirCara` y `crearBoca`.
+- Colores: `COLORES` en `personaje.js` (piel, pelo, polo, jean…). El volumen de la piel lo da `rampaPiel` (cuánto
+  oscurece cada tono y el tinte de las sombras); las sombras y el calor pintados, los discos de `sombra` al principio de
+  `construirCara`. La luz principal del presentador viene de la izquierda de quien mira (en la foto, de la derecha).
+- Forma de la cara: `deformarCabeza` (la superelipse de frente, las sienes, el largo de la mandíbula y el mentón) y
+  `RELIEVE` (los bultos y hundidos de la cara), la línea del pelo (`limite` en `pelo`) y las medidas de ojos, cejas,
+  orejas, nariz y boca en `construirCara` y `crearBoca`. La forma de la oreja (su silueta, el hélix, la concha y sus
+  dos líneas) está en `ORE`; en `construirCara` solo se ubica y se gira (cuánto se despega).
+- El cuerpo y la ropa: el torso es un torno (`perfil`) que `anchoTorso` y `fondoTorso` ensanchan y aplanan; las mismas
+  funciones (`enTorso`, `zTorso`, `fueraDelTorso`) sirven para apoyar cosas sobre la polo sin lanzar rayos. El cuello
+  de la polo se arma en `cuelloDeLaPolo`: el doblez de arriba (`arriba`, alrededor del cuello) y el borde de abajo
+  (`BORDE`: dónde se apoya en los hombros, la punta y la V), y `ABRE_CUELLO` es la altura de la V (donde empieza la
+  tapeta). La cabeza va al 0,94 (`craneo.scale`): más grande, el cuerpo parece de niño.
 - Gestos: `GESTOS` en `animador.js`. Un gesto nuevo es una función que devuelve su pose (o sus claves), sus manos
   (`MANOS`), sus vaivenes y lo que hace la cara. Para que el asistente lo pueda pedir, va también en `GESTOS` de
   `admin/app/recorrido.py` (con lo que expresa), en `GESTOS_AGENTE` y en las listas de `mando.js` y del puente
