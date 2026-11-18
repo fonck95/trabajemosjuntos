@@ -8,13 +8,15 @@ three.js a partir de su foto:
   nariz a la boca, los ojos almendrados entrecerrados (el párpado de abajo casi recto, el iris café oscuro) con sus
   patas de gallo y el pliegue del párpado, las cejas castañas de borde ralo, casi rectas, con un arco suave hacia la
   cola, bajas y cerca de los ojos, la nariz ancha y trapezoidal (la punta redonda fundida con las aletas, las fosas a la
-  vista) y la sonrisa ancha y plana, de medialuna, con el labio de abajo lleno y rosado y los dientes muy blancos. La
+  vista, el puente ancho y recto hasta el entrecejo) y la sonrisa ancha y plana, de medialuna, con el labio de abajo
+  lleno y rosado y los dientes muy blancos; las mejillas en «manzanas», algo exageradas (el rasgo que lo distingue). La
   piel tostada rosada clara, con volumen (más clara en la frente, los pómulos y la nariz; más oscura hacia la mandíbula,
-  en las cuencas y en la banda del pliegue de la sonrisa), un calor suave en las mejillas y la sombra del bigote
-  rasurado. El cuello grueso, casi tan ancho como la mandíbula, y más oscuro que la cara (a la sombra de la mandíbula).
-- **El pelo**: gris muy oscuro (no negro azabache), corto en cepillo, parado y peinado hacia arriba, con las puntas que
-  se aclaran donde da la luz (el brillo del gel); la línea de la frente recta, con un piquito redondo en el medio, las
-  sienes cubiertas y los lados cortos en degradé gris.
+  en las cuencas, en el párpado de arriba y en la banda del pliegue de la sonrisa), un calor suave en las mejillas y la
+  cara de abajo casi tan clara como la frente, como en la foto de estudio; los brazos y las manos, más tostados. El cuello grueso, casi tan ancho como la mandíbula, y más oscuro que la cara (a la sombra de la mandíbula).
+- **El pelo**: gris muy oscuro (no negro azabache), corto en cepillo, parado y peinado hacia arriba y hacia su
+  izquierda, en mechones juntos por el gel (el copete, más alto de ese lado), con las puntas que se aclaran donde da la
+  luz; el frente sube derecho desde la línea de la frente, recta, con un piquito redondo en el medio; las sienes
+  cubiertas y los lados cortos en un degradé gris (las canas) que se funde con la piel, y la patilla que se afina.
 - **Las orejas**: grandes y despegadas, abiertas hacia adelante (de frente se les ve la concha), anchas y redondas
   arriba y angostas hacia el lóbulo, pegado; van de entre la ceja y el ojo a entre la nariz y la boca. La derecha se
   despega algo menos que la izquierda, como en la foto.
@@ -22,9 +24,10 @@ three.js a partir de su foto:
   media): hombros anchos que bajan en pendiente suave desde el cuello, sin bultos; brazos y antebrazos fuertes y manos
   grandes, de dedos gruesos; muslos y cadera a juego con el torso.
 - **La ropa**: la polo carmesí, suelta sobre la cadera, con el cuello grande de la foto: rodea el cuello por detrás y
-  por los lados casi hasta la mandíbula y adelante se abre en una V honda que deja ver la piel; sus bordes bajan hasta
-  juntarse sobre el botón de arriba (que queda medio tapado) y las puntas, largas, se apoyan en el pecho. La tapeta
-  larga, con dos botones blanco rosado (con su costura roja en cruz) y el pespunte abajo; las mangas rectas, algo
+  por los lados casi hasta la mandíbula, parado alrededor del cuello (no cae sobre los hombros), y adelante se abre en
+  una V honda que deja ver la piel; sus bordes bajan hasta juntarse sobre el botón de arriba (que asoma bajo las
+  puntas) y las puntas se apoyan en el pecho, junto a la tapeta. La tapeta larga, con dos botones blanco rosado (con su
+  costura roja en cruz) y el pespunte en cuadro, abajo y a los lados; las mangas rectas, algo
   sueltas, con el puño acanalado del mismo rojo, y el jinete bordado (un caballo parado, mirando a la derecha, y el
   jinete derecho, de azul oscuro y pantalón blanco). El jean stonewash, desteñido casi celeste en los muslos y las
   rodillas y oscuro en los costados; el reloj negro grande en la muñeca izquierda (bisel gris, esfera gris carbón con
@@ -33,11 +36,14 @@ three.js a partir de su foto:
 
 Se arma entera con geometrías (sin modelos, sin imágenes y sin nada de afuera). La cabeza es una esfera esculpida (de
 frente, una superelipse de lados casi rectos, con el relieve de pómulos, mejillas, cuencas, hocico, mentón y pliegues);
-la nariz, una sola superficie suave (la unión de cinco elipsoides); lo que va dibujado sobre la piel (ojos, cejas, boca,
+la nariz, una sola superficie suave (la unión de seis elipsoides), sin el casco del contorno: su borde se oscurece en el
+sombreado donde queda de canto, una línea entera que la sigue desde cualquier lado; lo que va dibujado sobre la piel (ojos, cejas, boca,
 pliegues, sombras suaves) son tiras pegadas a la superficie con una grilla de alturas que se mide una vez rasterizando
 la cara. La piel lleva sombreado suave (una rampa de doce tonos, con las sombras más rojizas, como la piel de verdad);
 la ropa, por tonos, como caricatura; todo con un contorno de grosor fijo, café rojizo en la piel y casi negro en el
-pelo y la ropa.
+pelo y la ropa (corrido un poco hacia atrás, para que no asome en motas en las zonas cóncavas; no baja por el degradé de
+los lados del pelo). Lo dibujado sobre la piel no se pinta donde queda de canto a la cámara: de perfil, la ceja y el ojo
+del otro lado no asoman por el borde de la frente.
 
 | Archivo | Qué hace |
 |---|---|
