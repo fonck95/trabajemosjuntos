@@ -28,9 +28,9 @@ const BRAZOS = { I: ['hombroI', 'codoI', 'munecaI'], D: ['hombroD', 'codoD', 'mu
 // Las manos: [índice, medio, anular, meñique, pulgar]. Cada dedo de 0 (estirado) a 1 (cerrado); el pulgar de −1 (afuera)
 // a 1 (doblado sobre la palma)
 export const MANOS = {
-  relajada: [0.32, 0.4, 0.47, 0.54, 0.15],
+  relajada: [0.22, 0.28, 0.34, 0.4, 0.1],
   abierta: [0.04, 0.03, 0.06, 0.1, -0.55],
-  explica: [0.14, 0.18, 0.24, 0.3, -0.3],
+  explica: [0.12, 0.16, 0.22, 0.28, -0.3],
   puno: [1, 1, 1, 1, 1],
   senala: [0, 1, 1, 1, 0.75],
   pulgar: [1, 1, 1, 1, -1],
@@ -39,7 +39,10 @@ export const MANOS = {
   tres: [0, 0, 0, 1, 0.9],
   barbilla: [0.15, 0.85, 0.95, 1, 0.3],
   junta: [0.5, 0.55, 0.6, 0.65, 0.4],
+  pinza: [0.5, 0.75, 0.85, 0.9, 0.7],
+  plana: [0, 0, 0, 0, -0.2],
 };
+export const FORMAS_CONTAR = ['uno', 'dos', 'tres'];
 
 const REPOSO = {
   cadera: [0, 0, 0], columna: [0.03, 0, 0], pecho: [0, 0, 0], cuello: [0.02, 0, 0], cabeza: [-0.02, 0, 0],
@@ -53,25 +56,40 @@ const CONVERSA = { hombro: [-0.24, 0, 0.17], codo: [-1.08, 1.0, 0], muneca: [0.1
 
 const otro = (lado) => (lado === 'I' ? 'D' : 'I');
 const brazo = (lado, hombro, codo, muneca = [0, 0, 0]) => ({ [`hombro${lado}`]: hombro, [`codo${lado}`]: codo, [`muneca${lado}`]: muneca });
+const dos = (hombro, codo, muneca) => ({ ...brazo('I', hombro, codo, muneca), ...brazo('D', hombro, codo, muneca) });
+// Algunas poses que se repiten
+const P = {
+  palmasArriba: [[-0.45, 0, 0.34], [-1.22, 1.35, 0], [0.18, 0, 0]],      // las manos adelante, las palmas arriba
+  ladoAbierto: [[-0.55, 0, 0.78], [-0.6, 1.45, 0], [-0.15, 0, 0]],        // un brazo afuera, la palma arriba
+  dedoArriba: [[-0.6, 0, 0.3], [-2.2, -1.5, 0], [0, 0, 0.08]],            // el antebrazo arriba, la palma a la sala
+  enJarra: [[0.15, -1.57, 0.75], [-1.6, 0, 0], [0, 0, 0.2]],              // la mano en la cintura
+};
 
 /**
  * Los gestos: cada uno arma su clip con las opciones del momento. Un clip es
- * {dur, pose, claves?, manos, osc?, cara?, entra?, sale?, sostener?, mirar?, salto?}:
- * - `pose` (o `claves`: [[t, pose], …]) son las articulaciones que toma; las demás siguen con las otras capas.
+ * {dur, pose | claves, manos, osc?, cara?, entra?, sale?, sostener?, mirar?, salto?}:
+ * - `pose` (o `claves`: [[t, pose], …], que se encadenan) son las articulaciones que toma; las demás siguen con las
+ *   otras capas.
  * - `manos`: {I, D} con el nombre de una forma de MANOS (o [[t, forma], …] para cambiarla en el tiempo).
  * - `osc`: [[articulación, eje, amplitud, frecuencia, desde, hasta]]: un vaivén encima (saludar, explicar).
- * - `cara`: {cejas, sonrisa, abrir, ojos}: lo que hace la cara mientras dura.
+ * - `cara`: {cejas, ceno, sonrisa, abrir, ojos}: lo que hace la cara mientras dura.
  * - `entra` / `sale`: lo que tarda en tomar la pose y en soltarla; `sostener`: se queda hasta otro gesto.
  * - `mirar`: un punto (Vector3, del mundo) al que mira mientras dura; `salto`: un saltito (celebrar).
- * `o.lado` elige el brazo cuando el gesto es de uno solo; `o.punto` es hacia dónde (señalar, presentar).
+ * `o.lado` elige el brazo cuando el gesto es de uno solo; `o.punto` es hacia dónde (señalar, presentar, mirar la
+ * maqueta); `o.n`, cuántos dedos (contar, enumerar).
  */
 export const GESTOS = {
+  // ── Empezar y terminar ──
   saludar: (o) => {
     const l = o.lado || 'D';
     return { dur: o.dur || 2.6, pose: { ...brazo(l, [-0.22, 1.45, 1.3], [-1.75, 0, 0], [0, 0, 0.1]), cabeza: [0.02, 0, l === 'D' ? 0.07 : -0.07] },
       manos: { [l]: 'abierta' }, osc: [[`codo${l}`, 0, 0.34, 2.6, 0.45, (o.dur || 2.6) - 0.4]], cara: { cejas: 0.7, abrir: 0.18 } };
   },
   despedirse: (o) => ({ ...GESTOS.saludar({ ...o, dur: o.dur || 1.5 }) }),
+  invitar: (o) => ({ dur: o.dur || 3.0, sostener: o.sostener === true,
+    pose: { ...dos([-0.4, 0, 0.82], [-0.55, 1.45, 0], [-0.2, 0, 0]), cabeza: [-0.05, 0, 0.06], pecho: [-0.04, 0, 0] },
+    manos: { I: 'abierta', D: 'abierta' }, cara: { cejas: 0.85, abrir: 0.12 } }),
+  // ── Mostrar ──
   senalar: (o) => {
     const l = o.lado || 'D';
     return { dur: o.dur || 2.8, pose: brazo(l, o.apunta || [-1.2, 0, 0.5], [-0.12, 0, 0], [0.1, 0, 0]), manos: { [l]: 'senala' },
@@ -83,43 +101,112 @@ export const GESTOS = {
     return { dur: o.dur || 2.8, pose: brazo(l, [x, y, z], [-0.35, 1.45, 0], [-0.25, 0, 0]),
       manos: { [l]: 'abierta' }, mirar: o.punto || null, cara: { cejas: 0.45, abrir: 0.1 } };
   },
+  mirar_maqueta: (o) => ({ dur: o.dur || 3.2, pose: { ...dos(...P.enJarra), columna: [0.02, 0, 0], pecho: [-0.03, 0, 0] },
+    manos: { I: 'plana', D: 'plana' }, mirar: o.punto || null, cara: { cejas: 0.4, sonrisa: 0.9 } }),
+  // ── Explicar ──
   explicar: (o) => {
     const d = o.dur || 3.4;
-    return { dur: d, pose: { ...brazo('I', [-0.45, 0, 0.34], [-1.22, 1.35, 0], [0.18, 0, 0]),
-      ...brazo('D', [-0.45, 0, 0.34], [-1.22, 1.35, 0], [0.18, 0, 0]), pecho: [0.04, 0, 0] },
-    manos: { I: 'explica', D: 'explica' },
-    osc: [['hombroI', 0, 0.09, 1.5, 0.4, d - 0.4], ['hombroD', 0, -0.09, 1.5, 0.4, d - 0.4], ['cabeza', 0, 0.04, 1.5, 0.4, d - 0.4]],
-    cara: { cejas: 0.4 } };
+    return { dur: d, pose: { ...dos(...P.palmasArriba), pecho: [0.04, 0, 0] }, manos: { I: 'explica', D: 'explica' },
+      osc: [['hombroI', 0, 0.09, 1.5, 0.4, d - 0.4], ['hombroD', 0, -0.09, 1.5, 0.4, d - 0.4], ['cabeza', 0, 0.04, 1.5, 0.4, d - 0.4]],
+      cara: { cejas: 0.4 } };
+  },
+  destacar: (o) => {
+    const l = o.lado || 'D', d = o.dur || 2.6;
+    return { dur: d, pose: { ...brazo(l, ...P.dedoArriba), cabeza: [0.06, 0, 0], pecho: [0.04, 0, 0] }, manos: { [l]: 'uno' },
+      osc: [[`codo${l}`, 0, 0.08, 1.4, 0.45, d - 0.4]], cara: { cejas: 0.9, sonrisa: 0.85 } };
+  },
+  comparar: (o) => ({ dur: o.dur || 3.6,
+    claves: [
+      [0.45, { ...brazo('D', ...P.ladoAbierto), ...brazo('I', [-0.2, 0, 0.12], [-0.9, 0.9, 0]), cabeza: [0, -0.2, -0.05] }],
+      [1.45, { ...brazo('D', ...P.ladoAbierto), ...brazo('I', [-0.2, 0, 0.12], [-0.9, 0.9, 0]), cabeza: [0, -0.2, -0.05] }],
+      [2.05, { ...brazo('I', ...P.ladoAbierto), ...brazo('D', [-0.2, 0, 0.12], [-0.9, 0.9, 0]), cabeza: [0, 0.2, 0.05] }],
+    ],
+    manos: { I: [[0, 'relajada'], [1.6, 'abierta']], D: [[0, 'abierta'], [1.8, 'relajada']] }, cara: { cejas: 0.5 } }),
+  enumerar: (o) => {
+    const n = Math.max(1, Math.min(3, o.n || 1));
+    return { dur: o.dur || 3.2, sostener: o.sostener === true, pose: { ...brazo('I', ...P.dedoArriba), cabeza: [0.02, 0.08, 0.04] },
+      manos: { I: [[0, 'puno'], [0.3, FORMAS_CONTAR[n - 1]]] }, osc: [['codoI', 0, 0.06, 1.2, 0.45, 60]], cara: { cejas: 0.5 } };
   },
   contar: (o) => {
     const n = Math.max(1, Math.min(3, o.n || 3));
     const paso = 0.85, d = 0.6 + n * paso + 0.6;
-    const formas = ['uno', 'dos', 'tres'].slice(0, n).map((f, i) => [0.45 + i * paso, f]);
+    const formas = FORMAS_CONTAR.slice(0, n).map((f, i) => [0.45 + i * paso, f]);
     return { dur: d, pose: { ...brazo('I', [-0.2, 0, 0.42], [-2.45, -1.5, 0], [0, 0, 0.1]), cabeza: [0.02, 0.06, 0.04] },
       manos: { I: [[0, 'puno'], ...formas] }, osc: [['codoI', 0, 0.07, 1 / paso, 0.45, d - 0.5]], cara: { cejas: 0.5 } };
   },
+  crecer: (o) => ({ dur: o.dur || 3.0,
+    claves: [[0.45, { ...dos([-0.2, 0, 0.28], [-0.95, 1.4, 0], [0.2, 0, 0]) }], [2.2, { ...dos([-1.05, 0, 0.5], [-1.1, 1.4, 0], [0.1, 0, 0]),
+      cabeza: [-0.1, 0, 0] }]],
+    manos: { I: 'abierta', D: 'abierta' }, cara: { cejas: 0.85, abrir: 0.15 } }),
+  grande: (o) => {
+    const d = o.dur || 2.8;
+    return { dur: d, pose: { ...dos([-0.55, 0, 0.98], [-0.5, 0, 0], [0, 0, 0]), pecho: [-0.04, 0, 0] }, manos: { I: 'abierta', D: 'abierta' },
+      osc: [['hombroI', 2, 0.08, 1.1, 0.45, d - 0.4], ['hombroD', 2, 0.08, 1.1, 0.45, d - 0.4]], cara: { cejas: 0.8, abrir: 0.2 } };
+  },
+  detalle: (o) => {
+    const l = o.lado || 'D', d = o.dur || 2.6;
+    return { dur: d, pose: { ...brazo(l, [-0.6, 0, 0.12], [-1.95, -0.3, 0], [0.25, 0, 0]), cabeza: [0.08, 0, 0.04] },
+      manos: { [l]: 'pinza' }, osc: [[`muneca${l}`, 0, 0.1, 1.6, 0.45, d - 0.4]], cara: { cejas: 0.3, sonrisa: 0.8, ojos: [0.2, -0.2] } };
+  },
+  construir: (o) => {
+    const d = o.dur || 2.8;
+    return { dur: d, pose: { ...brazo('D', [-0.55, 0, 0.22], [-1.75, 0, 0], [0, 0, 0]), ...brazo('I', [-0.35, 0, 0.1], [-1.35, 1.45, 0], [0.1, 0, 0]),
+      cabeza: [0.1, 0, 0] }, manos: { D: 'puno', I: 'plana' }, osc: [['codoD', 0, 0.42, 2.4, 0.45, d - 0.4]],
+    cara: { cejas: 0.3, sonrisa: 0.95 } };
+  },
+  // ── Preguntar y responder ──
   pensar: (o) => ({ dur: o.dur || 3.2, sostener: o.sostener === true,
     pose: { ...brazo('D', [-0.78, 0, -0.42], [-2.3, -1.3, 0], [0.3, 0, 0.3]),
-      ...brazo('I', [-0.22, 0, -0.04], [-1.6, 1.15, 0], [0, 0, 0]), cabeza: [-0.1, 0.12, 0.12], cuello: [-0.03, 0.05, 0] },
+      ...brazo('I', [-0.3, -0.7, -0.05], [-1.55, 0.3, 0], [0, 0, 0]), cabeza: [-0.1, 0.12, 0.12], cuello: [-0.03, 0.05, 0] },
     manos: { D: 'barbilla', I: 'relajada' }, cara: { cejas: 0.55, sonrisa: 0.75, ojos: [0.5, 0.7] } }),
-  celebrar: (o) => ({ dur: o.dur || 2.0, pose: { ...brazo('I', [-0.15, 0, 2.55], [-0.4, 0, 0]), ...brazo('D', [-0.15, 0, 2.55], [-0.4, 0, 0]),
-    cabeza: [-0.12, 0, 0] }, manos: { I: 'puno', D: 'puno' }, salto: true, cara: { cejas: 0.9, abrir: 0.55 },
-  osc: [['hombroI', 2, 0.12, 2.4, 0.4, 1.6], ['hombroD', 2, 0.12, 2.4, 0.4, 1.6]] }),
-  invitar: (o) => ({ dur: o.dur || 3.0, sostener: o.sostener === true,
-    pose: { ...brazo('I', [-0.4, 0, 0.82], [-0.55, 1.45, 0], [-0.2, 0, 0]), ...brazo('D', [-0.4, 0, 0.82], [-0.55, 1.45, 0], [-0.2, 0, 0]),
-      cabeza: [-0.05, 0, 0.06], pecho: [-0.04, 0, 0] },
-    manos: { I: 'abierta', D: 'abierta' }, cara: { cejas: 0.85, abrir: 0.12 } }),
+  preguntar: (o) => ({ dur: o.dur || 2.6, pose: { ...dos([-0.15, 0, 0.42], [-1.35, 1.55, 0], [-0.2, 0, 0]), cabeza: [-0.04, 0, 0.16],
+    cuello: [-0.05, 0, 0] }, manos: { I: 'abierta', D: 'abierta' }, cara: { cejas: 1, sonrisa: 0.7, abrir: 0.1 } }),
   asentir: (o) => ({ dur: o.dur || 1.3, pose: {}, osc: [['cabeza', 0, 0.13, 2.3, 0.1, (o.dur || 1.3) - 0.15]], entra: 0.1, sale: 0.15,
     cara: { cejas: 0.3 } }),
-  pulgar: (o) => {
+  negar: (o) => {
+    const d = o.dur || 2.2;
+    return { dur: d, pose: { ...brazo('D', ...P.dedoArriba) }, manos: { D: 'uno' },
+      osc: [['cabeza', 1, 0.24, 2.2, 0.3, d - 0.4], ['codoD', 1, 0.4, 2.2, 0.4, d - 0.4]], cara: { ceno: 0.7, sonrisa: 0.55 } };
+  },
+  calmar: (o) => {
+    const d = o.dur || 2.8;
+    return { dur: d, pose: dos([-0.42, 0, 0.32], [-1.15, -1.45, 0], [-0.25, 0, 0]), manos: { I: 'plana', D: 'plana' },
+      osc: [['hombroI', 0, 0.07, 1.1, 0.45, d - 0.4], ['hombroD', 0, 0.07, 1.1, 0.45, d - 0.4], ['cabeza', 0, 0.04, 1.1, 0.45, d - 0.4]],
+      cara: { cejas: 0.2, sonrisa: 0.9 } };
+  },
+  // ── Emoción ──
+  aprobar: (o) => {
     const l = o.lado || 'D';
     return { dur: o.dur || 2.0, pose: { ...brazo(l, [-0.38, 0, 0.24], [-1.4, 0, 0], [0, 0, 0]), cabeza: [0.03, 0, 0.06] },
       manos: { [l]: 'pulgar' }, cara: { cejas: 0.5, abrir: 0.1 } };
   },
+  celebrar: (o) => ({ dur: o.dur || 2.0, pose: { ...dos([-0.15, 0, 2.55], [-0.4, 0, 0]), cabeza: [-0.12, 0, 0] },
+    manos: { I: 'puno', D: 'puno' }, salto: true, cara: { cejas: 0.9, abrir: 0.55 },
+    osc: [['hombroI', 2, 0.12, 2.4, 0.4, 1.6], ['hombroD', 2, 0.12, 2.4, 0.4, 1.6]] }),
+  aplaudir: (o) => {
+    const d = o.dur || 2.2;
+    return { dur: d, pose: dos([-0.55, 0, 0.12], [-1.25, 0.2, 0], [0, 0, 0]), manos: { I: 'plana', D: 'plana' },
+      osc: [['hombroI', 2, 0.13, 3.2, 0.4, d - 0.35], ['hombroD', 2, 0.13, 3.2, 0.4, d - 0.35]], cara: { cejas: 0.7, abrir: 0.35 } };
+  },
+  juntos: (o) => {
+    const d = o.dur || 2.8;
+    return { dur: d, claves: [[0.45, dos([-0.5, -0.3, 0.45], [-1.5, 0.1, 0], [0, 0, 0])], [1.1, { ...dos([-0.55, -0.8, -0.05], [-1.6, 0.1, 0], [0, 0, 0]),
+      cabeza: [0.04, 0, 0] }]], manos: { I: [[0, 'abierta'], [1.0, 'junta']], D: [[0, 'abierta'], [1.0, 'junta']] },
+    osc: [['pecho', 0, 0.03, 2, 1.2, d - 0.4]], cara: { cejas: 0.6, abrir: 0.1 } };
+  },
+  corazon: (o) => ({ dur: o.dur || 2.8, pose: { ...brazo('D', [-0.5, -0.85, -0.38], [-1.75, 0.1, 0], [0, 0, 0.2]), cabeza: [0.05, 0, -0.1] },
+    manos: { D: 'plana' }, cara: { cejas: 0.4, ojos: [0, -0.3] } }),
+  // ── En pausa ──
   escuchar: (o) => ({ dur: o.dur || 3, sostener: o.sostener !== false,
-    pose: { ...brazo('I', [-0.22, 0, -0.06], [-1.35, 0.95, 0], [0.1, 0, 0]), ...brazo('D', [-0.22, 0, -0.06], [-1.35, 0.95, 0], [0.1, 0, 0]),
-      cabeza: [0.04, 0, 0.09] }, manos: { I: 'junta', D: 'junta' }, cara: { cejas: 0.2 } }),
+    pose: { ...dos([-0.22, 0, -0.06], [-1.35, 0.95, 0], [0.1, 0, 0]), cabeza: [0.04, 0, 0.09] }, manos: { I: 'junta', D: 'junta' },
+    cara: { cejas: 0.2 } }),
 };
+// Para el asistente: los gestos que puede pedir en cada paso del plan (`gesto`: app/recorrido.py y el puente tienen la
+// misma lista; una prueba las compara). Los demás los hace el presentador solo: contar el resumen y escuchar en pausa.
+// `senalar` señala lo resaltado (o, sin resaltado, la obra en la maqueta); `mostrar_panel`, el panel
+export const GESTOS_AGENTE = ['saludar', 'senalar', 'presentar', 'mostrar_panel', 'mirar_maqueta', 'explicar', 'destacar',
+  'comparar', 'enumerar', 'crecer', 'grande', 'detalle', 'construir', 'pensar', 'preguntar', 'asentir', 'negar', 'calmar',
+  'aprobar', 'celebrar', 'aplaudir', 'juntos', 'corazon', 'invitar', 'despedirse'];
 export const NOMBRES_GESTOS = Object.keys(GESTOS);
 
 const suave = (t) => { const x = Math.min(1, Math.max(0, t)); return x * x * (3 - 2 * x); };
@@ -141,7 +228,6 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   const dedos = { I: [...MANOS.relajada], D: [...MANOS.relajada] };
   const dedosObj = { I: [...MANOS.relajada], D: [...MANOS.relajada] };
   const tmpQ = new THREE.Quaternion(), tmpQ2 = new THREE.Quaternion(), tmpV = new THREE.Vector3(), tmpM = new THREE.Matrix4();
-  const cejasBase = cara.cejas.map((c) => ({ y: c.position.y, rz: c.rotation.z }));
 
   let t = 0;
   let clip = null, tClip = 0, nombreClip = null, alTerminarClip = null;
@@ -149,7 +235,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   let silaba = 0, abrirObj = 0, anchoObj = 1, abrir = 0, ancho = 1;
   let wHabla = 0, golpe = null, proxGolpe = 1, ladoGolpe = 'D';
   let parpado = 1, proxParpadeo = 2 + azar() * 3, enParpadeo = -1, doble = false;
-  let cejas = 0, cejasPico = 0, sonrisa = 1;
+  let cejas = 0, cejasPico = 0, sonrisa = 1, ceno = 0;
   let mira = null;          // un punto del mundo; null: la cámara (la sala)
   let yaw = 0, pitch = 0, ojoX = 0, ojoY = 0;
   let destinoX = grupo.position.x, fase = 0, wCaminar = 0, rumbo = 0, rumboBase = 0;
@@ -168,10 +254,23 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       opciones.lado = lado;
       opciones.apunta = apuntar(lado, o.punto, nombre === 'presentar' ? 0.38 : 0);
     }
-    clip = hacer(opciones);
+    const nuevo = hacer(opciones);
+    // el mismo gesto que sigue (enumerar: un dedo más con cada frase): cambia sus manos sin volver a empezar
+    if (o.seguir && clip && nombreClip === nombre) {
+      clip.manosEn = normalizarManos(nuevo.manos);
+      for (const l of Object.keys(clip.manosEn)) clip.manosEn[l] = clip.manosEn[l].map(([, f]) => [0, f]).slice(-1);
+      return clip.sostener ? Infinity : clip.dur;
+    }
+    clip = nuevo;
     clip.nombre = nombre;
     clip.manosEn = normalizarManos(clip.manos);
     clip.qPose = Object.fromEntries(Object.entries(clip.pose || {}).map(([j, e]) => [j, qDe(j, e)]));
+    // las claves: cada una con todas las articulaciones que toca alguna (las que no nombra, en reposo)
+    if (clip.claves) {
+      const todas = [...new Set(clip.claves.flatMap(([, p]) => Object.keys(p)))];
+      clip.qClaves = clip.claves.map(([tt, p]) => [tt, Object.fromEntries(todas.map((j) => [j, p[j] ? qDe(j, p[j]) : base[j].clone()]))]);
+      for (const j of todas) clip.qPose[j] = clip.qClaves[0][1][j];
+    }
     tClip = 0;
     nombreClip = nombre;
     alTerminarClip = typeof o.alTerminar === 'function' ? o.alTerminar : null;
@@ -339,7 +438,15 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
 
     // el gesto encima
     if (clip && wClip > 0) {
-      for (const [j, q] of Object.entries(clip.qPose)) objetivo[j].slerp(q, wClip);
+      if (clip.qClaves) {
+        // entre la clave anterior y la siguiente
+        const ks = clip.qClaves;
+        let k = 0;
+        while (k < ks.length - 1 && tClip >= ks[k + 1][0]) k++;
+        const [t0, p0] = ks[k], [t1, p1] = ks[Math.min(k + 1, ks.length - 1)];
+        const u = t1 > t0 ? suave((tClip - t0) / (t1 - t0)) : 1;
+        for (const j of Object.keys(p0)) objetivo[j].slerp(tmpQ2.slerpQuaternions(p0[j], p1[j], tClip < t0 ? 0 : u), wClip);
+      } else for (const [j, q] of Object.entries(clip.qPose)) objetivo[j].slerp(q, wClip);
       if (!reducido || clip.nombre !== 'celebrar') {
         for (const [j, eje, amp, frec, desde, hasta] of clip.osc || []) {
           if (tClip < desde || tClip > hasta) continue;
@@ -433,10 +540,9 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     cejasPico *= 1 - acercar(2.2, dt);
     const cejasObj = Math.max(cejasPico, (clipCara?.cejas || 0) * wClip * 0.8);
     cejas += (cejasObj - cejas) * acercar(10, dt);
-    cara.cejas.forEach((c, i) => {
-      c.position.y = cejasBase[i].y + 0.017 * cejas;
-      c.rotation.z = cejasBase[i].rz + 0.05 * cejas;
-    });
+    const cenoObj = (clipCara?.ceno || 0) * wClip;
+    ceno += (cenoObj - ceno) * acercar(8, dt);
+    for (const c of cara.cejas) c.poner({ alza: cejas, ceno });
     // los ojos: hacia donde mira, más de lo que gira la cabeza
     const ojos = clipCara?.ojos && wClip > 0.4 ? clipCara.ojos : null;
     const ox = ojos ? ojos[0] : Math.max(-1, Math.min(1, (yawObj - yaw) * 2.5 + yawObj * 0.4));

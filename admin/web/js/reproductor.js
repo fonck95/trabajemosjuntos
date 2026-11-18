@@ -227,7 +227,7 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
     // trae: sin movimiento propio, animación ni simulación). La simulación se vuelve a accionar si la escena se repite
     const res = await mandar({ orden: 'escena', capitulo: esc.capitulo, paso: esc.paso, panel: esc.panel,
       visual: esc.visual, resaltar: esc.resaltar, mover: esc.mover ?? null, animar: esc.animar === true,
-      simular: esc.simular ?? null, frases: esc.frases,
+      simular: esc.simular ?? null, gesto: esc.gesto ?? null, frases: esc.frases,
       titulo: r.titulo, n: k, de: de(), voz: voz.estado() === 'activa', rid: r.id, ms: narracionMs(esc.frases) },
     { plazo: ESPERA_ESCENA_MS });
     if (!vigente(g)) return null;

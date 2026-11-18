@@ -247,7 +247,7 @@ def test_el_esquema_y_los_textos_para_el_modelo_lo_nombran():
     assert sim["maxItems"] == rec.MAX_SIMULAR and sim["items"]["type"] == "object" and sim["items"]["required"] == ["control"]
     assert {r["type"] for r in sim["items"]["properties"]["valor"]["anyOf"]} == {"boolean", "number", "string"}
     assert s["properties"]["pasos"]["items"]["properties"]["simular"]["items"]["type"] == "object"
-    assert len(json.dumps(s, ensure_ascii=False)) < 14000
+    assert len(json.dumps(s, ensure_ascii=False)) < 14200   # (14000 hasta el gesto del presentador en los pasos)
     assert "simular [{control, valor}]" in hi.D_PRESENTACION and len(hi.D_PRESENTACION) < 1500
     assert "simular [{control, valor}]" in hi.NOTA_GUION
     from app.agente import sistema

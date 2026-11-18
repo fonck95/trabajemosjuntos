@@ -1,15 +1,19 @@
 // El taller del presentador (web/presentador.html): el personaje solo, de cerca, para verlo y probarlo. Se gira y se
 // acerca con el ratón (OrbitControls), un clic lo hace señalar ese punto, las flechas lo hacen caminar y los botones
-// disparan cada gesto, la entrada, la salida y el habla (con la voz del navegador, si la hay).
+// disparan cada gesto, la entrada, la salida y el habla (la boca y el texto, como el subtítulo).
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { crearPersonaje } from './personaje.js';
-import { crearAnimador, NOMBRES_GESTOS } from './animador.js';
+import { crearAnimador, GESTOS_AGENTE } from './animador.js';
 import { decirS } from './presentador.js';
 
-const NOMBRES = { saludar: 'Saludar', despedirse: 'Despedirse', senalar: 'Señalar', presentar: 'Presentar', explicar: 'Explicar',
-  contar: 'Contar hasta 3', pensar: 'Pensar', celebrar: 'Celebrar', invitar: '¿Preguntas?', asentir: 'Asentir',
-  pulgar: 'Pulgar arriba', escuchar: 'Escuchar' };
+// Los gestos que el asistente puede pedir en cada paso del plan, con su nombre para la persona (y el de cada uno en el
+// plan, en el title del botón)
+const NOMBRES = { saludar: 'Saludar', senalar: 'Señalar', presentar: 'Presentar', mostrar_panel: 'Mostrar el panel',
+  mirar_maqueta: 'Mirar la maqueta', explicar: 'Explicar', destacar: 'Destacar', comparar: 'Comparar', enumerar: 'Enumerar',
+  crecer: 'Crecer', grande: 'Grande', detalle: 'Detalle', construir: 'Construir', pensar: 'Pensar', preguntar: 'Preguntar',
+  asentir: 'Asentir', negar: 'Negar', calmar: 'Calmar', aprobar: 'Aprobar', celebrar: 'Celebrar', aplaudir: 'Aplaudir',
+  juntos: '¡Juntos!', corazon: 'Corazón', invitar: '¿Preguntas?', despedirse: 'Despedirse' };
 const LIMITE_X = 2.4;
 
 const caja = document.getElementById('escenario');
@@ -22,9 +26,13 @@ renderer.domElement.setAttribute('role', 'img');
 
 const escena = new THREE.Scene();
 escena.add(new THREE.HemisphereLight(0xffffff, 0x8a7a70, 1.15));
-const luz = new THREE.DirectionalLight(0xffffff, 2.1);
+const luz = new THREE.DirectionalLight(0xffffff, 1.9);
 luz.position.set(-2, 3, 4);
 escena.add(luz);
+// una luz suave de frente: la cara (su relieve, los pliegues de la sonrisa) se lee sin sombras duras
+const relleno = new THREE.DirectionalLight(0xfff1e6, 0.7);
+relleno.position.set(1.5, 0.6, 4);
+escena.add(relleno);
 // el piso: un disco con sombra suave al centro
 const piso = (() => {
   const c = document.createElement('canvas');
@@ -45,9 +53,9 @@ const piso = (() => {
 escena.add(piso);
 
 const camara = new THREE.PerspectiveCamera(30, 1, 0.1, 60);
-camara.position.set(0.5, 1.45, 4.9);
+camara.position.set(0.5, 1.5, 5.4);
 const controles = new OrbitControls(camara, renderer.domElement);
-controles.target.set(0, 1.12, 0);
+controles.target.set(0, 1.2, 0);
 controles.enablePan = false;
 controles.enableDamping = true;
 controles.minDistance = 1.6;
@@ -85,15 +93,28 @@ renderer.setAnimationLoop((ahora) => {
 
 // ── Los gestos ──
 const filaGestos = document.querySelector('[aria-label="Gestos"]');
-for (const nombre of NOMBRES_GESTOS) {
+const alLado = (lado, y = 2.3) => new THREE.Vector3(personaje.grupo.position.x + lado * 3, y, 1.5);
+let enumerar = 0;
+for (const nombre of GESTOS_AGENTE) {
   const b = document.createElement('button');
   b.type = 'button';
   b.textContent = NOMBRES[nombre] || nombre;
+  b.title = `gesto: ${nombre}`;
   b.addEventListener('click', () => {
-    if (nombre === 'senalar' || nombre === 'presentar') {
-      // hacia la cámara, arriba a un lado (con el clic en la escena se elige el punto)
-      const lado = Math.random() < 0.5 ? -1 : 1;
-      anim.gesto(nombre, { punto: new THREE.Vector3(personaje.grupo.position.x + lado * 3, 2.3, 1.5) });
+    clearInterval(enumerar);
+    // los que van hacia algo: un lado de la escena (con el clic en la escena se elige el punto)
+    if (nombre === 'senalar' || nombre === 'presentar') anim.gesto(nombre, { punto: alLado(Math.random() < 0.5 ? -1 : 1) });
+    else if (nombre === 'mostrar_panel') anim.gesto('senalar', { punto: alLado(-1, 1.6) });
+    else if (nombre === 'mirar_maqueta') anim.gesto(nombre, { punto: alLado(1, 1.2) });
+    else if (nombre === 'enumerar') {
+      // uno, dos, tres: como en un paso de tres frases
+      let n = 1;
+      anim.gesto('enumerar', { n, sostener: true });
+      enumerar = setInterval(() => {
+        n += 1;
+        if (n > 3) { clearInterval(enumerar); anim.detenerGesto(); return; }
+        anim.gesto('enumerar', { n, seguir: true });
+      }, 1200);
     } else anim.gesto(nombre, { n: 3 });
   });
   filaGestos.append(b);
@@ -134,17 +155,17 @@ boca.addEventListener('click', () => {
   boca.setAttribute('aria-pressed', String(v));
   if (v) anim.hablar(true); else anim.callar();
 });
+// «Decir»: mueve la boca lo que tardaría en decirlo y lo muestra abajo, como el subtítulo de la presentación (la voz
+// de verdad es la del panel, en el recorrido narrado)
+const leyenda = document.getElementById('dice');
+let tLeyenda = 0;
 document.getElementById('decir').addEventListener('click', () => {
   const texto = document.getElementById('texto').value.trim();
   if (!texto) return;
-  const s = globalThis.speechSynthesis;
-  const voces = s?.getVoices?.().filter((v) => /^es/i.test(v.lang)) || [];
-  if (!s || !globalThis.SpeechSynthesisUtterance || !voces.length) { anim.hablar(decirS(texto)); return; }
-  s.cancel();
-  const u = new SpeechSynthesisUtterance(texto);
-  u.voice = voces.find((v) => /es-CO/i.test(v.lang)) || voces.find((v) => /es-(419|MX|US)/i.test(v.lang)) || voces[0];
-  u.lang = u.voice.lang;
-  u.onstart = () => anim.hablar(true);
-  u.onend = u.onerror = () => anim.callar();
-  s.speak(u);
+  const s = decirS(texto);
+  anim.hablar(s);
+  leyenda.textContent = texto;
+  leyenda.hidden = false;
+  clearTimeout(tLeyenda);
+  tLeyenda = setTimeout(() => { leyenda.hidden = true; }, s * 1000 + 800);
 });

@@ -516,7 +516,9 @@ def test_definicion_y_esquema():
     assert s["properties"]["zoom"] == {**s["properties"]["zoom"], "type": "number", "minimum": 0.3, "maximum": 3}
     assert s["properties"]["sin"]["maxItems"] == 8 and s["properties"]["sin"]["items"]["type"] == "string"
     assert "PLAN" in d["description"] and "pasos" in d["description"] and "dice" in d["description"]
-    assert len(texto) < 14000   # el esquema va en cada pedido al modelo
+    # el esquema va en cada pedido al modelo (14000 hasta que los pasos del plan llevaron el gesto del presentador)
+    assert len(texto) < 14200
+    assert "gestos" in s["properties"]["pasos"]["items"]["properties"]["gesto"]["description"]
     # Al final de las de interfaz: el orden fijo de `fijas()` (las conversaciones congelan la lista)
     assert [h.nombre for h in herramientas.fijas()][-1] == "presentacion"
 
@@ -1337,7 +1339,7 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
                        timeout=60)
     assert p.returncode == 0, p.stderr
     r = json.loads(p.stdout.strip().splitlines()[-1])
-    assert r["exports"] == ["AVISOS", "CANAL", "CONTROLES", "FASES", "MAX_CIERRE", "MAX_ESCENAS", "MAX_EXPLICACION",
+    assert r["exports"] == ["AVISOS", "CANAL", "CONTROLES", "FASES", "GESTOS", "MAX_CIERRE", "MAX_ESCENAS", "MAX_EXPLICACION",
                             "MAX_FRASES", "MAX_PUNTO", "MAX_SOSTENER_MS", "MAX_TITULO", "MOTIVOS", "RESALTAR",
                             "TERMINALES", "VERSION", "VOCES", "accionPresentacion", "accionesEnCola",
                             "accionesPresentacion", "alternarVozRecorrido", "avisarEstado", "avisarRecorrido",

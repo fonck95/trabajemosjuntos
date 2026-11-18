@@ -168,7 +168,7 @@ const CLAVES = new Map([
   ['ir', ['capitulo', 'paso', 'explicacion']], ['avanzar', ['d', 'explicacion']], ['explicar', ['explicacion']],
   ['quitar_explicacion', []], ['estado', []], ['vista', ['panel', 'indice', 'fichas', 'controles', 'presentador']],
   ['visual', [...Object.keys(VISUAL), 'mover', 'animar', 'simular', 'ms']],
-  ['escena', ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'mover', 'animar', 'simular', 'frases', 'titulo', 'n', 'de', 'voz', 'rid', 'ms']],
+  ['escena', ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'mover', 'animar', 'simular', 'gesto', 'frases', 'titulo', 'n', 'de', 'voz', 'rid', 'ms']],
   ['narracion', ['frase', 'pausa', 'voz', 'preparando', 'habla']],
   ['cierre', ['puntos', 'rid']],
 ]);
@@ -301,6 +301,17 @@ function animarTolerante(v, descartadas) {
 
 /** `simular` con tolerancia: los controles con la forma {control, valor?} (el control, un id; el valor, un número, el id
  * de una opción o verdadero o falso), hasta MAX_SIMULAR; lo que no la tiene se anota y no va. null si no queda nada. */
+// El gesto del presentador que pide la escena (`GESTOS` de app/recorrido.py y del puente: una prueba los compara). Uno
+// que no está en la lista se descarta: el presentador elige solo
+export const GESTOS = ['saludar', 'senalar', 'presentar', 'mostrar_panel', 'mirar_maqueta', 'explicar', 'destacar',
+  'comparar', 'enumerar', 'crecer', 'grande', 'detalle', 'construir', 'pensar', 'preguntar', 'asentir', 'negar', 'calmar',
+  'aprobar', 'celebrar', 'aplaudir', 'juntos', 'corazon', 'invitar', 'despedirse'];
+function gestoTolerante(g, descartadas) {
+  if (g === undefined || g === null) return null;
+  if (typeof g === 'string' && GESTOS.includes(g)) return g;
+  descartadas.push({ clave: 'gesto', motivo: 'el presentador no tiene ese gesto' });
+  return null;
+}
 function simularTolerante(s, descartadas) {
   if (s === undefined || s === null) return null;
   if (!Array.isArray(s)) { descartadas.push({ clave: 'simular', motivo: 'no es una lista de controles' }); return null; }
@@ -712,6 +723,7 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     const mover = moverTolerante(m.mover, descartadas);
     const animar = animarTolerante(m.animar, descartadas);
     const simulacion = simularTolerante(m.simular, descartadas);
+    const gesto = gestoTolerante(m.gesto, descartadas);
     // lo que durará la narración: lo dice el reproductor; si no, la lectura de sus frases
     const ms = entero(m.ms, 1, MS_MAX) ? m.ms
       : m.frases.reduce((a, f) => a + lecturaMs(f), 0) + ENTRE_FRASES_MS * (m.frases.length - 1);
@@ -733,7 +745,7 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       const conPanel = !pres?.classList.contains('sin-panel');
       if (conPanel !== m.panel) verPanel(m.panel);
       narrar({ titulo: m.titulo, n: m.n, de: m.de, frases: m.frases, voz: m.voz === true, rid: m.rid });
-      presentar('narrar', { n: m.n, de: m.de, senal: !!senal,
+      presentar('narrar', { n: m.n, de: m.de, senal: !!senal, gesto, frases: m.frases.length,
         obra: atlas || !!(v.enfoque || v.mirar || v.detalle || v.inmersion || mover) });
       guiar(true);
       // si la persona había movido la cámara, deja de contar como movida (el viaje que sigue corta ese reencuadre)

@@ -172,7 +172,12 @@ export const AVISOS = ['atlas', 'resaltar', 'asiento', 'voz', 'parcial'];
 const RID = /^[0-9a-f]{12}$/;
 const VISUAL_ESCENA = Object.keys(VISUAL_INICIAL);
 const ESCENA_BASE = ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'frases', 'sostener_ms'];
-const ESCENA = [...ESCENA_BASE, 'mover', 'animar', 'simular'];
+const ESCENA = [...ESCENA_BASE, 'mover', 'animar', 'simular', 'gesto'];
+// Los gestos del presentador que un paso del plan puede pedir (`GESTOS` de app/recorrido.py, `GESTOS_AGENTE` de
+// web/js/presentador/animador.js y `GESTOS` de mando.js: una prueba los compara)
+export const GESTOS = ['saludar', 'senalar', 'presentar', 'mostrar_panel', 'mirar_maqueta', 'explicar', 'destacar',
+  'comparar', 'enumerar', 'crecer', 'grande', 'detalle', 'construir', 'pensar', 'preguntar', 'asentir', 'negar', 'calmar',
+  'aprobar', 'celebrar', 'aplaudir', 'juntos', 'corazon', 'invitar', 'despedirse'];
 const entero = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
 const tiene = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 const exactas = (o, claves) => !!o && typeof o === 'object' && !Array.isArray(o) && Object.keys(o).length === claves.length
@@ -228,6 +233,7 @@ function escenaValida(e) {
   if (e.mover !== undefined && !moverValido(e.mover)) return null;
   if (e.animar !== undefined && typeof e.animar !== 'boolean') return null;
   if (e.simular !== undefined && !simularValido(e.simular)) return null;
+  if (e.gesto !== undefined && e.gesto !== null && !GESTOS.includes(e.gesto)) return null;
   const f = e.frases;
   if (!Array.isArray(f) || !f.length || f.length > MAX_FRASES || !f.every((x) => tal(x, MAX_EXPLICACION))) return null;
   if (f.reduce((a, x) => a + [...x].length, 0) + f.length - 1 > MAX_EXPLICACION) return null;

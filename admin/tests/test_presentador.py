@@ -136,7 +136,9 @@ def test_el_personaje_y_el_animador_con_node(tmp_path):
         else:
             assert isinstance(x["dur"], (int, float)) and 1 <= x["dur"] <= 6 and x["sigue"] is None, (g, x)
     assert set(r["gestos"]) >= {"saludar", "senalar", "presentar", "explicar", "contar", "pensar", "celebrar", "invitar",
-                                "asentir", "pulgar", "escuchar", "despedirse"}
+                                "asentir", "aprobar", "escuchar", "despedirse", "destacar", "comparar", "enumerar", "crecer",
+                                "grande", "detalle", "construir", "preguntar", "negar", "calmar", "aplaudir", "juntos",
+                                "corazon", "mirar_maqueta"}
     assert r["habla"]["hablando"] and r["habla"]["abrirMax"] > 0.3, r["habla"]
     assert r["calla"] == {"hablando": False, "abrir": 0.0} or (not r["calla"]["hablando"] and r["calla"]["abrir"] < 0.01), r["calla"]
     # a la izquierda de la pantalla (−x) señala con el brazo derecho del personaje, y al revés
@@ -228,6 +230,10 @@ const tomar = () => llamadas.splice(0).map((l) => JSON.parse(JSON.stringify(l)))
   // otra escena en otro paso, con resaltado y la cámara a una obra: el subtítulo que se quita en el camino no lo despide
   await a.pedir('escena', { id: 8, ...E({ paso: 2, n: 2, resaltar: { tipo: 'cifra', n: 1 }, visual: { ...structuredClone(V0), mirar: 'torre' } }) });
   r.escena2 = tomar();
+  // el gesto que pidió el asistente llega al presentador; uno que no existe se descarta (aviso parcial) y elige solo
+  const g1 = await a.pedir('escena', { id: 18, ...E({ paso: 2, n: 3, gesto: 'comparar' }) });
+  const g2 = await a.pedir('escena', { id: 19, ...E({ paso: 2, n: 3, gesto: 'volar' }) });
+  r.gestos = [tomar(), g1?.aviso ?? null, g2?.aviso ?? null, (g2?.descartadas || []).map((x) => x.clave)];
   await a.pedir('cierre', { id: 9, puntos: ['Uno', 'Dos'], rid: 'abcdef123456' });
   await a.pedir('cierre', { id: 10, puntos: null, rid: 'abcdef123456' });
   r.cierre = tomar();
@@ -260,12 +266,15 @@ console.log(JSON.stringify(r));
 @requiere_node
 def test_el_mando_le_avisa_al_presentador(tmp_path):
     r = _node(tmp_path, _guion_mando(NODE_MANDO_PRESENTADOR), MANDO_JS.as_uri())
-    assert r["escena1"] == [["narrar", {"n": 1, "de": 3, "senal": False, "obra": False}]], r["escena1"]
+    assert r["escena1"] == [["narrar", {"n": 1, "de": 3, "senal": False, "gesto": None, "frases": 2, "obra": False}]], r["escena1"]
     assert r["frase"] == [["frase", 1, {"voz": True, "texto": "Frase dos."}]], r["frase"]
     assert r["habla"] == [["habla", True], ["habla", False]]
     assert r["habla_mala"] == "error"
     assert r["pausa"] == [["pausa", True], ["pausa", False]]
-    assert r["escena2"] == [["narrar", {"n": 2, "de": 3, "senal": True, "obra": True}]], r["escena2"]
+    assert r["escena2"] == [["narrar", {"n": 2, "de": 3, "senal": True, "gesto": None, "frases": 2, "obra": True}]], r["escena2"]
+    assert r["gestos"][0] == [["narrar", {"n": 3, "de": 3, "senal": False, "gesto": "comparar", "frases": 2, "obra": False}],
+                              ["narrar", {"n": 3, "de": 3, "senal": False, "gesto": None, "frases": 2, "obra": False}]], r["gestos"]
+    assert r["gestos"][1:] == [None, "parcial", ["gesto"]], r["gestos"]
     assert r["cierre"] == [["cierre", ["Uno", "Dos"], {"voz": False}], ["cierre", None, {"voz": False}]], r["cierre"]
     assert r["quitar"] == [["quitar"]]
     assert r["explicar"] == [["explicar", "La torre tiene cuatro pisos."]]
@@ -301,3 +310,98 @@ def test_el_presentador_solo_usa_lo_que_el_sitio_publica():
     assert '<meta name="robots" content="noindex">' in (WEB / "presentador.html").read_text(encoding="utf-8")
     assert ".presentador { position: fixed; z-index: 8; left: 0; top: 0; pointer-events: none; }" in \
         (WEB / "propuesta.html").read_text(encoding="utf-8")
+
+
+# ───────────────────────────── La serie de gestos que pide el asistente ─────────────────────────────
+
+def _lista_js(js: str, nombre: str) -> list[str]:
+    m = re.search(rf"export const {nombre} = \[(.+?)\];", js, re.S)
+    assert m, nombre
+    return re.findall(r"'([a-z_]+)'", m.group(1))
+
+
+def test_los_gestos_son_los_mismos_en_el_servidor_el_puente_el_mando_y_el_animador():
+    from app import recorrido as rec
+    puente = (ADMIN / "web" / "js" / "agente-presentacion.js").read_text(encoding="utf-8")
+    animador = (PRESENTADOR / "animador.js").read_text(encoding="utf-8")
+    mando = MANDO_JS.read_text(encoding="utf-8")
+    nombres = list(rec.GESTOS)
+    assert len(nombres) >= 24 and all(re.fullmatch(r"[a-z_]{3,20}", n) for n in nombres)
+    assert _lista_js(puente, "GESTOS") == _lista_js(mando, "GESTOS") == _lista_js(animador, "GESTOS_AGENTE") == nombres
+    # cada uno lo sabe hacer el animador (mostrar_panel es señalar hacia el panel) y dice para qué sirve
+    hechos = set(re.findall(r"^  (\w+): \(o\) =>", animador, re.M))
+    assert set(nombres) - hechos == {"mostrar_panel"}, set(nombres) - hechos
+    assert all(5 <= len(rec.GESTOS[n]) <= 80 for n in nombres)
+
+
+def test_el_asistente_pide_el_gesto_de_cada_paso():
+    from app import recorrido as rec
+    from app.agente.herramientas import interfaz as hi
+    from test_recorrido import G, _armar
+    _, r = _armar(entrada={"op": "recorrido", "titulo": "Con el presentador", "pasos": [
+        {"capitulo": "salud", "paso": "torre", "gesto": "Saludar", "dice": "Uno."},
+        {"gesto": "señalar", "dice": "Dos."},
+        {"gesto": "pulgar", "dice": "Tres."},
+        {"gesto": "volar", "dice": "Cuatro."},
+        {"gesto": "Mostrar panel", "dice": "Cinco."},
+        {"dice": "Seis."}]})
+    absoluto = r.acciones[0]["recorrido"]
+    assert rec.validar(absoluto, G) == []
+    # el nombre, con tildes o en otras palabras; el que no existe se descarta con un aviso y el plan corre igual
+    assert [e.get("gesto") for e in absoluto["escenas"]] == ["saludar", "senalar", "aprobar", None, "mostrar_panel", None]
+    avisos = r.contenido["avisos"]
+    assert any(a.startswith("Paso 4: ") and "«volar»" in a and "saludar, senalar" in a for a in avisos), avisos
+    assert not any(a.startswith(("Paso 1:", "Paso 2:", "Paso 3:", "Paso 5:")) for a in avisos), avisos
+    # la tarjeta del chat lo muestra y al modelo se le dice
+    t = r.acciones[1]
+    assert ["gesto" in x["hace"] for x in t["escenas"]] == [True, True, True, False, True, False]
+    assert hi.HACE["gesto"] == "el presentador hace un gesto"
+    assert "el presentador: senalar" in r.contenido["pasos"][1]["muestra"]
+    # un gesto que no está en la lista no pasa la validación (lo guardado en la base se vuelve a validar)
+    malo = {**absoluto, "escenas": [{**absoluto["escenas"][0], "gesto": "volar"}]}
+    assert any("ese gesto" in x for x in rec.validar(malo, G))
+
+
+def test_el_guion_le_da_al_modelo_la_lista_de_gestos():
+    from app import recorrido as rec
+    from app.agente.herramientas import interfaz as hi
+    from test_recorrido import _armar
+    _, r = _armar(entrada={"op": "guion", "capitulo": "salud"})
+    assert r.contenido["gestos"] == rec.GESTOS and "gesto del presentador" in hi.NOTA_GUION
+    assert "gesto" in hi.D_PRESENTACION and len(hi.D_PRESENTACION) < 1500
+
+
+NODE_PUENTE_GESTO = r"""globalThis.document = { querySelector: () => null, documentElement: {} };
+globalThis.MutationObserver = class { observe() {} };
+globalThis.window = globalThis;
+globalThis.addEventListener ||= () => {};
+globalThis.location = { pathname: '/', origin: 'https://panel.example' };
+const [puente, tarjeta, datos] = process.argv.slice(2);
+const P = await import(puente), T = await import(tarjeta);
+const fs = await import('node:fs');
+const d = JSON.parse(fs.readFileSync(datos, 'utf8'));
+const r = d.recorrido;
+const malo = { ...r, escenas: r.escenas.map((e, i) => (i === 0 ? { ...e, gesto: 'volar' } : e)) };
+console.log(JSON.stringify({
+  valido: P.recorridoValido(r)?.escenas.map((e) => e.gesto ?? null) ?? null,
+  malo: P.recorridoValido(malo),
+  tarjeta: !!T.tarjetaValida(d.tarjeta),
+}));
+"""
+
+
+@requiere_node
+def test_el_puente_y_la_tarjeta_aceptan_el_gesto(tmp_path):
+    import json
+    from test_recorrido import PUENTE_JS, TARJETA_JS, _armar
+    _, r = _armar(entrada={"op": "recorrido", "titulo": "Gestos", "pasos": [
+        {"capitulo": "salud", "paso": "torre", "gesto": "saludar", "dice": "Uno."}, {"gesto": "enumerar", "dice": "Dos."},
+        {"dice": "Tres."}]})
+    (tmp_path / "datos.json").write_text(json.dumps({"recorrido": r.acciones[0]["recorrido"], "tarjeta": r.acciones[1]},
+                                                    ensure_ascii=False), encoding="utf-8")
+    (tmp_path / "puente.mjs").write_text(NODE_PUENTE_GESTO, encoding="utf-8")
+    p = subprocess.run(["node", str(tmp_path / "puente.mjs"), PUENTE_JS.as_uri(), TARJETA_JS.as_uri(), str(tmp_path / "datos.json")],
+                       capture_output=True, text=True, timeout=60, cwd=ADMIN)
+    assert p.returncode == 0, p.stderr
+    o = json.loads(p.stdout.strip().splitlines()[-1])
+    assert o == {"valido": ["saludar", "enumerar", None], "malo": None, "tarjeta": True}, o

@@ -22,7 +22,8 @@ import * as THREE from 'three';
 import { crearPersonaje } from './personaje.js';
 import { crearAnimador } from './animador.js';
 
-const FOV = 17, DIST = 8, ALTO_VISTA = 2 * DIST * Math.tan((FOV * Math.PI) / 360);   // lo que se ve de alto en z = 0
+const FOV = 17;           // poca perspectiva: casi un dibujo plano
+const HOLGURA = 1.1;      // lo que se ve de alto, por la altura del personaje (los brazos arriba caben)
 const ASPECTO = 0.95;
 const HUNDIDO = 0.05;      // la parte de abajo del lienzo que queda detrás del subtítulo (los pies)
 const DECIR_S = 0.058;     // lo que tarda en decirse un carácter sin voz (a unos 17 por segundo)
@@ -48,14 +49,20 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   renderer.setClearColor(0x000000, 0);
   const escena = new THREE.Scene();
   escena.add(new THREE.HemisphereLight(0xffffff, 0x8a7a70, 1.15));
-  const luz = new THREE.DirectionalLight(0xffffff, 2.1);
+  const luz = new THREE.DirectionalLight(0xffffff, 1.9);
   luz.position.set(-2, 3, 4);
   escena.add(luz);
+  // una luz suave de frente: la cara (su relieve, los pliegues de la sonrisa) se lee sin sombras duras
+  const relleno = new THREE.DirectionalLight(0xfff1e6, 0.7);
+  relleno.position.set(1.5, 0.6, 4);
+  escena.add(relleno);
   const camara = new THREE.PerspectiveCamera(FOV, ASPECTO, 0.1, 50);
-  camara.position.set(0, ALTO_VISTA / 2, DIST);
-  camara.lookAt(0, ALTO_VISTA / 2, 0);
   const personaje = crearPersonaje({ documento });
   escena.add(personaje.grupo);
+  // el encuadre: los pies abajo del lienzo y lo que mide, con su holgura, a lo alto
+  const altoVista = personaje.medidas.alto * HOLGURA;
+  camara.position.set(0, altoVista / 2, altoVista / 2 / Math.tan((FOV * Math.PI) / 360));
+  camara.lookAt(0, altoVista / 2, 0);
   const anim = crearAnimador(personaje, { reducido });
   anim.camara = camara;
   personaje.grupo.visible = false;
@@ -204,21 +211,51 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     detener();
     lienzo.hidden = true;
   }
-  function senalarA(objetivo, { presentar = false } = {}) {
+  function senalarA(objetivo, { presentar = false, gesto = null } = {}) {
     const p = objetivo && typeof objetivo.x === 'number' ? objetivo : centroDe(objetivo);
     if (!p || W === 0) return false;
     colocar(true);
-    anim.gesto(presentar ? 'presentar' : 'senalar', { punto: alMundo(p.x, p.y), dur: 3 });
+    anim.gesto(gesto || (presentar ? 'presentar' : 'senalar'), { punto: alMundo(p.x, p.y), dur: 3 });
     return true;
+  }
+  /** El centro del panel de la presentación (su texto y sus cifras), o null si está oculto («Solo 3D») */
+  function centroPanel() {
+    const panel = documento.querySelector('.panel'), pres = documento.querySelector('#pres');
+    if (!panel || pres?.classList.contains('sin-panel')) return null;
+    const r = panel.getBoundingClientRect();
+    return r.width > 0 ? { x: r.left + r.width * 0.6, y: r.top + Math.min(r.height, 420) * 0.45 } : null;
+  }
+  let enumerando = 0;   // `enumerar`: cuántas frases tiene el paso (un dedo por cada una)
+  /** El gesto que pidió el asistente para el paso (`GESTOS` de app/recorrido.py) */
+  function hacerGesto(nombre, { senal = false, frases = 1 } = {}) {
+    enumerando = 0;
+    const foco = documento.querySelector('.foco');
+    if (nombre === 'senalar') return (senal && foco && senalarA(foco)) || senalarA(centroMaqueta());
+    if (nombre === 'presentar') return senalarA(centroMaqueta(), { presentar: true });
+    if (nombre === 'mostrar_panel') {
+      const enPanel = foco && documento.querySelector('.panel')?.contains(foco) ? foco : null;
+      return (enPanel && senalarA(enPanel)) || senalarA(centroPanel() || centroMaqueta());
+    }
+    if (nombre === 'mirar_maqueta') return senalarA(centroMaqueta(), { gesto: 'mirar_maqueta' });
+    if (nombre === 'enumerar') { enumerando = Math.max(1, Math.min(3, frases)); return anim.gesto('enumerar', { n: 1, sostener: true }); }
+    return anim.gesto(nombre);
   }
 
   // ── Lo que le avisa mando.js ──
   return {
     /** Una escena del recorrido (la n): `senal` si resalta algo, `obra` si la cámara va a una obra o a un modelo */
-    narrar({ n = 1, senal = false, obra = false } = {}) {
+    narrar({ n = 1, senal = false, obra = false, gesto = null, frases = 1 } = {}) {
       if (!permitido) return;
-      const nuevo = aparecer({ saludo: n === 1 });
+      if (anim.estado().gesto === 'enumerar') anim.detenerGesto();
+      enumerando = 0;
+      const nuevo = aparecer({ saludo: n === 1 && (!gesto || gesto === 'saludar') });
       clearTimeout(tSenal);
+      // el gesto que pidió el asistente (si es saludar al subir, ya lo hace la entrada)
+      if (gesto) {
+        if (gesto === 'saludar' && nuevo) return;
+        tSenal = setTimeout(() => hacerGesto(gesto, { senal, frases }), nuevo ? 950 : 450);
+        return;
+      }
       if (n === 1 && nuevo) return;
       // el resaltado aparece (y el panel se desplaza hasta él) un momento después de la escena
       tSenal = setTimeout(() => {
@@ -232,6 +269,8 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     frase(k, { voz = false, texto = '' } = {}) {
       if (!permitido || !enEscena) return;
       if (anim.estado().gesto === 'escuchar') anim.detenerGesto();
+      // `enumerar`: un dedo más con cada frase
+      if (enumerando && k > 0 && anim.estado().gesto === 'enumerar') anim.gesto('enumerar', { n: Math.min(3, k + 1), seguir: true });
       anim.hablar(voz ? true : decirS(texto));
     },
     /** La voz empieza (true) o termina (false) de decir algo */
