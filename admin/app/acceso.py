@@ -145,7 +145,7 @@ def reunion_de(request: Request) -> int | None:
     """El id de la cabecera `X-Reunion` (la pantalla de la reunión desde la que se hace la petición), si es un número.
     Solo sirve para la traza (app/trazas.py), que además revisa que quien pide pueda ver esa reunión."""
     v = (request.headers.get("x-reunion") or "").strip()
-    return int(v) if v.isdigit() and len(v) <= 9 else None
+    return int(v) if v.isascii() and v.isdigit() and len(v) <= 9 else None
 
 
 def requiere(*permisos: str, limitar: bool = False) -> Callable[..., Quien]:

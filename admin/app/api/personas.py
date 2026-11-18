@@ -844,6 +844,9 @@ def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, 
     completar = modo == "completar"
     p_rol = _es_planillero(quien)
     adm = quien.administra
+    if base and not adm:
+        # Lo que el rol no ve no se compara: un 409 «cambiada» (o su ausencia) diría si alguien es líder
+        base = {k: v for k, v in base.items() if k not in VEDADOS_P}
     ts = bd.ahora()
     avisos_op: list[str] = []
     if p_rol:

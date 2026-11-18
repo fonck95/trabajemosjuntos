@@ -128,8 +128,11 @@ def preparar(db: Database, f: Filtros) -> Filtros:
             raise HTTPException(404, "El área no existe")
         f._area = geometria_de_area(a) or {"type": "Polygon", "coordinates": [[]]}
     if f.intervenida_en:
-        f._intervenidas = db.auditoria.distinct("entidad_id", {"reuniones": f.intervenida_en, "entidad": "persona",
-                                                               "accion": {"$nin": trazas.SOLO_ASISTENCIA}})
+        from ..db import _raices_activas
+        ids = db.auditoria.distinct("entidad_id", {"reuniones": f.intervenida_en, "entidad": "persona",
+                                                   "accion": {"$nin": trazas.SOLO_ASISTENCIA}})
+        # Con la ficha en que quedó la que después se unió con otra
+        f._intervenidas = ids + [r for r, _ in _raices_activas(db, ids).values()]
     return f
 
 

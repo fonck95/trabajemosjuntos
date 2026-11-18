@@ -281,8 +281,10 @@ def exportar(f: Filtros = Depends(filtros_query), incluir_sin_autorizacion: int 
     etiquetas = {e["_id"]: e["nombre"] for e in db.etiquetas.find() if incluir_sensibles or not e.get("sensible")}
     codigos = {x["_id"]: x.get("codigo") for x in db.puestos.find({}, {"codigo": 1})}
     # Los nombres de los líderes que trajeron a alguien (app/api/lideres.py)
-    lideres = {x["_id"]: x.get("nombre") for x in db.personas.find(
-        {"_id": {"$in": db.personas.distinct("lideres.id", bd.ACTIVA)}, **bd.ACTIVA}, {"nombre": 1})}
+    # (sin quien no autorizó el tratamiento, como en las filas, salvo que se pida incluirlos)
+    lideres = {x["_id"]: x.get("nombre") for x in db.personas.find(con_autorizacion(
+        {"_id": {"$in": db.personas.distinct("lideres.id", bd.ACTIVA)}, **bd.ACTIVA}, incluir_sin_autorizacion),
+        {"nombre": 1})}
     columnas = [c for c in COLUMNAS if c[0] != "listas" or incluir_listas]
     sensibles = list(modelo.SENSIBLES.items()) if incluir_sensibles else []
     wb = openpyxl.Workbook(write_only=True)

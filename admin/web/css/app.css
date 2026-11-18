@@ -391,7 +391,8 @@ dialog .pie { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 
 /* Líderes que trajeron a la persona (ficha, A y K) */
 .lider-asignado { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
 .lider-asignado:last-of-type { border-bottom: 0; }
-.lider-asignado .q { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.lider-asignado .q { flex: 1; min-width: 0; }
+.lider-asignado .q small { display: block; }
 .lider-asignado .q a { font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
 a.chip { text-decoration: none; }
 
@@ -418,7 +419,7 @@ a.chip { text-decoration: none; }
 @media (max-width: 900px) { input, select, textarea { font-size: 16px; } }
 /* 2. Dedo: blancos de 44 px o más */
 @media (pointer: coarse) {
-  .btn.chico, .chip[data-et], button.chip, label.chip.opcion, .segmentado button, .pestanas button { min-height: 44px; }
+  .btn.chico, .chip[data-et], button.chip, a.chip, label.chip.opcion, .segmentado button, .pestanas button { min-height: 44px; }
   .btn.chico { padding: 8px 12px; }
   .casilla { min-height: 44px; }
 }
@@ -758,8 +759,8 @@ dialog .cab .cerrar-dialogo svg { width: 20px; height: 20px; }
   .btn, .campo input, .campo select, .entrada, .fila-campos input, .fila-campos select, .selector-usuario select, .no-sabe select,
   .boton-filtros, details.bloque > summary, .mas-datos > summary, .bloque-autorizacion summary, .bloque-dictados summary,
   .interruptor, .nav a, .lateral .pie button { min-height: 44px; }
-  .btn, button.chip { min-width: 44px; }
-  button.chip { justify-content: center; }
+  .btn, button.chip, a.chip { min-width: 44px; }
+  button.chip, a.chip { justify-content: center; }
   .barra-movil button { min-width: 44px; min-height: 44px; }
   .leyenda a, .tarjeta > header a { display: inline-flex; align-items: center; min-height: 44px; }
   .tarjeta > header a { margin-block: -12px; }

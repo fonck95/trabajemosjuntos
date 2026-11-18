@@ -40,6 +40,9 @@ _PROY = {"fecha": 1, "hora": 1, "hora_fin": 1, "creado_por_uid": 1, "abierta_a_e
 
 
 def _visible(r: dict, quien: Any) -> bool:
+    puede = getattr(quien, "puede", None)
+    if callable(puede) and not puede("reuniones.ver"):  # el consultor no trabaja con reuniones
+        return False
     return bool(getattr(quien, "administra", False)) or r.get("creado_por_uid") == getattr(quien, "uid", None) \
         or bool(r.get("abierta_a_equipo"))
 
@@ -105,8 +108,10 @@ def traza(entrada: dict, reuniones: dict[int, dict]) -> list[dict]:
 def intervenciones_persona(db: Database, pid: int, asistencias: list[dict] | None) -> list[dict]:
     """Por reunión, lo que se le hizo a la persona `pid` en ella (sin contar registrar o quitar su asistencia):
     [{id, titulo, fecha, hora, hora_fin, cambios, acciones, primera, ultima, asistio}], la más reciente primero."""
+    from .db import grupo_fusion  # aquí: db usa este módulo
+    # Con las fichas que se unieron en esta: lo que se le hizo a cada una antes de unirlas también es suyo
     grupos = list(db.auditoria.aggregate([
-        {"$match": {"entidad": "persona", "entidad_id": pid, "reuniones.0": {"$exists": True},
+        {"$match": {"entidad": "persona", "entidad_id": {"$in": grupo_fusion(db, pid)}, "reuniones.0": {"$exists": True},
                     "accion": {"$nin": SOLO_ASISTENCIA}}},
         {"$unwind": "$reuniones"},
         {"$group": {"_id": "$reuniones", "cambios": {"$sum": 1}, "acciones": {"$addToSet": "$accion"},
@@ -135,4 +140,11 @@ def intervenidas_reunion(db: Database, rid: int) -> dict[int, dict]:
         if isinstance(g["_id"], int):
             out[g["_id"]] = {"cambios": g["cambios"], "acciones": sorted(a for a in g["acciones"] if a),
                              "primera": g["primera"], "ultima": g["ultima"]}
+    # Una ficha que después se unió con otra cuenta en la que quedó
+    from .db import _raices_activas
+    for i, (raiz, _) in _raices_activas(db, list(out)).items():
+        g, r = out.pop(i), out.get(raiz)
+        out[raiz] = g if r is None else {
+            "cambios": r["cambios"] + g["cambios"], "acciones": sorted(set(r["acciones"]) | set(g["acciones"])),
+            "primera": min(r["primera"], g["primera"]), "ultima": max(r["ultima"], g["ultima"])}
     return out

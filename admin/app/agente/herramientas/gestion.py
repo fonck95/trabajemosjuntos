@@ -80,7 +80,7 @@ def _fecha(v: str) -> str:
 
 def _hora(v: str) -> str:
     """HH:MM de 24 horas («9:30» queda «09:30»): la API guarda hasta 5 caracteres sin revisar el formato."""
-    m = re.fullmatch(r"(\d{1,2}):(\d{2})", v)
+    m = re.fullmatch(r"([0-9]{1,2}):([0-9]{2})", v)
     if not m or int(m.group(1)) > 23 or int(m.group(2)) > 59:
         raise ValueError("Use la hora en formato HH:MM de 24 horas (por ejemplo 15:30)")
     return f"{int(m.group(1)):02d}:{m.group(2)}"

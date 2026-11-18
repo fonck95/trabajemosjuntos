@@ -77,7 +77,7 @@ AHORA = datetime(2026, 11, 18, 15, 0, tzinfo=timezone.utc)  # 10:00 en Colombia
 
 
 def _q(rol="planillero", uid=5, reunion=None):
-    return acceso.Quien(uid=uid, usuario=f"u{uid}", rol=rol, reunion=reunion)
+    return acceso.Quien(uid=uid, usuario=f"u{uid}", rol=rol, reunion=reunion, permisos=acceso.PERMISOS[rol])
 
 
 def test_traza_por_asistencia_por_quien_la_creo_y_por_la_pantalla():
@@ -102,6 +102,8 @@ def test_traza_por_asistencia_por_quien_la_creo_y_por_la_pantalla():
     assert t(_q(uid=7, reunion=3), 11) == [3]
     assert t(_q(uid=7, reunion=2), 11) == []
     assert t(_q(rol="coordinador", uid=8, reunion=2), 11) == [2]
+    # El consultor no trabaja con reuniones: su cabecera no marca nada
+    assert t(_q(rol="consultor", uid=7, reunion=3), 11) == []
     # La que nombra la ruta (asistencia, nota o alta en la reunión) siempre
     assert t(_q(uid=7), 11, "asistencia", 4) == [4]
     assert t(_q(uid=5), 10, "nota", 4) == [2, 4]
@@ -109,6 +111,8 @@ def test_traza_por_asistencia_por_quien_la_creo_y_por_la_pantalla():
     assert t(_q(uid=5), 10, "ver_sensibles") == [] and t(_q(uid=5), 10, "suprimir") == []
     assert trazas.reuniones_del_cambio(db, "sistema", "editar", 10, None, AHORA) == []
     assert trazas.reuniones_del_cambio(db, None, "editar", 10, None, AHORA) == []
+    # Una hora con dígitos que no son ASCII no es una hora (no rompe la ventana)
+    assert modelo.hora_valida("０９:３０") is None and modelo.ventana_reunion({"fecha": "2026-11-18", "hora": "٠٩:٣٠"}) is None
     # Fuera de toda reunión en curso, nada
     assert trazas.reuniones_del_cambio(db, _q(uid=5), "editar", 10, None, AHORA + timedelta(hours=7)) == []
 
@@ -148,14 +152,14 @@ def _ultima(db, pid, accion=None):
 
 
 def test_rango_de_horas_de_la_reunion(sesion):
-    r = sesion.post("/api/reuniones", json={"titulo": "Asamblea inventada", "fecha": "2026-11-20", "hora": "9:00",
+    r = sesion.post("/api/reuniones", json={"titulo": "Asamblea inventada", "fecha": "2025-01-10", "hora": "9:00",
                                             "hora_fin": "11:30"})
     assert r.status_code == 201, r.text
     rid = r.json()["id"]
     assert (r.json()["hora"], r.json()["hora_fin"], r.json()["en_curso"]) == ("09:00", "11:30", False)
     for malo in ({"hora_fin": "11:00"}, {"hora": "11:00", "hora_fin": "10:00"}, {"hora": "25:00"},
                  {"hora": "11:00", "hora_fin": "11:00"}):
-        r = sesion.post("/api/reuniones", json={"titulo": "Asamblea inventada", "fecha": "2026-11-20", **malo})
+        r = sesion.post("/api/reuniones", json={"titulo": "Asamblea inventada", "fecha": "2025-01-10", **malo})
         assert r.status_code == 422, (malo, r.text)
     # Al editar se mira con lo guardado: una hora de fin antes del inicio guardado no pasa, y quitar el inicio tampoco
     assert sesion.patch(f"/api/reuniones/{rid}", json={"hora_fin": "08:00"}).status_code == 422

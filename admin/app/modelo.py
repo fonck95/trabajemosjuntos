@@ -236,7 +236,7 @@ def _fecha_de(v: Any) -> date | None:
 
 # ───────────────────────────── Reuniones: su rango de tiempo ─────────────────────────────
 
-_HORA = re.compile(r"(\d{1,2}):(\d{2})")
+_HORA = re.compile(r"([0-9]{1,2}):([0-9]{2})")  # solo dígitos ASCII: «０９:３０» no es una hora
 # Una reunión con hora de inicio y sin hora de fin (las de antes del rango, o si no se sabe) dura esto
 DURACION_REUNION = timedelta(hours=2)
 

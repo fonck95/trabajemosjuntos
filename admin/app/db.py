@@ -383,7 +383,7 @@ def auditar(db: Database, quien: Any, accion: str, entidad: str | None = None, e
     En lo que una persona del equipo le hace a una persona (no en lo del sistema ni en las importaciones), `reuniones`
     lleva las reuniones en que se hizo (`trazas.reuniones_del_cambio`): `reunion` es la que la ruta ya sabe (la de una
     asistencia, una nota o un alta en la reunión), además de la de la pantalla de la reunión y las que están en curso.
-    Son ids de reuniones, no datos personales: la supresión no los borra."""
+    La supresión los borra con el detalle: dirían en qué reuniones estuvo la persona."""
     choque = CLAVES_AUDITORIA & set(extra)
     if choque:
         raise ValueError(f"auditar: {sorted(choque)} no van en extra")
@@ -910,11 +910,12 @@ def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | No
         from .pipeline.importar import georreferenciar  # aquí: el pipeline usa este módulo
         georreferenciar(db, [destino])
     cerrar_coincidencias_imposibles(db, [destino])
+    # Antes de vaciar el origen: si se corta aquí, `reparar_fusiones` (que busca orígenes sin vaciar) lo repite
+    reapuntar_lideres(db, origen, destino)
     db.personas.replace_one({"_id": origen, "fusionada_en": destino},
                             {**persona_vacia(), "_id": origen, "nombre": "FUSIONADA", "fusionada_en": destino,
                              "eliminado": False, "actualizado_en": ahora()})
     db.personas.update_many({"fusionada_en": origen}, {"$set": {"fusionada_en": destino}})
-    reapuntar_lideres(db, origen, destino)
 
 
 def expr_lideres_limpios(origen: int | None = None, destino: int | None = None) -> dict:
@@ -1222,6 +1223,8 @@ def suprimir(db: Database, pid: int, quien: Any, ip: str | None = None) -> list[
         db.personas.replace_one({"_id": i}, {**persona_vacia(), "_id": i, "nombre": "SUPRIMIDO", "nombre_norm": "",
                                              "eliminado": True, "actualizado_en": ahora()})
     limpiar_ligados(db, ids, cedulas)
-    db.auditoria.update_many({"entidad": "persona", "entidad_id": {"$in": ids}}, {"$set": {"detalle": None}})
+    # La traza de reuniones también: con ella se sabría en qué reuniones estuvo la persona suprimida
+    db.auditoria.update_many({"entidad": "persona", "entidad_id": {"$in": ids}},
+                             {"$set": {"detalle": None}, "$unset": {"reuniones": ""}})
     auditar(db, quien, "suprimir", "persona", pid, {"fichas": len(ids)}, ip)
     return ids

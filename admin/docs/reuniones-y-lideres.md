@@ -30,7 +30,8 @@ de un cambio si se cumple cualquiera de estas condiciones:
 1. **La ruta la nombra.** Es el caso de registrar o quitar a un asistente, de una nota escrita en la reunión y del
    alta de una persona en la reunión.
 2. **El cambio se hace desde la pantalla de la reunión** (el modo reunión, `/reuniones/N`) y quien lo hace puede ver
-   esa reunión: es suya, está abierta al equipo, o quien lo hace es A o K. `web/js/api.js` manda la cabecera
+   esa reunión: es suya, está abierta al equipo, o quien lo hace es A o K. El consultor, que no trabaja con reuniones,
+   no marca ninguna. `web/js/api.js` manda la cabecera
    `X-Reunion` en las escrituras de esa pantalla. La reunión entra aunque el cambio se haga fuera de su horario, por
    ejemplo al completar perfiles al día siguiente.
 3. **La reunión está en curso**, y la persona es asistente de ella o quien hace el cambio la creó.
@@ -72,8 +73,13 @@ Dónde se ve:
 - **Ajustes → Auditoría.** El filtro «Reunión» (`GET /api/auditoria?reunion_id=`) muestra lo que se hizo en esa
   reunión, y cada fila lleva su reunión.
 
-Al borrar una reunión, su id sale de la traza (`$pull`), como ya salía de las notas. Los ids de reuniones no son datos
-personales: la supresión de una persona no los borra de la auditoría.
+Otros casos:
+
+- **Borrar una reunión.** Su id sale de la traza (`$pull`), como ya salía de las notas.
+- **Suprimir a una persona.** Se borra su traza junto con el detalle de su auditoría: la traza diría en qué reuniones
+  estuvo.
+- **Unir fichas.** Lo que se le hizo a la ficha que se unió cuenta para la ficha que queda: en sus intervenciones, en
+  las intervenidas de la reunión y en el filtro `intervenida_en`.
 
 ## Líderes: quién trajo a quién
 
