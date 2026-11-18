@@ -6,10 +6,68 @@ import {
   CAMPOS_FALTAN, CAMPOS_NO_DISPONIBLE, CANALES_AUTORIZACION, ETIQUETAS_CAMPOS, MAS_DATOS, MEDIOS_AUTORIZACION,
   MEDIOS_POR_ROL, MOTIVOS_NO_DISPONIBLE, SEXOS, TIPOS_DOCUMENTO, edadDesde,
 } from '../modelo.js';
-import { $, $$, aviso, avisoError, datosForm, debounce, dialogo, hoy, html, titulo } from '../ui.js';
+import { $, $$, aviso, avisoError, datosForm, debounce, dialogo, hoy, html, montar, titulo } from '../ui.js';
 
 /** ¿Administrador o coordinador? Lo que la especificación reserva a «A» en el manejo de datos (adenda 1). */
 export const administra = () => sesion.rol === 'admin' || sesion.rol === 'coordinador';
+
+// ───────── Reuniones: su rango de tiempo ─────────
+
+/** «09:00–11:00», «09:00» (sin hora de fin) o '' (sin hora). */
+export const rangoHora = (r) => (r?.hora ? (r.hora_fin ? `${r.hora}–${r.hora_fin}` : r.hora) : '');
+
+/** Campos de hora de inicio y de fin de una reunión (lo que se le hace a una persona mientras dura queda con su traza). */
+export const camposHoraReunion = (r = {}) => html`
+  <label class="campo"><span>Hora de inicio</span><input name="hora" type="time" value="${r.hora || ''}"></label>
+  <label class="campo"><span>Hora de fin</span><input name="hora_fin" type="time" value="${r.hora_fin || ''}"></label>
+  <p class="sec ancho" style="margin:0">Con hora, lo que se le haga a una persona mientras dure la reunión queda en su ficha como hecho durante la reunión. Sin hora de fin, se cuentan 2 horas.</p>`;
+
+/** El motivo por el que el rango de horas del formulario no sirve, o null. */
+export function errorRangoHora(datos) {
+  if (datos.hora_fin && !datos.hora) return 'Ponga también la hora de inicio.';
+  if (datos.hora && datos.hora_fin && datos.hora_fin <= datos.hora) return 'La hora de fin debe ser después de la de inicio.';
+  return null;
+}
+
+// ───────── Líderes (solo A y K): quién trajo a quién ─────────
+
+/** Los líderes con cuántas personas trajo cada uno (GET /api/lideres): {lideres: [...], personas_con_varios}. */
+export const cargarLideres = () => api.get('/api/lideres');
+
+/**
+ * Elegir un líder (una ficha marcada como líder) en un diálogo con búsqueda: devuelve {id, nombre} o null. `excluir`:
+ * ids que no se ofrecen (la persona misma y los que ya tiene).
+ */
+export async function elegirLider({ excluir = [], persona = '' } = {}) {
+  let lista;
+  try { lista = (await cargarLideres()).lideres || []; } catch (e) { avisoError(e); return null; }
+  const fuera = new Set(excluir.map(Number));
+  const candidatos = lista.filter((l) => l.marcado && !fuera.has(l.id));
+  const { el: d, cerrar, listo } = dialogo({
+    titulo: persona ? `Líder que trajo a ${titulo(persona)}` : 'Elegir líder',
+    cuerpo: html`<label class="buscador"><input class="entrada" id="buscar-lider" type="search" placeholder="Buscar líder por nombre…" autocomplete="off"></label>
+      <div class="resultados" id="res-lider"></div>
+      <p class="sec" style="margin-top:10px">Solo aparecen las fichas marcadas como «Líder comunitario». Para agregar uno, márquelo en su ficha.</p>`,
+    ancho: true,
+  });
+  const norma = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const pintar = () => {
+    const q = norma($('#buscar-lider', d).value.trim());
+    const ls = candidatos.filter((l) => !q || norma(l.nombre).includes(q)).slice(0, 60);
+    montar($('#res-lider', d), ls.length ? html`${ls.map((l) => html`<div class="resultado">
+        <div class="q"><b>${l.nombre}</b><small>${[l.lugar ? titulo(l.lugar) : null, `trajo ${l.traidas}`, l.compartidas ? `${l.compartidas} con otro líder` : null].filter(Boolean).join(' · ')}</small></div>
+        <button class="btn chico primario" data-lider="${l.id}">Elegir</button></div>`)}`
+      : html`<div class="sec">${candidatos.length ? 'Ningún líder con ese nombre.' : 'No hay otros líderes marcados.'}</div>`);
+  };
+  $('#buscar-lider', d).addEventListener('input', pintar);
+  d.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-lider]');
+    if (b) cerrar(candidatos.find((l) => String(l.id) === b.dataset.lider) || null);
+  });
+  pintar();
+  $('#buscar-lider', d).focus();
+  return listo;
+}
 
 export function opcionesLugares(cat, valor) {
   const grupos = { barrio: 'Barrios del casco', sector: 'Sectores', centro_poblado: 'Centros poblados', corregimiento: 'Corregimientos', caserio: 'Caseríos', vereda: 'Veredas' };
@@ -355,6 +413,9 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
       <label class="campo ancho"><span>Dirección</span><input name="direccion" maxlength="240" placeholder="CL 49 # 45-12" value="${hogar?.direccion || ''}"></label>
       <div class="grupo-campo ancho"><span class="titulo-campo">Puesto y mesa</span><div class="form">${camposVotacion(cat, {})}</div></div>
       ${necesidades.length ? html`<div class="campo ancho"><span>Necesidades</span><div class="chips">${necesidades.map((e) => html`<button type="button" class="chip" data-et="${e.id}" aria-pressed="false">${e.nombre}</button>`)}</div></div>` : ''}
+      ${administra() ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Traída por (líder)</span>
+        <div class="chips" id="lideres-elegidos"></div>
+        <div><button type="button" class="btn chico" data-elegir-lider>Agregar líder</button></div></div>` : ''}
       ${camposAutorizacion(cat)}
       <div class="ancho" id="conflicto" aria-live="polite"></div>
     </form>`,
@@ -372,6 +433,25 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   let terminado = false;
   const quitarPendiente = registrarPendiente(() => tocado && !terminado);
   form.addEventListener('click', (e) => { const c = e.target.closest('[data-et]'); if (c) { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') !== 'true'); tocado = true; } });
+  // Los líderes que la trajeron (A y K): se eligen en un diálogo y van con el alta (o, si es una ficha que ya existe, se
+  // le asignan al completarla)
+  const lideresElegidos = [];
+  const pintarLideres = () => {
+    const caja = $('#lideres-elegidos', el);
+    if (caja) montar(caja, html`${lideresElegidos.map((l) => html`<button type="button" class="chip" data-quitar-elegido="${l.id}" aria-label="Quitar a ${l.nombre}">${l.nombre} ✕</button>`)}`);
+  };
+  form.addEventListener('click', async (e) => {
+    const q = e.target.closest('[data-quitar-elegido]');
+    if (q) {
+      const i = lideresElegidos.findIndex((l) => String(l.id) === q.dataset.quitarElegido);
+      if (i >= 0) lideresElegidos.splice(i, 1);
+      pintarLideres();
+      return;
+    }
+    if (!e.target.closest('[data-elegir-lider]')) return;
+    const l = await elegirLider({ excluir: lideresElegidos.map((x) => x.id), persona: form.nombre.value.trim() });
+    if (l) { lideresElegidos.push({ id: l.id, nombre: l.nombre }); tocado = true; pintarLideres(); }
+  });
 
   // Búsqueda en vivo (400 ms, 3 caracteres o más en nombre, documento o celular): «¿Es alguna de estas?» antes de seguir
   let turno = 0;
@@ -418,6 +498,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     Object.assign(c, cuerpoVotacion(form.puesto.value, { texto: d.puesto_texto, municipio: d.municipio, mesa: d.mesa }));
     c.etiquetas = $$('[data-et][aria-pressed="true"]', form).map((b) => Number(b.dataset.et));
     if (hogar?.ficha) c.ficha = hogar.ficha;
+    if (lideresElegidos.length) c.lideres = lideresElegidos.map((l) => l.id);
     return { c, d };
   }
 
@@ -429,13 +510,15 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   async function esEsta(id, origen) {
     if (enCurso) return;
     const { c } = cuerpo();
-    delete c.nombre; delete c.etiquetas; delete c.ficha;
+    const lideres = c.lideres || [];
+    delete c.nombre; delete c.etiquetas; delete c.ficha; delete c.lideres;
     for (const k of Object.keys(c)) if (c[k] == null) delete c[k];
     enCurso = true;
     boton.disabled = true;
     if (origen) origen.disabled = true;
     try {
       if (Object.keys(c).length) await api.patch(`/api/personas/${id}?modo=completar`, c, { clave: nuevaClave() });
+      for (const lid of lideres) await api.post(`/api/personas/${id}/lideres`, { lider_id: lid });
       tocado = false;
       cerrar();
       alCrear?.({ id, existente: true });

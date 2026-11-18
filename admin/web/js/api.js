@@ -89,12 +89,20 @@ const NO_CAMBIO = Symbol('304');
 // AbortSignal de quien llama) corta la petición, también mientras llega la respuesta: lanza `ErrorApi(0)` con `codigo`
 // `cancelada`, sin abrir el ingreso ni avisar de una cuenta pendiente por una respuesta que ya nadie espera
 const CANCELADA = { codigo: 'cancelada', mensaje: 'Se canceló.' };
+// La reunión en cuya pantalla (el modo reunión, /reuniones/N) se hace un cambio: va en la cabecera X-Reunion de las
+// escrituras y el servidor la anota en la traza de la persona (app/trazas.py), aunque el cambio sea fuera de su horario
+const RUTA_REUNION = /\/reuniones\/(\d+)\/?$/;
+const reunionEnPantalla = () => RUTA_REUNION.exec(globalThis.location?.pathname || '')?.[1] || null;
 async function pedir(metodo, ruta, cuerpo, op = {}, reintento = false) {
   const { formulario = false, clave = null, cabeceras = null, alResponder = null, keepalive = false } = op;
   const sinLimite = SIN_LIMITE.some((r) => ruta === r || ruta.startsWith(r + '?'));
   const timeout = op.timeout ?? (sinLimite ? 0 : metodo === 'GET' ? ESPERA_LECTURA : ESPERA_ESCRITURA);
   const o = { method: metodo, credentials: 'same-origin', headers: { ...(cabeceras || {}) } };
-  if (metodo !== 'GET') o.headers['X-CSRF-Token'] = csrf || '';
+  if (metodo !== 'GET') {
+    o.headers['X-CSRF-Token'] = csrf || '';
+    const reunion = reunionEnPantalla();
+    if (reunion) o.headers['X-Reunion'] = reunion;
+  }
   if (clave) o.headers['Idempotency-Key'] = clave;
   if (keepalive) o.keepalive = true;
   if (cuerpo !== undefined) {

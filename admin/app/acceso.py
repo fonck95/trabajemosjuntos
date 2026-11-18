@@ -91,6 +91,8 @@ class Quien:
     ip: str | None = None
     permisos: frozenset[str] = field(default_factory=frozenset)
     asignacion: dict | None = None  # {lugares: [int], areas: [int]} de P y C; None para A y K (sin límite)
+    # La reunión en cuya pantalla se hizo la petición (cabecera X-Reunion del modo reunión; ver app/trazas.py)
+    reunion: int | None = None
 
     def puede(self, permiso: str) -> bool:
         """¿Tiene el permiso? Lo de `SOLO_ADMIN` es solo de A, aunque otro rol tenga «*»."""
@@ -139,6 +141,13 @@ def _quien_de(db: Database, request: Request, s: dict) -> Quien:
                                                              "areas": list(asignacion.get("areas") or [])})
 
 
+def reunion_de(request: Request) -> int | None:
+    """El id de la cabecera `X-Reunion` (la pantalla de la reunión desde la que se hace la petición), si es un número.
+    Solo sirve para la traza (app/trazas.py), que además revisa que quien pide pueda ver esa reunión."""
+    v = (request.headers.get("x-reunion") or "").strip()
+    return int(v) if v.isascii() and v.isdigit() and len(v) <= 9 else None
+
+
 def requiere(*permisos: str, limitar: bool = False) -> Callable[..., Quien]:
     """Dependencia de una ruta: sesión (la que dejó la guardia en `scope["state"]["sesion"]`, o la de la cookie) +
     CSRF en lo que cambia datos + rol + todos los `permisos`. `limitar` marca las rutas con límite de frecuencia por
@@ -158,6 +167,7 @@ def requiere(*permisos: str, limitar: bool = False) -> Callable[..., Quien]:
             if not esperado or not hmac.compare_digest(enviado.encode(), esperado.encode()):
                 raise HTTPException(403, "Token CSRF inválido; recargue la página")
         quien = _quien_de(db, request, s)
+        quien.reunion = reunion_de(request)
         if not quien.es_admin:
             rechazo = rechazo_de_cuenta(s, ruta_interna(request.scope), db)
             if rechazo is not None:

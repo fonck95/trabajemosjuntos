@@ -46,7 +46,7 @@ Las herramientas del panel (`app/agente/herramientas/`):
 | `registrar_acercamiento`, `registrar_autorizacion`, `agregar_telefono` | escritura | todos | Lo que la persona del equipo dicta: nunca inventa evidencias, autorizaciones ni números. Un «sí» va siempre con su medio y sus canales, y una solicitud de derechos con su tipo (y su plazo) |
 | `indicadores`, `equipo` | lectura | A, K | Tablero compacto (sin listas ni sensibles, y sin contar a quien no autorizó) y el equipo: lo que hizo y administró cada usuario, alertas, asignación y el avance de cada zona (también sin contar a quien no autorizó) |
 | `listar_reuniones`, `ver_reunion` | lectura | A, K, P | Agenda y asistentes |
-| `crear_reunion`, `agregar_asistente` | escritura | A, K, P | Reunión nueva y asistentes |
+| `crear_reunion`, `agregar_asistente` | escritura | A, K, P | Reunión nueva (con hora de inicio y de fin) y asistentes |
 | `pendientes`, `mi_trabajo`, `buscar_lugar`, `catalogos` | lectura | todos | Insignias y colas, listas de trabajo, nomenclátor de barrios y veredas, catálogos no sensibles |
 | `mapa` | interfaz | A, K | Vuela a un lugar, filtra, cambia capas y mapa base, resalta personas, abre una zona |
 | `abrir_vista` | interfaz | todos | Abre una vista o una ficha que su rol puede ver |

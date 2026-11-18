@@ -18,7 +18,7 @@ from typing import Any, Iterable
 from fastapi import HTTPException
 from pymongo.database import Database
 
-from . import acceso, modelo
+from . import acceso, modelo, trazas
 from .db import ACTIVA, cerrar_coincidencias_imposibles
 
 # ───────────────────────────── Ficha ─────────────────────────────
@@ -40,7 +40,8 @@ CAMPOS_FICHA: dict[str, frozenset[str]] = {
         _IDENTIDAD_A | _DEMOGRAFIA | _UBICACION | _VOTACION | _AUTORIZACION | _SEGUIMIENTO
         | {"sensibles_registrados", "sensibles_autorizados", "telefonos", "telefono", "telefono2", "autorizacion",
            "autorizacion_ultima", "reclamo_en_tramite", "abordaje", "abordaje_seq", "acercamientos", "ultimo_contacto",
-           "en_curso", "notas", "listas", "lider", "etiquetas", "extra", "observaciones", "origen", "procedencia",
+           "en_curso", "notas", "listas", "lider", "lideres", "traidas", "intervenciones", "etiquetas", "extra",
+           "observaciones", "origen", "procedencia",
            "tramites", "alternos", "avance", "historial", "coincidencias", "reuniones", "reunion_origen", "fuentes",
            "completitud", "clave_tramites", "claves_tramites", "creado_por", "actualizado_por", "creado_en",
            "actualizado_en", "fusionada_en", "eliminado", "punto", "nombre_fon"}),
@@ -63,7 +64,8 @@ CAMPOS_FILA: dict[str, frozenset[str]] = {
     # Las de hoy (app/api/personas.py:53-58) más las nuevas de 8.1
     "admin": frozenset({
         "id", "nombre", "cedula", "telefono", "lugar", "lugar_tipo", "zona", "precision", "completitud", "fuentes",
-        "reuniones", "lider", "consentimiento", "ultimo_contacto", "tiene_cedula", "telefonos_n", "sexo", "rango_edad",
+        "reuniones", "lider", "lideres_n", "consentimiento", "ultimo_contacto", "tiene_cedula", "telefonos_n", "sexo",
+        "rango_edad",
         "menor", "puesto", "mesa", "votacion_estado", "abordaje", "faltan", "requiere_actualizacion", "situacion"}),
     "planillero": frozenset({
         "id", "nombre", "tiene_cedula", "cedula_ult3", "telefono_mascara", "telefonos_n", "lugar", "zona", "rango_edad",
@@ -256,7 +258,8 @@ def fila_completa(p: dict, ctx: Contexto) -> dict:
         "telefonos_n": len(us), "lugar": lg.get("nombre") or p.get("lugar_texto"), "lugar_tipo": lg.get("tipo"),
         "zona": p.get("zona"), "precision": p.get("geo_precision"), "completitud": p.get("completitud", 0),
         "fuentes": list(p.get("fuentes") or []), "reuniones": len(p.get("asistencias") or []),
-        "lider": bool(p.get("lider")), "consentimiento": p.get("consentimiento"),
+        "lider": bool(p.get("lider")), "lideres_n": len({l.get("id") for l in p.get("lideres") or [] if isinstance(l, dict)}),
+        "consentimiento": p.get("consentimiento"),
         "ultimo_contacto": p.get("ultimo_contacto"), "sexo": p.get("sexo"),
         "rango_edad": modelo.rango_edad(modelo.edad_efectiva(p, ctx.hoy)), "menor": modelo.es_menor(p, ctx.hoy),
         "puesto": puesto_codigo(p, ctx) if v else p.get("puesto_votacion"),
@@ -272,7 +275,8 @@ def fila_completa(p: dict, ctx: Contexto) -> dict:
 # Lo que una fila de Habitantes, la búsqueda y las parecidas necesitan de cada ficha
 CAMPOS_PARA_FILA = {k: 1 for k in (
     "nombre", "nombre_norm", "cedula", "telefono", "telefono2", "telefonos", "lugar_id", "lugar_texto", "zona",
-    "geo_precision", "completitud", "fuentes", "asistencias.reunion_id", "lider", "consentimiento", "ultimo_contacto",
+    "geo_precision", "completitud", "fuentes", "asistencias.reunion_id", "lider", "lideres.id", "consentimiento",
+    "ultimo_contacto",
     "sexo", "edad", "edad_ref", "fecha_nacimiento", "nac_aprox", "tipo_documento", "creado_en", "votacion",
     "puesto_votacion", "mesa", "abordaje", "requiere_actualizacion", "situacion", "no_disponible", "lat", "lon", "punto",
     "direccion", "mayor_declarado", "contacto_habilitado", "consentimiento_canales", "reclamo_en_tramite")}
@@ -478,6 +482,20 @@ def _historial_autorizacion(db: Database, pid: int) -> list[dict]:
             for e in db.autorizaciones.find({"persona_id": pid}).sort([("ts", -1), ("_id", -1)]).limit(50)]
 
 
+def _lideres():
+    from .api import lideres  # aquí: la API importa este módulo
+    return lideres
+
+
+def _historial(db: Database, pid: int) -> list[dict]:
+    """Las últimas 40 entradas de la auditoría de la persona, cada una con las reuniones en que se hizo (app/trazas.py)."""
+    entradas = list(db.auditoria.find({"entidad": "persona", "entidad_id": pid}).sort("_id", -1).limit(40))
+    reus = trazas.resumen_reuniones(db, entradas)
+    return [{"ts": h.get("ts"), "usuario": h.get("usuario"), "uid": h.get("uid"), "rol": h.get("rol"),
+             "accion": h.get("accion"), "detalle": h.get("detalle"), "reuniones": trazas.traza(h, reus)}
+            for h in entradas]
+
+
 def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> dict:
     """La ficha de `p` con los campos de `CAMPOS_FICHA[rol]` y sus recortes por dentro (3.8). Cada valor se calcula
     solo si el rol lo puede ver: lo demás no se lee."""
@@ -547,9 +565,11 @@ def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> 
                               "ts": a.get("ts"), **({"uid": a.get("uid")} if adm else {})}
                              for a in p.get("alternos") or []],
         "avance": lambda: dict(p.get("avance") or {}),
-        "historial": lambda: [{"ts": h.get("ts"), "usuario": h.get("usuario"), "uid": h.get("uid"), "rol": h.get("rol"),
-                               "accion": h.get("accion"), "detalle": h.get("detalle")}
-                              for h in db.auditoria.find({"entidad": "persona", "entidad_id": pid}).sort("_id", -1).limit(40)],
+        "historial": lambda: _historial(db, pid),
+        "lideres": lambda: _lideres().lideres_de(db, p),
+        "traidas": lambda: _lideres().traidas_de(db, pid) if p.get("lider") or db.personas.count_documents(
+            {"lideres.id": pid, **ACTIVA}, limit=1) else None,
+        "intervenciones": lambda: trazas.intervenciones_persona(db, pid, p.get("asistencias")),
         "coincidencias": lambda: _coincidencias(db, pid),
         "reuniones": lambda: reuniones()[0],
         "fuentes": lambda: list(p.get("fuentes") or []), "completitud": lambda: p.get("completitud", 0),

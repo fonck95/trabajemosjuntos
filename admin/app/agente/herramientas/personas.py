@@ -175,7 +175,7 @@ def esquema(m: type[BaseModel]) -> dict:
 _FUERA_DE_CLAVE = re.compile(r"[^A-Za-z0-9_.:-]")
 DETALLE_PERMITIDO = ("campo", "motivo", "campos")
 # Valores que un 409 «cambiada» puede traer y que el modelo nunca recibe
-OCULTOS = {"correo", "fecha_nacimiento", "lider", "sensibles", "regimen_salud", "consentimiento",
+OCULTOS = {"correo", "fecha_nacimiento", "lider", "lideres", "sensibles", "regimen_salud", "consentimiento",
            "consentimiento_fecha", "observaciones"}
 
 

@@ -219,7 +219,7 @@ COLUMNAS = [
     ("nivel_educativo", "Nivel educativo"), ("estado_civil", "Estado civil"), ("situacion_laboral", "Situación laboral"),
     ("personas_hogar", "Personas en el hogar"), ("jefe_hogar", "Jefe de hogar"),
     ("tenencia_vivienda", "Tenencia de la vivienda"), ("estrato", "Estrato"), ("regimen_salud", "Régimen de salud"),
-    ("lider", "Líder"), ("etiquetas", "Necesidades / etiquetas"), ("listas", "Listas"), ("reuniones", "Reuniones"),
+    ("lider", "Líder"), ("lideres", "Traído por (líderes)"), ("etiquetas", "Necesidades / etiquetas"), ("listas", "Listas"), ("reuniones", "Reuniones"),
     ("consentimiento", "Autorización de datos"), ("abordaje", "Abordaje"), ("ultimo_acercamiento", "Último acercamiento"),
     ("situacion", "Situación"), ("completitud", "Completitud %"), ("fuentes", "Fuentes"),
     ("ultimo_contacto", "Último contacto"), ("creado_por", "Creado por"), ("actualizado_por", "Actualizado por"),
@@ -280,6 +280,11 @@ def exportar(f: Filtros = Depends(filtros_query), incluir_sin_autorizacion: int 
     lugares = mapa_lugares(db)
     etiquetas = {e["_id"]: e["nombre"] for e in db.etiquetas.find() if incluir_sensibles or not e.get("sensible")}
     codigos = {x["_id"]: x.get("codigo") for x in db.puestos.find({}, {"codigo": 1})}
+    # Los nombres de los líderes que trajeron a alguien (app/api/lideres.py)
+    # (sin quien no autorizó el tratamiento, como en las filas, salvo que se pida incluirlos)
+    lideres = {x["_id"]: x.get("nombre") for x in db.personas.find(con_autorizacion(
+        {"_id": {"$in": db.personas.distinct("lideres.id", bd.ACTIVA)}, **bd.ACTIVA}, incluir_sin_autorizacion),
+        {"nombre": 1})}
     columnas = [c for c in COLUMNAS if c[0] != "listas" or incluir_listas]
     sensibles = list(modelo.SENSIBLES.items()) if incluir_sensibles else []
     wb = openpyxl.Workbook(write_only=True)
@@ -311,6 +316,8 @@ def exportar(f: Filtros = Depends(filtros_query), incluir_sin_autorizacion: int 
             "etiquetas": ", ".join(etiquetas[e] for e in p.get("etiquetas", []) if e in etiquetas),
             "listas": "; ".join(p.get("listas", [])), "reuniones": len(p.get("asistencias", [])),
             "fuentes": ", ".join(p.get("fuentes", [])), "lider": "Sí" if p.get("lider") else "",
+            "lideres": "; ".join(lideres[l["id"]] or "" for l in p.get("lideres") or []
+                                 if isinstance(l, dict) and l.get("id") in lideres),
             "abordaje": modelo.ESTADOS_ABORDAJE.get(ab.get("estado"), ab.get("estado")),
             "ultimo_acercamiento": ab.get("ultimo_fecha"),
             "situacion": modelo.SITUACIONES.get((p.get("situacion") or {}).get("estado"), (p.get("situacion") or {}).get("estado")),
@@ -512,6 +519,7 @@ def borrar_etiqueta(eid: int, db: Database = Depends(obtener_db), adm: Quien = D
 @r.get("/auditoria")
 def auditoria(pagina: int = 1, uid: int | None = None, accion: str | None = Query(None, max_length=40),
               entidad: str | None = Query(None, max_length=20), entidad_id: int | None = None,
+              reunion_id: int | None = None,
               desde: str | None = None, hasta: str | None = None, db: Database = Depends(obtener_db),
               _: Quien = Depends(requiere("admin"))):
     from .usuarios import periodo
@@ -525,10 +533,13 @@ def auditoria(pagina: int = 1, uid: int | None = None, accion: str | None = Quer
         q["entidad"] = entidad
     if entidad_id is not None:
         q["entidad_id"] = entidad_id
+    if reunion_id is not None:  # lo que se hizo en esa reunión (la traza, app/trazas.py)
+        q["reuniones"] = reunion_id
     if desde or hasta:
         _, _, ts_desde, ts_hasta = periodo(desde or "2000-01-01", hasta, maximo_dias=None)
         q["ts"] = {"$gte": ts_desde, "$lt": ts_hasta}
     orden = [("ts", -1), ("_id", -1)] if q else [("_id", -1)]
-    filas = [{k: a.get(k) for k in ("ts", "usuario", "uid", "rol", "accion", "entidad", "entidad_id", "detalle", "ip")}
+    filas = [{**{k: a.get(k) for k in ("ts", "usuario", "uid", "rol", "accion", "entidad", "entidad_id", "detalle",
+                                       "ip")}, "reuniones": list(a.get("reuniones") or [])}
              for a in db.auditoria.find(q).sort(orden).skip((pagina - 1) * 100).limit(100)]
     return {"total": db.auditoria.count_documents(q) if q else db.auditoria.estimated_document_count(), "filas": filas}

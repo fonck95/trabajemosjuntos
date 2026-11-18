@@ -20,7 +20,7 @@ from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, PrivateAttr
 from pymongo.database import Database
 
-from .. import geometria, modelo, proyeccion
+from .. import geometria, modelo, proyeccion, trazas
 from ..db import ACTIVA
 from ..pipeline import texto as tx
 from ..seguridad import obtener_db
@@ -28,7 +28,8 @@ from ..seguridad import obtener_db
 APROXIMADAS = ["barrio", "sector", "caserio", "centro_poblado", "vereda", "corregimiento", "direccion_aprox"]
 SIN_CAMPOS = ("cedula", "telefono", "sexo", "edad", "lugar", "puesto", "mesa", "direccion")
 # Parámetros que P y C no pueden usar (3.6): darían listas políticas, de menores o de la actividad de otros
-VEDADOS = ("poligono", "ids", "lista", "lider", "creado_por", "actualizado_por", "menor")
+VEDADOS = ("poligono", "ids", "lista", "lider", "lider_id", "varios_lideres", "intervenida_en", "creado_por",
+           "actualizado_por", "menor")
 PERMISO = {"mensaje": "Su rol no permite usar este filtro", "codigo": "permiso"}
 
 
@@ -46,6 +47,11 @@ class Filtros(BaseModel):
     asistio: int | None = None
     consentimiento: str | None = None
     lider: int | None = None
+    # Las que trajo ese líder; las que trae más de un líder (app/api/lideres.py)
+    lider_id: int | None = None
+    varios_lideres: int | None = None
+    # Las que se intervinieron en esa reunión (la traza de la auditoría, app/trazas.py)
+    intervenida_en: int | None = None
     sexo: str | None = None
     completitud_max: int | None = None
     ids: str | None = None
@@ -98,6 +104,7 @@ class Filtros(BaseModel):
     _dias_dato: int = PrivateAttr(default=modelo.AJUSTES_POR_DEFECTO["dias_reintento_dato"])
     _uid: int | None = PrivateAttr(default=None)
     _estricta: bool = PrivateAttr(default=False)  # `q` como la busca el asistente (`q_estricta`)
+    _intervenidas: list = PrivateAttr(default_factory=list)  # ids de `intervenida_en` (los resuelve `preparar`)
 
 
 def geometria_de_area(a: dict | None) -> dict | None:
@@ -120,6 +127,12 @@ def preparar(db: Database, f: Filtros) -> Filtros:
         if a is None:
             raise HTTPException(404, "El área no existe")
         f._area = geometria_de_area(a) or {"type": "Polygon", "coordinates": [[]]}
+    if f.intervenida_en:
+        from ..db import _raices_activas
+        ids = db.auditoria.distinct("entidad_id", {"reuniones": f.intervenida_en, "entidad": "persona",
+                                                   "accion": {"$nin": trazas.SOLO_ASISTENCIA}})
+        # Con la ficha en que quedó la que después se unió con otra
+        f._intervenidas = ids + [r for r, _ in _raices_activas(db, ids).values()]
     return f
 
 
@@ -128,7 +141,8 @@ def filtros_query(
     fuente: str | None = None, lista: str | None = Query(None, max_length=120), etiqueta: int | None = None,
     con_cedula: int | None = None, con_telefono: int | None = None, precision: str | None = None,
     reunion_id: int | None = None, asistio: int | None = None, consentimiento: str | None = None,
-    lider: int | None = None, sexo: str | None = None, completitud_max: int | None = None,
+    lider: int | None = None, lider_id: int | None = None, varios_lideres: int | None = None,
+    intervenida_en: int | None = None, sexo: str | None = None, completitud_max: int | None = None,
     ids: str | None = Query(None, max_length=4000),
     edad_min: int | None = Query(None, ge=0, le=130), edad_max: int | None = Query(None, ge=0, le=130),
     tipo_documento: str | None = None, cedula_verificada: int | None = None, puesto_id: int | None = None,
@@ -309,6 +323,12 @@ def filtro(f: Filtros, hoy: date | None = None) -> dict:
         y.append({"consentimiento": {"$ne": "no"}})
     if f.lider:
         y.append({"lider": True})
+    if f.lider_id:
+        y.append({"lideres.id": f.lider_id})
+    if f.varios_lideres:
+        y.append({"lideres.1": {"$exists": True}})
+    if f.intervenida_en:
+        y.append({"_id": {"$in": f._intervenidas}})
     if f.sexo in modelo.SEXOS:
         y.append({"sexo": f.sexo})
     elif f.sexo == "sin":

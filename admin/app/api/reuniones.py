@@ -7,6 +7,9 @@ acercamiento (4.4): agregar a alguien crea un acercamiento automático y quitarl
   solo cuántas hay (cabecera `X-Reuniones-Ajenas`). La lista de asistentes usa la proyección de fila del rol. El
   asistente lista las reuniones con `tratables`: sus conteos no cuentan a quien no autorizó.
 * Toda escritura sobre la persona exige que la ficha siga activa y que se pueda tratar (`exigir_tratable`).
+* Rango de tiempo: `hora` (inicio) y `hora_fin`, HH:MM de 24 horas en hora de Colombia; sin `hora_fin`, la reunión
+  dura `modelo.DURACION_REUNION`. Lo que se le hace a una persona mientras la reunión está en curso queda con su traza
+  (app/trazas.py): la reunión devuelve `en_curso` y, en `intervenidas`, a quién se intervino en ella.
 """
 from __future__ import annotations
 
@@ -20,7 +23,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 from pymongo.database import Database
 
-from .. import acceso, proyeccion
+from .. import acceso, modelo, proyeccion, trazas
 from .. import db as bd
 from ..acceso import Quien, requiere
 from ..seguridad import obtener_db
@@ -34,6 +37,7 @@ class ReunionIn(BaseModel):
     titulo: str | None = Field(None, min_length=3, max_length=160)
     fecha: str | None = None
     hora: str | None = Field(None, max_length=5)
+    hora_fin: str | None = Field(None, max_length=5)
     lugar_texto: str | None = Field(None, max_length=160)
     lugar_id: int | None = None
     lat: float | None = Field(None, ge=6.3, le=7.5)
@@ -48,12 +52,30 @@ class ReunionIn(BaseModel):
     def _f(cls, v):
         return fecha_iso(v)  # vacía la rechazan crear y editar («necesita título y fecha»)
 
+    @field_validator("hora", "hora_fin")
+    @classmethod
+    def _h(cls, v):
+        if v is None or not v.strip():
+            return None
+        h = modelo.hora_valida(v)
+        if h is None:
+            raise ValueError("Use la hora en formato HH:MM de 24 horas (por ejemplo 15:30)")
+        return h
+
     @field_validator("titulo")
     @classmethod
     def _t(cls, v):
         if v is not None and len(v.strip()) < 3:
             raise ValueError("El título necesita al menos 3 letras")
         return v.strip() if v is not None else None
+
+
+def _exigir_rango(hora: str | None, hora_fin: str | None) -> None:
+    """La hora de fin necesita la de inicio y va después de ella (las dos ya en HH:MM, o None)."""
+    if hora_fin and not hora:
+        raise HTTPException(422, {"mensaje": "Ponga también la hora de inicio", "campo": "hora"})
+    if hora and hora_fin and hora_fin <= hora:
+        raise HTTPException(422, {"mensaje": "La hora de fin debe ser después de la de inicio", "campo": "hora_fin"})
 
 
 def _propia_o_abierta(x: dict, quien: Quien) -> bool:
@@ -76,14 +98,15 @@ def _cargar(db: Database, rid: int, quien: Quien, propia: bool = False) -> dict:
 def _reunion(db: Database, rid: int, quien: Quien) -> dict:
     x = _cargar(db, rid, quien)
     adm = quien.administra
-    campos = ("titulo", "fecha", "hora", "lugar_texto", "lugar_id", "lat", "lon", "tema", "descripcion", "compromisos",
-              "abierta_a_equipo", "creado_en", "actualizado_en", "creado_por_uid")
+    campos = ("titulo", "fecha", "hora", "hora_fin", "lugar_texto", "lugar_id", "lat", "lon", "tema", "descripcion",
+              "compromisos", "abierta_a_equipo", "creado_en", "actualizado_en", "creado_por_uid")
     d = {k: x.get(k) for k in campos}
     if adm:
         d["creado_por"] = x.get("creado_por")
     d["id"] = rid
     d["abierta_a_equipo"] = bool(x.get("abierta_a_equipo"))
     d["propia"] = x.get("creado_por_uid") == quien.uid
+    d["en_curso"] = modelo.durante_reunion(x, bd.ahora())
     lg = db.lugares.find_one({"_id": x.get("lugar_id")}, {"nombre": 1}) if x.get("lugar_id") else None
     d["lugar_nombre"] = (lg or {}).get("nombre")
     ctx = proyeccion.contexto(db)
@@ -101,10 +124,20 @@ def _reunion(db: Database, rid: int, quien: Quien) -> dict:
         extra.append({"rol": a.get("rol"), "creado_en": a.get("creado_en"),
                       **({} if no else {"etiquetas": [e["nombre"] for e in ets]}),
                       **({"nota": a.get("nota")} if adm else {})})
-    acceso.registrar_lecturas(db, quien, [f["id"] for f in docs])
-    asist = [{**f, **e} for f, e in zip(proyeccion.filas_para(quien, docs), extra)]
+    # Lo que se le hizo a cada persona en la reunión (app/trazas.py): a los asistentes, cuántos cambios; las demás van
+    # aparte, en `intervenidas`, para saber quién estuvo aunque no se haya registrado su asistencia
+    traza = trazas.intervenidas_reunion(db, rid)
+    ya = {f["id"] for f in docs}
+    filas_otras = [proyeccion.fila_completa(p, ctx) for p in db.personas.find(
+        {**bd.ACTIVA, "_id": {"$in": sorted(i for i in traza if i not in ya)}}, proyeccion.CAMPOS_PARA_FILA)]
+    acceso.registrar_lecturas(db, quien, [f["id"] for f in docs] + [f["id"] for f in filas_otras])
+    asist = [{**f, **e, "cambios": (traza.get(f["id"]) or {}).get("cambios", 0)}
+             for f, e in zip(proyeccion.filas_para(quien, docs), extra)]
     # Con la misma marca de segundo, el último registrado primero (el orden de llegada desempata)
     d["asistentes"] = [a for _, a in sorted(enumerate(asist), key=lambda x: (x[1]["creado_en"] or "", x[0]), reverse=True)]
+    d["intervenidas"] = sorted(({**f, **{k: traza[f["id"]][k] for k in ("cambios", "primera", "ultima")}}
+                                for f in proyeccion.filas_para(quien, filas_otras)),
+                               key=lambda f: f.get("ultima") or "", reverse=True)
     d["necesidades"] = [{"nombre": n, "n": c} for n, c in necesidades.most_common()]
     return d
 
@@ -133,7 +166,9 @@ def listar(response: Response, tratables: int = 0, db: Database = Depends(obtene
     visibles = [x for x in todas if _propia_o_abierta(x, quien)]
     if not quien.administra:  # de las demás, P solo ve cuántas hay
         response.headers["X-Reuniones-Ajenas"] = str(len(todas) - len(visibles))
-    return [{"id": x["_id"], "titulo": x["titulo"], "fecha": x["fecha"], "hora": x.get("hora"), "tema": x.get("tema"),
+    ahora = bd.ahora()
+    return [{"id": x["_id"], "titulo": x["titulo"], "fecha": x["fecha"], "hora": x.get("hora"),
+             "hora_fin": x.get("hora_fin"), "en_curso": modelo.durante_reunion(x, ahora), "tema": x.get("tema"),
              "lugar": (lugares.get(x.get("lugar_id")) or {}).get("nombre") or x.get("lugar_texto"), "lat": x.get("lat"),
              "lon": x.get("lon"), "asistentes": conteo[x["_id"]], "nuevos": nuevos[x["_id"]],
              "abierta_a_equipo": bool(x.get("abierta_a_equipo")), "propia": x.get("creado_por_uid") == quien.uid}
@@ -163,6 +198,7 @@ def crear(body: ReunionIn, db: Database = Depends(obtener_db), quien: Quien = De
     if not body.titulo or not body.fecha:
         raise HTTPException(422, "La reunión necesita título y fecha")
     _exigir_apertura(body, quien)
+    _exigir_rango(body.hora, body.hora_fin)
     datos = {k: None for k in ReunionIn.model_fields} | body.model_dump(exclude_none=True)
     datos["abierta_a_equipo"] = bool(datos.get("abierta_a_equipo"))
     _ubicar_desde_lugar(db, datos)
@@ -181,12 +217,16 @@ def ver(rid: int, db: Database = Depends(obtener_db), quien: Quien = Depends(req
 @r.patch("/{rid}")
 def editar(rid: int, body: ReunionIn, db: Database = Depends(obtener_db),
            quien: Quien = Depends(requiere("reuniones.crear"))):
-    _cargar(db, rid, quien, propia=True)
+    x = _cargar(db, rid, quien, propia=True)
     _exigir_apertura(body, quien)
     antes = _reunion(db, rid, quien)
     datos = body.model_dump(exclude_unset=True)
     if any(k in datos and not datos[k] for k in ("titulo", "fecha")):
         raise HTTPException(422, "La reunión necesita título y fecha")
+    if "hora" in datos or "hora_fin" in datos:
+        # Con lo guardado: una hora escrita mal antes (la API no la revisaba) cuenta como vacía
+        _exigir_rango(datos["hora"] if "hora" in datos else modelo.hora_valida(x.get("hora")),
+                      datos["hora_fin"] if "hora_fin" in datos else modelo.hora_valida(x.get("hora_fin")))
     if "lugar_id" in datos:
         if "lat" not in datos:
             datos["lat"] = datos["lon"] = None
@@ -208,6 +248,8 @@ def borrar(rid: int, db: Database = Depends(obtener_db), quien: Quien = Depends(
     db.personas.update_many({"asistencias.reunion_id": rid}, {"$pull": {"asistencias": {"reunion_id": rid}}})
     db.personas.update_many({"notas.reunion_id": rid}, {"$set": {"notas.$[n].reunion_id": None}},
                             array_filters=[{"n.reunion_id": rid}])
+    # Como las notas: la traza de los cambios ya no nombra una reunión que no existe
+    db.auditoria.update_many({"reuniones": rid}, {"$pull": {"reuniones": rid}})
     bd.auditar(db, quien, "borrar", "reunion", rid, None)
     return {"ok": True}
 
@@ -242,7 +284,7 @@ def agregar(rid: int, body: AsistenteIn, request: Request, db: Database = Depend
         if not res.matched_count and db.personas.count_documents({"_id": body.persona_id, **bd.ACTIVA}, limit=1) == 0:
             raise HTTPException(409, "La ficha se unió o se suprimió")
         ac.crear_automatico(db, body.persona_id, reu, quien)
-    bd.auditar(db, quien, "asistencia", "persona", body.persona_id, {"reunion_id": rid})
+    bd.auditar(db, quien, "asistencia", "persona", body.persona_id, {"reunion_id": rid}, reunion=rid)
     cuerpo = _reunion(db, rid, quien)
     acceso.idempotencia_guardar(db, quien, request, 201, cuerpo, persona_id=body.persona_id)
     return cuerpo
@@ -258,7 +300,7 @@ def quitar(rid: int, pid: int, db: Database = Depends(obtener_db),
     if not res.matched_count:
         raise HTTPException(409, "La ficha se unió o se suprimió")
     ac.anular_automatico(db, pid, rid, quien, "Se quitó de la reunión")
-    bd.auditar(db, quien, "quitar_asistencia", "persona", pid, {"reunion_id": rid})
+    bd.auditar(db, quien, "quitar_asistencia", "persona", pid, {"reunion_id": rid}, reunion=rid)
     return _reunion(db, rid, quien)
 
 

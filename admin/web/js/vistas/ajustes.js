@@ -298,13 +298,14 @@ export async function vistaAjustes(el, { q } = {}) {
           <form id="f-aud" class="form" style="margin:12px 0">
             <label class="campo"><span>Acción</span><input name="accion" value="${filtros.accion || ''}" placeholder="editar, importar, ingreso…"></label>
             <label class="campo"><span>Usuario (uid)</span><input name="uid" type="number" min="0" value="${filtros.uid ?? ''}"></label>
+            <label class="campo"><span>Reunión (número)</span><input name="reunion_id" type="number" min="1" value="${filtros.reunion_id ?? ''}" title="Lo que se hizo en esa reunión"></label>
             <label class="campo"><span>Desde</span><input name="desde" type="date" value="${filtros.desde || ''}"></label>
             <label class="campo"><span>Hasta</span><input name="hasta" type="date" value="${filtros.hasta || ''}"></label>
             <div class="ancho"><button class="btn">Filtrar</button></div>
           </form>
           <div class="envoltura-tabla" style="max-height:420px;overflow:auto"><table class="tabla"><thead><tr><th>Cuándo</th><th>Usuario</th><th>Acción</th><th>Sobre</th><th>IP</th></tr></thead>
             <tbody>${aud.filas.map((a) => html`<tr style="cursor:default"><td>${fecha(a.ts, true)}</td><td>${a.usuario || 'sistema'}${a.rol && a.rol !== 'admin' ? html` <span class="sec">(${a.rol})</span>` : ''}</td><td>${(a.accion || '').replace(/_/g, ' ')}</td>
-              <td>${a.entidad === 'persona' ? html`<a href="/personas/${a.entidad_id}" data-ruta>persona ${a.entidad_id}</a>` : a.entidad ? `${a.entidad} ${a.entidad_id ?? ''}` : ''}</td><td class="sec">${a.ip || ''}</td></tr>`)}</tbody></table></div>
+              <td>${a.entidad === 'persona' ? html`<a href="/personas/${a.entidad_id}" data-ruta>persona ${a.entidad_id}</a>` : a.entidad ? `${a.entidad} ${a.entidad_id ?? ''}` : ''}${(a.reuniones || []).map((r) => html` <a class="chip borde" href="/reuniones/${r}" data-ruta title="Hecho en la reunión ${r}">reunión ${r}</a>`)}</td><td class="sec">${a.ip || ''}</td></tr>`)}</tbody></table></div>
         </section>
         <section class="tarjeta c-12">
           <h2>Protección de datos personales</h2>

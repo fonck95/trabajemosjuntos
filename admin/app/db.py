@@ -55,6 +55,8 @@ PERSONA_VACIA: dict[str, Any] = {
     "observaciones": None, "extra": {}, "fuentes": [], "clave_tramites": None, "completitud": 0, "ultimo_contacto": None,
     "fusionada_en": None, "eliminado": False, "listas": [], "etiquetas": [], "tramites": [], "notas": [], "origen": [],
     "asistencias": [], "claves_tramites": [], "reunion_origen": None,
+    # Quién la trajo: [{id (la ficha del líder), asignado_en, asignado_por, asignado_por_uid}] (app/api/lideres.py)
+    "lideres": [],
     # Identidad
     "tipo_documento": None, "cedula_verificada": False, "cedula_origen": None, "cedulas_anteriores": [],
     # Demografía (la edad declarada vale desde edad_ref; nac_* se derivan)
@@ -122,6 +124,7 @@ INDICES_PERSONAS = (
     "votacion.estado", "votacion.eleccion", "abordaje.ultimo_ts", "abordaje.estado", "abordaje.proximo",
     "consentimiento", "contacto_habilitado", "creado_por.uid", "actualizado_por.uid", "actualizado_en",
     "ultimo_contacto", "fusionada_en", "requiere_actualizacion.ts", "situacion.estado", "sexo", "en_curso.uid",
+    "lideres.id",
 )
 _SOLO_TEXTO = {"clave_migracion": {"$type": "string"}}
 
@@ -145,7 +148,8 @@ def _indices() -> dict[str, list[IndexModel]]:
         "etiquetas": [i("nombre", unique=True)],
         "campos": [i("clave", unique=True)],
         "auditoria": [i([("entidad", ASCENDING), ("entidad_id", ASCENDING)]),
-                      *(i([(c, ASCENDING), ("ts", ASCENDING)]) for c in ("uid", "capturado_por", "accion"))],
+                      *(i([(c, ASCENDING), ("ts", ASCENDING)]) for c in ("uid", "capturado_por", "accion",
+                                                                         "reuniones"))],
         "sesiones": [i("expira", expireAfterSeconds=0), i("uid")],
         "intentos": [i("ts", expireAfterSeconds=24 * 3600), i([("ip", ASCENDING), ("ts", ASCENDING)]),
                      i([("nombre_h", ASCENDING), ("ts", ASCENDING)]),
@@ -300,7 +304,7 @@ def soltar_turno(db: Database, nombre: str, dueño: str) -> None:
 # ───────────────────────────── Auditoría ─────────────────────────────
 
 CLAVES_AUDITORIA = frozenset({"ts", "usuario", "accion", "entidad", "entidad_id", "detalle", "ip", "uid", "rol", "campos",
-                              "completados"})
+                              "completados", "reuniones"})
 OCULTO = "(oculto)"
 # Claves de `detalle` que llevan una cédula: quedan solo sus 3 últimos dígitos, para todos los roles
 CLAVES_CEDULA = frozenset({"cedula", "cedulas_anteriores", "cedula_en_traspaso", "cedula_correcta", "cedula_digitada",
@@ -352,7 +356,7 @@ def enmascarar(db: Database, detalle: Any) -> Any:
             k = str(k)
             if k in CLAVES_CEDULA:
                 out[k] = _mascara_cedula(x)
-            elif k in ("lider", "sensibles") or k.startswith("sensibles."):
+            elif k in ("lider", "lideres", "lider_id", "sensibles") or k.startswith("sensibles."):
                 out[k] = OCULTO
             elif k == "etiquetas":
                 out[k] = etiquetas(x)
@@ -367,14 +371,19 @@ def enmascarar(db: Database, detalle: Any) -> Any:
 
 def auditar(db: Database, quien: Any, accion: str, entidad: str | None = None, entidad_id: int | None = None,
             detalle: Any = None, ip: str | None = None, campos: list[str] | None = None,
-            completados: list[str] | None = None, **extra) -> None:
+            completados: list[str] | None = None, reunion: int | None = None, **extra) -> None:
     """Una entrada de la auditoría.
 
     `quien` es el nombre de usuario (texto, como siempre) o un `acceso.Quien`: con él la entrada lleva además `uid`
     (0 para el administrador) y `rol`, y su IP si no se pasa otra. `campos` y `completados` son solo nombres canónicos.
     `extra` va al nivel superior: campos no personales que los indicadores necesitan aun después de una supresión
     (`capturado_por`, `canal`, `resultado`, `estado`…). El detalle se enmascara (`enmascarar`). Toda entrada sobre una
-    persona usa entidad «persona» y su id: así la supresión limpia todo su rastro."""
+    persona usa entidad «persona» y su id: así la supresión limpia todo su rastro.
+
+    En lo que una persona del equipo le hace a una persona (no en lo del sistema ni en las importaciones), `reuniones`
+    lleva las reuniones en que se hizo (`trazas.reuniones_del_cambio`): `reunion` es la que la ruta ya sabe (la de una
+    asistencia, una nota o un alta en la reunión), además de la de la pantalla de la reunión y las que están en curso.
+    La supresión los borra con el detalle: dirían en qué reuniones estuvo la persona."""
     choque = CLAVES_AUDITORIA & set(extra)
     if choque:
         raise ValueError(f"auditar: {sorted(choque)} no van en extra")
@@ -387,6 +396,11 @@ def auditar(db: Database, quien: Any, accion: str, entidad: str | None = None, e
         doc["campos"] = list(campos)
     if completados is not None:
         doc["completados"] = list(completados)
+    if entidad == "persona" and entidad_id is not None:
+        from .trazas import reuniones_del_cambio  # aquí: trazas usa este módulo
+        rids = reuniones_del_cambio(db, quien, accion, entidad_id, reunion)
+        if rids:
+            doc["reuniones"] = rids
     doc.update(extra)
     db.auditoria.insert_one(doc)
 
@@ -779,7 +793,7 @@ def _pipeline_fusion(o: dict, origen: int, uid: Any) -> list[dict]:
             {"$filter": {"input": _lit(con_id), "as": "x", "cond": {"$not": [{"$in": [
                 "$$x.id_externo", {"$map": {"input": actuales, "as": "t", "in": "$$t.id_externo"}}]}]}}},
             {"$filter": {"input": _lit(sin_id), "as": "x", "cond": {"$not": [{"$in": ["$$x", actuales]}]}}}]}
-    for k, llave in (("notas", "id"), ("asistencias", "reunion_id")):
+    for k, llave in (("notas", "id"), ("asistencias", "reunion_id"), ("lideres", "id")):
         if o.get(k):
             actuales = {"$ifNull": [f"${k}", []]}
             s[k] = {"$concatArrays": [actuales, {"$filter": {"input": _lit(o[k]), "as": "x", "cond": {"$not": [{"$in": [
@@ -896,10 +910,32 @@ def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | No
         from .pipeline.importar import georreferenciar  # aquí: el pipeline usa este módulo
         georreferenciar(db, [destino])
     cerrar_coincidencias_imposibles(db, [destino])
+    # Antes de vaciar el origen: si se corta aquí, `reparar_fusiones` (que busca orígenes sin vaciar) lo repite
+    reapuntar_lideres(db, origen, destino)
     db.personas.replace_one({"_id": origen, "fusionada_en": destino},
                             {**persona_vacia(), "_id": origen, "nombre": "FUSIONADA", "fusionada_en": destino,
                              "eliminado": False, "actualizado_en": ahora()})
     db.personas.update_many({"fusionada_en": origen}, {"$set": {"fusionada_en": destino}})
+
+
+def expr_lideres_limpios(origen: int | None = None, destino: int | None = None) -> dict:
+    """Los líderes de la ficha con `origen` cambiado por `destino` (si se pasan), sin repetir (queda la primera
+    asignación de cada líder) y sin la ficha misma: nadie es su propio líder."""
+    lista: Any = {"$ifNull": ["$lideres", []]}
+    if origen is not None:
+        lista = {"$map": {"input": lista, "as": "l", "in": {"$cond": [
+            {"$eq": ["$$l.id", origen]}, {"$mergeObjects": ["$$l", {"id": destino}]}, "$$l"]}}}
+    return {"$reduce": {"input": lista, "initialValue": [], "in": {"$cond": [
+        {"$or": [{"$in": ["$$this.id", {"$map": {"input": "$$value", "as": "v", "in": "$$v.id"}}]},
+                 {"$eq": ["$$this.id", "$_id"]}]},
+        "$$value", {"$concatArrays": ["$$value", ["$$this"]]}]}}}
+
+
+def reapuntar_lideres(db: Database, origen: int, destino: int) -> None:
+    """Quien tenía como líder a la ficha que se unió (`origen`) pasa a tener a la que queda (`destino`), sin repetir;
+    el destino deja de ser su propio líder si lo era por el origen. Se puede repetir sin daño."""
+    db.personas.update_many({"$or": [{"lideres.id": origen}, {"_id": destino, "lideres.id": destino}]},
+                            [{"$set": {"lideres": expr_lideres_limpios(origen, destino)}}])
 
 
 def fusionar(db: Database, destino: int, origen: int, quien: Any, ip: str | None = None, georef: bool = True) -> None:
@@ -1156,6 +1192,7 @@ def limpiar_ligados(db: Database, ids: list[int], cedulas: Iterable[str] = ()) -
     db.coincidencias.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"candidato_id": {"$in": ids}}]})
     db.conflictos_cedula.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"cedula": {"$in": cedulas}}]})
     db.idempotencia.delete_many({"persona_id": {"$in": ids}})
+    db.personas.update_many({"lideres.id": {"$in": ids}}, {"$pull": {"lideres": {"id": {"$in": ids}}}})
     db.acercamientos.update_many({"persona_id": {"$in": ids}}, {"$set": {
         "persona_id": None, "telefono": None, "nota": None, "datos_dictados": [], "suprimido": True}})
     db.autorizaciones.update_many({"persona_id": {"$in": ids}}, {"$set": {
@@ -1186,6 +1223,8 @@ def suprimir(db: Database, pid: int, quien: Any, ip: str | None = None) -> list[
         db.personas.replace_one({"_id": i}, {**persona_vacia(), "_id": i, "nombre": "SUPRIMIDO", "nombre_norm": "",
                                              "eliminado": True, "actualizado_en": ahora()})
     limpiar_ligados(db, ids, cedulas)
-    db.auditoria.update_many({"entidad": "persona", "entidad_id": {"$in": ids}}, {"$set": {"detalle": None}})
+    # La traza de reuniones también: con ella se sabría en qué reuniones estuvo la persona suprimida
+    db.auditoria.update_many({"entidad": "persona", "entidad_id": {"$in": ids}},
+                             {"$set": {"detalle": None}, "$unset": {"reuniones": ""}})
     auditar(db, quien, "suprimir", "persona", pid, {"fichas": len(ids)}, ip)
     return ids
