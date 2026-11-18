@@ -157,12 +157,13 @@ function tenir(geo, f) {
 }
 
 /**
- * Arma el personaje. Devuelve {grupo, cuerpo, huesos, manos, cara, contorno, medidas, liberar()}:
+ * Arma el personaje. Devuelve {grupo, cuerpo, huesos, manos, cara, craneo, contorno, medidas, liberar()}:
  * - `huesos`: los pivotes que mueve animador.js (cadera, columna, pecho, cuello, cabeza, hombro/codo/muneca y
  *   muslo/rodilla/tobillo de cada lado: …I es el izquierdo, …D el derecho, que vive en un grupo espejo).
  * - `manos.I` / `manos.D`: {dedos: [[base, punta] × 4], pulgar, ponerPulgar(p)}: índice, medio, anular y meñique.
  * - `cara`: {boca: {poner({abrir, ancho, sonrisa})}, ojos: [{poner({abierto, sonrisa, mira})}],
  *   cejas: [{poner({alza, ceno})}]}.
+ * - `craneo`: el grupo de la cabeza (la cara, el pelo, las orejas), para medirla o encuadrarla.
  * - `contorno`: los uniformes del contorno ({grosor, resolucion, color}).
  */
 export function crearPersonaje({ documento = globalThis.document } = {}) {
@@ -923,7 +924,7 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     grupo.traverse((o) => { if (o.geometry && !geos.has(o.geometry)) o.geometry.dispose(); });
   }
 
-  return { grupo, cuerpo, huesos, manos, cara, contorno, medidas, liberar };
+  return { grupo, cuerpo, huesos, manos, cara, craneo, contorno, medidas, liberar };
 }
 
 // Una mancha redonda que se desvanece hacia el borde (las sombras suaves de la cara)
