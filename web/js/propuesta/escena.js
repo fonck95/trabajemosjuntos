@@ -10,12 +10,14 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { progressiveLOD } from '../assets.js';
 import { EDIFICIOS, CALLES } from '../data.js';
-import { V, cinta, losa, prisma, materiales, usarMateriales, dentro, arboles, palmas } from './geo3d.js';
+import { V, cinta, losa, prisma, materiales, usarMateriales, dentro, arboles, palmas, ponerLuces, lucesEstado } from './geo3d.js';
 import { matT, matAgua, tex, texFachada, texFachadaLuz, ajustesMundo } from './texturas.js';
 import { ambiente } from './ambiente.js';
 import { casasDeHuellas, geometrias, sembrarArboles, rejillaLineas, rejillaPoligonos, trozos } from './contexto.js';
 
-const R_SUELO = 16000;
+// el suelo llega mucho más allá de lo que se mira (60 km): en las vistas de todo el municipio (cámara a 24–30 km) el borde
+// de un disco de 16 km se veía cortado contra el cielo; ahora la bruma lo disuelve antes de llegar a él
+const R_SUELO = 60000;
 
 export function crearEscena(el, datos) {
   const terr = datos.territorio || {};
@@ -47,6 +49,8 @@ export function crearEscena(el, datos) {
   st.onFrame(() => {
     const d = st.camera.position.distanceTo(st.controls.target);
     st.fogCfg.near = Math.max(1500, d * 1.6); st.fogCfg.far = Math.max(7000, d * 5.5);
+    // de muy lejos (todo el municipio), la bruma cierra antes: el horizonte queda en el cielo y no en el borde del suelo
+    if (d > 8000) { st.fogCfg.near = d * 1.15; st.fogCfg.far = d * 2.6; }
     // en el celular, las vistas de todo el municipio (puestos rurales a 11,5 km) alejan la cámara más de 40 km: el plano
     // lejano crece con ella para que la maqueta no quede recortada
     const lejos = Math.max(40000, d * 2.5);
@@ -121,7 +125,16 @@ export function crearEscena(el, datos) {
   // (alHora: los módulos se suscriben para encender lo suyo, como las ventanas de la vivienda nueva)
   const alHora = new Set();
   let horaActual = null;
-  const amb = ambiente(st, { sol: SOL, alCambiar: (H) => { horaActual = H; ctxMats.wall.emissiveIntensity = 0.9 * H.encendido; alHora.forEach((fn) => fn(H)); ancla.set(1e9, 0, 0); st.invalidate(true); } });
+  // (durante el ciclo del día, `sombras` dice si en este cuadro se recalcula el mapa de sombras: no en todos; la luz sí
+  // sigue al sol en cada cuadro)
+  const amb = ambiente(st, { sol: SOL, alCambiar: (H, _n, sombras = true) => {
+    horaActual = H; ctxMats.wall.emissiveIntensity = 0.9 * H.encendido;
+    ponerLuces({ oscuridad: H.oscuridad, auto: H.encendido });   // luminarias y charcos de luz según la hora (o lo pedido)
+    alHora.forEach((fn) => fn(H));
+    if (sombras) ancla.set(1e9, 0, 0);   // el próximo cuadro ubica la luz y recalcula las sombras
+    else if (ancla.x < 1e8) { L.position.copy(ancla).add(SOL); L.updateMatrixWorld(); }
+    st.invalidate(sombras);
+  } });
   const zonasHoy = (datos.zonas_intervencion || []).map((z) => ({ ...z, grupo: new THREE.Group() }));
   zonasHoy.forEach((z) => { z.grupo.name = `hoy.${z.id}`; S.add(z.grupo); });
   const huellas = [];
@@ -208,6 +221,27 @@ export function crearEscena(el, datos) {
     st.updateShadows(); st.invalidate();
   }).catch((e) => console.warn('árboles del contexto', e));
 
+  // Las réplicas del atlas traen materiales de color liso (el atlas es un esquema): aquí, los de superficie se cambian por los
+  // texturizados de la maqueta según su nombre (el predio y los pisos en concreto, el asfalto, el pasto, la teja de zinc, el
+  // ladrillo y el bloque), con un solo material nuevo por material original. Los de las adecuaciones (paneles, conexiones)
+  // y los de color con significado (advertencia, celdas, datos, potencia) no se tocan
+  const REALCE = {
+    predio: () => matT('concreto', { modo: 'xz', color: '#e6e1d6' }), piso: () => matT('concreto', { modo: 'xz', color: '#efeae0' }),
+    asfalto: () => matT('asfalto'), pasto: () => matT('cesped'), techo_zinc: (m) => matT('zinc', { color: m.color }),
+    muro_ladrillo: () => matT('ladrillo'), muro_bloque: (m) => matT('estuco', { color: m.color.clone().lerp(new THREE.Color('#ffffff'), 0.25) }),
+  };
+  const realzados = new Map();
+  function realzar(raiz) {
+    raiz.traverse((o) => {
+      if (!o.isMesh || !o.material || o.userData.realzado) return;
+      const viejo = o.material, crear = !Array.isArray(viejo) && REALCE[viejo.name];
+      o.userData.realzado = true;
+      if (!crear) return;
+      if (!realzados.has(viejo)) { const m = crear(viejo); m.name = `${viejo.name}.maqueta`; m.side = viejo.side; realzados.set(viejo, m); }
+      o.material = realzados.get(viejo);
+    });
+  }
+
   // réplicas de las sedes públicas, en su estado de hoy (sin las adecuaciones del atlas: paneles, baterías, conexiones)
   const edificios = new Map();
   let cargados = 0;   // cuántos modelos de sedes han llegado (la caja de una sede cambia cuando llega el suyo)
@@ -219,6 +253,7 @@ export function crearEscena(el, datos) {
     const it = { e, g, ph, lod: null, cargado: false, modo: { capa: 'hoy', sin: [] }, listo: [] };
     if (e.archivo) {
       it.lod = progressiveLOD([{ url: e.archivo, distance: 0 }, { url: e.archivo_lod1, distance: 300 }], (lod) => {
+        realzar(lod);
         ph.visible = false; it.cargado = true; cargados++; aplicarModo(it); st.updateShadows();
         it.listo.splice(0).forEach((fn) => fn(it));
       });
@@ -297,7 +332,14 @@ export function crearEscena(el, datos) {
     f.set(potencia, 1); flujos.push(f);
     return f;
   }
-  st.onFrame((dt) => { let n = false; flujos.forEach((f) => { let vis = true; for (let p = f.mesh; p; p = p.parent) if (!p.visible) { vis = false; break; } if (vis && f.update(dt) !== false) n = true; }); return n; });
+  // las partículas cambian de tamaño con la distancia de la cámara: de cerca no son burbujas gigantes y en los planos
+  // generales (a 1–3 km) se siguen viendo
+  st.onFrame((dt) => {
+    let n = false;
+    const k = THREE.MathUtils.clamp(st.camera.position.distanceTo(st.controls.target) / 250, 0.45, 4.5);
+    flujos.forEach((f) => { let vis = true; for (let p = f.mesh; p; p = p.parent) if (!p.visible) { vis = false; break; } if (!vis) return; f._s.setScalar(Math.min(f.size * k, 2.6)); if (f.update(dt) !== false) n = true; });
+    return n;
+  });
 
   // Etiquetas sin encimarse y dentro de la zona libre: tiene en cuenta el ancla de cada recuadro, corre en horizontal
   // las que el panel, la leyenda o el borde cortarían, sube lo justo las que chocan y oculta las de puntos que caen
@@ -633,6 +675,11 @@ export function crearEscena(el, datos) {
     hora: () => amb.hora(),
     // quita los árboles del contexto alrededor de unos puntos (ver despejar)
     despejar,
+    // la hora del día de la maqueta (ambiente.js): poner(nombre | null), ciclo({ desde, hasta, duracion }), pausar()…
+    ambiente: amb,
+    // luminarias: true (encendidas), false (apagadas) o null (según la hora); devuelve el estado que quedó
+    luces(v) { const r = ponerLuces({ encendidas: v === undefined ? lucesEstado().encendidas : v }); st.invalidate(); return r; },
+    lucesEstado,
     // fn(H) cada vez que cambia la hora del día (y una vez al suscribirse): H.encendido es 1 al atardecer y 0 de tarde
     alHora(fn) { alHora.add(fn); if (horaActual) fn(horaActual); return () => alHora.delete(fn); },
     // con una narración en pantalla (visual.guiado) los módulos no mueven la cámara por su cuenta: la lleva el plan

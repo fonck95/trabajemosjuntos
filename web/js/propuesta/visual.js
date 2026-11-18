@@ -22,10 +22,11 @@
 // * tema: claro u oscuro (para el proyector), también en el atlas enmarcado.
 // Todo vuelve a como lo dice el paso al cambiar de paso, salvo el tema.
 // Y tres acciones que no son estado: `mover` (la cámara gira, se acerca o cambia de elevación despacio, lo que dure la
-// frase), `animar` (repite la animación propia del paso) y `simular` (acciona los controles de adentro del modelo del
-// atlas a la vista —la magnitud del simulador sísmico, hacerlo temblar, el piso, el 4D del BIM— con
-// `__escenario.simular` de js/escenario.js, como los acciona la persona; lo que el atlas no acepta vuelve como
-// descartado). Con `ms`, `aplicar` cambia en el acto lo que se ve y lleva la
+// frase), `animar` (repite la animación propia del paso) y `simular` (acciona los controles del modelo a la vista: con un
+// modelo del atlas abierto, los de adentro —la magnitud del simulador sísmico, hacerlo temblar, el piso, el 4D del BIM—
+// con `__escenario.simular` de js/escenario.js, como los acciona la persona; sin él, los de la maqueta 3D —la hora del
+// día, el día entero, las luces, el partido en la cancha— con simulacion.js, que también vuelven a lo del paso al
+// cambiar de paso; lo que no se acepta vuelve como descartado). Con `ms`, `aplicar` cambia en el acto lo que se ve y lleva la
 // cámara a su postura con un PASEO de esa duración (Stage.pasear de core.js: no es un vuelo, nada lo espera): así el
 // asistente muestra MIENTRAS explica. Con una narración en pantalla (`guiado`) los módulos no mueven la cámara.
 // Las comprobaciones de forma (tipos, listas) las hace mando.js; aquí, las que dependen de lo que hay (`depurar` quita lo
@@ -33,6 +34,7 @@
 import { THREE, gsap, reducedMotion, solidBox } from '../core.js';
 import { sinPlata, especificacionTecnica, anios } from './tecnica.js';
 import { caja } from './modulos/comun.js';
+import { crearSimulacion } from './simulacion.js';
 
 export const CAMARAS = ['paso', 'aerea', 'oblicua', 'rasante', 'cerca', 'lejos'];
 // elevación (grados sobre el horizonte) y cuánto más grande queda la obra en la zona libre (el `margen` de encuadrar)
@@ -67,6 +69,39 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
     return mapas.get(c.id);
   };
   const parteDe = (x, id) => (x?.partes || []).find((k) => k.id === id) || null;
+  // las simulaciones de la maqueta 3D (la hora, el día, las luces, el partido): `simular` sin un modelo del atlas abierto
+  const sim = crearSimulacion({ escena, ctx3d, datos, caps, estado, enEncuadre });
+
+  // ¿Queda `obj` (una pieza de la maqueta) en el encuadre? Se mira desde donde queda la cámara: la postura del último
+  // encuadre (el del paso, con lo que pide lo visual: cámara, enfoque, mirar, el final de un `mover`) aunque la cámara
+  // todavía vaya de camino (el vuelo o el paseo de una escena), o donde la dejó la persona. Su caja, proyectada, tiene
+  // que caer en la zona libre (sin el panel, la ficha ni el subtítulo) con al menos ENCUADRE_MIN del ancho y del alto
+  // de esa zona, y con la mitad de la caja dentro (o llenándola, si la cámara está encima). Así el partido no se da por
+  // jugado en un paso que encuadra otra obra (las canchas cubiertas junto al CIC)
+  const ENCUADRE_MIN = 0.06;
+  function enEncuadre(obj) {
+    if (!obj?.isObject3D) return true;
+    const caja = new THREE.Box3().setFromObject(obj);
+    if (caja.isEmpty()) return false;
+    const cam = st.camera.clone(), v = new THREE.Vector3();
+    cam.far = 1e7;
+    const p = !st.userMoved && ultimo ? escena.postura(ultimo.obj, opcionesDe(ultimo.opts)) : null;
+    if (p) { cam.position.fromArray(p.pos); cam.lookAt(v.fromArray(p.tgt)); }
+    cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+    const b = [Infinity, -Infinity, Infinity, -Infinity];
+    for (let i = 0; i < 8; i++) {
+      v.set(i & 1 ? caja.max.x : caja.min.x, i & 2 ? caja.max.y : caja.min.y, i & 4 ? caja.max.z : caja.min.z)
+        .applyMatrix4(cam.matrixWorldInverse);
+      if (v.z > -cam.near) continue;   // detrás de la cámara: solo cuenta lo que tiene delante
+      v.applyMatrix4(cam.projectionMatrix);
+      b[0] = Math.min(b[0], v.x); b[1] = Math.max(b[1], v.x); b[2] = Math.min(b[2], v.y); b[3] = Math.max(b[3], v.y);
+    }
+    if (!(b[1] > b[0] && b[3] > b[2])) return false;
+    const z = escena.zona(), zw = z.x1 - z.x0, zh = z.y1 - z.y0;
+    const iw = Math.max(0, Math.min(b[1], z.x1) - Math.max(b[0], z.x0)), ih = Math.max(0, Math.min(b[3], z.y1) - Math.max(b[2], z.y0));
+    if (iw < zw * ENCUADRE_MIN || ih < zh * ENCUADRE_MIN) return false;
+    return (iw * ih) / ((b[1] - b[0]) * (b[3] - b[2])) >= 0.5 || (iw >= zw * 0.5 && ih >= zh * 0.5);
+  }
 
   // ---------------------------------------------------------------- encuadres con la cámara pedida
   // Todos los encuadres de los módulos pasan por aquí: se guarda el último (para repetirlo con otra cámara o para llevar
@@ -489,21 +524,29 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
     return inm.abriendo;
   }
 
-  // ---------------------------------------------------------------- la simulación del modelo del atlas
-  /** Acciona en el modelo del atlas a la vista los controles de `lista` ([{ control, valor? }], la forma ya revisada por
-   * mando.js), en orden, con `__escenario.simular` (js/escenario.js: como los acciona la persona; un control que todavía
-   * no está o está deshabilitado lo espera). Antes espera a que termine de abrirse el modelo pedido. Devuelve lo que no se
-   * pudo, [{ clave, valor, motivo }], a más tardar en `tope` ms: lo que el atlas todavía espera entonces (Reproducir
-   * hasta que termine el primer cálculo) sigue solo y no se cuenta. Nunca lanza. */
+  // ---------------------------------------------------------------- la simulación del modelo a la vista
+  /** Acciona en el modelo a la vista los controles de `lista` ([{ control, valor? }], la forma ya revisada por mando.js),
+   * en orden. Con un modelo del atlas abierto, con `__escenario.simular` (js/escenario.js: como los acciona la persona;
+   * un control que todavía no está o está deshabilitado lo espera), después de que termine de abrirse el modelo pedido;
+   * sin él, en la maqueta 3D (simulacion.js: la hora, el día, las luces, el partido). Devuelve lo que no se pudo,
+   * [{ clave, valor, motivo }], a más tardar en `tope` ms: lo que todavía espera entonces (Reproducir hasta que termine
+   * el primer cálculo, el partido mientras carga el capítulo) sigue solo y no se cuenta. Nunca lanza. */
   async function simular(lista, { tope = 2000 } = {}) {
     if (!Array.isArray(lista) || !lista.length) return [];
     const fuera = (x, motivo) => ({ clave: `simular.${x?.control ?? ''}`.slice(0, 40), valor: x?.valor, motivo });
     const pedida = inmersionVigente();
     const vence = new Promise((ok) => { const t = setTimeout(() => ok(undefined), tope); t?.unref?.(); });
+    if (!pedida) {
+      // la maqueta: todos en el acto y en orden (el partido puede esperar a que su capítulo termine de armarse)
+      const res = lista.map((x) => sim.accionar(x.control, x.valor));
+      const hechos = await Promise.all(res.map((r) => Promise.race([Promise.resolve(r), vence])));
+      return hechos.map((r, i) => (r === true || r === undefined ? null : fuera(lista[i], typeof r === 'string' && r ? r : 'la maqueta no pudo accionarlo')))
+        .filter(Boolean);
+    }
     const todo = (async () => {
       try { await inm.abriendo; } catch { /* el modelo no cargó: lo dice abajo */ }
-      if (!pedida || inmersionVigente() !== pedida || !inm.abierta || inm.actual?.id !== pedida) {
-        return lista.map(() => (pedida ? 'se cambió de modelo antes de accionarlo' : 'no hay un modelo del atlas a la vista'));
+      if (inmersionVigente() !== pedida || !inm.abierta || inm.actual?.id !== pedida) {
+        return lista.map(() => 'se cambió de modelo antes de accionarlo');
       }
       let p;
       try { p = await puente(); } catch { return lista.map(() => 'el modelo del atlas no cargó'); }
@@ -631,18 +674,22 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   function estadoVisual() {
     return { enfoque: vis.enfoque, camara: vis.camara, rumbo: vis.rumbo, elevacion: vis.elevacion, zoom: vis.zoom, mirar: vis.mirar, girar: vis.girar,
       comparar: vis.comparar, detalle: vis.detalle, inmersion: vis.inmersion, mostrar: [...vis.mostrar], ocultar: [...vis.ocultar], aislar: vis.aislar,
-      sin: [...vis.sin], tema: vis.tema, abierta: inm.abierta ? inm.actual?.id ?? null : null };
+      sin: [...vis.sin], tema: vis.tema, abierta: inm.abierta ? inm.actual?.id ?? null : null,
+      // lo que acciona `simular` en la maqueta 3D (no es estado del paso: es lo que se ve ahora)
+      simulacion: sim.estado() };
   }
 
   /** Al cambiar de paso: todo vuelve a lo del paso (menos el tema); un paso de inmersión abre la suya. La ficha se cierra
    * sin reencuadrar (antes lanzaba un vuelo a la vista vieja, que el paso nuevo cortaba) y lo que se había mostrado,
-   * ocultado o quitado lo deshace pasar3D antes de poner el paso nuevo. */
+   * ocultado o quitado lo deshace pasar3D antes de poner el paso nuevo. La simulación de la maqueta (la hora, las luces,
+   * el partido) también vuelve a lo del paso. */
   function alPaso() {
     Object.assign(vis, INICIAL);
     for (const k of LISTAS) vis[k] = [];
     movido = null; pendiente = false;
     verDetalle(null, { reencuadre: false });
     pintarHud();
+    sim.reiniciar();
     aplicarInmersion().catch(fallaAtlas);
   }
 
@@ -675,6 +722,8 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   const cargando = () => inm.abierta && !capaInm.classList.contains('lista') && !inm.fallo;
 
   return { aplicar, mover, simular, guiado, pausar, depurar, estado: estadoVisual, alPaso, validar, cargando,
+    // los controles de la simulación de la maqueta en el capítulo a la vista
+    controlesMaqueta: () => sim.controles(),
     // para pasar3D (main.js): lo que el asistente muestra, oculta o aísla encima del paso, y la vista del paso sin vuelo
     ajustar, efectos, deshacer, enSeco,
     // repite el encuadre pedido (cámara, enfoque, mirar o el final del último movimiento); false si no hay ninguno

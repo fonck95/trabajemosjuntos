@@ -120,6 +120,21 @@ const cargas = caps.map(async (c) => {
 // con todas las capas armadas (y los árboles del contexto sembrados), sus shaders se compilan de a una y sin bloquear: un
 // cambio de paso que muestra muchas capas nuevas ya no congela la página (escena.precompilar)
 Promise.all(cargas).then(() => escena.listoArboles).then(() => escena.precompilar?.()).catch(() => {});
+// Los módulos llegan a destiempo (urbanismo espera las casas del contexto y tarda segundos): uno que termina de cargar con
+// un paso ya puesto no estaba cuando pasar3D repartió las capas. Las vistas de conjunto (portada, ruta, pedidos) se
+// quedaban sin sus obras —la Cancha de Sóftbol Casabe no aparecía en la vista global— y, en los demás capítulos, sin
+// su estado de hoy (salir). Al llegar, el paso puesto se vuelve a aplicar en suave: solo capas y estado, sin cámara ni
+// animación, y una sola vez aunque lleguen varios juntos
+let puesto = null, tLlegada = 0;   // lo último que puso pasar3D: capítulo y paso, en qué paso estaba y los módulos que había
+cargas.forEach((pr, i) => pr.then(() => {
+  if (!ctx3d[caps[i].id]) return;   // sin 3D (o falló al armarse): no suma nada
+  clearTimeout(tLlegada);
+  tLlegada = setTimeout(() => {
+    // un paso a medio entrar (mostrar espera al panel y a su módulo) lo pone él, ya con los que hayan llegado
+    if (!puesto || estado.ci !== puesto.ci || estado.pi !== puesto.pi) return;
+    if (Object.keys(ctx3d).some((id) => !puesto.mods.has(id))) pasar3D(puesto.c, puesto.p, { camara: false, animar: false, soloCapas: true });
+  }, 150);
+}));
 
 // ---------------------------------------------------------------- panel
 const madurezPasos = ['Idea', 'Perfil', 'Prefactibilidad', 'Factibilidad', 'Diseños', 'Radicado'];
@@ -539,11 +554,13 @@ async function pintarPanel(c, p, dir, conTelon) {
 // efectos: réplicas, partes quitadas, gris) y lo deshace antes de que el módulo ponga el estado del paso siguiente.
 // `camara: false` no vuela (al llegar al paso solo queda anotado qué encuadra: la cámara la lleva quien llama) y
 // `animar: false` no corre la animación: así se vuelve a aplicar el paso «en suave» cuando solo cambian las piezas a la
-// vista. `entrada`: es la llegada al paso (mostrar), no un retoque de visual.js
+// vista. `entrada`: es la llegada al paso (mostrar), no un retoque de visual.js. `soloCapas`: un módulo que llegó tarde
+// suma lo suyo al paso ya puesto; ni la vista del paso (sin visual.js volaría) ni lo que anotó para los rótulos cambian
 let capasVisibles = [];   // las capas del paso, sin lo que el asistente añade o quita
 let animada = { clave: '', t: 0 };
-function pasar3D(c, p, { camara = true, animar = true, entrada = false } = {}) {
+function pasar3D(c, p, { camara = true, animar = true, entrada = false, soloCapas = false } = {}) {
   const m = ctx3d[c.id], def = m?.pasos?.[p.id] || m?.pasos?.['*'] || {};
+  puesto = { c, p, ci: estado.ci, pi: estado.pi, mods: new Set(Object.keys(ctx3d)) };
   visual?.deshacer();
   const ids = [...(m?.siempre || []), ...(def.capas || []), ...(p.capas || [])];
   // la visión completa (hoja de ruta, pedidos) muestra las capas principales de todos los módulos; en los demás pasos,
@@ -563,13 +580,15 @@ function pasar3D(c, p, { camara = true, animar = true, entrada = false } = {}) {
   // la vista del paso dice qué obra encuadra (los rótulos se apartan de ella en el celular). Sin cámara, al llegar al
   // paso solo queda anotada (en seco); en un retoque de visual.js ni eso: lo que el paso encuadra no cambió
   const vista = def.vista || m?.vista;
-  if (camara || !visual) { escena.st._obra = null; vista?.(); } else if (entrada) { escena.st._obra = null; visual.enSeco(vista); }
-  // la animación del paso no vuelve a arrancar si acaba de hacerlo al llegar (la orden `escena` cambia de paso y,
-  // enseguida, llama a visual.aplicar: los dos con `animar`)
-  const clave = `${c.id}/${p.id}`, ahora = performance.now();
-  const repetida = !entrada && animada.clave === clave && ahora - animada.t < 1500;
-  animada = entrada && animar ? { clave, t: ahora } : { clave: '', t: 0 };
-  if (animar && !repetida) { if (gsap && !reducedMotion) def.animar?.(); else def.alFinal?.(); }
+  if (!soloCapas) {
+    if (camara || !visual) { escena.st._obra = null; vista?.(); } else if (entrada) { escena.st._obra = null; visual.enSeco(vista); }
+    // la animación del paso no vuelve a arrancar si acaba de hacerlo al llegar (la orden `escena` cambia de paso y,
+    // enseguida, llama a visual.aplicar: los dos con `animar`)
+    const clave = `${c.id}/${p.id}`, ahora = performance.now();
+    const repetida = !entrada && animada.clave === clave && ahora - animada.t < 1500;
+    animada = entrada && animar ? { clave, t: ahora } : { clave: '', t: 0 };
+    if (animar && !repetida) { if (gsap && !reducedMotion) def.animar?.(); else def.alFinal?.(); }
+  }
   // el mapa de sombras se recalcula a pedido: una vez más cuando ya terminaron de crecer las piezas del paso
   clearTimeout(tSombras); tSombras = setTimeout(() => escena.st.updateShadows(), 3600);
 }

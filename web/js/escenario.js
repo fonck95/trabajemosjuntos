@@ -48,8 +48,11 @@ const ESPERA_MS = 30000;
 // esperan a que termine el cálculo en curso: con el resultado anterior todavía en pantalla, accionarlos no dejaría nada
 // del nuevo, que al llegar arranca solo desde el comienzo). Por modo, `listo`: un elemento que marca que el modo ya se
 // puede manejar (el modelo BIM cargado; antes sus botones están pero no hacen nada). Un control que no está todavía (el
-// modo carga) o que está deshabilitado (Reproducir antes del primer cálculo) se espera hasta ESPERA_CONTROL_MS; si
-// mientras tanto llega otra orden ir(), se abandona.
+// modo carga) o que está deshabilitado se espera hasta ESPERA_CONTROL_MS; si mientras tanto llega otra orden ir(), se
+// abandona. Salvo `sinResultado`: un control que necesita un cálculo terminado (Reproducir y el instante, deshabilitados
+// hasta el primero) no espera en silencio si no hay ningún cálculo en curso y el botón que calcula (`calcula` del modo)
+// está a la vista: con 'calcular' (Reproducir), sí lo pulsa antes y el resultado se reproduce solo al llegar (no lo pausa:
+// no hay nada que se mueva); con 'error' (el instante), responde enseguida que hace falta calcular.
 // build_propuesta.py lee esta tabla (las claves «'vista:modo': {» y las de sus controles) para revisar el catálogo.
 const ESPERA_CONTROL_MS = 25000;
 const panel = (m) => [`#v-torre [data-slot="torre.panel.${m}"]`, `#v-torre [data-slot="torre.hud.${m}"]`];
@@ -87,10 +90,11 @@ const ACCIONADORES = {
   'torre:laboratorio': RECORRIDO,
   'torre:sismo': {
     en: [...panel('sismo')],
+    calcula: { sel: '[data-s="calcular"]', control: 'calcular' },
     controles: {
       calcular: { como: 'boton', sel: '[data-s="calcular"]', antes: '[data-s="cancelar"]' },
       cancelar: { como: 'boton', sel: '[data-s="cancelar"]', espera: false },
-      reproducir: { como: 'alternar', sel: '[data-s="play"]', libre: '[data-s="cancelar"]' },
+      reproducir: { como: 'alternar', sel: '[data-s="play"]', libre: '[data-s="cancelar"]', sinResultado: 'calcular' },
       magnitud: { como: 'rango', sel: '[data-c="Mw"]' },
       escenario: { como: 'lista', sel: '[data-c="escenario"]' },
       profundidad: { como: 'rango', sel: '[data-c="h"]' },
@@ -98,7 +102,7 @@ const ACCIONADORES = {
       tipo_sismo: { como: 'lista', sel: '[data-c="regimen"]' },
       suelo: { como: 'rango', sel: '[data-c="vs30"]' },
       escala: { como: 'radio', nombre: 'sismo-escala', valores: { fisica: '1' } },
-      instante: { como: 'rango', sel: '[data-c="t"]', fraccion: true, libre: '[data-s="cancelar"]' },
+      instante: { como: 'rango', sel: '[data-c="t"]', fraccion: true, libre: '[data-s="cancelar"]', sinResultado: 'error' },
       velocidad: { como: 'botones', sel: '[data-vel]', dato: 'vel', valores: { lenta: '0.25', real: '1' } },
       exageracion: { como: 'lista', sel: '[data-c="exag"]' },
       colorear: { como: 'botones', sel: '[data-campo]', dato: 'campo' },
@@ -182,8 +186,9 @@ const espera = (ms) => new Promise((ok) => setTimeout(ok, ms));
 const plano = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
 const fmt = (v) => String(v).replace('.', ',');
 
-// valida el valor contra el tipo y el rango del catálogo; devuelve { v } (el valor ya normalizado) o { error }
-function validar(c, valor) {
+// valida el valor contra el tipo y el rango del catálogo; devuelve { v } (el valor ya normalizado) o { error }. La
+// maqueta de la presentación (js/propuesta/simulacion.js) usa esta misma regla para sus controles
+export function validar(c, valor) {
   const nombre = `«${c.nombre || c.id}»`;
   if (c.tipo === 'accion') return valor == null ? { v: null } : { error: `${nombre} es una acción: va sin valor` };
   if (c.tipo === 'si_no') return typeof valor === 'boolean' ? { v: valor } : { error: `${nombre} pide sí o no (true o false)` };
@@ -229,6 +234,29 @@ function objetivo(ac, a, v, clave, id) {
   }
 }
 const avisar = (el, ...tipos) => tipos.forEach((t) => el.dispatchEvent(new Event(t, { bubbles: true })));
+// Sin un resultado calculado (`sinResultado`): el control está pero deshabilitado, no hay un cálculo en curso (`libre` no
+// está a la vista) y el botón que calcula sí. Entonces no hay nada que esperar: antes se esperaba ESPERA_CONTROL_MS en
+// silencio y la presentación lo daba por hecho
+const SIN_RESULTADO = Symbol('sin resultado');
+function faltaResultado(ac, a) {
+  if (!a.sinResultado || !ac.calcula) return null;
+  const el = buscar(ac, a.sel);
+  if (!el || !el.isConnected || el.hidden || !el.disabled) return null;
+  return !(a.libre && usable(buscar(ac, a.libre))) && usable(buscar(ac, ac.calcula.sel)) ? SIN_RESULTADO : null;
+}
+async function sinResultado(ac, a, c, v, inm, mio) {
+  const calc = (inm?.controles || []).find((x) => x.id === ac.calcula.control);
+  const nombreCalc = `«${calc?.nombre || ac.calcula.control}»`;
+  if (a.sinResultado !== 'calcular') return `«${c.nombre}» necesita un cálculo terminado: accione antes ${nombreCalc}`;
+  if (v === false) return true;   // pausar: no hay nada que se mueva
+  const b = buscar(ac, ac.calcula.sel);
+  if (!usable(b)) return `«${c.nombre}» necesita un cálculo terminado y ${nombreCalc} no está disponible`;
+  b.click();
+  // arrancó (el cálculo en curso a la vista) o ya terminó (el control quedó habilitado): el resultado se reproduce solo
+  if (await hasta(() => usable(buscar(ac, a.libre)) || usable(buscar(ac, a.sel)), 1500, mio)) return true;
+  if (mio !== turno) return `Se cambió de modelo antes de accionar «${c.nombre}»`;
+  return `«${c.nombre}» necesita un cálculo terminado y ${nombreCalc} no arrancó`;
+}
 
 // acciona el control como la persona; devuelve true o el texto del error
 async function accionar(ac, a, c, v, el, clave) {
@@ -313,7 +341,8 @@ async function simularUno(control, valor, mio) {
     if (!p) return mio !== turno ? `Se cambió de modelo antes de accionar «${c.nombre}»` : `«${c.nombre}» no está disponible: el panel no tiene la pestaña «${a.pestana}»`;
     if (p.getAttribute('aria-selected') !== 'true') { p.click(); await espera(0); }
   }
-  const el = await hasta(() => (mismo() ? objetivo(ac, a, val.v, v0.clave, control) : null), a.espera === false ? 0 : ESPERA_CONTROL_MS, mio);
+  const el = await hasta(() => (mismo() ? objetivo(ac, a, val.v, v0.clave, control) || faltaResultado(ac, a) : null), a.espera === false ? 0 : ESPERA_CONTROL_MS, mio);
+  if (el === SIN_RESULTADO) return sinResultado(ac, a, c, val.v, inm, mio);
   if (!el) {
     if (mio !== turno || !mismo()) return `Se cambió de modelo antes de accionar «${c.nombre}»`;
     if (a.libre && usable(buscar(ac, a.libre))) return `«${c.nombre}» esperó a que terminara el cálculo en curso, y no terminó a tiempo`;

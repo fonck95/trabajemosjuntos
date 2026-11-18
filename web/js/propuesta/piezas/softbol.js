@@ -12,7 +12,7 @@
 // jardineras con cordylines, helechos y heliconias, bancas, bolardos y canecas, guayacanes rosados y palmas, parque infantil
 // con velaria, cancha múltiple con malla, parqueadero con carros, cebra y reductor, jugadores en el campo y público.
 import { THREE, mat } from '../../core.js';
-import { losa, cinta, prisma, graderia, membrana, torresLuz, postes, arboles, palmas, matas, jardin, bancas, bolardos, canecas, gente, carros, aLoLargo, unir, azar } from '../geo3d.js';
+import { losa, cinta, prisma, graderia, membrana, torresLuz, postes, arboles, palmas, matas, jardin, bancas, bolardos, canecas, gente, carros, aLoLargo, unir, azar, luzComun } from '../geo3d.js';
 import { matT } from '../texturas.js';
 
 export const MEDIDAS = {
@@ -297,7 +297,7 @@ export function canchaSoftbol({ home, rumbo = 0 }) {
       est.push(new THREE.BoxGeometry(0.08, 0.76, 0.6).translate(x - 0.8, 0.38, 0), new THREE.BoxGeometry(0.08, 0.76, 0.6).translate(x + 0.8, 0.38, 0));
     }
     for (let k = 0; k < 9; k++) list.push(new THREE.BoxGeometry(0.09, 2.2, 0.05).translate(-largo / 2 + 0.25 + k * 0.22, 1.1, -ancho / 2));   // celosía
-    const o1 = new THREE.Mesh(unir(est), C.oscuro), o2 = new THREE.Mesh(unir(list), C.madera), o3 = new THREE.Mesh(unir(mesas), C.madera), o4 = new THREE.Mesh(unir(led), C.led);
+    const o1 = new THREE.Mesh(unir(est), C.oscuro), o2 = new THREE.Mesh(unir(list), C.madera), o3 = new THREE.Mesh(unir(mesas), C.madera), o4 = new THREE.Mesh(unir(led), luzComun());
     g.add(sombra(o1), sombra(o3), o4);
     const piso2 = new THREE.Mesh(new THREE.BoxGeometry(largo + 1, 0.12, ancho + 1).translate(0, 0.06, 0), C.concreto); piso2.receiveShadow = true; g.add(piso2);
     const [pu, pv] = enLinea(lado, 33, 13);
@@ -343,7 +343,8 @@ export function canchaSoftbol({ home, rumbo = 0 }) {
   const L = { camisa: '#f4f4f0', pantalon: '#1f4f8f' }, Vt = { camisa: '#b8302a', pantalon: '#d8d8d2' }, U = { camisa: '#1d2124', pantalon: '#3a3f44' };
   const juego2 = [[0, cv + 0.3, Math.PI, L], [0, -1.6, 0, L], [0, -2.6, 0, U], [lb + 2.2, lb + 1.2, -2.4, L], [-lb - 2.2, lb + 1.2, 2.4, L], [5.5, M.homeSegunda + 2.5, Math.PI, L], [-6, M.homeSegunda + 1.5, Math.PI, L],
     [-38, 52, 2.6, L], [0, 63, Math.PI, L], [37, 52, -2.6, L], [-1.0, 0.4, -Math.PI / 2, Vt], [-11.5, -3.2, 0.6, Vt], [...enLinea(1, 26, 2.5), Math.PI / 2, Vt], [...enLinea(-1, 22, 2.5), -Math.PI / 2, L]];
-  personas.add(gente(juego2.map(([u, v, rr, ropa]) => [u, v, rr, ropa]), { semilla: 3 }));
+  const jugadores = gente(juego2.map(([u, v, rr, ropa]) => [u, v, rr, ropa]), { semilla: 3 });
+  personas.add(jugadores);
   personas.add(gente(publico, { sentado: true, semilla: 5 }));
   const paseantes = [];
   [1, -1].forEach((lado) => { [12, 21, 38].forEach((x, i) => { const [u, v] = enLinea(lado, x, 9.2 + (i % 2 ? 0.6 : -0.6)); paseantes.push([u, v, rotLinea(lado) + (i % 2 ? 0 : Math.PI)]); }); [-6.5, -3, 3, 6.5].forEach((x) => { const [u, v] = enLinea(lado, 33 + x, 13 + (x > 0 ? 0.9 : -0.9)); paseantes.push([u, v, rotLinea(lado) + (x > 0 ? Math.PI / 2 : -Math.PI / 2)]); }); });
@@ -352,6 +353,8 @@ export function canchaSoftbol({ home, rumbo = 0 }) {
   const ninos = gente([[u0 + 5.6, v0 + 48, 0.5], [u0 + 8.4, v0 + 52, 2.1], [u0 + 6.8, v0 + 45.5, -0.4], [u0 + 4.6, v0 + 56.5, 1.4], [u0 + 9.4, v0 + 44, 2.9]], { semilla: 13, escala: 0.62 });
   personas.add(ninos);
 
+  raiz.userData.partido = partidoAnimado(jugadores, campo, { cv, lb, M });
+
   raiz.userData.partes = { piso, campo, obras, cubierta, luces, verde, gente: personas };
   // puntos del contorno del lote en el modelo (para encuadrar) y los focos de la cámara
   raiz.updateMatrixWorld(true);
@@ -359,4 +362,84 @@ export function canchaSoftbol({ home, rumbo = 0 }) {
   raiz.userData.contorno = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]].map(([u, v]) => aModelo(u, v));
   raiz.userData.aModelo = aModelo;
   return raiz;
+}
+
+// ---------------------------------------------------------------- el partido (simulación de la maqueta)
+// Una jugada que se repite mientras está encendida: el lanzador lanza, el bateador batea un elevado al hueco entre el
+// jardín izquierdo y el central, corre a primera y llega parado a segunda (doble); el jardinero izquierdo recoge la bola y
+// la devuelve al campocorto, que la releva a segunda, donde la cubre el segunda base; el central lo respalda. Después todos
+// vuelven a su puesto y vuelve a empezar. Mueve las instancias de los jugadores (las tres mallas de gente(): piernas,
+// torso y cabeza) y una bola amarilla. paso(dt) devuelve true mientras hay movimiento (la escena redibuja)
+const JUGADA = 12;   // segundos
+function partidoAnimado(jugadores, padre, { cv, lb, M }) {
+  const ims = jugadores.children.filter((o) => o.isInstancedMesh);
+  const base = ims.map((im) => Array.from({ length: im.count }, (_, i) => { const m = new THREE.Matrix4(); im.getMatrixAt(i, m); return m; }));
+  const inicio = base[0].map((m) => { const p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3(); m.decompose(p, q, s); return { p, q, s }; });
+  const bola = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 8), new THREE.MeshStandardMaterial({ color: 0xe8f53a, emissive: 0xc8d21e, emissiveIntensity: 0.35, roughness: 0.6 }));
+  bola.visible = false; bola.castShadow = true; padre.add(bola);
+  const P = (u, v) => new THREE.Vector2(u, v);
+  const casa = P(-1.0, 0.4), primera = P(lb, lb), segunda = P(0, M.homeSegunda), caida = P(-19, 52), recoge = P(-22, 57.5), relevo = P(-8.5, 36);
+  const de = (i) => P(inicio[i].p.x, -inicio[i].p.z);
+  // trayectorias por jugador: [t0, t1, desde, hasta] (en segundos de la jugada); fuera de los tramos, quieto en el último punto
+  const lerp2 = (a, b, k) => P(a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k);
+  const rutas = {
+    10: [[1.4, 4.7, casa, primera], [4.7, 8.1, primera, segunda], [9.2, 11.6, segunda, casa]],          // bateador → corredor
+    7: [[1.5, 5.0, de(7), recoge], [9.2, 11.6, recoge, de(7)]],                                          // jardín izquierdo
+    8: [[1.6, 5.2, de(8), P(-12, 60)], [9.2, 11.6, P(-12, 60), de(8)]],                                 // central, de respaldo
+    6: [[2.0, 5.2, de(6), relevo], [9.2, 11.6, relevo, de(6)]],                                          // campocorto, al relevo
+    5: [[4.6, 6.9, de(5), P(0.9, M.homeSegunda + 0.6)], [9.2, 11.6, P(0.9, M.homeSegunda + 0.6), de(5)]], // segunda base, a cubrir
+    3: [[1.6, 3.2, de(3), P(lb + 0.8, lb - 0.2)], [9.2, 11.6, P(lb + 0.8, lb - 0.2), de(3)]],          // primera base, a la base
+  };
+  // la bola: [t0, t1, desde (u, v, h), hasta (u, v, h), altura del arco]
+  const vuelo = [
+    [0.8, 1.25, [0, cv, 1.6], [-0.4, 0.3, 0.9], 0.3],             // el lanzamiento
+    [1.25, 4.3, [-0.4, 0.6, 1.0], [caida.x, caida.y, 0.3], 22],    // el elevado
+    [4.3, 5.1, [caida.x, caida.y, 0.3], [recoge.x, recoge.y, 0.25], 0.6],   // rueda y bota hasta el jardinero
+    [5.4, 6.5, [recoge.x, recoge.y, 1.6], [relevo.x, relevo.y, 1.5], 3.5],  // devolución al relevo
+    [6.7, 7.5, [relevo.x, relevo.y, 1.6], [0.9, M.homeSegunda + 0.6, 1.2], 1.4],   // relevo a segunda (llega tarde: doble)
+  ];
+  let t = 0, activo = false, quieto = true;
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), eje = new THREE.Vector3(0, 1, 0), pos = new THREE.Vector3(), esc = new THREE.Vector3();
+  function poner(i, u, v, rumbo, salto = 0) {
+    const s0 = inicio[i];
+    q.setFromAxisAngle(eje, rumbo);
+    pos.set(u, s0.p.y + salto, -v); esc.copy(s0.s);
+    m4.compose(pos, q, esc);
+    ims.forEach((im) => im.setMatrixAt(i, m4));
+  }
+  function aplicar() {
+    for (const [k, tramos] of Object.entries(rutas)) {
+      const i = +k;
+      let p = de(i), rumbo = new THREE.Euler().setFromQuaternion(inicio[i].q, 'YXZ').y, salto = 0;
+      for (const [t0, t1, a, b] of tramos) {
+        if (t < t0) break;
+        const kk = Math.min(1, (t - t0) / (t1 - t0));
+        p = lerp2(a, b, kk);
+        if (kk < 1) { rumbo = Math.atan2(-(b.y - a.y), b.x - a.x) - Math.PI / 2; salto = 0.09 * Math.abs(Math.sin((t - t0) * 11)); }
+      }
+      poner(i, p.x, p.y, rumbo, salto);
+    }
+    // el lanzador se estira al lanzar; el bateador gira al batear
+    const lanza = t > 0.3 && t < 1.0 ? Math.sin(((t - 0.3) / 0.7) * Math.PI) * 0.25 : 0;
+    poner(0, inicio[0].p.x, -inicio[0].p.z - lanza, new THREE.Euler().setFromQuaternion(inicio[0].q, 'YXZ').y, lanza * 0.3);
+    ims.forEach((im) => { im.instanceMatrix.needsUpdate = true; });
+    const tramo = vuelo.find(([t0, t1]) => t >= t0 && t <= t1);
+    bola.visible = !!tramo;
+    if (tramo) {
+      const [t0, t1, a, b, alto] = tramo, k = (t - t0) / (t1 - t0);
+      bola.position.set(a[0] + (b[0] - a[0]) * k, a[2] + (b[2] - a[2]) * k + alto * 4 * k * (1 - k), -(a[1] + (b[1] - a[1]) * k));
+    }
+  }
+  function reposo() { ims.forEach((im, j) => { base[j].forEach((m, i) => im.setMatrixAt(i, m)); im.instanceMatrix.needsUpdate = true; }); bola.visible = false; }
+  return {
+    jugar(v = true) { activo = !!v; if (activo) quieto = false; return activo; },
+    activo: () => activo,
+    /** dt en segundos; true si hubo que mover algo (redibujar) */
+    paso(dt) {
+      if (!activo) { if (!quieto) { reposo(); quieto = true; return true; } return false; }
+      t = (t + Math.min(dt, 0.1)) % JUGADA;
+      aplicar();
+      return true;
+    },
+  };
 }

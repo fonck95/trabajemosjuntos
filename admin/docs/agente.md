@@ -296,8 +296,9 @@ maqueta 3D del territorio real, con lo que se agrega para presentar cada detalle
   losas; `[]` las devuelve). Todo vuelve a lo del paso al cambiar de paso. Y tres **acciones que no son estado**:
   `mover` (`{giro, zoom, elevacion}`: la cámara gira esos grados alrededor de lo que mira y termina con ese
   acercamiento y esa elevación; en un plan dura lo que dura la frase, suelta dura unos segundos), `animar` (repite la
-  animación propia del paso: la obra crece) y `simular` ([las simulaciones del atlas](#las-simulaciones-del-atlas)).
-  La pantalla las hace una vez: no quedan guardadas como lo que se ve.
+  animación propia del paso: la obra crece) y `simular` ([las simulaciones del atlas](#las-simulaciones-del-atlas) o,
+  sin un modelo del atlas a la vista, [las de la maqueta](#las-simulaciones-de-la-maqueta)). La pantalla las hace una
+  vez: no quedan guardadas como lo que se ve.
 - **El catálogo de piezas** está en `data/propuesta/general.json` (`tecnica.maqueta`: por capítulo, cada pieza con su
   id, su nombre, las capas que enciende y las partes que se le pueden quitar; cuando la pieza es un componente del
   capítulo lleva su mismo id). build_propuesta.py lo copia a `web/data/propuesta.json` y lo revisa; la presentación lo
@@ -329,8 +330,10 @@ o una opción habla de costos, presupuesto o valor, y en el atlas enmarcado el B
   `mover`, `animar` y `resaltar`) y en la op **`visual`** suelta. Es una acción, no estado: se aplica cuando llega,
   sobre el modelo que queda abierto en ese paso (el que abre `inmersion`, el que había o el del paso de inmersión; de
   otro capítulo que el de la pantalla, solo el que abre la misma orden). Cambiar un valor no recalcula, igual que en la
-  página: el plan manda después `calcular`; al terminar un cálculo pedido la torre tiembla sola (no el primer cálculo
-  al entrar ni con movimiento reducido: ahí, `reproducir` con `true`).
+  página: el plan manda después `calcular`; al terminar un cálculo pedido la torre tiembla sola, también en un
+  proyector con movimiento reducido (en el escenario lo pidió quien presenta), y la primera vez que se reproduce un
+  resultado arranca desde el comienzo, no desde el pico. El primer cálculo, al entrar, no tiembla solo: ahí,
+  `reproducir` con `true`.
 - **Tolerante, con avisos legibles.** El servidor resuelve cada control por id o por nombre contra los del modelo que
   queda abierto; un número fuera de su rango se recorta y se ajusta a su paso («simular «profundidad» 900 quedó en 200
   (va de 5 a 200 km)»); un control que no existe, un valor que no sirve, un paso sin modelo del atlas o uno sin
@@ -349,11 +352,44 @@ o una opción habla de costos, presupuesto o valor, y en el atlas enmarcado el B
   el plan, en la acción `visual` y en el estado de la pantalla en off; el reproductor la manda en la orden `escena`; la
   presentación (`mando.js`) la revisa y `visual.js` la pasa al marco del atlas con `__escenario.simular`
   (`web/js/escenario.js`), que acciona el control de la página como la persona y espera hasta 25 s a que aparezca o se
-  habilite (Reproducir antes del primer cálculo). La escena acciona cuando el modelo ya cargó y espera las respuestas a
+  habilite. Sin un sismo calculado ni un cálculo en curso (se canceló, o el de entrada falló) no espera en silencio:
+  `reproducir` con `true` pulsa antes **Calcular** (responde en cuanto el cálculo arranca y el resultado tiembla solo
+  al llegar) y el instante responde enseguida que hace falta calcular. La escena acciona cuando el modelo ya cargó y espera las respuestas a
   lo sumo 2 s: lo que el atlas rechaza en ese tiempo vuelve como descartado (el aviso `parcial`); lo que sigue
   esperando se acciona solo después. Si la escena se vuelve a aplicar (repetir, o seguir después de que la persona
   movió la imagen), la simulación se acciona otra vez. En la presentación, el simulador muestra en su barra el sismo
-  puesto («Mw 7,0 · 150 km de profundidad · calculando 40 %»): la sala ve lo que cambió el asistente.
+  puesto («Mw 7,0 · 150 km de profundidad · calculando 40 %»): la sala ve lo que cambió el asistente. Con una narración
+  o una explicación a la vista, la ventana del modelo termina encima del subtítulo, que ya no tapa la barra de tiempo.
+
+### Las simulaciones de la maqueta
+
+Sin un modelo del atlas a la vista, **`simular` maneja la maqueta 3D**, con la misma forma, los mismos topes y la misma
+tolerancia: la **hora del día** (`hora`: `manana`, `tarde`, `atardecer` o `noche`; el sol, el cielo, la luz y las
+sombras, y al atardecer y de noche las ventanas y las luminarias que haya), **el día entero** (`reproducir_dia`:
+`true` lleva el sol de la mañana a la noche en 24 s de reloj, aunque la pantalla dibuje pocos cuadros; `false` lo pausa
+donde va y otro `true` sigue desde ahí), en Vivienda y Urbanismo (los capítulos con luminarias) **las luces** (`luces`:
+las torres LED del estadio, los postes y los bolardos con su luz en el piso; sin pedirlas, siguen la hora) y, solo en
+Urbanismo, **un partido** en la Cancha de Sóftbol Casabe (`partido`: lanzamiento, elevado, doble y relevo, que se
+repite; solo con la cancha en el encuadre en que queda la cámara: no en la portadilla ni en el mirador, que la ocultan,
+ni en las canchas cubiertas junto al CIC, que encuadran otra cosa).
+
+- **El catálogo** es la clave reservada `maqueta` de `data/propuesta/simulaciones.json`, con la forma de los controles
+  del atlas y, solo ahí, `capitulos` (en qué capítulos vale un control; sin la clave, en todos). `build_propuesta.py`
+  lo revisa (también que `web/js/propuesta/simulacion.js` sepa accionar cada control y que las horas sean las de
+  `ambiente.js`) y lo copia a `tecnica.simulaciones_maqueta`; el guion lo lleva aparte de las inmersiones (`maqueta`,
+  «La maqueta 3D»: `Guion.controles("maqueta", capítulo)`). El modelo lo ve en `indice` y `guion` por capítulo
+  (`controles_maqueta`) y al ir a un paso sin modelo del atlas.
+- **Dónde acciona** (`recorrido.simulable_en`): en el modelo del atlas que queda abierto o, sin él, en la maqueta (un
+  paso que se sabe, la maqueta pedida o un capítulo sin modelos del atlas). Si todo lo que se pide es de un modelo del
+  atlas (`calcular`, `reproducir`), el aviso de siempre («ahí no hay uno») con lo que tiene la maqueta; el partido
+  fuera de Urbanismo dice dónde está.
+- **En la pantalla** la acciona `simulacion.js` (`visual.js` la usa cuando no hay una inmersión vigente), con la misma
+  regla del valor que el atlas (`validar` de `escenario.js`). Lo que no se puede (el partido con la cancha oculta o
+  fuera del encuadre) vuelve como descartado; el partido espera hasta 8 s a que se arme su capítulo. Como lo demás de
+  `visual`, **vuelve a lo del paso al cambiar de paso** (un `ir` al mismo paso no la toca: la pantalla en off solo
+  recibe de él lo visual que cambió; el botón del tema devuelve la hora, no las luces ni el partido): un plan la repite
+  en el paso siguiente si debe seguir. El estado de la presentación trae lo que se ve en `visual.simulacion`
+  (`{hora, dia, luces, partido}`).
 
 ### El plan guiado (recorridos narrados)
 
@@ -542,7 +578,7 @@ ventana para ver el plan.
 - **La pantalla en off cuenta como abierta desde que se monta**, no desde que termina de cargar: un plan pedido en el
   chat de esa ventana en ese rato va igual a la pantalla en off. En el celular, cuando el plan empieza, el chat se
   pliega para que se vea la presentación.
-- Los pasos que manejan una simulación del atlas llevan en la tarjeta el chip «Maneja la simulación».
+- Los pasos que manejan una simulación (del atlas o de la maqueta) llevan en la tarjeta el chip «Maneja la simulación».
 - Los enlaces **Abrir en otra pantalla** y **Pantalla en off** de la vista lo dicen en su descripción: ahí también se
   abre el asistente.
 

@@ -1,7 +1,9 @@
 """Las simulaciones del atlas: los controles de adentro de cada modelo 3D que el asistente acciona (`simular`).
 
 * El catálogo data/propuesta/simulaciones.json ({inmersión: [control…]}): la forma de cada control (id, nombre, tipo,
-  rangos, opciones), que cada inmersión exista en `tecnica.inmersiones` y que los rangos sean coherentes.
+  rangos, opciones), que cada inmersión exista en `tecnica.inmersiones` y que los rangos sean coherentes. La clave
+  reservada «maqueta» (las simulaciones de la maqueta 3D: la hora, el día, las luces, el partido) tiene la misma forma,
+  con `capitulos` (solo ella), y la maqueta sabe accionar cada uno (ACCIONADORES de web/js/propuesta/simulacion.js).
 * Que el catálogo diga lo mismo que la página: los rangos y los escenarios del simulador sísmico son los del estudio de
   amenaza (web/data/sismo_amenaza.json), las exageraciones y los campos de color los de web/js/scenes/torre/sismo.js.
 * Que el atlas sepa accionar cada control (la tabla ACCIONADORES de web/js/escenario.js, por vista y modo) y que
@@ -47,6 +49,9 @@ pytestmark = pytest.mark.skipif(not SIMULACIONES.is_file() or not GENERAL.is_fil
 ID = re.compile(r"[a-z0-9_]{1,40}")
 TIPOS = {"accion", "numero", "opcion", "si_no"}
 CAMPOS = {"id", "nombre", "tipo", "min", "max", "paso", "unidad", "opciones", "ayuda"}
+SIMULACION_JS = RAIZ / "web" / "js" / "propuesta" / "simulacion.js"
+AMBIENTE_JS = RAIZ / "web" / "js" / "propuesta" / "ambiente.js"
+URBANISMO_JS = RAIZ / "web" / "js" / "propuesta" / "modulos" / "urbanismo.js"
 
 
 def _cargar(p: Path):
@@ -54,7 +59,18 @@ def _cargar(p: Path):
 
 
 def _catalogo() -> dict:
-    return _cargar(SIMULACIONES)
+    """Las simulaciones de los modelos del atlas (sin la clave reservada «maqueta»)."""
+    return {k: v for k, v in _cargar(SIMULACIONES).items() if k != "maqueta"}
+
+
+def _maqueta() -> list:
+    """Las simulaciones de la maqueta 3D (la clave «maqueta» del catálogo)."""
+    return _cargar(SIMULACIONES).get("maqueta") or []
+
+
+def _capitulos_tecnica() -> set:
+    """Los capítulos de la presentación técnica: la portada, los módulos y el cronograma."""
+    return {"portada", "ruta"} | set(_cargar(GENERAL).get("orden_modulos") or [])
 
 
 def _inmersiones() -> dict:
@@ -95,14 +111,17 @@ def test_catalogo_es_un_objeto_de_listas_por_inmersion_que_existe():
 
 
 def test_cada_control_tiene_la_forma_comun():
-    for iid, lista in _catalogo().items():
+    for iid, lista in [*_catalogo().items(), ("maqueta", _maqueta())]:
         ids, nombres = set(), set()
         for c in lista:
             donde = f"{iid}/{c.get('id')}"
             assert isinstance(c.get("id"), str) and ID.fullmatch(c["id"]), donde
             assert c["id"] not in ids, f"{donde}: id repetido"
             ids.add(c["id"])
-            assert set(c) <= CAMPOS, f"{donde}: campos de más {set(c) - CAMPOS}"
+            # (solo los de la maqueta dicen en qué capítulos valen)
+            assert set(c) <= CAMPOS | ({"capitulos"} if iid == "maqueta" else set()), f"{donde}: campos de más {set(c) - CAMPOS}"
+            if "capitulos" in c:
+                assert isinstance(c["capitulos"], list) and c["capitulos"] and set(c["capitulos"]) <= _capitulos_tecnica(), donde
             assert c.get("tipo") in TIPOS, donde
             nombre = c.get("nombre")
             assert isinstance(nombre, str) and nombre.strip(), f"{donde}: sin nombre"
@@ -126,7 +145,7 @@ def test_cada_control_tiene_la_forma_comun():
 
 
 def test_rangos_coherentes():
-    for iid, lista in _catalogo().items():
+    for iid, lista in [*_catalogo().items(), ("maqueta", _maqueta())]:
         for c in (x for x in lista if x["tipo"] == "numero"):
             donde = f"{iid}/{c['id']}"
             mn, mx, paso = c.get("min"), c.get("max"), c.get("paso")
@@ -153,7 +172,7 @@ def test_lo_proyectado_no_lleva_plata():
     del presupuesto (5D) ni la pestaña de costos. build_propuesta.py avisa (y la CI falla) si un control o una opción
     habla de plata; bim.js, además, no escribe cifras en pesos en el escenario."""
     habla, ayuda = _regla_de_plata()
-    for iid, lista in _catalogo().items():
+    for iid, lista in [*_catalogo().items(), ("maqueta", _maqueta())]:
         for c in lista:
             donde = f"{iid}/{c['id']}"
             assert not habla(c["id"]) and not habla(c["nombre"]) and not habla(c.get("ayuda"), ayuda), donde
@@ -230,14 +249,46 @@ def test_el_atlas_sabe_accionar_cada_control():
     assert cat["torre_recorrido"] == cat["torre_laboratorio"]
 
 
+def test_la_maqueta_sabe_accionar_cada_control():
+    """La maqueta 3D acciona sus controles con la tabla ACCIONADORES de simulacion.js (como la lee build_propuesta.py);
+    las horas son las de ambiente.js, en su orden; el partido vive en urbanismo.js (`simulaciones: { partido }`) y solo
+    vale ahí; ninguna inmersión se llama «maqueta»."""
+    maq = {c["id"]: c for c in _maqueta()}
+    assert list(maq) == ["hora", "reproducir_dia", "luces", "partido"]
+    js = SIMULACION_JS.read_text(encoding="utf-8")
+    tabla = re.search(r"const ACCIONADORES = \{\n(.*?)\n  \};", js, re.S)
+    assert tabla, "simulacion.js no tiene la tabla ACCIONADORES"
+    claves = lambda t: set(re.findall(r"^ {4}([a-z0-9_]+): ", t.group(1), re.M))   # noqa: E731
+    assert set(maq) <= claves(tabla)
+    # la tabla se lee hasta su propio cierre (a 2 espacios), no hasta el primer `};` de una función de adentro: un
+    # control escrito después del partido también cuenta
+    otra = js.replace("\n  };\n  const controles = ", "\n    lluvia: (v) => true,\n  };\n  const controles = ", 1)
+    assert otra != js and "lluvia" in claves(re.search(r"const ACCIONADORES = \{\n(.*?)\n  \};", otra, re.S))
+    assert "import { validar } from '../escenario.js';" in js   # la misma regla del valor que el atlas
+    horas = re.search(r"export const ORDEN_HORAS = \[([^\]]*)\]", AMBIENTE_JS.read_text(encoding="utf-8"))
+    assert horas and [o["id"] for o in maq["hora"]["opciones"]] == re.findall(r"'([a-z0-9_]+)'", horas.group(1))
+    assert maq["reproducir_dia"]["tipo"] == maq["luces"]["tipo"] == maq["partido"]["tipo"] == "si_no"
+    assert re.search(r"export const DURACION_DIA = (\d+);", js).group(1) == "24" and "24 segundos" in maq["reproducir_dia"]["ayuda"]
+    assert maq["partido"]["capitulos"] == ["urbanismo"] and "Solo con la cancha a la vista" in maq["partido"]["ayuda"]
+    # las luces, solo donde hay luminarias que se vean (en los demás capítulos encenderlas no cambiaba nada)
+    assert maq["luces"]["capitulos"] == ["vivienda", "urbanismo"]
+    assert all("capitulos" not in c for k, c in maq.items() if k not in ("partido", "luces"))
+    urb = URBANISMO_JS.read_text(encoding="utf-8")
+    assert "simulaciones: {" in urb and re.search(r"^\s+partido: \{ pieza: ", urb, re.M)
+    assert "maqueta" not in _inmersiones() and "export function validar(c, valor)" in ESCENARIO_JS.read_text(encoding="utf-8")
+
+
 @pytest.mark.skipif(not PROPUESTA_JSON.is_file(), reason="Sin web/data/propuesta.json")
 def test_propuesta_json_lleva_los_controles_en_cada_inmersion():
     """build_propuesta.py copia el catálogo tal cual (sin unir cifras y unidades) a cada inmersión; [] si no tiene."""
     cat = _catalogo()
-    inms = _cargar(PROPUESTA_JSON)["tecnica"]["inmersiones"]
+    tec = _cargar(PROPUESTA_JSON)["tecnica"]
+    inms = tec["inmersiones"]
     assert {i["id"] for i in inms} == set(_inmersiones())
     for i in inms:
         assert i.get("controles") == cat.get(i["id"], []), f"{i['id']}: corre python3 scripts/build_propuesta.py"
+    # y los de la maqueta 3D, tal cual (con sus capítulos), aparte
+    assert tec.get("simulaciones_maqueta") == _maqueta(), "corre python3 scripts/build_propuesta.py"
 
 
 # ───────────────────────────── simular en Chromium ─────────────────────────────
@@ -456,4 +507,81 @@ def test_el_bim_recien_abierto_y_lo_que_la_sala_ve_en_cada_modo(tmp_path, marco_
     for modo, x in r["modos"].items():
         assert all(v is True for v in x["controles"].values()), (modo, x["controles"])
         assert x["textos"] > 0 and x["plata"] == [] and x["personas"] == [], (modo, x)
+    assert not r["errores"], r["errores"]
+
+
+NODE_SISMO_SIN_RESULTADO = r"""// El simulador sísmico sin un sismo calculado, en un proyector con «reducir movimiento», y la primera reproducción de
+// un resultado. Uso: node <guion> <url de la página que enmarca el atlas>
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+(async () => {
+const [url] = process.argv.slice(2);
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const r = { errores: [] };
+async function abrir(opciones) {
+  const ctx = await browser.newContext({ viewport: { width: 1100, height: 700 }, deviceScaleFactor: 1, ...opciones });
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => r.errores.push(String(e)));
+  await page.goto(url);
+  await page.waitForFunction(() => !!document.getElementById('m').contentWindow.__escenario, null, { timeout: 60000 });
+  const E = (expr, arg) => page.evaluate(new Function('arg', `const E = document.getElementById('m').contentWindow.__escenario, D = document.getElementById('m').contentWindow.document; return (async () => { ${expr} })();`), arg);
+  const sim = (c, v) => E('return E.simular(arg.c, arg.v);', { c, v });
+  const q = (sel, prop = 'value') => E(`const el = D.querySelector(arg.sel); return el ? (arg.prop === 'text' ? el.textContent : el[arg.prop] ?? el.getAttribute(arg.prop)) : null;`, { sel, prop });
+  const listo = () => page.waitForFunction(() => /^Listo/.test(document.getElementById('m').contentWindow.document.querySelector('[data-o="estado"]')?.textContent || ''), null, { timeout: 180000 });
+  await E("return E.ir({ vista: 'torre', modo: 'sismo' });");
+  return { ctx, page, sim, q, listo };
+}
+const medir = async (f) => { const t = Date.now(); const v = await f(); return [v, Date.now() - t]; };
+// 1. Con «reducir movimiento»: el cálculo de entrada, cancelado apenas arranca; sin resultado ni cálculo en curso,
+//    el instante dice enseguida que falta calcular, pausar no tiene nada que pausar y Reproducir calcula antes (antes
+//    esperaba 25 s en silencio); el resultado se reproduce solo al llegar, aunque el proyector reduzca el movimiento
+{
+  const { ctx, page, sim, q, listo } = await abrir({ reducedMotion: 'reduce' });
+  await page.waitForFunction(() => { const b = document.getElementById('m').contentWindow.document.querySelector('[data-s="cancelar"]'); return !!b && !b.hidden; }, null, { timeout: 120000 });
+  r.cancelar = await sim('cancelar');
+  r.sin_resultado = [await q('[data-s="play"]', 'disabled'), await q('[data-s="cancelar"]', 'hidden')];
+  r.instante = await medir(() => sim('instante', 50));
+  r.pausa = await medir(() => sim('reproducir', false));
+  r.reproducir = await medir(() => sim('reproducir', true));
+  r.calcula = (await q('[data-s="cancelar"]', 'hidden')) === false || /^Listo/.test(await q('[data-o="estado"]', 'text') || '');
+  await listo();
+  await page.waitForTimeout(600);
+  r.tiembla = await q('[data-s="play"]', 'aria-pressed');
+  await sim('reproducir', false);
+  await ctx.close();
+}
+// 2. Sin «reducir movimiento»: el cálculo de entrada no se reproduce solo y queda en su pico; la primera vez que se
+//    reproduce arranca desde el comienzo (antes, desde el pico: la sala no veía llegar el sismo)
+{
+  const { ctx, page, sim, q, listo } = await abrir({});
+  await listo();
+  await page.waitForTimeout(400);
+  r.entrada = [await q('[data-s="play"]', 'aria-pressed'), +(await q('[data-c="t"]'))];
+  r.reproducir_tras_entrada = await sim('reproducir', true);
+  r.t_al_reproducir = +(await q('[data-c="t"]'));
+  await sim('reproducir', false);
+  await ctx.close();
+}
+console.log(JSON.stringify(r));
+await browser.close();
+})().catch((e) => { console.error(e); process.exit(1); });
+"""
+
+
+@requiere_navegador
+@pytest.mark.skipif(not PROPUESTA_JSON.is_file() or not AMENAZA.is_file(), reason="Sin los datos del sitio")
+def test_reproducir_sin_un_sismo_calculado_y_desde_el_comienzo(tmp_path, marco_atlas):
+    """Lo que encontró la prueba de punta a punta del agente: Reproducir sin un sismo calculado ni un cálculo en curso
+    esperaba 25 s en silencio (la presentación lo daba por hecho y la torre no se movía); con «reducir movimiento»,
+    calcular no hacía temblar la torre; y la primera reproducción de un resultado arrancaba en el pico."""
+    r = _correr_node(tmp_path, NODE_SISMO_SIN_RESULTADO, marco_atlas, timeout=600)
+    assert r["cancelar"] is True and r["sin_resultado"] == [True, True], r
+    instante, ms = r["instante"]
+    assert isinstance(instante, str) and "necesita un cálculo terminado" in instante and "«Calcular el sismo»" in instante, instante
+    assert ms < 2000, ms
+    assert r["pausa"][0] is True and r["pausa"][1] < 2000, r["pausa"]
+    assert r["reproducir"][0] is True and r["reproducir"][1] < 2000 and r["calcula"], (r["reproducir"], r["calcula"])
+    assert r["tiembla"] == "true", r
+    pressed, pico = r["entrada"]
+    assert pressed == "false" and pico > 0, r["entrada"]
+    assert r["reproducir_tras_entrada"] is True and r["t_al_reproducir"] < pico, (r["t_al_reproducir"], pico)
     assert not r["errores"], r["errores"]

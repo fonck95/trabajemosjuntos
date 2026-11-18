@@ -8,8 +8,9 @@ técnica (`VISUAL`: la cámara con su encuadre, su rumbo, su elevación, su acer
 hoy o con el proyecto, la ficha técnica abierta, la inmersión en un modelo del atlas, las piezas de la maqueta que se
 muestran, se ocultan o se aíslan, las partes que se les quitan y el tema). Al cambiar de paso lo visual vuelve a lo del
 paso, salvo el tema. Y tres acciones que NO son estado (`ACCIONES`) y pidió la última orden `visual`: `mover` (el viaje
-de la cámara), `animar` (repetir la animación del paso) y `simular` (los controles de la simulación del modelo del atlas
-a la vista, `recorrido.MAX_SIMULAR` a lo sumo); la pantalla las hace una vez, con la versión que las trae. La API anota
+de la cámara), `animar` (repetir la animación del paso) y `simular` (los controles de la simulación del modelo a la vista:
+el del atlas o, sin uno, la maqueta 3D; `recorrido.MAX_SIMULAR` a lo sumo); la pantalla las hace una vez, con la versión
+que las trae. La API anota
 la última versión que le entregó (`entregada_v`, `entregar`): ya recibidas, cualquier otra orden, un cambio de paso o el
 cierre de un recorrido las deja en nada; mientras la pantalla abierta no las recibe, la orden siguiente no las pisa
 (`guardar_orden`): se juntan con las suyas (dos órdenes seguidas, o en paralelo, de un agente se hacen las dos), salvo
@@ -150,7 +151,8 @@ def _visual_valido(e: dict, guion: Any) -> None:
     """Lo visual guardado, con los valores que admite la presentación: lo que no cumple (o un componente o una pieza de
     la maqueta que ya no está en el capítulo, una inmersión que ya no está en el catálogo, si el guion cambió) vuelve a
     lo del paso; de una lista (mostrar, ocultar, sin) solo se va lo que no vale. Y las tres acciones, con su forma
-    (`simular`, contra los controles del modelo del atlas que queda a la vista: si alguno no vale, no va ninguno)."""
+    (`simular`, contra los controles del modelo que queda a la vista: el del atlas o, sin uno, la maqueta 3D en ese
+    capítulo; si alguno no vale, no va ninguno)."""
     ci = guion.por_id(e["capitulo"])
     ids = {x["id"] for x in guion.capitulos[ci].get("componentes") or []} if ci is not None else set()
     lugar = {x["id"] for x in guion.capitulos[ci].get("componentes") or [] if x.get("enfoque")} if ci is not None else set()
@@ -179,9 +181,9 @@ def _visual_valido(e: dict, guion: Any) -> None:
     if e["mover"] is not None and not rec.mover_valido(e["mover"]):
         e["mover"] = None
     e["animar"] = e["animar"] is True
-    controles = getattr(guion, "controles", lambda _i: [])
-    if e["simular"] is not None and rec.simular_problemas(
-            e["simular"], controles(rec.inmersion_en(e["capitulo"], e["paso"], e["inmersion"], guion))):
+    controles = getattr(guion, "controles", lambda *_: [])
+    modelo = rec.simulable_en(e["capitulo"], e["paso"], e["inmersion"], guion)
+    if e["simular"] is not None and rec.simular_problemas(e["simular"], controles(modelo, e["capitulo"])):
         e["simular"] = None
 
 

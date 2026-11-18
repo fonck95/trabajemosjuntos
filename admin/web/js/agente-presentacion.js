@@ -39,7 +39,7 @@
 // El plan guiado (el recorrido narrado: reproductor.js, docs/agente.md): la acción `recorrido` trae las escenas (los
 // pasos del plan) ya absolutas, cada una con lo visual (la cámara, las piezas que se muestran, se ocultan o se aíslan,
 // las partes que se quitan), cómo se mueve la cámara mientras se dice (`mover`), si repite la animación del paso
-// (`animar`) y los controles de la simulación del modelo del atlas que acciona (`simular`), y se
+// (`animar`) y los controles de la simulación del modelo a la vista que acciona (`simular`: el del atlas o la maqueta), y se
 // valida aquí entera (`recorridoValido`) antes de reproducirse en la vista o en el proyector. El avance que va
 // diciendo el reproductor (`avisarRecorrido`) llega a los oyentes de esta pestaña (la tarjeta del chat) y, si esta
 // ventana es el proyector, a las demás por el canal (`recorrido`), aceptado solo del que manda. Los controles de la
@@ -112,8 +112,9 @@ const VISUAL_INICIAL = Object.freeze({ enfoque: null, camara: 'paso', rumbo: nul
 const VISUAL_BASE = ['enfoque', 'camara', 'rumbo', 'girar', 'comparar', 'detalle', 'inmersion'];
 // Las tres acciones que no son estado (van en la escena, junto a `resaltar`, y en la orden `visual`): `mover`, lo que
 // hace la cámara mientras dura la frase (cuánto gira alrededor de lo que mira y con qué zoom y elevación termina),
-// `animar`, que repite la animación del paso, y `simular`, los controles de la simulación del modelo del atlas a la
-// vista (de 1 a MAX_SIMULAR {control, valor?}: el control, un id; el valor, un número, el id de una opción o verdadero
+// `animar`, que repite la animación del paso, y `simular`, los controles de la simulación del modelo a la vista (el del
+// atlas o, sin él, la maqueta 3D: la hora, el día, las luces, el partido; aquí solo se revisa la forma) (de 1 a
+// MAX_SIMULAR {control, valor?}: el control, un id; el valor, un número, el id de una opción o verdadero
 // o falso; `MAX_SIMULAR` de app/recorrido.py y de mando.js). `ms`: lo que dura el movimiento de una orden `visual` suelta
 const MOVER = {
   giro: (v) => Number.isInteger(v) && v >= -360 && v <= 360,
@@ -495,7 +496,7 @@ export function ordenesHacia(antes, e) {
     if (!igual(valor, previo) && !(k === 'tema' && valor === null)) visual[k] = copia(valor);
   }
   // `mover`, `animar` y `simular` (un movimiento de la cámara, repetir la animación del paso, accionar la simulación del
-  // modelo del atlas) son acciones, no estado: valen una vez por cada versión nueva de la pantalla (la misma pedida
+  // modelo a la vista: el del atlas o la maqueta) son acciones, no estado: valen una vez por cada versión nueva de la pantalla (la misma pedida
   // dos veces se hace dos veces) y nunca al abrir o recargar (no se repite una vieja)
   const nueva = !!antes && antes.v !== e.v;
   if (e.mover && nueva) visual.mover = { ...e.mover };

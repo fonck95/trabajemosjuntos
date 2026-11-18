@@ -1,5 +1,7 @@
 """`simular`: el asistente y los agentes por MCP accionan los controles de adentro de los modelos del atlas (la magnitud
-del simulador sísmico, hacerlo temblar, el piso, el 4D del BIM…) en un paso del plan y en la op `visual` suelta.
+del simulador sísmico, hacerlo temblar, el piso, el 4D del BIM…) en un paso del plan y en la op `visual` suelta; sin un
+modelo del atlas a la vista, los de la maqueta 3D (la hora, el día, las luces, el partido: test_simulaciones_maqueta.py
+prueba el resto de ese camino).
 
 El camino entero, sin navegador: el catálogo en el guion (`controles` de cada inmersión), la forma absoluta de la escena
 (app/recorrido.py), la pantalla en off (app/pantalla.py: una acción que se hace una vez por versión), la herramienta
@@ -58,6 +60,17 @@ def test_el_guion_trae_los_controles_de_cada_inmersion_y_los_resuelve_por_id_o_p
         assert [c["id"] for c in i["controles"]] == [c["id"] for c in fuente.get(i["id"], [])], i["id"]
     assert G.controles("torre_hoy") == [] and G.controles("relleno_parque") == [] and G.controles("marte") == []
     assert G.controles(None) == []
+    # la maqueta 3D no es una inmersión: sus controles van aparte, por capítulo (el partido, solo en urbanismo)
+    assert "maqueta" not in {i["id"] for i in G.inmersiones}
+    assert [c["id"] for c in G.controles("maqueta", "urbanismo")] == ["hora", "reproducir_dia", "luces", "partido"]
+    # (las luces, solo donde hay luminarias: vivienda y urbanismo)
+    assert [c["id"] for c in G.controles("maqueta", "salud")] == ["hora", "reproducir_dia"]
+    assert [c["id"] for c in G.controles("maqueta", "vivienda")] == ["hora", "reproducir_dia", "luces"]
+    assert G.controles("maqueta", G.por_id("urbanismo")) == G.controles("maqueta", "urbanismo")
+    assert G.controles("maqueta") == [] and all("capitulos" not in c for c in G.controles("maqueta", "urbanismo"))
+    assert G.control("maqueta", "hora del dia", "salud")["id"] == "hora" and G.control("maqueta", "partido", "salud") is None
+    assert G.nombre_modelo("maqueta") == "La maqueta 3D" and G.nombre_modelo("torre_sismo") == "Simulador sísmico"
+    assert [o["id"] for o in G.control("maqueta", "hora", "salud")["opciones"]] == ["manana", "tarde", "atardecer", "noche"]
     # por id o por nombre (sin tildes ni mayúsculas), o por las palabras que lo distinguen; si no, None
     assert G.control("torre_sismo", "magnitud")["id"] == "magnitud"
     assert G.control("torre_sismo", "Magnitud de momento (Mw)")["id"] == "magnitud"
@@ -87,6 +100,16 @@ def test_lo_que_lee_el_modelo_dice_que_controles_hay():
     assert [c["id"] for c in r.contenido["controles"]] == [c["id"] for c in G.controles("torre_sismo")]
     r = _hacer(_Base(), UID, {"op": "ir", "capitulo": "salud", "paso": 1}, por="asistente")
     assert "controles" not in r.contenido
+    # sin un modelo del atlas, los de la maqueta 3D (sin su ayuda: está en guion), y en el índice y en guion por capítulo
+    assert [c["id"] for c in r.contenido["controles_maqueta"]] == ["hora", "reproducir_dia"]
+    assert all("ayuda" not in c for c in r.contenido["controles_maqueta"])
+    r = _hacer(_Base(), UID, {"op": "ir", "capitulo": "urbanismo", "paso": "softbol"}, por="asistente")
+    assert [c["id"] for c in r.contenido["controles_maqueta"]] == ["hora", "reproducir_dia", "luces", "partido"]
+    assert "controles_maqueta" not in _hacer(_Base(), UID, {"op": "ir", "capitulo": "salud", "paso": "torre_sismo"},
+                                             por="asistente").contenido
+    assert {c["id"]: c.get("controles_maqueta") for c in G.indice()["capitulos"]}["urbanismo"][-1] == "partido"
+    assert all(c.get("ayuda") for c in leer["controles_maqueta"])
+    assert all("ayuda" not in c for c in chico["controles_maqueta"])
 
 
 def test_problemas_revisa_los_controles():
@@ -155,6 +178,18 @@ def test_la_escena_puede_traer_simular_o_no():
     assert rec.validar(malo, G) and rec.validar(malo) == []   # sin guion, solo la forma
     malo["escenas"][1]["simular"] = [{"control": "c"}] * 5
     assert rec.validar(malo)
+    # sin un modelo del atlas, contra la maqueta 3D del capítulo: el partido vale en urbanismo, no en salud
+    maq = copy.deepcopy(plano)
+    maq["escenas"][1].update(capitulo="urbanismo", paso=3, simular=[{"control": "hora", "valor": "noche"},
+                                                                   {"control": "partido", "valor": True}])
+    maq["escenas"][1]["visual"]["inmersion"] = None
+    assert rec.validar(maq, G) == []
+    maq["escenas"][1].update(capitulo="salud", paso=1)
+    assert any("«partido» no es un control del modelo a la vista" in x for x in rec.validar(maq, G))
+    maq["escenas"][1]["simular"] = [{"control": "hora", "valor": "amanecer"}]
+    assert any("no es una de sus opciones" in x for x in rec.validar(maq, G))
+    maq["escenas"][1]["simular"] = [{"control": "hora", "valor": "mañana"}]   # el id de la opción va sin eñe: manana
+    assert any("no es un número, una opción ni verdadero o falso" in x for x in rec.validar(maq, G))
     # lo que queda de una escena: sin la simulación (ya pasó); y se sostiene más (hay algo que mirar)
     assert rec.estado_de_escena(e2)["simular"] is None
     assert e2["sostener_ms"] == rec.SOSTENER_MIRAR_MS
@@ -221,6 +256,12 @@ def test_el_esquema_y_los_textos_para_el_modelo_lo_nombran():
     assert "`simular`" in t and "`calcular`, que hace temblar la torre" in t and "cambiar un valor no recalcula" in t
     from app.api import mcp
     assert "sus controles con simular" in mcp.INSTRUCCIONES and len(mcp.D_MCP) < 1500
+    # y que sin un modelo del atlas maneja la maqueta (la hora, el día, las luces, el partido), que vuelve a lo del paso
+    assert "`reproducir_dia`" in t and "`partido`" in t and "«ponla de noche con las luces encendidas»" in t
+    assert "controles_maqueta" in hi.NOTA_GUION and "vuelven a lo del paso" in hi.NOTA_GUION
+    assert "la hora de la maqueta" in hi.D_PRESENTACION and "reproducir_dia" in mcp.INSTRUCCIONES
+    assert "maqueta" in s["properties"]["simular"]["description"]
+    assert "24 s" in hi.SIMULACION_MAQUETA and "vuelven a lo del paso" in hi.SIMULACION_MAQUETA
 
 
 # ───────────────────────────── La herramienta: la op visual ─────────────────────────────
@@ -260,6 +301,18 @@ def test_visual_acciona_en_el_modelo_abierto_y_la_pantalla_lo_hace_una_vez():
     # otras ops no la usan
     with pytest.raises(Exception):
         hi.PresentacionEntrada.model_validate({"op": "ir", "capitulo": "salud", "simular": ["calcular"]})
+    # sin un modelo del atlas, en la maqueta 3D: la hora y las luces (por nombre, «de noche», «sí»)
+    _hacer(db, UID, {"op": "ir", "capitulo": "vivienda", "paso": 3})
+    r = _hacer(db, UID, {"op": "visual", "simular": [{"control": "Hora del día", "valor": "de noche"},
+                                                      {"control": "luces", "valor": "sí"}]})
+    assert r.resumen == "La presentación muestra en «La maqueta 3D»: Hora del día: Noche; Luces de la maqueta: sí"
+    assert r.contenido["simulacion"] == hi.SIMULACION_MAQUETA and "avisos" not in r.contenido
+    assert pantalla.estado(db.pantallas.find_one({"_id": UID}), G)["simular"] == [{"control": "hora", "valor": "noche"},
+                                                                                {"control": "luces", "valor": True}]
+    # cerrar el modelo del atlas en la misma orden también deja la maqueta
+    _hacer(db, UID, {"op": "ir", "capitulo": "salud", "paso": "torre_sismo"})
+    r = _hacer(db, UID, {"op": "visual", "inmersion": "maqueta", "simular": [{"control": "reproducir_dia", "valor": True}]})
+    assert r.contenido["simulacion"] == hi.SIMULACION_MAQUETA and r.resumen.endswith("en «La maqueta 3D»: Reproducir el día: sí")
 
 
 def test_visual_del_asistente_va_al_navegador_con_simular():
@@ -502,6 +555,13 @@ def test_la_pantalla_corrige_una_simulacion_guardada_que_no_vale():
     assert pantalla.estado({"capitulo": "salud", "paso": 1, "simular": [{"control": "calcular"}]}, G)["simular"] is None
     assert pantalla.estado({"capitulo": "salud", "paso": 1, "inmersion": "torre_sismo", "simular": [{"control": "calcular"}]},
                            G)["simular"] == [{"control": "calcular"}]
+    # sin un modelo del atlas, contra la maqueta del capítulo: el partido vale en la cancha, no en salud
+    partido = [{"control": "partido", "valor": True}]
+    assert pantalla.estado({"capitulo": "urbanismo", "paso": 3, "simular": partido}, G)["simular"] == partido
+    assert pantalla.estado({"capitulo": "salud", "paso": 1, "simular": partido}, G)["simular"] is None
+    hora = [{"control": "hora", "valor": "noche"}]
+    assert pantalla.estado({"capitulo": "salud", "paso": 1, "simular": hora}, G)["simular"] == hora
+    assert pantalla.estado({**base, "simular": hora}, G)["simular"] is None   # (en el simulador sísmico, no)
 
 
 def test_los_topes_son_los_mismos_en_el_servidor_y_en_el_navegador():
@@ -512,6 +572,11 @@ def test_los_topes_son_los_mismos_en_el_servidor_y_en_el_navegador():
     assert rec.TIPOS_CONTROL == guion_presentacion.TIPOS_CONTROL
     escenario = (ADMIN.parent / "web" / "js" / "escenario.js").read_text(encoding="utf-8")
     assert all(f"c.tipo === '{t}'" in escenario for t in rec.TIPOS_CONTROL)
+    # la maqueta: la misma palabra en el servidor y en el navegador, y la misma regla del valor (validar de escenario.js)
+    assert rec.MAQUETA == guion_presentacion.MAQUETA == "maqueta"
+    visual = (ADMIN.parent / "web" / "js" / "propuesta" / "visual.js").read_text(encoding="utf-8")
+    assert "vis.inmersion === 'maqueta'" in visual and "import { crearSimulacion } from './simulacion.js';" in visual
+    assert "export function validar(c, valor)" in escenario
 
 
 # ───────────────────────────── El navegador (Node) ─────────────────────────────

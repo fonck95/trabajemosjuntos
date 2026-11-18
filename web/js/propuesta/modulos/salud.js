@@ -2,10 +2,52 @@
 // paneles propios: su energía viene de la granja solar centralizada), la red de telesalud por la fibra municipal hacia el
 // centro de control y los puestos rurales, y las rutas de los equipos básicos de salud (EBS). Los puestos van en sus
 // centros poblados (OpenStreetMap); los que quedan más allá de la maqueta se señalan en su dirección con la distancia.
-import { THREE, gsap } from '../../core.js';
+// Alrededor de las réplicas, el lote del hospital como se usará: plazoleta de adoquín con marquesina, bancas bajo los
+// árboles, jardín con palmas y heliconias, tótem, pasillo cubierto entre la torre y la sede actual, la bahía de
+// ambulancias en la entrada vehicular de la torre, el parqueadero y gente (pacientes y personal de bata blanca). Las
+// coordenadas del lote salen de las réplicas (torre: 54 × 67 m; hospital: 90 × 89 m, centrados en sus puntos de data.js).
+import { THREE, gsap, mat } from '../../core.js';
+import { membrana, bancas, gente, carros, palmas, jardin, unir, V } from '../geo3d.js';
+import { matT } from '../texturas.js';
+import { acopio, caja as bloque, cil, letrero } from '../piezas/relleno.js';
+import { mastil, matMastil, MASTIL_CCED } from './tic.js';
 import { sitios, caja } from './comun.js';
 
 const ALCANCE = 11500;   // radio en el que se dibujan los puestos (el terreno de la maqueta llega a 16 km)
+// el lote, en metros respecto al centro del hospital (x al oriente, y al norte): la plazoleta en la franja libre entre el
+// hospital y el lindero sur, la bahía de ambulancias sobre la vía de la torre (al occidente), el parqueadero sobre el
+// asfalto del hospital (al norte), el pasillo cubierto en el andén oriental de la torre y el mástil de telesalud en la
+// franja oriental, entre los árboles del hospital
+const LOTE = {
+  plaza: [[-2.8, -46.6], [41.8, -46.6], [41.8, -37.5], [-2.8, -37.5]], marquesina: [10.2, -41.8], tronco: [[-0.0, -46.0], [20.0, -45.0]],
+  jardin: [[26.2, -46.2], [37.2, -46.2], [37.2, -42.6], [26.2, -42.6]], palmas: [[28.2, -39.6], [36.2, -39.6], [24.6, -46.4]], totem: [39.7, -45.6],
+  ambulancias: [[-40.3, -7.7], [-40.3, -13.7]], parqueo: [[20.2, 33.8], [22.8, 33.8], [25.4, 33.8], [28.0, 33.8], [30.6, 33.8]],
+  pasillo: [[-7.0, -36.2, -14.2], [-7.0, -9.2, 4.8]], mastil: [38.7, -10.7],
+};
+// ambulancia: furgón blanco con franja roja, cabina adelante, vidrios, luces en el techo (brillan: material sin luz) y ruedas
+function ambulancia() {
+  return {
+    blanco: [bloque(4.2, 2.2, 2.1, -0.75, 0.45, 0), bloque(1.5, 1.35, 2.0, 2.1, 0.45, 0), new THREE.BoxGeometry(0.9, 0.6, 2.0).rotateZ(-0.6).translate(2.55, 1.85, 0)],
+    rojo: [bloque(4.24, 0.28, 2.14, -0.75, 1.15, 0), bloque(1.54, 0.2, 2.04, 2.1, 1.2, 0), bloque(0.1, 0.55, 0.16, -2.86, 1.9, 0), bloque(0.1, 0.16, 0.55, -2.86, 2.09, 0)],
+    vidrio: [bloque(0.06, 0.65, 1.8, 2.86, 1.25, 0), bloque(1.0, 0.55, 2.04, 2.1, 1.3, 0)],
+    oscuro: [bloque(5.9, 0.3, 1.9, 0, 0.3, 0)], caucho: [[-1.9, 1.8].map((x) => [-0.95, 0.95].map((z) => new THREE.CylinderGeometry(0.4, 0.4, 0.3, 14).rotateX(Math.PI / 2).translate(x, 0.4, z)))].flat(2),
+    baliza: [bloque(0.18, 0.14, 0.5, 1.15, 2.65, -0.55), bloque(0.18, 0.14, 0.5, 1.15, 2.65, 0.55)], azul: [bloque(0.18, 0.14, 0.4, 1.15, 2.65, 0)],
+  };
+}
+// puesto de salud rural (icono a escala: 8 × 6 m): muros blancos, cubierta de zinc a dos aguas, corredor con columnas de
+// madera al frente (+x), puerta y ventanas, y la cruz roja en la fachada
+// y la cruz roja sobre fondo blanco en las dos caídas de la cubierta (lo que se ve desde arriba)
+function puestoRural() {
+  const caida = (g, s) => g.rotateX(s * 0.38).translate(0, 3.62, s * 1.75), culata = new THREE.Shape([new THREE.Vector2(-3, 0), new THREE.Vector2(3, 0), new THREE.Vector2(0, 1.19)]);
+  return {
+    muro: [bloque(8, 3, 6), new THREE.ExtrudeGeometry(culata, { depth: 8, bevelEnabled: false }).rotateY(Math.PI / 2).translate(-4, 3, 0)],
+    zinc: [-1, 1].map((s) => caida(new THREE.BoxGeometry(9.4, 0.08, 3.8), s)).concat([new THREE.BoxGeometry(3.6, 0.08, 7.8).rotateZ(-0.08).translate(5.7, 2.78, 0)]),
+    concreto: [bloque(3.4, 0.25, 7.4, 5.6, 0, 0)], madera: [-3.2, 0, 3.2].map((z) => bloque(0.18, 2.45, 0.18, 7.1, 0.25, z)).concat([bloque(0.06, 2.1, 1.1, 4.01, 0, 0)]),
+    vidrio: [bloque(0.05, 1.0, 1.3, 4.01, 1.1, -2.1), bloque(0.05, 1.0, 1.3, 4.01, 1.1, 2.1)],
+    blanco: [-1, 1].map((s) => caida(new THREE.BoxGeometry(2.6, 0.1, 2.4).translate(0, 0.07, 0), s)),
+    rojo: [-1, 1].flatMap((s) => [caida(new THREE.BoxGeometry(1.9, 0.12, 0.55).translate(0, 0.1, 0), s), caida(new THREE.BoxGeometry(0.55, 0.12, 1.9).translate(0, 0.1, 0), s)]),
+  };
+}
 
 export function crear(esc, datos) {
   const color = '--m-salud';
@@ -13,24 +55,65 @@ export function crear(esc, datos) {
   const pT = torre ? [torre.e.x, torre.e.y] : [-342, -137], pH = hosp ? [hosp.e.x, hosp.e.y] : [-326, -121];
   const cRed = esc.capa('salud.red'), cTorre = esc.capa('salud.torre'), cPuestos = esc.capa('salud.puestos'), cHoy = esc.capa('salud.hoy');
   const alc = esc.edificios.get('alcaldia'), pA = alc ? [alc.e.x, alc.e.y] : [104, -199];
-  const arco = (a, b, alto) => { const pts = []; for (let i = 0; i <= 40; i++) { const t = i / 40; pts.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 12 + alto * 4 * t * (1 - t)]); } return pts; };
-  // enlace hospital → centro de control (alcaldía) con datos en movimiento
-  esc.linea(arco(pH, pA, 60), { color: '--data', ancho: 3, punteada: true, guion: 10, padre: cRed });
-  esc.flujo(arco(pH, pA, 60), { color: '#6250d6', potencia: 0.8, max: 16, tam: 2.4, tubo: 0.01, padre: cRed });
+  const enLote = ([dx, dy]) => [pH[0] + dx, pH[1] + dy];
+  const arco = (a, b, alto, h0 = 12, h1 = 12) => { const pts = []; for (let i = 0; i <= 40; i++) { const t = i / 40; pts.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, h0 + (h1 - h0) * t + alto * 4 * t * (1 - t)]); } return pts; };
+  const M = {
+    ...matMastil(), adoquin: matT('adoquin', { color: '#ece5d8', polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -4 }), concreto: matT('concreto'),
+    muro: matT('estuco', { color: '#f7f5ef' }), zinc: matT('zinc', { color: '#d5dade' }), madera: matT('madera'), oscuro: mat(new THREE.Color('#2a2e32'), { roughness: 0.5, metalness: 0.45 }),
+    blanco: mat(new THREE.Color('#f6f6f2'), { roughness: 0.35, metalness: 0.1 }), rojo: mat(new THREE.Color('#d1262c'), { roughness: 0.45 }), azul: new THREE.MeshBasicMaterial({ color: 0x2f7bff, toneMapped: false }),
+    vidrio: mat(new THREE.Color('#2d3b45'), { roughness: 0.06, metalness: 0.75 }), caucho: mat(new THREE.Color('#1b1c1e'), { roughness: 0.85 }),
+    caseta: matT('estuco', { color: '#e9e6de' }),
+  };
+  M.baliza = new THREE.MeshBasicMaterial({ color: 0xff3b30, toneMapped: false });
+
+  // telesalud: mástiles con antenas en el hospital y en el CCED, y el enlace entre sus antenas como un tubo que brilla, con
+  // los datos que viajan por él y un halo que late en la base de cada mástil
+  const pMh = enLote(LOTE.mastil), pMc = [pA[0] + MASTIL_CCED.off[0], pA[1] + MASTIL_CCED.off[1]], hM = MASTIL_CCED.alto - 1;
+  const Am = acopio(); Am.poner(mastil(MASTIL_CCED.alto), ...pMh); Am.poner(mastil(MASTIL_CCED.alto), ...pMc); Am.volcar(cRed, M);
+  const enlace = arco(pMh, pMc, 60, hM, hM);
+  const tubo = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(enlace.map(([x, y, h]) => V(x, y, h))), 80, 1.1, 8, false), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.8, depthWrite: false, toneMapped: false }));
+  esc.tenir(tubo.material, '--data'); cRed.add(tubo);
+  esc.linea(enlace, { color: '--data', ancho: 3, punteada: true, guion: 10, padre: cRed });
+  esc.flujo(enlace, { color: '#a99cff', potencia: 0.8, max: 16, tam: 2.0, tubo: 0.01, padre: cRed });
+  const halos = [];
+  [pMh, pMc].forEach((p) => { for (let k = 0; k < 2; k++) { const o = new THREE.Mesh(new THREE.RingGeometry(1, 1.12, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.6, depthWrite: false })); o.position.copy(V(p[0], p[1], 0.5 + k * 0.05)); o.userData.fase = k / 2; esc.tenir(o.material, '--data'); cRed.add(o); halos.push(o); } });
   esc.etiqueta('<b>Centro de control (CCED)</b><small>alcaldía</small>', { pos: [pA[0], pA[1], 22], padre: cRed, color: 'var(--data)', cls: 'lbl-p mini', ancla: [0, 0.5] });
-  // puestos rurales: los de geo.json (OpenStreetMap); si no hay, tres direcciones genéricas
+
+  // puestos rurales: los de geo.json (OpenStreetMap); si no hay, tres direcciones genéricas. Cada uno es una casita de salud
+  // con un halo que late; los dos crecen con la distancia de la cámara (a 30 km una casa de 8 m no se vería)
   const gp = sitios(datos, 'salud', 'puesto');
   const puestos = (gp.length ? gp : [{ nombre: 'Veredas del norte', x: -900, y: 2600 }, { nombre: 'Veredas del occidente', x: -2600, y: 400 }, { nombre: 'Veredas del sur', x: -1500, y: -2600 }])
     .map((s) => { const d = Math.hypot(s.x, s.y), lejos = d > ALCANCE, k = lejos ? ALCANCE / d : 1; return { ...s, p: [s.x * k, s.y * k], lejos, km: s.distancia_km ?? Math.round(d / 100) / 10 }; });
-  const matPin = new THREE.MeshStandardMaterial({ color: 0xd9363e, roughness: 0.5, emissive: 0xd9363e, emissiveIntensity: 0.35 });
-  esc.tenir(matPin, color, true);
+  // (iconos: sin sombra, que de lejos serían manchas de cientos de metros)
+  const casitas = Object.entries(puestoRural()).map(([k, gs]) => { const im = new THREE.InstancedMesh(unir(gs), M[k], puestos.length); im.receiveShadow = true; im.frustumCulled = false; cPuestos.add(im); return im; });
+  const halosP = [], rotulos = [];
   puestos.forEach((s) => {
     esc.linea(arco(pH, s.p, Math.min(900, 180 + Math.hypot(s.p[0] - pH[0], s.p[1] - pH[1]) * 0.06)), { color: '--data', ancho: 2.5, punteada: true, guion: 14, opacidad: 0.9, padre: cRed });
-    const pin = new THREE.Mesh(new THREE.CylinderGeometry(40, 40, 120, 20).translate(0, 60, 0), matPin);
-    pin.position.set(s.p[0], 0, -s.p[1]); cPuestos.add(pin);
+    for (let k = 0; k < 2; k++) { const o = new THREE.Mesh(new THREE.RingGeometry(1, 1.1, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.6, depthWrite: false })); o.position.copy(V(s.p[0], s.p[1], 1 + k * 0.1)); o.userData.fase = k / 2; esc.tenir(o.material, color); cPuestos.add(o); halosP.push(o); }
     const uso = s.uso || 'telesalud · EBS';
-    esc.etiqueta(`<b>${s.nombre}</b><small>${s.lejos ? `a ${String(s.km).replace('.', ',')} km → · ` : ''}${uso}</small>`, { pos: [s.p[0], s.p[1], 140], padre: cPuestos, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] });
+    rotulos.push(esc.etiqueta(`<b>${s.nombre}</b><small>${s.lejos ? `a ${String(s.km).replace('.', ',')} km → · ` : ''}${uso}</small>`, { pos: [s.p[0], s.p[1], 140], padre: cPuestos, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] }));
   });
+  // escala de cada casita según la distancia de la cámara (y el rótulo encima de ella); los halos se abren con ella
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), ejeY = new THREE.Vector3(0, 1, 0), esc3 = new THREE.Vector3(), pos = new THREE.Vector3();
+  const escalas = puestos.map(() => 1);
+  esc.st.onFrame((dt, t) => {
+    let n = false;
+    if (cRed.visible) { halos.forEach((o) => { const u = ((t * 0.45) + o.userData.fase) % 1; o.scale.setScalar(4 + u * 30); o.material.opacity = 0.6 * (1 - u); }); n = true; }
+    if (!cPuestos.visible) return n;
+    const cam = esc.st.camera.position;
+    puestos.forEach((s, i) => {
+      pos.copy(V(s.p[0], s.p[1])); const k = THREE.MathUtils.clamp(cam.distanceTo(pos) / 380, 1, 70);
+      if (Math.abs(k - escalas[i]) > escalas[i] * 0.02 || !casitas[0].userData.listo) {
+        escalas[i] = k; q.setFromAxisAngle(ejeY, Math.atan2(pH[1] - s.p[1], pH[0] - s.p[0]));   // el corredor mira al casco
+        m4.compose(pos, q, esc3.set(k, k, k)); casitas.forEach((im) => { im.setMatrixAt(i, m4); im.instanceMatrix.needsUpdate = true; });
+        rotulos[i].position.y = Math.max(140, 4.6 * k + 30);
+      }
+      [halosP[i * 2], halosP[i * 2 + 1]].forEach((o) => { const u = ((t * 0.4) + o.userData.fase) % 1; o.scale.setScalar(k * (10 + u * 26)); o.material.opacity = 0.65 * (1 - u); });
+    });
+    casitas[0].userData.listo = true;
+    return true;
+  });
+
   // huella de la torre en el color del módulo (la réplica BIM es blanca: así se lee la muestra de la leyenda)
   esc.alCargarEdificio?.('torre_hospital', () => {
     const b = esc.cajaEdificio('torre_hospital'); if (!b) return;
@@ -42,6 +125,34 @@ export function crear(esc, datos) {
     esc.linea([...r, r[0]].map(([x, y]) => [x, y, 0.4]), { color, ancho: 3, padre: cTorre });
     esc.st.invalidate();
   });
+  // el lote: plazoleta, marquesina, bancas, jardín, palmas, tótem, pasillo cubierto, ambulancias, parqueadero y gente
+  const lote = new THREE.Group(); lote.name = 'lote'; cTorre.add(lote);
+  const Al = acopio();
+  Al.put('adoquin', new THREE.ShapeGeometry(new THREE.Shape(LOTE.plaza.map(enLote).map(([x, y]) => new THREE.Vector2(x, y)))).rotateX(-Math.PI / 2).translate(0, 0.06, 0));
+  LOTE.pasillo.forEach(([dx, y0, y1]) => {
+    const [x, ya] = enLote([dx, y0]), yb = pH[1] + y1, L = yb - ya;
+    // cubierta volada desde la fachada oriental de la torre, canal y columnas del lado de afuera
+    Al.put('zinc', bloque(4.4, 0.1, L, x + 2.0, 3.1, -(ya + L / 2)));
+    Al.put('oscuro', bloque(0.12, 0.25, L, x + 4.1, 2.95, -(ya + L / 2)));
+    for (let s = 0; s <= L; s += 4) Al.put('oscuro', cil(0.07, 3.1, x + 3.6, 0, -(ya + s), 8));
+  });
+  LOTE.ambulancias.forEach((d) => Al.poner(ambulancia(), ...enLote(d), Math.PI / 2));
+  Al.volcar(lote, M);
+  lote.add(membrana(...enLote(LOTE.marquesina), 9, 5, 3.4, 0, { flecha: 0.7, m: matT('membrana', { color: '#f4f1ea' }), mastil: M.oscuro }));
+  const [mx, my] = enLote(LOTE.marquesina), [t0x, t0y] = enLote(LOTE.tronco[0]), [t1x, t1y] = enLote(LOTE.tronco[1]);
+  const bz = [[mx - 2.3, my - 0.6, 0], [mx + 2.3, my - 0.6, 0], [t0x + 2.4, t0y + 2.4, Math.PI], [t1x - 0.4, t1y + 3.2, Math.PI]];
+  lote.add(bancas(bz));
+  lote.add(jardin(LOTE.jardin.map(enLote), { densidad: 0.9, semilla: 12, tipos: ['heliconia', 'cordyline', 'helecho', 'heliconia'] }));
+  lote.add(palmas(LOTE.palmas.map(enLote), { alto: 8, semilla: 14 }));
+  lote.add(carros(LOTE.parqueo.map((d, i) => [...enLote(d), i % 2 ? -Math.PI / 2 : Math.PI / 2]), { semilla: 15 }));
+  const tot = letrero([['E.S.E. HOSPITAL', 0.9], ['Héctor Abad Gómez', 1.0], ['Yondó · urgencias 24 h', 0.6]], { w: 3.2, h: 2.4, alto: 0.6, fondo: '#f4f2ec', tinta: '#2a2e32', acento: '#c81e2a' });
+  tot.position.copy(V(...enLote(LOTE.totem))); tot.rotation.y = -Math.PI / 2; lote.add(tot);
+  // gente: pacientes y acompañantes sentados bajo la marquesina y en las bancas, personal de bata blanca en la plazoleta y
+  // en el pasillo, y quien entra o sale
+  const bata = { camisa: '#f6f6f2', pantalon: '#e9eef2' }, verdeQx = { camisa: '#5fa8a0', pantalon: '#5fa8a0' };
+  lote.add(gente(bz.flatMap(([x, y, a], i) => (i < 2 ? [-0.45, 0.45] : [0.4]).map((d) => Object.assign([x + Math.cos(a) * d, y + Math.sin(a) * d, a], { h: 0.06 }))), { sentado: true, semilla: 16 }));
+  const [px, py] = enLote([-5, -30]);
+  lote.add(gente([[mx - 5, my + 1.8, 0.4, bata], [mx - 4.2, my + 2.4, 3.6], [mx + 6, my + 2, 1.2], [mx + 13, my - 1, 2.8, bata], [mx + 14, my - 1.6, 0.2, verdeQx], [px + 0.4, py, Math.PI / 2, bata], [px - 0.6, py - 6, -Math.PI / 2], [px, py + 9, Math.PI / 2, verdeQx], [mx - 9.5, my - 2.5, 0.8], [mx - 8.7, my - 2.9, 0.6]].map((p) => Object.assign(p, { h: 0.06 })), { semilla: 17 }));
   esc.etiqueta('<b>Torre de servicios de primer nivel</b><small>urgencias · partos · hospitalización · laboratorio 24 h</small>', { pos: [pT[0], pT[1], 36], padre: cTorre, color: `var(${color})`, ancla: [0.5, 1] });
   esc.etiqueta('<b>Hospital Héctor Abad Gómez</b><small>sede actual: administración y apoyo</small>', { pos: [pH[0] + 30, pH[1] + 25, 14], padre: cTorre, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0, 0.5] });
   // portadilla: el hospital de hoy, la única sede pública habilitada

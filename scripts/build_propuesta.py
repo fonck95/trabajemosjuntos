@@ -6,7 +6,9 @@ Entradas (data/propuesta/):
   general.json        también la sección `tecnica`: la portada, las inmersiones en los modelos del atlas, sus pasos y los
                       títulos de la presentación técnica (web/propuesta.html?modo=tecnica, la que muestra el asistente)
   simulaciones.json   los controles de adentro de cada inmersión que el asistente acciona en el atlas (`simular`): se
-                      revisan y se copian a cada inmersión de `tecnica.inmersiones` como `controles`
+                      revisan y se copian a cada inmersión de `tecnica.inmersiones` como `controles`; con la clave
+                      «maqueta», los de la maqueta 3D (la hora, el día, las luces, el partido), a
+                      `tecnica.simulaciones_maqueta`
   modulos/<id>.json   un archivo por módulo: diagnóstico, componentes con costo, financiación, gestión, metas y pasos
   geo.json            sitios y trazados de cada propuesta en metros del modelo (x al oriente, y al norte)
   territorio.json     río Magdalena, vías y puente (lo genera scripts/geo/territorio_propuesta.py)
@@ -180,33 +182,38 @@ def accionadores_js():
             hay[m.group(1)] = claves(m.group(3))
     return hay
 es_num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)
-simulaciones = load('simulaciones.json') if (D / 'simulaciones.json').exists() else {}
-if not isinstance(simulaciones, dict):
-    aviso('simulaciones.json no es un objeto {inmersión: [controles]}')
-    simulaciones = {}
-atlas_js = accionadores_js()
-if atlas_js is None and simulaciones:
-    aviso('no se pudo leer la tabla ACCIONADORES de web/js/escenario.js para revisar las simulaciones')
-controles_total = 0
-for iid, lista in simulaciones.items():
-    donde = f'simulaciones/{iid}'
-    inm = catalogo.get(iid)
-    if inm is None:
-        aviso(f'{donde}: no es una inmersión de tecnica.inmersiones')
-    if not isinstance(lista, list):
-        aviso(f'{donde}: no es una lista de controles')
-        simulaciones[iid] = []
-        continue
-    clave_atlas = f'{inm.get("vista")}:{inm.get("modo")}' if inm else None
-    if inm and atlas_js is not None and lista and clave_atlas not in atlas_js:
-        aviso(f'{donde}: el atlas no tiene con qué accionar controles en «{clave_atlas}» (ACCIONADORES de web/js/escenario.js)')
+# La maqueta 3D también tiene sus simulaciones (la clave reservada «maqueta» de simulaciones.json, con la misma forma):
+# la hora del día, el día entero en unos segundos, las luminarias y el partido en la cancha, que el asistente acciona con
+# `simular` cuando no hay un modelo del atlas a la vista (web/js/propuesta/simulacion.js las acciona). Solo ellas pueden
+# decir en qué capítulos valen (`capitulos`; sin la clave, en todos). Se revisan con las mismas reglas, contra la tabla
+# ACCIONADORES de simulacion.js (sus claves a 4 espacios, `id: (v) =>`, y su cierre `};` a 2: las funciones de adentro
+# pueden tener su propio `};`), y las horas contra ORDEN_HORAS de ambiente.js; se copian tal cual a
+# `tecnica.simulaciones_maqueta`
+MAQUETA = 'maqueta'
+SIMULACION_JS = R / 'web/js/propuesta/simulacion.js'
+AMBIENTE_JS = R / 'web/js/propuesta/ambiente.js'
+def accionadores_maqueta():
+    """Los ids que sabe accionar la maqueta (las claves de ACCIONADORES en web/js/propuesta/simulacion.js), o None."""
+    if not SIMULACION_JS.exists():
+        return None
+    m = re.search(r'const ACCIONADORES = \{\n(.*?)\n  \};', SIMULACION_JS.read_text(encoding='utf-8'), re.S)
+    return set(re.findall(r'^ {4}([a-z0-9_]+): ', m.group(1), re.M)) if m else None
+def horas_maqueta():
+    """Las horas de la maqueta en su orden (ORDEN_HORAS de web/js/propuesta/ambiente.js), o None."""
+    m = re.search(r'export const ORDEN_HORAS = \[([^\]]*)\]', AMBIENTE_JS.read_text(encoding='utf-8')) if AMBIENTE_JS.exists() else None
+    return re.findall(r"'([a-z0-9_]+)'", m.group(1)) if m else None
+def revisar_controles(donde, lista, accionables, que_falta, extra=frozenset()):
+    """Revisa la forma de cada control de `lista` (avisa con `donde`) y que esté en `accionables` (los ids que el código
+    sabe accionar; None si no se pudo leer: entonces no se revisa; `que_falta`, el aviso si no está). `extra`: campos
+    que esta lista admite además de los de un control. Devuelve cuántos controles con id válido tiene."""
+    n = 0
     vistos, nombres = set(), set()
     for c in lista:
         if not isinstance(c, dict) or not isinstance(c.get('id'), str) or not ID_CONTROL.fullmatch(c['id']):
             aviso(f'{donde}: un control sin id válido ([a-z0-9_], hasta 40): {c.get("id") if isinstance(c, dict) else c!r}')
             continue
         cid, tipo = f'{donde}/{c["id"]}', c.get('tipo')
-        controles_total += 1
+        n += 1
         if c['id'] in vistos:
             aviso(f'{cid}: el id del control está repetido en la inmersión')
         vistos.add(c['id'])
@@ -216,7 +223,7 @@ for iid, lista in simulaciones.items():
         elif nombre.lower() in nombres:
             aviso(f'{cid}: el nombre «{nombre}» se repite en la inmersión (el asistente también los pide por nombre)')
         nombres.add(nombre.lower())
-        for k in sorted(set(c) - CAMPOS_CONTROL):
+        for k in sorted(set(c) - CAMPOS_CONTROL - set(extra)):
             aviso(f'{cid}: el campo «{k}» no es de la forma de un control')
         if tipo not in TIPOS_CONTROL:
             aviso(f'{cid}: el tipo «{tipo}» no es accion, numero, opcion ni si_no')
@@ -252,8 +259,67 @@ for iid, lista in simulaciones.items():
                           'proyecta nunca lleva costos: quítela del catálogo')
         elif 'opciones' in c:
             aviso(f'{cid}: las opciones son solo de los controles de tipo opcion')
-        if inm and atlas_js is not None and clave_atlas in atlas_js and c['id'] not in atlas_js[clave_atlas]:
-            aviso(f'{cid}: el atlas no sabe accionar este control en «{clave_atlas}» (ACCIONADORES de web/js/escenario.js)')
+        if accionables is not None and c['id'] not in accionables:
+            aviso(f'{cid}: {que_falta}')
+    return n
+simulaciones = load('simulaciones.json') if (D / 'simulaciones.json').exists() else {}
+if not isinstance(simulaciones, dict):
+    aviso('simulaciones.json no es un objeto {inmersión: [controles]}')
+    simulaciones = {}
+atlas_js = accionadores_js()
+if atlas_js is None and any(k != MAQUETA for k in simulaciones):
+    aviso('no se pudo leer la tabla ACCIONADORES de web/js/escenario.js para revisar las simulaciones')
+if MAQUETA in catalogo:
+    aviso(f'tecnica: una inmersión no puede llamarse «{MAQUETA}» (es la palabra que cierra el modelo del atlas)')
+controles_total = 0
+for iid, lista in simulaciones.items():
+    if iid == MAQUETA:   # la maqueta 3D: aparte, más abajo
+        continue
+    donde = f'simulaciones/{iid}'
+    inm = catalogo.get(iid)
+    if inm is None:
+        aviso(f'{donde}: no es una inmersión de tecnica.inmersiones')
+    if not isinstance(lista, list):
+        aviso(f'{donde}: no es una lista de controles')
+        simulaciones[iid] = []
+        continue
+    clave_atlas = f'{inm.get("vista")}:{inm.get("modo")}' if inm else None
+    if inm and atlas_js is not None and lista and clave_atlas not in atlas_js:
+        aviso(f'{donde}: el atlas no tiene con qué accionar controles en «{clave_atlas}» (ACCIONADORES de web/js/escenario.js)')
+    accionables = atlas_js[clave_atlas] if inm and atlas_js is not None and clave_atlas in atlas_js else None
+    controles_total += revisar_controles(donde, lista, accionables, f'el atlas no sabe accionar este control en «{clave_atlas}» '
+                                         '(ACCIONADORES de web/js/escenario.js)')
+capitulos_tecnica = {'portada', 'ruta'} | {m['id'] for m in modulos}
+sim_maqueta = simulaciones.get(MAQUETA) or []
+if not isinstance(sim_maqueta, list):
+    aviso(f'simulaciones/{MAQUETA}: no es una lista de controles')
+    sim_maqueta = []
+simulaciones[MAQUETA] = sim_maqueta
+maqueta_js = accionadores_maqueta()
+if maqueta_js is None and sim_maqueta:
+    aviso('no se pudo leer la tabla ACCIONADORES de web/js/propuesta/simulacion.js para revisar las simulaciones de la maqueta')
+controles_maqueta = revisar_controles(f'simulaciones/{MAQUETA}', sim_maqueta, maqueta_js,
+                                      'la maqueta no sabe accionarlo (ACCIONADORES de web/js/propuesta/simulacion.js)',
+                                      extra={'capitulos'})
+for c in sim_maqueta:
+    if not isinstance(c, dict) or 'capitulos' not in c:
+        continue
+    caps_c = c['capitulos']
+    if not isinstance(caps_c, list) or not caps_c or not all(isinstance(x, str) for x in caps_c):
+        aviso(f'simulaciones/{MAQUETA}/{c.get("id")}: capitulos es una lista de ids de capítulo')
+        continue
+    for x in caps_c:
+        if x not in capitulos_tecnica:
+            aviso(f'simulaciones/{MAQUETA}/{c.get("id")}: «{x}» no es un capítulo de la presentación técnica')
+hora = next((c for c in sim_maqueta if isinstance(c, dict) and c.get('id') == 'hora'), None)
+if hora is not None and isinstance(hora.get('opciones'), list):
+    horas = horas_maqueta()
+    pedidas = [o.get('id') for o in hora['opciones'] if isinstance(o, dict)]
+    if horas is None:
+        aviso('no se pudo leer ORDEN_HORAS de web/js/propuesta/ambiente.js para revisar las horas de la maqueta')
+    elif pedidas != horas:
+        aviso(f'simulaciones/{MAQUETA}/hora: las opciones ({", ".join(map(str, pedidas))}) no son las horas de la maqueta '
+              f'en su orden ({", ".join(horas)}; ORDEN_HORAS de web/js/propuesta/ambiente.js)')
 # El catálogo de piezas de la maqueta (`tecnica.maqueta`): lo que el asistente puede mostrar, ocultar o aislar en cada
 # capítulo y las partes que les puede quitar (web/js/propuesta/visual.js; el guion solo le pasa al modelo ids y nombres).
 # Se revisa contra lo que existe: los capítulos de la técnica, los ids de capa (literales `esc.capa('…')` de los módulos),
@@ -283,7 +349,6 @@ def efectos_js(cid):
     m = re.search(r'\befectos:\s*\{([^\n]*)', f.read_text(encoding='utf-8')) if f.exists() else None
     return set(re.findall(r'[a-z_0-9]+', m.group(1))) if m else set()
 maqueta = tecnica.get('maqueta') or {}
-capitulos_tecnica = {'portada', 'ruta'} | {m['id'] for m in modulos}
 piezas_total = 0
 if not isinstance(maqueta, dict):
     aviso('tecnica.maqueta no es un objeto {capítulo: [piezas]}')
@@ -391,6 +456,7 @@ for k in ('meta', 'portada', 'modulos', 'financiacion', 'ruta', 'pedidos', 'tecn
 for i in out['tecnica'].get('inmersiones') or []:
     if isinstance(i, dict):
         i['controles'] = json.loads(json.dumps(simulaciones.get(i.get('id')) or []))
+out['tecnica']['simulaciones_maqueta'] = json.loads(json.dumps(sim_maqueta))
 
 # El Home repite en cada tarjeta el nombre y el lema del área, enlaza a su capítulo y muestra su imagen: si el módulo cambia,
 # el Home se queda atrás sin que nadie lo note. Se revisa tarjeta por tarjeta, no el archivo entero (los ids del área
@@ -456,7 +522,8 @@ print(f'propuesta_guion.json {destino_guion.stat().st_size / 1024:.0f} KB (prese
       f'{sum(1 for c in guion["capitulos"] for x in c.get("componentes", []) if x["enfoque"])} componentes con lugar en la maqueta')
 print(f'Textos con cifras unidas a su unidad: {cambios}')
 print(f'Catálogo de la maqueta: {piezas_total} piezas en {len(maqueta)} capítulos ({len(capas_js)} capas en los módulos)')
-print(f'Simulaciones del atlas: {controles_total} controles en {sum(1 for v in simulaciones.values() if v)} inmersiones')
+print(f'Simulaciones del atlas: {controles_total} controles en {sum(1 for k, v in simulaciones.items() if v and k != MAQUETA)} inmersiones')
+print(f'Simulaciones de la maqueta: {controles_maqueta} controles')
 print(f'Avisos de la propuesta: {len(avisos)}')
 for a in avisos:
     print('  -', a)
