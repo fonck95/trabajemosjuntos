@@ -328,7 +328,8 @@ def test_listar_reuniones_por_rol_y_con_filtros(sesion, como, ctx_de):
     assert [x["id"] for x in r.contenido["reuniones"]] == [a3, propia, a2, a1] and r.contenido["total"] == 4
     assert "ajenas" not in r.contenido and r.resumen == "4 reuniones"
     assert r.contenido["reuniones"][3] == {
-        "id": a1, "titulo": "Reunión de vecinos del casco", "fecha": "2026-10-01", "hora": None, "tema": "Vías",
+        "id": a1, "titulo": "Reunión de vecinos del casco", "fecha": "2026-10-01", "hora": None, "hora_fin": None,
+        "tema": "Vías",
         "lugar": None, "asistentes": 0, "nuevos": 0, "abierta_a_equipo": False, "propia": True,
         "ruta": f"/reuniones/{a1}"}
     assert [x["id"] for x in _ej(sesion, ctx, "listar_reuniones", {"desde": "2026-11-01", "hasta": "2026-11-04"})
@@ -445,7 +446,9 @@ def test_crear_reunion_la_tarjeta_no_escribe_y_aprobar_escribe_una_vez(sesion, c
     for mala in ({"titulo": "ab", "fecha": "2026-11-20"}, {"titulo": "Bien", "fecha": "2026-02-30"},
                  {"titulo": "Bien", "fecha": "20/11/2026"}, {"titulo": "Bien", "fecha": "2026-11-20", "hora": "25:00"},
                  {"titulo": "Bien", "fecha": "2026-11-20", "lugar": "La Paz", "lugar_id": 3},
-                 {"titulo": "Bien", "fecha": "2026-11-20", "lat": 7.0}, {"titulo": "1234", "fecha": "2026-11-20"}):
+                 {"titulo": "Bien", "fecha": "2026-11-20", "lat": 7.0}, {"titulo": "1234", "fecha": "2026-11-20"},
+                 {"titulo": "Bien", "fecha": "2026-11-20", "hora_fin": "11:00"},
+                 {"titulo": "Bien", "fecha": "2026-11-20", "hora": "11:00", "hora_fin": "10:00"}):
         with pytest.raises(ValidationError):
             H["crear_reunion"].validar(mala)
 

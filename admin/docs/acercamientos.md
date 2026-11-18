@@ -21,7 +21,8 @@ Toda respuesta con una ficha o con filas se arma con la lista de campos permitid
 
 - Nadie recibe `sensibles` ni `cedula_en_traspaso`. A y K ven `sensibles_registrados` y leen los valores con
   `GET /api/personas/{pid}/sensibles`, que queda auditado sin los valores.
-- P: sin `lider`, `listas`, `origen`, `procedencia`, `historial`, `coincidencias`, `cedulas_anteriores`, `fuentes`
+- P: sin `lider`, `lideres`, `traidas`, `intervenciones`, `listas`, `origen`, `procedencia`, `historial`,
+  `coincidencias`, `cedulas_anteriores`, `fuentes`
   ni etiquetas o campos propios sensibles. La fuente «cedulas» se muestra como «otra_base». No ve los teléfonos de un
   menor. Sus filas llevan la cédula y el teléfono enmascarados (`···123`, `···2233`).
 - C: nombre, cédula enmascarada, rango de edad, sexo, barrio, puesto, la autorización, solo los números usables
@@ -67,7 +68,8 @@ escribe con el filtro `{_id, abordaje_seq}` (hasta 3 intentos).
 
 **Reuniones**: agregar un asistente crea un acercamiento automático (`canal: reunion`, `resultado: contesto`); quitarlo
 o borrar la reunión lo anula. P ve sus reuniones y las abiertas al equipo; de las demás recibe solo cuántas hay, en
-la cabecera `X-Reuniones-Ajenas`.
+la cabecera `X-Reuniones-Ajenas`. La hora de inicio y de fin, la traza de lo que se hace durante cada reunión y los
+líderes están en [`reuniones-y-lideres.md`](reuniones-y-lideres.md).
 
 ## Colas del consultor
 
@@ -105,6 +107,6 @@ de otro) y dentro de su asignación.
 
 `filtros_query` lee los mismos parámetros en Habitantes, el mapa, la exportación y el tablero (8.3), incluidos
 `poligono` (`"lon,lat;…"`, solo A y K) y `area_id` (404 si no existe; 403 si P o C no la tienen asignada). P y C
-reciben 403 `permiso` con `poligono`, `ids`, `lista`, `lider`, `fuente=cedulas|ambas`, una etiqueta sensible,
-`creado_por`, `actualizado_por` y `menor`. El alcance (`alcance_de`) une los lugares asignados (cubren a quien no
+reciben 403 `permiso` con `poligono`, `ids`, `lista`, `lider`, `lider_id`, `varios_lideres`, `intervenida_en`,
+`fuente=cedulas|ambas`, una etiqueta sensible, `creado_por`, `actualizado_por` y `menor`. El alcance (`alcance_de`) une los lugares asignados (cubren a quien no
 tiene coordenadas) y las áreas (por `punto`).

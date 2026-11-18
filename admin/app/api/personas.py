@@ -316,7 +316,7 @@ CANONICO = {"fecha_nacimiento": "edad", "lugar_id": "lugar", "telefono": "telefo
             "consentimiento_fecha": "autorizacion", "tipo_documento": "cedula", "cedula_verificada": "cedula"}
 VOTACION_ENTRADA = ("puesto_id", "puesto_texto", "puesto_votacion", "mesa", "donde", "municipio", "votacion_verificada")
 # Lo que P no puede mandar (403 con el nombre del campo)
-VEDADOS_P = ("lider", "motivo_cambio_cedula", "puesto_votacion", "consentimiento_fecha")
+VEDADOS_P = ("lider", "lideres", "motivo_cambio_cedula", "puesto_votacion", "consentimiento_fecha")
 
 
 def _vacio(v: Any) -> bool:
@@ -826,7 +826,7 @@ def _detalle(k: str, antes: Any, despues: Any, ctx_sens: set) -> dict:
     """Entrada de la auditoría con las máscaras de 1.9 (cédulas: 3 últimos dígitos; lo sensible, oculto)."""
     if k in ("cedula", "cedulas_anteriores"):
         return {"antes": acceso.enmascarar_cedula(antes), "despues": acceso.enmascarar_cedula(despues)}
-    if k in ("lider", "sensibles"):
+    if k in ("lider", "lideres", "sensibles"):
         return {"antes": "(oculto)", "despues": "(oculto)"}
     if k == "etiquetas":
         f = lambda xs: ["(oculto)" if e in ctx_sens else e for e in xs or []]  # noqa: E731
@@ -1134,6 +1134,8 @@ class NuevaPersona(PersonaIn):
     forzar_suprimida: bool = False
     reunion_id: int | None = None
     autorizacion: AutorizacionIn | None = None
+    # Los líderes que la trajeron (ids de fichas marcadas como líder): solo A y K (app/api/lideres.py)
+    lideres: list[int] | None = Field(None, max_length=10)
 
 
 def _parecidas(db: Database, nombre: str, telefonos: list[str] | None = None, cedula: str | None = None,
@@ -1258,6 +1260,12 @@ def crear(body: NuevaPersona, request: Request, db: Database = Depends(obtener_d
     if body.lugar_id and lg is None:
         raise HTTPException(422, "Lugar no existe")
     reunion = _reunion_permitida(db, body.reunion_id, quien)
+    lideres = []
+    if body.lideres:
+        from .lideres import exigir_lider  # aquí: lideres usa este módulo
+        if not adm:
+            raise _prohibido("Su rol no puede cambiar «lideres»", campo="lideres")
+        lideres = [exigir_lider(db, lid, None) for lid in dict.fromkeys(body.lideres)]
     evento = validar_autorizacion(db, body.autorizacion, quien) if body.autorizacion else None
     if not body.forzar:
         encontradas = _parecidas(db, doc_datos["nombre"], nums, cedula)
@@ -1303,6 +1311,9 @@ def crear(body: NuevaPersona, request: Request, db: Database = Depends(obtener_d
         doc["asistencias"] = [{"reunion_id": reunion["_id"], "rol": None, "nota": None, "creado_en": ts}]
         doc["ultimo_contacto"] = reunion["fecha"]
         doc["reunion_origen"] = reunion["_id"]  # la reunión donde se registró (cuenta como persona nueva de esa reunión)
+    if lideres:
+        doc["lideres"] = [{"id": l["_id"], "asignado_en": ts, "asignado_por": quien.usuario, "asignado_por_uid": quien.uid}
+                          for l in lideres]
     if lg:  # barrio o vereda elegido a mano: georreferenciar lo conserva y toma su punto (o el de la placa)
         doc.update({"lugar_id": lg["_id"], "zona": lg["zona"], "geo_manual": "lugar"})
     completados = modelo.completados(None, doc)
@@ -1326,8 +1337,9 @@ def crear(body: NuevaPersona, request: Request, db: Database = Depends(obtener_d
     _alta_simultanea(db, {**doc, "_id": pid})
     bd.auditar(db, quien, "crear", "persona", pid, {"fuente": fuente, "reunion_id": body.reunion_id},
                campos=sorted({CANONICO.get(k, k) for k in [*doc_datos, *(["cedula"] if cedula else []),
-                                                           *(["telefono"] if nums else []), *(["puesto"] if v else [])]}),
-               completados=completados)
+                                                           *(["telefono"] if nums else []), *(["puesto"] if v else []),
+                                                           *(["lideres"] if lideres else [])]}),
+               completados=completados, reunion=reunion["_id"] if reunion else None)
     return _guardar_idem(db, quien, request, 201, ficha_respuesta(db, quien, pid), pid)
 
 
@@ -1584,12 +1596,13 @@ def nota(pid: int, body: NotaIn, request: Request, db: Database = Depends(obtene
         return previa
     p = proyeccion.persona_activa(db, pid)
     proyeccion.exigir_tratable(p, quien, "nota")
+    _reunion_permitida(db, body.reunion_id, quien)  # la nota «en la reunión» solo en una que se puede ver
     nueva = {"id": str(ObjectId()), "texto": body.texto.strip(), "autor": quien.usuario, "autor_uid": quien.uid,
              "creado_en": bd.ahora(), "reunion_id": body.reunion_id}
     # Ya no toca `ultimo_contacto`: solo los acercamientos efectivos y las reuniones cuentan como contacto
     escribir(db, pid, [{"$set": {"notas": {"$concatArrays": [{"$ifNull": ["$notas", []]}, [_lit(nueva)]]}}},
                        etapa_actualizado(quien)])
-    bd.auditar(db, quien, "nota", "persona", pid, {"reunion_id": body.reunion_id})
+    bd.auditar(db, quien, "nota", "persona", pid, {"reunion_id": body.reunion_id}, reunion=body.reunion_id)
     return _guardar_idem(db, quien, request, 201, ficha_respuesta(db, quien, pid), pid)
 
 

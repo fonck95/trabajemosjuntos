@@ -1,6 +1,9 @@
 // Ficha de un habitante (7.4): cabecera con chips, barra de acciones por rol, teléfonos con su estado, formulario por
 // bloques (los campos que el rol no puede editar quedan deshabilitados), autorización, historial con los
 // acercamientos, origen y cambios (A y K). El consultor ve una ficha reducida (`pintarConsultor`).
+// A y K ven además quién la trajo (sus líderes: «Asignar líder», y el aviso si la capta más de un líder), a quiénes trajo
+// ella si es líder, y la traza de las reuniones: en el historial, en qué reuniones se la intervino y si asistió; en
+// Cambios, cada cambio con la reunión en que se hizo (app/trazas.py).
 import { api, ErrorApi, nuevaClave, puede, registrarPendiente, sesion } from '../api.js';
 import { refrescarInsignias } from '../app.js';
 import { marcarLlamada } from '../llamadas.js';
@@ -18,8 +21,8 @@ import {
 import { dialogoAcercamiento, mensajeNoContactable } from './acercamiento.js';
 import {
   administra, camposAutorizacion, camposVotacion, chipsFaltan, cuerpoVotacion, dialogoCambiada, dialogoCompletar, elegirPunto,
-  enlazarAutorizacion, enlazarEdad, enlazarVotacion, faltanDe, formularioNuevaPersona, leerAutorizacion, opcionesLugares, textoCedula,
-  ubicarConGps,
+  elegirLider, enlazarAutorizacion, enlazarEdad, enlazarVotacion, faltanDe, formularioNuevaPersona, leerAutorizacion,
+  opcionesLugares, rangoHora, textoCedula, ubicarConGps,
 } from './comunes.js';
 
 const TIPOS_SOLICITUD = { consulta: 'Consultar sus datos', correccion: 'Corregir sus datos', supresion: 'Borrar sus datos', revocatoria: 'Revocar la autorización', otro: 'Otra' };
@@ -254,6 +257,7 @@ export async function vistaFicha(el, { params, ir }) {
               <div><span>Reuniones</span><b>${num((p.reuniones || []).length)}</b></div>
             </div>
           </section>
+          ${adm ? tarjetaLideres() : ''}
           <section class="tarjeta">
             <header><h2>Ubicación</h2>${chipPrecision(p.geo_precision)}</header>
             ${p.lat != null && verMapa ? html`<div class="minimapa" id="minimapa"></div>`
@@ -320,7 +324,7 @@ export async function vistaFicha(el, { params, ir }) {
       ${p.menor ? html`<span class="chip rojo">Menor de edad</span>` : ''}
       ${p.requiere_actualizacion ? html`<span class="chip ambar">Pendiente de actualizar</span>` : ''}
       ${sit ? html`<span class="chip rojo">${SITUACIONES[sit.estado] || sit.estado}${sit.confirmada ? '' : ' (sin confirmar)'}</span>` : ''}
-      ${adm ? html`${insigniasFuentes(p.fuentes, { conNombre: true })}${p.lider ? html`<span class="chip rojo">Líder</span>` : ''}${(p.listas || []).map((l) => html`<span class="chip azul">${l}</span>`)}` : ''}
+      ${adm ? html`${insigniasFuentes(p.fuentes, { conNombre: true })}${p.lider ? html`<span class="chip rojo">Líder</span>` : ''}${(p.lideres || []).length > 1 ? html`<span class="chip ambar" title="Más de un líder la está captando">${num(p.lideres.length)} líderes</span>` : ''}${(p.listas || []).map((l) => html`<span class="chip azul">${l}</span>`)}` : ''}
     </div>`;
   }
 
@@ -456,6 +460,11 @@ export async function vistaFicha(el, { params, ir }) {
         t: `${CANALES[a.canal] || a.canal} · ${etiquetaResultado(a.resultado, a.canal)}`,
         m: [a.usuario, a.telefono ? '···' + String(a.telefono).slice(-4) : null, a.proximo ? `volver el ${fecha(a.proximo)}` : null, a.nota].filter(Boolean).join(' · ') })),
       ...(p.reuniones || []).map((r) => ({ f: r.fecha, tipo: 'reunion', t: `Asistió a «${r.titulo}»`, m: [r.lugar_texto, r.rol, r.nota].filter(Boolean).join(' · '), href: `/reuniones/${r.id}` })),
+      // Lo que se le hizo en cada reunión (solo A y K): con hora, para ver si se la intervino ese día
+      ...(p.intervenciones || []).map((r) => ({ f: r.ultima, tipo: 'reunion', intervencion: true,
+        t: `Intervenida en «${r.titulo}»`, href: `/reuniones/${r.id}`, asistio: r.asistio,
+        m: [`${num(r.cambios)} ${r.cambios === 1 ? 'cambio' : 'cambios'} (${(r.acciones || []).map((a) => a.replace(/_/g, ' ')).join(', ')})`,
+          r.hora ? `reunión de ${rangoHora(r)}` : null].filter(Boolean).join(' · ') })),
       ...(p.notas || []).map((n) => ({ f: n.creado_en, tipo: 'nota', t: n.texto, m: `${n.autor || ''}${n.reunion ? ' · en ' + n.reunion : ''}`, nota: n.id, autor: n.autor_uid })),
       ...(p.tramites || []).map((t) => ({ f: t.fecha, tipo: 'tramite', t: titulo(t.tipo || 'Trámite'), m: [t.ficha && 'Ficha ' + t.ficha, t.direccion].filter(Boolean).join(' · ') })),
     ].sort((a, b) => String(b.f || '').localeCompare(String(a.f || '')));
@@ -465,8 +474,8 @@ export async function vistaFicha(el, { params, ir }) {
     const propio = (e) => adm || (e.autor != null && e.autor === sesion.uid);
     const anulable = (a) => !a.anulado && !a.auto && (adm || (a.uid === sesion.uid && Date.now() - new Date(a.ts).getTime() < 24 * 3600 * 1000));
     return eventos.length ? html`<div class="linea-tiempo">${eventos.map((e) => html`<div class="ev ${e.a?.anulado ? 'anulado' : ''}"><span class="punto ${e.tipo}"></span><div>
-      <div class="t">${e.href ? html`<a href="${e.href}" data-ruta>${e.t}</a>` : e.t}${e.a?.anulado ? html` <span class="chip">Anulado</span>` : ''}</div>
-      <div class="m">${fecha(e.f, e.tipo === 'nota' || e.tipo === 'acercamiento')}${e.m ? ' · ' + e.m : ''}
+      <div class="t">${e.href ? html`<a href="${e.href}" data-ruta>${e.t}</a>` : e.t}${e.a?.anulado ? html` <span class="chip">Anulado</span>` : ''}${e.intervencion ? (e.asistio ? html` <span class="chip verde">Asistió</span>` : html` <span class="chip ambar" title="Se le hizo algo durante la reunión, pero no está registrada como asistente">Sin asistencia registrada</span>`) : ''}</div>
+      <div class="m">${fecha(e.f, e.tipo === 'nota' || e.tipo === 'acercamiento' || e.intervencion)}${e.m ? ' · ' + e.m : ''}
         ${e.nota && propio(e) ? html`<button class="btn fantasma chico" data-borrar-nota="${e.nota}">Borrar</button>` : ''}
         ${e.a && anulable(e.a) ? html`<button class="btn fantasma chico" data-anular="${e.a.id}">Anular</button>` : ''}</div></div></div>`)}</div>`
       : html`<div class="vacio"><b>Sin historial</b>Registre un acercamiento, su asistencia a una reunión o una nota.</div>`;
@@ -487,10 +496,31 @@ export async function vistaFicha(el, { params, ir }) {
         : html`<p class="sec">No aparece en la base de trámites.</p>`}`;
   }
 
+  // ───────── Líderes (A y K): quién la trajo y a quiénes trajo ─────────
+  function tarjetaLideres() {
+    const ls = p.lideres || [];
+    const tr = p.traidas;
+    return html`<section class="tarjeta lideres-ficha">
+      <header><h2>Líderes</h2>${ls.length > 1 ? html`<span class="chip ambar">Captada por ${num(ls.length)}</span>` : ''}</header>
+      ${ls.length ? html`<div class="sec" style="margin-bottom:6px">Traída por</div>
+        ${ls.map((l) => html`<div class="lider-asignado"><div class="q"><a href="/personas/${l.id}" data-ruta>${l.nombre}</a>
+            <small class="sec">${[l.asignado_en ? 'desde ' + fecha(l.asignado_en) : null, l.asignado_por ? 'por ' + l.asignado_por : null, l.marcado ? null : 'ya no marcado como líder'].filter(Boolean).join(' · ')}</small></div>
+          <button class="btn chico fantasma" data-quitar-lider="${l.id}" aria-label="Quitar a ${l.nombre} como líder">✕</button></div>`)}
+        ${ls.length > 1 ? html`<p class="aviso-legal" style="margin:8px 0 0">Más de un líder la está captando.</p>` : ''}`
+        : html`<p class="sec" style="margin:0 0 6px">Sin líder asignado.</p>`}
+      <div class="fila-botones" style="margin-top:10px"><button class="btn chico" data-asignar-lider>${icono('mas')} Asignar líder</button></div>
+      ${tr ? html`<div class="datos" style="margin-top:12px;grid-template-columns:1fr 1fr">
+        <div><span>Personas que trajo</span><b><a href="/personas?lider_id=${p.id}" data-ruta>${num(tr.total)}</a></b></div>
+        <div><span>También con otro líder</span><b>${tr.compartidas ? html`<a href="/personas?lider_id=${p.id}&varios_lideres=1" data-ruta>${num(tr.compartidas)}</a>` : '0'}</b></div>
+      </div>` : ''}
+    </section>`;
+  }
+
   function panelCambios() {
     const h = p.historial || [];
     return h.length ? html`<div class="linea-tiempo">${h.map((x) => html`<div class="ev"><span class="punto"></span><div>
       <div class="t">${x.usuario || 'sistema'} · ${String(x.accion || '').replace(/_/g, ' ')}</div><div class="m">${fecha(x.ts, true)}</div>
+      ${(x.reuniones || []).length ? html`<div class="chips" style="margin-top:4px">${x.reuniones.map((r) => html`<a class="chip ${r.durante ? 'verde' : 'borde'}" href="/reuniones/${r.id}" data-ruta title="${r.durante ? 'Hecho mientras la reunión estaba en curso' : 'Hecho desde la pantalla de la reunión, fuera de su horario'}">${r.durante ? 'Durante' : 'Desde'} «${r.titulo}»${r.hora ? ` · ${rangoHora(r)}` : ''}</a>`)}</div>` : ''}
       ${x.detalle ? html`<pre class="detalle-cambio">${resumenDetalle(x.detalle)}</pre>` : ''}</div></div>`)}</div>`
       : html`<p class="sec">Sin cambios registrados.</p>`;
   }
@@ -719,6 +749,20 @@ export async function vistaFicha(el, { params, ir }) {
       marcarLlamada({ pid: id, indice: Number(ll.dataset.llamar), canal: ll.dataset.canal });
       if (esC) api.post(`/api/trabajo/tomar/${id}`, undefined, { keepalive: true }).catch(() => {});
       return; // el enlace sigue su curso (tel: o WhatsApp)
+    }
+    if (e.target.closest('[data-asignar-lider]')) {
+      // El líder se elige entre las fichas marcadas como líder; la ficha vuelve con la lista al día
+      const l = await elegirLider({ excluir: [id, ...(p.lideres || []).map((x) => x.id)], persona: p.nombre });
+      if (!l) return;
+      try { p = await api.post(`/api/personas/${id}/lideres`, { lider_id: l.id }); pintar({ conservar: true }); aviso('Líder asignado'); } catch (err) { avisoError(err); }
+      return;
+    }
+    const ql = e.target.closest('[data-quitar-lider]');
+    if (ql) {
+      const l = (p.lideres || []).find((x) => String(x.id) === ql.dataset.quitarLider);
+      if (!await confirmar(`¿Quitar a ${l?.nombre || 'este líder'} como líder de ${p.nombre}?`, { si: 'Quitar' })) return;
+      try { p = await api.del(`/api/personas/${id}/lideres/${ql.dataset.quitarLider}`); pintar({ conservar: true }); aviso('Líder quitado'); } catch (err) { avisoError(err); }
+      return;
     }
     if (e.target.closest('[data-registrar]')) return registrar(esP ? { canal: 'visita' } : {});
     if (e.target.closest('[data-pedir-actualizacion]')) return registrar({ resultado: 'actualizo_datos', pedirActualizacion: true });

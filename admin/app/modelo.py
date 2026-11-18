@@ -16,7 +16,7 @@ from __future__ import annotations
 import copy
 import math
 import re
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from functools import lru_cache
 from typing import Any, Iterable
 
@@ -232,6 +232,57 @@ def _fecha_de(v: Any) -> date | None:
     if isinstance(v, str):
         return fecha_valida(v[:10])
     return fecha_valida(v)
+
+
+# ───────────────────────────── Reuniones: su rango de tiempo ─────────────────────────────
+
+_HORA = re.compile(r"(\d{1,2}):(\d{2})")
+# Una reunión con hora de inicio y sin hora de fin (las de antes del rango, o si no se sabe) dura esto
+DURACION_REUNION = timedelta(hours=2)
+
+
+def hora_valida(v: Any) -> str | None:
+    """La hora «HH:MM» de 24 horas («9:30» queda «09:30») si `v` lo es; si no, None. Nunca lanza error: una hora mal
+    escrita guardada de antes (la API no la revisaba) cuenta como desconocida."""
+    if not isinstance(v, str):
+        return None
+    m = _HORA.fullmatch(v.strip())
+    if not m or int(m.group(1)) > 23 or int(m.group(2)) > 59:
+        return None
+    return f"{int(m.group(1)):02d}:{m.group(2)}"
+
+
+def ventana_reunion(r: dict) -> tuple[datetime, datetime] | None:
+    """Inicio y fin de la reunión `r` (instantes con zona): su `fecha` entre `hora` y `hora_fin`, en hora de Colombia.
+    Sin `hora_fin` (o con una que no es posterior a `hora`), dura `DURACION_REUNION`. Sin fecha u hora de inicio
+    válidas no tiene rango: None."""
+    f, h = fecha_valida((r or {}).get("fecha")), hora_valida((r or {}).get("hora"))
+    if f is None or h is None:
+        return None
+    inicio = datetime.combine(f, time.fromisoformat(h), tzinfo=ZONA)
+    hf = hora_valida(r.get("hora_fin"))
+    fin = datetime.combine(f, time.fromisoformat(hf), tzinfo=ZONA) if hf else None
+    if fin is None or fin <= inicio:
+        fin = inicio + DURACION_REUNION
+    return inicio, fin
+
+
+def instante(ts: Any) -> datetime | None:
+    """El instante con zona de un texto ISO (como `bd.ahora()`; sin zona se toma como UTC) o un datetime; si no, None."""
+    if isinstance(ts, str):
+        try:
+            ts = datetime.fromisoformat(ts.strip())
+        except ValueError:
+            return None
+    if not isinstance(ts, datetime):
+        return None
+    return ts if ts.tzinfo is not None else ts.replace(tzinfo=timezone.utc)
+
+
+def durante_reunion(r: dict, ts: Any) -> bool:
+    """¿El instante `ts` cae dentro del rango de la reunión `r` (inicio y fin incluidos)?"""
+    v, t = ventana_reunion(r), instante(ts)
+    return v is not None and t is not None and v[0] <= t <= v[1]
 
 
 def fecha_local(ts: Any) -> str | None:

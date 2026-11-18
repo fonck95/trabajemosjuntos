@@ -8,7 +8,7 @@ from conftest import CLAVE_USUARIO, crear_usuario, insertar_personas
 
 # Claves y valores que P y C nunca reciben (3.8, 9.5)
 VEDADAS = {"sensibles", "listas", "lider", "historial", "origen", "procedencia", "cedulas_anteriores", "partido",
-           "mesa_testigo", "cedula_en_traspaso"}
+           "mesa_testigo", "cedula_en_traspaso", "lideres", "lideres_n", "traidas", "intervenciones"}
 
 
 def persona(db, **campos) -> int:

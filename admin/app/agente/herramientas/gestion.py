@@ -691,8 +691,8 @@ def _texto(v: Any, n: int) -> Any:
 
 def _fila_reunion(x: dict) -> dict:
     return {"id": x.get("id"), "titulo": _texto(x.get("titulo"), 160), "fecha": x.get("fecha"),
-            "hora": x.get("hora"), "tema": _texto(x.get("tema"), 160), "lugar": _texto(x.get("lugar"), 120),
-            "asistentes": x.get("asistentes"), "nuevos": x.get("nuevos"),
+            "hora": x.get("hora"), "hora_fin": x.get("hora_fin"), "tema": _texto(x.get("tema"), 160),
+            "lugar": _texto(x.get("lugar"), 120), "asistentes": x.get("asistentes"), "nuevos": x.get("nuevos"),
             "abierta_a_equipo": x.get("abierta_a_equipo"), "propia": x.get("propia"),
             "ruta": f"/reuniones/{x.get('id')}"}
 
@@ -796,7 +796,7 @@ async def _ver_reunion(ctx: Contexto, a: VerReunionEntrada) -> Resultado:
                           if n in de_necesidad and n not in sens_nombres)
     lugar = d.get("lugar_nombre") or d.get("lugar_texto")
     out = {"id": d.get("id", a.reunion_id), "titulo": _texto(d.get("titulo"), 160), "fecha": d.get("fecha"),
-           "hora": d.get("hora"), "lugar": _texto(lugar, 120), "lugar_id": d.get("lugar_id"),
+           "hora": d.get("hora"), "hora_fin": d.get("hora_fin"), "lugar": _texto(lugar, 120), "lugar_id": d.get("lugar_id"),
            "sitio": _texto(d.get("lugar_texto"), 160) if d.get("lugar_texto") != d.get("lugar_nombre") else None,
            "tema": _texto(d.get("tema"), 160), "descripcion": _texto(d.get("descripcion"), 800),
            "compromisos": _texto(d.get("compromisos"), 800), "abierta_a_equipo": d.get("abierta_a_equipo"),
@@ -824,7 +824,8 @@ def _fecha_legible(f: str | None) -> str:
 class CrearReunionEntrada(_Entrada):
     titulo: str = Field(..., min_length=3, max_length=160)
     fecha: Fecha = Field(..., description="AAAA-MM-DD; puede ser pasada (una reunión que ya ocurrió)")
-    hora: Hora | None = None
+    hora: Hora | None = Field(None, description="Hora de inicio")
+    hora_fin: Hora | None = Field(None, description="Hora de fin (necesita la de inicio y va después de ella)")
     lugar: str | None = Field(None, min_length=2, max_length=80, description="Barrio o vereda por nombre")
     tipo_lugar: TipoLugar | None = Field(None, description="Tipo del lugar, si el nombre se repite")
     lugar_id: Id | None = Field(None, description="Id del barrio o vereda (buscar_lugar)")
@@ -848,6 +849,8 @@ class CrearReunionEntrada(_Entrada):
             raise ValueError("Use lugar (nombre) o lugar_id, no los dos")
         if self.tipo_lugar is not None and self.lugar is None:
             raise ValueError("tipo_lugar acompaña a lugar (el nombre)")
+        if self.hora_fin is not None and (self.hora is None or self.hora_fin <= self.hora):
+            raise ValueError("hora_fin necesita hora (la de inicio) y va después de ella")
         return self
 
 
@@ -869,13 +872,16 @@ def _misma(db: Any, uid: Any, a: CrearReunionEntrada, lugar: Lugar | None) -> di
     barrio o vereda, el sitio (sin sitio, la API guarda el nombre del lugar) y el tema. Dos reuniones del mismo día y
     título en sitios distintos son dos; la misma llamada repetida (un reintento) encuentra la que ya creó."""
     sitio = a.sitio or (lugar.nombre if lugar else None)
-    pedida = (tx.limpiar(a.titulo), a.hora or None, lugar.id if lugar else None, tx.limpiar(sitio), tx.limpiar(a.tema))
-    for x in db.reuniones.find({"creado_por_uid": uid, "fecha": a.fecha},
-                               {"titulo": 1, "fecha": 1, "hora": 1, "lugar_id": 1, "lugar_texto": 1, "tema": 1}):
-        if (tx.limpiar(x.get("titulo")), x.get("hora") or None, x.get("lugar_id") or None,
+    pedida = (tx.limpiar(a.titulo), a.hora or None, a.hora_fin or None, lugar.id if lugar else None, tx.limpiar(sitio),
+              tx.limpiar(a.tema))
+    for x in db.reuniones.find({"creado_por_uid": uid, "fecha": a.fecha}, {"titulo": 1, "fecha": 1, "hora": 1,
+                                                                          "hora_fin": 1, "lugar_id": 1,
+                                                                          "lugar_texto": 1, "tema": 1}):
+        if (tx.limpiar(x.get("titulo")), x.get("hora") or None, x.get("hora_fin") or None, x.get("lugar_id") or None,
                 tx.limpiar(x.get("lugar_texto")), tx.limpiar(x.get("tema"))) == pedida:
             return {"id": x["_id"], "titulo": x.get("titulo"), "fecha": x.get("fecha"), "hora": x.get("hora"),
-                    "tema": x.get("tema"), "lugar": x.get("lugar_texto"), "propia": True}
+                    "hora_fin": x.get("hora_fin"), "tema": x.get("tema"), "lugar": x.get("lugar_texto"),
+                    "propia": True}
     return None
 
 
@@ -891,7 +897,8 @@ async def _preparar_reunion(ctx: Contexto, a: CrearReunionEntrada) -> Confirmaci
         raise ErrorHerramienta(f"Ya existe una reunión suya igual: «{_texto(ya.get('titulo'), 160)}» del "
                                f"{ya.get('fecha')} (#{ya.get('id')}). Use esa; no se crea otra.", "duplicada",
                                estado=409, detalle={"id": ya.get("id"), "ruta": f"/reuniones/{ya.get('id')}"})
-    detalle = [("Título", a.titulo), ("Fecha", _fecha_legible(a.fecha)), ("Hora", a.hora or "Sin hora"),
+    hora = f"{a.hora} a {a.hora_fin}" if a.hora and a.hora_fin else (a.hora or "Sin hora")
+    detalle = [("Título", a.titulo), ("Fecha", _fecha_legible(a.fecha)), ("Hora", hora),
                ("Barrio o vereda", lugar.legible() if lugar else "Sin lugar del nomenclátor")]
     for etiqueta, v in (("Sitio", a.sitio), ("Tema", a.tema), ("Descripción", a.descripcion)):
         if v:
@@ -913,7 +920,8 @@ async def _crear_reunion(ctx: Contexto, a: CrearReunionEntrada) -> Resultado:
     if ya is not None:
         return Resultado({"ok": True, "ya_existia": True, "reunion": _fila_reunion(ya)},
                          f"Ya existía la reunión #{ya.get('id')}", acciones=[{"tipo": "recargar"}])
-    cuerpo = {"titulo": a.titulo, "fecha": a.fecha, "hora": a.hora, "lugar_id": lugar.id if lugar else None,
+    cuerpo = {"titulo": a.titulo, "fecha": a.fecha, "hora": a.hora, "hora_fin": a.hora_fin,
+              "lugar_id": lugar.id if lugar else None,
               "lugar_texto": a.sitio, "tema": a.tema, "descripcion": a.descripcion,
               "abierta_a_equipo": a.abierta_a_equipo}
     d = await pedir(ctx, "POST", "/api/reuniones", cuerpo={k: v for k, v in cuerpo.items() if v is not None},
@@ -921,6 +929,7 @@ async def _crear_reunion(ctx: Contexto, a: CrearReunionEntrada) -> Resultado:
     d = d if isinstance(d, dict) else {}
     rid = d.get("id")
     reunion = {"id": rid, "titulo": _texto(d.get("titulo"), 160), "fecha": d.get("fecha"), "hora": d.get("hora"),
+               "hora_fin": d.get("hora_fin"),
                "lugar": _texto(d.get("lugar_nombre") or d.get("lugar_texto"), 120), "ruta": f"/reuniones/{rid}"}
     return Resultado({"ok": True, "ya_existia": False, "reunion": reunion}, f"Reunión #{rid} creada",
                      acciones=[{"tipo": "recargar"}])
@@ -1364,11 +1373,12 @@ D_VER_REUNION = (
     "consulta a nadie.")
 D_CREAR_REUNION = (
     "Prepara una reunión nueva en el panel: no queda guardada hasta que la persona la aprueba en la tarjeta. Necesita "
-    "título y fecha (AAAA-MM-DD; puede ser pasada, para registrar una que ya ocurrió); opcionales: hora (HH:MM de 24 "
-    "horas), barrio o vereda (por nombre en `lugar` o con `lugar_id` de buscar_lugar), el sitio exacto (caseta "
+    "título y fecha (AAAA-MM-DD; puede ser pasada, para registrar una que ya ocurrió); opcionales: hora de inicio y "
+    "hora_fin (HH:MM de 24 horas; lo que se le haga a una persona mientras dura queda con la traza de la reunión), "
+    "barrio o vereda (por nombre en `lugar` o con `lugar_id` de buscar_lugar), el sitio exacto (caseta "
     "comunal, escuela…), tema y descripción. Si el nombre del lugar es ambiguo devuelve los candidatos: pregunte "
     "cuál. Solo el administrador y el coordinador la abren al equipo. Si ya hay una reunión suya igual (título, fecha, "
-    "hora, lugar, sitio y tema) no se crea otra.")
+    "horas, lugar, sitio y tema) no se crea otra.")
 D_AGREGAR_ASISTENTE = (
     "Prepara el registro de una persona como asistente de una reunión: se guarda cuando la persona del equipo lo "
     "aprueba en la tarjeta. Necesita reunion_id y persona_id (de listar_reuniones, ver_reunion o buscar_personas); "

@@ -1,8 +1,15 @@
 // Modo reunión (7.13): buscar o registrar asistentes en segundos y completar su perfil en el momento con «Completar»
 // (el mismo de Habitantes). La lista de asistentes llega con la proyección de fila del rol.
+// Lo que se cambia desde esta pantalla (y lo que se le hace a una persona mientras la reunión está en curso) queda con
+// la traza de la reunión (api.js manda X-Reunion; app/trazas.py): cada asistente dice cuántos cambios tuvo en ella, y
+// «Intervenidas sin asistencia registrada» lista a quienes se les hizo algo en la reunión sin registrarlos como
+// asistentes, para registrarlos con un clic.
 import { api, descargar, nuevaClave, puede, sesion } from '../api.js';
 import { $, aviso, avisoError, confirmar, datosForm, debounce, dialogo, fecha, hayEscrito, html, icono, montar, num, titulo } from '../ui.js';
-import { administra, dialogoCompletar, formularioNuevaPersona, textoCedula, textoTelefono } from './comunes.js';
+import {
+  administra, camposHoraReunion, dialogoCompletar, errorRangoHora, formularioNuevaPersona, rangoHora, textoCedula,
+  textoTelefono,
+} from './comunes.js';
 
 export async function vistaReunion(el, { params, ir }) {
   const id = Number(params[0]);
@@ -16,8 +23,8 @@ export async function vistaReunion(el, { params, ir }) {
   montar(el, html`
     <div class="miga"><a href="/reuniones" data-ruta>Reuniones</a> › ${fecha(r.fecha)}</div>
     <div class="cabecera">
-      <div><h1>${r.titulo}</h1><div class="sub">${fecha(r.fecha)}${r.hora ? ' · ' + r.hora : ''} · ${titulo(r.lugar_nombre || r.lugar_texto || 'Sin lugar')}${r.tema ? ' · ' + r.tema : ''}</div>
-        ${r.abierta_a_equipo ? html`<div class="chips" style="margin-top:6px"><span class="chip azul">Abierta al equipo: los planilleros registran asistentes</span></div>` : ''}</div>
+      <div><h1>${r.titulo}</h1><div class="sub">${fecha(r.fecha)}${r.hora ? ' · ' + rangoHora(r) : ''} · ${titulo(r.lugar_nombre || r.lugar_texto || 'Sin lugar')}${r.tema ? ' · ' + r.tema : ''}</div>
+        ${r.abierta_a_equipo || r.en_curso ? html`<div class="chips" style="margin-top:6px">${r.en_curso ? html`<span class="chip verde" title="Lo que se le haga ahora a un asistente, o desde esta pantalla, queda en su ficha como hecho durante esta reunión">En curso</span>` : ''}${r.abierta_a_equipo ? html`<span class="chip azul">Abierta al equipo: los planilleros registran asistentes</span>` : ''}</div>` : ''}</div>
       <div class="acciones">
         ${editable ? html`<button class="btn" id="editar">Editar</button>` : ''}
         ${puede('exportar') ? html`<button class="btn" id="csv">${icono('descargar')} Asistentes (CSV)</button>` : ''}
@@ -37,6 +44,7 @@ export async function vistaReunion(el, { params, ir }) {
         <div id="asistentes"></div>
       </section>
     </div>
+    <section class="tarjeta" id="intervenidas" style="margin-top:16px" hidden></section>
     ${r.descripcion || r.compromisos ? html`<section class="tarjeta" style="margin-top:16px"><h2>Notas de la reunión</h2>
       ${r.descripcion ? html`<p>${r.descripcion}</p>` : ''}${r.compromisos ? html`<h3 style="font-size:14px">Compromisos</h3><p>${r.compromisos}</p>` : ''}</section>` : ''}`);
 
@@ -51,11 +59,30 @@ export async function vistaReunion(el, { params, ir }) {
         <div class="q"><a href="/personas/${a.id}" data-ruta>${a.nombre}</a>
           <div class="sec">${lineaFila(a)}</div>
           ${(a.etiquetas || []).length ? html`<div class="chips" style="margin-top:4px">${a.etiquetas.map((e) => html`<span class="chip">${typeof e === 'object' ? e.nombre : e}</span>`)}</div>` : ''}
-          ${a.nota ? html`<div class="sec" style="margin-top:4px">“${a.nota}”</div>` : ''}</div>
+          ${a.nota ? html`<div class="sec" style="margin-top:4px">“${a.nota}”</div>` : ''}
+          ${a.cambios ? html`<div class="chips" style="margin-top:4px"><span class="chip borde" title="Cambios a su ficha hechos en esta reunión">${num(a.cambios)} ${a.cambios === 1 ? 'cambio' : 'cambios'} en la reunión</span></div>` : ''}</div>
         <div class="acciones-asistente">${puede('personas.editar') && a.consentimiento !== 'no' ? html`<button class="btn chico" data-completar="${a.id}">${icono('completar')} Completar</button>` : ''}
           ${puede('personas.notas') ? html`<button class="btn chico fantasma" data-nota="${a.id}">Nota</button>` : ''}
           <button class="btn chico fantasma" data-quitar="${a.id}" aria-label="Quitar a ${a.nombre}">✕</button></div>
       </div>`)}` : html`<div class="vacio"><b>Nadie registrado aún</b>Busque a cada asistente.</div>`);
+    pintarIntervenidas();
+  }
+
+  // Personas a las que se les hizo algo en la reunión (la traza) sin registrar su asistencia
+  function pintarIntervenidas() {
+    const caja = $('#intervenidas', el);
+    const lista = r.intervenidas || [];
+    caja.hidden = !lista.length;
+    if (!lista.length) { caja.replaceChildren(); return; }
+    montar(caja, html`<header><h2>Intervenidas sin asistencia registrada (${num(lista.length)})</h2>
+        ${adm ? html`<a class="nota" href="/personas?intervenida_en=${id}" data-ruta>Ver todas las intervenidas en Habitantes</a>` : html`<span class="nota">Se les hizo algo durante la reunión</span>`}</header>
+      <p class="sec" style="margin-top:0">A estas personas se les hizo algo mientras la reunión estaba en curso (o desde esta pantalla), pero no están como asistentes. Si vinieron, registre su asistencia.</p>
+      ${lista.map((a) => html`<div class="asistente">
+        <div class="q"><a href="/personas/${a.id}" data-ruta>${a.nombre}</a>
+          <div class="sec">${lineaFila(a)}</div>
+          <div class="chips" style="margin-top:4px"><span class="chip borde">${num(a.cambios)} ${a.cambios === 1 ? 'cambio' : 'cambios'} · último ${fecha(a.ultima, true)}</span></div></div>
+        <div class="acciones-asistente">${puede('reuniones.asistentes') && a.consentimiento !== 'no' ? html`<button class="btn chico primario" data-agregar="${a.id}">Registrar asistencia</button>` : ''}</div>
+      </div>`)}`);
   }
 
   // Búsqueda: cada consulta lleva un turno; solo pinta la última y Enter solo usa resultados del texto escrito
@@ -176,7 +203,7 @@ export async function vistaReunion(el, { params, ir }) {
       cuerpo: html`<form class="form" id="f-ed">
         <label class="campo ancho"><span>Título</span><input name="titulo" value="${r.titulo}" required minlength="3" maxlength="160"></label>
         <label class="campo"><span>Fecha</span><input name="fecha" type="date" value="${r.fecha}" required></label>
-        <label class="campo"><span>Hora</span><input name="hora" type="time" value="${r.hora ?? ''}"></label>
+        ${camposHoraReunion(r)}
         <label class="campo ancho"><span>Tema</span><input name="tema" value="${r.tema ?? ''}" maxlength="160"></label>
         <label class="campo ancho"><span>Descripción</span><textarea name="descripcion" maxlength="4000">${r.descripcion ?? ''}</textarea></label>
         <label class="campo ancho"><span>Compromisos</span><textarea name="compromisos" maxlength="4000">${r.compromisos ?? ''}</textarea></label>
@@ -189,8 +216,10 @@ export async function vistaReunion(el, { params, ir }) {
       const f = $('#f-ed', d);
       const boton = ev.currentTarget;
       if (boton.disabled || !f.reportValidity()) return;
-      boton.disabled = true;
       const datos = datosForm(f);
+      const rango = errorRangoHora(datos);
+      if (rango) { aviso(rango, 'error'); return; }
+      boton.disabled = true;
       if (!adm) delete datos.abierta_a_equipo;
       try {
         await api.patch(`/api/reuniones/${id}`, datos);
