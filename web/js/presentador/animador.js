@@ -433,7 +433,8 @@ const entre = (a, b, u) => a.map((e, i) => e.map((x, k) => x + (b[i][k] - x) * u
  * maqueta) y `o.hasta`, otro punto (presentar barre de uno al otro: `o.apuntaHasta`); `o.abajo` / `o.arriba` (0..1), cuánto
  * más abajo o más arriba que el hombro está el punto; `o.n`, cuántos dedos (contar, enumerar); `o.variante`, cuál de sus
  * variantes (VARIANTES); `o.plano`, lo que se ve de él; `o.azar`, el azar del animador; `o.dato` (mostrar_panel):
- * «fíjense en este dato».
+ * «fíjense en este dato». (Y en `gesto`, `o.mira`: lo que mira mientras el brazo va a `o.punto`: desde lejos, la palma
+ * hacia el borde del panel y la cara al dato)
  */
 export const GESTOS = {
   // ── Empezar y terminar ──
@@ -931,18 +932,26 @@ export const GESTOS = {
 // las dos últimas de ese gesto (o de la última, si hay dos)
 export const VARIANTES = { explicar: 3, asentir: 2, presentar: 3, destacar: 2, mirar_maqueta: 2, crecer: 2, grande: 2, negar: 2 };
 // Con poco tamaño (la cabeza de menos de 70 px: el busto del celular) los dedos no se leen: contar y enumerar van con la
-// mano abierta en un lugar por número, a la altura del pecho (el 1 a la izquierda de la pantalla, con la derecha; el 2
-// al centro; el 3 a la derecha, con la izquierda) y un golpe al llegar; el detalle es un golpe de explicar con la mano
-// alta; aprobar, el pulgar más alto y un asentimiento. Las manos, arriba del corte del plano medio (≥ 1.2)
+// mano abierta en un lugar por número, delante del pecho (el 1 frente al hombro de la izquierda de la pantalla, con la
+// derecha; el 2 al centro; el 3 frente al otro hombro, con la izquierda) y un golpe al llegar; el detalle es un golpe de
+// explicar con la mano alta; aprobar, el pulgar más alto y un asentimiento. Las manos, arriba del corte del plano medio
+// (≥ 1.2). Los lugares no salen del ancho de los hombros (la palma a ±0.15 del alto del centro): abiertos hacia afuera
+// (±0.26) la mano del 3 se salía del lienzo del busto, pegado al borde de la pantalla del celular
+// (el antebrazo girado: la palma a la sala, no de canto)
 const POR_NUMERO = [
-  ['D', [-1.05, 0, 0.62], [-0.95, 0.3, 0], [-0.2, 0, 0]],
-  ['D', [-1.0, 0, 0.08], [-1.15, 0.3, 0], [-0.2, 0, 0]],
-  ['I', [-1.05, 0, 0.62], [-0.95, 0.3, 0], [-0.2, 0, 0]],
+  ['D', [-1.05, 0, 0.12], [-1.1, -1.3, 0], [-0.2, 0, 0.3]],
+  ['D', [-0.78, 0, -0.7], [-1.25, -1.8, 0], [-0.2, 0, 0.8]],
+  ['I', [-1.05, 0, 0.12], [-1.1, -1.3, 0], [-0.2, 0, 0.3]],
 ];
+// la otra mano, quieta abajo frente al vientre (la de la casa con la muñeca), con la palma floja: no habla mientras
+// cuenta (las dos palmas arriba a los lados del pecho no dejaban leer cuál es el número)
+const QUIETA = { D: [[-0.04, -0.8, -0.22], [-1.39, 0.54, 0], [0.12, 0, -0.48]], I: [[-0.2, -1.18, -0.03], [-1.27, 0.64, 0], [-0.24, 0, 0]] };
 const porNumero = (o) => {
   const n = Math.max(1, Math.min(3, o.n || 1)), [l, h, c, m] = POR_NUMERO[n - 1];
-  return { dur: o.dur || 1.8, sostener: o.sostener === true, entra: 0.32, pose: { ...brazo(l, h, c, m), cabeza: [0.03, 0, 0] },
-    manos: { [l]: 'abierta' }, cara: { cejas: 0.5 },
+  const q = QUIETA[otro(l)], medio = o.plano === 'medio';
+  const quieta = brazo(otro(l), [q[0][0] + (medio ? ALZAR_MEDIO.hombro : 0), q[0][1], q[0][2]], [q[1][0] + (medio ? ALZAR_MEDIO.codo : 0), q[1][1], q[1][2]], q[2]);
+  return { dur: o.dur || 1.8, sostener: o.sostener === true, entra: 0.32, pose: { ...brazo(l, h, c, m), ...quieta, cabeza: [0.03, 0, 0] },
+    manos: { [l]: 'abierta', [otro(l)]: 'relajada' }, cara: { cejas: 0.5 },
     golpes: [{ t: 0.34, art: `muneca${l}`, eje: 0, amp: 0.2, ida: 0.08, vuelta: 0.24 }, { t: 0.34, art: 'cabeza', eje: 0, amp: 0.05, ida: 0.1, vuelta: 0.25 }] };
 };
 export const CHICOS = {
@@ -1288,6 +1297,8 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       if (o.hasta) apuntaA.puntos.push([o.hasta.clone(), opciones.apuntaHasta]);
     }
     const nuevo = hacer(opciones);
+    // (`mira`: la cara a otra cosa que la mano: la palma al borde del panel, la cara al dato)
+    if (o.mira && nuevo.mirar) nuevo.mirar = o.mira.clone ? o.mira.clone() : o.mira;
     // (y en cada cuadro el hombro vuelve a apuntar: el pecho se mueve con la respiración, la mirada y el giro; en la
     // pose o en las claves que llevan ese ángulo)
     if (apuntaA) nuevo.apuntaA = apuntaA;

@@ -9,10 +9,13 @@
 // * elegirVista(d, ctx): las reglas, en orden (la primera que se cumple decide): lo resaltado manda (señala), después
 //   la obra pedida (presenta), después el tipo de paso; con superposiciones (la bienvenida, el gesto de cara a la sala,
 //   el cambio de capítulo).
-// * lugares / elegirLugar: dónde se para a lo largo del subtítulo, con un puntaje que castiga tapar la obra, los títulos
-//   de sus rótulos, lo resaltado, el HUD y la leyenda (medido con la silueta: la cabeza y el torso), y descarta tapar el
-//   panel, la ficha o el marco del atlas; señalando, el dedo tiene que llegar (o quedar lo más cerca que se pueda);
-//   con histéresis (no va y viene, ni se mueve por poco) y a lo sumo un cambio por escena.
+// * lugares / elegirLugar: dónde se para a lo largo del subtítulo, con un puntaje que castiga tapar la obra, sus rótulos
+//   (el título y la caja entera), lo resaltado, el HUD y la leyenda (medido con la silueta: la cabeza y el torso), y
+//   descarta tapar el panel, la ficha o el marco del atlas; señalando, el dedo tiene que llegar (o quedar lo más cerca
+//   que se pueda); si desde ningún lugar que deje leer los rótulos llega, desde lejos: la mano abierta hacia el borde de
+//   lo que explica, sin taparlos ni caer sobre uno; con histéresis (no va y viene, ni se mueve por poco) y a lo sumo un
+//   cambio por escena.
+// * comoSenala, abierta, manoAbierta: si el dedo llega, está muy arriba o lejos, y adónde va la mano abierta.
 // * objetivoDe, alcance: el punto al que apunta y hasta dónde llega la punta del índice.
 // * rotuloDe / posRotulo: el rótulo (la cara en un círculo), bajo el panel o acoplado al subtítulo.
 // * transicion: cómo pasa de una vista a otra (girar, acercarse, caminar, saltar, el rótulo, fundirse).
@@ -368,23 +371,72 @@ export function apuntable(x, punto, o) {
   return { x: a.hombro.x + ux * d, y: a.hombro.y + uy * d };
 }
 
-// los pesos del puntaje: cuánto cuesta tapar cada cosa (el panel, la ficha y el marco no se tapan nunca)
-const PESOS = { obra: 1, rotulo: 2, foco: 3, hud: 3, leyenda: 3 };
+// los pesos del puntaje: cuánto cuesta tapar cada cosa (el panel, la ficha y el marco no se tapan nunca). De un rótulo
+// de la maqueta, su título (el nombre: «La Soledad») y su caja entera (la línea de abajo: «a 27,6 km → · sede…»)
+const PESOS = { obra: 1, rotulo: 2, caja: 1, foco: 3, hud: 3, leyenda: 3 };
 const CON_BRAZO = ['senala', 'presenta', 'general'];
 /** Señalando: el dedo «llega» si la punta queda a no más de LLEGA_PX de lo que señala. Si algún lugar llega, los que no
  * llegan no están; si ninguno llega, solo los que quedan a no más de 30 px de lo más cerca que se puede (pararse junto
- * al panel se lee como «esto del panel»; a 200 px, la mano cae sobre la maqueta y se lee «esto de la maqueta») */
+ * al panel se lee como «esto del panel»), hasta LEJOS_PX; más lejos, desde lejos (a 200 px el índice cae sobre la
+ * maqueta y se lee «esto de la maqueta»: la mano abierta hacia el panel) */
 export const LLEGA_PX = 90;
 const BANDA_PX = 30;
-const TITULO_TAPADO = 0.3;
-/** Más lejos que esto (la punta del brazo estirado a lo que señala) el dedo no llega desde ningún lado: se sostiene el
- * índice con el brazo en la recta hacia lo que señala, no la palma baja (presentador.js) */
+/** Lo más que se tapa de un rótulo de la maqueta y se sigue leyendo: el título (30 %) y la caja entera (30 %) */
+export const TITULO_TAPADO = 0.3;
+export const CAJA_TAPADA = 0.3;
+export const CAJA_LEJOS = 0.1;
+/** Más lejos que esto (la punta del índice estirado a lo que señala) el dedo no llega: desde ningún lugar que deje leer
+ * los rótulos, «desde lejos» (abierta) */
 export const LEJOS_PX = 120;
-/** Lo señalado más de ALTO_PX arriba del hombro también se señala con el índice (la palma alzada, sostenida, se leería
- * como una mano levantada) */
+/** Lo señalado más de ALTO_PX arriba del hombro, al alcance, se señala con el índice (la palma alzada, sostenida, se
+ * leería como una mano levantada) */
 export const ALTO_PX = 150;
 /** La distancia (px) de la punta del índice parado en `x` a `punto` (alcance) */
 export const distPunta = (x, punto, o) => { const a = alcance(x, punto, o).punta; return punto ? Math.hypot(a.x - punto.x, a.y - punto.y) : 0; };
+/**
+ * Cómo señala `punto` parado en `x` (presentador.js): 'llega' (el índice y después la mano abierta), 'alto' (al alcance
+ * pero más de ALTO_PX arriba del hombro: el índice sostenido) o 'lejos' (la punta del índice estirado a más de LEJOS_PX:
+ * el índice en alto se leería como un dedo levantado o, sobre la maqueta, como «esto del mapa»; la mano abierta hacia
+ * el borde de lo que explica, a la altura del hombro, `abierta`)
+ */
+export function comoSenala(x, punto, o) {
+  if (!punto || !Number.isFinite(x)) return 'llega';
+  if (distPunta(x, punto, o) > LEJOS_PX) return 'lejos';
+  return yHombro(o.subTop, o) - punto.y > ALTO_PX ? 'alto' : 'llega';
+}
+/** Desde lejos, la mano abierta llega a MANO_ABIERTA·pxAlto del hombro (medido en indicar y presentar: la palma a 0.24,
+ * la punta de los dedos a 0.29) y la recta del hombro a la mano no sube más de TOPE_ABIERTA (rad, ≈ 11°: el TOPE de
+ * animador.js) */
+export const MANO_ABIERTA = 0.27;
+export const TOPE_ABIERTA = 0.2;
+/** Lo que explica (`lado`), para la mano abierta: el panel, la ficha o la leyenda (o lo resaltado) */
+const regionDe = (lado, c) => (lado === 'panel' ? c.panel || c.foco : lado === 'ficha' ? c.ficha || c.foco : lado === 'leyenda' ? c.leyenda || c.foco : c.foco) || null;
+/**
+ * Hacia dónde va la mano abierta desde lejos (px de la ventana): el borde de lo que explica que da al cuerpo parado en
+ * `x`, a la altura del hombro `yH` (dentro de su alto, a 20 px de sus bordes). Se lee «allá, en el panel» y no apunta a
+ * nada del mapa. null: sin eso
+ */
+export function abierta(lado, c, x, yH) {
+  const b = regionDe(lado, c);
+  if (!b || !Number.isFinite(x)) return null;
+  const m = Math.min(20, (b.y1 - b.y0) / 2);
+  return { x: x >= (b.x0 + b.x1) / 2 ? b.x1 : b.x0, y: acotar(Number.isFinite(yH) ? yH : (b.y0 + b.y1) / 2, b.y0 + m, b.y1 - m) };
+}
+/** La mano abierta parada en `x` hacia `destino` (abierta): {hombro, punta (la mano)}; nunca baja del corte */
+export function manoAbierta(x, destino, { p, subTop, rumbo = 0, yc = PLANOS.americano.yc }) {
+  const s = destino && destino.x < x ? -1 : 1;
+  const hombro = { x: x + s * HOMBRO.lado * p * Math.cos(rumbo), y: yHombro(subTop, { p, yc }) };
+  if (!destino) return { hombro, punta: hombro };
+  const ang = Math.min(TOPE_ABIERTA, Math.atan2(hombro.y - destino.y, Math.abs(destino.x - hombro.x) || 1));
+  const L = Math.min(MANO_ABIERTA * p, Math.hypot(destino.x - hombro.x, destino.y - hombro.y));
+  return { hombro, punta: { x: hombro.x + s * L * Math.cos(ang), y: Math.min(subTop - 30, hombro.y - L * Math.sin(ang)) } };
+}
+/** Desde lejos, la mano abierta a menos de CERCA_PX de un rótulo de la maqueta se leería «esto de acá» (el puesto bajo el
+ * rótulo, su anillo) */
+const CERCA_PX = 60;
+const distCaja = (q, b) => Math.hypot(Math.max(b.x0 - q.x, 0, q.x - b.x1), Math.max(b.y0 - q.y, 0, q.y - b.y1));
+// la banda del alcance desde lejos: la mano abierta, a no más de esto más lejos del borde que desde el mejor lugar limpio
+const BANDA_LEJOS = 0.45;
 
 /** La huella del cuerpo parado en `x` (lo que tapa arriba del corte) */
 export function huella(x, m, subTop) {
@@ -424,18 +476,27 @@ function preparar(e, m, ctx, c, punto) {
   // [caja, peso, cuenta el brazo, por su propia área]: la obra cuesta por lo que tapa de la huella; un rótulo o lo
   // resaltado, por lo que se tapa de ellos (chicos: medidos sobre la huella no costarían nada)
   if (obra && area(obra) > 0) blandos.push([obra, PESOS.obra, true]);
-  for (const r of c.rotulos || []) blandos.push([r, PESOS.rotulo, true, true, true]);
+  // (de cada rótulo, el título y la caja entera: 'titulo' y 'caja')
+  for (const r of c.rotulos || []) blandos.push([r, PESOS.rotulo, true, true, 'titulo']);
+  for (const r of c.cajasRotulos || []) blandos.push([r, PESOS.caja, true, true, 'caja']);
   if (c.foco) blandos.push([c.foco, PESOS.foco, false, true]);
   if (c.hud) blandos.push([c.hud, PESOS.hud, true]);
   if (c.leyenda && e.lado !== 'leyenda') blandos.push([c.leyenda, PESOS.leyenda, true]);
-  const lo = sub.x0 + m.margen, hi = sub.x1 - m.margen;
+  const senala = e.vista === 'senala' && !!punto;
+  // señalando, hasta el extremo del subtítulo que deje la cadera sobre él (junto al panel, si queda lugar libre)
+  const lo = senala ? sub.x0 + 9 + m.cadera : sub.x0 + m.margen, hi = senala ? sub.x1 - 9 - m.cadera : sub.x1 - m.margen;
   // lo que señala: la punta del índice no entra ahí (el vidrio del panel, la ficha o la leyenda)
   const senalado = e.lado === 'panel' ? c.panel : e.lado === 'ficha' ? c.ficha || c.foco : e.lado === 'leyenda' ? c.leyenda || c.foco : null;
   const abre = Math.max(m.huella[0], m.p * Math.max(ENVERGADURA[e.gesto] || 0, e.saludoPrimero ? ENVERGADURA.saludar : 0));
+  // los rótulos de la maqueta, para la mano abierta desde lejos (que no caiga sobre uno)
+  const marcas = (c.cajasRotulos?.length ? c.cajasRotulos : c.rotulos || []).filter(Boolean);
   return { e, m, VW, sub, punto, blandos, duros: [c.panel, c.ficha, c.marco].filter(Boolean), lo, hi, abre,
     pref: preferido(e.vista, m, ctx, sub, punto), conBrazo: CON_BRAZO.includes(e.vista) && !!punto,
-    senala: e.vista === 'senala' && !!punto, senalado };
+    senala, senalado, c, marcas, lejos: false, banda: Infinity, hayLimpios: false };
 }
+/** ¿Deja leer los rótulos de la maqueta? (ningún título ni caja tapados más de lo que se lee; desde lejos, la caja no
+ * más de CAJA_LEJOS: si el dedo no llega igual, no hay por qué tapar la línea de abajo) */
+const limpio = (l, lejos = false) => l.titulo <= TITULO_TAPADO && l.caja <= (lejos ? CAJA_LEJOS : CAJA_TAPADA);
 // El costo de pararse en `x` y lo que no cumple (razon: [] si cumple todo)
 function puntuar(P, x) {
   const { e, m, sub, punto } = P;
@@ -447,7 +508,9 @@ function puntuar(P, x) {
   if (P.duros.some((b) => cruza({ ...h, x0: x - P.abre - 6, x1: x + P.abre + 6 }, b))) razon.push('tapa');
   let a = null;
   if (P.conBrazo) {
-    a = alcance(x, punto, { p: m.p, subTop: sub.y0, rumbo: rumboDe(e.vista, punto.x - x), yc: m.yc });
+    const o = { p: m.p, subTop: sub.y0, rumbo: rumboDe(e.vista, punto.x - x), yc: m.yc };
+    // (desde lejos, la mano abierta hacia el borde de lo que explica; si no, el índice hacia lo que señala)
+    a = P.lejos ? manoAbierta(x, abierta(e.lado, P.c, x, yHombro(sub.y0, m)), o) : alcance(x, punto, o);
     if (P.senala) {
       const t = a.punta, b = P.senalado;
       if (b && punto.x < x && t.x < b.x1 + 6) razon.push('alcance');
@@ -458,28 +521,46 @@ function puntuar(P, x) {
   const ah = area(h) || 1;
   const g = 0.04 * m.p;
   const brazo = a ? { x0: Math.min(a.hombro.x, a.punta.x) - g, y0: Math.min(a.hombro.y, a.punta.y) - g, x1: Math.max(a.hombro.x, a.punta.x) + g, y1: Math.max(a.hombro.y, a.punta.y) + g } : null;
-  let costo = 0, titulo = 0;
-  for (const [b, w, conBrazo, propia, esRotulo] of P.blandos) {
+  let costo = 0, titulo = 0, cajaR = 0;
+  for (const [b, w, conBrazo, propia, deRotulo] of P.blandos) {
     if (!propia) {
       costo += (w * areaEn(sil, b)) / ah;
       // el brazo, con la mitad del peso (no sobre lo que señala)
       if (brazo && conBrazo) costo += (0.5 * w * area(corte(brazo, b))) / ah;
       continue;
     }
-    // un rótulo o lo resaltado: poco si se tapa un poco; mucho pasado el 30 % (lo que ya no se lee)
+    // un rótulo o lo resaltado: poco si se tapa un poco; mucho pasado el 25 % (lo que ya no se lee)
     const f = Math.min(1, (areaEn(sil, b) + (brazo && conBrazo ? 0.5 * area(corte(brazo, b)) : 0)) / (area(b) || 1));
     costo += w * (0.5 * f + 4 * Math.max(0, f - 0.25));
-    if (esRotulo) titulo = Math.max(titulo, f);
+    if (deRotulo === 'titulo') titulo = Math.max(titulo, f);
+    if (deRotulo === 'caja') cajaR = Math.max(cajaR, f);
   }
-  // lejos del preferido cuesta poco (señalando, más: lo más cerca que deje el alcance)
-  costo += ((P.senala ? 1 : 0.15) * Math.abs(x - P.pref)) / (Math.max(40, P.hi - P.lo) + 1);
-  // señalando: la punta del dedo, a no más de 60 px (después, cuanto más lejos, peor; más allá de la banda, no está)
-  const dp = P.senala && a ? Math.hypot(a.punta.x - punto.x, a.punta.y - punto.y) : null;
-  if (dp !== null) costo += Math.max(0, dp - 60) / 100;
+  // lejos del preferido cuesta poco (señalando, más: lo más cerca que deje el alcance; desde lejos, menos: la mano
+  // abierta se lee «allá, en el panel» desde cualquier lado, y pesa más no tapar)
+  const kLejos = P.lejos ? 0.3 : 1;
+  costo += ((P.senala ? kLejos : 0.15) * Math.abs(x - P.pref)) / (Math.max(40, P.hi - P.lo) + 1);
+  // señalando: la punta del dedo, a no más de 60 px (después, cuanto más lejos, peor; más allá de la banda, no está).
+  // Desde lejos, la mano abierta: lo cerca que queda del borde de lo que explica, y lejos de los rótulos de la maqueta
+  // (a menos de 60 px de uno se leería «esto de acá»: el puesto bajo el rótulo, su anillo)
+  let dp = null;
+  if (P.senala && a) {
+    const destino = P.lejos ? abierta(e.lado, P.c, x, a.hombro.y) : punto;
+    dp = destino ? Math.hypot(a.punta.x - destino.x, a.punta.y - destino.y) : null;
+    if (dp !== null) costo += (kLejos * Math.max(0, dp - 60)) / 100;
+    if (P.lejos) for (const b of P.marcas) costo += Math.max(0, 1 - distCaja(a.punta, b) / CERCA_PX);
+  }
   return { x, costo: Math.round(costo * 1e4) / 1e4, razon, punta: a ? { x: Math.round(a.punta.x), y: Math.round(a.punta.y) } : null,
-    dp: dp === null ? null : Math.round(dp), titulo: Math.round(titulo * 100) / 100 };
+    dp: dp === null ? null : Math.round(dp), titulo: Math.round(titulo * 100) / 100, caja: Math.round(cajaR * 100) / 100 };
 }
-// Los candidatos puntuados y, señalando, la banda del alcance (los que no llegan llevan la razón 'lejos')
+// Señalando, lo que no cumple de la banda: la punta (o la mano abierta) más lejos que la banda ('lejos'); desde lejos, el
+// lugar que tapa un rótulo si hay otro que no ('rotulo': si el dedo no llega igual, no hay por qué taparlo)
+function marcar(P, l) {
+  if (l.dp !== null && l.dp > P.banda) l.razon.push('lejos');
+  if (P.lejos && P.hayLimpios && !limpio(l, true)) l.razon.push('rotulo');
+  return l;
+}
+// Los candidatos puntuados y, señalando, la banda del alcance (los que no llegan llevan la razón 'lejos'). Si desde
+// ningún lugar limpio llega el dedo, «desde lejos»: se vuelven a puntuar con la mano abierta
 function candidatos(P, c, chica) {
   const xs = new Set();
   if (chica) { xs.add(Math.round(c.sub.x1 - P.m.margen)); xs.add(Math.round(c.sub.x0 + P.m.margen)); }
@@ -488,20 +569,33 @@ function candidatos(P, c, chica) {
     for (let x = P.lo; x <= P.hi; x += P.senala ? 8 : 40) xs.add(Math.round(x));
     for (const x of [P.lo, (c.sub.x0 + c.sub.x1) / 2, P.hi, P.pref]) xs.add(Math.round(x));
   }
-  const lista = [...xs].map((x) => puntuar(P, x));
-  const banda = bandaDe(P, lista);
-  for (const l of lista) if (l.dp !== null && l.dp > banda) l.razon.push('lejos');
-  return { lista, banda };
+  let lista = [...xs].map((x) => puntuar(P, x));
+  if (P.senala) {
+    const b = bandaDe(lista);
+    if (b.lejos && !chica) {
+      P.lejos = true;
+      lista = [...xs].map((x) => puntuar(P, x));
+      const bl = bandaDe(lista, true, P.m.p);
+      P.banda = bl.banda; P.hayLimpios = bl.hayLimpios;
+    } else { P.banda = b.banda; P.hayLimpios = b.hayLimpios; }
+  }
+  for (const l of lista) marcar(P, l);
+  return { lista, banda: P.banda };
 }
-// Señalando: hasta dónde puede quedar la punta (LLEGA_PX si algún lugar llega; si no, lo más cerca que se puede + 30).
-// Cuentan los lugares que dejan leer los títulos de la maqueta (ninguno tapado más de un 30 %); si todos tapan alguno,
-// todos (llegar a lo que señala pesa más)
-function bandaDe(P, lista) {
-  if (!P.senala) return Infinity;
+// Señalando: hasta dónde puede quedar la punta. Cuentan los lugares que dejan leer los rótulos de la maqueta (limpio);
+// si todos tapan alguno, todos. Si alguno de ellos llega (a no más de LEJOS_PX), LLEGA_PX o lo más cerca que se puede
+// + 30 (llegar a lo que señala pesa más que la histéresis); si ninguno, «desde lejos» (`lejos`). Desde lejos
+// (`abiertas`), la mano a no más de 0.45·pxAlto más lejos del borde que desde el mejor
+function bandaDe(lista, abiertas = false, p = 0) {
   const validos = lista.filter((l) => !l.razon.length && l.dp !== null);
-  const limpios = validos.filter((l) => l.titulo <= TITULO_TAPADO);
+  const limpios = validos.filter((l) => limpio(l, abiertas));
   const ds = (limpios.length ? limpios : validos).map((l) => l.dp);
-  return ds.length ? Math.max(LLEGA_PX, Math.min(...ds) + BANDA_PX) : Infinity;
+  const hayLimpios = limpios.length > 0;
+  if (!ds.length) return { banda: Infinity, lejos: false, hayLimpios };
+  const min = Math.min(...ds);
+  if (abiertas) return { banda: min + BANDA_LEJOS * p, lejos: true, hayLimpios };
+  if (min > LEJOS_PX) return { banda: Infinity, lejos: true, hayLimpios };
+  return { banda: Math.min(LEJOS_PX, Math.max(LLEGA_PX, min + BANDA_PX)), lejos: false, hayLimpios };
 }
 
 /**
@@ -528,23 +622,27 @@ export function lugares(e, m, ctx, c, { punto = null, todos = false } = {}) {
  * contrario de lo que explica: gira en el lugar). A lo sumo un cambio por escena (`actual.cambios`) y ninguno en una
  * escena corta (`actual.ms` < 3500: solo gira), salvo que el de ahora ya no cumpla (la cadera en el aire, tapa el
  * panel, la punta del dedo entraría en lo que señala o no llega). Sin ninguno que cumpla todo, el que menos falla.
- * → {x, cambia, costo, razon}
+ * → {x, cambia, costo, razon, lejos (señalando: desde lejos)}
  */
 export function elegirLugar(e, m, ctx, c, actual = {}, { punto = null } = {}) {   // actual: {x, cambios, ms, ciego}
   if (!c.sub) return null;
   const chica = ctx.chica ?? (ctx.VW || 800) <= CHICA_PX;
   const P = preparar(e, m, ctx, c, punto);
-  const { lista: todos, banda } = candidatos(P, c, chica);
-  const grave = (l) => l.razon.reduce((a, r) => a + ({ tapa: 100, cadera: 50, pantalla: 50, alcance: 10, lejos: 8, corte: 5 }[r] || 1), 0);
+  const { lista: todos } = candidatos(P, c, chica);
+  const r = elegirEntre(P, m, todos, actual, punto);
+  // (`lejos`: el dedo no llega desde ningún lugar que deje leer los rótulos: se señala desde lejos, con la mano abierta)
+  return r && P.senala ? { ...r, lejos: P.lejos } : r;
+}
+function elegirEntre(P, m, todos, actual, punto) {
+  const grave = (l) => l.razon.reduce((a, r) => a + ({ tapa: 100, cadera: 50, pantalla: 50, alcance: 10, lejos: 8, rotulo: 6, corte: 5 }[r] || 1), 0);
   const orden = (a, b) => a.costo - b.costo || Math.abs(a.x - P.pref) - Math.abs(b.x - P.pref);
   const mejor = todos.filter((l) => !l.razon.length).sort(orden)[0] || [...todos].sort((a, b) => grave(a) - grave(b) || a.costo - b.costo)[0] || null;
   const x = actual.x;
   if (!Number.isFinite(x)) return mejor ? { x: mejor.x, cambia: true, costo: mejor.costo, razon: 'primero' } : null;
   if (!mejor) return { x, cambia: false, costo: null, razon: 'sin_lugar' };
-  const ahora = puntuar(P, x);
-  if (ahora.dp !== null && ahora.dp > banda) ahora.razon.push('lejos');
+  const ahora = marcar(P, puntuar(P, x));
   // (el de ahora que ya no cumple: la cadera en el aire, tapa el panel, la punta del dedo entraría en lo que señala o
-  // no llega)
+  // no llega; desde lejos, tapa un rótulo que otro lugar deja leer)
   const valeAhora = !ahora.razon.length;
   // (`ciego`: el lugar de ahora se eligió sin saber dónde quedarían la obra y sus rótulos: lo que llegó manda, aunque
   // ya haya cambiado o la escena sea corta)

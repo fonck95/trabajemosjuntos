@@ -45,8 +45,10 @@
   rótulo y, con movimiento reducido, solo fundirse o girar); el rótulo (bajo el panel si cabe, si no acoplado al
   subtítulo, que no lo pasa); los tiempos del resumen. Y lo que corrigió la revisión: no se mueve por poco; señalando
   lo que el dedo no alcanza se para lo más cerca que se puede del panel, y desde lejos se va aunque ya haya cambiado;
-  no tapa los títulos de la maqueta si hay un lugar que llegue sin taparlos; el rótulo de una seguidilla no cambia con
-  cada panel y de lado no pisa la ficha; a mitad de la escena, lo que se ve («Solo 3D», el atlas, la ficha) manda.
+  no tapa los títulos de la maqueta si hay un lugar que llegue sin taparlos; si desde ningún lugar que deje leer los
+  rótulos (el título y la caja entera) llega el dedo, señala desde lejos con la mano abierta hacia el borde del panel,
+  sin taparlos; el rótulo de una seguidilla no cambia con cada panel y de lado no pisa la ficha; a mitad de la escena,
+  lo que se ve («Solo 3D», el atlas, la ficha) manda.
 * El vidrio del subtítulo que se quitó espera al presentador mientras se agacha detrás (propuesta.html y presentador.js).
 """
 import re
@@ -694,6 +696,29 @@ for (const [g, rumbo, pt] of [['indicar', 0, [-3, 1.6, 1]], ['senalar', 0, [-2.5
   const fwd = new THREE.Vector3(0, 0, 1).transformDirection(H.cabeza.matrixWorld);
   r.cabezaArriba = r3(Math.asin(fwd.y));
 }
+// en el celular (el busto, chico: contar por lugares), cada número con la palma frente al pecho, dentro del ancho de los
+// hombros (el lienzo del busto va pegado al borde de la pantalla: abierta hacia afuera, la mano del 3 se salía) y hacia
+// la sala; la otra mano, quieta abajo aunque hable (las dos palmas a los lados del pecho no dejaban leer el número)
+{
+  const a = nuevo(0, 'medio');
+  a.tamano(200, { celular: true });
+  a.hablar(9, { texto: 'En resumen. Uno: la torre. Dos: el agua para todos. Tres: vivienda nueva y mejorada.' });
+  for (let i = 0; i < 30; i++) a.actualizar(1 / 60);
+  r.chico = [];
+  for (const n of [1, 2, 3]) {
+    a.gesto('contar', n === 1 ? { n, sostener: true } : { n, seguir: true });
+    const l = n === 3 ? 'I' : 'D', o = n === 3 ? 'D' : 'I', yOtra = [];
+    for (let i = 0; i < 90; i++) {
+      a.actualizar(1 / 60);
+      p.grupo.updateMatrixWorld(true);
+      if (i >= 45) yOtra.push(palma[o].getWorldPosition(new THREE.Vector3()).y);
+    }
+    const pm = palma[l].getWorldPosition(new THREE.Vector3());
+    const normal = new THREE.Vector3(0, 0, 1).transformDirection(palma[l].matrixWorld);
+    r.chico.push({ n, lado: l, x: r3(pm.x / A), y: r3(pm.y / A), otra: r3(Math.max(...yOtra) / A),
+      mueve: r3((Math.max(...yOtra) - Math.min(...yOtra)) / A), chico: a.estado().chico });
+  }
+}
 p.liberar();
 console.log(JSON.stringify(r));
 """
@@ -731,6 +756,13 @@ def test_los_gestos_no_se_leen_mal(tmp_path):
     assert 0.25 <= r["labiosReposo"] <= 0.5 and r["labiosPensar"] > 0.9, (r["labiosReposo"], r["labiosPensar"])
     assert r["medio"]["casa"] >= 0.04 and r["medio"]["invitar"] >= 0.1 and min(r["medio"].values()) > 0.02, r["medio"]
     assert r["cabezaArriba"] < 0.25, r["cabezaArriba"]
+    # contar en el celular: el 1 a la izquierda de la pantalla, el 2 al centro y el 3 a la derecha, todos dentro de los
+    # hombros (±0.2 del alto; antes ±0.26, y en el cierre del celular la mano del 3 salía del lienzo); la otra mano,
+    # quieta abajo mientras habla
+    ch = r["chico"]
+    assert all(c["chico"] for c in ch) and [c["lado"] for c in ch] == ["D", "D", "I"], ch
+    assert ch[0]["x"] < ch[1]["x"] < ch[2]["x"] and all(abs(c["x"]) <= 0.2 for c in ch) and abs(ch[1]["x"]) <= 0.06, ch
+    assert all(c["otra"] <= 0.53 and c["mueve"] <= 0.01 for c in ch), ch
 
 
 NODE_REACCIONES = r"""import { register } from 'node:module';
@@ -1256,6 +1288,22 @@ def test_el_vidrio_espera_al_presentador_que_baja():
     assert "(saliendo ? vidrioQueEspera() : null)" in cuerpo("colocar")
 
 
+def test_desde_lejos_la_mano_abierta_hacia_el_panel():
+    # lo que el dedo no alcanza (la punta del índice a más de LEJOS_PX: Telesalud a 1440, el panel a 1920) no se señala con
+    # el índice en alto (un dedo levantado) ni sobre la maqueta («esto del mapa»): la palma se abre hacia el borde del
+    # panel a la altura del hombro (presentar y después indicar) y la cara mira el dato (`mira`) y vuelve a la sala; lo
+    # señalado al alcance pero muy arriba del hombro sigue con el índice (la cifra de la portada)
+    js = (PRESENTADOR / "presentador.js").read_text(encoding="utf-8")
+    cuerpo = lambda nombre: js[js.index(f"function {nombre}("):js.index("\n  }\n", js.index(f"function {nombre}("))]
+    entrada, sosten = cuerpo("gestoDeEntrada"), cuerpo("sostener")
+    assert "comoSenalaDe(punto, c)" in entrada and "como === 'lejos'" in entrada and "g = 'presentar'" in entrada, entrada
+    assert "opciones.mira = alMundo(punto.x, punto.y)" in entrada and "if (g === 'presentar' && como === 'alto') g = 'senalar'" in entrada
+    assert "anim.gesto('indicar', { punto: alMundo(ab.x, ab.y), sostener: true })" in sosten
+    assert "como === 'alto'" in sosten and "anim.gesto('senalar'" in sosten
+    anim = (PRESENTADOR / "animador.js").read_text(encoding="utf-8")
+    assert "if (o.mira && nuevo.mirar) nuevo.mirar = " in anim
+
+
 
 # ───────────────────────────── Las vistas (vistas.js): qué plano, dónde y hacia dónde ─────────────────────────────
 
@@ -1443,7 +1491,35 @@ r.lejos = {
   hayLejos: todosC.some((l) => l.razon.includes('lejos')),
   desdeLejos: V.elegirLugar(eC, m, ctx, cifra, { x: 1100, ms: 9000, cambios: 1 }, { punto: pC }).razon,
   titulo: V.lugares(eT, m, ctx, tele, { punto: pT, todos: true }).find((l) => l.x === lT.x)?.titulo,
+  // (la cifra de la portada, al alcance pero 190 px arriba del hombro: el índice)
+  como: V.comoSenala(lC.x, pC, { p: m.p, subTop: sub.y0, yc: m.yc, rumbo: V.rumboDe('senala', pC.x - lC.x) }),
 };
+// desde lejos: Telesalud con las cajas enteras de sus rótulos (las de la página: «La Soledad · a 27,6 km → · sede
+// satélite (…)» a la altura del pecho en casi todo el subtítulo). Desde ningún lugar que deje leerlos llega el dedo: no
+// hay por qué taparlos (ni el título ni la caja); la mano abierta hacia el borde del panel, a la altura del hombro
+const teleE = { ...tele, cajasRotulos: [{ x0: 790, y0: 72, x1: 1042, y1: 105 }, { x0: 1168, y0: 631, x1: 1269, y1: 664 },
+  { x0: 654, y0: 491, x1: 834, y1: 524 }, { x0: 637, y0: 613, x1: 1003, y1: 646 }] };
+const lTE = V.elegirLugar(eT, m, ctx, teleE, {}, { punto: pT });
+const todosTE = V.lugares(eT, m, ctx, teleE, { punto: pT, todos: true });
+const xTE = todosTE.find((l) => l.x === lTE.x);
+const oTE = { p: m.p, subTop: subT.y0, yc: m.yc, rumbo: V.rumboDe('senala', pT.x - lTE.x) };
+const abTE = V.abierta('panel', teleE, lTE.x, V.yHombro(subT.y0, m));
+const manoTE = V.manoAbierta(lTE.x, abTE, oTE);
+r.desdeLejos = { lejos: lTE.lejos, como: V.comoSenala(lTE.x, pT, oTE), titulo: xTE.titulo, caja: xTE.caja, razon: xTE.razon,
+  // (el lugar de antes, x 833: el dedo a 200 px y la caja de La Soledad tapada en un 37 %)
+  antes: todosTE.find((l) => Math.abs(l.x - 833) <= 4)?.razon,
+  ab: abTE, mano: manoTE.punta, hombro: manoTE.hombro, borde: panel.x1,
+  seVa: V.elegirLugar(eT, m, ctx, teleE, { x: 833, cambios: 1, ms: 9000 }, { punto: pT }).razon };
+// 1920x1080 (aguas/2, el punto 3): lo señalado 300 px arriba del hombro y el dedo no llega desde ningún lado: junto al
+// panel (hasta el extremo del subtítulo que deja la cadera sobre él), con la mano abierta
+const ctx19 = { ...ESC, VW: 1920, VH: 1080 };
+const m19 = V.medidas('senala', ctx19);
+const c19 = { sub: { x0: 668, y0: 893, x1: 1512, y1: 994 }, panel: { x0: 100, y0: 76, x1: 552, y1: 729 },
+  foco: { x0: 149, y0: 441, x1: 527, y1: 509 }, obra: { x0: 746, y0: 138, x1: 1784, y1: 820 } };
+const p19 = V.objetivoDe('foco', 'panel', c19, { yHombro: V.yHombro(c19.sub.y0, m19), VW: 1920, VH: 1080 });
+const l19 = V.elegirLugar(eT, m19, ctx19, c19, {}, { punto: p19 });
+r.lejos1920 = { x: l19.x, lejos: l19.lejos, sub: c19.sub.x0, cadera: 0.12 * m19.p, margen: 0.2 * m19.p,
+  como: V.comoSenala(l19.x, p19, { p: m19.p, subTop: c19.sub.y0, yc: m19.yc, rumbo: -0.35 }) };
 // el cierre: un dedo al empezar cada punto
 const tc = V.tiemposCierre(['Uno: la torre del hospital.', 'Dos: el agua.', 'Tres: vivienda nueva y mejorada para todos.']);
 r.cierre = { crece: tc.inicios.every((t, i) => i === 0 || t > tc.inicios[i - 1]), primero: tc.inicios[0], total: tc.total, n: tc.inicios.length };
@@ -1546,6 +1622,20 @@ def test_elegir_vista(tmp_path):
     lj = r["lejos"]
     assert lj["hayLejos"] and lj["dp"] <= lj["minDp"] + 30 and lj["desdeLejos"] == "no_sirve", lj
     assert lj["titulo"] is not None and lj["titulo"] <= 0.3, lj
+    assert lj["como"] == "alto", lj
+    # desde lejos (Telesalud, con la caja entera de La Soledad): el dedo no llega desde ningún lugar que deje leer los
+    # rótulos, así que no tapa ni el título (≤ 30 %) ni la caja (≤ 10 %); el lugar de antes los tapaba y se va de ahí
+    # aunque ya haya cambiado. La mano abierta, hacia el borde del panel a la altura del hombro, fuera del vidrio
+    dl = r["desdeLejos"]
+    assert dl["lejos"] and dl["como"] == "lejos" and not dl["razon"], dl
+    assert dl["titulo"] <= 0.3 and dl["caja"] <= 0.1, dl
+    assert "rotulo" in dl["antes"] and dl["seVa"] == "no_sirve", dl
+    assert dl["ab"]["x"] == dl["borde"] and dl["mano"]["x"] >= dl["borde"] + 6, dl
+    assert dl["hombro"]["y"] - dl["mano"]["y"] <= 0.21 * (dl["hombro"]["x"] - dl["mano"]["x"]) + 1, dl
+    # en 1920x1080, junto al panel: más cerca que el margen de siempre, la cadera todavía sobre el subtítulo
+    l19 = r["lejos1920"]
+    assert l19["lejos"] and l19["como"] == "lejos", l19
+    assert l19["sub"] + 8 + l19["cadera"] <= l19["x"] < l19["sub"] + l19["margen"], l19
 
 
 def test_los_giros_suaves_son_los_mismos():

@@ -59,8 +59,7 @@ import { crearPersonaje } from './personaje.js';
 import { crearAnimador, planHabla, CARAS } from './animador.js';
 import {
   PLANOS, CHICA_PX, HORIZONTAL_PX, elegirVista, medidas, rumboDe, cxDe, caja, union, objetivoDe, elegirLugar,
-  transicion, tiemposCierre, apuntable, rotuloDe, posRotulo, yHombro as alturaHombro, esSuave, distPunta, LEJOS_PX,
-  ALTO_PX,
+  transicion, tiemposCierre, apuntable, rotuloDe, posRotulo, yHombro as alturaHombro, esSuave, comoSenala, abierta,
 } from './vistas.js';
 
 const FOV = 17;           // poca perspectiva: casi un dibujo plano
@@ -368,8 +367,9 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     return !cs || (cs.display !== 'none' && cs.visibility !== 'hidden' && Number(cs.opacity) > 0.05);
   };
   const rect = (el) => (el ? caja(el.getBoundingClientRect?.()) : null);
-  // los títulos de los rótulos de la maqueta a la vista en la página
+  // los títulos de los rótulos de la maqueta a la vista en la página (y sus cajas enteras)
   const rotulosDom = () => [...documento.querySelectorAll('.lbl-p, .lbl-pin')].filter(visibleEl).map(tituloDe).filter(Boolean);
+  const cajasRotulosDom = () => [...documento.querySelectorAll('.lbl-p, .lbl-pin')].filter(visibleEl).map(rect).filter(Boolean);
   // cuánto se solapan dos cajas (la intersección sobre la menor)
   const solapa = (a, b) => {
     const w = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), h = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
@@ -408,7 +408,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     c.control = rect(q('.control'));
     // la obra y sus rótulos donde quedarán (el encuadre de esta escena); antes de que llegue, los de la página son los
     // de la cámara de antes: no cuentan (salvo fuera de una escena: el cierre, la píldora, una explicación). De cada
-    // rótulo cuenta su título (el nombre: «La Soledad»), no la línea de abajo
+    // rótulo cuentan su título (el nombre: «La Soledad») y su caja entera (con la línea de abajo), cada uno con lo suyo
     const enc = avisos.encuadre;
     if (enc?.caja && prog && prog.tEncuadre !== null && (enc.n == null || enc.n === prog.d.n)) {
       c.obra = caja(enc.caja.obra);
@@ -416,11 +416,13 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       const fin = (enc.caja.titulos || enc.caja.rotulos || []).map(caja).filter(Boolean);
       const desde = (enc.caja.titulosAhora || []).map(caja).filter((b) => b && !fin.some((f) => solapa(b, f) > 0.5));
       c.rotulos = [...fin, ...desde];
+      c.cajasRotulos = (enc.caja.rotulos || []).map(caja).filter(Boolean);
       // (el encuadre llegó sin rótulos —el módulo del paso todavía cargaba—: los que ya aparecieron en la página)
-      if (!c.rotulos.length) c.rotulos = rotulosDom();
+      if (!c.rotulos.length) { c.rotulos = rotulosDom(); c.cajasRotulos = cajasRotulosDom(); }
     } else if (!prog || prog.evento !== 'narrar') {
       c.rotulos = rotulosDom();
-    } else c.rotulos = [];
+      c.cajasRotulos = cajasRotulosDom();
+    } else { c.rotulos = []; c.cajasRotulos = []; }
     c.foco = union([...documento.querySelectorAll('.foco')].map(rect));
     return c;
   }
@@ -1257,9 +1259,20 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     else if (punto && (APUNTAN.includes(g) || g === 'mirar_maqueta')) opciones.punto = alMundo(punto.x, punto.y);
     // presentar barre con la palma (los pines de la portada, los años del cronograma): de un punto al otro
     const b = g === 'presentar' && punto ? barridoDe(p.d, e, c, punto) : null;
-    // señalando lo que el dedo no alcanza (el panel muy arriba del hombro): el índice con el brazo estirado hacia ahí,
-    // no la palma (que quedaría sobre la maqueta: «esto de la maqueta»)
-    if (g === 'presentar' && !b && e.vista === 'senala' && lejos(punto, c)) g = 'senalar';
+    const como = e.vista === 'senala' && !b ? comoSenalaDe(punto, c) : 'llega';
+    // lo señalado muy arriba del hombro, al alcance: el índice con el brazo estirado hacia ahí, no la palma alzada (que se
+    // leería como una mano levantada)
+    if (g === 'presentar' && como === 'alto') g = 'senalar';
+    // desde lejos (el dedo no llega desde donde deja leer la maqueta): ni el índice en alto (un dedo levantado) ni sobre
+    // la maqueta («esto del mapa»): la palma se abre hacia el borde del panel a la altura del hombro, el torso girado, y
+    // la cara mira lo que explica y vuelve a la sala. Se lee «miren ahí, en el panel»
+    const desdeLejos = como === 'lejos' && ['senalar', 'presentar', 'indicar'].includes(g) ? abiertaDe(e, c) : null;
+    if (desdeLejos) {
+      g = 'presentar';
+      opciones.punto = alMundo(desdeLejos.x, desdeLejos.y);
+      opciones.mira = alMundo(punto.x, punto.y);
+    }
+    p.lejos = !!desdeLejos;
     if (b) {
       opciones.punto = alMundo(b.desde.x, b.desde.y); opciones.hasta = alMundo(b.hasta.x, b.hasta.y);
       objetivoPx = b.hasta; p.barrido = b;
@@ -1276,8 +1289,9 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     const dur = g ? anim.gesto(g, opciones) : 0;
     const fin = p.finFrase0 ?? (p.frase0 !== null ? p.frase0 + decirS(p.d.textos?.[0]) * 1000 : null);
     p.tSosten = ahora() + (sostenido ? acotar((fin ?? 0) - ahora(), b ? BARRIDO_MS : SOSTEN_MS, 6000) : g === 'enumerar' ? Infinity : Math.max(0, (Number.isFinite(dur) ? dur : 0) * 1000 - 350));
-    // el dedo llega: lo señalado late; la cabeza vuelve a la sala al rato (la mano sigue)
-    if (g === 'senalar' && e.objetivo === 'foco') despues(450, pulso);
+    // el dedo llega: lo señalado late; la cabeza vuelve a la sala al rato (la mano sigue). Desde lejos, late cuando se
+    // abre la palma (lo que dice «ahí»)
+    if ((g === 'senalar' || desdeLejos) && e.objetivo === 'foco') despues(desdeLejos ? 650 : 450, pulso);
     if (APUNTAN.includes(g) && e.objetivo !== 'obra') despues(MIRAR_MS, () => { if (prog === p && p.fase === 'gesto') anim.mirarSala((p.tSosten - ahora()) / 1000 + 0.2); });
     // el rótulo y el busto que muestra la hoja miran lo que explican un momento y vuelven a la sala (la cara sostenida
     // hacia abajo se ve desde arriba, con ceño, y no se reconoce): un vistazo a lo de abajo (la hoja, la ficha), un
@@ -1373,11 +1387,20 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     }
     colocar();
     const c = e.vista === 'senala' ? leerCajas() : null;
-    // el dedo no llega (lo señalado muy arriba del hombro, el panel lejos): sigue el índice con el brazo estirado en la
-    // recta hacia lo que señala (la palma baja quedaría sobre la maqueta y se leería «esto de la maqueta»)
-    p.lejos = !!c?.sub && lejos(punto, c);
-    if (p.lejos) {
+    const como = c?.sub ? comoSenalaDe(punto, c) : 'llega';
+    // lo señalado muy arriba del hombro, al alcance: sigue el índice con el brazo estirado en la recta hacia ahí (la
+    // palma alzada se leería como una mano levantada)
+    if (como === 'alto') {
+      p.lejos = false;
       if (anim.estado().gesto !== 'senalar') anim.gesto('senalar', { punto: alMundo(punto.x, punto.y), sostener: true });
+      return;
+    }
+    // desde lejos: la mano abierta hacia el borde del panel, a la altura del hombro, mirando a la sala (cada frase, un
+    // vistazo a lo que explica: alEmpezarFrase)
+    const ab = como === 'lejos' ? abiertaDe(e, c) : null;
+    p.lejos = !!ab;
+    if (ab) {
+      anim.gesto('indicar', { punto: alMundo(ab.x, ab.y), sostener: true });
       return;
     }
     // la mano baja un poco más que el dedo: lo que está abajo del hombro se apunta con más margen sobre el corte
@@ -1387,13 +1410,14 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     anim.gesto('indicar', { punto: alMundo(pt.x, pt.y), sostener: true, mirar: e.objetivo === 'obra',
       ...(e.objetivo === 'obra' && viaja(p.d) ? { mirada: 'sigue' } : {}) });
   }
-  /** ¿El dedo no llega a `punto` desde donde está parado? (la punta del brazo estirado a más de LEJOS_PX) */
-  function lejos(punto, c) {
-    if (!punto || !c?.sub || !plan || !Number.isFinite(xCuerpo) || !Number.isFinite(plan.yc)) return false;
-    // (o muy arriba del hombro: la palma alzada se leería como una mano levantada)
-    if (alturaHombro(c.sub.y0, plan) - punto.y > ALTO_PX) return true;
-    return distPunta(xCuerpo, punto, { p: plan.p, subTop: c.sub.y0, yc: plan.yc, rumbo: anim.estado().rumboBase }) > LEJOS_PX;
+  /** Cómo señala `punto` desde donde está parado (vistas.js comoSenala): 'llega', 'alto' (muy arriba del hombro, al
+   * alcance) o 'lejos' (la punta del índice estirado a más de LEJOS_PX) */
+  function comoSenalaDe(punto, c) {
+    if (!punto || !c?.sub || !plan || !Number.isFinite(xCuerpo) || !Number.isFinite(plan.yc)) return 'llega';
+    return comoSenala(xCuerpo, punto, { p: plan.p, subTop: c.sub.y0, yc: plan.yc, rumbo: anim.estado().rumboBase });
   }
+  /** Adónde va la mano abierta desde lejos: el borde de lo que explica, a la altura del hombro (vistas.js abierta) */
+  const abiertaDe = (e, c) => (c?.sub && plan ? abierta(e.lado, c, xCuerpo, alturaHombro(c.sub.y0, plan)) : null);
   // ¿Se simuló algo en el modelo en esta escena? (el aviso `simulacion` con su narración)
   const simuladaEn = (p) => {
     const s = avisos.simulacion;
