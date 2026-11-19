@@ -7,6 +7,11 @@
   lo muestran y lo ocultan. Detrás del subtítulo: entra agachado sin pasarse (y saluda antes de terminar de subir), se
   agacha y sale sin subir antes (con el «gracias» de la despedida, un poco más), se asoma desde donde esté, camina con
   la velocidad y el rumbo que le piden; con movimiento reducido, todo eso en el acto y el cuerpo gira en el acto.
+* El diseño y la luz: las medidas siguen en su rango; la boca con los labios (cerrada, a medias o con cualquier valor)
+  y el nivel de la cara (de 0 con la cabeza grande a 1 con la chica, y de vuelta a las tiras de siempre) no dejan nada sin
+  número; lo que no recibe luz empieza sin teñir. Las luces siguen a la de la maqueta (`lucesDe`): sin aviso, las de
+  siempre; de tarde, desde el lado del sol; al atardecer, el relleno tibio; de noche, más bajas y con el contraluz frío,
+  sin saltos entre una hora y otra.
 * La carga perezosa (perezoso.js): un «quitar», un «mostrar» o un aviso de la escena (encuadre, atlas, simulación,
   ambiente) no cargan el módulo; el primer aviso que lo necesita sí, y lo que llegó mientras cargaba se le pasa en orden
   (de cada aviso de la escena, el último); con el presentador apagado no se carga; si no se pudo crear, lo que llega se
@@ -276,6 +281,90 @@ def test_detras_del_subtitulo_se_agacha_se_asoma_y_camina(tmp_path):
     assert r["girarYa"] == 0.35
     # movimiento reducido: todo en el acto, en orden, y el cuerpo gira sin muelle
     assert r["reducido"] == {"marcas": ["agacha", -1.4, "asoma", 0, "sale", False, "entra", 0, True], "rumbo": 0.35}, r["reducido"]
+
+
+NODE_DISENO = r"""import { register } from 'node:module';
+import { pathToFileURL } from 'node:url';
+const [cargador, dir] = process.argv.slice(2);
+register(pathToFileURL(cargador).href);
+await import('three');
+const { crearPersonaje } = await import(pathToFileURL(`${dir}/personaje.js`).href);
+const { lucesDe } = await import(pathToFileURL(`${dir}/presentador.js`).href);
+const r = { errores: [] };
+const p = crearPersonaje({ documento: null });
+r.medidas = p.medidas;
+r.tinte = p.tinte?.value?.getHexString?.() ?? null;
+// las tiras de la cara (la suma pesada de sus vértices): sin nivel, con el nivel chico y de vuelta al de cerca
+const firmas = () => { const f = []; p.craneo.traverse((m) => { if (m.isMesh && m.renderOrder >= 3) { const a = m.geometry.attributes.position.array; let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * ((i % 7) + 1); f.push(s.toFixed(5)); } }); return f.join(','); };
+const finito = () => { let ok = true; p.grupo.traverse((m) => { if (m.isMesh) for (const v of m.geometry.attributes.position.array) if (!Number.isFinite(v)) ok = false; }); return ok; };
+const antes = firmas();
+try {
+  r.nivel = [150, 120, 110, 100, 76, 0, 1e6, undefined, NaN, null, 'x'].map((x) => p.cara.nivel(x));
+  p.cara.nivel(60);
+  r.cambia = firmas() !== antes;
+  p.cara.nivel(150);
+  r.vuelve = firmas() === antes;
+  // la boca con los labios: cerrada, a medias, fuera de rango o sin número
+  for (const labios of [0, 0.3, 1, 2, -1, NaN, undefined, 'x']) for (const abrir of [0, 0.5, 1]) for (const sonrisa of [0, 1]) {
+    p.cara.boca.poner({ abrir, ancho: 0.9, sonrisa, labios });
+  }
+  p.cara.nivel(60);
+  p.cara.boca.poner({ abrir: 0.2, labios: 1 });
+} catch (e) { r.errores.push(String(e.stack || e).slice(0, 400)); }
+r.finito = finito();
+p.liberar();
+// la luz de la maqueta (visual.js luz()) y las del presentador
+const ver = (e) => ({ luz: e.luz.getHexString(), luzI: +e.luzI.toFixed(3), lado: +e.lado.toFixed(3), cielo: e.cielo.getHexString(),
+  suelo: e.suelo.getHexString(), hemiI: +e.hemiI.toFixed(3), relleno: e.relleno.getHexString(), rellenoI: +e.rellenoI.toFixed(3),
+  contraI: +e.contraI.toFixed(3) });
+const tarde = { hora: 'tarde', luz: '#ffe8c6', intensidad: 2.7, cielo: '#cfe0ff', piso: '#7a7458', hemi: 0.42, oscuridad: 0,
+  sol: [-0.2, 0.1, 0.9], solFin: [0.571, 0.128, 0.811] };
+const atardecer = { ...tarde, hora: 'atardecer', luz: '#ffbd88', intensidad: 2.5, cielo: '#8d9fd0', piso: '#4a3f33', oscuridad: 0.5 };
+const noche = { hora: 'noche', luz: '#a9bce6', intensidad: 0.62, cielo: '#5a6ea8', piso: '#26262c', hemi: 0.55, oscuridad: 1,
+  sol: [-0.582, 0.748, 0.32] };
+r.luces = { nada: ver(lucesDe(null)), vacio: ver(lucesDe({})), tarde: ver(lucesDe(tarde)), atardecer: ver(lucesDe(atardecer)),
+  noche: ver(lucesDe(noche)), medio: ver(lucesDe({ ...noche, oscuridad: 0.75 })), porHora: ver(lucesDe({ ...noche, oscuridad: undefined })),
+  malo: ver(lucesDe({ luz: 'rojo', cielo: 3, intensidad: NaN, oscuridad: 'x', sol: [NaN, 1, 2], solFin: 'x' })) };
+console.log(JSON.stringify(r));
+"""
+
+
+@requiere_node
+def test_el_diseno_del_personaje_y_la_luz(tmp_path):
+    (tmp_path / "cargador.mjs").write_text(CARGADOR, encoding="utf-8")
+    (tmp_path / "prueba.mjs").write_text(NODE_DISENO, encoding="utf-8")
+    p = subprocess.run(["node", str(tmp_path / "prueba.mjs"), str(tmp_path / "cargador.mjs"), str(PRESENTADOR)],
+                       capture_output=True, text=True, timeout=120, cwd=ADMIN,
+                       env={"PATH": "/usr/bin:/bin:/usr/local/bin:/opt/node22/bin", "VENDOR_THREE": str(VENDOR_THREE)})
+    assert p.returncode == 0, p.stderr
+    import json
+    r = json.loads(p.stdout.strip().splitlines()[-1])
+    # las medidas siguen en su rango (las manos ×1.3 no cambian el alto ni el hombro) y nada quedó sin número
+    m = r["medidas"]
+    assert 2.1 < m["alto"] < 2.4 and abs(m["piso"]) < 0.03 and 1.2 < m["hombro"] < 1.45, m
+    assert r["errores"] == [] and r["finito"], r
+    # lo que no recibe luz empieza sin teñir (como siempre)
+    assert r["tinte"] == "ffffff"
+    # el nivel de la cara: 0 con la cabeza grande (o sin número), 1 con la chica, una mezcla en el medio; las tiras cambian
+    # con el nivel chico y vuelven a ser las de siempre con el de cerca
+    assert r["nivel"] == [0, 0, 0.5, 1, 1, 1, 0, 0, 0, 0, 0], r["nivel"]
+    assert r["cambia"] and r["vuelve"], r
+    L = r["luces"]
+    # sin aviso de la maqueta (el taller, una capa vieja) o con uno que no se entiende: las luces de siempre
+    hoy = {"luz": "ffffff", "luzI": 1.9, "lado": -1, "cielo": "ffffff", "suelo": "8a7a70", "hemiI": 1.15, "relleno": "fff1e6",
+           "rellenoI": 0.7, "contraI": 0}
+    assert L["nada"] == hoy and L["vacio"] == hoy and L["malo"] == hoy, L
+    # de tarde: la principal desde el lado del sol donde termina el viaje (a la derecha), tibia, y sin contraluz
+    assert L["tarde"]["lado"] == 1 and L["tarde"]["luzI"] == 1.9 and L["tarde"]["contraI"] == 0 and L["tarde"]["luz"] != "ffffff", L["tarde"]
+    # al atardecer (el tema oscuro): el relleno tibio y algo menos de luz
+    assert L["atardecer"]["relleno"] == "ffd9b0" and L["atardecer"]["luzI"] < 1.9 and L["atardecer"]["contraI"] == 0, L["atardecer"]
+    # de noche: desde el lado de la luna, la principal y la hemisférica bajan (al 60 % del piso), el relleno tibio a 0.5 y
+    # entra el contraluz frío; sin `oscuridad`, la hora la dice; a medio camino, a medio camino (sin saltos)
+    n = L["noche"]
+    assert n["lado"] == -1 and abs(n["luzI"] - 1.9 * 0.55 * 0.6) < 0.01 and abs(n["hemiI"] - 1.15 * 0.55 * 0.6) < 0.01, n
+    assert n["relleno"] == "ffd9b0" and n["rellenoI"] == 0.5 and n["contraI"] == 0.8, n
+    assert L["porHora"] == n
+    assert n["luzI"] < L["medio"]["luzI"] < 1.9 * 0.55 and L["medio"]["contraI"] == 0.4, L["medio"]
 
 
 NODE_PEREZOSO = r"""import { pathToFileURL } from 'node:url';

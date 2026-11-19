@@ -282,6 +282,13 @@ a.chip:hover { border-color: var(--ink); }
    movimiento); sin él camina, se agacha y salta o se acerca, y nada de eso pasa por aquí */
 .presentador { transition: opacity 0.15s; }
 .presentador.fundido { opacity: 0; }
+/* el contorno de calcomanía: un filo crema de 1 px alrededor de la silueta (lo separa del pasto y de la maqueta de
+   noche, también para quien no distingue el rojo del verde) y una sombra suave detrás. El filo son dos sombras sin
+   corrimiento, una sobre la otra (una sola, de 0.7 px, apenas aclaraba el borde: 2:1 contra el pasto); con 1 px CSS de
+   desenfoque en las pantallas comunes (menos de un píxel no dibuja nada) y 0.6 px desde 2x (más nítido). El recorte
+   del corte se aplica después del filtro: lo que cae bajo el subtítulo no se ve. El rótulo lleva su propio anillo */
+.presentador:not(.rotulo) { filter: drop-shadow(0 0 1px #fff8ec) drop-shadow(0 0 1px #fff8ec) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.22)); }
+@media (min-resolution: 2dppx) { .presentador:not(.rotulo) { filter: drop-shadow(0 0 0.6px #fff8ec) drop-shadow(0 0 0.6px #fff8ec) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.22)); } }
 /* el rótulo (con un modelo del atlas a la vista, con la ficha en el celular o con el celular de lado): la cara en un
    círculo con el color del capítulo, encima del subtítulo, bajo el panel o acoplado a un extremo del subtítulo, que le
    hace lugar (presentador.js pone la clase y el diámetro más 10 px en --pres-rotulo); el texto se reacomoda */

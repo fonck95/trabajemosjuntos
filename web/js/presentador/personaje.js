@@ -186,7 +186,7 @@ function tenir(geo, f) {
 }
 
 /**
- * Arma el personaje. Devuelve {grupo, cuerpo, huesos, manos, cara, craneo, contorno, medidas, liberar()}:
+ * Arma el personaje. Devuelve {grupo, cuerpo, huesos, manos, cara, craneo, contorno, tinte, medidas, liberar()}:
  * - `huesos`: los pivotes que mueve animador.js (cadera, columna, pecho, cuello, cabeza, hombro/codo/muneca y
  *   muslo/rodilla/tobillo de cada lado: …I es el izquierdo, …D el derecho, que vive en un grupo espejo).
  * - `manos.I` / `manos.D`: {dedos: [[base, punta] × 4], pulgar, ponerPulgar(p)}: índice, medio, anular y meñique.
@@ -195,6 +195,7 @@ function tenir(geo, f) {
  *   cerrada); `nivel`: el detalle de la cara según lo que mide la cabeza en la pantalla (sin llamarlo, como de cerca).
  * - `craneo`: el grupo de la cabeza (la cara, el pelo, las orejas), para medirla o encuadrarla.
  * - `contorno`: los uniformes del contorno ({grosor, resolucion, color}).
+ * - `tinte`: el uniforme ({value: Color}) con que se tiñe lo que no recibe luz (blanco por omisión: como siempre).
  */
 export function crearPersonaje({ documento = globalThis.document } = {}) {
   const geos = new Set(), mats = new Set(), texs = new Set();
@@ -228,7 +229,21 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     mats.add(m);
     return m;
   };
-  const plano = (color, extra = {}) => { const m = new THREE.MeshBasicMaterial({ color, ...extra }); mats.add(m); return m; };
+  // Lo que no recibe luz (las tiras de la cara: los ojos, las cejas, la boca y los dientes; el logo, la esfera del reloj)
+  // se tiñe con `tinte` (blanco: como siempre). El presentador lo pone en proporción a su luz, que sigue a la de la
+  // maqueta: de noche, sin esto, los ojos y los dientes brillaban sobre la cara en penumbra
+  const tinte = { value: new THREE.Color(1, 1, 1) };
+  const conTinte = (sh) => {
+    sh.uniforms.tinteLuz = tinte;
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform vec3 tinteLuz;')
+      .replace('#include <opaque_fragment>', 'outgoingLight *= tinteLuz;\n#include <opaque_fragment>');
+  };
+  const plano = (color, extra = {}) => {
+    const m = new THREE.MeshBasicMaterial({ color, ...extra });
+    m.onBeforeCompile = conTinte;
+    mats.add(m);
+    return m;
+  };
   const M = {
     piel: toon(COLORES.piel, { gradientMap: rampaPiel }),
     pielBrazo: toon(COLORES.pielBrazo, { gradientMap: rampaPiel }),   // los brazos, más tostados que la cara
@@ -1618,7 +1633,7 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
   function capa(padre, colorHex, orden, extra = {}) {
     const m = plano(colorHex, { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 - orden,
       polygonOffsetUnits: -4 - 2 * orden, ...extra });
-    m.onBeforeCompile = deCanto;
+    m.onBeforeCompile = (sh) => { deCanto(sh); conTinte(sh); };
     return m;
   }
   function deCanto(sh) {
@@ -2080,7 +2095,7 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     grupo.traverse((o) => { if (o.geometry && !geos.has(o.geometry)) o.geometry.dispose(); });
   }
 
-  return { grupo, cuerpo, huesos, manos, cara, craneo, contorno, medidas, liberar };
+  return { grupo, cuerpo, huesos, manos, cara, craneo, contorno, tinte, medidas, liberar };
 }
 
 // Una mancha redonda que se desvanece hacia el borde (las sombras suaves de la cara)

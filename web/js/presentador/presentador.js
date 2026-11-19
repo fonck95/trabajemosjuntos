@@ -26,6 +26,11 @@
 //   mano baja hacia lo que explica (`indicar`) hasta la escena siguiente, mirando a la sala al empezar cada frase. En la
 //   primera escena saluda antes (corto si ya hay un dato que señalar). El resumen del cierre lo cuenta con los dedos, un
 //   dedo al empezar cada punto.
+// * La LUZ sigue a la de la maqueta (el aviso `ambiente`: la hora y el lado del sol), en 0.6 s: de tarde desde el lado
+//   del sol, al atardecer (el tema oscuro) más tibia, de noche más baja y con un contraluz frío; el rótulo, con la de
+//   siempre. Lo que no recibe luz (los ojos, los dientes, las cejas) se tiñe en proporción. Lo pegado al corte se
+//   oscurece un poco (la sombra del atril) y propuesta.html le pone un filo crema alrededor (el contorno de calcomanía).
+//   El detalle de la cara (las cejas, los ojos) va según lo que mide la cabeza en la pantalla (personaje.js `nivel`).
 // * Nunca queda a la vista sin el subtítulo: si el subtítulo se va (se quita la explicación, la hoja grande del celular
 //   lo tapa) se agacha en el acto detrás de la línea donde estaba (después del cierre, despidiéndose) y, si vuelve, se
 //   asoma de nuevo.
@@ -80,6 +85,70 @@ const suave = (u) => { const t = acotar(u, 0, 1); return t * t * (3 - 2 * t); };
 /** La duración de decir `texto` sin voz, en segundos. */
 export const decirS = (texto) => Math.min(16, Math.max(1.2, [...String(texto || '')].length * DECIR_S));
 
+// ── La luz: la de la maqueta ──
+const LUZ_MS = 600;          // la luz nueva llega en 0.6 s (el «reproducir el día» la mueve con cada frase: no salta)
+const TIBIO = 0xffd9b0, FRIO = 0x8fb0ff;
+const HEX = /^#[0-9a-f]{6}$/i;
+/**
+ * Las luces del presentador para la luz de la maqueta `l` (visual.js `luz()`: {hora, luz, intensidad, cielo, piso,
+ * hemi, oscuridad, sol, solFin}); sin aviso (el taller, una capa vieja), las de siempre. → {luz, luzI, lado, cielo,
+ * suelo, hemiI, relleno, rellenoI, contraI} (colores THREE.Color; `lado` de −1, la luz desde la izquierda de la pantalla,
+ * a 1, desde la derecha). Pura: se prueba con Node.
+ * - El lado, el del sol donde termina el viaje de la cámara (`solFin`; si no, `sol`): x > 0 es el sol a la derecha de la
+ *   pantalla, y la luz principal viene de ahí (las sombras de la maqueta y las de su cara caen hacia el mismo lado). El
+ *   relleno, del otro lado.
+ * - El color de la principal, mitad blanco y mitad el del sol (no ensucia el rojo de la polo); el cielo y el suelo de
+ *   la hemisférica, un poco del cielo y la mitad del piso de la maqueta. Su intensidad sigue a la del sol, con un piso
+ *   (de noche no queda a oscuras).
+ * - `oscuridad` (0 de día, 0.5 al atardecer, 1 de noche, continua en el ciclo del día) mezcla sin saltos: el relleno se
+ *   entibia hacia el atardecer; de noche la principal y la hemisférica bajan a 0.6, el relleno a 0.5 y entra un
+ *   contraluz frío desde atrás (separa el pelo y los hombros del fondo oscuro, sin lavar la cara)
+ */
+export function lucesDe(l) {
+  const c = (v) => new THREE.Color(v);
+  const hoy = { luz: c(0xffffff), luzI: 1.9, lado: -1, cielo: c(0xffffff), suelo: c(0x8a7a70), hemiI: 1.15,
+    relleno: c(0xfff1e6), rellenoI: 0.7, contraI: 0 };
+  if (!l || typeof l !== 'object') return hoy;
+  const num = (v, d) => (Number.isFinite(v) ? v : d);
+  const de = (v, d) => (typeof v === 'string' && HEX.test(v) ? c(v) : d.clone());
+  const k = acotar(num(l.intensidad, 2.7) / 2.7, 0.55, 1);
+  const osc = acotar(num(l.oscuridad, { noche: 1, atardecer: 0.5 }[l.hora] ?? 0), 0, 1);
+  const noche = acotar((osc - 0.5) / 0.5, 0, 1), tibio = acotar(osc / 0.5, 0, 1);
+  const sol = Array.isArray(l.solFin) ? l.solFin : Array.isArray(l.sol) ? l.sol : null;
+  const sx = num(sol?.[0], NaN);
+  // (el sol casi de frente o de espaldas: la luz casi de arriba; sin saltos cuando el ciclo lo cruza)
+  const lado = Number.isFinite(sx) ? acotar(sx / 0.25, -1, 1) : -1;
+  const baja = 1 - 0.4 * noche;
+  return {
+    luz: c(0xffffff).lerp(de(l.luz, hoy.luz), 0.5), luzI: 1.9 * k * baja, lado,
+    cielo: c(0xffffff).lerp(de(l.cielo, hoy.cielo), 0.35), suelo: c(0x8a7a70).lerp(de(l.piso, hoy.suelo), 0.5),
+    hemiI: 1.15 * k * baja,
+    relleno: hoy.relleno.lerp(c(TIBIO), tibio), rellenoI: 0.7 - 0.2 * noche, contraI: 0.8 * noche,
+  };
+}
+/** Entre dos juegos de luces (u de 0 a 1), en `out` */
+function mezclarLuces(a, b, u, out) {
+  for (const k of ['luz', 'cielo', 'suelo', 'relleno']) out[k].copy(a[k]).lerp(b[k], u);
+  for (const k of ['luzI', 'lado', 'hemiI', 'rellenoI', 'contraI']) out[k] = mezclar(a[k], b[k], u);
+  return out;
+}
+const copiaLuces = (e) => mezclarLuces(e, e, 0, lucesDe(null));
+const mismasLuces = (a, b) => ['luz', 'cielo', 'suelo', 'relleno'].every((k) => a[k].equals(b[k]))
+  && ['luzI', 'lado', 'hemiI', 'rellenoI', 'contraI'].every((k) => Math.abs(a[k] - b[k]) < 1e-4);
+/** Lo que recibe una superficie de frente a la cámara con las luces `e` (para teñir lo que no recibe luz: los ojos, los
+ * dientes, las cejas). La rampa de tonos de los materiales va de la mitad a 1 según cuánto mira a cada luz */
+function irradiancia(e, out = new THREE.Color()) {
+  const mira = (x, y, z) => Math.max(0.35, 0.5 + 0.5 * z / Math.hypot(x, y, z));
+  const frio = new THREE.Color(FRIO);
+  out.setRGB(0, 0, 0);
+  const suma = (col, f) => { out.r += col.r * f; out.g += col.g * f; out.b += col.b * f; };
+  suma(e.luz, e.luzI * mira(2 * e.lado, 3, 4));
+  suma(e.relleno, e.rellenoI * mira(-1.5 * e.lado, 0.6, 4));
+  suma(frio, e.contraI * mira(-3 * e.lado, 2.5, -3));
+  suma(e.cielo.clone().add(e.suelo).multiplyScalar(0.5), e.hemiI);
+  return out;
+}
+
 export function crearPresentador({ ventana = globalThis.window, documento = globalThis.document } = {}) {
   if (!ventana || !documento?.createElement) return null;
   const reducido = !!ventana.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
@@ -100,14 +169,14 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   else documento.body.append(lienzo);
   renderer.setClearColor(0x000000, 0);
   const escena = new THREE.Scene();
-  escena.add(new THREE.HemisphereLight(0xffffff, 0x8a7a70, 1.15));
+  // Las luces: las de siempre (la principal desde arriba a la izquierda, el cielo y el suelo, y un relleno suave de
+  // frente, para que la cara —su relieve, los pliegues de la sonrisa— se lea sin sombras duras) hasta que la maqueta
+  // avisa su luz (`ambiente`): entonces la siguen (lucesDe). El contraluz frío, solo de noche
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x8a7a70, 1.15);
   const luz = new THREE.DirectionalLight(0xffffff, 1.9);
-  luz.position.set(-2, 3, 4);
-  escena.add(luz);
-  // una luz suave de frente: la cara (su relieve, los pliegues de la sonrisa) se lee sin sombras duras
   const relleno = new THREE.DirectionalLight(0xfff1e6, 0.7);
-  relleno.position.set(1.5, 0.6, 4);
-  escena.add(relleno);
+  const contraluz = new THREE.DirectionalLight(FRIO, 0);
+  escena.add(hemi, luz, relleno, contraluz);
   // la cámara mira siempre de frente (−z, sin girar): solo se mueve, cuadro a cuadro (ver `colocar`)
   const camara = new THREE.PerspectiveCamera(FOV, 1, 0.1, 50);
   const personaje = crearPersonaje({ documento });
@@ -116,6 +185,57 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   const anim = crearAnimador(personaje, { reducido });
   anim.camara = camara;
   personaje.grupo.visible = false;
+  // la luz de ahora, adónde va y desde dónde (interpolada en LUZ_MS); lo que no recibe luz se tiñe en proporción
+  const luces = lucesDe(null), irrHoy = irradiancia(luces), irr = new THREE.Color();
+  let lucesHacia = copiaLuces(luces), lucesDesde = null, tLuces = 0;
+  function ponerLuces(e) {
+    luz.color.copy(e.luz); luz.intensity = e.luzI; luz.position.set(2 * e.lado, 3, 4);
+    hemi.color.copy(e.cielo); hemi.groundColor.copy(e.suelo); hemi.intensity = e.hemiI;
+    relleno.color.copy(e.relleno); relleno.intensity = e.rellenoI; relleno.position.set(-1.5 * e.lado, 0.6, 4);
+    contraluz.intensity = e.contraI; contraluz.position.set(-3 * e.lado, 2.5, -3);
+    if (personaje.tinte) {
+      irradiancia(e, irr);
+      personaje.tinte.value.setRGB(acotar(irr.r / irrHoy.r, 0, 1.1), acotar(irr.g / irrHoy.g, 0, 1.1), acotar(irr.b / irrHoy.b, 0, 1.1));
+    }
+  }
+  ponerLuces(luces);
+  // La sombra del atril: lo que queda pegado al corte (los 0.12 del mundo sobre el borde del subtítulo) se oscurece hasta
+  // un 20 %, en degradé (sin línea): da profundidad detrás del subtítulo. Se agrega al sombreado de los materiales con
+  // luz (la ropa, la piel, el pelo); `atril` es la altura del corte en el mundo (lejos abajo: sin sombra, el rótulo). La
+  // cámara nunca gira, así que la altura del mundo es la de la cámara menos la del punto en la vista
+  const atril = { value: -100 };
+  const conAtril = new Set();
+  personaje.grupo.traverse((o) => {
+    const m = o.material;
+    if (!o.isMesh || !m?.isMeshToonMaterial || conAtril.has(m)) return;
+    conAtril.add(m);
+    const previo = m.onBeforeCompile, clave = m.customProgramCacheKey();
+    m.onBeforeCompile = (sh, r) => {
+      previo.call(m, sh, r);
+      sh.uniforms.corteAtril = atril;
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float corteAtril;')
+        .replace('#include <opaque_fragment>', `outgoingLight *= 1.0 - 0.2 * (1.0 - smoothstep(corteAtril, corteAtril + 0.12, cameraPosition.y - vViewPosition.y));
+        #include <opaque_fragment>`);
+    };
+    // (cada material con su programa: la nariz tiene su propio agregado)
+    m.customProgramCacheKey = () => `${clave}|atril`;
+  });
+  /** La luz a la que va: la de la maqueta (el rótulo, que va en su círculo y no sobre la maqueta, con la de siempre).
+   * Si se ve, llega en 0.6 s; si no (o `ya`), en el acto */
+  function seguirLuz({ ya = false } = {}) {
+    const hacia = lucesDe(esRotulo(planDestino()) ? null : avisos.ambiente);
+    if (mismasLuces(hacia, lucesHacia) && !(ya && lucesDesde)) return;
+    lucesHacia = hacia;
+    if (!ya && seVe()) { lucesDesde = copiaLuces(luces); tLuces = ahora(); return; }
+    lucesDesde = null;
+    ponerLuces(mezclarLuces(hacia, hacia, 0, luces));
+  }
+  function avanzarLuces() {
+    if (!lucesDesde) return;
+    const u = suave((ahora() - tLuces) / LUZ_MS);
+    ponerLuces(mezclarLuces(lucesDesde, lucesHacia, u, luces));
+    if (u >= 1) lucesDesde = null;
+  }
 
   let permitido = true;     // la preferencia del panel («Presentador»)
   let enEscena = false;     // lo quieren a la vista: una escena, el cierre, la píldora o una explicación (sin `quitar`)
@@ -248,8 +368,11 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   const hondoDe = (pl = plan) => (pl && Number.isFinite(pl.yc) ? (1 - pl.yc) * A + 0.12 : 1.6);
   /** Pasar a otro plan (el tamaño del lienzo, el rótulo y el lugar que el subtítulo le hace) */
   function ponerPlan(np) {
+    const eraRotulo = esRotulo(plan);
     plan = np;
     const rot = esRotulo(np);
+    // (del círculo a la figura o al revés, la luz cambia en el acto: pasa mientras no se ve)
+    if (rot !== eraRotulo) seguirLuz({ ya: true });
     lienzo.classList.toggle('rotulo', rot);
     if (!rot) { escalaLienzo = 1; lienzo.style.opacity = ''; lienzo.style.transition = ''; circ = { k: 1, op: 1, anim: null }; }
     acoplar(rot && np.modo === 'acoplado' && permitido && !perdido ? np.lado : 0);
@@ -270,6 +393,9 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
    * plano, el mayor de los dos */
   function aplicarTamano(Wc = plan.Wc, Hc = plan.Hc) {
     const d = Math.min(ventana.devicePixelRatio || 1, Hc > 300 ? 1.5 : 2);
+    // el mismo peso de línea en todas las vistas, también en el busto del celular (≈1.5 px CSS: con el filo crema de
+    // propuesta.html se lee como un dibujo); el círculo chico (acoplado, el del celular), un poco menos
+    personaje.contorno.grosor.value = (esRotulo() && plan.p < 160 ? 1.2 : 1.5) * d;
     if (Wc === W && Hc === H && d === dpr) return;
     W = Wc; H = Hc; dpr = d;
     renderer.setPixelRatio(dpr);
@@ -279,7 +405,6 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     camara.aspect = W / H;
     camara.updateProjectionMatrix();
     personaje.contorno.resolucion.value.set(W * dpr, H * dpr);
-    personaje.contorno.grosor.value = (plan.chica || plan.p < 200 ? 1.1 : 1.5) * dpr;
     redimensiones++;
   }
   // ¿Está a la vista de verdad (arriba y no subiendo desde abajo)? Si no, el lugar se elige sin histéresis
@@ -545,6 +670,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       bajo = mezclar(plan.bajo, b.bajo, u);
       if (Number.isFinite(trans.desde.x) && Number.isFinite(trans.hasta.x)) xCuerpo = mezclar(trans.desde.x, trans.hasta.x, u);
     }
+    nivelCara(0.312 * A * s);
     // el subtítulo cambió de alto (otro texto): el corte lo sigue en el acto y el cuerpo lo alcanza en un momento, sin
     // saltar (se dibuja `desfase` px más abajo, que se va a 0)
     if (subTopAntes !== null && seVe()) desfase -= r.top - subTopAntes;
@@ -563,12 +689,23 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     // la cámara: el corte (yc·A del mundo) cae en la fila H − bajo del lienzo y el cuerpo en la columna cxPx
     const h = H / s;
     const yb = yc * A - bajoPx / s + desfase / s;
+    atril.value = yc * A + desfase / s;   // (la sombra del atril, sobre el corte)
     camara.position.set(personaje.grupo.position.x - (cxPx - W / 2) / s, yb + h / 2, h / 2 / TAN);
     camara.updateMatrixWorld();
     x = left; y = top;
     ponerTransform(`translate(${x}px, ${y}px)`);
     // lo que queda bajo el corte no se ve: el subtítulo es vidrio y se vería a través
     if (bajoPx !== recorte) { recorte = bajoPx; lienzo.style.clipPath = `inset(0 0 ${recorte}px 0)`; }
+  }
+  // El detalle de la cara para lo que mide la cabeza en la pantalla (personaje.js `cara.nivel`: con la cabeza chica, las
+  // cejas, las pestañas y los ojos más marcados). Cambia con la vista; acercándose, cuadro a cuadro (no salta). Solo hace
+  // algo cuando cambia el px
+  let pxCabeza = null, nivel = 0;
+  function nivelCara(px) {
+    const r = Math.round(px);
+    if (!Number.isFinite(r) || r === pxCabeza) return;
+    pxCabeza = r;
+    try { nivel = personaje.cara.nivel?.(r) ?? 0; } catch { nivel = 0; }
   }
   // el transform del lienzo, solo cuando cambia
   let trTexto = '';
@@ -581,6 +718,8 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     const cxV = pos ? pos.x0 + L / 2 : r.left + L / 2, cyV = pos ? pos.y0 + L / 2 : r.top - L / 2;
     xCuerpo = cxV;
     escalaLienzo = (L / W) * circ.k;
+    nivelCara(0.312 * plan.p * (L / W));
+    atril.value = -100;   // (en el círculo no hay atril)
     const left = Math.round(cxV - W / 2), top = Math.round(cyV - H / 2);
     const P = PLANOS.primer, h = H / plan.s;
     camara.position.set(personaje.grupo.position.x, ((P.yb + P.ya) / 2) * A, h / 2 / TAN);
@@ -690,6 +829,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     anim.actualizar(dt);
     avanzarTrans();
     colocar(dt);
+    avanzarLuces();
     // el subtítulo se fue (o ya no lo quieren): se agacha; volvió (y terminó de aparecer) mientras se agachaba: se asoma
     if (arriba && (!enEscena || !anclaCuadro)) agachar({ despedida: !enEscena && ultimoCierre });
     else if (!arriba && enEscena && llena(anclaCuadro) && permitido) subir();
@@ -1063,6 +1203,11 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       acoplado, desfase: Math.round(desfase), recorte, dpr,
       ancla: ultimaAncla ? { left: Math.round(ultimaAncla.left), top: Math.round(ultimaAncla.top), right: Math.round(ultimaAncla.right) } : null,
       redimensiones, msCuadro: r(msCuadro), cuadros,
+      // la luz (la de la maqueta, si avisó) y el detalle de la cara
+      luz: { lado: r(luces.lado), luz: `#${luces.luz.getHexString()}`, luzI: r(luces.luzI), hemiI: r(luces.hemiI),
+        relleno: `#${luces.relleno.getHexString()}`, rellenoI: r(luces.rellenoI), contraI: r(luces.contraI),
+        tinte: personaje.tinte ? `#${personaje.tinte.value.getHexString()}` : null, cambiando: !!lucesDesde },
+      detalle: { pxCabeza, nivel: r(nivel) },
       escena: ultimaEscena ? { n: ultimaEscena.n ?? null, tipo: ultimaEscena.tipo ?? null, cambio: ultimaEscena.cambio ?? null } : null,
       avisos: Object.keys(avisos).filter((k) => avisos[k] !== null),
       prog: prog ? { t: Math.round(ahora() - prog.t0), frase0: prog.frase0 === null ? null : Math.round(prog.frase0 - prog.t0),
@@ -1210,7 +1355,8 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     },
     atlas(a) { avisos.atlas = a ?? null; },
     simulacion(s) { avisos.simulacion = s ?? null; },
-    ambiente(l) { avisos.ambiente = l ?? null; },
+    /** La luz de la maqueta (la hora y el lado del sol): la suya la sigue, en 0.6 s */
+    ambiente(l) { avisos.ambiente = l ?? null; seguirLuz(); },
     /** Dónde queda la mano que señala ({lado, y}) para que el panel lleve lo resaltado a esa altura; null: ninguna */
     alturaMano() {
       if (!eleccion || eleccion.vista !== 'senala' || !plan || plan.chica) return null;
