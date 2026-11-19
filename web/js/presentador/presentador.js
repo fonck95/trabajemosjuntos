@@ -13,8 +13,9 @@
 //   panel, de la ficha o de la leyenda; presenta la obra de la maqueta; de anfitrión, de frente a la sala; entero con
 //   «Solo 3D»; de cerca en el cierre; un busto en la pantalla chica. El LUGAR, a lo largo del subtítulo, el que menos tapa
 //   (la obra, los títulos de sus rótulos, lo resaltado) sin tapar nunca el panel, la ficha ni el atlas, a un brazo de lo
-//   que señala (si nada llega, lo más cerca que se puede, y lo señala con el índice y el brazo estirado: la palma baja
-//   caería sobre la maqueta); se queda donde está si sigue sirviendo, no se mueve por poco y cambia a lo sumo una vez
+//   que señala (si desde ningún lugar que deje leer la maqueta llega el dedo, desde lejos: la mano abierta hacia el
+//   borde del panel a la altura del hombro, no el índice sobre la maqueta); se queda donde está si sigue sirviendo, no
+//   se mueve por poco y cambia a lo sumo una vez
 //   por escena (salvo que lo que se esperaba —la obra, sus rótulos, lo resaltado— llegue en otro lado). El cuerpo gira
 //   hacia lo que explica; la cara, nunca más de la apertura (en 3/4, nunca de perfil). Si lo que se ve cambia a mitad de
 //   la escena («Solo 3D», la ficha, el atlas), la vista sale de lo que se ve.
