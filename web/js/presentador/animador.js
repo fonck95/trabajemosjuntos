@@ -13,7 +13,8 @@
 //   4. un gesto (el clip): entra desde lo que hacía el anterior, sin pasar por el reposo, con el cuerpo un poco antes
 //      que el brazo y la muñeca un poco después; sale a la casa (la de hablar si sigue hablando). Sostenido, sigue vivo
 //      (se mueve apenas, asiente despacio, hace su acento y a los 6–7 s afloja). Cada uno elige una variante distinta
-//      de las dos últimas, y con poco tamaño los de dedos se reemplazan por los que se leen por la silueta;
+//      de las dos últimas, y con poco tamaño los de dedos se reemplazan por los que se leen por la silueta; en el rótulo
+//      (la cara en un círculo), con la cara y la cabeza;
 //   5. hacia dónde mira: los ojos saltan, la cabeza los sigue y la columna y la cadera después (hablando, la mirada
 //      recorre la sala); la cara (cejas por lado, párpados que se entrecierran, ojos que sonríen, el guiño);
 //   6. los pies: las piernas los alcanzan donde quedaron apoyados (dos huesos, de la cadera al tobillo).
@@ -265,8 +266,8 @@ const FORMAS_HABLA = [{ mano: 'explica', giro: 1.35 }, { mano: 'canto', giro: 0.
 const otro = (lado) => (lado === 'I' ? 'D' : 'I');
 const brazo = (lado, hombro, codo, muneca = [0, 0, 0]) => ({ [`hombro${lado}`]: hombro, [`codo${lado}`]: codo, [`muneca${lado}`]: muneca });
 const dos = (hombro, codo, muneca) => ({ ...brazo('I', hombro, codo, muneca), ...brazo('D', hombro, codo, muneca) });
-// Los dedos que «llaman» (invitar, sostenido): se cierran un poco y se abren, dos veces
-const LLAMAR = [[0, 'llama'], [0.4, 'abierta'], [0.8, 'llama'], [1.2, 'abierta']];
+// Una forma de mano entre otras dos (los dedos que «llaman» despacio, de a poco)
+const entreManos = (a, b, u) => MANOS[a].map((x, i) => x + (MANOS[b][i] - x) * u);
 // Algunas poses que se repiten
 const P = {
   palmasArriba: [[-0.45, 0, 0.34], [-1.22, 1.35, 0], [0.18, 0, 0]],      // las manos adelante, las palmas arriba
@@ -319,6 +320,42 @@ const POSE = {
   // que bajan un poco hacia atrás, y las manos quedan detrás del cuerpo y del subtítulo
   manosAtrasI: [[0.54, -1.31, -0.13], [-0.55, 1.6, 0], [0.6, 0, 0.45]],
   manosAtrasD: [[0.54, -1.31, -0.19], [-0.54, 1.6, 0], [0.6, 0, 0.45]],
+  // ── los de reaccionar, el lema, el cierre y la pausa (etapa 7b) ──
+  // pensar: la palma hacia la cara, a 5 cm de la barbilla (el pulgar bajo el mentón, el índice a medio estirar sobre la
+  // mejilla); el otro brazo cruzado, la palma arriba bajo el codo (lo sostiene)
+  pensarD: [[-1.1, -0.33, -0.61], [-1.47, 0.59, 0], [-0.43, 0, -0.15]],
+  pensarI: [[0.04, -0.95, -0.45], [-1.62, 1.38, 0], [-0.05, 0, 0.45]],
+  // preguntar: la mano abierta adelante, hacia la cámara (0.66 delante del hombro, a la altura del pecho: 1.33), la palma
+  // arriba y los dedos hacia la sala (y un poco afuera: de frente se lee por la silueta)
+  pregunta: [[-1.52, 0.63, -0.13], [-0.24, 0.68, 0], [-0.1, 0, 0.3]],
+  // calmar: las manos delante del vientre (1.09), al ancho de los hombros, las palmas abajo y un poco hacia la sala
+  calma: [[-0.29, -0.32, 0.19], [-1.36, -1.61, 0], [0.03, 0, 0.45]],
+  // aprobar: el puño de canto con el pulgar arriba, a la altura del pecho (1.25) y hacia la sala
+  aprueba: [[-0.62, -0.29, 0.25], [-1.66, 0.61, 0], [0.6, 0, 0.45]],
+  // celebrar: los puños al pecho (antes de saltar) y arriba, por delante y abiertos en V (a 1.9, sobre los hombros)
+  punosPecho: [[-0.24, -0.2, -0.6], [-1.78, -1.23, 0], [0.13, 0, 0.45]],
+  punosArriba: [[-2.7, 0, 0.5], [-0.5, 0, 0], [0, 0, 0]],
+  // aplaudir: las palmas enfrentadas frente al pecho (1.25), la izquierda un poco más alta y girada; a 0.18 una de la
+  // otra (el golpe las junta)
+  aplaudeD: [[-0.46, -0.42, -0.35], [-1.48, -0.35, 0], [0.18, 0, 0.45]],
+  aplaudeI: [[-0.53, -0.44, -0.26], [-1.53, -0.4, 0], [-0.01, 0, 0.45]],
+  // juntos: las dos palmas arriba hacia la sala (a 1.17, abiertas); después entrelazadas frente al pecho (1.31), un
+  // palmo delante de la polo (las palmas a 0.085 una de la otra: al llegar, el muelle las junta un poco más)
+  juntosAbre: [[-0.77, -0.05, 0.17], [-1.04, 1.6, 0], [-0.1, 0, 0.45]],
+  juntasD: [[-0.53, -0.52, -0.48], [-1.58, -0.32, 0], [0.45, 0, 0.43]],
+  juntasI: [[-0.55, -0.57, -0.32], [-1.68, -0.19, 0], [0.48, 0, 0.45]],
+  // corazón: la mano derecha plana sobre el pectoral izquierdo (la palma a 3 cm de la polo), los dedos hacia el hombro
+  corazon: [[-0.36, -1.1, -0.32], [-1.66, 0.32, 0], [0.06, 0, -0.33]],
+  // invitar: los brazos bajos y adelante, las palmas arriba hacia la sala (a 1.12, delante: no en T)
+  invita: [[-0.48, 0.09, 0.39], [-1.14, 1.6, 0], [-0.05, 0, 0.45]],
+  // negar: el índice arriba frente al pecho (1.38), la palma a la sala; o la mano plana, la palma abajo, adentro (frente
+  // al ombligo) y afuera (a 0.36 del centro: no más que la huella del cuerpo, que el panel no se tape)
+  niegaIndice: [[-0.78, -0.5, -0.14], [-1.52, -1.6, 0], [0.6, 0, 0.45]],
+  cortaAdentro: [[-0.53, -0.62, -0.28], [-1.19, -1.6, 0], [0.24, 0, -0.1]],
+  cortaAfuera: [[-0.41, -0.13, 0.16], [-1.4, -1.42, 0], [0.57, 0, -0.09]],
+  // escuchar: las manos entrelazadas al frente, a la altura de la cintura (las palmas a 0.99, 0.078 una de la otra)
+  escuchaD: [[-0.1, -0.57, -0.28], [-1.24, 0.4, 0], [0.51, 0, 0.45]],
+  escuchaI: [[-0.04, -0.49, -0.27], [-1.37, 0.35, 0], [0.6, 0, 0.45]],
 };
 // el puño de construir, levantado: lo que suben el hombro y el codo desde apoyado (cada golpe los devuelve)
 const MARTILLO = { hombro: -0.32, codo: -0.5, muneca: -0.3 };
@@ -330,16 +367,19 @@ const entre = (a, b, u) => a.map((e, i) => e.map((x, k) => x + (b[i][k] - x) * u
 /**
  * Los gestos: cada uno arma su clip con las opciones del momento. Un clip es
  * {dur, pose | claves, manos, cara?, entra?, sale?, curva?, sostener?, mirar?, mirada?, resto?, retraso?, cuerpo?,
- *  golpes?, golpesCallado?, batuta?, vaiven?, osc?, salto?, acento?, relajada?, alSeguir?, poseApunta?, manoApunta?}:
+ *  golpes?, golpesCallado?, batuta?, vaiven?, osc?, salto?, acento?, relajada?, alSeguir?, poseApunta?, manoApunta?,
+ *  parpadeos?, deriva?, alSoltar?, cambiaMirada?}:
  * - `pose` (o `claves`: [[t, pose, curva?], …], que se encadenan) son las articulaciones que toma; las demás siguen con
  *   las otras capas. `curva` es cómo se llega a esa clave desde la anterior (a la primera, desde lo que hacía antes):
  *   'suave' (la de omisión), 'anticipa' (retrocede un poco y después va), 'golpe' (llega rápido), 'sosten' (llega
  *   despacio) o 'lineal'.
- * - `manos`: {I, D} con el nombre de una forma de MANOS (o [[t, forma], …] para cambiarla en el tiempo).
+ * - `manos`: {I, D} con el nombre de una forma de MANOS (o [[t, forma], …] para cambiarla en el tiempo; una forma puede
+ *   ser también los cinco números: `entreManos`, los dedos que llaman despacio).
  * - `cara`: {cejas, ceno, sonrisa, abrir, ojos, labios, cejasI, cejasD, entrecierra, guino, duchenne}: lo que hace
  *   la cara mientras dura (`labios` 1: la sonrisa cerrada; 0: con los dientes; `cejasI`/`cejasD`: cada ceja por su lado;
  *   `entrecierra` 0..1; `guino`: 'I' | 'D' | {lado, t}, un ojo se cierra 0.25 s (a los 0.35 s); `duchenne`: los ojos
- *   sonríen con la boca; por omisión, cuando sonríe con los dientes; `ancho`: lo ancho de la boca callado). Cada valor
+ *   sonríen con la boca; por omisión, cuando sonríe con los dientes; `ancho`: lo ancho de la boca callado; `cierra`:
+ *   los ojos que se cierran, 0..1: de sonrisa al celebrar, al apoyar la mano en el pecho). Cada valor
  *   puede ser una línea en el tiempo del clip, [[t, valor], …] (de una clave a la otra, suave).
  * - `curva`: la de la entrada de un gesto con `pose` (con `claves`, la de la primera).
  * - `entra` / `sale`: lo que tarda en tomar la pose y en soltarla (0.4 / 0.45 por omisión); `sostener`: se queda
@@ -361,7 +401,12 @@ const entre = (a, b, u) => a.map((e, i) => e.map((x, k) => x + (b[i][k] - x) * u
  *   punto, con un vistazo a la sala cada 3 s) o {objetivo: s, cada: [a, b], dura} (el punto `s` segundos y después la
  *   sala, con otro vistazo cada a–b s) o 'recorre' (salta entre puntos de la obra, asiente a la mitad y a los 2.2 s
  *   vuelve a la sala, en ciclo); por omisión, {objetivo: 0.8}. `resto`: mirando a la sala, la cara se queda hasta esos
- *   radianes hacia el punto. `salto`: un saltito (celebrar).
+ *   radianes hacia el punto. `salto`: un saltito (true, o {t, dur, alto}: cuándo despega, lo que dura en el aire y lo
+ *   que sube; celebrar). `parpadeos`: [t, …] los parpadeos del gesto (la espera de la pregunta, el primer asentimiento).
+ * - `deriva`: {amp, cada: [a, b]}: aunque no hable, la mirada recorre la sala (invitar, sostenido: cada a–b s, de un lado
+ *   al otro). `cambiaMirada`: con cada `seguir`, la mirada cambia de lado de la sala (contar).
+ * - `alSoltar`: (o) → un clip corto que hace al soltarlo con detenerGesto() (con el mismo nombre: el «¡ya está!» de
+ *   pensar, la inspiración de escuchar antes de volver a hablar).
  * - Sostenido: `acento` {cada: [a, b], golpes: [{t, art, eje, amp, ida, vuelta}], manos: {I, D: [[t, forma], …]}} lo
  *   que hace cada a–b s para seguir vivo (y con `acentuar()`); `relajada`: la pose a la que afloja a los 6–7 s (si no
  *   la trae, los brazos que no apuntan bajan un poco). `alSeguir`: los golpes del mismo gesto que sigue (enumerar: el
@@ -369,7 +414,8 @@ const entre = (a, b, u) => a.map((e, i) => e.map((x, k) => x + (b[i][k] - x) * u
  * - `poseApunta` / `manoApunta`: el brazo y la mano con los que apunta (si cambian en las claves): con ellos se calcula
  *   el hombro que deja la recta a la punta del índice en el punto; las claves (o la pose) que llevan ese ángulo vuelven a
  *   apuntar en cada cuadro.
- * `o.lado` elige el brazo cuando el gesto es de uno solo; `o.punto` es hacia dónde (señalar, presentar, indicar, mirar la
+ * `o.lado` elige el brazo cuando el gesto es de uno solo; `o.reducido`, si es con movimiento reducido (celebrar no se agacha
+ * ni salta); `o.saliendo` (despedirse), se superpone a la salida, que pone el «gracias»; `o.punto` es hacia dónde (señalar, presentar, indicar, mirar la
  * maqueta) y `o.hasta`, otro punto (presentar barre de uno al otro: `o.apuntaHasta`); `o.abajo` / `o.arriba` (0..1), cuánto
  * más abajo o más arriba que el hombro está el punto; `o.n`, cuántos dedos (contar, enumerar); `o.variante`, cuál de sus
  * variantes (VARIANTES); `o.plano`, lo que se ve de él; `o.azar`, el azar del animador; `o.dato` (mostrar_panel):
@@ -401,12 +447,44 @@ export const GESTOS = {
       cara: { cejas: [[0, 0.5], [llega, 0.8], [llega + 0.8, 0.5]], abrir: [[llega - 0.1, 0], [llega + 0.05, 0.35], [llega + 0.3, 0.12], [llega + 0.5, 0]],
         sonrisa: 1, duchenne: true } };
   },
-  despedirse: (o) => ({ ...GESTOS.saludar({ ...o, dur: o.dur || 1.5 }) }),
-  invitar: (o) => ({ dur: o.dur || 3.0, sostener: o.sostener === true,
-    pose: { ...dos([-0.4, 0, 0.82], [-0.55, 1.45, 0], [-0.2, 0, 0]), cabeza: [-0.05, 0, 0.06], pecho: [-0.04, 0, 0] },
-    manos: { I: 'abierta', D: 'abierta' }, cara: { cejas: 0.85, abrir: 0.12 },
-    // sostenido: los dedos «llaman» (se cierran un poco y se abren, dos veces)
-    acento: { cada: [4, 6], manos: { I: LLAMAR, D: LLAMAR } } }),
+  // gracias y hasta pronto: la mano sube enseguida al costado de la cabeza (sin el amague del saludo) y va y viene dos
+  // veces mientras la cabeza asiente su «gracias»; la sonrisa con los ojos. Corta: se superpone a la salida (la mano
+  // sigue saludando mientras él se agacha detrás del subtítulo, con la cara a la sala hasta el final; `saliendo`: el
+  // «gracias» lo pone la salida)
+  despedirse: (o) => {
+    const l = o.lado || 'D', d = o.dur || 1.5, s = l === 'D' ? 1 : -1;
+    const arriba = brazo(l, ...(o.plano === 'medio' ? POSE.saludoCara : POSE.saludoAlto));
+    const llega = Math.min(0.32, d * 0.25), fin = Math.max(llega + 0.35, d - 0.3);
+    // dos idas y vueltas (o las que entren, a no más de 2.6 por segundo)
+    const frec = lim(2 / (fin - llega), 2.2, 2.6);
+    const dedos = [[0, 'relajada'], [llega - 0.12, 'abierta']];
+    for (let k = llega + 0.08; k < fin - 0.1; k += 1 / frec) dedos.push([k, 'explica'], [k + 0.18, 'abierta']);
+    return { dur: d, entra: Math.min(0.3, llega), sale: 0.3, curva: 'sosten',
+      claves: [[llega, { ...arriba, cabeza: [0.02, 0, 0.08 * s] }, 'sosten']],
+      manos: { [l]: dedos },
+      cuerpo: { pecho: [0, -0.06 * s, 0], peso: -0.5 * s },
+      vaiven: [{ art: `codo${l}`, eje: 0, amp: 0.3, frec, desde: llega, hasta: fin, decae: 0.8, azar: 0.05,
+        cadena: { art: `muneca${l}`, amp: 0.22, retraso: 0.1 } }],
+      golpes: o.saliendo ? [] : [{ t: 0.08, art: 'cabeza', eje: 0, amp: 0.07, ida: 0.15, vuelta: 0.35 }, { t: 0.08, art: 'cuello', eje: 0, amp: 0.03, ida: 0.15, vuelta: 0.35 }],
+      cara: { cejas: [[0, 0.4], [llega, 0.7], [d - 0.3, 0.5]], sonrisa: 1, labios: 0, duchenne: true } };
+  },
+  // bienvenida o «¿preguntas?»: los brazos bajos y adelante, las palmas arriba hacia la sala (las manos a la altura de la
+  // cintura y delante, nunca en T), el pecho abierto y el peso adelante, la cabeza ladeada y un asentimiento. Sostenido:
+  // los dedos «llaman» despacio (cada 1.6 s), respira y la mirada recorre la sala
+  invitar: (o) => {
+    const d = o.dur || 3.0, sost = o.sostener === true;
+    // (los dedos que llaman: de abiertos a un poco cerrados y de vuelta, despacio, mientras dure)
+    const llamar = [[0, 'explica'], [0.4, 'abierta']];
+    if (sost) for (let t = 1.6; t < 40; t += 1.6) for (let k = 1; k <= 4; k++) llamar.push([t + k * 0.2, entreManos('abierta', 'llama', k / 4)], [t + 0.8 + k * 0.2, entreManos('llama', 'abierta', k / 4)]);
+    return { dur: d, sostener: sost, entra: 0.55, curva: 'sosten', sale: 0.5,
+      claves: [[0.55, { ...dos(...POSE.invita), cabeza: [-0.02, 0, 0.08] }, 'sosten']],
+      manos: { I: llamar, D: llamar },
+      cuerpo: { columna: [0.04, 0, 0], pecho: [-0.05, 0, 0] },
+      golpes: [{ t: 0.6, art: 'cabeza', eje: 0, amp: 0.06, ida: 0.15, vuelta: 0.35 }, { t: 0.6, art: 'cuello', eje: 0, amp: 0.025, ida: 0.15, vuelta: 0.35 }],
+      deriva: sost ? { amp: 0.15, cada: [1.8, 2.4] } : null,
+      cara: { cejas: [[0.2, 0.85], [1.4, 0.6]], abrir: [[0.3, 0], [0.5, 0.12], [0.9, 0]], sonrisa: 1, duchenne: true },
+      relajada: dos(...alzar(POSE.invita, 0.1, -0.08)) };
+  },
   // ── Mostrar ──
   // «esta es…»: mira lo resaltado y prepara (la mano frente al pecho), y en el golpe estira el brazo (nunca del todo)
   // hasta que la recta del hombro a la punta del índice cae en lo que señala; pasa un poco y asienta. A los 0.8 s la
@@ -549,12 +627,22 @@ export const GESTOS = {
       cuerpo: { pecho: [0.02, 0.04, 0] }, cara: { cejas: [[0.3, 0.5], [1, 0.3]] },
       relajada: { ...brazo('I', ...alzar(POSE.cuentaI, 0.1, 0.06)), ...brazo('D', ...alzar(POSE.cuentaToque, 0.1, 0.1)) } };
   },
+  // el resumen del cierre, un dedo al empezar cada punto (`seguir`): como enumerar (la izquierda frente al pecho y arriba,
+  // la palma a la sala, el índice derecho que la toca), y entre punto y punto un cabeceo y la mirada que cambia de lado
+  // de la sala. Sin `seguir` cuenta solo hasta `n` (el taller, las pruebas)
   contar: (o) => {
     const n = Math.max(1, Math.min(3, o.n || 3));
-    const paso = 0.85, d = 0.6 + n * paso + 0.6;
-    const formas = FORMAS_CONTAR.slice(0, n).map((f, i) => [0.45 + i * paso, f]);
-    return { dur: d, pose: { ...brazo('I', [-0.2, 0, 0.42], [-2.45, -1.5, 0], [0, 0, 0.1]), cabeza: [0.02, 0.06, 0.04] },
-      manos: { I: [[0, 'puno'], ...formas] }, osc: [['codoI', 0, 0.07, 1 / paso, 0.45, d - 0.5]], cara: { cejas: 0.5 } };
+    const c = GESTOS.enumerar({ ...o, n: o.sostener || o.seguir ? n : 1 });
+    if (!o.sostener && !o.seguir && n > 1) {
+      // (solo: los números siguientes, cada 0.85 s, con su golpe)
+      const paso = 0.85;
+      c.dur = o.dur || 0.6 + n * paso + 0.6;
+      c.manos = { ...c.manos, I: [[0, 'puno'], ...FORMAS_CONTAR.slice(0, n).map((f, i) => [0.3 + i * paso, f])] };
+      for (let i = 1; i < n; i++) c.golpes.push(...c.alSeguir.map((g) => ({ ...g, t: 0.3 + i * paso + (g.t || 0) })));
+    }
+    c.alSeguir = [...c.alSeguir, { art: 'cuello', eje: 0, amp: 0.03, ida: 0.12, vuelta: 0.3 }];
+    c.cambiaMirada = true;
+    return c;
   },
   // crece, aumenta, mejora: las dos manos planas, la palma abajo, marcan el nivel de hoy a la cintura; una sube hacia
   // arriba y afuera, acelerando (o en tres escalones, con un golpecito en cada uno), y la otra se queda en el nivel de
@@ -625,60 +713,178 @@ export const GESTOS = {
       cara: { cejas: 0.2, ceno: 0.2, sonrisa: 0.8, labios: 1 } };
   },
   // ── Preguntar y responder ──
-  pensar: (o) => ({ dur: o.dur || 3.2, sostener: o.sostener === true,
-    pose: { ...brazo('D', [-0.78, 0, -0.42], [-2.3, -1.3, 0], [0.3, 0, 0.3]),
-      ...brazo('I', [-0.3, -0.7, -0.05], [-1.55, 0.3, 0], [0, 0, 0]), cabeza: [-0.1, 0.12, 0.12], cuello: [-0.03, 0.05, 0] },
-    manos: { D: 'barbilla', I: 'relajada' }, cara: { cejasI: 0.6, cejasD: 0.2, sonrisa: 0.75, ojos: [0.5, 0.7], labios: 1 },
-    // sostenido: el índice da dos toques en la mejilla
-    acento: { cada: [4, 6], golpes: [{ t: 0, art: 'munecaD', eje: 0, amp: -0.1, ida: 0.08, vuelta: 0.16 },
-      { t: 0.28, art: 'munecaD', eje: 0, amp: -0.08, ida: 0.08, vuelta: 0.18 }] } }),
-  preguntar: (o) => ({ dur: o.dur || 2.6, pose: { ...dos([-0.15, 0, 0.42], [-1.35, 1.55, 0], [-0.2, 0, 0]), cabeza: [-0.04, 0, 0.16],
-    cuello: [-0.05, 0, 0] }, manos: { I: 'abierta', D: 'abierta' }, cara: { cejasI: 1, cejasD: 0.6, sonrisa: 0.7, abrir: 0.1 } }),
-  // (variantes: tres veces o dos, un poco más hondas)
+  // «¿por qué?» y «estoy preparando»: la mano a la barbilla (la palma hacia la cara, el pulgar bajo el mentón y el índice
+  // a medio estirar sobre la mejilla) y el otro brazo cruzado que sostiene el codo; la cabeza ladeada y un poco atrás, el
+  // peso atrás, los ojos arriba y a un lado (saltan de un punto a otro), las cejas desparejas y la boca de lado, cerrada.
+  // Sostenido: el índice da un toque en la mejilla cada 1.2–2 s y la cabeza se mece despacio. Al soltarlo, «¡ya está!»:
+  // las cejas arriba y la mano que se abre hacia la sala
+  pensar: (o) => {
+    const d = o.dur || 3.2, sost = o.sostener === true, hasta = sost ? 40 : d;
+    const puntos = [[0.5, 0.6], [0.3, 0.7], [0.6, 0.5]];
+    const ojos = [[0.2, [0.2, 0.3]], [0.4, puntos[0]]];
+    for (let t = 1.5, k = 1; t < hasta; t += 1.1 + 0.25 * (k % 3), k++) ojos.push([t - 0.04, puntos[(k - 1) % 3]], [t, puntos[k % 3]]);
+    return { dur: d, sostener: sost, entra: 0.55, curva: 'sosten', sale: 0.45,
+      pose: { ...brazo('D', ...POSE.pensarD), ...brazo('I', ...POSE.pensarI), cabeza: [-0.1, 0.12, 0.12], cuello: [-0.03, 0.05, 0] },
+      manos: { D: [[0, 'relajada'], [0.3, 'ele']], I: 'relajada' },
+      cuerpo: { columna: [-0.03, 0, 0], peso: 0.6 },
+      vaiven: [{ art: 'cabeza', eje: 2, amp: 0.035, frec: 0.25, desde: 0.6, hasta, decae: 1, azar: 0.15 }],
+      cara: { cejasI: 0.6, cejasD: 0.2, sonrisa: 0.5, ancho: 0.85, labios: 1, ojos },
+      acento: { cada: [1.2, 2], golpes: [{ t: 0, art: 'munecaD', eje: 0, amp: -0.12, ida: 0.08, vuelta: 0.16 }] },
+      relajada: { ...brazo('I', ...alzar(POSE.pensarI, 0.08, 0.12)), cabeza: [-0.07, 0.1, 0.16] },
+      alSoltar: () => ({ dur: 0.75, entra: 0.25, sale: 0.4, pose: brazo('D', ...P.palmasArriba), manos: { D: 'abierta' },
+        cara: { cejas: 0.9, sonrisa: 1, labios: 0, abrir: [[0.1, 0], [0.25, 0.15], [0.5, 0]] } }) };
+  },
+  // una pregunta a la sala: una mano abierta adelante, hacia la cámara, la palma arriba (la otra queda en la casa), el
+  // torso adelante, la cabeza ladeada, las cejas desparejas y la sonrisa cerrada; espera quieto un segundo (con un
+  // parpadeo) y asiente apenas
+  preguntar: (o) => {
+    const l = o.lado || 'D', d = o.dur || 2.6, s = l === 'D' ? 1 : -1;
+    return { dur: d, entra: 0.45, curva: 'sosten', sale: 0.45,
+      claves: [[0.45, { ...brazo(l, ...POSE.pregunta), cabeza: [-0.02, 0, 0.12 * s] }, 'sosten']],
+      manos: { [l]: [[0, 'explica'], [0.3, 'abierta']] },
+      cuerpo: { columna: [0.05, 0, 0], pecho: [0, -0.04 * s, 0], peso: 0.4 * s },
+      golpes: [{ t: 1.6, art: 'cabeza', eje: 0, amp: 0.05, ida: 0.15, vuelta: 0.35 }, { t: 1.6, art: 'cuello', eje: 0, amp: 0.02, ida: 0.15, vuelta: 0.35 }],
+      parpadeos: [1.1],
+      cara: { cejasI: 1, cejasD: 0.6, sonrisa: 0.9, labios: 1 } };
+  },
+  // «sí, así es»: dos o tres asentimientos que decrecen (bajan rápido y suben más despacio; 40 % el cuello y 60 % la
+  // cabeza, el torso apenas), los ojos que sonríen con un parpadeo en el primero y la sonrisa que crece. (variantes:
+  // tres; dos, más hondos)
   asentir: (o) => {
+    const amps = o.variante === 1 ? [0.18, 0.1] : [0.16, 0.1, 0.05];
     const d = o.dur || (o.variante === 1 ? 1.05 : 1.3);
-    return { dur: d, pose: {}, osc: [['cabeza', 0, o.variante === 1 ? 0.15 : 0.13, o.variante === 1 ? 2.1 : 2.3, 0.1, d - 0.15]], entra: 0.1, sale: 0.15,
-      cara: { cejas: 0.3 } };
+    const golpes = amps.flatMap((a, k) => {
+      const t = 0.1 + k * 0.36;
+      return [{ t, art: 'cabeza', eje: 0, amp: 0.6 * a, ida: 0.12, vuelta: 0.2 }, { t, art: 'cuello', eje: 0, amp: 0.4 * a, ida: 0.12, vuelta: 0.2 },
+        { t, art: 'columna', eje: 0, amp: 0.02 * (a / 0.16), ida: 0.12, vuelta: 0.2 }];
+    });
+    return { dur: d, pose: {}, entra: 0.1, sale: 0.15, golpes, parpadeos: [0.16],
+      cara: { cejas: 0.3, sonrisa: [[0, 0.85], [d - 0.3, 1]], entrecierra: [[0, 0], [0.25, 0.25], [d - 0.2, 0.1]], duchenne: true, labios: 1 } };
   },
+  // «eso no», sin agresividad: el índice arriba frente al pecho que se agita desde la muñeca (tres veces, cada vez menos)
+  // y la cabeza que niega a la mitad de esa frecuencia; la boca cerrada con una sonrisa leve que crece al final (nunca el
+  // ceño con los dientes) y las cejas un poco juntas. (variantes: el índice; la mano plana, la palma abajo, que corta de
+  // adentro hacia afuera)
   negar: (o) => {
-    const d = o.dur || 2.2;
-    return { dur: d, pose: { ...brazo('D', ...P.dedoArriba) }, manos: { D: 'uno' },
-      osc: [['cabeza', 1, 0.24, 2.2, 0.3, d - 0.4], ['codoD', 1, 0.4, 2.2, 0.4, d - 0.4]], cara: { ceno: 0.7, sonrisa: 0.55 } };
+    const l = o.lado || 'D', d = o.dur || 2.4, corta = o.variante === 1;
+    const cabeza = { art: 'cuello', eje: 1, amp: 0.08, frec: 1.5, desde: 0.35, hasta: 0.35 + 3 / 1.5, decae: 0.6, azar: 0.05,
+      cadena: { art: 'cabeza', amp: 0.12, retraso: 0.06 } };
+    const cara = { ceno: 0.4, cejas: 0.1, sonrisa: [[0, 0.4], [d - 0.7, 0.4], [d - 0.3, 0.75]], labios: 1 };
+    if (corta) {
+      return { dur: d, entra: 0.3, sale: 0.4,
+        claves: [[0.3, brazo(l, ...POSE.cortaAdentro)], [0.55, brazo(l, ...POSE.cortaAfuera), 'golpe'], [d - 0.5, brazo(l, ...POSE.cortaAfuera)]],
+        manos: { [l]: [[0, 'relajada'], [0.15, 'plana']] }, vaiven: [cabeza], cara };
+    }
+    return { dur: d, entra: 0.35, sale: 0.4, claves: [[0.35, brazo(l, ...POSE.niegaIndice), 'sosten']],
+      manos: { [l]: [[0, 'relajada'], [0.2, 'uno']] },
+      // (la muñeca en x: con el índice arriba y la palma a la sala, la punta va de un lado al otro)
+      vaiven: [{ art: `muneca${l}`, eje: 0, amp: 0.3, frec: 3, desde: 0.45, hasta: 0.45 + 3 / 3, decae: 0.7, azar: 0.05 }, cabeza],
+      cara };
   },
+  // «tranquilos, está previsto»: las dos manos delante del vientre, al ancho de los hombros, las palmas abajo y un poco
+  // hacia la sala; dos presiones hacia abajo (la segunda más chica), el pecho que exhala, un asentimiento lento, los ojos
+  // suaves y la boca cerrada sonriendo
   calmar: (o) => {
-    const d = o.dur || 2.8;
-    return { dur: d, pose: dos([-0.42, 0, 0.32], [-1.15, -1.45, 0], [-0.25, 0, 0]), manos: { I: 'plana', D: 'plana' },
-      osc: [['hombroI', 0, 0.07, 1.1, 0.45, d - 0.4], ['hombroD', 0, 0.07, 1.1, 0.45, d - 0.4], ['cabeza', 0, 0.04, 1.1, 0.45, d - 0.4]],
-      cara: { cejas: 0.2, sonrisa: 0.9 } };
+    const d = o.dur || 2.6;
+    const presion = (t, a) => LADOS.flatMap((x) => [{ t, art: `codo${x}`, eje: 0, amp: 0.16 * a, ida: 0.35, vuelta: 0.3 },
+      { t, art: `muneca${x}`, eje: 0, amp: -0.1 * a, ida: 0.35, vuelta: 0.3 }]);
+    return { dur: d, entra: 0.45, curva: 'sosten', sale: 0.45, pose: dos(...POSE.calma),
+      manos: { I: 'plana', D: 'plana' },
+      golpes: [...presion(0.55, 1), ...presion(1.3, 0.6), { t: 0.6, art: 'cabeza', eje: 0, amp: 0.05, ida: 0.35, vuelta: 0.5 }],
+      cuerpo: { pecho: [[0.5, [0, 0, 0]], [0.9, [0.03, 0, 0]], [1.7, [0.01, 0, 0]]] },
+      cara: { cejas: 0.25, sonrisa: 0.9, labios: 1, entrecierra: 0.2 } };
   },
   // ── Emoción ──
+  // listo, de acuerdo: el pulgar arriba a la altura del pecho, hacia la sala, que llega de golpe (pasa un poco y rebota);
+  // la cabeza se ladea y asiente una vez, un guiño y la sonrisa más grande, con los dientes
   aprobar: (o) => {
-    const l = o.lado || 'D';
-    return { dur: o.dur || 2.0, pose: { ...brazo(l, [-0.38, 0, 0.24], [-1.4, 0, 0], [0, 0, 0]), cabeza: [0.03, 0, 0.06] },
-      manos: { [l]: 'pulgar' }, cara: { cejas: 0.5, abrir: 0.1 } };
+    const l = o.lado || 'D', d = o.dur || 2.0, s = l === 'D' ? 1 : -1;
+    return { dur: d, entra: 0.12, sale: 0.4,
+      claves: [[0.12, brazo(l, ...alzar(POSE.aprueba, 0.35, -0.25, -0.3))], [0.3, { ...brazo(l, ...POSE.aprueba), cabeza: [0.02, 0, 0.08 * s] }, 'golpe']],
+      manos: { [l]: [[0, 'relajada'], [0.1, 'pulgar']] },
+      golpes: [{ t: 0.3, art: `muneca${l}`, eje: 0, amp: -0.15, ida: 0.06, vuelta: 0.2 }, { t: 0.45, art: 'cabeza', eje: 0, amp: 0.07, ida: 0.14, vuelta: 0.3 },
+        { t: 0.45, art: 'cuello', eje: 0, amp: 0.03, ida: 0.14, vuelta: 0.3 }],
+      cuerpo: { pecho: [0, -0.05 * s, 0], peso: 0.4 * s },
+      cara: { cejas: [[0.2, 0.5], [0.4, 0.7], [1.2, 0.4]], sonrisa: 1, labios: 0, duchenne: true, guino: { lado: l, t: 0.4 } } };
   },
-  celebrar: (o) => ({ dur: o.dur || 2.0, pose: { ...dos([-0.15, 0, 2.55], [-0.4, 0, 0]), cabeza: [-0.12, 0, 0] },
-    manos: { I: 'puno', D: 'puno' }, salto: true, cara: { cejas: 0.9, abrir: 0.55 },
-    osc: [['hombroI', 2, 0.12, 2.4, 0.4, 1.6], ['hombroD', 2, 0.12, 2.4, 0.4, 1.6]] }),
+  // ¡un logro!: se agacha un poco con los puños al pecho, los puños suben por delante y salta (con el americano se ve
+  // como un rebote del torso), aterriza con un rebote y bombea los puños dos veces; «¡sí!» con la boca y los ojos que se
+  // cierran de sonrisa; baja los brazos por delante. Con movimiento reducido, sin agacharse ni saltar
+  celebrar: (o) => {
+    const d = o.dur || 2.2, r = o.reducido ? 0 : 1;
+    const arriba = { ...dos(...POSE.punosArriba), cabeza: [-0.1, 0, 0] };
+    const bombeo = (t) => LADOS.map((x) => ({ t, art: `codo${x}`, eje: 0, amp: -0.5, ida: 0.12, vuelta: 0.25 }));
+    return { dur: d, entra: 0.2, sale: 0.5,
+      claves: [[0.2, { ...dos(...POSE.punosPecho), cabeza: [0.05, 0, 0] }], [0.45, arriba, 'golpe'], [d - 0.6, arriba],
+        [d - 0.25, dos(...POSE.punosPecho)]],
+      manos: { I: 'puno', D: 'puno' },
+      salto: r ? { t: 0.38, dur: 0.3, alto: 0.1 } : null,
+      golpes: [...bombeo(1.0), ...bombeo(1.5)],
+      cuerpo: { alto: [[0, 0], [0.2, -0.045 * r], [0.38, 0], [0.62, 0], [0.74, -0.025 * r], [0.9, 0]], pecho: [[0.2, [0.04, 0, 0]], [0.45, [-0.05, 0, 0]]],
+        columna: [[0.2, [0.06 * r, 0, 0]], [0.45, [-0.03, 0, 0]]] },
+      cara: { cejas: [[0.2, 0.6], [0.45, 1], [1.6, 0.8]], abrir: [[0.35, 0], [0.5, 0.6], [0.8, 0.3], [1.1, 0.4], [1.6, 0.1]], sonrisa: 1, labios: 0, duchenne: true,
+        cierra: [[0.45, 0], [0.55, 0.85], [0.75, 0.85], [0.9, 0]] } };
+  },
+  // reconocimiento: las palmas enfrentadas frente al pecho (la izquierda un poco más alta y girada) que se juntan y se
+  // separan, 3.5 por segundo, cinco o seis veces (se cierran rápido y se abren más despacio: se tocan de verdad), los
+  // dedos que se abren un poco en cada choque, la cabeza que rebota apenas, la sonrisa con los dientes
   aplaudir: (o) => {
     const d = o.dur || 2.2;
-    return { dur: d, pose: dos([-0.55, 0, 0.12], [-1.25, 0.2, 0], [0, 0, 0]), manos: { I: 'plana', D: 'plana' },
-      osc: [['hombroI', 2, 0.13, 3.2, 0.4, d - 0.35], ['hombroD', 2, 0.13, 3.2, 0.4, d - 0.35]], cara: { cejas: 0.7, abrir: 0.35 } };
+    const golpes = [], dedos = [[0, 'plana']];
+    for (let k = 0, t = 0.45; k < 6 && t < d - 0.5; k++, t += 1 / 3.5) {
+      golpes.push({ t, art: 'hombroD', eje: 2, amp: -0.22, ida: 0.07, vuelta: 0.15 }, { t, art: 'hombroI', eje: 2, amp: -0.18, ida: 0.07, vuelta: 0.15 },
+        { t: t + 0.06, art: 'cabeza', eje: 0, amp: 0.02, ida: 0.05, vuelta: 0.12 });
+      dedos.push([t + 0.05, 'abierta'], [t + 0.15, 'plana']);
+    }
+    return { dur: d, entra: 0.4, curva: 'sosten', sale: 0.4, pose: { ...brazo('D', ...POSE.aplaudeD), ...brazo('I', ...POSE.aplaudeI) },
+      manos: { I: dedos, D: dedos }, golpes,
+      cara: { cejas: 0.7, sonrisa: 1, labios: 0, duchenne: true } };
   },
+  // «trabajemos juntos», el lema: abre las dos manos hacia la sala con las palmas arriba (inclusivo, el torso adelante),
+  // las trae y entrelaza los dedos frente al pecho, un palmo adelante; un apretón con dos sacudidas, asiente, la sonrisa
+  // amplia con los dientes y los ojos que sonríen, mirando a la sala; lo sostiene un momento
   juntos: (o) => {
     const d = o.dur || 2.8;
-    return { dur: d, claves: [[0.45, dos([-0.5, -0.3, 0.45], [-1.5, 0.1, 0], [0, 0, 0])], [1.1, { ...dos([-0.55, -0.8, -0.05], [-1.6, 0.1, 0], [0, 0, 0]),
-      cabeza: [0.04, 0, 0] }]], manos: { I: [[0, 'abierta'], [1.0, 'junta']], D: [[0, 'abierta'], [1.0, 'junta']] },
-    osc: [['pecho', 0, 0.03, 2, 1.2, d - 0.4]], cara: { cejas: 0.6, abrir: 0.1 } };
+    const juntas = { ...brazo('D', ...POSE.juntasD), ...brazo('I', ...POSE.juntasI) };
+    // (las trae rápido y las junta despacio: si no, el muelle las pasa y una mano entra en la otra)
+    const cerca = { ...brazo('D', ...entre(POSE.juntosAbre, POSE.juntasD, 0.75)), ...brazo('I', ...entre(POSE.juntosAbre, POSE.juntasI, 0.75)) };
+    // (el apretón: los codos se doblan un poco y vuelven, las dos manos juntas)
+    const sacude = (t) => LADOS.map((x) => ({ t, art: `codo${x}`, eje: 0, amp: -0.06, ida: 0.1, vuelta: 0.18 }));
+    return { dur: d, entra: 0.45, curva: 'sosten', sale: 0.45,
+      claves: [[0.45, { ...dos(...POSE.juntosAbre), cabeza: [-0.03, 0, 0] }, 'sosten'], [0.6, dos(...POSE.juntosAbre)], [0.78, cerca],
+        [1.12, { ...juntas, cabeza: [0.03, 0, 0] }, 'sosten']],
+      manos: { I: [[0, 'explica'], [0.25, 'abierta'], [0.72, 'entrelazada']], D: [[0, 'explica'], [0.25, 'abierta'], [0.72, 'entrelazada']] },
+      golpes: [...sacude(1.3), ...sacude(1.7), { t: 1.3, art: 'cabeza', eje: 0, amp: 0.07, ida: 0.15, vuelta: 0.3 }, { t: 1.3, art: 'cuello', eje: 0, amp: 0.03, ida: 0.15, vuelta: 0.3 }],
+      cuerpo: { columna: [[0, [0, 0, 0]], [0.45, [0.04, 0, 0]], [1.0, [0.02, 0, 0]]], pecho: [[0.3, [0, 0, 0]], [0.5, [-0.03, 0, 0]], [1.0, [0, 0, 0]]] },
+      cara: { cejas: [[0.3, 0.6], [1.2, 0.5]], abrir: [[0.3, 0], [0.5, 0.15], [0.8, 0]], sonrisa: 1, labios: 0, duchenne: true } };
   },
-  corazon: (o) => ({ dur: o.dur || 2.8, pose: { ...brazo('D', [-0.5, -0.85, -0.38], [-1.75, 0.1, 0], [0, 0, 0.2]), cabeza: [0.05, 0, -0.1] },
-    manos: { D: 'plana' }, cara: { cejas: 0.4, ojos: [0, -0.3], labios: 1 } }),
+  // un compromiso sincero: la mano derecha plana sobre el pectoral izquierdo (los dedos hacia el hombro), llega en medio
+  // segundo y se apoya con una presión pequeña; la cabeza baja y se ladea, los ojos se cierran un momento y vuelven a la
+  // sala, la sonrisa cerrada, una respiración marcada y el peso un poco adelante. Quieto
+  corazon: (o) => {
+    const d = o.dur || 2.8;
+    return { dur: d, entra: 0.5, curva: 'sosten', sale: 0.5,
+      claves: [[0.5, { ...brazo('D', ...POSE.corazon), cabeza: [0.08, 0, -0.08] }, 'sosten']],
+      manos: { D: [[0, 'relajada'], [0.25, 'plana']] },
+      golpes: [{ t: 0.62, art: 'codoD', eje: 0, amp: -0.04, ida: 0.12, sosten: 0.3, vuelta: 0.4 }],
+      cuerpo: { columna: [0.05, 0, 0], pecho: [[0.6, [0, 0, 0]], [1.3, [-0.025, 0, 0]], [2.1, [0, 0, 0]]] },
+      cara: { cejas: 0.35, sonrisa: 0.9, labios: 1, cierra: [[0.55, 0], [0.75, 0.9], [1.1, 0.9], [1.35, 0]] },
+      relajada: { cabeza: [0.06, 0, -0.06] } };
+  },
   // ── En pausa ──
-  escuchar: (o) => ({ dur: o.dur || 3, sostener: o.sostener !== false,
-    pose: { ...dos([-0.22, 0, -0.06], [-1.35, 0.95, 0], [0.1, 0, 0]), cabeza: [0.04, 0, 0.09] }, manos: { I: 'junta', D: 'junta' },
-    cara: { cejas: 0.2, labios: 1 },
+  // escucha: las manos entrelazadas al frente, a la altura de la cintura (no los puños), el peso en una pierna, la
+  // cabeza ladeada hacia la sala y la sonrisa cerrada. Sostenido: asiente despacio cada tanto y ladea la cabeza. Al
+  // soltarlo (vuelve a hablar), inspira
+  escuchar: (o) => ({ dur: o.dur || 3, sostener: o.sostener !== false, entra: 0.55, curva: 'sosten',
+    pose: { ...brazo('D', ...POSE.escuchaD), ...brazo('I', ...POSE.escuchaI), cabeza: [0.03, 0, 0.1] },
+    manos: { I: 'entrelazada', D: 'entrelazada' },
+    cuerpo: { peso: 0.8 },
+    cara: { cejas: 0.2, sonrisa: 0.9, labios: 1 },
     // sostenido: ladea la cabeza hacia la sala, despacio
-    acento: { cada: [4, 6], golpes: [{ t: 0, art: 'cabeza', eje: 2, amp: 0.07, ida: 0.45, vuelta: 0.9 }, { t: 0, art: 'cuello', eje: 2, amp: 0.03, ida: 0.45, vuelta: 0.9 }] } }),
+    acento: { cada: [4, 6], golpes: [{ t: 0, art: 'cabeza', eje: 2, amp: 0.07, ida: 0.45, vuelta: 0.9 }, { t: 0, art: 'cuello', eje: 2, amp: 0.03, ida: 0.45, vuelta: 0.9 }] },
+    relajada: { ...brazo('D', ...alzar(POSE.escuchaD, 0.04, 0.02)), ...brazo('I', ...alzar(POSE.escuchaI, 0.04, 0.02)), cabeza: [0.04, 0, 0.13] },
+    alSoltar: () => ({ dur: 0.6, entra: 0.15, sale: 0.3, pose: {}, cuerpo: { pecho: [[0, [0, 0, 0]], [0.3, [-0.03, 0, 0]], [0.6, [0, 0, 0]]] },
+      cara: { cejas: 0.35 } }) }),
   // ── Lo hace solo el presentador ──
   // la mano abierta, baja, hacia lo que se explica (después del primer golpe de señalar o de presentar): el brazo
   // apunta al objetivo (`o.punto`) un poco más abajo, el codo a medio doblar y la palma hacia la sala. Se sostiene
@@ -696,7 +902,7 @@ export const GESTOS = {
 };
 // Cuántas variantes tiene cada gesto (la fábrica recibe `o.variante`, de 0 a n − 1): el animador elige una distinta de
 // las dos últimas de ese gesto (o de la última, si hay dos)
-export const VARIANTES = { explicar: 3, asentir: 2, presentar: 3, destacar: 2, mirar_maqueta: 2, crecer: 2, grande: 2 };
+export const VARIANTES = { explicar: 3, asentir: 2, presentar: 3, destacar: 2, mirar_maqueta: 2, crecer: 2, grande: 2, negar: 2 };
 // Con poco tamaño (la cabeza de menos de 70 px: el busto del celular) los dedos no se leen: contar y enumerar van con la
 // mano abierta en un lugar por número, a la altura del pecho (el 1 a la izquierda de la pantalla, con la derecha; el 2
 // al centro; el 3 a la derecha, con la izquierda) y un golpe al llegar; el detalle es un golpe de explicar con la mano
@@ -724,6 +930,54 @@ export const CHICOS = {
       manos: { [l]: 'pulgar' }, cara: { cejas: 0.6, abrir: 0.1, sonrisa: 1 },
       golpes: [{ t: 0.45, art: 'cabeza', eje: 0, amp: 0.09, ida: 0.14, vuelta: 0.3 }, { t: 0.45, art: 'cuello', eje: 0, amp: 0.04, ida: 0.14, vuelta: 0.3 }] };
   },
+};
+// En el rótulo (la cara en un círculo: el atlas a la vista, la ficha en el celular, el celular de lado) los brazos no se
+// ven: los gestos se hacen con la cara y la cabeza, y los brazos quedan en la casa, fuera del círculo
+// (`gesto(nombre, {soloCara: true})`; los que no están acá no hacen nada: señalar, presentar o mirar la maqueta son mirar
+// el modelo, y eso lo pide el presentador)
+const asiente = (amps, t0 = 0.1, cada = 0.36, lento = 1) => amps.flatMap((a, k) => {
+  const t = t0 + k * cada * lento;
+  return [{ t, art: 'cabeza', eje: 0, amp: 0.6 * a, ida: 0.12 * lento, vuelta: 0.2 * lento }, { t, art: 'cuello', eje: 0, amp: 0.4 * a, ida: 0.12 * lento, vuelta: 0.2 * lento }];
+});
+const niega = (desde, ciclos = 3) => ({ art: 'cuello', eje: 1, amp: 0.08, frec: 1.5, desde, hasta: desde + ciclos / 1.5, decae: 0.6, azar: 0.05,
+  cadena: { art: 'cabeza', amp: 0.12, retraso: 0.06 } });
+export const CARAS = {
+  // aprobar: asiente con la sonrisa y un guiño; celebrar: las cejas arriba y la sonrisa grande («¡sí!»)
+  aprobar: () => ({ dur: 1.5, pose: {}, entra: 0.1, sale: 0.3, golpes: asiente([0.14], 0.25), cara: { cejas: 0.5, sonrisa: 1, labios: 0, duchenne: true, guino: { lado: 'D', t: 0.3 } } }),
+  celebrar: () => ({ dur: 1.7, pose: { cabeza: [-0.08, 0, 0] }, entra: 0.2, sale: 0.4, golpes: asiente([0.06], 0.7),
+    cara: { cejas: 1, sonrisa: 1, labios: 0, duchenne: true, abrir: [[0.2, 0], [0.4, 0.45], [0.9, 0.1]], cierra: [[0.3, 0], [0.4, 0.8], [0.6, 0.8], [0.75, 0]] } }),
+  // pensar: la cabeza ladeada y los ojos arriba, a un lado
+  pensar: (o) => ({ dur: o.dur || 3.2, sostener: o.sostener === true, entra: 0.5, sale: 0.45, pose: { cabeza: [-0.1, 0.1, 0.14], cuello: [-0.03, 0.04, 0] },
+    cara: { cejasI: 0.6, cejasD: 0.2, sonrisa: 0.5, ancho: 0.85, labios: 1, ojos: [0.5, 0.65] }, relajada: { cabeza: [-0.07, 0.08, 0.17] } }),
+  // calmar: asiente despacio; negar: la cabeza niega cada vez menos (la boca cerrada, una sonrisa leve al final)
+  calmar: () => ({ dur: 2.2, pose: {}, golpes: asiente([0.1, 0.06], 0.25, 0.36, 2), cara: { cejas: 0.25, sonrisa: 0.9, labios: 1, entrecierra: 0.2 } }),
+  negar: () => ({ dur: 2.4, pose: {}, vaiven: [niega(0.25)], cara: { ceno: 0.35, cejas: 0.1, sonrisa: [[0, 0.4], [1.7, 0.4], [2.1, 0.75]], labios: 1 } }),
+  // saludar y despedirse: las cejas arriba, la sonrisa y un ladeo
+  saludar: (o) => ({ dur: o.dur || 1.6, pose: { cabeza: [0, 0, 0.1] }, entra: 0.25, golpes: asiente([0.07], 0.35),
+    cara: { cejas: [[0, 0.3], [0.3, 0.9], [1.2, 0.5]], sonrisa: 1, labios: 0, duchenne: true } }),
+  despedirse: (o) => ({ dur: o.dur || 1.3, pose: { cabeza: [0, 0, -0.1] }, entra: 0.2, golpes: asiente([0.1], 0.15),
+    cara: { cejas: [[0, 0.3], [0.25, 0.8], [1, 0.5]], sonrisa: 1, labios: 0, duchenne: true } }),
+  asentir: (o) => GESTOS.asentir(o),
+  // preguntar: la cabeza ladeada, las cejas desparejas, espera (un parpadeo) y asiente apenas
+  preguntar: () => ({ dur: 2.2, pose: { cabeza: [-0.02, 0, 0.12] }, entra: 0.35, parpadeos: [1.0], golpes: asiente([0.06], 1.4),
+    cara: { cejasI: 1, cejasD: 0.6, sonrisa: 0.9, labios: 1 } }),
+  // destacar: un cabeceo con las cejas al máximo; grande y crecer: las cejas arriba (y la boca redonda)
+  destacar: () => ({ dur: 1.6, pose: {}, golpes: [{ t: 0.4, art: 'cabeza', eje: 0, amp: 0.08, ida: 0.1, vuelta: 0.3 }, { t: 0.4, art: 'cuello', eje: 0, amp: 0.03, ida: 0.1, vuelta: 0.3 }],
+    cara: { cejas: [[0.2, 0.5], [0.4, 1], [1.1, 0.5]], entrecierra: [[0.4, 0], [0.5, 0.15], [1, 0]], sonrisa: 0.9 } }),
+  grande: () => ({ dur: 1.8, pose: { cabeza: [-0.06, 0, 0] }, cara: { cejas: [[0.2, 0.5], [0.5, 1], [1.3, 0.7]], abrir: [[0.3, 0], [0.5, 0.35], [1.1, 0.05]], ancho: 0.85, sonrisa: 1 } }),
+  crecer: () => ({ dur: 1.8, pose: { cabeza: [-0.05, 0, 0] }, cara: { cejas: [[0.2, 0.4], [0.9, 0.85]], abrir: [[0.8, 0], [1.0, 0.25], [1.4, 0.05]], sonrisa: 1 } }),
+  // juntos y aplaudir: asiente con la sonrisa amplia; corazón: la cabeza baja y los ojos se cierran un momento
+  juntos: () => ({ dur: 1.8, pose: {}, golpes: asiente([0.12, 0.07], 0.3), cara: { cejas: 0.6, sonrisa: 1, labios: 0, duchenne: true } }),
+  aplaudir: () => ({ dur: 1.7, pose: {}, golpes: asiente([0.06, 0.05, 0.04], 0.3, 0.28), cara: { cejas: 0.7, sonrisa: 1, labios: 0, duchenne: true } }),
+  corazon: () => ({ dur: 2.2, pose: { cabeza: [0.08, 0, -0.08] }, entra: 0.5, sale: 0.5, cara: { cejas: 0.35, sonrisa: 0.9, labios: 1, cierra: [[0.4, 0], [0.6, 0.9], [1.0, 0.9], [1.25, 0]] } }),
+  // invitar: las cejas, la sonrisa y un ladeo (sostenido, la mirada recorre la sala); escuchar: ladeada, sonrisa cerrada
+  invitar: (o) => ({ dur: o.dur || 2.4, sostener: o.sostener === true, entra: 0.4, pose: { cabeza: [-0.02, 0, 0.08] }, golpes: asiente([0.08], 0.5),
+    deriva: o.sostener === true ? { amp: 0.15, cada: [1.8, 2.4] } : null, cara: { cejas: [[0.2, 0.85], [1.4, 0.6]], sonrisa: 1, duchenne: true } }),
+  escuchar: (o) => ({ dur: o.dur || 3, sostener: o.sostener !== false, entra: 0.5, pose: { cabeza: [0.03, 0, 0.1] }, cara: { cejas: 0.2, sonrisa: 0.9, labios: 1 },
+    acento: { cada: [4, 6], golpes: [{ t: 0, art: 'cabeza', eje: 2, amp: 0.07, ida: 0.45, vuelta: 0.9 }] } }),
+  // el resumen del cierre: un cabeceo por punto y la mirada que cambia de lado
+  contar: (o) => ({ dur: o.dur || 2.4, sostener: o.sostener === true, pose: {}, golpes: asiente([0.06], 0.15), alSeguir: asiente([0.06], 0),
+    cambiaMirada: true, cara: { cejas: 0.4 } }),
 };
 // Para el asistente: los gestos que puede pedir en cada paso del plan (`gesto`: app/recorrido.py y el puente tienen la
 // misma lista; una prueba las compara). Los demás los hace el presentador solo: contar el resumen y escuchar en pausa.
@@ -813,7 +1067,10 @@ function crearRuido(azar) {
  * hablar(seg|true, {texto, claves}), callar({dicha}), mirarA(punto|null), mirarSala(seg), caminarA(x, {velocidad, rumbo,
  * zancada}), reubicar(x), entrar(al, {hondo, instante, casi}), salir(al, {hondo, gracias}), agacharse(al, {hondo}),
  * asomarse(al, {hondo, desde}), estado(), girar(rumbo, {ya}), casa(nombre), tamano(pxAlto, {celular}), acentuar(),
- * alzarCejas(v), camara, apertura, plano, chica}.
+ * alzarCejas(v), reaccionar(v), camara, apertura, plano, chica}.
+ * `gesto(nombre, {soloCara: true})`: el gesto con la cara y la cabeza (CARAS: el rótulo); si no tiene, nada.
+ * `detenerGesto()`: lo suelta hacia la casa (si tiene su manera de terminar, `alSoltar`, la hace); un sostenido sale suave
+ * desde ese momento. `reaccionar(v)`: las cejas arriba y un asentimiento, sin dejar el gesto (la simulación terminó).
  * `gesto(nombre, {sostener: true})` sostiene cualquier gesto hasta otro o hasta detenerGesto(); `{mirada}` cambia cómo
  * mira su punto (el formato de los clips); `{entra}`, lo que tarda en entrar; `{variante}`, cuál (si no, una distinta de
  * las dos últimas). Un gesto nuevo entra desde lo que pedía el anterior (si el mismo brazo cambia de lado, por delante del
@@ -880,7 +1137,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   // la mirada que deriva por la sala mientras habla (se queda en una «persona» 2–4 s) y el ladeo de las preguntas
   let deriva = 0, derivaP = 0, proxDeriva = 0, ladeo = 0;
   let parpado = 1, proxParpadeo = 2 + azar() * 3, enParpadeo = -1, doble = false, ultimoParpadeo = -9;
-  let cejasPico = 0, sonrisa = 1, ceno = 0, entrecierra = 0, entrePulso = 0, duchenne = 0;
+  let cejasPico = 0, sonrisa = 1, ceno = 0, entrecierra = 0, entrePulso = 0, duchenne = 0, cierra = 0;
   const cejasL = [0, 0];      // cada ceja (la I y la D: cara.cejas[0] y [1])
   // los impulsos sueltos (los golpes del habla, el asentimiento al terminar una frase, los acentos): {t0, art, eje, amp,
   // ida, vuelta}
@@ -953,10 +1210,12 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     // (mostrar_panel: señalar el dato del panel, con las cejas y la boca de «fíjense»; sin un punto, presentar)
     if (!GESTOS[nombre] && ALIAS[nombre]) { const [g, extra] = ALIAS[nombre](o); return gesto(g, { ...o, ...extra }); }
     if (!GESTOS[nombre]) return 0;
+    // en el rótulo, solo con la cara y la cabeza (CARAS; si no tiene, nada)
+    if (o.soloCara && !CARAS[nombre]) return 0;
     // con poco tamaño, la versión que se lee por la silueta (CHICOS)
-    const chico = api.chica ? CHICOS[nombre] || null : null;
-    const hacer = chico || GESTOS[nombre];
-    const opciones = { ...o, chica: !!api.chica, plano: api.plano, azar };
+    const chico = api.chica && !o.soloCara ? CHICOS[nombre] || null : null;
+    const hacer = o.soloCara ? CARAS[nombre] : chico || GESTOS[nombre];
+    const opciones = { ...o, chica: !!api.chica, plano: api.plano, azar, reducido };
     // la variante: la pedida o una distinta de las dos últimas (el mismo gesto que sigue, la misma)
     if (!o.seguir || nombreClip !== nombre) opciones.variante = variante(nombre, o.variante);
     else opciones.variante = clip?.variante ?? 0;
@@ -964,7 +1223,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     // medidos con el rumbo al que va el cuerpo (si está girando, apunta a donde quedará). `hasta`: un segundo punto
     // (presentar barre la palma de uno al otro)
     let apuntaA = null;
-    if (BAJAR[nombre] !== undefined && o.punto) {
+    if (BAJAR[nombre] !== undefined && o.punto && !o.soloCara) {
       const r0 = grupo.rotation.y;
       grupo.rotation.y = rumboBase;
       const lado = o.lado || ladoDe(o.punto);
@@ -1006,10 +1265,19 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       for (const l of Object.keys(clip.manosEn)) clip.manosEn[l] = clip.manosEn[l].map(([, f]) => [0, f]).slice(-1);
       // (el golpe del número nuevo: la mano sube y baja, la cabeza se ladea hacia ella, el índice de la otra la toca)
       for (const g of nuevo.alSeguir || []) golpe(g.art, g.eje ?? 0, g.amp, g.ida, g.vuelta, t + (g.t || 0));
+      // (contar: la mirada cambia de lado de la sala con cada número)
+      if (clip.cambiaMirada && !reducido) { deriva = (deriva > 0 ? -1 : 1) * (0.08 + 0.05 * azar()); derivaP = 0; proxDeriva = t + 2 + azar(); }
       return clip.sostener ? Infinity : clip.dur;
     }
-    // de dónde viene: lo que pedía el gesto anterior en el último cuadro (sus articulaciones y sus manos), para entrar
-    // desde ahí y no desde el reposo
+    nuevo.variante = opciones.variante;
+    nuevo.chico = !!chico;
+    nuevo.soloCara = !!o.soloCara;
+    ponerClip(nuevo, nombre, typeof o.alTerminar === 'function' ? o.alTerminar : null);
+    return clip.sostener ? Infinity : clip.dur;
+  }
+  // El clip nuevo, que entra desde lo que pedía el gesto anterior en el último cuadro (sus articulaciones y sus manos)
+  // y no desde el reposo
+  function ponerClip(nuevo, nombre, alTerminar) {
     const viejo = clip && pesoBase(clip, tClip) > 0.01 ? clip : null;
     if (viejo) {
       const nuevoDesde = {};
@@ -1019,14 +1287,11 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       desdeManos = {};
       for (const l of LADOS) if (viejo.manosEn?.[l]) desdeManos[l] = [...dedos[l]];
     } else { desde = null; desdeManos = null; }
-    nuevo.variante = opciones.variante;
-    nuevo.chico = !!chico;
     clip = preparar(nuevo, nombre);
     tClip = 0;
     nombreClip = nombre;
-    alTerminarClip = typeof o.alTerminar === 'function' ? o.alTerminar : null;
+    alTerminarClip = alTerminar;
     if (typeof clip.cara?.cejas === 'number') cejasPico = Math.max(cejasPico, clip.cara.cejas);
-    return clip.sostener ? Infinity : clip.dur;
   }
   // El clip listo para usar: sus poses en cuaterniones, el retraso de cada articulación, cuánto vive, los vaivenes y
   // si algún brazo cambia de lado (pasa por delante)
@@ -1102,6 +1367,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     c.proxAsiente = c.entra + 1.5 + azar() * 1.5;
     if (c.acento) { const [a0, a1] = c.acento.cada || [4, 6]; c.proxAcento = c.entra + a0 + azar() * (a1 - a0); }
     c.tRelaja = 5.8 + azar() * 0.8;
+    c.kParpadeo = 0;
     c.qRelaja = Object.fromEntries(Object.entries(c.relajada || relajadaDe(c)).filter(([j]) => c.qPose[j]).map(([j, e]) => [j, qDe(j, e)]));
     return c;
   }
@@ -1151,7 +1417,9 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     for (const l of LADOS) {
       const v = m[l];
       if (!v) continue;
-      out[l] = Array.isArray(v) ? v.map(([tt, f]) => [tt, MANOS[f] || MANOS.relajada]) : [[0, MANOS[v] || MANOS.relajada]];
+      // (cada forma, por su nombre o como los cinco números)
+      const forma = (f) => MANOS[f] || (Array.isArray(f) && f.length === 5 ? f : MANOS.relajada);
+      out[l] = Array.isArray(v) ? v.map(([tt, f]) => [tt, forma(f)]) : [[0, forma(v)]];
     }
     return out;
   }
@@ -1162,8 +1430,19 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   const pesoBase = (c, tau) => Math.max(0, entrando(c, tau)) * saliendo(c, tau);
   // lo que pesa el clip ahora en la articulación `j` (con su retraso)
   const pesoArt = (j) => (clip ? Math.max(0, entrando(clip, tClip - clip.ret[j])) * saliendo(clip, tClip - clip.ret[j]) : 0);
+  /** Suelta el gesto (a la casa: la de hablar si habla). Si el gesto tiene su manera de terminar (`alSoltar`: el «¡ya
+   * está!» de pensar, la inspiración de escuchar antes de volver a hablar), la hace: un clip corto con el mismo nombre */
   function detenerGesto() {
     if (!clip) return;
+    if (typeof clip.alSoltar === 'function' && !clip.soltando && pesoBase(clip, tClip) > 0.3) {
+      const al = alTerminarClip;
+      let c = null;
+      try { c = clip.alSoltar({ chica: !!api.chica, plano: api.plano, azar, reducido }); } catch { c = null; }
+      if (c) { c.soltando = true; c.variante = clip.variante; ponerClip(c, nombreClip, al); return; }
+    }
+    // (un sostenido que ya pasó su duración sale desde ahora, en lo que tarda su salida: si no, terminaría en el cuadro
+    // siguiente y la cara y los dedos saltarían)
+    if (clip.sostener && tClip > clip.dur - clip.sale) { clip.dur = tClip + clip.sale; clip.vida = clip.dur + clip.retMax; }
     clip.sostener = false;
     tClip = Math.max(tClip, clip.dur - clip.sale);
   }
@@ -1683,6 +1962,9 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
         wClip = pesoBase(clip, tClip);
         clipManos = clip.manosEn;
         clipCara = clip.cara ? caraEn(clip.cara, tClip) : null;
+        // (los parpadeos del gesto: la espera quieta de la pregunta, el primer asentimiento)
+        const pp = clip.parpadeos;
+        if (pp && clip.kParpadeo < pp.length && tClip >= pp[clip.kParpadeo]) { clip.kParpadeo++; if (enParpadeo < 0 && t - ultimoParpadeo > 0.3) parpadear(); }
       }
     }
 
@@ -1899,9 +2181,16 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       const yp = Math.atan2(tmpV.x, Math.max(0.05, tmpV.z));
       yawObj += lim(yp - yawObj, -clip.resto, clip.resto) * wClip;
     }
-    // hablando a la sala, la mirada deriva por la sala: se queda 2–4 s en una «persona» y salta a otra (±0.12)
-    if (hablando && !reducido && miraModo === 'sala') {
-      if (t >= proxDeriva) { deriva = (azar() * 2 - 1) * 0.12; derivaP = (azar() * 2 - 1) * 0.03; proxDeriva = t + 2 + azar() * 2; }
+    // hablando a la sala, la mirada deriva por la sala: se queda 2–4 s en una «persona» y salta a otra (±0.12); un gesto
+    // que espera a la sala (invitar, sostenido) la recorre aunque no hable (`deriva`: {amp, cada})
+    const dg = clip?.deriva && wClip > 0.5 ? clip.deriva : null;
+    if ((hablando || dg) && !reducido && miraModo === 'sala') {
+      if (t >= proxDeriva) {
+        const amp = dg?.amp ?? 0.12, [c0, c1] = dg?.cada || [2, 4];
+        // (recorriendo la sala, cada vez del otro lado)
+        deriva = dg ? (deriva > 0 ? -1 : 1) * amp * (0.6 + 0.4 * azar()) : (azar() * 2 - 1) * amp;
+        derivaP = (azar() * 2 - 1) * 0.03; proxDeriva = t + c0 + azar() * (c1 - c0);
+      }
       yawObj += deriva;
       pitchObj += derivaP;
     } else if (deriva || derivaP) { deriva = 0; derivaP = 0; proxDeriva = t + 0.5; }
@@ -1984,7 +2273,9 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
         e.al?.();
       }
     } else {
-      if (clip?.salto && !reducido) salto = Math.max(0, Math.sin(Math.min(1, (tClip - 0.35) / 0.5) * Math.PI)) * (tClip > 0.35 ? 0.12 : 0);
+      // (el saltito de un gesto: `salto` true, o {t, dur, alto}: cuándo despega, lo que está en el aire y lo que sube)
+      const sj = clip?.salto === true ? { t: 0.35, dur: 0.5, alto: 0.12 } : clip?.salto || null;
+      if (sj && !reducido) salto = tClip > sj.t ? Math.max(0, Math.sin(Math.min(1, (tClip - sj.t) / sj.dur) * Math.PI)) * sj.alto : 0;
       else salto *= 1 - acercar(10, dt);
       if (grupo.visible) cuerpo.position.y = yQuieto + salto;
     }
@@ -2081,7 +2372,9 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     const duch = clipCara && (clipCara.duchenne ?? ((clipCara.sonrisa ?? 1) >= 0.85 && (clipCara.labios === 0 || (clipCara.abrir || 0) > 0.05)));
     duchenne += ((duch ? wClip : 0) - duchenne) * acercar(6, dt);
     const ojoSonrisa = lim(0.85 - 0.25 * abrir + 0.1 * (sonrisa - 1) + 0.15 * duchenne, 0, 1);
-    const abre = parpado * (1 - 0.3 * entrecierra) * (1 - 0.25 * Math.max(0, -ojoY));
+    // (`cierra`: los ojos que se cierran un momento: de sonrisa al celebrar, al apoyar la mano en el pecho)
+    cierra += ((clipCara?.cierra || 0) * wClip - cierra) * acercar(14, dt);
+    const abre = parpado * (1 - 0.3 * entrecierra) * (1 - 0.25 * Math.max(0, -ojoY)) * (1 - lim(cierra, 0, 0.95));
     const g = clipCara?.guino, gLado = typeof g === 'object' && g ? g.lado : g;
     const cierraGuino = gLado ? 0.8 * formaGuino(tClip - (g?.t ?? 0.35)) * wClip : 0;
     cara.ojos.forEach((o, i) => o.poner({ abierto: abre * (gLado === (i === 0 ? 'I' : 'D') ? 1 - cierraGuino : 1), sonrisa: ojoSonrisa, mira: [ojoX, ojoY] }));
@@ -2136,6 +2429,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       peso: r3(pesoEf), casa: casaA, mirada: miraModo, pies: { I: !!pies.I.vuelo, D: !!pies.D.vuelo },
       vivo: { pesos: cambiosPeso, sacadicos, parpadeos },
       ritmo: r3(ritmo), relajada: r3(relajaEstado), variante: clip?.variante ?? null, chica: !!api.chica, chico: !!clip?.chico,
+      soltando: !!clip?.soltando, soloCara: !!clip?.soloCara,
       habla: hablando && habla ? { texto: habla.texto, voz: habla.voz, golpes: golpesHabla, mano: FORMAS_HABLA[formaHabla].mano,
         manda: domD > 0.5 ? 'D' : 'I' } : null,
       boca: { abrir: r3(abrir), labios: r3(labios), sonrisa: r3(sonrisa) },
@@ -2172,9 +2466,16 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   }
   /** Las cejas arriba un momento (lo que cambió: el panel de otro capítulo) */
   function alzarCejas(v = 0.6) { cejasPico = Math.max(cejasPico, lim(Number(v) || 0, 0, 1)); }
+  /** La reacción a lo que pasó en el modelo (la simulación terminó: «sigue en servicio»): las cejas arriba y un
+   * asentimiento, sin dejar el gesto que hace */
+  function reaccionar(v = 0.6) {
+    alzarCejas(v);
+    golpe('cabeza', 0, 0.06, 0.14, 0.3, t + 0.15);
+    golpe('cuello', 0, 0.025, 0.14, 0.3, t + 0.15);
+  }
 
   return Object.assign(api, { actualizar, gesto, detenerGesto, hablar, callar, mirarA, mirarSala, caminarA, reubicar, entrar,
-    salir, agacharse, asomarse, estado, girar, casa, tamano, acentuar, alzarCejas });
+    salir, agacharse, asomarse, estado, girar, casa, tamano, acentuar, alzarCejas, reaccionar });
 }
 
 // Un paso del muelle de una articulación (cuaternión `q` con velocidad angular `w`, en el espacio del padre) hacia

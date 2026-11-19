@@ -20,7 +20,9 @@
 //   asoma ya orientado; al mismo lugar en otro plano, la cámara se acerca. Ningún gesto de brazos arranca mientras camina
 //   o salta. Con el atlas a la vista (o la ficha en el celular, o el celular de lado) es un RÓTULO: la cara en un círculo
 //   bajo el panel o acoplado al subtítulo (que le hace lugar: .pres.rotulo-acoplado), que aparece creciendo cuando él se
-//   agachó y se encoge para que él vuelva a asomarse.
+//   agachó y se encoge para que él vuelva a asomarse. En el círculo los brazos no se ven: el gesto que se pide lo hace
+//   con la cara y la cabeza (aprobar asiente con un guiño, negar niega con la cabeza, pensar ladea la cabeza y mira
+//   arriba…; animador.js `CARAS`) y lo que se señala o se presenta es mirar el modelo.
 // * El tiempo de la escena: el gesto de entrada arranca con la primera frase (o a los 0.8 s) y su golpe cae en la
 //   tónica de la palabra clave (la cifra, lo que sigue a «esta es», lo resaltado), cuando ya está en su lugar y, si
 //   señala, cuando lo resaltado apareció y dejó de moverse; se sostiene la primera frase y después queda la mano baja
@@ -31,7 +33,8 @@
 //   dato con las cejas y la boca de «fíjense»; «mirar la maqueta» la recorre con la mirada. La boca va por las sílabas de
 //   cada frase (con voz, al ritmo que tuvo la voz en las anteriores). En la primera escena saluda antes (corto si ya hay
 //   un dato que señalar). El resumen del cierre lo cuenta con los dedos, un dedo al empezar cada punto (por el largo de
-//   cada uno; con voz, a su ritmo).
+//   cada uno; con voz, a su ritmo). Si la escena simuló algo en el modelo, en la última frase reacciona (las cejas
+//   arriba y un asentimiento; en el rótulo, aprobar con la cara).
 // * La LUZ sigue a la de la maqueta (el aviso `ambiente`: la hora y el lado del sol), en 0.6 s: de tarde desde el lado
 //   del sol, al atardecer (el tema oscuro) más tibia, de noche más baja y con un contraluz frío; el rótulo, con la de
 //   siempre. Lo que no recibe luz (los ojos, los dientes, las cejas) se tiñe en proporción. Lo pegado al corte se
@@ -48,7 +51,7 @@
 // * Con ?qa en la dirección de la página: `window.__qaPresentador` (estado, cajas proyectadas, msCuadro) para medirlo.
 import * as THREE from 'three';
 import { crearPersonaje } from './personaje.js';
-import { crearAnimador, planHabla } from './animador.js';
+import { crearAnimador, planHabla, CARAS } from './animador.js';
 import {
   PLANOS, CHICA_PX, HORIZONTAL_PX, elegirVista, medidas, rumboDe, cxDe, caja, union, objetivoDe, elegirLugar,
   transicion, tiemposCierre, apuntable, rotuloDe, posRotulo, yHombro as alturaHombro, esSuave,
@@ -83,6 +86,7 @@ const MIRAR_MS = 1000;     // cada frase empieza mirando a la sala; después, un
 const VISTAZO_MS = 800;
 const SALUDO_S = 2.6, SALUDO_CORTO_S = 1.2;
 const CAPITULO_MS = 600;   // el cambio de capítulo: mira el panel (que cambió de color y de contenido) antes del gesto
+const REACCION_MS = 300;   // la reacción a la simulación, un momento después de empezar la última frase
 // el golpe del gesto de entrada cae en la tónica de la palabra clave de la primera frase: el gesto tarda en llegar a su
 // pose lo que tarda en entrar (0.4 s, con la preparación); si la clave cae tarde, no espera más de 2 s
 const LLEGA_S = 0.4, GOLPE_MAX_MS = 2000;
@@ -968,7 +972,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       circulo(0.6, 0, reducido ? FUNDIDO_MS / 1000 : ENCOGE_S, () => { if (!arriba) { saliendo = false; personaje.grupo.visible = false; } });
     } else {
       const chau = despedida && !reducido;
-      if (chau) anim.gesto('despedirse', { dur: 1.1, entra: 0.2 });
+      if (chau) anim.gesto('despedirse', { dur: 1.1, entra: 0.2, saliendo: true });
       else anim.detenerGesto();
       const hondo = Math.max(hondoDe(plan), trans?.tipo === 'acercar' ? hondoDe(trans.hasta.plan) : 0);
       anim.salir(() => { saliendo = false; }, { hondo, gracias: chau });
@@ -1155,7 +1159,8 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     frente = !!e.frente && !APUNTAN.includes(g);
     orientar(punto);
     const opciones = {};
-    if (punto && (APUNTAN.includes(g) || g === 'mirar_maqueta')) opciones.punto = alMundo(punto.x, punto.y);
+    if (e.vista === 'rotulo') opciones.soloCara = true;
+    else if (punto && (APUNTAN.includes(g) || g === 'mirar_maqueta')) opciones.punto = alMundo(punto.x, punto.y);
     // presentar barre con la palma (los pines de la portada, los años del cronograma): de un punto al otro
     const b = g === 'presentar' && punto ? barridoDe(p.d, e, c, punto) : null;
     if (b) {
@@ -1180,10 +1185,13 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     if (e.vista === 'rotulo' && punto) { anim.mirarA(alMundo(punto.x, punto.y)); }
     if (e.lado === 'hoja' && punto) { anim.mirarA(alMundo(punto.x, punto.y)); }
   }
+  /** Un gesto fuera de la escena (pensar, contar, invitar, asentir): en el rótulo, con la cara y la cabeza */
+  const gestoVista = (nombre, o = {}) => anim.gesto(nombre, esRotulo() ? { ...o, soloCara: true } : o);
   /** El gesto que hace la vista al empezar: el que pidió el asistente (adaptado a lo que apunta) o el de la vista */
   function gestoDe(e) {
     let g = e.gesto;
-    if (e.vista === 'rotulo') return null;   // (el rótulo es la cara: los brazos quedan en la casa)
+    // (el rótulo es la cara: el gesto pedido, con la cara y la cabeza si se puede; los brazos quedan en la casa)
+    if (e.vista === 'rotulo') return prog?.evento === 'narrar' && prog.d.gesto && CARAS[prog.d.gesto] ? prog.d.gesto : null;
     // el anfitrión que explica sin que nadie pidiera un gesto: el que pide el texto (una pregunta, «juntos», algo que
     // crece, una cifra)
     if (prog?.evento === 'narrar' && !prog.d.gesto && e.vista === 'anfitrion' && g === 'explicar') g = gestoDelTexto(prog.d.textos) || g;
@@ -1257,6 +1265,12 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     anim.gesto('indicar', { punto: alMundo(pt.x, pt.y), sostener: true, mirar: e.objetivo === 'obra',
       ...(e.objetivo === 'obra' && viaja(p.d) ? { mirada: 'sigue' } : {}) });
   }
+  // ¿Se simuló algo en el modelo en esta escena? (el aviso `simulacion` con su narración)
+  const simuladaEn = (p) => {
+    const s = avisos.simulacion;
+    if (!s || !p.d.simular) return false;
+    return (s.rid == null || p.d.rid == null || s.rid === p.d.rid) && (s.n == null || p.d.n == null || s.n === p.d.n);
+  };
   // ¿La cámara viaja en esta escena (un movimiento pedido que no es el suave, un giro) o la maqueta simula algo?
   const viaja = (d) => !!(d?.visual?.girar || d?.simular?.modelo === 'maqueta' || (d?.mover && !esSuave(d.mover)));
   /** Cada frase: la sala al empezar y, después, un vistazo a lo que explica; señalando, la mano que indica da dos toques
@@ -1264,6 +1278,15 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   function alEmpezarFrase(k, texto = '', voz = false) {
     const p = prog;
     if (!p || p.fase === 'cierre') return;
+    // la simulación de esta escena (la maqueta o el atlas): en la última frase reacciona a lo que pasó («sigue en
+    // servicio»): las cejas arriba y un asentimiento; en el rótulo, aprobar con la cara (asiente, la sonrisa y un guiño)
+    if (k > 0 && k === (p.d.frases ?? 0) - 1 && simuladaEn(p)) {
+      despues(REACCION_MS, () => {
+        if (prog !== p) return;
+        if (esRotulo()) gestoVista('aprobar');
+        else anim.reaccionar(0.6);
+      });
+    }
     if (k === 0) { p.frase0 = ahora(); return; }
     if (p.fase !== 'sosten' || !objetivoPx) return;
     if (p.e.vista === 'senala' && anim.estado().gesto === 'indicar') {
@@ -1289,8 +1312,8 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     const t = cz.fin ? Infinity : (ahora() - cz.t0) / 1000 * cz.escala;
     while (cz.k < cz.inicios.length && t >= cz.inicios[cz.k]) {
       cz.k++;
-      if (cz.k === 1) anim.gesto('contar', { n: 1, sostener: true });
-      else anim.gesto('contar', { n: Math.min(3, cz.k), seguir: true });
+      if (cz.k === 1) gestoVista('contar', { n: 1, sostener: true });
+      else gestoVista('contar', { n: Math.min(3, cz.k), seguir: true });
     }
     // el último se sostiene hasta que termina de hablar
     if (!cz.voz && t > cz.total + 0.6 && anim.estado().gesto === 'contar') { anim.detenerGesto(); p.fase = 'listo'; }
@@ -1438,14 +1461,14 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
         else despues(FRASE0_MS * 2, () => { const cz = prog?.cierre; if (cz && cz.t0 === null) { cz.t0 = ahora(); cz.escala = 1 / (anim.estado().ritmo || 1); } });
       } else {
         anim.callar();
-        anim.gesto('invitar', { sostener: true });
+        gestoVista('invitar', { sostener: true });
         // a los 4.5 s pasa a la casa, esperando; asiente cada tanto
         const p = prog;
         despues(4500, () => {
           if (prog !== p) return;
           if (anim.estado().gesto === 'invitar') anim.detenerGesto();
           anim.alzarCejas(0.5);   // (las cejas arriba: esperando)
-          const asentir = () => { if (prog !== p) return; if (!anim.estado().gesto) anim.gesto('asentir'); despues(3500, asentir); };
+          const asentir = () => { if (prog !== p) return; if (!anim.estado().gesto) gestoVista('asentir'); despues(3500, asentir); };
           despues(1200, asentir);
         });
       }
@@ -1453,7 +1476,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     /** El asistente prepara la explicación (la píldora): piensa */
     preparando(v) {
       if (!permitido) return;
-      if (v) { ultimoCierre = false; evento('preparando'); anim.gesto('pensar', { sostener: true }); }
+      if (v) { ultimoCierre = false; evento('preparando'); gestoVista('pensar', { sostener: true }); }
       else if (anim.estado().gesto === 'pensar') { anim.detenerGesto(); retirar(); }
     },
     /** Una explicación suelta (sin recorrido) en el subtítulo */
