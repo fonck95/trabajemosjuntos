@@ -155,15 +155,15 @@ boca.addEventListener('click', () => {
   boca.setAttribute('aria-pressed', String(v));
   if (v) anim.hablar(true); else anim.callar();
 });
-// «Decir»: mueve la boca lo que tardaría en decirlo y lo muestra abajo, como el subtítulo de la presentación (la voz
-// de verdad es la del panel, en el recorrido narrado)
+// «Decir»: mueve la boca por las sílabas del texto lo que tardaría en decirlo (con los golpes en sus palabras clave) y
+// lo muestra abajo, como el subtítulo de la presentación (la voz de verdad es la del panel, en el recorrido narrado)
 const leyenda = document.getElementById('dice');
 let tLeyenda = 0;
 document.getElementById('decir').addEventListener('click', () => {
   const texto = document.getElementById('texto').value.trim();
   if (!texto) return;
   const s = decirS(texto);
-  anim.hablar(s);
+  anim.hablar(s, { texto });
   leyenda.textContent = texto;
   leyenda.hidden = false;
   clearTimeout(tLeyenda);
