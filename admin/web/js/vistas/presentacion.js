@@ -81,6 +81,7 @@ export const ESPERA_AUTO_MS = 1500;          // desde que terminó un plan autom
 export const ESPERA_TRAS_PLAN_MS = 5000;     // desde que terminó un plan del asistente (la pregunta que la interrumpió)
 export const ESPERA_TRAS_ORDEN_MS = 45000;   // desde otra orden suelta: lo que se pidió ver se queda un rato a la vista
 export const REINTENTO_AUTO_MS = 5000;       // el servidor no tenía nada que armar (204) o no respondió: se vuelve a pedir
+const CLAVE_PRESENTADOR = 'yj_presentador';   // el botón «Presentador»: '0' oculto
 const QUIETO_MS = 3000;          // el botón flotante del asistente se atenúa tras esto sin mover el ratón ni tocar
 const PEDIR_PANTALLA = 'pantalla:pedir';   // el puente (`pedirPantalla`): la pantalla en off pregunta ya
 const TEXTO_VOZ = { activa: 'Voz activa', apagada: 'Voz', sin_activar: 'Toque para activar la voz', sin_voces: 'Sin voces en español' };
@@ -238,6 +239,7 @@ export async function vistaPresentacion(el, { q } = {}) {
           <span class="chip borde pres-off-chip" title="La manejan el asistente del panel y los agentes por MCP">${icono('agente')}<span id="pres-off-estado">Esperando al asistente</span></span>
           <button type="button" class="btn pres-auto" id="pres-auto" aria-pressed="false" aria-label="Presentación automática" title="Recorre sola toda la presentación, muy resumida. Una pregunta al asistente la interrumpe y, al terminar la respuesta, sigue donde iba" disabled>${icono('animar')}<span>Presentación automática</span></button>
           <button type="button" class="btn pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta pantalla (la del navegador)">${icono('voz')}<span>Voz</span></button>
+          <button type="button" class="btn pres-presentador" aria-pressed="true" title="El presentador: la caricatura que explica lo que narra el asistente (se oculta y se vuelve a mostrar en esta pantalla)">${icono('presentador')}<span>Presentador</span></button>
           <a class="btn" id="pres-salir-off" href="${url('/presentacion')}">${icono('cerrar')}<span>Salir del modo en off</span></a>
         </div>
       </div>
@@ -247,7 +249,8 @@ export async function vistaPresentacion(el, { q } = {}) {
         <div class="pres-botones">
           <button type="button" class="btn" id="pres-anterior" aria-label="Paso anterior" title="Paso anterior" disabled>${icono('anterior')}</button>
           <button type="button" class="btn primario" id="pres-siguiente" aria-label="Paso siguiente" title="Paso siguiente" disabled><span>Siguiente</span>${icono('siguiente')}</button>
-          ${off ? '' : html`<button type="button" class="btn pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta pestaña (la del navegador)">${icono('voz')}<span>Voz</span></button>`}
+          ${off ? '' : html`<button type="button" class="btn pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta pestaña (la del navegador)">${icono('voz')}<span>Voz</span></button>
+          <button type="button" class="btn pres-presentador" aria-pressed="true" title="El presentador: la caricatura que explica lo que narra el asistente (se oculta y se vuelve a mostrar en esta pestaña)">${icono('presentador')}<span>Presentador</span></button>`}
           ${conPantalla ? html`<button type="button" class="btn" id="pres-pantalla" aria-label="Pantalla completa" title="Pantalla completa">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
           <a class="btn" id="pres-otra" href="${url('/presentacion?pantalla=1')}" target="_blank" rel="noopener" aria-label="Abrir en otra pantalla (proyector)" title="Abre la presentación en otra ventana para el proyector: el asistente la sigue manejando desde aquí, y en esa ventana también se abre el asistente, al lado de la presentación">${icono('proyector')}<span>Abrir en otra pantalla</span></a>
           <a class="btn" id="pres-off" href="${url('/presentacion?off=1')}" target="_blank" rel="noopener" aria-label="Pantalla en off" title="Una pantalla sin controles para el proyector o un televisor, en este equipo o en otro: solo cambia cuando se le pide al asistente o a un agente por MCP. En esa ventana también se abre el asistente, al lado de la presentación">${icono('agente')}<span>Pantalla en off</span></a>
@@ -258,6 +261,7 @@ export async function vistaPresentacion(el, { q } = {}) {
       ${proyector ? html`<div class="pres-flotantes">
         ${conPantalla ? html`<button type="button" class="btn oscuro pres-completa" id="pres-completa" title="Pantalla completa">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
         <button type="button" class="btn oscuro pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta ventana (la del navegador)">${icono('voz')}<span>Voz</span></button>
+        <button type="button" class="btn oscuro pres-presentador" aria-pressed="true" title="El presentador: la caricatura que explica lo que narra el asistente (se oculta y se vuelve a mostrar en esta ventana)">${icono('presentador')}<span>Presentador</span></button>
       </div>` : ''}
     </section>`);
   const marco = $('#pres-marco', el);
@@ -408,8 +412,13 @@ export async function vistaPresentacion(el, { q } = {}) {
   // sin avisarle el «detenido» al servidor, que lo cerraba y la apagaba para todos (y cortaba otra pantalla en off que la
   // estuviera narrando). Así queda encendida, como al cerrar o recargar la pestaña: la retoma quien siga
   let seFue = false;
+  // La boca del presentador (web/js/presentador/, en la presentación): cuándo la voz empieza y termina de decir algo
+  // (una frase o el resumen). Sin narración en pantalla la presentación lo ignora
+  const boca = (v) => { if (rep.activo()) orden({ orden: 'narracion', habla: v }, { plazo: 3000 }); };
+  const vozConBoca = { ...voz, decir: (texto, o = {}) => voz.decir(texto, { ...o, alEmpezar: () => { boca(true); o.alEmpezar?.(); } })
+    .then((r) => { boca(false); return r; }) };
   const rep = crearReproductor({
-    orden, voz,
+    orden, voz: vozConBoca,
     avisar: (pr) => {
       avisarRecorrido(pr);
       pintarEstado();
@@ -451,6 +460,22 @@ export async function vistaPresentacion(el, { q } = {}) {
     hablaba = habla;
   }));
   pintarVoz();
+  // El botón «Presentador»: muestra u oculta la caricatura que explica lo que narra el asistente. La preferencia es de
+  // este navegador (`yj_presentador`: '0' oculto; sin guardar, a la vista) y le llega a la presentación como
+  // `vista {presentador}` al cambiarla y, si está oculto, cada vez que la presentación carga
+  let conPresentador = true;
+  try { conPresentador = localStorage.getItem(CLAVE_PRESENTADOR) !== '0'; } catch { conPresentador = true; }
+  const botonesPresentador = [...el.querySelectorAll('.pres-presentador')];
+  const pintarPresentador = () => { for (const b of botonesPresentador) b.setAttribute('aria-pressed', String(conPresentador)); };
+  for (const b of botonesPresentador) {
+    b.addEventListener('click', () => {
+      conPresentador = !conPresentador;
+      try { localStorage.setItem(CLAVE_PRESENTADOR, conPresentador ? '1' : '0'); } catch { /* dura lo que la página */ }
+      pintarPresentador();
+      if (lista) orden({ orden: 'vista', presentador: conPresentador });
+    });
+  }
+  pintarPresentador();
 
   // `enPausa`: la pantalla en off que se recargó con el recorrido en pausa lo retoma en su escena y en pausa. La pausa
   // entra cuando la escena ya está a la vista (antes, el cambio de imagen la taparía con «preparando»). `previa`: un
@@ -562,6 +587,7 @@ export async function vistaPresentacion(el, { q } = {}) {
     }
     // la presentación se recargó a mitad del recorrido: la escena en curso vuelve a empezar
     if (m.tipo === 'listo' && lista && rep.activo()) rep.repetir();
+    if (m.tipo === 'listo' && !conPresentador) orden({ orden: 'vista', presentador: false });
     if (!lista && (m.tipo === 'listo' || (m.tipo === 'estado' && nuevo))) {
       lista = true;
       clearTimeout(tListo);

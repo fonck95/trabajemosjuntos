@@ -52,6 +52,14 @@
 // * Cada toque o tecla de la persona en la presentación (con controles) se le avisa al panel (`gesto`, a lo sumo uno por
 //   segundo): la voz del recorrido vive en el panel y el navegador solo la deja hablar después de un gesto, que en la
 //   ventana del proyector cae aquí dentro y no allá.
+// * El presentador (web/js/presentador/, docs/presentador.md): si main.js lo pasa (`presentador`), se le avisa la escena,
+//   la frase, `narracion {habla}` (la voz del panel empieza o termina de decir algo: solo mueve su boca), la pausa, el
+//   cierre, la píldora de «prepara», la explicación suelta y quitarla, y `vista {presentador}` (el botón del panel) lo
+//   muestra u oculta. Con la escena (`narrar`) le llega lo que se explica (el paso y su tipo, el resaltado, lo visual ya
+//   depurado, la inmersión, `mover`, `simular`, las frases y si cambió de capítulo o de paso) y, si la capa visual lo
+//   sabe, los avisos de lo que pasa en la escena: `encuadre` (dónde quedan la obra y sus rótulos), `atlas` (el modelo
+//   cargó), `simulacion` (qué se accionó) y `ambiente` (la luz de la maqueta, con cada frase). Él decide su vista y sus
+//   gestos; lo que le pase a él no cambia nada de aquí.
 // * Cada cambio de paso (también por el teclado o un clic) se le avisa al panel con el estado: capítulo, paso, total,
 //   nombre del capítulo, título del paso, la explicación a la vista y, en la técnica, lo visual. main.js lo anuncia con
 //   el evento `propuesta:paso` (y visual.js, `propuesta:visual`).
@@ -162,10 +170,10 @@ const ESCALAS = [1, 0.93, 0.86, 0.8, 0.75];
 // Claves que admite cada orden (además de canal, v, orden e id)
 const CLAVES = new Map([
   ['ir', ['capitulo', 'paso', 'explicacion']], ['avanzar', ['d', 'explicacion']], ['explicar', ['explicacion']],
-  ['quitar_explicacion', []], ['estado', []], ['vista', ['panel', 'indice', 'fichas', 'controles']],
+  ['quitar_explicacion', []], ['estado', []], ['vista', ['panel', 'indice', 'fichas', 'controles', 'presentador']],
   ['visual', [...Object.keys(VISUAL), 'mover', 'animar', 'simular', 'ms']],
-  ['escena', ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'mover', 'animar', 'simular', 'frases', 'titulo', 'n', 'de', 'voz', 'rid', 'ms']],
-  ['narracion', ['frase', 'pausa', 'voz', 'preparando']],
+  ['escena', ['capitulo', 'paso', 'panel', 'visual', 'resaltar', 'mover', 'animar', 'simular', 'gesto', 'frases', 'titulo', 'n', 'de', 'voz', 'rid', 'ms']],
+  ['narracion', ['frase', 'pausa', 'voz', 'preparando', 'habla']],
   ['cierre', ['puntos', 'rid']],
 ]);
 const CLAVES_ESCENA = new Set(['canal', 'v', 'orden', 'id', ...CLAVES.get('escena')]);
@@ -297,6 +305,17 @@ function animarTolerante(v, descartadas) {
 
 /** `simular` con tolerancia: los controles con la forma {control, valor?} (el control, un id; el valor, un número, el id
  * de una opción o verdadero o falso), hasta MAX_SIMULAR; lo que no la tiene se anota y no va. null si no queda nada. */
+// El gesto del presentador que pide la escena (`GESTOS` de app/recorrido.py y del puente: una prueba los compara). Uno
+// que no está en la lista se descarta: el presentador elige solo
+export const GESTOS = ['saludar', 'senalar', 'presentar', 'mostrar_panel', 'mirar_maqueta', 'explicar', 'destacar',
+  'comparar', 'enumerar', 'crecer', 'grande', 'detalle', 'construir', 'pensar', 'preguntar', 'asentir', 'negar', 'calmar',
+  'aprobar', 'celebrar', 'aplaudir', 'juntos', 'corazon', 'invitar', 'despedirse'];
+function gestoTolerante(g, descartadas) {
+  if (g === undefined || g === null) return null;
+  if (typeof g === 'string' && GESTOS.includes(g)) return g;
+  descartadas.push({ clave: 'gesto', motivo: 'el presentador no tiene ese gesto' });
+  return null;
+}
 function simularTolerante(s, descartadas) {
   if (s === undefined || s === null) return null;
   if (!Array.isArray(s)) { descartadas.push({ clave: 'simular', motivo: 'no es una lista de controles' }); return null; }
@@ -345,7 +364,7 @@ const limpio = (t, n) => String(t ?? '').replace(/[\xa0\u{202f}]/gu, ' ').replac
  * {subtitulo(texto|null), estado()} (para las pruebas y por si main.js lo necesita). */
 export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, abrirFichas = () => {}, verPanel = () => {},
   reencuadrar = () => {}, visual = null, asentada = async () => true, resaltar = () => true, restaurarEncuadre = () => {},
-  ventana = globalThis.window, documento = globalThis.document } = {}) {
+  presentador = null, ventana = globalThis.window, documento = globalThis.document } = {}) {
   if (!ventana || !documento || !Array.isArray(caps) || !estado || typeof ir !== 'function' || typeof vecino !== 'function') return null;
   let padre = null;
   try { padre = ventana.parent; } catch { return null; }
@@ -367,6 +386,18 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   let aplicando = 0;            // órdenes en curso: un cambio sin ninguna es de la persona
   let escenaVigente = 0;        // la última `escena` (o la orden que la dejó atrás): una más vieja no narra al asentarse
   let ultimoGesto = 0;          // cuándo salió el último `gesto` (a lo sumo uno por segundo)
+  // El presentador (web/js/presentador/presentador.js, que main.js carga solo aquí, dentro del panel): se le avisa lo que
+  // pasa con la narración y él decide qué hacer. Lo que le pase a él no toca nada de aquí
+  const presentar = (metodo, ...args) => { try { presentador?.[metodo]?.(...args); } catch { /* sin presentador */ } };
+  let escenasEnCurso = 0;       // una escena cambia de paso: el subtítulo que se quita en el camino no lo despide
+  // Lo que el presentador sabe de la escena, si la capa visual lo dice (una capa de antes o la de las pruebas no lo tiene:
+  // entonces no se le avisa nada de esto). Nunca lanza
+  const deVisual = (f, ...a) => { try { return typeof visual?.[f] === 'function' ? visual[f](...a) ?? null : null; } catch { return null; } };
+  // dónde quedan la obra encuadrada y sus rótulos cuando la cámara llegue (la palma y la mirada van a la obra real; su
+  // lugar esquiva la obra y los rótulos)
+  const avisarEncuadre = (rid, n) => { if (typeof visual?.cajaObra === 'function') presentar('encuadre', { rid, n, caja: deVisual('cajaObra') }); };
+  // la luz de la maqueta (la hora del día: la del tema, la que pide `simular`, el ciclo del día): su luz la sigue
+  const avisarAmbiente = () => { const l = deVisual('luz'); if (l) presentar('ambiente', l); };
 
   // Dentro del panel, los enlaces de la barra (el Home, el atlas) abren otra pestaña: si no, el iframe dejaría la
   // presentación y el asistente ya no la podría manejar
@@ -494,6 +525,8 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       textoActual = null;
     }
     medir();
+    if (t) { presentar('explicar', t); avisarAmbiente(); }
+    else if (!escenasEnCurso) presentar('quitar');
     // En la pantalla chica el subtítulo le quita alto a la maqueta: la cámara vuelve a encuadrar (si nadie la movió)
     if (antes !== !!t && chica?.matches) reencuadrar();
   }
@@ -565,9 +598,12 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       pasoDelSubtitulo = null;
       tPreparando = setTimeout(() => preparando(false), 25000);
       medir();
+      presentar('preparando', true);
+      avisarAmbiente();
     } else if (!v && sub.classList.contains('preparando')) {
       sub.classList.remove('preparando', 'visible');
       medir();
+      presentar('preparando', false);
     }
   }
 
@@ -658,6 +694,14 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     descartadas.push(...malos.filter(Boolean));
     return malos.filter(Boolean).length;
   }
+  // Al presentador, lo que se accionó de `lista` (lo que no quedó en las descartadas desde `antes`), si algo se accionó:
+  // mira lo que pasa y reacciona en la última frase. Y la luz que quedó (la hora pudo cambiar)
+  function avisarSimulacion(lista, descartadas, antes, { rid = null, n = null, modelo = 'maqueta' } = {}) {
+    const fuera = new Set(descartadas.slice(antes).map((d) => d?.clave));
+    const controles = lista.map((x) => x.control).filter((c) => !fuera.has(`simular.${c}`.slice(0, 40)));
+    if (controles.length) presentar('simulacion', { rid, n, modelo, controles });
+    avisarAmbiente();
+  }
 
   // La orden `escena`: solo esto la hace fallar entera (lo que se proyecta, el avance, el id, un capítulo o un paso que
   // no existen, `panel` sin verdadero o falso). Lo visual, el resaltado, `mover`, `animar` y `simular` se descartan por
@@ -687,6 +731,8 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   // se asiente; solo, si la escena deja un modelo del atlas a la vista, a que cargue
   async function escena(m) {
     const ci = caps.findIndex((c) => c.id === m.capitulo), pi = m.paso - 1;
+    // de dónde viene (antes de cambiar de paso, que mueve `estado`): el presentador marca el cambio de capítulo
+    const cambio = ci !== estado.ci ? 'capitulo' : pi !== estado.pi ? 'paso' : null;
     const t0 = Date.now();
     const mia = ++escenaVigente;
     const superada = () => mia !== escenaVigente;
@@ -700,12 +746,16 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     const mover = moverTolerante(m.mover, descartadas);
     const animar = animarTolerante(m.animar, descartadas);
     const simulacion = simularTolerante(m.simular, descartadas);
+    const gesto = gestoTolerante(m.gesto, descartadas);
     // lo que durará la narración: lo dice el reproductor; si no, la lectura de sus frases
     const ms = entero(m.ms, 1, MS_MAX) ? m.ms
       : m.frases.reduce((a, f) => a + lecturaMs(f), 0) + ENTRE_FRASES_MS * (m.frases.length - 1);
     // ¿deja un modelo del atlas a la vista? (el que pide, o el del paso si es de inmersión y no pide la maqueta)
     const atlas = v.inmersion ? v.inmersion !== 'maqueta' : caps[ci].pasos[pi]?.tipo === 'inmersion';
+    const delPaso = caps[ci].pasos[pi] || {};
+    const idAtlas = atlas ? (v.inmersion && v.inmersion !== 'maqueta' ? v.inmersion : delPaso.inmersion ?? null) : null;
     aplicando++;
+    escenasEnCurso++;
     try {
       sub?.classList.add('cambiando');   // la narración anterior se apaga mientras cambia el paso
       resaltar(null);
@@ -720,6 +770,23 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       const conPanel = !pres?.classList.contains('sin-panel');
       if (conPanel !== m.panel) verPanel(m.panel);
       narrar({ titulo: m.titulo, n: m.n, de: m.de, frases: m.frases, voz: m.voz === true, rid: m.rid });
+      // Lo que el presentador sabe de la escena para elegir su vista (docs/presentador.md): lo de siempre (el taller y los
+      // presentadores de antes leen solo eso) y lo que se está explicando. Todo JSON plano, copiado
+      presentar('narrar', {
+        n: m.n, de: m.de, senal: !!senal, gesto, frases: m.frases.length,
+        obra: atlas || !!(v.enfoque || v.mirar || v.detalle || v.inmersion || mover),
+        rid: m.rid, ms, capitulo: m.capitulo, paso: m.paso, tipo: delPaso.tipo ?? null,
+        lista: Array.isArray(delPaso.lista) ? delPaso.lista.length : 0,
+        cambio, panel: m.panel,
+        resaltar: senal ? { ...senal } : null,   // {tipo, n} | {tipo: 'especificacion', n, en} | {tipo: 'componente', id}
+        visual: { ...v, mostrar: [...v.mostrar], ocultar: [...v.ocultar], sin: [...v.sin] },   // ya depurado
+        atlas: idAtlas,                                                  // la inmersión que queda a la vista, o null
+        modo: idAtlas ? deVisual('modoDe', idAtlas) : null,              // torre, pisos, recorrido, sismo, bim, parque…
+        animar: !!animar,
+        simular: simulacion ? { modelo: atlas ? 'atlas' : 'maqueta', controles: simulacion.map((x) => x.control) } : null,
+        mover: mover ? { ...mover } : null,                              // {giro?, zoom?, elevacion?} tal cual
+        textos: [...m.frases],                                           // las frases: el gesto por omisión y la boca
+      });
       guiar(true);
       // si la persona había movido la cámara, deja de contar como movida (el viaje que sigue corta ese reencuadre)
       restaurarEncuadre();
@@ -727,18 +794,24 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       try { error = textoDeError(await visual.aplicar(v, { ms, mover, animar })); } catch { error = 'La presentación no pudo aplicar lo visual'; }
       if (superada()) return { reemplazada: true };
       if (error) descartadas.push({ clave: 'visual', motivo: error });
+      avisarEncuadre(m.rid, m.n);
+      avisarAmbiente();
       let aviso = null;
       if (senal && !senalar(senal, () => !superada() && narracion?.rid === m.rid && narracion.n === m.n)) aviso = 'resaltar';
       let asento = true;
       if (atlas || visual.cargando?.()) {
         asento = await asentada({ tope: ASIENTO_ATLAS_MS });
         if (superada()) return { reemplazada: true };
+        // el modelo del atlas ya está (o venció la espera): el presentador deja de mirar «Cargando…»
+        if (atlas) presentar('atlas', { rid: m.rid, n: m.n, listo: asento });
       }
       // la simulación, con el modelo del atlas ya cargado (si no cargó a tiempo, visual.js espera por su cuenta) o, sin
       // él, en la maqueta
       if (simulacion) {
+        const antes = descartadas.length;
         await simularEnModelo(simulacion, descartadas);
         if (superada()) return { reemplazada: true };
+        avisarSimulacion(simulacion, descartadas, antes, { rid: m.rid, n: m.n, modelo: atlas ? 'atlas' : 'maqueta' });
       }
       if (descartadas.length) aviso = 'parcial';
       if (!asento) aviso = visual.cargando?.() ? 'atlas' : 'asiento';
@@ -746,6 +819,7 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
         ...(descartadas.length ? { descartadas: cortas(descartadas) } : {}) };
     } finally {
       aplicando--;
+      escenasEnCurso--;
     }
   }
 
@@ -774,10 +848,19 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       const partes = CLAVES.get('narracion').filter((k) => m[k] !== undefined);
       if (!partes.length) return fallo('La orden no dice qué cambiar de la narración');
       if (m.frase !== undefined && (!narracion || !entero(m.frase, 0, narracion.frases.length - 1))) return fallo('No hay esa frase en la narración');
-      if (['pausa', 'voz', 'preparando'].some((k) => m[k] !== undefined && typeof m[k] !== 'boolean')) return fallo('pausa, voz y preparando van con verdadero o falso');
+      if (['pausa', 'voz', 'preparando', 'habla'].some((k) => m[k] !== undefined && typeof m[k] !== 'boolean')) return fallo('pausa, voz, preparando y habla van con verdadero o falso');
       if ((m.pausa !== undefined || m.voz !== undefined) && !narracion) return fallo('No hay una narración en pantalla');
-      if (m.frase !== undefined) { narracion.frase = m.frase; sub.classList.remove('pausado'); pintarFrases(narracion.frases, m.frase); }
+      if (m.frase !== undefined) {
+        narracion.frase = m.frase;
+        sub.classList.remove('pausado');
+        pintarFrases(narracion.frases, m.frase);
+        presentar('frase', m.frase, { voz: sub.classList.contains('con-voz'), texto: narracion.frases[m.frase] });
+        avisarAmbiente();   // la cámara viaja y el día puede correr («reproducir el día»): la luz se pone al día
+      }
+      // `habla`: la voz del panel empieza (true) o termina (false) de decir algo; solo mueve la boca del presentador
+      if (m.habla !== undefined) presentar('habla', m.habla);
       if (m.pausa !== undefined) {
+        presentar('pausa', m.pausa);
         sub.classList.toggle('pausado', m.pausa);
         try { visual?.pausar?.(m.pausa); } catch { /* una capa visual de antes: la cámara termina su viaje */ }
       }
@@ -797,6 +880,7 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       dejarAtras();
       if (!narracion || m.rid !== narracion.rid) return fallo('El cierre no es del recorrido en pantalla');
       cierre(m.puntos);
+      presentar('cierre', m.puntos, { voz: sub.classList.contains('con-voz') });
       // «¿Preguntas?»: el plan terminó y la maqueta vuelve a moverse como siempre
       if (m.puntos === null) guiar(false);
       return responder(id, 'estado', origen);
@@ -814,6 +898,7 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
       if (m.indice !== undefined) abrirIndice(m.indice);
       if (m.fichas !== undefined) abrirFichas(m.fichas);
       if (m.controles !== undefined) { pres?.classList.toggle('sin-controles', !m.controles); sinTeclado = !m.controles; }
+      if (m.presentador !== undefined) presentar('mostrar', m.presentador);
       return responder(id, 'estado', origen);
     }
     // Lo visual, sin cambiar de paso: solo las partes que vienen, cada una con un valor de su lista, y las tres acciones
@@ -845,12 +930,20 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
         const error = textoDeError(mover && !animar && !Object.keys(cambios).length && typeof visual.mover === 'function'
           ? await visual.mover(mover, opciones.ms) : await visual.aplicar(cambios, opciones));
         if (error) return fallo(error.slice(0, 160));
+        // al presentador: dónde queda la obra (la de la narración en pantalla, si hay una)
+        avisarEncuadre(narracion?.rid ?? null, narracion?.n ?? null);
       }
       // la simulación, después de lo demás (una inmersión que abre esta misma orden ya va en camino), en el modelo a la
       // vista (el del atlas o, sin él, la maqueta): si era lo único y no aceptó ningún control, es un error con su porqué
-      if (simulacion && await simularEnModelo(simulacion, descartadas) === simulacion.length && !algoVisual) {
-        return fallo(`No se pudo accionar la simulación: ${cortas(descartadas.slice(-simulacion.length))[0]?.motivo || 'ningún control'}`.slice(0, 160));
-      }
+      if (simulacion) {
+        const antes = descartadas.length;
+        const malos = await simularEnModelo(simulacion, descartadas);
+        avisarSimulacion(simulacion, descartadas, antes, { rid: narracion?.rid ?? null, n: narracion?.n ?? null,
+          modelo: deVisual('estado')?.abierta ? 'atlas' : 'maqueta' });
+        if (malos === simulacion.length && !algoVisual) {
+          return fallo(`No se pudo accionar la simulación: ${cortas(descartadas.slice(-simulacion.length))[0]?.motivo || 'ningún control'}`.slice(0, 160));
+        }
+      } else avisarAmbiente();   // (el tema cambia la hora; la cámara, de qué lado queda el sol)
       return responder(id, 'estado', origen, descartadas.length ? { aviso: 'parcial', descartadas: cortas(descartadas) } : {});
     }
     if (m.orden === 'explicar' || m.orden === 'quitar_explicacion') {

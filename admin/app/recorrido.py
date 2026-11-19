@@ -89,6 +89,38 @@ ZOOM_SUAVE = 1.06
 # {control, valor?}: el valor según el tipo del control (un número en su rango, el id de una opción, verdadero o falso);
 # una acción, sin valor. Lo de la maqueta vuelve a lo del paso al cambiar de paso, como lo demás
 MAX_SIMULAR = 4
+# `gesto`: lo que hace el presentador mientras se dice el paso (la caricatura del candidato que explica en la
+# presentación, web/js/presentador/, docs/presentador.md). Es una acción, no estado, como `mover`; puede faltar (un plan
+# de antes, la presentación automática) y entonces el presentador elige solo. Los mismos nombres en animador.js
+# (`GESTOS_AGENTE`), en mando.js y en el puente del panel: una prueba los compara. Lo que dice cada uno va al modelo
+# con el guion
+GESTOS = {
+    "saludar": "saluda: al empezar",
+    "senalar": "señala lo resaltado o la obra",
+    "presentar": "la palma hacia la obra",
+    "mostrar_panel": "señala el panel",
+    "mirar_maqueta": "mira la maqueta",
+    "explicar": "las dos manos explican",
+    "destacar": "el índice arriba: lo clave",
+    "comparar": "una mano y la otra: hoy y proyecto",
+    "enumerar": "un dedo por frase: una lista",
+    "crecer": "una mano sube: crece, mejora",
+    "grande": "abre los brazos: algo grande",
+    "detalle": "índice y pulgar: un detalle",
+    "construir": "martilla: se construye",
+    "pensar": "la mano en la barbilla",
+    "preguntar": "una palma arriba: una pregunta",
+    "asentir": "asiente: sí",
+    "negar": "niega: eso no",
+    "calmar": "palmas abajo: está previsto",
+    "aprobar": "pulgar arriba: listo",
+    "celebrar": "puños arriba: un logro",
+    "aplaudir": "aplaude",
+    "juntos": "junta las manos: juntos",
+    "corazon": "la mano en el pecho: compromiso",
+    "invitar": "palmas a la sala: ¿preguntas?",
+    "despedirse": "se despide: al terminar",
+}
 TIPOS_CONTROL = ("accion", "numero", "opcion", "si_no")
 # el modelo de `simular` sin uno del atlas: la maqueta 3D (MAQUETA de agente/guion.py: una prueba las compara; aquí no se
 # importa, este archivo solo usa la biblioteca estándar)
@@ -468,8 +500,9 @@ def validar(r: Any, guion: Any = None) -> list[str]:
         return [*out, f"el recorrido lleva de 1 a {MAX_ESCENAS} escenas"]
     claves = {"capitulo", "paso", "panel", "visual", "resaltar", "mover", "animar", "frases", "sostener_ms"}
     for n, esc in enumerate(escenas, 1):
-        # (`simular` puede faltar: la escena de un plan de antes o de la presentación automática no acciona nada)
-        if not isinstance(esc, dict) or not claves <= set(esc) <= claves | {"simular"}:
+        # (`simular` y `gesto` pueden faltar: la escena de un plan de antes o de la presentación automática no acciona
+        # nada y el presentador elige solo)
+        if not isinstance(esc, dict) or not claves <= set(esc) <= claves | {"simular", "gesto"}:
             out.append(f"escena {n}: no tiene la forma")
             continue
         ci = guion.por_id(esc["capitulo"]) if guion is not None and isinstance(esc["capitulo"], str) else None
@@ -490,6 +523,8 @@ def validar(r: Any, guion: Any = None) -> list[str]:
             out.append(f"escena {n}: mover no tiene la forma (giro, zoom o elevacion)")
         if not isinstance(esc["animar"], bool):
             out.append(f"escena {n}: animar es verdadero o falso")
+        if esc.get("gesto") is not None and esc["gesto"] not in GESTOS:
+            out.append(f"escena {n}: el presentador no tiene ese gesto")
         if esc.get("simular") is not None:
             # contra los controles del modelo que la escena deja a la vista: el del atlas o, sin uno, la maqueta
             con_visual = pi is not None and isinstance(esc["visual"], dict) and set(esc["visual"]) == set(VISUAL)

@@ -280,7 +280,9 @@ def test_la_op_guion_trae_la_maqueta_y_los_ejemplos_son_planes_que_corren():
     db = _Base()
     r = _hacer(db, 7, {"op": "guion", "capitulo": "Salud"}, por="asistente")
     assert r.acciones == [] and db.pantallas.find_one({"_id": 7}) is None   # leer no mueve ni guarda nada
-    assert list(r.contenido) == ["capitulo", "pasos", "componentes", "maqueta", "controles_maqueta", "inmersiones", "nota"]
+    # (y los gestos del presentador que cada paso puede pedir, con lo que expresa cada uno)
+    assert list(r.contenido) == ["capitulo", "pasos", "componentes", "maqueta", "controles_maqueta", "inmersiones", "gestos",
+                                 "nota"]
     assert [x["id"] for x in r.contenido["maqueta"]] == ["hospital_hoy", "torre", "telesalud", "puestos"]
     assert [p["id"] for p in r.contenido["maqueta"][1]["partes"]] == ["cubierta", "equipos", "jardines"]
     # (con los controles de las simulaciones de sus modelos del atlas: el simulador sísmico, el BIM… por debajo del tope
@@ -1173,7 +1175,7 @@ def test_el_reproductor_con_un_reloj_falso(tmp_path):
     assert [e["animar"] for e in x["escenas"]] == [e["animar"] for e in plan["escenas"]]
     assert [e["visual"] for e in x["escenas"]] == [e["visual"] for e in plan["escenas"]]
     assert x["escenas"][0]["claves"] == sorted(["orden", "rid", "n", "de", "titulo", "capitulo", "paso", "panel", "visual",
-                                                "resaltar", "mover", "animar", "simular", "frases", "voz", "ms"])
+                                                "resaltar", "mover", "animar", "simular", "gesto", "frases", "voz", "ms"])
     # Y dura lo que el servidor estima: sin lo que se le suma por el cambio de paso y la carga del atlas (aquí la
     # presentación responde en el acto) ni el margen del final, la cuenta es exacta
     corrido = rec.PREVIA_MS + sum(rec.RESPIRO_MS + rec.narracion_ms(e["frases"]) + e["sostener_ms"] for e in plan["escenas"]) \

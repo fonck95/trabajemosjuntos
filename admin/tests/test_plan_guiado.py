@@ -871,7 +871,7 @@ def test_el_reproductor_manda_ms_espera_la_previa_y_avisa_parcial(tmp_path):
     # lo que dura la narración: la lectura de las frases y 250 ms entre ellas
     assert r["narracion"] == [3200, 6650, 7700 + 7700 + 3200 + 500]
     o = r["orden"]
-    assert o["claves"] == ["animar", "capitulo", "de", "frases", "mover", "ms", "n", "orden", "panel", "paso", "resaltar",
+    assert o["claves"] == ["animar", "capitulo", "de", "frases", "gesto", "mover", "ms", "n", "orden", "panel", "paso", "resaltar",
                            "rid", "simular", "titulo", "visual", "voz"], o
     assert o["ms"] == 6650 and o["mover"] == {"giro": 30, "zoom": 1.4} and o["animar"] is True and o["n"] == [1, 2], o
     assert o["visual"]["mostrar"] == ["red"] and o["visual"]["elevacion"] == 30 and o["plazo"] == 25000 and o["primera"] is True, o

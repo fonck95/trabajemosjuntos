@@ -209,6 +209,7 @@ const P = {
   anterior: '<path d="M19 12H6m5-6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
   pantalla: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   proyector: '<path d="M4 5h16v11H4zM8 20h8M12 16v4M14 3h6v6M20 3l-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  presentador: '<path d="M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM5 21v-1.5A5.5 5.5 0 0 1 10.5 14h3a5.5 5.5 0 0 1 5.5 5.5V21M9 4.5l1-2.5 1 1.6L12 1.8l1 1.8 1-1.6 1 2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   // Asistente del panel (web/js/agente.js)
   agente: '<path d="M10 2.5 12 8l5.5 2L12 12l-2 5.5L8 12l-5.5-2L8 8zM18 13l1.1 2.9L22 17l-2.9 1.1L18 21l-1.1-2.9L14 17l2.9-1.1z"/>',
   enviar: '<path d="M12 19V5m0 0-6 6m6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',

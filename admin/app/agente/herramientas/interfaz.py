@@ -899,6 +899,8 @@ class EscenaEntrada(_Entrada):
         "(hora, luces)"))
     girar: Tol(StrictBool) = Field(None, description="true: la cámara gira despacio sin parar; se hereda")
     resaltar: Tol(ResaltarEntrada) = Field(None, description="Señala en pantalla lo que la frase nombra")
+    gesto: Tol(Annotated[str, Field(min_length=2, max_length=40)]) = Field(None, description=(
+        "El gesto del presentador mientras se dice (de «gestos» del guion)"))
     sostener: Tol(Annotated[float, Field(ge=0, le=8)]) = Field(None, description=(
         "Segundos que la imagen se queda después de la frase (por omisión 1,3, o 2,7 si hay algo que mirar)"))
 
@@ -1280,7 +1282,7 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
     if a.op == "guion":
         ci = _resolver_capitulo(g, a.capitulo)
         c = g.capitulos[ci]
-        return Resultado({**g.capitulo_para_leer(ci), "nota": NOTA_GUION},
+        return Resultado({**g.capitulo_para_leer(ci), "gestos": dict(rec.GESTOS), "nota": NOTA_GUION},
                          f"Guion de {c['nombre']} · {len(c['pasos'])} pasos, {len(c.get('componentes') or [])} componentes")
     doc = await run_in_threadpool(pantalla_off.leer, db, uid)
     abierta = pantalla_off.conectada(doc)
@@ -1942,7 +1944,8 @@ NOTA_GUION = (
     "inmersion y sus controles (simular [{control, valor}], de «controles» en inmersiones: la magnitud del simulador "
     "sísmico y luego calcular, que la hace temblar; sin inmersión, los de «controles_maqueta»: hora (manana a noche), "
     "reproducir_dia, luces (vivienda y urbanismo) y partido (urbanismo), que vuelven a lo del paso al cambiar de paso: "
-    "repítalos), animar. "
+    "repítalos), animar, y el gesto del presentador (de «gestos»: saludar al comenzar, comparar hoy y proyecto, "
+    "invitar al final). "
     "Cada paso parte del anterior: lo que no nombra sigue igual, y al cambiar de paso del capítulo "
     "lo visual vuelve a lo de ese paso. Un arco que sirve: ubicar con una vista amplia; cómo está hoy; qué se construye "
     "(aislar la obra, quitarle la cubierta, rodearla con mover); el dato clave (la ficha con la especificación "
@@ -1962,10 +1965,32 @@ HACE = {"paso": "cambia de paso", "camara": "mueve la cámara", "enfoque": "enfo
         "hoy": "muestra hoy", "proyecto": "muestra el proyecto", "modelo": "abre un modelo del atlas",
         "resaltar": "resalta", "solo3d": "solo 3D", "girar": "gira", "capas": "muestra u oculta piezas",
         "aislar": "aísla una obra", "partes": "quita partes", "mover": "recorre con la cámara",
-        "mirar": "apunta la cámara", "animar": "anima la obra", "simular": "maneja la simulación"}
+        "mirar": "apunta la cámara", "animar": "anima la obra", "simular": "maneja la simulación",
+        "gesto": "el presentador hace un gesto"}
 _NUMERO = re.compile(r"\d[\d.,]*\d|\d")
 # Lo que la cámara puede traer en un paso del plan: si nada de esto cambia (ni el paso), el paso no le pide nada
 DE_LA_CAMARA = ("camara", "rumbo", "elevacion", "zoom", "mirar", "enfoque")
+
+
+# `gesto` también puede llegar con tildes, en otras palabras o como lo que expresa
+SINONIMOS_GESTO = {"senala": "senalar", "apuntar": "senalar", "indicar": "senalar", "saludo": "saludar",
+                   "hola": "saludar", "pulgar": "aprobar", "ok": "aprobar", "contar": "enumerar", "aplauso": "aplaudir",
+                   "panel": "mostrar_panel", "maqueta": "mirar_maqueta", "mirar": "mirar_maqueta", "chao": "despedirse",
+                   "adios": "despedirse", "preguntas": "invitar", "bienvenida": "invitar", "duda": "preguntar",
+                   "no": "negar", "si": "asentir", "importante": "destacar", "clave": "destacar",
+                   "construccion": "construir", "obra": "construir", "logro": "celebrar", "union": "juntos",
+                   "compromiso": "corazon", "tranquilidad": "calmar", "aumentar": "crecer", "precision": "detalle"}
+
+
+def _resolver_gesto(crudo: Any, avisar: Any) -> str | None:
+    """El gesto del presentador en un paso del plan: su nombre (de `recorrido.GESTOS`, sin tildes ni mayúsculas, con
+    `_` o espacios) o un sinónimo; lo que no es ninguno se descarta con un aviso (el presentador elige solo)."""
+    v = crudo.crudo if isinstance(crudo, NoVale) else crudo
+    c = guion_presentacion.clave(v).replace(" ", "_") if isinstance(v, str) else ""
+    nombre = c if c in rec.GESTOS else SINONIMOS_GESTO.get(c)
+    if not nombre:
+        avisar(f"el presentador no tiene el gesto «{_ver(v)}»: elige solo; gestos: {_lista(list(rec.GESTOS))}")
+    return nombre
 
 
 def _con_paso(e: ErrorHerramienta, n: int) -> ErrorHerramienta:
@@ -2199,9 +2224,12 @@ def _componer(g: guion_presentacion.Guion, a: PresentacionEntrada) -> tuple[dict
         mover = _resolver_mover(x.mover, avisar) if x.mover is not None else None
         if isinstance(x.animar, NoVale):
             avisar("animar es true o false: se ignoró")
+        gesto = _resolver_gesto(x.gesto, avisar) if x.gesto is not None else None
         esc = {"capitulo": c["id"], "paso": pi + 1, "panel": panel, "visual": rec.copia_visual(visual),
                "resaltar": resaltar, "mover": mover, "animar": x.animar is True, "simular": None,
                "frases": rec.partir_frases(texto) if texto else ["…"], "sostener_ms": 0}
+        if gesto:
+            esc["gesto"] = gesto
         # Los controles de la simulación del modelo que este paso deja a la vista (el del atlas o, sin él, la maqueta)
         if x.simular is not None:
             esc["simular"] = _resolver_simular(g, rec.simulable_de(esc, g), x.simular, avisar, capitulo=c["id"])
@@ -2312,6 +2340,8 @@ def _hace(g: guion_presentacion.Guion, esc: dict, anterior: dict | None) -> list
         out.append("animar")
     if esc.get("simular"):   # acciona controles del modelo a la vista (el sismo, el BIM…; o la hora, las luces de la maqueta)
         out.append("simular")
+    if esc.get("gesto"):     # lo que hace el presentador (la caricatura que explica)
+        out.append("gesto")
     if esc["resaltar"]:
         out.append("resaltar")
     if not esc["panel"] and (not anterior or anterior["panel"]):
@@ -2375,6 +2405,8 @@ def _muestra(g: guion_presentacion.Guion, esc: dict, suave: bool = False, anteri
         partes.append("anima la obra")
     if esc.get("simular"):
         partes.append(f"acciona: {_simular_dicho(g, rec.simulable_de(esc, g), esc['simular'], esc['capitulo'])}")
+    if esc.get("gesto"):
+        partes.append(f"el presentador: {esc['gesto']}")
     if esc["resaltar"]:
         r = esc["resaltar"]
         partes.append(f"resalta {r['tipo']} {r.get('n') or nombres.get(r.get('id'), r.get('id'))}")
@@ -2591,11 +2623,11 @@ D_ABRIR_VISTA = (
 D_PRESENTACION = (
     "Presenta la propuesta Yondó 2028–2031 en su versión técnica (lo que se construye, sin costos, en la maqueta 3D "
     "y los modelos del atlas) en el panel de la persona o en su pantalla en off. PARA EXPLICAR, PRIMERO UN PLAN: guion "
-    "(datos de un capítulo; no mueve nada) y luego recorrido, en UNA llamada: titulo, pasos (de 6 a 10, hasta 12) "
+    "(datos de un capítulo) y luego recorrido, en UNA llamada: titulo, pasos (de 6 a 10, hasta 12) "
     "y cierre {puntos}. Cada paso: dice (UNA frase de hasta 220 caracteres, proyectada y leída en voz "
     "alta) y lo que ocurre MIENTRAS se dice: capitulo, paso, la cámara (camara, rumbo, elevacion, zoom, mirar, mover "
     "{giro, zoom, elevacion}), las piezas (aislar, mostrar, ocultar, sin «pieza.parte»), enfoque, detalle, comparar, "
-    "inmersion y simular [{control, valor}] (el sismo o la hora de la maqueta), animar, resaltar; lo demás sigue. La "
+    "inmersion y simular [{control, valor}] (el sismo o la hora de la maqueta), animar, resaltar, gesto; lo demás sigue. La "
     "pantalla lo ejecuta sola; lo que no exista se descarta con aviso. Ejemplo de pasos: [{\"capitulo\":"
     "\"salud\",\"paso\":\"torre\",\"camara\":\"oblicua\",\"mover\":{\"giro\":40},\"dice\":\"…\"},{\"aislar\":\"torre\","
     "\"sin\":[\"torre.cubierta\"],\"dice\":\"…\"}]. control_recorrido lo pausa, salta o detiene. automatica (accion "

@@ -59,6 +59,7 @@ export const HACE = {
   girar: ['Gira', 'repetir'], capas: ['Muestra u oculta piezas', 'capas'], aislar: ['Aísla una obra', 'aislar'],
   partes: ['Quita partes', 'partes'], mover: ['Recorre con la cámara', 'recorrer'], mirar: ['Apunta la cámara', 'mirar'],
   animar: ['Anima la obra', 'animar'], simular: ['Maneja la simulación', 'ajustes'],
+  gesto: ['El presentador hace un gesto', 'presentador'],
 };
 const FASE = { preparando: 'Preparando', narrando: 'Narrando', sosteniendo: 'Mirando', cierre: 'En resumen', pausa: 'En pausa',
   fin: 'Terminó', detenido: 'Detenido', error: 'Detenido por un error', sin_avance: 'Preparando' };

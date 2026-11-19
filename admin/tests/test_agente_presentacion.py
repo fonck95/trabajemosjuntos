@@ -124,7 +124,10 @@ def test_los_capitulos_son_los_de_la_presentacion_tecnica():
     # Lo de main.js que hace falta para el control remoto
     assert "import { montarMando } from './mando.js';" in js
     assert ("montarMando({ caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel: (v) => alternarPanel(!v), "
-            "reencuadrar,\n  visual, asentada, resaltar, restaurarEncuadre });") in js
+            "reencuadrar,\n  visual, asentada, resaltar, restaurarEncuadre, presentador });") in js
+    # y el presentador (la caricatura que explica, js/presentador/), que solo se carga cuando el mando lo necesita
+    assert "import { presentadorPerezoso } from '../presentador/perezoso.js';" in js
+    assert "import('../presentador/presentador.js')" in js
     assert "dispatchEvent(new CustomEvent('propuesta:paso'" in js
     assert re.search(r"function avanzar\(d\) \{\n  if \(tlTelon\?\.isActive\(\)\) \{ tlTelon\.progress\(1\); return; \}"
                      r"\n  const \[ci, pi\] = vecino\(estado\.ci, estado\.pi, d\);", js)
@@ -513,7 +516,9 @@ def test_definicion_y_esquema():
     assert s["properties"]["zoom"] == {**s["properties"]["zoom"], "type": "number", "minimum": 0.3, "maximum": 3}
     assert s["properties"]["sin"]["maxItems"] == 8 and s["properties"]["sin"]["items"]["type"] == "string"
     assert "PLAN" in d["description"] and "pasos" in d["description"] and "dice" in d["description"]
-    assert len(texto) < 14000   # el esquema va en cada pedido al modelo
+    # el esquema va en cada pedido al modelo (14000 hasta que los pasos del plan llevaron el gesto del presentador)
+    assert len(texto) < 14200
+    assert "gestos" in s["properties"]["pasos"]["items"]["properties"]["gesto"]["description"]
     # Al final de las de interfaz: el orden fijo de `fijas()` (las conversaciones congelan la lista)
     assert [h.nombre for h in herramientas.fijas()][-1] == "presentacion"
 
@@ -1334,7 +1339,7 @@ def test_puente_cola_navegacion_y_proyector(tmp_path):
                        timeout=60)
     assert p.returncode == 0, p.stderr
     r = json.loads(p.stdout.strip().splitlines()[-1])
-    assert r["exports"] == ["AVISOS", "CANAL", "CONTROLES", "FASES", "MAX_CIERRE", "MAX_ESCENAS", "MAX_EXPLICACION",
+    assert r["exports"] == ["AVISOS", "CANAL", "CONTROLES", "FASES", "GESTOS", "MAX_CIERRE", "MAX_ESCENAS", "MAX_EXPLICACION",
                             "MAX_FRASES", "MAX_PUNTO", "MAX_SOSTENER_MS", "MAX_TITULO", "MOTIVOS", "RESALTAR",
                             "TERMINALES", "VERSION", "VOCES", "accionPresentacion", "accionesEnCola",
                             "accionesPresentacion", "alternarVozRecorrido", "avisarEstado", "avisarRecorrido",
