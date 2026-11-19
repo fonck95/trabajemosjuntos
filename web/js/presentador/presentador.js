@@ -370,6 +370,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   function ponerPlan(np) {
     const eraRotulo = esRotulo(plan);
     plan = np;
+    anim.plano = np.plano;   // (con la figura entera, a veces deja los brazos sueltos en reposo)
     const rot = esRotulo(np);
     // (del círculo a la figura o al revés, la luz cambia en el acto: pasa mientras no se ve)
     if (rot !== eraRotulo) seguirLuz({ ya: true });
