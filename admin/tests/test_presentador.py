@@ -5,13 +5,17 @@
 * El animador: cada gesto entra y sale (o se sostiene hasta otro), ninguno deja un ángulo que no sea un número, hablar
   abre la boca y callar la cierra, señalar a la izquierda o a la derecha usa el brazo de ese lado, y entrar y salir
   lo muestran y lo ocultan.
-* La carga perezosa (perezoso.js): un «quitar» o un «mostrar» no cargan el módulo; el primer aviso que lo necesita sí,
-  y lo que llegó mientras cargaba se le pasa en orden; con el presentador apagado no se carga; si no se pudo crear, lo
-  que llega se ignora.
-* El mando de la presentación (mando.js) le avisa cada cosa: la escena (con o sin resaltado, con o sin obra), la frase
-  (con la voz o sin ella), `habla`, la pausa, el cierre, la píldora de «prepara», la explicación suelta, quitarla y la
-  preferencia del panel (`vista {presentador}`). Una escena que cambia de paso no lo despide en el camino, y un
-  presentador que falla no rompe nada de la presentación.
+* La carga perezosa (perezoso.js): un «quitar», un «mostrar» o un aviso de la escena (encuadre, atlas, simulación,
+  ambiente) no cargan el módulo; el primer aviso que lo necesita sí, y lo que llegó mientras cargaba se le pasa en orden
+  (de cada aviso de la escena, el último); con el presentador apagado no se carga; si no se pudo crear, lo que llega se
+  ignora; `alturaMano()` es null hasta que está listo.
+* El mando de la presentación (mando.js) le avisa cada cosa: la escena (con o sin resaltado, con o sin obra, y lo que
+  se explica: el paso, su tipo, el resaltado, lo visual, la inmersión, `mover`, `simular`, las frases y el cambio de
+  capítulo o de paso), la frase (con la voz o sin ella), `habla`, la pausa, el cierre, la píldora de «prepara», la
+  explicación suelta, quitarla y la preferencia del panel (`vista {presentador}`); y, si la capa visual lo sabe, dónde
+  queda la obra (`encuadre`, después de aplicar), el modelo del atlas que cargó (`atlas`), lo que se accionó
+  (`simulacion`) y la luz de la maqueta (`ambiente`). Una escena que cambia de paso no lo despide en el camino, y un
+  presentador (o una capa visual) que falla no rompe nada de la presentación.
 """
 import re
 import subprocess
@@ -187,6 +191,27 @@ const armar = (crear = true) => {
   await dormir(20);
   r.sin_webgl = { cargas: x.cargas, estado: x.p.estado() };
 }
+{
+  // los avisos de la escena: sin cargar no lo despiertan (ni hay mano que preguntar); mientras carga, de cada uno el último
+  const x = armar();
+  x.p.encuadre({ n: 1 }); x.p.atlas({ listo: true }); x.p.simulacion({ controles: ['hora'] }); x.p.ambiente({ hora: 'tarde' });
+  await dormir(20);
+  r.avisos_no_despiertan = { cargas: x.cargas, estado: x.p.estado(), mano: x.p.alturaMano() };
+  x.p.narrar({ n: 2 }); x.p.ambiente({ hora: 'tarde' }); x.p.encuadre({ n: 2 }); x.p.ambiente({ hora: 'noche' });
+  await dormir(20);
+  r.avisos_en_cola = { cargas: x.cargas, llamadas: x.llamadas };
+}
+{
+  // la altura de la mano: la del de verdad cuando está listo; null antes, o si el de verdad falla
+  const p = presentadorPerezoso(async () => ({ alturaMano: () => ({ lado: 'panel', y: 671 }) }));
+  const antes = p.alturaMano();
+  p.narrar({ n: 1 });
+  await dormir(20);
+  const roto = presentadorPerezoso(async () => ({ alturaMano: () => { throw new Error('roto'); } }));
+  roto.narrar({ n: 1 });
+  await dormir(20);
+  r.mano = [antes, p.alturaMano(), roto.alturaMano()];
+}
 console.log(JSON.stringify(r));
 """
 
@@ -200,13 +225,21 @@ def test_la_carga_perezosa(tmp_path):
         ["narrar", {"n": 1}], ["frase", 0, {"voz": True}], ["habla", False], ["cierre", None]]}, r["en_orden"]
     assert r["apagado"] == {"cargas": 0, "estado": "sin_cargar"}
     assert r["sin_webgl"] == {"cargas": 1, "estado": "fallo"}
+    assert r["avisos_no_despiertan"] == {"cargas": 0, "estado": "sin_cargar", "mano": None}, r["avisos_no_despiertan"]
+    assert r["avisos_en_cola"] == {"cargas": 1, "llamadas": [
+        ["narrar", {"n": 2}], ["encuadre", {"n": 2}], ["ambiente", {"hora": "noche"}]]}, r["avisos_en_cola"]
+    assert r["mano"] == [None, {"lado": "panel", "y": 671}, None], r["mano"]
 
 
 def _guion_mando(escenarios: str) -> str:
     base = NODE_MANDO.split("const r = {};")[0]
     viejo = "    restaurarEncuadre: () => { log.push(['restaurar']); } });"
     assert base.count(viejo) == 1
-    return base.replace(viejo, "    restaurarEncuadre: () => { log.push(['restaurar']); }, presentador: globalThis.PRESENTADOR });") + escenarios
+    base = base.replace(viejo, "    restaurarEncuadre: () => { log.push(['restaurar']); }, presentador: globalThis.PRESENTADOR });")
+    # la capa visual de mentira, con lo que el guion le sume (globalThis.VISUAL_EXTRA(log): cajaObra, luz, modoDe, simular)
+    capa = "ventana, documento, visual,"
+    assert base.count(capa) == 1
+    return base.replace(capa, "ventana, documento, visual: Object.assign(visual, globalThis.VISUAL_EXTRA?.(log) ?? {}),") + escenarios
 
 
 NODE_MANDO_PRESENTADOR = r"""
@@ -250,6 +283,46 @@ const tomar = () => llamadas.splice(0).map((l) => JSON.parse(JSON.stringify(l)))
   r.vista = tomar();
   r.vista_mala = (await a.pedir('vista', { id: 17, presentador: 1 }))?.tipo;
 }
+// el paso de inmersión (el 4: torre_sismo) y un `mover` que llega tal cual; sin cajaObra ni luz en la capa no van
+// `encuadre` ni `ambiente`; el aviso del atlas, cuando el modelo terminó de cargar (o venció la espera)
+{
+  const a = armar();
+  a.mandar('escena', { id: 1, ...E({ paso: 4, n: 2, mover: { giro: 12 } }) });
+  await dormir(15);
+  r.inmersion = tomar();
+  a.asientos.shift()?.(false);
+  await dormir(15);
+  r.inmersion_lista = [tomar(), a.respuesta(1)?.aviso ?? null];
+}
+// una capa que sabe de la escena (cajaObra, luz, modoDe y simular): el encuadre después de aplicar, la luz después de
+// aplicar, de simular y con cada frase, lo que se accionó (sin lo que el modelo rechazó) y el modo de la inmersión
+const CAJA = { obra: { x0: 600, y0: 200, x1: 900, y1: 500 }, rotulos: [{ x0: 700, y0: 170, x1: 790, y1: 196 }] };
+const LUZ = { hora: 'atardecer', luz: '#ffbd88', intensidad: 2.5, cielo: '#8d9fd0', piso: '#4a3f33', hemi: 0.58, oscuridad: 0.5, sol: [0.4, 0.3, -0.87], solFin: [0.4, 0.3, -0.87] };
+{
+  globalThis.VISUAL_EXTRA = (log) => ({
+    cajaObra: () => { log.push(['cajaObra']); return structuredClone(CAJA); },
+    luz: () => structuredClone(LUZ),
+    modoDe: (id) => ({ torre_sismo: 'sismo', torre_bim: 'bim' })[id] ?? null,
+    simular: async (lista) => lista.filter((x) => x.control === 'malo').map((x) => ({ clave: `simular.${x.control}`, motivo: 'no está' })),
+  });
+  const a = armar();
+  globalThis.VISUAL_EXTRA = null;
+  await a.pedir('escena', { id: 1, ...E({ paso: 2, visual: { ...structuredClone(V0), enfoque: 'torre' },
+    simular: [{ control: 'hora', valor: 'noche' }, { control: 'malo' }] }) });
+  r.capa = { llamadas: tomar(), nombres: a.nombres() };
+  await a.pedir('narracion', { id: 2, frase: 1 });
+  r.capa_frase = tomar();
+  await a.pedir('visual', { id: 3, tema: 'oscuro' });
+  r.capa_visual = tomar();
+  const s = await a.pedir('visual', { id: 4, simular: [{ control: 'malo' }] });
+  r.capa_simular_malo = [tomar(), s?.tipo];
+  a.mandar('escena', { id: 5, ...E({ paso: 4, n: 2 }) });
+  await dormir(15);
+  const narrar = tomar();
+  a.asientos.shift()?.(true);
+  await dormir(15);
+  r.capa_inmersion = [narrar, tomar()];
+}
 // un presentador que falla en todo: la presentación responde igual
 {
   globalThis.PRESENTADOR = new Proxy({}, { get: () => () => { throw new Error('roto'); } });
@@ -259,28 +332,87 @@ const tomar = () => llamadas.splice(0).map((l) => JSON.parse(JSON.stringify(l)))
   const q = await a.pedir('quitar_explicacion', { id: 3 });
   r.roto = [e?.tipo, f?.tipo, q?.tipo, a.sub.classList.contains('visible')];
 }
+// y una capa visual cuyo saber de la escena falla (cajaObra, luz y modoDe lanzan): tampoco
+{
+  globalThis.VISUAL_EXTRA = () => ({ cajaObra: () => { throw new Error('roto'); }, luz: () => { throw new Error('roto'); },
+    modoDe: () => { throw new Error('roto'); } });
+  const a = armar();
+  globalThis.VISUAL_EXTRA = null;
+  const e = await a.pedir('escena', { id: 1, ...E({ paso: 2 }) });
+  const f = await a.pedir('narracion', { id: 2, frase: 1 });
+  const v = await a.pedir('visual', { id: 3, tema: 'claro' });
+  r.capa_rota = [e?.tipo, e?.aviso ?? null, f?.tipo, v?.tipo];
+}
 console.log(JSON.stringify(r));
 """
+
+# Lo de siempre de `narrar` (el taller y los presentadores de antes leen solo esto)
+VIEJAS = ("n", "de", "senal", "gesto", "frases", "obra")
+
+
+def _narrar(llamadas, **esperado):
+    """La llamada `narrar` de `llamadas` (debe ser la única) con lo de siempre y, aparte, las claves de `esperado`."""
+    assert len(llamadas) == 1 and llamadas[0][0] == "narrar", llamadas
+    d = llamadas[0][1]
+    for k, v in esperado.items():
+        assert d.get(k, "falta") == v, (k, d.get(k, "falta"), v)
+    return {k: d[k] for k in VIEJAS}
 
 
 @requiere_node
 def test_el_mando_le_avisa_al_presentador(tmp_path):
     r = _node(tmp_path, _guion_mando(NODE_MANDO_PRESENTADOR), MANDO_JS.as_uri())
-    assert r["escena1"] == [["narrar", {"n": 1, "de": 3, "senal": False, "gesto": None, "frases": 2, "obra": False}]], r["escena1"]
+    # la escena: lo de siempre (con los valores de antes) y lo nuevo, aparte (E() de la prueba: salud/1, donde ya está)
+    v0 = {"enfoque": None, "camara": "paso", "rumbo": None, "elevacion": None, "zoom": None, "mirar": None, "girar": False,
+          "comparar": "proyecto", "detalle": None, "inmersion": None, "mostrar": [], "ocultar": [], "aislar": None, "sin": []}
+    assert _narrar(r["escena1"], rid="abcdef123456", ms=7400, capitulo="salud", paso=1, tipo=None, lista=0, cambio=None,
+                   panel=True, resaltar=None, visual=v0, atlas=None, modo=None, animar=False, simular=None, mover=None,
+                   textos=["Frase uno.", "Frase dos."]) \
+        == {"n": 1, "de": 3, "senal": False, "gesto": None, "frases": 2, "obra": False}
+    assert len(r["escena1"][0][1]) == 22, sorted(r["escena1"][0][1])
     assert r["frase"] == [["frase", 1, {"voz": True, "texto": "Frase dos."}]], r["frase"]
     assert r["habla"] == [["habla", True], ["habla", False]]
     assert r["habla_mala"] == "error"
     assert r["pausa"] == [["pausa", True], ["pausa", False]]
-    assert r["escena2"] == [["narrar", {"n": 2, "de": 3, "senal": True, "gesto": None, "frases": 2, "obra": True}]], r["escena2"]
-    assert r["gestos"][0] == [["narrar", {"n": 3, "de": 3, "senal": False, "gesto": "comparar", "frases": 2, "obra": False}],
-                              ["narrar", {"n": 3, "de": 3, "senal": False, "gesto": None, "frases": 2, "obra": False}]], r["gestos"]
+    assert _narrar(r["escena2"], cambio="paso", resaltar={"tipo": "cifra", "n": 1}, paso=2, visual={**v0, "mirar": "torre"}) \
+        == {"n": 2, "de": 3, "senal": True, "gesto": None, "frases": 2, "obra": True}
+    assert [_narrar([x], cambio=None) for x in r["gestos"][0]] == [
+        {"n": 3, "de": 3, "senal": False, "gesto": "comparar", "frases": 2, "obra": False},
+        {"n": 3, "de": 3, "senal": False, "gesto": None, "frases": 2, "obra": False}], r["gestos"]
     assert r["gestos"][1:] == [None, "parcial", ["gesto"]], r["gestos"]
     assert r["cierre"] == [["cierre", ["Uno", "Dos"], {"voz": False}], ["cierre", None, {"voz": False}]], r["cierre"]
     assert r["quitar"] == [["quitar"]]
     assert r["explicar"] == [["explicar", "La torre tiene cuatro pisos."]]
     assert r["preparando"] == [["preparando", True], ["preparando", False]], r["preparando"]
     assert r["vista"] == [["mostrar", False]] and r["vista_mala"] == "error"
+    # el paso de inmersión: la inmersión del paso y su `mover` tal cual; sin la capa que sabe, ni encuadre ni ambiente; el
+    # aviso del atlas cuando la espera termina
+    assert _narrar(r["inmersion"], tipo="inmersion", atlas="torre_sismo", modo=None, cambio="paso", mover={"giro": 12},
+                   simular=None) == {"n": 2, "de": 3, "senal": False, "gesto": None, "frases": 2, "obra": True}
+    assert r["inmersion_lista"] == [[["atlas", {"rid": "abcdef123456", "n": 2, "listo": False}]], "asiento"], r["inmersion_lista"]
+    # con la capa que sabe: encuadre (después de aplicar) y ambiente; lo accionado, sin lo que el modelo rechazó
+    caja = {"obra": {"x0": 600, "y0": 200, "x1": 900, "y1": 500}, "rotulos": [{"x0": 700, "y0": 170, "x1": 790, "y1": 196}]}
+    luz = {"hora": "atardecer", "luz": "#ffbd88", "intensidad": 2.5, "cielo": "#8d9fd0", "piso": "#4a3f33", "hemi": 0.58,
+           "oscuridad": 0.5, "sol": [0.4, 0.3, -0.87], "solFin": [0.4, 0.3, -0.87]}
+    llamadas = r["capa"]["llamadas"]
+    assert [x[0] for x in llamadas] == ["narrar", "encuadre", "ambiente", "simulacion", "ambiente"], llamadas
+    assert _narrar(llamadas[:1], cambio="paso", simular={"modelo": "maqueta", "controles": ["hora", "malo"]},
+                   visual={**v0, "enfoque": "torre"})["obra"] is True
+    assert llamadas[1:] == [["encuadre", {"rid": "abcdef123456", "n": 1, "caja": caja}], ["ambiente", luz],
+                            ["simulacion", {"rid": "abcdef123456", "n": 1, "modelo": "maqueta", "controles": ["hora"]}],
+                            ["ambiente", luz]], llamadas
+    nombres = r["capa"]["nombres"]
+    assert nombres.index("aplicar") < nombres.index("cajaObra"), nombres
+    assert r["capa_frase"] == [["frase", 1, {"voz": False, "texto": "Frase dos."}], ["ambiente", luz]], r["capa_frase"]
+    assert r["capa_visual"] == [["encuadre", {"rid": "abcdef123456", "n": 1, "caja": caja}], ["ambiente", luz]], r["capa_visual"]
+    assert r["capa_simular_malo"] == [[["ambiente", luz]], "error"], r["capa_simular_malo"]
+    narrar, despues = r["capa_inmersion"]
+    assert [x[0] for x in narrar] == ["narrar", "encuadre", "ambiente"], narrar
+    assert _narrar(narrar[:1], atlas="torre_sismo", modo="sismo", tipo="inmersion")["obra"] is True
+    assert despues == [["atlas", {"rid": "abcdef123456", "n": 2, "listo": True}]], despues
+    # un presentador que falla, o una capa cuyo saber de la escena falla, no rompen nada
     assert r["roto"] == ["estado", "estado", "estado", False], r["roto"]
+    assert r["capa_rota"] == ["estado", None, "estado", "estado"], r["capa_rota"]
 
 
 def test_la_vista_del_panel_le_da_la_boca_y_el_boton():

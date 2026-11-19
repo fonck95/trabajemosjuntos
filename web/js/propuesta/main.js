@@ -6,7 +6,7 @@
 // construye, cómo funciona y cómo se mide, sin costos ni financiación (tecnica.js), con las inmersiones en los modelos
 // del atlas y lo que el asistente cambia de lo que se ve sin cambiar de paso (visual.js: cámara, enfoque, hoy/proyecto,
 // ficha técnica, inmersión, tema y las piezas de la maqueta que muestra, oculta o aísla mientras explica).
-import { gsap, reducedMotion, countUp } from '../core.js';
+import { gsap, reducedMotion, countUp, onTheme } from '../core.js';
 import { crearEscena } from './escena.js';
 import { montarMando } from './mando.js';
 import { capsTecnica, sinPlata, cifraTecnica, especificacionTecnica, anios } from './tecnica.js';
@@ -794,10 +794,36 @@ function resaltar(r) {
   if (!els.length) return false;
   for (const e of els) e.classList.add('foco');
   els[0].parentElement?.classList.add('con-foco');
-  els[0].scrollIntoView?.({ block: 'nearest', behavior: reducedMotion ? 'auto' : 'smooth' });
+  if (!aLaMano(els)) els[0].scrollIntoView?.({ block: 'nearest', behavior: reducedMotion ? 'auto' : 'smooth' });
   // en el celular, con la hoja en «mini», lo resaltado del panel no se vería: la hoja sube a «medio»
   if (hojaMQ.matches && hoja === 'mini' && r.tipo !== 'leyenda' && !(r.tipo === 'especificacion' && r.en === 'ficha')) aplicarHoja('medio');
   resaltado = els;
+  return true;
+}
+// Lo resaltado, a la altura de la mano del presentador cuando señala hacia su lado (el panel o la ficha, en pantalla
+// grande): el brazo queda casi horizontal y la punta del dedo, pegada a la tarjeta. Se desplaza el contenedor con
+// scroll más cercano lo que haga falta (acotado a lo que puede), solo si así lo resaltado queda entero a la vista.
+// Devuelve si lo hizo; si no (no señala hacia ahí, no hay presentador, no cabe), quien llama lo trae lo justo
+function aLaMano(els) {
+  let mano = null;
+  try { mano = presentador?.alturaMano?.() ?? null; } catch { mano = null; }   // (antes de crearlo no hay mano)
+  if (!mano || !Number.isFinite(mano.y)) return false;
+  const lado = els[0].closest('.detalle') ? 'ficha' : els[0].closest('.panel') ? 'panel' : null;
+  if (!lado || lado !== mano.lado) return false;
+  let cont = null;
+  for (let p = els[0].parentElement; p && p !== document.body; p = p.parentElement) {
+    const o = getComputedStyle(p).overflowY;
+    if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight + 1) { cont = p; break; }
+  }
+  if (!cont) return false;
+  const cajas = els.map((e) => e.getBoundingClientRect());
+  const arriba = Math.min(...cajas.map((b) => b.top)), abajo = Math.max(...cajas.map((b) => b.bottom));
+  const max = cont.scrollHeight - cont.clientHeight;
+  const delta = Math.round(Math.max(-cont.scrollTop, Math.min(max - cont.scrollTop, (arriba + abajo) / 2 - mano.y)));
+  // lo que se ve del contenedor (sin sus bordes) dentro de la ventana
+  const c = cont.getBoundingClientRect(), techo = Math.max(0, c.top + cont.clientTop), piso = Math.min(innerHeight, c.top + cont.clientTop + cont.clientHeight);
+  if (arriba - delta < techo || abajo - delta > piso) return false;
+  if (delta) cont.scrollBy({ top: delta, behavior: reducedMotion ? 'auto' : 'smooth' });
   return true;
 }
 // Si la persona movió la cámara desde la escena anterior, vuelve al encuadre vigente (el que pidió el recorrido)
@@ -822,6 +848,14 @@ ir(ci0, pi0, { primera: true });
 // postMessage y muestra su explicación en el subtítulo. Fuera de un iframe no escucha nada
 // El presentador (una caricatura en 3D que explica lo que narra el asistente, js/presentador/): solo lo despierta el
 // mando, así que fuera del panel ni se descarga
-const presentador = presentadorPerezoso(() => import('../presentador/presentador.js').then((m) => m.crearPresentador()));
+const perezoso = presentadorPerezoso(() => import('../presentador/presentador.js').then((m) => m.crearPresentador()));
+// con «?qa» en la dirección (las herramientas de prueba, como __qaPropuesta): lo que el mando le avisa al presentador
+// queda anotado ([método, argumentos, ms], los últimos 300), y la capa visual y el presentador perezoso quedan a mano
+const qaMando = new URLSearchParams(location.search).has('qa') ? { avisos: [], visual, perezoso } : null;
+if (qaMando) window.__qaMando = qaMando;
+const presentador = !qaMando ? perezoso : new Proxy(perezoso, { get: (o, k) => (typeof o[k] !== 'function' || k === 'estado' || k === 'alturaMano' ? o[k]
+  : (...a) => { qaMando.avisos.push([k, a, Math.round(performance.now())]); if (qaMando.avisos.length > 300) qaMando.avisos.shift(); return o[k](...a); }) });
 montarMando({ caps, estado, ir, vecino, abrirIndice, abrirFichas, verPanel: (v) => alternarPanel(!v), reencuadrar,
   visual, asentada, resaltar, restaurarEncuadre, presentador });
+// el tema (el botón de la persona) cambia la hora de la maqueta (ambiente.js ya la puso: se suscribió antes): su luz la sigue
+if (visual) onTheme(() => { try { const l = visual.luz(); if (l) presentador.ambiente(l); } catch { /* sin luz que seguir */ } });

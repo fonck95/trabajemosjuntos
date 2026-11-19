@@ -721,7 +721,104 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   // un modelo del atlas pedido que todavía carga (la escena espera a que esté antes de narrar)
   const cargando = () => inm.abierta && !capaInm.classList.contains('lista') && !inm.fallo;
 
+  // ---------------------------------------------------------------- lo que el presentador sabe de la escena
+  // (web/js/presentador/: mando.js se lo pasa con los avisos `encuadre` y `ambiente`, docs/presentador.md)
+  /** La cámara donde termina el viaje: la postura del último encuadre con lo vigente (la cámara pedida, el final del
+   * último `mover`, la misma cuenta de `enEncuadre`), o null si no hay encuadre que valga (la persona tomó la cámara,
+   * todavía no hay ninguno o un modelo del atlas tapa la maqueta). */
+  function camaraFinal() {
+    if (st.userMoved || !ultimo || inmersionVigente()) return null;
+    const p = escena.postura(ultimo.obj, opcionesDe(ultimo.opts));
+    if (!p?.pts?.length) return null;
+    const cam = st.camera.clone();
+    cam.far = 1e7;
+    cam.updateProjectionMatrix();
+    cam.position.fromArray(p.pos);
+    cam.lookAt(new THREE.Vector3().fromArray(p.tgt));
+    cam.updateMatrixWorld();
+    return { cam, p };
+  }
+  const redondo = (x) => Math.round(x);
+  /** Dónde quedan, cuando la cámara llegue, la obra encuadrada y sus rótulos, en px de la ventana:
+   * { obra: {x0, y0, x1, y1} | null, rotulos: [{x0, y0, x1, y1}] }, o null (ver `camaraFinal`). La obra es la caja de
+   * los puntos de la postura proyectados con la cámara final (lo que queda delante de ella), recortada a la pantalla.
+   * Los rótulos (.lbl-p y .lbl-pin a la vista) se ponen un momento donde los dejará esa cámara y se reparten como allí
+   * (el reparto de escena.js: los que el panel taparía se corren, los que caen fuera se ocultan), se miden y vuelven a
+   * su lugar con la cámara de ahora, sin que se pinte nada en el medio: cuentan el ancla de cada uno, su reparto y los
+   * que todavía no se ven porque la cámara está lejos. Se llama una vez por escena (mando.js, tras `aplicar`). */
+  function cajaObra() {
+    const f = camaraFinal();
+    if (!f) return null;
+    const r = st.el.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    const { cam, p } = f, v = new THREE.Vector3();
+    const recortar = (x0, y0, x1, y1) => {
+      const c = [Math.max(x0, r.left), Math.max(y0, r.top), Math.min(x1, r.right), Math.min(y1, r.bottom)].map(redondo);
+      return c[2] > c[0] && c[3] > c[1] ? { x0: c[0], y0: c[1], x1: c[2], y1: c[3] } : null;
+    };
+    const b = [Infinity, -Infinity, Infinity, -Infinity];
+    for (const q of p.pts) {
+      v.copy(q).applyMatrix4(cam.matrixWorldInverse);
+      if (v.z > -cam.near) continue;   // detrás de la cámara
+      v.applyMatrix4(cam.projectionMatrix);
+      const x = r.left + ((v.x + 1) / 2) * r.width, y = r.top + ((1 - v.y) / 2) * r.height;
+      b[0] = Math.min(b[0], x); b[1] = Math.max(b[1], x); b[2] = Math.min(b[2], y); b[3] = Math.max(b[3], y);
+    }
+    const obra = b[1] > b[0] ? recortar(b[0], b[2], b[1], b[3]) : null;
+    const rotulos = [];
+    // (la cámara de la escena, un momento en la postura final: el reparto proyecta con ella; durante un paseo se rehace
+    // a lo sumo cuatro veces por segundo, y aquí tiene que correr en el acto)
+    const c0 = st.camera, pos0 = c0.position.clone(), q0 = c0.quaternion.clone(), t0 = st._tReparto;
+    const poner = () => {
+      c0.updateMatrixWorld();
+      st.labels.render(st.scene, c0);
+      st._tReparto = 0;
+      if (st.declutter && typeof st.declutterLabels === 'function') st.declutterLabels();
+    };
+    try {
+      c0.position.copy(cam.position);
+      c0.quaternion.copy(cam.quaternion);
+      poner();
+      for (const o of st._labels) {
+        const e = o.element;
+        if (!o.visible || !e?.isConnected || e.style.display === 'none' || e.classList.contains('fuera')) continue;
+        if (!e.classList.contains('lbl-p') && !e.classList.contains('lbl-pin')) continue;
+        const k = e.getBoundingClientRect();
+        if (!k.width || !k.height || getComputedStyle(e).visibility === 'hidden') continue;
+        const c = recortar(k.left, k.top, k.right, k.bottom);
+        if (c) rotulos.push(c);
+      }
+    } catch (e) { console.warn('visual.cajaObra', e); }
+    finally {
+      c0.position.copy(pos0);
+      c0.quaternion.copy(q0);
+      try { poner(); } catch { /* el cuadro siguiente los vuelve a poner */ }
+      st._tReparto = t0;
+    }
+    return { obra, rotulos };
+  }
+  /** La luz de la maqueta (ambiente.js), para que el presentador la siga: { hora, luz, intensidad, cielo, piso, hemi,
+   * oscuridad, sol: [x, y, z], solFin }. `hora` es la que se ve (en el ciclo del día, la más cercana; los números y los
+   * colores son los de la hora intermedia); los colores, '#rrggbb'; `sol`, la dirección hacia el sol en el espacio de la
+   * cámara de ahora (x > 0: el sol está a la derecha de la pantalla) y `solFin`, en el de la cámara donde termina el
+   * viaje (la misma si no hay viaje que valga). null sin ambiente. */
+  const dirSol = new THREE.Vector3();
+  function luz() {
+    const a = escena.ambiente, h = a?.datos?.();
+    if (!h || !Array.isArray(h.sol)) return null;
+    const color = (c) => `#${new THREE.Color(c).getHexString()}`;
+    const r3 = (x) => Math.round(x * 1000) / 1000;
+    const enCamara = (cam) => dirSol.fromArray(h.sol).normalize().transformDirection(cam.matrixWorldInverse).toArray().map(r3);
+    st.camera.updateMatrixWorld();
+    const sol = enCamara(st.camera), fin = camaraFinal();
+    return { hora: a.hora?.() ?? null, luz: color(h.luz), intensidad: r3(h.intensidad), cielo: color(h.cielo), piso: color(h.piso),
+      hemi: r3(h.hemi), oscuridad: r3(h.oscuridad ?? 0), sol, solFin: fin ? enCamara(fin.cam) : sol };
+  }
+
   return { aplicar, mover, simular, guiado, pausar, depurar, estado: estadoVisual, alPaso, validar, cargando,
+    // para el presentador: la obra y sus rótulos donde terminan, la luz de la maqueta y el modo de una inmersión
+    // (torre, pisos, recorrido, sismo, bim, parque, hoy, laboratorio)
+    cajaObra, luz, modoDe: (id) => catalogo.get(id)?.modo ?? null,
     // los controles de la simulación de la maqueta en el capítulo a la vista
     controlesMaqueta: () => sim.controles(),
     // para pasar3D (main.js): lo que el asistente muestra, oculta o aísla encima del paso, y la vista del paso sin vuelo
