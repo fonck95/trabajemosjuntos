@@ -13,10 +13,15 @@ three.js a partir de su foto:
   piel tostada rosada clara, con volumen (más clara en la frente, los pómulos y la nariz; más oscura hacia la mandíbula,
   en las cuencas, en el párpado de arriba y en la banda del pliegue de la sonrisa), un calor suave en las mejillas y la
   cara de abajo casi tan clara como la frente, como en la foto de estudio; los brazos y las manos, más tostados. El cuello grueso, casi tan ancho como la mandíbula, y más oscuro que la cara (a la sombra de la mandíbula).
-- **El pelo**: gris muy oscuro (no negro azabache), corto en cepillo, parado y peinado hacia arriba y hacia su
-  izquierda, en mechones juntos por el gel (el copete, más alto de ese lado), con las puntas que se aclaran donde da la
-  luz; el frente sube derecho desde la línea de la frente, recta, con un piquito redondo en el medio; las sienes
-  cubiertas y los lados cortos en un degradé gris (las canas) que se funde con la piel, y la patilla que se afina.
+- **El pelo**: casi negro, corto y con gel, peinado hacia arriba y algo hacia su izquierda. Manda el volumen: de frente
+  es un domo ancho y redondeado, casi liso (la silueta calza con la de la foto), con una textura de puntitas cortas y
+  finas que apenas rompen el borde, más paradas y apretadas al frente-centro y hacia su izquierda; el brillo del gel
+  son vetas finas que siguen el peinado, de poco contraste (no manchones). La línea de la frente es una curva suave con
+  un pico de viuda chico y redondeado; las esquinas retroceden en curva (entradas suaves, más la de su derecha) y bajan
+  por la sien hasta la patilla, que llega al borde de arriba de la oreja y termina en un degradé hacia un gris de canas.
+  Los lados son cortos y oscuros, pegados a la cabeza, con trazos cortos de pelo; solo el borde, donde el pelo es ralo,
+  se aclara un poco. De perfil es un casco corto y continuo: el frente nace en una rampa desde la línea y queda apenas
+  más alto que la coronilla (sin visera).
 - **Las orejas**: grandes y despegadas, abiertas hacia adelante (de frente se les ve la concha), anchas y redondas
   arriba y angostas hacia el lóbulo, pegado; van de entre la ceja y el ojo a entre la nariz y la boca. La derecha se
   despega algo menos que la izquierda, como en la foto.
@@ -32,7 +37,8 @@ three.js a partir de su foto:
   jinete derecho, de azul oscuro y pantalón blanco). El jean stonewash, desteñido casi celeste en los muslos y las
   rodillas y oscuro en los costados; el reloj negro grande en la muñeca izquierda (bisel gris, esfera gris carbón con
   doce marcas, la fecha y la corona) y la manilla roja, fina, con cuentas color oro champaña y dos cabos que cuelgan,
-  en la derecha.
+  en la derecha (cuelgan de verdad: en cada cuadro apuntan hacia abajo, también con la mano en alto). Al caminar, la
+  polo se aparta del muslo que va adelante (o atrás): la tela pasa por encima de la pierna en vez de dejarla asomar.
 
 Se arma entera con geometrías (sin modelos, sin imágenes y sin nada de afuera). La cabeza es una esfera esculpida (de
 frente, una superelipse de lados casi rectos, con el relieve de pómulos, mejillas, cuencas, hocico, mentón y pliegues);
@@ -41,8 +47,8 @@ sombreado donde queda de canto, una línea entera que la sigue desde cualquier l
 pliegues, sombras suaves) son tiras pegadas a la superficie con una grilla de alturas que se mide una vez rasterizando
 la cara. La piel lleva sombreado suave (una rampa de doce tonos, con las sombras más rojizas, como la piel de verdad);
 la ropa, por tonos, como caricatura; todo con un contorno de grosor fijo, café rojizo en la piel y casi negro en el
-pelo y la ropa (corrido un poco hacia atrás, para que no asome en motas en las zonas cóncavas; no baja por el degradé de
-los lados del pelo). Lo dibujado sobre la piel no se pinta donde queda de canto a la cámara: de perfil, la ceja y el ojo
+pelo y la ropa (corrido un poco hacia atrás, para que no asome en motas en las zonas cóncavas; no baja hasta el borde
+del pelo, que se funde con la piel). Lo dibujado sobre la piel no se pinta donde queda de canto a la cámara: de perfil, la ceja y el ojo
 del otro lado no asoman por el borde de la frente.
 
 | Archivo | Qué hace |
@@ -155,11 +161,16 @@ Con `prefers-reduced-motion` entra y sale sin animación y sin saltos. Si el nav
   oscurece cada tono y el tinte de las sombras); las sombras y el calor pintados, los discos de `sombra` al principio de
   `construirCara`. La luz principal del presentador viene de la izquierda de quien mira (en la foto, de la derecha).
 - Forma de la cara: `deformarCabeza` (la superelipse de frente, las sienes, el largo de la mandíbula y el mentón) y
-  `RELIEVE` (los bultos y hundidos de la cara), la línea del pelo (`limite` en `pelo`) y las medidas de ojos, cejas,
+  `RELIEVE` (los bultos y hundidos de la cara), el pelo (en `pelo`: la línea del pelo `lineaBase`/`limite`, el grueso
+  del casco por meridianos `deLado`/`deFrente`/`deAtras`, sus colores en `tinte` y en `COLORES.pelo*`) y las medidas de ojos, cejas,
   orejas, nariz y boca en `construirCara` y `crearBoca`. La forma de la oreja (su silueta, el hélix, la concha y sus
   dos líneas) está en `ORE`; en `construirCara` solo se ubica y se gira (cuánto se despega).
 - El cuerpo y la ropa: el torso es un torno (`perfil`) que `anchoTorso` y `fondoTorso` ensanchan y aplanan; las mismas
-  funciones (`enTorso`, `zTorso`, `fueraDelTorso`) sirven para apoyar cosas sobre la polo sin lanzar rayos. El cuello
+  funciones (`enTorso`, `zTorso`, `fueraDelTorso`, `sobreTorso`) sirven para apoyar cosas sobre la polo sin lanzar
+  rayos (el jinete va pegado a la tela con `sobreTorso`). `apartarPolo` empuja la parte de abajo de la polo y el ruedo
+  fuera de los muslos (`PERFIL_MUSLO`, con `HOLGURA_MUSLO`) justo antes de calcular la matriz de la polo (no recalcula
+  si los muslos no se movieron desde la vez anterior, ni mientras no alcanzan a gastar la `holgura` que quedaba); `colgar`
+  apunta los cabos de la manilla hacia abajo. El cuello
   de la polo se arma en `cuelloDeLaPolo`: el doblez de arriba (`arriba`, alrededor del cuello) y el borde de abajo
   (`BORDE`: dónde se apoya en los hombros, la punta y la V), y `ABRE_CUELLO` es la altura de la V (donde empieza la
   tapeta). La cabeza va al 0,94 (`craneo.scale`): más grande, el cuerpo parece de niño.

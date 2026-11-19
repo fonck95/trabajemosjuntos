@@ -3,8 +3,10 @@
 // sube la sonrisa, los pliegues de la nariz a la boca, los ojos almendrados entrecerrados con sus patas de gallo, las
 // cejas castañas casi rectas, la nariz ancha y trapezoidal (la punta redonda fundida con las aletas), la sonrisa ancha y
 // plana, de medialuna, con el labio de abajo lleno y rosado y los dientes muy blancos; las orejas grandes y despegadas,
-// abiertas hacia adelante; el pelo gris muy oscuro, corto en cepillo, parado y peinado hacia arriba y hacia su izquierda,
-// en mechones con brillos de gel, la línea de la frente recta y los lados cortos (degradé gris). El cuerpo de un
+// abiertas hacia adelante; el pelo casi negro, corto y con gel, peinado hacia arriba y algo hacia su izquierda: de frente
+// un domo redondeado y casi liso, con textura de puntitas cortas y vetas finas de gel, la línea de la frente en curva
+// suave (un pico de viuda chico y entradas redondeadas), el frente que sube en rampa, los lados cortos y oscuros, y la
+// patilla que baja hasta la oreja y se aclara en un degradé. El cuerpo de un
 // adulto robusto (hombros anchos en pendiente, brazos fuertes, manos grandes) con la polo roja carmesí: el cuello
 // grande abierto en V hasta el botón de arriba, la tapeta larga de dos botones y el jinete bordado; el jean
 // stonewash, el reloj negro grande en la muñeca izquierda y la manilla roja con cuentas doradas en la derecha.
@@ -31,7 +33,8 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 export const COLORES = {
   piel: 0xdca291, pielBrazo: 0xcf9480, pielSombra: 0x9e5e50, pielLinea: 0x8a4f45, oreja: 0xeca292, labio: 0xd68c92, labioSup: 0xc6827e,
   labioBrillo: 0xe6a9ab,
-  pelo: 0x29252e, peloDegrade: 0x928684, ceja: 0x5d4138,
+  pelo: 0x29252e, peloLado: 0x2f2a30, peloBorde: 0x705c5e, peloBrillo: 0x75727e, peloCana: 0x9a9494,
+  ceja: 0x5d4138,
   polo: 0xbe2537, poloOscuro: 0x951a2b, jeanClaro: 0x97a8c5, jean: 0x445d8a, jeanOscuro: 0x283a5f,
   zapato: 0x3a2a22, suela: 0x2a201b,
   dientes: 0xfdfcf8, boca: 0x4a1416, lengua: 0xc0545a, ojo: 0xe0d3ca, iris: 0x2e1d17, pupila: 0x080504,
@@ -222,7 +225,7 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     pielBrazo: toon(COLORES.pielBrazo, { gradientMap: rampaPiel }),   // los brazos y las manos, más tostados que la cara
     cuello: toon(0xffffff, { gradientMap: rampaPiel, vertexColors: true }),   // la piel, con su sombra por vértice
     oreja: toon(COLORES.oreja, { gradientMap: rampaPiel, vertexColors: true }),
-    pelo: toon(COLORES.pelo), peloDegrade: toon(0xffffff, { vertexColors: true }),
+    pelo: toon(0xffffff, { vertexColors: true }),   // su color va por vértice (el negro, los lados, el gel)
     polo: toon(COLORES.polo), poloDoble: toon(COLORES.polo, { side: THREE.DoubleSide }), poloOscuro: toon(COLORES.poloOscuro),
     jean: toon(0xffffff, { vertexColors: true }), jeanOscuro: toon(COLORES.jeanOscuro, { side: THREE.DoubleSide }),
     zapato: toon(COLORES.zapato), suela: toon(COLORES.suela), reloj: toon(COLORES.reloj), bisel: toon(COLORES.bisel),
@@ -393,8 +396,10 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
   // ── El torso: la polo carmesí ─────────────────────────────────────────────────────────────────────────────────
   // Un torno (radio, altura) que después se ensancha de lado y se aplana de adelante hacia atrás. Es el de un hombre
   // adulto y robusto: de hombro a hombro mide más que la cabeza y los hombros bajan en pendiente suave desde el cuello,
-  // sin bultos; la polo cae suelta y tapa la pretina del jean
-  const perfil = [[0.224, -0.24], [0.226, -0.2], [0.22, -0.12], [0.214, -0.03], [0.212, 0.08], [0.218, 0.2], [0.228, 0.31],
+  // sin bultos; la polo cae suelta y tapa la pretina del jean. Abajo lleva filas de más (sobre la misma línea): al
+  // caminar se aparta de los muslos (apartarPolo) y con filas tan separadas el muslo asomaba entre una y otra
+  const perfil = [[0.224, -0.24], [0.225, -0.22], [0.226, -0.2], [0.223, -0.16], [0.22, -0.12], [0.217, -0.075],
+    [0.214, -0.03], [0.212, 0.08], [0.218, 0.2], [0.228, 0.31],
     [0.231, 0.38], [0.224, 0.43], [0.2, 0.475], [0.16, 0.51], [0.124, 0.533], [0.1, 0.545]].map(([r, y]) => new THREE.Vector2(r, y));
   // los hombros anchos y la cintura más angosta; el pecho algo adelante
   const anchoTorso = (y) => 1.1 + 0.32 * suave(0.05, 0.42, y) - 0.12 * suave(0.43, 0.545, y);
@@ -425,6 +430,17 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     // el margen está en unidades del modelo: en esa dirección, una unidad del torno mide hypot(a·seno, f·coseno)
     const meta = r + margen / Math.hypot((v.x / q), (v.z / q));
     if (q < meta) { v.x *= meta / q; v.z *= meta / q; }
+    return v;
+  }
+  // como fueraDelTorso, pero también acerca lo que está afuera: el punto queda a `margen` justo de la tela
+  function sobreTorso(v, margen) {
+    const r = radioTorso(v.y);
+    if (r <= 0) return v;
+    const a = anchoTorso(v.y), f = fondoTorso(v.y, v.z > 0);
+    const q = Math.hypot(v.x / a, v.z / f) || 1e-6;
+    const meta = r + margen / Math.hypot((v.x / q), (v.z / q));
+    v.x *= meta / q;
+    v.z *= meta / q;
     return v;
   }
   let torsoGeo = new THREE.LatheGeometry(perfil, 56, Math.PI, Math.PI * 2);
@@ -473,16 +489,27 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     costura.position.set(x, 0.0059, 0.0052);
     tapeta.add(costura);
   }
-  // El logo bordado (el jinete) en el pecho izquierdo
+  // El logo bordado (el jinete) en el pecho izquierdo. Va pegado a la tela, curvado con ella: un cuadrado plano tangente
+  // quedaba despegado en los bordes y, con el antebrazo apoyado en el pecho (¡juntos!), se dibujaba encima del reloj
   if (documento?.createElement) {
     const tex = logoDelJinete(documento);
     if (tex) {
       texs.add(tex);
       const enLogo = tocar(torso, 0.13, 0.3);
       if (enLogo) {
-        const logo = new THREE.Mesh(g(new THREE.PlaneGeometry(0.066, 0.066)), plano(0xffffff, { map: tex, transparent: true, depthWrite: false }));
-        logo.position.copy(enLogo.p).addScaledVector(enLogo.n, 0.002);
-        alinear(logo, enLogo.n);
+        const logoGeo = new THREE.PlaneGeometry(0.066, 0.066, 6, 6);
+        const ubicar = new THREE.Object3D();
+        ubicar.position.copy(enLogo.p);
+        alinear(ubicar, enLogo.n);
+        ubicar.updateMatrix();
+        logoGeo.applyMatrix4(ubicar.matrix);
+        const lp = logoGeo.attributes.position, v = new THREE.Vector3();
+        for (let i = 0; i < lp.count; i++) {
+          sobreTorso(v.fromBufferAttribute(lp, i), 0.0012);
+          lp.setXYZ(i, v.x, v.y, v.z);
+        }
+        const logo = new THREE.Mesh(g(logoGeo), plano(0xffffff, { map: tex, transparent: true, depthWrite: false,
+          polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }));
         logo.renderOrder = 2;
         huesos.columna.add(logo);
       }
@@ -606,7 +633,35 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
       cabo.position.set(-0.045, -0.004, dz);
       cabo.rotation.z = rz;
       r.add(cabo);
+      // los cabos cuelgan: rígidos con el antebrazo, con la mano en alto (saludar, pensar, negar) subían por la palma
+      cabo.updateMatrixWorld = () => colgar(cabo, r, rz);
     }
+  }
+  /** Apunta un cabo hacia abajo en el mundo, como un hilo que cuelga del nudo: si abajo es hacia adentro del brazo (el
+   * nudo arriba de la muñeca) se acuesta sobre él, y siempre se abre un poco hacia afuera (más si cuelga hacia el
+   * codo, donde el antebrazo se ensancha), así no se mete en la piel. `abre`: hacia qué lado se separa del otro cabo.
+   * Reemplaza el cálculo de su matriz del mundo (se llama en cada cuadro, después de la de la manilla) */
+  const ABAJO = new THREE.Vector3(0, -1, 0), qCabo = new THREE.Quaternion(), sCabo = new THREE.Vector3();
+  const nudoCabo = new THREE.Vector3(), ejeCabo = new THREE.Vector3(), afueraCabo = new THREE.Vector3();
+  const ladoCabo = new THREE.Vector3(), dirCabo = new THREE.Vector3();
+  function colgar(cabo, anillo, abre) {
+    if (cabo.matrixAutoUpdate) cabo.updateMatrix();
+    cabo.matrixWorld.multiplyMatrices(anillo.matrixWorld, cabo.matrix);
+    nudoCabo.setFromMatrixPosition(cabo.matrixWorld);
+    ejeCabo.setFromMatrixColumn(anillo.matrixWorld, 1);   // hacia el codo
+    const escala = ejeCabo.length();
+    ejeCabo.normalize();
+    // del centro de la muñeca hacia el nudo, de través al antebrazo
+    afueraCabo.setFromMatrixPosition(anillo.matrixWorld).subVectors(nudoCabo, afueraCabo);
+    afueraCabo.addScaledVector(ejeCabo, -afueraCabo.dot(ejeCabo)).normalize();
+    dirCabo.copy(ABAJO).addScaledVector(afueraCabo, -Math.min(0, ABAJO.dot(afueraCabo)));
+    if (dirCabo.length() < 0.3) dirCabo.addScaledVector(ejeCabo, -0.3);   // el nudo justo arriba: se acuesta hacia la mano
+    dirCabo.normalize();
+    ladoCabo.crossVectors(ejeCabo, afueraCabo);
+    dirCabo.addScaledVector(afueraCabo, 0.08 + 0.3 * Math.max(0, dirCabo.dot(ejeCabo))).addScaledVector(ladoCabo, abre).normalize();
+    qCabo.setFromUnitVectors(ABAJO, dirCabo);
+    cabo.matrixWorld.compose(nudoCabo, qCabo, sCabo.setScalar(escala));
+    cabo.matrixWorldNeedsUpdate = false;
   }
 
   // La mano: la palma hacia el cuerpo (−x), los dedos hacia abajo (−y) y el pulgar adelante (+z)
@@ -655,6 +710,10 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
   brazo('D');
 
   // ── Las piernas: el jean desteñido adelante, en los muslos y las rodillas ─────────────────────────────────────
+  // el torno del muslo: [radio, altura] (también lo usa apartarPolo)
+  const PERFIL_MUSLO = [[0, -0.232], [0.045, -0.23], [0.076, -0.214], [0.089, -0.18], [0.094, -0.12], [0.097, 0.0],
+    [0.097, 0.15], [0.09, 0.2], [0.06, 0.225], [0, 0.232]];
+  const muslos = [];
   function pierna(lado) {
     const raiz = lado === 'D' ? espejo() : new THREE.Group();
     huesos.cadera.add(raiz);
@@ -663,13 +722,12 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     raiz.add(muslo);
     // el muslo y la pierna, tornos que se angostan hacia la rodilla hasta casi el mismo ancho: la pierna nace de
     // adentro del muslo y la rodilla no se ve cortada
-    const musloGeo = suavizarNormales(new THREE.LatheGeometry([[0, -0.232], [0.045, -0.23], [0.076, -0.214], [0.089, -0.18],
-      [0.094, -0.12], [0.097, 0.0], [0.097, 0.15], [0.09, 0.2], [0.06, 0.225], [0, 0.232]]
-      .map(([r, y]) => new THREE.Vector2(r, y)), 18));
+    const musloGeo = suavizarNormales(new THREE.LatheGeometry(PERFIL_MUSLO.map(([r, y]) => new THREE.Vector2(r, y)), 18));
     tenir(musloGeo, (p, n) => jeanEn(Math.max(0, n.z) ** 1.1 * (0.62 + 0.45 * Math.exp(-((p.y + 0.02) ** 2) / 0.016)) + 0.06));
     const mm = malla(musloGeo, M.jean);
     mm.position.y = -0.19;
     muslo.add(mm);
+    muslos.push({ raiz, hueso: muslo, malla: mm, aColumna: new THREE.Matrix4(), deColumna: new THREE.Matrix4() });
     rodilla.position.y = -0.4;
     muslo.add(rodilla);
     const pantGeo = suavizarNormales(new THREE.LatheGeometry([[0, -0.219], [0.066, -0.21], [0.081, -0.18], [0.084, -0.1],
@@ -694,6 +752,132 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
   }
   pierna('I');
   pierna('D');
+
+  // ── La polo se aparta de los muslos ───────────────────────────────────────────────────────────────────────────
+  // Al caminar, el muslo que va adelante gira sobre la cadera y su frente, ya cerca del ruedo, salía por la polo (una
+  // mancha de jean sobre la tela; y atrás, el de atrás). En cada cuadro, antes de dibujar, la parte de abajo de la
+  // polo y el ruedo se empujan hacia afuera lo justo para pasar por encima de cada muslo: la tela toma la forma de la
+  // pierna que la empuja. En reposo los muslos quedan holgados adentro (a más de 1,5 cm) y no se toca nada
+  const HOLGURA_MUSLO = 0.012;   // lo que la tela queda por fuera del muslo (su contorno no asoma)
+  const radioMuslo = (y) => {
+    const P = PERFIL_MUSLO;
+    if (y <= P[0][1] || y >= P[P.length - 1][1]) return 0;
+    let i = 1;
+    while (y > P[i][1]) i++;
+    return P[i - 1][0] + ((P[i][0] - P[i - 1][0]) * (y - P[i - 1][1])) / (P[i][1] - P[i - 1][1]);
+  };
+  const qM = new THREE.Vector3(), nM = new THREE.Vector3();
+  // cuánto hay que correr el punto `p` (de la columna) en la dirección `n` (horizontal, hacia afuera de la polo) para
+  // que quede fuera de los dos muslos: la salida de la recta por el cilindro de cada uno (con su radio a esa altura)
+  // (y anota en `holgura` lo que le falta al muslo más cercano para llegar a la tela)
+  let holgura = 0;
+  function empujeMuslos(p, n) {
+    let t = 0;
+    for (const m of muslos) {
+      qM.copy(p).applyMatrix4(m.deColumna);
+      const r = radioMuslo(qM.y);
+      if (r <= 0) continue;
+      const c = qM.x * qM.x + qM.z * qM.z - (r + HOLGURA_MUSLO) ** 2;
+      if (c >= 0) {   // ya está afuera
+        holgura = Math.min(holgura, Math.sqrt(qM.x * qM.x + qM.z * qM.z) - r - HOLGURA_MUSLO);
+        continue;
+      }
+      holgura = 0;
+      nM.copy(n).transformDirection(m.deColumna);
+      const a = nM.x * nM.x + nM.z * nM.z, b = 2 * (qM.x * nM.x + qM.z * nM.z);
+      if (a < 1e-6) continue;
+      t = Math.max(t, (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a));
+    }
+    return t;
+  }
+  // lo que se mueve: los vértices de la polo de la cintura para abajo y todos los del ruedo, con su lugar en reposo y
+  // su dirección hacia afuera (la del ruedo, la de su anillo del medio: se corre entero, sin aplastarse)
+  const poloPos = torsoGeo.attributes.position, ruedoPos = ruedo.geometry.attributes.position;
+  const reposoPolo = poloPos.array.slice(), reposoRuedo = ruedoPos.array.slice();
+  const abajoPolo = [];
+  for (let i = 0; i < poloPos.count; i++) if (reposoPolo[i * 3 + 1] < 0) abajoPolo.push(i);
+  const ANILLO_RUEDO = 0.226;
+  const enRuedo = (i, c) => {   // el punto del anillo del medio del ruedo que le toca al vértice i (en la columna)
+    const x = reposoRuedo[i * 3] / 1.1, z = reposoRuedo[i * 3 + 2] / 0.645, l = Math.hypot(x, z) || 1e-6;
+    return c.set((x / l) * ANILLO_RUEDO * 1.1, ruedo.position.y, (z / l) * ANILLO_RUEDO * 0.645);
+  };
+  for (const geo of [torsoGeo, ruedo.geometry]) {   // la caja para recortar lo que no se ve, con lugar para el empuje
+    geo.computeBoundingSphere();
+    geo.boundingSphere.radius += 0.08;
+  }
+  let apartada = false;
+  const pP = new THREE.Vector3(), nP = new THREE.Vector3(), aColumna = new THREE.Matrix4();
+  const empujes = new Float32Array(abajoPolo.length), empujesRuedo = new Float32Array(ruedoPos.count);
+  // Casi siempre (de pie, en los gestos) los muslos no llegan a la tela y no hay nada que calcular. Cada cálculo anota
+  // cuánto le faltaba al muslo más cercano para tocarla (holgura) y dónde estaban las dos puntas del eje de cada muslo;
+  // mientras ninguna se haya movido lo bastante para gastar esa holgura, se deja todo como está. El muslo es un torno:
+  // su forma la da su eje, y ningún punto de su superficie se mueve más de ~1,5 veces lo que la punta del eje que más se
+  // movió; el factor 2,5 deja margen (con miles de poses al azar da los mismos roces que calcular siempre)
+  const PUNTAS_MUSLO = [PERFIL_MUSLO[0][1], PERFIL_MUSLO[PERFIL_MUSLO.length - 1][1]].map((y) => new THREE.Vector3(0, y, 0));
+  const pM = new THREE.Vector3();
+  /** De cada muslo a la columna, con las matrices locales (las del mundo de las piernas todavía no se recalcularon en
+   * este cuadro: la columna se recorre antes). Devuelve cuánto se movió la punta del eje que más se movió desde el
+   * último cálculo (con `anotar`, toma este lugar como el nuevo punto de partida) */
+  function muslosEnColumna(anotar) {
+    huesos.columna.updateMatrix();
+    aColumna.copy(huesos.columna.matrix).invert();
+    let mov = 0;
+    for (const m of muslos) {
+      m.hueso.updateMatrix();
+      m.aColumna.copy(aColumna).multiply(m.raiz.matrix).multiply(m.hueso.matrix).multiply(m.malla.matrix);
+      m.deColumna.copy(m.aColumna).invert();
+      m.puntas ??= PUNTAS_MUSLO.map((v) => v.clone());
+      for (let j = 0; j < 2; j++) {
+        pM.copy(PUNTAS_MUSLO[j]).applyMatrix4(m.aColumna);
+        mov = Math.max(mov, pM.distanceTo(m.puntas[j]));
+        if (anotar) m.puntas[j].copy(pM);
+      }
+    }
+    return mov;
+  }
+  function apartarPolo() {
+    // nada se movió desde el último cálculo (el animador y el renderer la piden en el mismo cuadro), o el muslo no
+    // alcanza a llegar a la tela
+    const mov = muslosEnColumna(false);
+    if (mov < 1e-7 || (!apartada && mov * 2.5 < holgura)) return;
+    muslosEnColumna(true);
+    holgura = Infinity;
+    let algo = false;
+    abajoPolo.forEach((i, k) => {
+      pP.fromArray(reposoPolo, i * 3);
+      nP.set(pP.x, 0, pP.z).normalize();
+      empujes[k] = empujeMuslos(pP, nP);
+      if (empujes[k] > 0) algo = true;
+    });
+    for (let i = 0; i < ruedoPos.count; i++) {
+      enRuedo(i, pP);
+      nP.set(pP.x, 0, pP.z).normalize();
+      empujesRuedo[i] = empujeMuslos(pP, nP);
+      if (empujesRuedo[i] > 0) algo = true;
+    }
+    if (!algo && !apartada) return;
+    apartada = algo;
+    abajoPolo.forEach((i, k) => {
+      pP.fromArray(reposoPolo, i * 3);
+      nP.set(pP.x, 0, pP.z).normalize();
+      pP.addScaledVector(nP, empujes[k]);
+      poloPos.setXYZ(i, pP.x, pP.y, pP.z);
+    });
+    poloPos.needsUpdate = true;
+    torsoGeo.computeVertexNormals();
+    for (let i = 0; i < ruedoPos.count; i++) {
+      enRuedo(i, nP);
+      nP.y = 0;
+      nP.normalize();
+      ruedoPos.setXYZ(i, reposoRuedo[i * 3] + nP.x * empujesRuedo[i], reposoRuedo[i * 3 + 1], reposoRuedo[i * 3 + 2] + nP.z * empujesRuedo[i]);
+    }
+    ruedoPos.needsUpdate = true;
+  }
+  // se hace justo antes de calcular la matriz del mundo de la polo (el renderer la recalcula antes de dibujar)
+  torso.updateMatrixWorld = (forzar) => {
+    apartarPolo();
+    THREE.Object3D.prototype.updateMatrixWorld.call(torso, forzar);
+  };
 
   // ── El cuello y la cabeza ─────────────────────────────────────────────────────────────────────────────────────
   // el cuello es grueso, como en la foto (con la mandíbula llena, uno fino hace de la cabeza un chupete): casi tan ancho
@@ -922,175 +1106,388 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     return { zEn, normal, punto: (x, y) => new THREE.Vector3(x, y, zEn(x, y)) };
   }
 
-  // El pelo: corto en cepillo, parado y peinado hacia arriba y hacia su izquierda (+x), con gel: los pelos se juntan en
-  // mechones. La línea de la frente recta, las entradas apenas marcadas, los lados y la nuca cortos, en un degradé gris
-  // (las canas) que se funde con la piel, y la patilla corta que se afina y se aclara
+  // El pelo: corto, con gel, peinado hacia arriba y algo hacia su izquierda (+x). Manda el volumen: un casco que de
+  // frente es el domo redondeado y casi liso de la foto (ancho, de lados casi rectos y la coronilla en cúpula), con los
+  // lados y la nuca cortos y oscuros pegados a la cabeza; adelante nace en una rampa desde la línea del pelo y se alza
+  // apenas por encima de la coronilla (de perfil, un casco corto y continuo, sin visera). La textura son muchas puntitas
+  // muy cortas sobre la superficie (las puntas de los mechones engominados), más paradas y apretadas al frente-centro y
+  // hacia su izquierda, que apenas rompen el borde; el brillo del gel son vetas finas (trazos acostados sobre el casco
+  // que siguen el peinado) y los lados llevan trazos cortos de pelo. La línea de la frente es una curva suave con un
+  // pico de viuda chico y redondeado; las esquinas retroceden en curva (entradas suaves) y bajan por la sien hasta la
+  // patilla, que llega al borde de arriba de la oreja y termina aclarándose (pelo corto y ralo, unas canas)
   function pelo(padre) {
-    // el límite (grados desde la coronilla) según el rumbo: 0 al frente, π atrás. Adelante es recto y alto (la frente
-    // ancha de la foto), con un piquito redondo en el medio, las esquinas casi en ángulo recto y la sien que baja casi
-    // vertical (cubierta, sin entradas); la patilla pasa apenas el borde de arriba de la oreja; atrás, la nuca recta
-    const limite = [[0, 45.5], [0.07, 44.5], [0.16, 42], [0.26, 41], [0.5, 41], [0.85, 42], [1.0, 54], [1.1, 75],
-      [1.17, 88], [1.24, 91], [1.32, 85], [1.42, 78], [1.85, 82], [2.3, 108], [2.75, 113], [Math.PI, 114]];
-    const enLimite = (az) => {
-      for (let i = 1; i < limite.length; i++) {
-        const [a1, l1] = limite[i - 1], [a2, l2] = limite[i];
-        if (az <= a2) return l1 + (l2 - l1) * (az - a1) / (a2 - a1);
+    const GRAD = Math.PI / 180;
+    // Interpolación cúbica monótona (Fritsch-Carlson) de una tabla [[x, y], ...]: pasa suave por los puntos sin pasarse
+    // de ellos (una lineal dejaba quiebres en la línea del pelo; una cúbica común, ondas en las subidas bruscas)
+    const curva = (tabla) => {
+      const n = tabla.length, xs = tabla.map((p) => p[0]), ys = tabla.map((p) => p[1]), d = [], m = [];
+      for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+      m[0] = 0;
+      m[n - 1] = 0;
+      for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+      for (let i = 0; i < n - 1; i++) {
+        if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; }
+        const a = m[i] / d[i], b = m[i + 1] / d[i], s = a * a + b * b;
+        if (s > 9) { const k = 3 / Math.sqrt(s); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; }
       }
-      return limite[limite.length - 1][1];
+      return (x) => {
+        if (x <= xs[0]) return ys[0];
+        if (x >= xs[n - 1]) return ys[n - 1];
+        let i = 0;
+        while (x > xs[i + 1]) i++;
+        const h = xs[i + 1] - xs[i], t = (x - xs[i]) / h, t2 = t * t, t3 = t2 * t;
+        return (2 * t3 - 3 * t2 + 1) * ys[i] + (t3 - 2 * t2 + t) * h * m[i] + (-2 * t3 + 3 * t2) * ys[i + 1] + (t3 - t2) * h * m[i + 1];
+      };
     };
-    // el grueso del pelo: arriba el cepillo (más alto hacia su izquierda, donde sube el copete), adelante un frente
-    // parado que crece de a poco desde la coronilla (sin escalón ni visera), y los lados que se afinan hasta quedar al
-    // ras de la piel en el borde: el degradé, sin una pared que el contorno dibuje
-    const grueso = (t, az) => {
-      const c = Math.cos(az), frente = suave(0.7, 0.95, c), lado = 1 - suave(0.35, 0.85, c);
-      return 0.011 + 0.056 * (1 - suave(0.4, 0.95, t)) * (0.7 + 0.3 * frente) + frente * 0.016 * suave(0.3, 1, t)
-        - 0.012 * (1 - suave(0, 0.35, t))
-        - 0.009 * (1 - frente) * Math.exp(-(((t - 0.55) / 0.18) ** 2))
-        + 0.01 * Math.max(0, Math.sin(az)) * (1 - suave(0.3, 0.75, t))
-        - 0.0085 * lado * suave(0.72, 1, t);
+    // La línea del pelo: el límite (grados desde la coronilla) según el rumbo |az| (0 al frente, π atrás), medida en la
+    // foto. Adelante una curva casi pareja; en las esquinas retrocede en curva (las entradas, suaves y redondeadas) y de
+    // ahí baja por la sien, apenas inclinada hacia atrás (az ≈ 1,05 → 1,2), hasta la patilla, a ≈ 86° (de frente, a la
+    // altura del borde de arriba de la oreja, como en la foto: el pelo llega a la oreja); pasa justo sobre la oreja y
+    // atrás baja a la nuca
+    const lineaBase = curva([[0, 39.6], [0.3, 39.3], [0.55, 39.3], [0.75, 39.6], [0.88, 40.4], [0.96, 41.8],
+      [1.01, 43.8], [1.045, 47], [1.07, 51.5], [1.09, 57], [1.11, 63.5], [1.13, 70], [1.155, 76.5], [1.185, 82],
+      [1.22, 85], [1.3, 86.5], [1.4, 86], [1.55, 85.5], [1.9, 86.5], [2.3, 106], [2.75, 112], [Math.PI, 113]]);
+    // y el pico de viuda: chico y redondeado, apenas a su derecha del centro, como en la foto. La esquina de su derecha
+    // (la de la izquierda en la foto) retrocede más: su curva empieza más afuera y es más cerrada
+    const limite = (az) => lineaBase(Math.abs(az) - (az < 0 ? 0.07 * Math.exp(-(((az + 1.06) / 0.08) ** 2)) : 0))
+      + 4.4 * Math.exp(-(((az + 0.03) / 0.15) ** 2));
+    // La línea del pelo en puntos sobre la esfera unidad, a pasos parejos a lo largo de ella (también en la sien, donde
+    // baja casi vertical): para medir cuán lejos del borde está cada punto. Lo que se afina y se aclara en el borde
+    // sigue esa distancia de verdad; medido solo hacia la coronilla, en la sien quedaba una franja clara de canto
+    const lineaPts = [];
+    {
+      let ult = null;
+      for (let az = -Math.PI; az <= Math.PI; az += 0.002) {
+        const th = limite(az) * GRAD, p = [Math.sin(th) * Math.sin(az), Math.cos(th), Math.sin(th) * Math.cos(az), az];
+        if (!ult || (p[0] - ult[0]) ** 2 + (p[1] - ult[1]) ** 2 + (p[2] - ult[2]) ** 2 > 0.008 ** 2) { lineaPts.push(p); ult = p; }
+      }
+    }
+    // grados hasta la línea del pelo desde (az, th en grados); lejos de ella (más de `hasta`) devuelve `hasta`. Los
+    // puntos de la línea están en orden de rumbo: se miran solo los de una ventana de rumbos alrededor (con vuelta en ±π)
+    const rumbosLinea = lineaPts.map((p) => p[3]), VENTANA = 0.5;
+    const desde = (a) => {
+      let lo = 0, hi = rumbosLinea.length;
+      while (lo < hi) { const m = (lo + hi) >> 1; if (rumbosLinea[m] < a) lo = m + 1; else hi = m; }
+      return lo;
     };
-    // el frente parado sube derecho desde la línea del pelo (no hacia adelante, a lo largo de la normal, que de perfil
-    // hacía una visera): esto lo alza
-    const alzar = (t, az) => suave(0.7, 0.95, Math.cos(az)) * 0.03 * suave(0.45, 1, t);
-    const NA = 120, NT = 30, pos = [], col = [], idx = [];
+    const alBorde = (az, th, lim, hasta = 15) => {
+      if (lim - th > hasta + 2) return hasta;
+      const t = th * GRAD, x = Math.sin(t) * Math.sin(az), y = Math.cos(t), z = Math.sin(t) * Math.cos(az);
+      let mejor = -2, a0 = az - VENTANA;
+      if (a0 < -Math.PI) a0 += 2 * Math.PI;
+      for (let i = desde(a0), k = 0; k < lineaPts.length; k++, i++) {
+        if (i >= lineaPts.length) i = 0;
+        const p = lineaPts[i];
+        let da = p[3] - az;
+        if (da < -Math.PI) da += 2 * Math.PI;
+        else if (da > Math.PI) da -= 2 * Math.PI;
+        if (da > VENTANA) break;
+        const d = x * p[0] + y * p[1] + z * p[2];
+        if (d > mejor) mejor = d;
+      }
+      return Math.min(hasta, Math.acos(Math.min(1, mejor)) / GRAD);
+    };
+    // El grueso del pelo sobre el cuero cabelludo (a lo largo de la dirección desde el centro), por meridianos según los
+    // grados desde la coronilla: de lado es el que calza la silueta de la foto (el domo, medido fila por fila); adelante,
+    // el frente parado; atrás, la nuca corta. Entre ellos se mezcla según el rumbo
+    const deLado = curva([[0, 0.078], [10, 0.075], [20, 0.069], [30, 0.06], [40, 0.048], [50, 0.035], [60, 0.023],
+      [70, 0.016], [80, 0.014], [100, 0.013]]);
+    const deFrente = curva([[0, 0.078], [15, 0.077], [25, 0.074], [32, 0.068], [40, 0.056], [50, 0.05]]);
+    const deAtras = curva([[0, 0.078], [20, 0.071], [40, 0.056], [60, 0.038], [80, 0.022], [100, 0.016], [115, 0.014]]);
+    const grueso = (th, az, borde) => {
+      const c = Math.cos(az), f = Math.abs(c) ** 1.4;
+      let e = c >= 0 ? deLado(th) + (deFrente(th) - deLado(th)) * f : deLado(th) + (deAtras(th) - deLado(th)) * f;
+      // a su izquierda (+x), hacia donde se peina, el domo va un poco más lleno arriba; a su derecha el costado va
+      // algo más pegado, como en la foto
+      e += Math.max(0, Math.sin(az)) * (0.007 * Math.exp(-(((th - 28) / 18) ** 2)) + 0.009 * Math.exp(-(((th - 52) / 14) ** 2)))
+        - 0.004 * Math.max(0, -Math.sin(az)) * suave(35, 60, th);
+      // en el borde se afina hasta quedar al ras de la piel: rápido a los lados (el pelo corto termina en una línea),
+      // de a poco en la nuca (rebajada) y adelante en una rampa que sube desde la línea (una pared vertical hacía de
+      // perfil una visera)
+      const ancho = 3.5 + 10.5 * suave(0.6, 1, c) + 7 * suave(0.2, 0.9, -c);
+      return 0.0015 + (e - 0.0015) * suave(0, ancho, borde);
+    };
+    // el frente parado se alza apenas por encima de la coronilla, derecho hacia arriba (no hacia adelante, a lo largo
+    // de la normal, que de perfil hacía una visera); en la línea misma no se alza: ahí nace la rampa
+    const alzar = (th, az, lim) => suave(0.6, 0.95, Math.cos(az)) * 0.01 * suave(lim - 26, lim - 12, th)
+      * suave(lim + 1, lim - 9, th);
     const v = new THREE.Vector3(), n = new THREE.Vector3();
-    const negro = color(COLORES.pelo), degrade = color(COLORES.peloDegrade), brilloCol = color(0x55505c);
-    const piel = color(COLORES.piel);
     const punto = (az, th, extra) => {
       n.set(Math.sin(th) * Math.sin(az), Math.cos(th), Math.sin(th) * Math.cos(az));
       v.copy(n).multiplyScalar(R);
       deformarCabeza(v);
       return v.addScaledVector(n, extra);
     };
-    // el color del pelo: negro arriba; a los lados, el gris de las canas desde la mitad hasta el borde
-    const ladoDe = (az) => 1 - suave(0.35, 0.85, Math.cos(az));
-    const tinte = (az, t) => negro.clone().lerp(degrade, ladoDe(az) * suave(0.55, 0.97, t));
-    for (let i = 0; i <= NA; i++) {
-      const az = -Math.PI + (2 * Math.PI * i) / NA, tope = (enLimite(Math.abs(az)) * Math.PI) / 180;
-      const lado = ladoDe(az);
-      for (let j = 0; j <= NT + 1; j++) {
-        // la última fila se mete bajo la piel (un poco más allá del borde a los lados): el borde queda pegado a la piel,
-        // sin que asome la frente entre una columna y otra
-        const t = Math.min(1, j / NT);
-        const p = punto(az, tope * t + (j > NT ? 0.012 * lado : 0), j > NT ? -0.003 : grueso(t, az));
-        if (j <= NT) p.y += alzar(t, az);
-        pos.push(p.x, p.y, p.z);
-        const c = tinte(az, t);
-        // la pared del frente: apenas gris arriba, donde da la luz (si no, una banda negra lisa; más, una vincha)
-        if (j <= NT) c.lerp(brilloCol, 0.12 * (1 - lado) * suave(0.8, 1, t));
-        // a los lados el borde se funde con la piel
-        if (j >= NT) c.lerp(piel, lado * (j > NT ? 0.6 : 0.3));
-        col.push(c.r, c.g, c.b);
-      }
-    }
-    // el contorno del pelo no baja por el degradé de los lados: ahí el borde es la piel (y su línea, la café de la piel);
-    // si no, la patilla remataba en una punta negra sobre la oreja
-    const F = NT + 2, idxCasco = [];
-    for (let i = 0; i < NA; i++) {
-      const enDegrade = ladoDe(-Math.PI + (2 * Math.PI * (i + 0.5)) / NA) > 0.6;
-      for (let j = 0; j < F - 1; j++) {
-        const a = i * F + j, b = a + 1, c = a + F, d = c + 1;
-        idx.push(a, b, c, b, d, c);
-        if (!enDegrade || j < NT * 0.7) idxCasco.push(a, b, c, b, d, c);
-      }
-    }
-    const armar = (indices) => {
-      let s = new THREE.BufferGeometry();
-      s.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-      s.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-      s.setIndex(indices);
-      s = mergeVertices(s, 1e-5);
-      s.computeVertexNormals();
-      return s;
+    // El color: negro arriba; los lados y la nuca apenas más claros (cortos, pero oscuros), que hacia abajo se aclaran
+    // hacia un gris de canas, y solo el borde, donde el pelo es ralo y asoma la piel, se aclara en una franja angosta
+    // (adelante el pelo es tupido hasta la línea). El brillo del gel va aparte, en las vetas finas
+    const negro = color(COLORES.pelo), lado = color(COLORES.peloLado), ralo = color(COLORES.peloBorde);
+    const brilloCol = color(COLORES.peloBrillo), cana = color(COLORES.peloCana), gris = ralo.clone().lerp(cana, 0.45);
+    // las entradas: las esquinas de la frente, donde el pelo es más ralo; más la de su derecha (la de la izquierda en
+    // la foto, que se ve clara: pelo ralo y algunas canas)
+    const entrada = (az) => Math.exp(-(((Math.abs(az) - 0.95) / 0.16) ** 2)) * (az < 0 ? 1 : 0.4);
+    // el brillo del gel cae arriba, hacia su izquierda, donde el pelo peinado se junta en mechones (como en la foto)
+    const luzDir = new THREE.Vector3(0.3, 0.8, 0.5).normalize();
+    // las vetas: mechones angostos a lo largo del peinado, cortados en trechos (los grumos del gel), entre 0 y 1
+    const vetas = (az, th) => (0.5 + 0.5 * Math.sin(31 * az + 2.5 * Math.sin(7 * az) + 0.06 * th))
+      * (0.55 + 0.45 * Math.sin(0.42 * th + 3 * Math.sin(5 * az) + 2 * az));
+    // `piel`: cuánto del aclarado del borde lleva (1 el casco, que ahí es la piel que asoma entre los pelos; los trazos
+    // de pelo de los lados, menos: más oscuros que el casco en el borde, se leen como pelo ralo)
+    const tinte = (az, th, lim, borde, nor, piel = 1) => {
+      const c = Math.cos(az), costado = 1 - suave(0.3, 0.8, c);
+      const col = negro.clone().lerp(lado, costado * suave(lim - 40, lim - 8, th));
+      // a los lados se aclara de a poco hacia abajo, hacia un gris de canas (más corto, más ralo: por la altura, no
+      // por la cercanía al borde, que en la sien es vertical y aclaraba toda la franja): la patilla termina en un
+      // degradé, no en un recorte
+      const abajo = Math.max(lim, 84);
+      col.lerp(gris, costado * suave(abajo - 14, abajo, th) * 0.4);
+      // y en el borde mismo, donde el pelo es ralo y asoma la piel, se aclara en una franja angosta: más ancha y más
+      // clara a los lados y en las entradas que en el medio de la frente, donde el pelo es tupido hasta la línea
+      const en = entrada(az);
+      col.lerp(ralo, (1 - suave(0, 1.3 + 1.2 * costado + 3 * en, borde)) * (0.2 + 0.15 * costado + 0.3 * en) * piel);
+      // la rampa del frente mira a la luz y se veía más clara que arriba (en la foto el frente es tan oscuro como lo
+      // de arriba): se oscurece un poco
+      col.multiplyScalar(1 - 0.18 * suave(0.5, 0.9, c) * (1 - suave(3, 14, borde)) * suave(0.5, 2, borde));
+      // el gel: apenas un lustre donde da la luz (los brillos de verdad son las vetas finas; pintados acá, por vértice,
+      // eran manchones)
+      const luz = suave(0.5, 0.95, nor.dot(luzDir)) * suave(4, 14, borde);
+      return col.lerp(brilloCol, luz * (0.03 + 0.08 * suave(3, 15, th) * vetas(az, th) ** 2));
     };
-    const casco = malla(armar(idx), M.peloDegrade, { borde: false });
-    const linea = new THREE.Mesh(g(armar(idxCasco)), matContorno);
+    // los rumbos de las columnas del casco: más juntas donde la línea del pelo cambia rápido (el pico, las esquinas y
+    // la sien), así la curva sale lisa y sin dientes
+    const rumbos = [];
+    for (let az = -Math.PI; az < Math.PI - 1e-6;) {
+      rumbos.push(az);
+      const a = Math.abs(az);
+      az += a < 0.3 ? 0.022 : a > 0.92 && a < 1.25 ? 0.009 : a > 1.25 && a < 1.55 ? 0.02 : 0.034;
+    }
+    rumbos.push(Math.PI);
+    // La malla del casco se arma ya indexada (los vértices compartidos: uno solo en la coronilla y la última columna,
+    // en ±π, es la primera): mergeVertices sobre miles de vértices era lo que más tardaba en armarse
+    const NA = rumbos.length - 1, NT = 34, FI = NT + 1, pos = [], col = [], idx = [], idxCasco = [], bordes = [];
+    const filas = [];   // las filas: más juntas cerca del borde, donde se afina
+    for (let j = 0; j <= NT; j++) filas.push(1 - (1 - j / NT) ** 1.35);
+    const nor = new THREE.Vector3();
+    const agregar = (az, th, lim, j) => {
+      // la última fila se mete bajo la piel: el borde queda pegado a ella, sin que asome la frente entre columnas
+      const borde = j >= NT ? 0 : alBorde(az, th, lim);
+      const p = punto(az, th * GRAD, j > NT ? -0.004 : grueso(th, az, borde));
+      nor.copy(n);
+      if (j <= NT) p.y += alzar(th, az, lim);
+      pos.push(p.x, p.y, p.z);
+      bordes.push(borde);
+      const c = tinte(az, th, lim, borde, nor);
+      col.push(c.r, c.g, c.b);
+    };
+    agregar(0, 0, limite(0), 0);   // la coronilla (el vértice 0)
+    for (let i = 0; i < NA; i++) {
+      const az = rumbos[i], lim = limite(az);
+      for (let j = 1; j <= NT + 1; j++) agregar(az, j > NT ? lim + 0.35 : lim * filas[j], lim, j);
+    }
+    const vert = (i, j) => (j === 0 ? 0 : 1 + (i % NA) * FI + j - 1);
+    for (let i = 0; i < NA; i++) {
+      for (let j = 0; j < NT + 1; j++) {
+        const a = vert(i, j), b = vert(i, j + 1), c = vert(i + 1, j), d = vert(i + 1, j + 1);
+        const tris = j === 0 ? [b, d, c] : [a, b, c, b, d, c];
+        idx.push(...tris);
+        // el contorno no baja hasta el borde: ahí el pelo se funde con la piel (una línea negra lo recortaba)
+        if (Math.min(bordes[a], bordes[b], bordes[c], bordes[d]) > 2.5) idxCasco.push(...tris);
+      }
+    }
+    const cascoGeo = new THREE.BufferGeometry();
+    cascoGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    cascoGeo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    cascoGeo.setIndex(idx);
+    cascoGeo.computeVertexNormals();
+    const casco = malla(cascoGeo, M.pelo, { borde: false });
+    // el contorno: los mismos vértices (y sus normales), con menos triángulos
+    const lineaGeo = new THREE.BufferGeometry();
+    lineaGeo.setAttribute('position', cascoGeo.attributes.position);
+    lineaGeo.setAttribute('normal', cascoGeo.attributes.normal);
+    lineaGeo.setIndex(idxCasco);
+    const linea = new THREE.Mesh(g(lineaGeo), matContorno);
     linea.raycast = () => {};
     casco.add(linea);
     padre.add(casco);
-    // la textura del cepillo: mechones de pelos juntos (el gel), cada uno de varios conos anchos que nacen cerca y salen
-    // casi paralelos, peinados hacia arriba, atrás y hacia su izquierda, con las puntas que se curvan hacia ese lado
+
+    // La textura: puntitas muy cortas y finas (pirámides de tres caras) que nacen en la superficie y salen peinadas
+    // hacia arriba, atrás y hacia su izquierda, casi acostadas sobre el casco (apenas rompen el borde); al frente-centro
+    // y a su izquierda más paradas, más largas y más apretadas; a los lados cortitas y pegadas. Se escriben directo en
+    // un arreglo (miles de conos de three tardaban demasiado en armarse). Sus normales son casi las del casco: se
+    // sombrean con él y se leen por el color (la raíz del tono del casco y la punta más clara donde brilla el gel)
     const r = azar(1896);
-    const conos = [];
-    const dir = new THREE.Vector3(), dirM = new THREE.Vector3(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0);
-    const doblar = (geo, hacia, k) => {   // el mechón se curva hacia `hacia` (más en la punta)
-      const p = geo.attributes.position;
-      for (let i = 0; i < p.count; i++) {
-        const t = (p.getY(i) + 0.5 * geo.parameters.height) / geo.parameters.height;
-        p.setXYZ(i, p.getX(i) + hacia.x * k * t * t, p.getY(i), p.getZ(i) + hacia.z * k * t * t);
-      }
-      return geo;
+    const N = 3000, P = new Float32Array(N * 12), NO = new Float32Array(N * 12), CO = new Float32Array(N * 12), I = [];
+    const peine = new THREE.Vector3(), tg = new THREE.Vector3(), b1 = new THREE.Vector3(), b2 = new THREE.Vector3();
+    const dir = new THREE.Vector3(), base = new THREE.Vector3(), punta = new THREE.Vector3(), w = new THREE.Vector3();
+    // la normal de verdad del casco (no la de la esfera) en la rampa del frente, donde el grueso crece rápido y se
+    // inclina hacia adelante. Con ella las puntitas y las vetas se acuestan sobre la rampa en vez de quedar enterradas
+    // en ella (la rampa quedaba como una franja lisa, una vincha). Solo adelante y cerca de la línea: en el resto la de
+    // la esfera alcanza (y medirla en todo el casco tardaba)
+    const pA = new THREE.Vector3(), pB = new THREE.Vector3(), pC = new THREE.Vector3(), pD = new THREE.Vector3();
+    const enCasco = (az, th, out) => {
+      const lim = limite(az);
+      out.copy(punto(az, th * GRAD, grueso(th, az, alBorde(az, th, lim))));
+      out.y += alzar(th, az, lim);
+      return out;
     };
-    const tenirCono = (geo, alto, base, punta) => {   // de `base` en la raíz a `punta` en la punta
-      const p = geo.attributes.position, col = new Float32Array(p.count * 3), c = new THREE.Color();
-      for (let i = 0; i < p.count; i++) {
-        c.copy(base).lerp(punta, Math.max(0, (p.getY(i) + alto / 2) / alto) ** 1.5);
-        col.set([c.r, c.g, c.b], i * 3);
-      }
-      geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const normalCasco = (az, th, borde, out) => {
+      if (borde > 16 || Math.cos(az) < 0.5) return out.set(Math.sin(th * GRAD) * Math.sin(az), Math.cos(th * GRAD), Math.sin(th * GRAD) * Math.cos(az));
+      const d = 0.6, da = (0.6 * GRAD) / Math.max(0.2, Math.sin(th * GRAD));
+      enCasco(az, th + d, pA).sub(enCasco(az, th - d, pB));     // hacia abajo
+      enCasco(az + da, th, pC).sub(enCasco(az - da, th, pD));   // de costado
+      return out.crossVectors(pA, pC).normalize();
     };
-    const ponerCono = (cono, base, alto, adentro) => {
-      q.setFromUnitVectors(Y, dir);
-      cono.applyQuaternion(q);
-      cono.translate(base.x + dir.x * (alto * 0.5 - adentro), base.y + dir.y * (alto * 0.5 - adentro), base.z + dir.z * (alto * 0.5 - adentro));
-      cono.deleteAttribute('uv');
-      conos.push(cono.toNonIndexed());
-    };
-    const luzDir = new THREE.Vector3(-0.35, 0.75, 0.55).normalize();
-    for (let m = 0; m < 165; m++) {
-      const delFrente = m < 20;
-      const az0 = delFrente ? (r() * 2 - 1) * 0.65 : (r() * 2 - 1) * Math.PI;
-      const t0 = delFrente ? 0.84 + 0.1 * r() : Math.min(0.88, Math.pow(r(), 0.85) * 0.92);
-      const frente0 = suave(0.35, 0.85, Math.cos(az0));
-      if (!delFrente && t0 > 0.7 && frente0 < 0.3 && r() < 0.75) continue;   // los lados, cortos: pocos mechones
-      const tope0 = (enLimite(Math.abs(az0)) * Math.PI) / 180;
-      punto(az0, tope0 * t0, 0);
-      // hacia dónde va el mechón: hacia afuera, arriba, atrás y hacia su izquierda (+x)
-      // (a los lados, menos hacia afuera y hacia +x: no salen púas de costado; adelante, menos hacia adelante: no hay visera)
-      const ax = Math.abs(n.x);
-      dirM.copy(n).multiplyScalar(0.55 - 0.2 * ax - 0.15 * Math.max(0, n.z))
-        .add(new THREE.Vector3(0.22 * (1 - 0.7 * ax), 0.7, 0.05 + 0.1 * frente0))
-        .add(new THREE.Vector3(r() - 0.5, (r() - 0.5) * 0.4, r() - 0.5).multiplyScalar(0.22)).normalize();
-      const hacia = { x: 0.6 + 0.3 * r(), z: -0.35 };
-      const cuantos = 5 + Math.floor(r() * 2), abre = 0.09 / Math.max(0.3, Math.sin(tope0 * t0));
-      for (let k = 0; k < cuantos; k++) {
-        const az = az0 + (r() - 0.5) * abre, t = Math.min(0.92, Math.max(0.02, t0 + (r() - 0.5) * 0.08));
-        const tope = (enLimite(Math.abs(az)) * Math.PI) / 180, frente = suave(0.35, 0.85, Math.cos(az));
-        const base = punto(az, tope * t, grueso(t, az) - 0.006).clone();
-        base.y += alzar(t, az);
-        const nn = n.clone();
-        // el brillo del gel: las puntas se aclaran hacia el gris, más arriba y adelante (donde da la luz); pocos,
-        // más finos, brillan casi enteros
-        const luz = Math.max(0, nn.dot(luzDir)), brilla = r() < 0.02 + 0.06 * luz;
-        const brillo = brilla ? 0.65 : luz * (0.2 + 0.8 * r()) * 0.6;
-        dir.copy(dirM).add(new THREE.Vector3(r() - 0.5, (r() - 0.5) * 0.4, r() - 0.5).multiplyScalar(0.12)).normalize();
-        // más largos adelante y en el copete (a su izquierda, arriba); cortos a los lados
-        const largo = (0.02 + 0.022 * r()) * (delFrente ? 1.35 : 1 - 0.12 * (1 - frente))
-          * (1 - 0.6 * suave(0.5, 0.88, t) * (1 - frente))
-          * (1 + 0.25 * suave(-0.2, 0.7, Math.sin(az)) * (1 - suave(0.3, 0.7, t)));
-        const alto = largo * (brilla ? 1.1 : 1);
-        const cono = doblar(new THREE.ConeGeometry((brilla ? 0.6 : 1) * (0.0095 + 0.0075 * r()), alto, 4, 2), hacia, 0.016);
-        const cb = tinte(az, t), cp = cb.clone().lerp(brilloCol, brillo);
-        tenirCono(cono, alto, cb, cp);
-        ponerCono(cono, base, alto, 0.003);
+    let k = 0;
+    const poner = (cb, cp, ancho) => {   // escribe la puntita k: la base (un triángulo en el plano tangente) y la punta
+      b1.set(1, 0, 0).cross(nor);
+      if (b1.lengthSq() < 0.01) b1.set(0, 0, 1).cross(nor);
+      b1.normalize();
+      b2.copy(nor).cross(b1);
+      const giro = r() * Math.PI * 2, o = k * 4;
+      for (let q = 0; q < 3; q++) {
+        const a = giro + (q * Math.PI * 2) / 3;
+        w.copy(base).addScaledVector(b1, Math.cos(a) * ancho).addScaledVector(b2, Math.sin(a) * ancho);
+        P.set([w.x, w.y, w.z], (o + q) * 3);
+        CO.set([cb.r, cb.g, cb.b], (o + q) * 3);
       }
+      P.set([punta.x, punta.y, punta.z], (o + 3) * 3);
+      CO.set([cp.r, cp.g, cp.b], (o + 3) * 3);
+      // normales: las del casco, apenas inclinadas hacia la punta (un brillo leve)
+      w.copy(nor).addScaledVector(dir, 0.25).normalize();
+      for (let q = 0; q < 4; q++) NO.set([w.x, w.y, w.z], (o + q) * 3);
+      I.push(o, o + 1, o + 3, o + 1, o + 2, o + 3, o + 2, o, o + 3);
+      k++;
+    };
+    // sobre el casco
+    for (let s = 0; s < N * 3 && k < N; s++) {
+      // dónde: al azar sobre el casco, más apretadas adelante y a su izquierda; menos en la nuca
+      const az = (r() * 2 - 1) * Math.PI, c = Math.cos(az), sn = Math.sin(az);
+      const densidad = 0.35 + 0.45 * suave(0.2, 0.9, c) + 0.2 * Math.max(0, sn) - 0.15 * suave(0.3, 0.9, -c);
+      if (r() > densidad) continue;
+      const lim = limite(az), th = lim * Math.sqrt(r()) * 0.99;
+      if (th < 4 && r() < 0.7) continue;
+      const borde = alBorde(az, th, lim);
+      if (borde < 0.6) continue;
+      base.copy(punto(az, th * GRAD, grueso(th, az, borde) - 0.0025));
+      base.y += alzar(th, az, lim);
+      normalCasco(az, th, borde, nor);
+      const frente = suave(0.55, 0.95, c), costado = 1 - suave(0.3, 0.8, c);
+      const cerca = 1 - suave(1, 12, borde);   // cerca de la línea del pelo
+      // el peinado: hacia arriba y atrás, y hacia su izquierda (+x): de frente, las puntas de arriba se inclinan hacia
+      // la derecha de la imagen, como en la foto
+      peine.set(0.3 + 0.2 * (1 - costado), 1, -0.55 * (1 - 0.5 * frente));
+      tg.copy(peine).addScaledVector(nor, -peine.dot(nor)).normalize();
+      // cuán acostada (el ángulo con la normal): casi acostada arriba (apenas rompe el borde), más parada al
+      // frente-centro y a su izquierda, pegada a los lados y en el borde. En el hombro del domo, a su derecha, algo más
+      // parada: de frente sale hacia arriba y afuera, como en la foto
+      const hombro = Math.max(0, -sn) * Math.exp(-(((th - 40) / 14) ** 2));
+      // En las esquinas de la frente y la sien (que de frente se ven de cara) algo más paradas: acostadas no se veían
+      // y quedaba una placa lisa
+      const esquina = Math.exp(-(((Math.abs(az) - 0.95) / 0.28) ** 2)) * suave(lim - 16, lim - 6, th);
+      const ang = 1.12 - 0.45 * frente * (0.5 + 0.5 * cerca) - 0.1 * Math.max(0, sn) - 0.2 * hombro
+        - 0.35 * esquina * (1 - 0.5 * cerca) + 0.25 * costado * cerca + (r() - 0.5) * 0.3;
+      dir.copy(nor).multiplyScalar(Math.cos(ang)).addScaledVector(tg, Math.sin(ang));
+      dir.x += (r() - 0.5) * 0.35;
+      dir.z += (r() - 0.5) * 0.35;
+      dir.normalize();
+      const largo = (0.011 + 0.012 * r()) * (1 + 0.3 * frente + 0.2 * Math.max(0, sn) * (1 - costado) + 0.15 * esquina)
+        * (1 - 0.5 * costado * suave(lim - 30, lim, th));
+      punta.copy(base).addScaledVector(dir, largo + 0.0025);
+      // el color: la raíz del tono del casco; la punta apenas más clara, cada una a su modo (si brillaran juntas
+      // según las vetas, hacían manchones), más donde da la luz
+      const cb = tinte(az, th, lim, borde, nor), luz = suave(0.3, 0.95, nor.dot(luzDir));
+      const cp = cb.clone().lerp(brilloCol, (0.04 + 0.22 * luz * r() + 0.2 * esquina * r()) * (1 - 0.6 * costado));
+      poner(cb, cp, 0.0042 + 0.0028 * r());
     }
-    // el frente parado, peinado hacia arriba y atrás: mechones que nacen en la línea del pelo y suben pegados a la pared
-    // del frente, más altos que ella (así no se ve su borde, como una vincha); oscuros en la raíz y algo grises en la punta
-    for (let i = 0; i < 110; i++) {
-      const az = (r() * 2 - 1) * 0.72, tope = (enLimite(Math.abs(az)) * Math.PI) / 180;
-      // nacen apenas por delante de la pared (sobre la piel, en la raíz) y suben pegados a ella
-      const base = punto(az, tope + 0.004, 0.004).clone(), nn = n.clone();
-      dir.copy(nn).multiplyScalar(0.6).add(new THREE.Vector3((r() - 0.5) * 0.4 + 0.1, 0.6, -0.15)).normalize();
-      const alto = (0.034 + 0.05 * r() ** 1.5) * (0.6 + 0.4 * suave(0.7, 0.95, Math.cos(az)));
-      const cono = doblar(new THREE.ConeGeometry(0.008 + 0.006 * r(), alto, 4, 2), { x: 0.5, z: -0.5 }, 0.012);
-      tenirCono(cono, alto, negro, negro.clone().lerp(brilloCol, 0.3 + 0.5 * r()));
-      ponerCono(cono, base, alto, 0);
+    const puntas = new THREE.BufferGeometry();
+    puntas.setAttribute('position', new THREE.BufferAttribute(P.subarray(0, k * 12), 3));
+    puntas.setAttribute('normal', new THREE.BufferAttribute(NO.subarray(0, k * 12), 3));
+    puntas.setAttribute('color', new THREE.BufferAttribute(CO.subarray(0, k * 12), 3));
+    puntas.setIndex(I);
+    padre.add(new THREE.Mesh(g(puntas), M.pelo));
+
+    // Los trazos: cintas angostas acostadas sobre el casco, que se afinan en las dos puntas y siguen el peinado (hacia
+    // arriba y atrás, y hacia su izquierda), cada una con su curva. Se usan para las vetas del gel y para la textura de
+    // los lados. Se escriben directo en un arreglo, como las puntitas
+    const NV = 1150, PASOS = 6, FV = (PASOS + 1) * 2;
+    const VP = new Float32Array(NV * FV * 3), VN = new Float32Array(NV * FV * 3), VC = new Float32Array(NV * FV * 3);
+    const VI = [], u = new THREE.Vector3(), lat = new THREE.Vector3(), cv = new THREE.Color();
+    let kv = 0;
+    // un trazo desde (az0, th0 en grados) de largo L y medio ancho `ancho`. `alto(t, az, borde)`: cuánto se separa del
+    // casco; `pintar(cv, t, az, th, lim, borde, nor)`: su color. Se descarta si llega a menos de `minBorde` grados de la
+    // línea del pelo (sería un trazo sobre la piel)
+    const trazo = (az0, th0, L, ancho, giro, minBorde, alto, pintar) => {
+      if (kv >= NV) return;
+      u.set(Math.sin(th0 * GRAD) * Math.sin(az0), Math.cos(th0 * GRAD), Math.sin(th0 * GRAD) * Math.cos(az0));
+      const o = kv * FV, i0 = VI.length;
+      for (let i = 0; i <= PASOS; i++) {
+        const t = i / PASOS, az = Math.atan2(u.x, u.z), th = Math.acos(Math.min(1, u.y)) / GRAD, lim = limite(az);
+        const borde = alBorde(az, th, lim);
+        if (borde < minBorde) { VI.length = i0; return; }
+        const c = Math.cos(az), frente = suave(0.55, 0.95, c), costado = 1 - suave(0.3, 0.8, c);
+        base.copy(punto(az, th * GRAD, grueso(th, az, borde) + 0.0006 + alto(t, az, borde)));
+        base.y += alzar(th, az, lim);
+        normalCasco(az, th, borde, nor);
+        // la dirección del peinado sobre la superficie, que gira de a poco (la curva del trazo)
+        peine.set(0.3 + 0.2 * (1 - costado) + giro * (t - 0.5), 1, -0.55 * (1 - 0.5 * frente));
+        tg.copy(peine).addScaledVector(nor, -peine.dot(nor)).normalize();
+        lat.copy(nor).cross(tg).normalize();
+        const a = ancho * (0.25 + 0.75 * Math.sin(Math.PI * t) ** 0.7), q = (o + 2 * i) * 3;
+        VP.set([base.x + lat.x * a, base.y + lat.y * a, base.z + lat.z * a, base.x - lat.x * a, base.y - lat.y * a,
+          base.z - lat.z * a], q);
+        VN.set([nor.x, nor.y, nor.z, nor.x, nor.y, nor.z], q);
+        pintar(cv, t, az, th, lim, borde, nor, costado);
+        VC.set([cv.r, cv.g, cv.b, cv.r, cv.g, cv.b], q);
+        if (i < PASOS) VI.push(o + 2 * i, o + 2 * i + 1, o + 2 * i + 2, o + 2 * i + 1, o + 2 * i + 3, o + 2 * i + 2);
+        // el paso siguiente, sobre la esfera unidad
+        u.addScaledVector(tg, L / PASOS / (R + 0.04)).normalize();
+      }
+      kv++;
+    };
+    // Las vetas del gel: largas, por arriba y adelante. Arquean sobre las puntitas, como un mechón: las puntas metidas
+    // entre ellas y el medio por encima (debajo quedaban tapadas; adelante, donde son más paradas, va más alta). El
+    // medio se aclara apenas hacia el gris azulado del brillo (o se oscurece, en algunas): de lejos son los brillos del
+    // gel en mechones; de cerca, trazos finos, no manchones. Más donde da la luz, arriba y hacia su izquierda; pocas y
+    // apagadas a los lados y atrás
+    for (let s = 0; s < 2800 && kv < 700; s++) {
+      const az0 = (r() * 2 - 1) * Math.PI, c0 = Math.cos(az0);
+      if (r() > 0.1 + 0.7 * suave(-0.1, 0.8, c0) + 0.2 * Math.max(0, Math.sin(az0))) continue;
+      const th0 = 2 + (limite(az0) - 4) * r() ** 0.7, fuerza = 0.35 + 0.6 * r() ** 1.5, oscura = r() < 0.25;
+      trazo(az0, th0, 0.03 + 0.04 * r(), 0.0014 + 0.0014 * r(), (r() - 0.5) * 1.2, 2,
+        (t, az, borde) => (0.003 + 0.009 * suave(0.55, 0.95, Math.cos(az))) * Math.sin(Math.PI * t) ** 0.6 * suave(2, 12, borde),
+        (col, t, az, th, lim, borde, nor, costado) => {
+          col.copy(tinte(az, th, lim, borde, nor));
+          const m = Math.sin(Math.PI * t) ** 1.2 * (1 - 0.85 * costado);
+          if (oscura) col.multiplyScalar(1 - 0.35 * m);
+          else col.lerp(brilloCol, m * fuerza * (0.3 + 0.7 * suave(0.2, 0.95, nor.dot(luzDir))));
+        });
     }
-    const puntas = mergeGeometries(conos);
-    for (const c of conos) c.dispose();
-    puntas.computeVertexNormals();
-    padre.add(new THREE.Mesh(g(puntas), M.peloDegrade));
+    // La textura de los lados, la nuca y las esquinas de la frente (el pelo corto, donde las puntitas van acostadas y
+    // casi no se ven): trazos cortos y finos pegados al casco, unos apenas más claros y otros más oscuros que él, que
+    // suben desde el borde. Sin ellos los lados eran una placa lisa. En el borde ralo (aclarado) los oscuros se leen
+    // como los pelos sobre la piel que asoma: el borde queda deshilachado sin que nada pase de la línea
+    for (let s = 0; s < 3000 && kv < NV; s++) {
+      const az0 = (r() * 2 - 1) * Math.PI, c0 = Math.cos(az0), lim0 = limite(az0);
+      if (c0 > 0.8 && r() > 0.1) continue;   // adelante ya están las puntitas paradas
+      const th0 = lim0 - 0.5 - 28 * r() ** 1.6, borde0 = alBorde(az0, th0, lim0);
+      if (borde0 < 0.4 || th0 < 30) continue;
+      const tono = r() < 0.55 ? 0.62 + 0.2 * r() : 1.12 + 0.12 * r();
+      // unas pocas canas finas sobre la oreja (trazos, no puntitos sueltos, que se leían como motas)
+      const canoso = Math.abs(Math.sin(az0)) > 0.8 && th0 > lim0 - 14 && c0 < 0.35 && r() < 0.35;
+      trazo(az0, th0, 0.012 + 0.016 * r(), 0.0008 + 0.0006 * r(), (r() - 0.5) * 1.5, 0.25,
+        (t, az, borde) => 0.0015 * suave(1, 6, borde) * Math.sin(Math.PI * t),
+        (col, t, az, th, lim, borde, nor) => {
+          col.copy(tinte(az, th, lim, borde, nor, 0.3));
+          if (canoso) col.lerp(cana, 0.45 * Math.sin(Math.PI * t));
+          else col.multiplyScalar(tono + (1 - tono) * t * t);
+        });
+    }
+    const vetasGeo = new THREE.BufferGeometry();
+    vetasGeo.setAttribute('position', new THREE.BufferAttribute(VP.subarray(0, kv * FV * 3), 3));
+    vetasGeo.setAttribute('normal', new THREE.BufferAttribute(VN.subarray(0, kv * FV * 3), 3));
+    vetasGeo.setAttribute('color', new THREE.BufferAttribute(VC.subarray(0, kv * FV * 3), 3));
+    vetasGeo.setIndex(VI);
+    padre.add(new THREE.Mesh(g(vetasGeo), M.pelo));
   }
 
   // Lo que va dibujado sobre la piel: tiras planas que se pegan a la cara con la grilla de alturas; en cada cuadro se
