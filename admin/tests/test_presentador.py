@@ -4,7 +4,9 @@
   trae los huesos y las manos que mueve el animador.
 * El animador: cada gesto entra y sale (o se sostiene hasta otro), ninguno deja un ángulo que no sea un número, hablar
   abre la boca y callar la cierra, señalar a la izquierda o a la derecha usa el brazo de ese lado, y entrar y salir
-  lo muestran y lo ocultan.
+  lo muestran y lo ocultan. Detrás del subtítulo: entra agachado sin pasarse (y saluda antes de terminar de subir), se
+  agacha y sale sin subir antes (con el «gracias» de la despedida, un poco más), se asoma desde donde esté, camina con
+  la velocidad y el rumbo que le piden; con movimiento reducido, todo eso en el acto y el cuerpo gira en el acto.
 * La carga perezosa (perezoso.js): un «quitar», un «mostrar» o un aviso de la escena (encuadre, atlas, simulación,
   ambiente) no cargan el módulo; el primer aviso que lo necesita sí, y lo que llegó mientras cargaba se le pasa en orden
   (de cada aviso de la escena, el último); con el presentador apagado no se carga; si no se pudo crear, lo que llega se
@@ -19,7 +21,9 @@
 * Las vistas (vistas.js, con Node): qué vista, lado y regla toma cada caso de la especificación (lo resaltado, la obra
   pedida, el tipo de paso, la pantalla chica, el atlas, el cierre); el movimiento suave del recorrido no cuenta como obra
   (y sus giros son los de app/recorrido.py); el lugar deja la punta del dedo fuera del panel y de la ficha, con
-  histéresis, un cambio por escena y ninguno en una escena corta; las transiciones; los tiempos del resumen.
+  histéresis, un cambio por escena y ninguno en una escena corta; las transiciones (girar, acercarse, caminar, saltar, el
+  rótulo y, con movimiento reducido, solo fundirse o girar); el rótulo (bajo el panel si cabe, si no acoplado al
+  subtítulo, que no lo pasa); los tiempos del resumen.
 """
 import re
 import subprocess
@@ -154,6 +158,124 @@ def test_el_personaje_y_el_animador_con_node(tmp_path):
     assert r["senalar"]["derecha"]["I"] > 1 > r["senalar"]["derecha"]["D"], r["senalar"]
     assert r["camina"] == 1.0
     assert r["salio"] is False and r["entro"] == {"visible": True, "y": 0.0} and r["numeros"], r
+
+
+NODE_AGACHARSE = r"""import { register } from 'node:module';
+import { pathToFileURL } from 'node:url';
+const [cargador, dir] = process.argv.slice(2);
+register(pathToFileURL(cargador).href);
+const THREE = await import('three');
+const { crearPersonaje } = await import(pathToFileURL(`${dir}/personaje.js`).href);
+const { crearAnimador } = await import(pathToFileURL(`${dir}/animador.js`).href);
+const azar = () => { let k = 7; return () => ((k = (k * 16807) % 2147483647) / 2147483647); };
+const r = {};
+const nuevo = (o = {}) => {
+  const p = crearPersonaje({ documento: null });
+  const a = crearAnimador(p, { azar: azar(), ...o });
+  a.camara = new THREE.PerspectiveCamera(17, 1, 0.1, 50);
+  a.camara.position.set(0, 1.2, 8);
+  return { p, a };
+};
+const r3 = (v) => Math.round(v * 1000) / 1000;
+// corre a 60 cuadros por segundo: las alturas del cuerpo y cuándo llamó cada aviso
+const correr = (x, s) => { const ys = []; for (let i = 0; i < Math.round(s * 60); i++) { x.a.actualizar(1 / 60); x.t += 1 / 60; ys.push(x.p.cuerpo.position.y); } return ys; };
+{
+  const x = nuevo();
+  x.t = 0;
+  correr(x, 0.5);
+  let t0 = x.t, tFin = null, tCasi = null;
+  x.a.entrar(() => { tFin = x.t - t0; }, { hondo: 1.57, casi: [0.3, () => { tCasi = x.t - t0; }] });
+  let ys = correr(x, 1.5);
+  r.entrar = { desde: r3(ys[0]), max: r3(Math.max(...ys)), fin: r3(ys.at(-1)), tFin: r3(tFin), tCasi: r3(tCasi), sube: ys.every((y, i) => i === 0 || y >= ys[i - 1] - 1e-9) };
+  t0 = x.t; tFin = null;
+  x.a.agacharse(() => { tFin = x.t - t0; }, { hondo: 1.57 });
+  ys = correr(x, 1);
+  r.agacharse = { max: r3(Math.max(...ys)), fin: r3(ys.at(-1)), tFin: r3(tFin), visible: x.p.grupo.visible, agachado: x.a.estado().agachado };
+  // a medio agacharse vuelve a asomarse: desde donde está, sin bajar antes
+  x.a.asomarse();
+  correr(x, 0.5);
+  x.a.agacharse();
+  correr(x, 0.1);
+  const desde = x.p.cuerpo.position.y;
+  t0 = x.t; tFin = null;
+  x.a.asomarse(() => { tFin = x.t - t0; });
+  ys = correr(x, 1);
+  r.asomarse = { desde: r3(desde), min: r3(Math.min(...ys)), fin: r3(ys.at(-1)), tFin: r3(tFin) };
+  t0 = x.t; tFin = null;
+  x.a.salir(() => { tFin = x.t - t0; });
+  ys = correr(x, 1.2);
+  r.salir = { max: r3(Math.max(...ys)), visible: x.p.grupo.visible, tFin: r3(tFin) };
+  x.a.entrar(null, { instante: true });
+  correr(x, 0.3);
+  t0 = x.t; tFin = null;
+  x.a.salir(() => { tFin = x.t - t0; }, { gracias: true });
+  ys = correr(x, 1.2);
+  r.gracias = { max: r3(Math.max(...ys)), visible: x.p.grupo.visible, tFin: r3(tFin) };
+  // caminar detrás del subtítulo: la velocidad que le piden y en 3/4 (rumbo 0.6), no de perfil
+  x.a.entrar(null, { instante: true });
+  correr(x, 0.2);
+  x.a.reubicar(0);
+  x.a.caminarA(1.6, { velocidad: 1.64, rumbo: 0.6, zancada: 0.65 });
+  let rumbo = 0, tLlega = null;
+  t0 = x.t;
+  for (let i = 0; i < 180; i++) { x.a.actualizar(1 / 60); x.t += 1 / 60; rumbo = Math.max(rumbo, Math.abs(x.a.estado().rumbo)); if (tLlega === null && !x.a.estado().caminando) tLlega = x.t - t0; }
+  r.caminar = { x: r3(x.a.estado().x), tLlega: r3(tLlega), rumbo: r3(rumbo) };
+  x.a.girar(0.35, { ya: true });
+  r.girarYa = x.a.estado().rumbo;
+  x.p.liberar();
+}
+{
+  // movimiento reducido: entrar, salir, agacharse y asomarse en el acto; el cuerpo gira en el acto
+  const x = nuevo({ reducido: true });
+  x.t = 0;
+  correr(x, 0.3);
+  const marcas = [];
+  x.a.agacharse(() => marcas.push('agacha'), { hondo: 1.4 });
+  marcas.push(r3(x.p.cuerpo.position.y));
+  x.a.asomarse(() => marcas.push('asoma'));
+  marcas.push(r3(x.p.cuerpo.position.y));
+  x.a.salir(() => marcas.push('sale'));
+  marcas.push(x.p.grupo.visible);
+  x.a.entrar(() => marcas.push('entra'));
+  marcas.push(r3(x.p.cuerpo.position.y), x.p.grupo.visible);
+  x.a.girar(0.35);
+  x.a.actualizar(1 / 60);
+  r.reducido = { marcas, rumbo: x.a.estado().rumbo };
+  x.p.liberar();
+}
+console.log(JSON.stringify(r));
+"""
+
+
+@requiere_node
+def test_detras_del_subtitulo_se_agacha_se_asoma_y_camina(tmp_path):
+    (tmp_path / "cargador.mjs").write_text(CARGADOR, encoding="utf-8")
+    (tmp_path / "prueba.mjs").write_text(NODE_AGACHARSE, encoding="utf-8")
+    p = subprocess.run(["node", str(tmp_path / "prueba.mjs"), str(tmp_path / "cargador.mjs"), str(PRESENTADOR)],
+                       capture_output=True, text=True, timeout=120, cwd=ADMIN,
+                       env={"PATH": "/usr/bin:/bin:/usr/local/bin:/opt/node22/bin", "VENDOR_THREE": str(VENDOR_THREE)})
+    assert p.returncode == 0, p.stderr
+    import json
+    r = json.loads(p.stdout.strip().splitlines()[-1])
+    # entra agachado desde abajo, sube sin pasarse (nunca sobre 0) en 0.8 s y el saludo empieza 0.3 s antes del final
+    e = r["entrar"]
+    assert e["desde"] < -1.4 and e["max"] <= 0 and e["fin"] == 0 and e["sube"], e
+    assert 0.7 <= e["tFin"] <= 0.85 and abs(e["tFin"] - e["tCasi"] - 0.3) < 0.05, e
+    # se agacha sin subir antes (0.3 s) y se queda agachado, a la vista
+    a = r["agacharse"]
+    assert a["max"] <= 0 and a["fin"] == -1.57 and a["tFin"] <= 0.35 and a["visible"] and a["agachado"] == 1, a
+    # a medio camino se asoma desde donde está (sin bajar antes) y tarda menos que desde abajo
+    s = r["asomarse"]
+    assert -1.5 < s["desde"] < -0.1 and s["min"] >= s["desde"] - 1e-6 and s["fin"] == 0 and s["tFin"] < 0.45, s
+    # sale sin subir antes: oculto en 0.45 s; con el «gracias» de la despedida, en 0.6 s
+    assert r["salir"]["max"] <= 0 and r["salir"]["visible"] is False and r["salir"]["tFin"] <= 0.5, r["salir"]
+    assert r["gracias"]["max"] <= 0 and r["gracias"]["visible"] is False and 0.5 < r["gracias"]["tFin"] <= 0.65, r["gracias"]
+    # camina a la velocidad pedida, en 3/4 (rumbo 0.6, no de perfil), y gira en el acto si se lo piden
+    c = r["caminar"]
+    assert abs(c["x"] - 1.6) < 0.02 and c["tLlega"] <= 1.2 and 0.55 <= c["rumbo"] <= 0.61, c
+    assert r["girarYa"] == 0.35
+    # movimiento reducido: todo en el acto, en orden, y el cuerpo gira sin muelle
+    assert r["reducido"] == {"marcas": ["agacha", -1.4, "asoma", 0, "sale", False, "entra", 0, True], "rumbo": 0.35}, r["reducido"]
 
 
 NODE_PEREZOSO = r"""import { pathToFileURL } from 'node:url';
@@ -563,6 +685,37 @@ r.transiciones = [
   V.transicion(A, { vista: 'cerca', plano: 'medio', p: 450, x: 996 }, { reducido: true }),
   V.transicion(A, { ...A, vista: 'senala' }, { reducido: true }),
 ];
+// más: el plano nuevo a menos de 0.2·pxAlto se acerca (y se corre); lejos, salta; de un rótulo a otro, se funde; con
+// movimiento reducido nunca camina, salta, se acerca ni cambia al rótulo con escala
+const R = { vista: 'rotulo', plano: 'primer', p: 207, x: 492, modo: 'panel' };
+r.transiciones2 = {
+  acercar_corre: V.transicion(A, { vista: 'cerca', plano: 'medio', p: 450, x: 1040 }),
+  saltar_plano: V.transicion(A, { vista: 'cerca', plano: 'medio', p: 450, x: 760 }),
+  rotulo_figura: V.transicion(R, A),
+  rotulo_rotulo: V.transicion(R, { ...R, p: 135, modo: 'acoplado', x: 680 }),
+  reducido: [V.transicion(A, { ...A, x: 800 }, { reducido: true }), V.transicion(A, { ...A, x: 500 }, { reducido: true }),
+    V.transicion(A, R, { reducido: true }), V.transicion(R, A, { reducido: true }),
+    V.transicion(A, { vista: 'cerca', plano: 'medio', p: 450, x: 1040 }, { reducido: true })],
+};
+// el rótulo: bajo el panel si entre el panel y el pie del subtítulo cabe el círculo (si no entero, hasta 88 px);
+// si no, acoplado al subtítulo (84; 64 en la pantalla chica; de lado, del alto del subtítulo)
+const subR = { x0: 627, y0: 721, x1: 1365, y1: 814 };
+const panelCorto = { x0: 100, y0: 76, x1: 552, y1: 693 }, panelLargo = { x0: 100, y0: 76, x1: 552, y1: 818 };
+const bajo = V.rotuloDe(ESC, { sub: subR, panel: panelCorto });
+const aco = V.rotuloDe(ESC, { sub: subR, panel: panelLargo });
+const cel = V.rotuloDe(CEL, { sub: { x0: 10, y0: 335, x1: 380, y1: 439 }, panel: { x0: 10, y0: 447, x1: 380, y1: 768 } });
+const lado = V.rotuloDe({ ...ESC, chica: true, horizontal: true, VW: 844, VH: 390 }, { sub: { x0: 397, y0: 280, x1: 834, y1: 376 } });
+const mR = V.medidas('rotulo', ESC, { rotulo: bajo });
+r.rotulo = {
+  bajo, aco, cel, lado,
+  medidas: { plano: mR.plano, Wc: mR.Wc, Hc: mR.Hc, bajo: mR.bajo, modo: mR.modo },
+  // dónde va el círculo: bajo el panel, a 4 px de su borde derecho y al pie del subtítulo; acoplado, a 10 px del
+  // extremo, centrado en su alto; con un subtítulo bajo, más chico (no lo pasa)
+  posBajo: V.posRotulo(bajo, subR, panelCorto.x1),
+  posAco: V.posRotulo(aco, subR),
+  posBajito: V.posRotulo(aco, { ...subR, y0: 746 }),
+  posCel: V.posRotulo(cel, { x0: 10, y0: 335, x1: 380, y1: 439 }),
+};
 // el cierre: un dedo al empezar cada punto
 const tc = V.tiemposCierre(['Uno: la torre del hospital.', 'Dos: el agua.', 'Tres: vivienda nueva y mejorada para todos.']);
 r.cierre = { crece: tc.inicios.every((t, i) => i === 0 || t > tc.inicios[i - 1]), primero: tc.inicios[0], total: tc.total, n: tc.inicios.length };
@@ -633,6 +786,21 @@ def test_elegir_vista(tmp_path):
     assert h["cambia"]["cambia"] and h["cambia"]["x"] == h["mejor"], h
     assert h["ya_cambio"] == "ya_cambio" and h["corta"] == "corta" and h["no_sirve"] == "no_sirve", h
     assert r["transiciones"] == ["giro", "acercar", "caminar", "saltar", "rotulo", "fundido", "fundido", "giro"], r["transiciones"]
+    t2 = r["transiciones2"]
+    assert (t2["acercar_corre"], t2["saltar_plano"], t2["rotulo_figura"], t2["rotulo_rotulo"]) == ("acercar", "saltar", "rotulo", "fundido"), t2
+    # con movimiento reducido solo se funde (o gira): nunca camina, salta ni se acerca
+    assert set(t2["reducido"]) == {"fundido"}, t2
+    # el rótulo: bajo el panel (113 a 900 de alto) si cabe; si no, acoplado (84); en el celular 64; de lado, del subtítulo
+    ro = r["rotulo"]
+    assert ro["bajo"] == {"modo": "panel", "lado": 113, "borde": "izq"} and ro["aco"] == {"modo": "acoplado", "lado": 84, "borde": "izq"}, ro
+    assert ro["cel"] == {"modo": "acoplado", "lado": 64, "borde": "der"} and ro["lado"] == {"modo": "acoplado", "lado": 64, "borde": "der"}, ro
+    assert ro["medidas"] == {"plano": "primer", "Wc": 113, "Hc": 113, "bajo": 0, "modo": "panel"}, ro
+    assert ro["posBajo"] == {"x0": 552 - 4 - 113, "y0": 814 - 113, "L": 113}, ro
+    a, b = ro["posAco"], ro["posBajito"]
+    assert a["x0"] == 637 and a["L"] == 84 and a["y0"] >= 721 and a["y0"] + a["L"] <= 814, ro
+    assert b["L"] < 84 and b["y0"] >= 746 and b["y0"] + b["L"] <= 814, ro
+    c = ro["posCel"]
+    assert c["x0"] + c["L"] == 380 - 8 and c["y0"] >= 335 and c["y0"] + c["L"] <= 439, ro
     assert r["cierre"]["crece"] and r["cierre"]["n"] == 3 and 0.5 < r["cierre"]["primero"] < 1 and r["cierre"]["total"] <= 16, r["cierre"]
 
 

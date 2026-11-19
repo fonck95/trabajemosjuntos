@@ -13,6 +13,7 @@
 //   rótulos, lo resaltado, el HUD y la leyenda, y descarta tapar el panel, la ficha o el marco del atlas; con
 //   histéresis (no va y viene) y a lo sumo un cambio por escena.
 // * objetivoDe, alcance: el punto al que apunta y hasta dónde llega la punta del índice.
+// * rotuloDe / posRotulo: el rótulo (la cara en un círculo), bajo el panel o acoplado al subtítulo.
 // * transicion: cómo pasa de una vista a otra (girar, acercarse, caminar, saltar, el rótulo, fundirse).
 // * tiemposCierre: cuándo empieza cada punto del resumen (un dedo por punto).
 
@@ -45,8 +46,9 @@ export const VISTAS = {
   presenta: { plano: 'americano', k: 0.36, min: 220, max: 400, rumbo: 0.3, margen: 0.2, apertura: 0.55 },
   general: { plano: 'entero', k: 0.42, min: 250, max: 460, chica: [0.28, 160, 280], rumbo: 0.3, margen: 0.25, apertura: 0.55 },
   cerca: { plano: 'medio', k: 0.5, min: 280, max: 520, rumbo: 0, margen: 0.2, apertura: 0.55 },
-  // (por ahora, un busto chico detrás del subtítulo: el círculo es de la etapa de las transiciones)
-  rotulo: { plano: 'medio', k: 0.125, min: 88, max: 128, rumbo: 0.3, margen: 0.26, apertura: 0.45 },
+  // la cara en un círculo (rotuloDe): bajo el panel (k, min, max: el diámetro) o acoplado al subtítulo (84 en la
+  // pantalla grande, 64 en la chica; de lado, lo que da el alto del subtítulo)
+  rotulo: { plano: 'primer', k: 0.125, min: 88, max: 128, acoplado: 84, chica: 64, rumbo: 0.3, margen: 0, apertura: 0.45 },
   busto: { plano: 'medio', k: 0.26, min: 150, max: 240, rumbo: 0.25, margen: 0.26, apertura: 0.5 },
 };
 /** La pantalla chica (el celular, la tableta vertical): el busto en lugar del anfitrión, señala, presenta y cerca */
@@ -177,18 +179,20 @@ export function elegirVista(d = {}, ctx = {}) {
 
 /** El tamaño de la vista para la ventana: {plano, p (pxAlto), Wc, Hc, bajo (lo del lienzo detrás del subtítulo), alto
  * (lo que se ve arriba del corte), margen, cadera, huella: [medio ancho, alto]}. `cierre`: el busto del cierre ×1.15 */
-export function medidas(vista, ctx = {}, { cierre = false, subAlto = 0 } = {}) {
+export function medidas(vista, ctx = {}, { cierre = false, subAlto = 0, rotulo = null } = {}) {
   const V = VISTAS[vista] || VISTAS.anfitrion;
   const VW = ctx.VW || 800, VH = ctx.VH || 600;
   const chica = ctx.chica ?? VW <= CHICA_PX;
   const P = PLANOS[V.plano];
   let p;
   if (vista === 'rotulo') {
-    // el tamaño del círculo (lo que se ve: 0.62 de pxAlto en el plano medio)
-    const horizontal = ctx.horizontal ?? (chica && VH < HORIZONTAL_PX);
-    const lado = horizontal ? acotar((subAlto || 56) - 6, 44, 64) : chica ? 64 : acotar(V.k * VH, V.min, V.max);
-    p = lado / (P.ya - P.yc);
-  } else if (chica && V.chica) p = acotar(V.chica[0] * VH, V.chica[1], V.chica[2]);
+    // el círculo: un lienzo cuadrado del diámetro, con la cabeza y los hombros (el plano primer, sin corte)
+    const r = rotulo || rotuloDe(ctx, { sub: subAlto ? { x0: 0, y0: 0, x1: 1, y1: subAlto } : null });
+    return { vista, plano: 'primer', p: Math.round((r.lado / (P.ya - P.yb)) * 10) / 10, Wc: r.lado, Hc: r.lado, bajo: 0,
+      alto: r.lado, yc: null, margen: 0, cadera: 0, huella: [r.lado / 2, r.lado], apertura: V.apertura,
+      modo: r.modo, borde: r.borde, lado: r.lado };
+  }
+  if (chica && V.chica) p = acotar(V.chica[0] * VH, V.chica[1], V.chica[2]);
   else p = acotar(V.k * VH, V.min, V.max);
   if (vista === 'busto' && cierre) p *= 1.15;
   p = Math.round(p * 10) / 10;
@@ -198,6 +202,43 @@ export function medidas(vista, ctx = {}, { cierre = false, subAlto = 0 } = {}) {
     alto: (P.ya - P.yc) * p, yc: P.yc, margen: V.margen * p, cadera: CORTE[V.plano] * p,
     huella: [HUELLA[V.plano][0] * p, HUELLA[V.plano][1] * p], apertura: V.apertura,
   };
+}
+
+/**
+ * Dónde va el rótulo (la cara en un círculo) con las cajas `c` de la página (sub, panel): en la pantalla grande, bajo el
+ * panel si entre su borde de abajo y el del subtítulo cabe el círculo (en la esquina de abajo a la derecha de la columna
+ * del panel: no tapa el modelo del atlas ni su barra de tiempo); si no, acoplado al subtítulo, en su extremo izquierdo
+ * (el subtítulo le hace lugar: propuesta.html, .pres.rotulo-acoplado). En la pantalla chica, acoplado a la derecha;
+ * de lado, del alto del subtítulo. → {modo: 'panel' | 'acoplado', lado (el diámetro, px), borde: 'izq' | 'der'}
+ */
+export function rotuloDe(ctx = {}, c = {}) {
+  const V = VISTAS.rotulo;
+  const VW = ctx.VW || 800, VH = ctx.VH || 600;
+  const chica = ctx.chica ?? VW <= CHICA_PX;
+  const horizontal = ctx.horizontal ?? (chica && VH < HORIZONTAL_PX);
+  const sub = c.sub || null;
+  const alto = sub ? sub.y1 - sub.y0 : 0;
+  if (horizontal) return { modo: 'acoplado', lado: Math.round(acotar((alto || 56) - 6, 44, V.chica)), borde: 'der' };
+  if (chica) return { modo: 'acoplado', lado: V.chica, borde: 'der' };
+  // (bajo el panel, si no cabe entero se achica hasta el mínimo)
+  const lado = Math.round(acotar(V.k * VH, V.min, V.max));
+  const cabe = c.panel && sub ? Math.floor(sub.y1 - (c.panel.y1 + 8)) : 0;
+  if (cabe >= V.min) return { modo: 'panel', lado: Math.min(lado, cabe), borde: 'izq' };
+  return { modo: 'acoplado', lado: V.acoplado, borde: 'izq' };
+}
+/**
+ * La caja del círculo en la ventana (px) con el subtítulo de ahora: bajo el panel, su borde derecho a 4 px del de la
+ * columna del panel (`panelX1`) y el de abajo con el del subtítulo; acoplado, a 10 px del extremo del subtítulo (8 a la
+ * derecha), centrado en su alto y nunca más alto que él (si el subtítulo es bajo, el círculo se achica: no lo pasa ni
+ * tapa lo de arriba, la barra de tiempo del simulador). → {x0, y0, L}
+ */
+export function posRotulo(r, sub, panelX1 = null) {
+  if (!r || !sub) return null;
+  if (r.modo === 'panel' && Number.isFinite(panelX1)) return { x0: panelX1 - 4 - r.lado, y0: sub.y1 - r.lado, L: r.lado };
+  const alto = sub.y1 - sub.y0;
+  const L = Math.max(36, Math.min(r.lado, alto - 6));
+  const x0 = r.borde === 'der' ? sub.x1 - 8 - L : sub.x0 + 10;
+  return { x0, y0: (sub.y0 + sub.y1) / 2 - L / 2, L };
 }
 
 /** El rumbo de la vista hacia un punto que está en `dx` (px, + a la derecha de la pantalla) del cuerpo */
@@ -433,21 +474,26 @@ export function elegirLugar(e, m, ctx, c, actual = {}, { punto = null } = {}) {
 }
 
 /**
- * Cómo pasa de una vista a otra. desde/hasta: {vista, plano, p, x}. → 'giro' (mismo lugar y plano: solo gira) |
- * 'acercar' (mismo lugar, otro plano o tamaño) | 'caminar' (otro lugar cerca, mismo plano) | 'saltar' (más lejos, u otro
- * plano y otro lugar) | 'rotulo' (de figura a rótulo o al revés) | 'fundido' (con movimiento reducido, todo lo que no es
- * girar)
+ * Cómo pasa de una vista a otra. desde/hasta: {vista, plano, p, x, modo?}. → 'giro' (mismo lugar y plano: solo gira) |
+ * 'acercar' (otro plano o tamaño en el mismo lugar, o a menos de 0.2·pxAlto: la cámara se acerca y se corre) |
+ * 'caminar' (otro lugar a no más de 0.8·pxAlto, mismo plano) | 'saltar' (más lejos, u otro plano y otro lugar: se
+ * agacha, el lienzo salta y se asoma) | 'rotulo' (de figura a rótulo o al revés) | 'fundido' (de un rótulo a otro, y con
+ * movimiento reducido todo lo que no es girar)
  */
 export function transicion(desde, hasta, { reducido = false, p = null } = {}) {
   if (!desde || !hasta) return 'giro';
-  const otroLugar = Number.isFinite(desde.x) && Number.isFinite(hasta.x) && Math.abs(hasta.x - desde.x) >= 3;
-  const otroPlano = desde.plano !== hasta.plano || Math.abs((desde.p || 0) - (hasta.p || 0)) > 0.5;
+  const dx = Number.isFinite(desde.x) && Number.isFinite(hasta.x) ? Math.abs(hasta.x - desde.x) : 0;
+  const otroLugar = dx >= 3;
+  const otroPlano = desde.plano !== hasta.plano || Math.abs((desde.p || 0) - (hasta.p || 0)) > 0.5
+    || (desde.modo || null) !== (hasta.modo || null);
   if (!otroLugar && !otroPlano) return 'giro';
   if (reducido) return 'fundido';
   if ((desde.vista === 'rotulo') !== (hasta.vista === 'rotulo')) return 'rotulo';
-  if (!otroLugar) return 'acercar';
-  const lejos = Math.abs(hasta.x - desde.x) > 0.8 * (p || hasta.p || desde.p || 300);
-  return !otroPlano && !lejos ? 'caminar' : 'saltar';
+  if (desde.vista === 'rotulo') return 'fundido';
+  const ref = p || Math.min(hasta.p || Infinity, desde.p || Infinity);
+  const P = Number.isFinite(ref) ? ref : 300;
+  if (otroPlano) return dx <= 0.2 * P ? 'acercar' : 'saltar';
+  return dx <= 0.8 * P ? 'caminar' : 'saltar';
 }
 
 /** Lo que tarda en decirse un carácter sin voz (a unos 17 por segundo; el de presentador.js) */

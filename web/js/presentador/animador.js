@@ -3,7 +3,7 @@
 //
 //   1. el reposo: de pie, las manos juntas al frente (la casa);
 //   2. lo que hace siempre: respira, se balancea un poco y parpadea;
-//   3. caminar (cuando va a otra x) o el salto de entrada y de salida;
+//   3. caminar (cuando va a otra x); agacharse y asomarse detrás del subtítulo (entrar, salir, saltar a otro lugar);
 //   4. hablar: la boca por sílabas, la cabeza que acompaña y, si los brazos están libres, las manos que explican con
 //      un golpe cada tanto;
 //   5. un gesto (saludar, señalar, presentar, explicar, contar, pensar, celebrar, invitar, asentir, pulgar, escuchar,
@@ -224,13 +224,20 @@ export const NOMBRES_GESTOS = Object.keys(GESTOS);
 
 const suave = (t) => { const x = Math.min(1, Math.max(0, t)); return x * x * (3 - 2 * x); };
 const acercar = (k, dt) => 1 - Math.exp(-k * dt);
+// Agachado detrás del subtítulo: cuánto baja el cuerpo por omisión (el presentador le da el de cada plano: lo justo para
+// que la cabeza quede bajo el corte) y lo que tardan la entrada (sube), la salida y agacharse o asomarse en un cambio de
+// lugar
+const HONDO = 1.6;
+const ENTRAR_S = 0.8, SALIR_S = 0.45, AGACHARSE_S = 0.3, ASOMARSE_S = 0.45, GRACIAS_S = 0.15;
 
 /**
  * crearAnimador(personaje, {reducido}) → {actualizar(dt), gesto(nombre, opciones), detenerGesto(), hablar(seg|true),
- * callar(), mirarA(punto|null), mirarSala(seg), caminarA(x), reubicar(x), entrar(), salir(alTerminar), estado(),
- * girar(rumbo), camara, apertura}.
+ * callar(), mirarA(punto|null), mirarSala(seg), caminarA(x, {velocidad, rumbo, zancada}), reubicar(x),
+ * entrar(al, {hondo, instante, casi}), salir(al, {hondo, gracias}), agacharse(al, {hondo}), asomarse(al, {hondo, desde}),
+ * estado(), girar(rumbo, {ya}), camara, apertura}.
  * `gesto(nombre, {sostener: true})` sostiene cualquier gesto hasta otro o hasta detenerGesto().
- * `reducido` (prefers-reduced-motion): sin saltos ni vaivenes del cuerpo, entra y sale sin animación.
+ * `reducido` (prefers-reduced-motion): sin saltos ni vaivenes del cuerpo, entra, sale, se agacha y se asoma sin
+ * animación y el cuerpo gira en el acto.
  */
 export function crearAnimador(personaje, { reducido = false, azar = Math.random } = {}) {
   const { grupo, cuerpo, huesos, manos, cara } = personaje;
@@ -255,7 +262,14 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   let salaHasta = 0;        // hasta cuándo mira a la sala pase lo que pase (mirarSala)
   let yaw = 0, pitch = 0, ojoX = 0, ojoY = 0;
   let destinoX = grupo.position.x, fase = 0, wCaminar = 0, rumbo = 0, rumboBase = 0;
-  let entrada = null;       // {desde, hasta, dur, t, al}
+  // caminar: la velocidad (unidades por segundo), el rumbo mientras anda (1.1: casi de perfil; el presentador va en 3/4)
+  // y lo que avanza en medio ciclo de las piernas
+  let velocidad = 0.95, rumboCaminar = 1.1, zancada = 0.3;
+  let entrada = null;       // subir o bajar detrás del subtítulo: {tipo, desde, hasta, dur, t, espera, al, casi, gracias}
+  let hondo = HONDO;        // cuánto baja agachado
+  let wBrazos = 0;          // lo agachado, con 80 ms de retraso: los brazos llegan después que el cuerpo
+  let tAsentar = 9, asentar = 0;   // el asentamiento al terminar de subir (la columna pasa un poco y vuelve)
+  let yQuieto = 0;          // dónde se queda el cuerpo sin moverse: 0 de pie, −hondo agachado
   let salto = 0;
   // `apertura`: lo más que la cara se aparta de la sala (el rumbo del cuerpo más el giro de la cabeza), en radianes
   const api = { camara: null, apertura: 0.55 };
@@ -287,8 +301,9 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     const nuevo = hacer(opciones);
     // (y en cada cuadro el hombro vuelve a apuntar: el pecho se mueve con la respiración, la mirada y el giro)
     if (apuntaA && nuevo.pose?.[`hombro${apuntaA.lado}`]) nuevo.apuntaA = apuntaA;
-    // cualquier gesto se puede sostener hasta otro (o hasta detenerGesto)
+    // cualquier gesto se puede sostener hasta otro (o hasta detenerGesto); y entrar más rápido (la despedida que se agacha)
     if (o.sostener === true) nuevo.sostener = true;
+    if (Number.isFinite(o.entra) && o.entra > 0) nuevo.entra = o.entra;
     // el mismo gesto que sigue (enumerar: un dedo más con cada frase): cambia sus manos sin volver a empezar
     if (o.seguir && clip && nombreClip === nombre) {
       clip.manosEn = normalizarManos(nuevo.manos);
@@ -392,7 +407,14 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   function callar() { hablando = false; }
 
   // ── Moverse ──
-  function caminarA(x) { destinoX = Number.isFinite(x) ? x : destinoX; }
+  /** Caminar hasta `x` (del mundo). `velocidad` en unidades por segundo (0.95 por omisión), `rumbo` el giro del cuerpo
+   * mientras anda (1.1 por omisión; 0.6 es en 3/4, de cara a la sala) y `zancada` lo que avanza en medio ciclo */
+  function caminarA(x, o = {}) {
+    destinoX = Number.isFinite(x) ? x : destinoX;
+    velocidad = Number.isFinite(o.velocidad) && o.velocidad > 0 ? o.velocidad : 0.95;
+    rumboCaminar = Number.isFinite(o.rumbo) ? Math.min(1.2, Math.abs(o.rumbo)) : 1.1;
+    zancada = Number.isFinite(o.zancada) && o.zancada > 0 ? o.zancada : 0.3;
+  }
   /** Ponerlo en `x` sin caminar (el presentador mueve la cámara con él: no se nota) */
   function reubicar(x) {
     if (!Number.isFinite(x)) return;
@@ -402,15 +424,53 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   function mirarA(p) { mira = p ? p.clone() : null; }
   /** Mirar a la sala (la cámara) `seg` segundos, aunque el gesto o mirarA pidan otra cosa (el comienzo de una frase) */
   function mirarSala(seg = 1) { salaHasta = t + Math.max(0, Number(seg) || 0); }
-  function entrar(al) {
-    grupo.visible = true;
-    if (reducido) { cuerpo.position.y = 0; al?.(); return; }
-    entrada = { desde: -2.6, hasta: 0, dur: 0.8, t: 0, al, tipo: 'entra' };
-    cuerpo.position.y = -2.6;
+  // ── Detrás del subtítulo: subir y bajar agachado (las rodillas dobladas y la columna adelante; lo de abajo del corte
+  // no se ve). `hondo`: cuánto baja (que la cabeza quede bajo el corte del plano) ──
+  function mover(tipo, hasta, dur, al, o = {}) {
+    entrada = { tipo, desde: cuerpo.position.y, hasta, dur, t: 0, espera: o.espera || 0, al: al || null,
+      casi: Array.isArray(o.casi) ? o.casi : null, gracias: !!o.gracias };
   }
-  function salir(al) {
-    if (reducido) { grupo.visible = false; al?.(); return; }
-    entrada = { desde: cuerpo.position.y, hasta: -2.6, dur: 0.6, t: 0, al: () => { grupo.visible = false; al?.(); }, tipo: 'sale' };
+  const ponerHondo = (h) => { if (Number.isFinite(h) && h > 0.2) hondo = h; };
+  /** Sube desde agachado detrás del subtítulo: el cuerpo de −hondo a 0 sin pasarse (los brazos 80 ms después y la
+   * columna, que se endereza, pasa un poco y vuelve), 0.8 s. `casi: [s, f]` llama a f cuando faltan s segundos (el
+   * saludo empieza antes de terminar de subir); `instante`: ya arriba */
+  function entrar(al, o = {}) {
+    grupo.visible = true;
+    ponerHondo(o.hondo);
+    if (reducido || o.instante) {
+      entrada = null;
+      cuerpo.position.y = yQuieto = 0;
+      try { o.casi?.[1]?.(); } catch { /* nada */ }
+      al?.();
+      return;
+    }
+    cuerpo.position.y = -hondo;
+    wBrazos = 1;
+    mover('entra', 0, Number(o.dur) > 0 ? o.dur : ENTRAR_S, al, o);
+  }
+  /** Se asoma desde donde esté (a medio agacharse, o desde `desde` si está más abajo): lo mismo que entrar, más corto y
+   * con menos rebote (0.45 s desde abajo del todo) */
+  function asomarse(al, o = {}) {
+    grupo.visible = true;
+    ponerHondo(o.hondo);
+    if (Number.isFinite(o.desde)) cuerpo.position.y = Math.min(cuerpo.position.y, o.desde);
+    const falta = Math.min(1, Math.max(0, -cuerpo.position.y / hondo));
+    if (reducido || falta < 0.002) { entrada = null; cuerpo.position.y = yQuieto = 0; al?.(); return; }
+    mover('asoma', 0, Math.max(0.15, (Number(o.dur) > 0 ? o.dur : ASOMARSE_S) * Math.sqrt(falta)), al, o);
+  }
+  /** Se agacha detrás del subtítulo hasta que no se ve (0.3 s), sin subir antes; queda a la vista (agachado) */
+  function agacharse(al, o = {}) {
+    ponerHondo(o.hondo);
+    if (reducido) { entrada = null; cuerpo.position.y = yQuieto = -hondo; al?.(); return; }
+    mover('agacha', -hondo, Number(o.dur) > 0 ? o.dur : AGACHARSE_S, al, o);
+  }
+  /** Se va: se agacha sin subir antes (0.45 s) y desaparece. `gracias`: antes, un asentimiento de «gracias» (0.15 s
+   * de más; la despedida del cierre) */
+  function salir(al, o = {}) {
+    const fin = () => { grupo.visible = false; cuerpo.position.y = yQuieto = -hondo; al?.(); };
+    ponerHondo(o.hondo);
+    if (reducido) { entrada = null; fin(); return; }
+    mover('sale', -hondo, Number(o.dur) > 0 ? o.dur : SALIR_S, fin, { espera: o.gracias ? GRACIAS_S : 0, gracias: o.gracias });
   }
 
   // ── Cada cuadro ──
@@ -439,12 +499,34 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     const anda = Math.abs(dx) > 0.01;
     wCaminar += ((anda ? 1 : 0) - wCaminar) * acercar(6, dt);
     if (anda) {
-      const paso = Math.sign(dx) * Math.min(Math.abs(dx), 0.95 * dt * (0.4 + 0.6 * wCaminar));
+      const paso = Math.sign(dx) * Math.min(Math.abs(dx), velocidad * dt * (0.4 + 0.6 * wCaminar));
       grupo.position.x += paso;
-      fase += (Math.abs(paso) * Math.PI) / 0.3;
+      fase += (Math.abs(paso) * Math.PI) / zancada;
     }
-    rumbo += ((anda ? Math.sign(dx) * 1.1 : rumboBase) - rumbo) * acercar(7, dt);
+    // (con movimiento reducido el cuerpo gira en el acto)
+    if (reducido && !anda) rumbo = rumboBase;
+    else rumbo += ((anda ? Math.sign(dx) * rumboCaminar : rumboBase) - rumbo) * acercar(7, dt);
     grupo.rotation.y = rumbo;
+
+    // agachado detrás del subtítulo: las rodillas, los muslos y la columna adelante; los brazos, con 80 ms de retraso
+    // (subiendo se quedan un poco atrás y bajando se adelantan), y al terminar de subir la columna pasa un poco y vuelve
+    const wAg = Math.max(0, Math.min(1, -cuerpo.position.y / hondo));
+    wBrazos += (wAg - wBrazos) * acercar(12.5, dt);
+    if (wAg > 0.001) {
+      sumar('rodillaI', 0.7 * wAg, 0, 0);
+      sumar('rodillaD', 0.7 * wAg, 0, 0);
+      sumar('musloI', -0.4 * wAg, 0, 0);
+      sumar('musloD', -0.4 * wAg, 0, 0);
+      sumar('columna', 0.2 * wAg, 0, 0);
+    }
+    if (!reducido) {
+      const atras = Math.max(-0.12, Math.min(0.12, wBrazos - wAg));
+      if (Math.abs(atras) > 0.001) { sumar('hombroI', 0.9 * atras, 0, 0); sumar('hombroD', 0.9 * atras, 0, 0); }
+      tAsentar += dt;
+      if (tAsentar < 0.25) sumar('columna', -asentar * Math.sin((Math.PI * tAsentar) / 0.25), 0, 0);
+      // el «gracias» de la despedida: la cabeza asiente antes de bajar
+      if (entrada?.gracias) sumar('cabeza', 0.12 * Math.sin(Math.PI * Math.min(1, entrada.t / 0.35)), 0, 0);
+    }
     if (wCaminar > 0.01) {
       const s = Math.sin(fase), c = Math.cos(fase), w = wCaminar;
       sumar('musloI', -0.5 * s * w, 0, 0);
@@ -576,18 +658,28 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       ponerMano(manos[l], dedos[l]);
     }
 
-    // el cuerpo: la entrada y la salida, el saltito y el sube y baja del paso
+    // el cuerpo: subir y bajar detrás del subtítulo, el saltito y el sube y baja del paso
     let y = 0;
     if (entrada) {
-      entrada.t += dt;
-      const u = Math.min(1, entrada.t / entrada.dur);
-      const e = entrada.tipo === 'entra' ? 1 + 2.2 * (u - 1) ** 3 + 1.2 * (u - 1) ** 2 : u * u * (2.4 * u - 1.4);
-      cuerpo.position.y = entrada.desde + (entrada.hasta - entrada.desde) * e;
-      if (u >= 1) { const al = entrada.al; entrada = null; cuerpo.position.y = 0; if (al) al(); }
+      const e = entrada;
+      e.t += dt;
+      const tt = Math.max(0, e.t - e.espera);
+      const u = Math.min(1, tt / e.dur);
+      // subiendo, sin pasarse (frena al llegar); bajando, sin subir antes
+      const sube = e.hasta > e.desde;
+      const k = sube ? 1 - (1 - u) ** 3 : u * u * (3 - 2 * u);
+      cuerpo.position.y = e.desde + (e.hasta - e.desde) * k;
+      if (e.casi && e.dur - tt <= e.casi[0]) { const f = e.casi[1]; e.casi = null; try { f?.(); } catch { /* nada */ } }
+      if (u >= 1) {
+        entrada = null;
+        cuerpo.position.y = yQuieto = e.hasta;
+        if (sube) { tAsentar = 0; asentar = e.tipo === 'entra' ? 0.02 : 0.012; }
+        e.al?.();
+      }
     } else {
       if (clip?.salto && !reducido) salto = Math.max(0, Math.sin(Math.min(1, (tClip - 0.35) / 0.5) * Math.PI)) * (tClip > 0.35 ? 0.12 : 0);
       else salto *= 1 - acercar(10, dt);
-      y = salto + (wCaminar > 0.01 ? -0.02 * Math.abs(Math.cos(fase)) * wCaminar : 0);
+      y = yQuieto + salto + (wCaminar > 0.01 ? -0.02 * Math.abs(Math.cos(fase)) * wCaminar : 0);
       if (grupo.visible) cuerpo.position.y = y;
     }
 
@@ -654,6 +746,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     return { gesto: nombreClip, sostenido: !!clip?.sostener, hablando, caminando: Math.abs(destinoX - grupo.position.x) > 0.01,
       x: grupo.position.x, visible: grupo.visible, entrando: entrada?.tipo || null,
       rumbo: r3(rumbo), rumboBase: r3(rumboBase), aLaSala: t < salaHasta,
+      agachado: r3(Math.max(0, Math.min(1, -cuerpo.position.y / hondo))), hondo,
       get cara() {
         huesos.cabeza.updateWorldMatrix(true, false);
         fwd.set(0, 0, 1).transformDirection(huesos.cabeza.matrixWorld);
@@ -661,6 +754,12 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       } };
   }
 
+  /** El rumbo del cuerpo (lo sigue en ~0.4 s); `ya`: en el acto (agachado detrás del subtítulo, antes de asomarse) */
+  function girar(r, o = {}) {
+    rumboBase = Math.max(-1.2, Math.min(1.2, Number(r) || 0));
+    if (o.ya) { rumbo = rumboBase; grupo.rotation.y = rumbo; }
+  }
+
   return Object.assign(api, { actualizar, gesto, detenerGesto, hablar, callar, mirarA, mirarSala, caminarA, reubicar, entrar,
-    salir, estado, girar(r) { rumboBase = Math.max(-1.2, Math.min(1.2, Number(r) || 0)); } });
+    salir, agacharse, asomarse, estado, girar });
 }

@@ -278,9 +278,16 @@ a.chip:hover { border-color: var(--ink); }
    transform y le recorta lo que queda detrás del subtítulo (clip-path) */
 .presentador { position: fixed; z-index: 8; left: 0; top: 0; pointer-events: none; }
 .presentador[hidden] { display: none; }
-/* cambiar de lugar: se funde (150 ms), se mueve y vuelve; la opacidad no es movimiento: también con movimiento reducido */
+/* con movimiento reducido, cambiar de lugar o de plano: se funde (150 ms), se mueve y vuelve (la opacidad no es
+   movimiento); sin él camina, se agacha y salta o se acerca, y nada de eso pasa por aquí */
 .presentador { transition: opacity 0.15s; }
 .presentador.fundido { opacity: 0; }
+/* el rótulo (con un modelo del atlas a la vista, con la ficha en el celular o con el celular de lado): la cara en un
+   círculo con el color del capítulo, encima del subtítulo, bajo el panel o acoplado a un extremo del subtítulo, que le
+   hace lugar (presentador.js pone la clase y el diámetro más 10 px en --pres-rotulo); el texto se reacomoda */
+.presentador.rotulo { z-index: 10; border-radius: 50%; background: color-mix(in srgb, var(--mc, var(--accent)) 12%, #fff); box-shadow: 0 0 0 3px var(--mc, var(--accent)), 0 6px 16px rgba(0, 0, 0, 0.25); filter: none; }
+@media (min-width: 1081px) { .pres.rotulo-acoplado .subtitulo { padding-left: calc(22px + var(--pres-rotulo, 0px)); } }
+@media (max-width: 1080px) { .pres.rotulo-acoplado .subtitulo { padding-right: calc(14px + var(--pres-rotulo, 0px)); } }
 @media print { .presentador { display: none !important; } }
 .subtitulo.visible { visibility: visible; opacity: 1; transform: none; transition: opacity 0.25s, transform 0.25s; }
 .subtitulo p { margin: 0; max-width: 62ch; color: var(--ink); font: 500 clamp(1rem, 1.25vw, 1.3rem)/1.4 var(--f-body); overflow-wrap: anywhere; }
