@@ -739,8 +739,18 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
     return { cam, p };
   }
   const redondo = (x) => Math.round(x);
+  /** El título de un rótulo (lo que tiene que leerse: el nombre), en px de la ventana: en .lbl-p, el texto de su <b> (no
+   * la línea de abajo); un pin es todo título. null si no tiene */
+  function cajaTitulo(e) {
+    let k = null;
+    const b = e.classList.contains('lbl-p') ? e.querySelector('b') : null;
+    if (b && document.createRange) { const rg = document.createRange(); rg.selectNodeContents(b); k = rg.getBoundingClientRect(); }
+    if (!k || !k.width || !k.height) k = e.getBoundingClientRect();
+    return k;
+  }
   /** Dónde quedan, cuando la cámara llegue, la obra encuadrada y sus rótulos, en px de la ventana:
-   * { obra: {x0, y0, x1, y1} | null, rotulos: [{x0, y0, x1, y1}] }, o null (ver `camaraFinal`). La obra es la caja de
+   * { obra: {x0, y0, x1, y1} | null, rotulos: [{x0, y0, x1, y1}], titulos: [{x0, y0, x1, y1}] } (`titulos`: los de
+   * cada rótulo, en el mismo orden: lo que no se tapa), o null (ver `camaraFinal`). La obra es la caja de
    * los puntos de la postura proyectados con la cámara final (lo que queda delante de ella), recortada a la pantalla.
    * Los rótulos (.lbl-p y .lbl-pin a la vista) se ponen un momento donde los dejará esa cámara y se reparten como allí
    * (el reparto de escena.js: los que el panel taparía se corren, los que caen fuera se ocultan), se miden y vuelven a
@@ -765,7 +775,7 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
       b[0] = Math.min(b[0], x); b[1] = Math.max(b[1], x); b[2] = Math.min(b[2], y); b[3] = Math.max(b[3], y);
     }
     const obra = b[1] > b[0] ? recortar(b[0], b[2], b[1], b[3]) : null;
-    const rotulos = [];
+    const rotulos = [], titulos = [];
     // (la cámara de la escena, un momento en la postura final: el reparto proyecta con ella; durante un paseo se rehace
     // a lo sumo cuatro veces por segundo, y aquí tiene que correr en el acto)
     const c0 = st.camera, pos0 = c0.position.clone(), q0 = c0.quaternion.clone(), t0 = st._tReparto;
@@ -775,10 +785,9 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
       st._tReparto = 0;
       if (st.declutter && typeof st.declutterLabels === 'function') st.declutterLabels();
     };
-    try {
-      c0.position.copy(cam.position);
-      c0.quaternion.copy(cam.quaternion);
-      poner();
+    // los rótulos a la vista, medidos donde los deja la cámara puesta: [caja entera, caja del título]
+    const medir = () => {
+      const out = [];
       for (const o of st._labels) {
         const e = o.element;
         if (!o.visible || !e?.isConnected || e.style.display === 'none' || e.classList.contains('fuera')) continue;
@@ -786,16 +795,28 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
         const k = e.getBoundingClientRect();
         if (!k.width || !k.height || getComputedStyle(e).visibility === 'hidden') continue;
         const c = recortar(k.left, k.top, k.right, k.bottom);
-        if (c) rotulos.push(c);
+        if (!c) continue;
+        const t = cajaTitulo(e);
+        out.push([c, recortar(t.left, t.top, t.right, t.bottom) || c]);
       }
+      return out;
+    };
+    let ahora = [];
+    try {
+      c0.position.copy(cam.position);
+      c0.quaternion.copy(cam.quaternion);
+      poner();
+      for (const [c, t] of medir()) { rotulos.push(c); titulos.push(t); }
     } catch (e) { console.warn('visual.cajaObra', e); }
     finally {
       c0.position.copy(pos0);
       c0.quaternion.copy(q0);
-      try { poner(); } catch { /* el cuadro siguiente los vuelve a poner */ }
+      try { poner(); ahora = medir(); } catch { /* el cuadro siguiente los vuelve a poner */ }
       st._tReparto = t0;
     }
-    return { obra, rotulos };
+    // (`titulosAhora`: los títulos donde están con la cámara de ahora, donde empieza el viaje de la escena: la cámara
+    // viaja lo que dura la narración y los rótulos pasan de unos a otros)
+    return { obra, rotulos, titulos, titulosAhora: ahora.map(([, t]) => t) };
   }
   /** La luz de la maqueta (ambiente.js), para que el presentador la siga: { hora, luz, intensidad, cielo, piso, hemi,
    * oscuridad, sol: [x, y, z], solFin }. `hora` es la que se ve (en el ciclo del día, la más cercana; los números y los

@@ -297,6 +297,9 @@ a.chip:hover { border-color: var(--ink); }
 @media (max-width: 1080px) { .pres.rotulo-acoplado .subtitulo { padding-right: calc(14px + var(--pres-rotulo, 0px)); } }
 @media print { .presentador { display: none !important; } }
 .subtitulo.visible { visibility: visible; opacity: 1; transform: none; transition: opacity 0.25s, transform 0.25s; }
+/* el presentador se agacha detrás del subtítulo que se quitó: el vidrio lo espera hasta que bajó (presentador.js;
+   después se apaga en sus 0.25 s); con la hoja grande del celular no (la hoja lo tapa) */
+.pres.presentador-sale:not(.panel-grande) .subtitulo:not(.visible) { visibility: visible; opacity: 1; transform: none; transition: none; }
 .subtitulo p { margin: 0; max-width: 62ch; color: var(--ink); font: 500 clamp(1rem, 1.25vw, 1.3rem)/1.4 var(--f-body); overflow-wrap: anywhere; }
 .pres.sin-panel .subtitulo { left: calc(max(14px, env(safe-area-inset-left, 0px)) + var(--riel) + 26px); }
 .pres.sub-sobre-leyenda .subtitulo { right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(var(--control) + 22px + var(--ley-h, 0px) + 10px); margin-right: 0; }

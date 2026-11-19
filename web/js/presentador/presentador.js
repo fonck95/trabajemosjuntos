@@ -12,9 +12,12 @@
 // * La VISTA sale de lo que se explica (vistas.js `elegirVista`, con lo que trae `narrar`): señala lo resaltado del
 //   panel, de la ficha o de la leyenda; presenta la obra de la maqueta; de anfitrión, de frente a la sala; entero con
 //   «Solo 3D»; de cerca en el cierre; un busto en la pantalla chica. El LUGAR, a lo largo del subtítulo, el que menos tapa
-//   (la obra, sus rótulos, lo resaltado) sin tapar nunca el panel, la ficha ni el atlas, a un brazo de lo que señala; se
-//   queda donde está si sigue sirviendo y cambia a lo sumo una vez por escena. El cuerpo gira hacia lo que explica; la
-//   cara, nunca más de la apertura (en 3/4, nunca de perfil).
+//   (la obra, los títulos de sus rótulos, lo resaltado) sin tapar nunca el panel, la ficha ni el atlas, a un brazo de lo
+//   que señala (si nada llega, lo más cerca que se puede, y lo señala con el índice y el brazo estirado: la palma baja
+//   caería sobre la maqueta); se queda donde está si sigue sirviendo, no se mueve por poco y cambia a lo sumo una vez
+//   por escena (salvo que lo que se esperaba —la obra, sus rótulos, lo resaltado— llegue en otro lado). El cuerpo gira
+//   hacia lo que explica; la cara, nunca más de la apertura (en 3/4, nunca de perfil). Si lo que se ve cambia a mitad de
+//   la escena («Solo 3D», la ficha, el atlas), la vista sale de lo que se ve.
 // * Las TRANSICIONES (vistas.js `transicion`): gira en el lugar; cerca, camina detrás del subtítulo (en 3/4, el lienzo
 //   y la cámara lo siguen); más lejos, o a otro plano y otro lugar, se agacha detrás del subtítulo, el lienzo salta y se
 //   asoma ya orientado; al mismo lugar en otro plano, la cámara se acerca. Ningún gesto de brazos arranca mientras camina
@@ -41,8 +44,10 @@
 //   oscurece un poco (la sombra del atril) y propuesta.html le pone un filo crema alrededor (el contorno de calcomanía).
 //   El detalle de la cara (las cejas, los ojos) va según lo que mide la cabeza en la pantalla (personaje.js `nivel`).
 // * Nunca queda a la vista sin el subtítulo: si el subtítulo se va (se quita la explicación, la hoja grande del celular
-//   lo tapa) se agacha en el acto detrás de la línea donde estaba (después del cierre, despidiéndose) y, si vuelve, se
-//   asoma de nuevo.
+//   lo tapa) se agacha en el acto detrás de la línea donde estaba (después del cierre, despidiéndose; el vidrio lo
+//   espera hasta que bajó: .pres.presentador-sale) y, si vuelve, se asoma de nuevo. El rótulo, que no tiene corte,
+//   espera un momento el subtítulo del paso siguiente. Si la ventana cambia a mitad de una transición, la termina y se
+//   asoma en la vista nueva.
 // * `mostrar(false)` (el botón «Presentador» del panel, `vista {presentador: false}`) lo oculta en el acto y lo deja
 //   quieto hasta `mostrar(true)`.
 // * prefers-reduced-motion: entra y sale sin animación, sin caminar, agacharse, acercarse ni saltar: cada cambio de
@@ -54,7 +59,8 @@ import { crearPersonaje } from './personaje.js';
 import { crearAnimador, planHabla, CARAS } from './animador.js';
 import {
   PLANOS, CHICA_PX, HORIZONTAL_PX, elegirVista, medidas, rumboDe, cxDe, caja, union, objetivoDe, elegirLugar,
-  transicion, tiemposCierre, apuntable, rotuloDe, posRotulo, yHombro as alturaHombro, esSuave,
+  transicion, tiemposCierre, apuntable, rotuloDe, posRotulo, yHombro as alturaHombro, esSuave, distPunta, LEJOS_PX,
+  ALTO_PX,
 } from './vistas.js';
 
 const FOV = 17;           // poca perspectiva: casi un dibujo plano
@@ -66,15 +72,20 @@ const FUERA_MS = 750;
 const VIGILAR_MS = 80;     // agachado esperando que vuelva el subtítulo: cada cuánto lo mira (sin dibujar)
 // Las transiciones
 const FUNDIDO_MS = 150;    // con movimiento reducido: se funde, cambia y vuelve (propuesta.html: .presentador.fundido)
-const CAMINAR_PX_S = 230;  // camina detrás del subtítulo a 230 px/s (si es más lejos, más rápido: nunca más de 1.1 s)
-const CAMINAR_MAX_S = 1.1;
+// camina detrás del subtítulo a paso de persona: 0.95 unidades del mundo por segundo (≈ 0.41 de su alto: unos 2.5
+// pasos por segundo con la zancada que da el animador; a 230 px/s eran 3.5 a 7 pasos por segundo, un trotecito); si es
+// más lejos, más rápido, para no tardar nunca más de 1.9 s (camina a lo sumo 0.8 de su alto: más lejos, salta)
+const CAMINAR_U_S = 0.95;
+const CAMINAR_MAX_S = 1.9;
 const ACERCAR_MS = 700;    // la cámara se acerca (o se aleja) a otro plano
 const CRECE_S = 0.25, ENCOGE_S = 0.2;   // el círculo del rótulo aparece (de 0.6 a 1, con la opacidad) y se encoge
+const ROTULO_ESPERA_MS = 2500;   // el rótulo espera hasta 2.5 s el subtítulo del paso siguiente antes de encogerse
 const TRANS_MAX_MS = 3000; // (una transición que no termina, sin cuadros, se da por hecha)
-const ESPERA_TRANS_MS = 1200;   // el gesto de entrada espera a que termine la transición (como mucho 1.2 s)
+const ESPERA_TRANS_MS = 2000;   // el gesto de entrada espera a que termine la transición (como mucho 2 s)
 const ASENTAR_SUB_S = 0.15;     // el subtítulo cambia de alto: el corte lo sigue en el acto y el cuerpo, en un momento
 // El tiempo dentro de una escena
 const LUGAR_MS = 150;      // el cambio de lugar arranca 150 ms después de narrar (o al llegar el encuadre de la obra)
+const REVISAR_MS = 700;    // el encuadre sin rótulos: a los 0.7 s se mira si ya aparecieron (antes del gesto)
 const FRASE0_MS = 800;     // el gesto de entrada espera la primera frase; si no llega en 0.8 s, arranca igual
 // lo resaltado: si a los 1.2 s de la escena no está (o a los 1.3 s de aplicar lo visual: el mando lo busca hasta 1 s
 // después), sigue sin él; si está pero se mueve (el panel se desplaza hasta él), lo espera hasta 2 s más
@@ -284,7 +295,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   let saliendo = false;     // agachándose (anim.salir)
   let saludoPendiente = null, ultimoCierre = false, pausado = false;
   let corriendo = false, cuadro = 0, antes = 0;
-  let tFuera = 0, tVigilar = 0, tFundido = 0, tAcople = 0;
+  let tFuera = 0, tVigilar = 0, tFundido = 0, tAcople = 0, tSinAncla = 0;
   let perdido = false;
   // la vista (lo que eligió vistas.js), su plan (el tamaño y el lienzo), el lugar y el lienzo
   let eleccion = null, plan = null;
@@ -305,7 +316,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   const tiempos = [];        // lo que tardó renderer.render en los últimos cuadros (sin los primeros: compila)
   let msCuadro = null, cuadros = 0;
   // lo último que avisó mando.js
-  let ultimaEscena = null, ultimoEvento = null;
+  let ultimaEscena = null, ultimoEvento = null, escenaApagado = false;
   const avisos = { encuadre: null, atlas: null, simulacion: null, ambiente: null };
   // la escena en curso: su programa (gesto de entrada, sostén), el objetivo (px), los cambios de lugar y sus esperas
   let prog = null, escenaN = 0, anterior = null;
@@ -315,7 +326,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   const despues = (ms, f) => { const t = setTimeout(() => { esperas.delete(t); f(); }, ms); esperas.add(t); return t; };
   const cancelarEsperas = () => { for (const t of esperas) clearTimeout(t); esperas.clear(); };
 
-  lienzo.addEventListener('webglcontextlost', (e) => { e.preventDefault(); perdido = true; detener(); lienzo.hidden = true; acoplar(0); });
+  lienzo.addEventListener('webglcontextlost', (e) => { e.preventDefault(); perdido = true; detener(); lienzo.hidden = true; acoplar(0); esperarVidrio(false); });
 
   // ── La página ──
   let subEl = null, presEl = null;
@@ -333,6 +344,17 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     return r && r.width > 0 ? { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height,
       op: cs ? Number(cs.opacity) : 1 } : null;
   }
+  /** El subtítulo que se quitó mientras él se agacha: el vidrio sigue a la vista hasta que él terminó de bajar
+   * (propuesta.html: .pres.presentador-sale; si no, quedaría el corte en el aire, sin el vidrio). Su caja, o null */
+  function vidrioQueEspera() {
+    const s = subtitulo();
+    if (!s || !pres()?.classList.contains('presentador-sale')) return null;
+    const cs = ventana.getComputedStyle?.(s);
+    if (cs && (cs.visibility !== 'visible' || Number(cs.opacity) <= 0.05)) return null;
+    const r = s.getBoundingClientRect?.();
+    return r && r.width > 0 ? { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height, op: 1 } : null;
+  }
+  const esperarVidrio = (v) => pres()?.classList.toggle('presentador-sale', !!v);
   // sube (o se asoma) cuando el subtítulo terminó de aparecer (su fundido de 0.25 s): primero el atril, después él
   const llena = (a) => !!a && (reducido || !(a.op < 0.98));
   const visibleEl = (el) => {
@@ -341,6 +363,21 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     return !cs || (cs.display !== 'none' && cs.visibility !== 'hidden' && Number(cs.opacity) > 0.05);
   };
   const rect = (el) => (el ? caja(el.getBoundingClientRect?.()) : null);
+  // los títulos de los rótulos de la maqueta a la vista en la página
+  const rotulosDom = () => [...documento.querySelectorAll('.lbl-p, .lbl-pin')].filter(visibleEl).map(tituloDe).filter(Boolean);
+  // cuánto se solapan dos cajas (la intersección sobre la menor)
+  const solapa = (a, b) => {
+    const w = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), h = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
+    return w > 0 && h > 0 ? (w * h) / Math.min((a.x1 - a.x0) * (a.y1 - a.y0), (b.x1 - b.x0) * (b.y1 - b.y0)) : 0;
+  };
+  // el título de un rótulo de la maqueta: el texto de su <b> (un pin es todo título)
+  const tituloDe = (el) => {
+    const b = el.classList?.contains('lbl-p') ? el.querySelector('b') : null;
+    if (b && documento.createRange) {
+      try { const rg = documento.createRange(); rg.selectNodeContents(b); const k = caja(rg.getBoundingClientRect()); if (k) return k; } catch { /* la caja entera */ }
+    }
+    return rect(el);
+  };
   // la caja de ahora y la de cuando termine de llegar (sin el transform de su entrada: el panel que vuelve de «Solo 3D»
   // se desliza desde afuera), juntas: lo que no se tapa, ni ahora ni en un momento
   const rectFijo = (el) => {
@@ -365,22 +402,28 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     c.barra = rect(q('.barra'));
     c.control = rect(q('.control'));
     // la obra y sus rótulos donde quedarán (el encuadre de esta escena); antes de que llegue, los de la página son los
-    // de la cámara de antes: no cuentan (salvo fuera de una escena: el cierre, la píldora, una explicación)
+    // de la cámara de antes: no cuentan (salvo fuera de una escena: el cierre, la píldora, una explicación). De cada
+    // rótulo cuenta su título (el nombre: «La Soledad»), no la línea de abajo
     const enc = avisos.encuadre;
     if (enc?.caja && prog && prog.tEncuadre !== null && (enc.n == null || enc.n === prog.d.n)) {
       c.obra = caja(enc.caja.obra);
-      c.rotulos = (enc.caja.rotulos || []).map(caja).filter(Boolean);
+      // (y donde empieza el viaje de la cámara, que dura la narración: los títulos pasan de unos lugares a los otros)
+      const fin = (enc.caja.titulos || enc.caja.rotulos || []).map(caja).filter(Boolean);
+      const desde = (enc.caja.titulosAhora || []).map(caja).filter((b) => b && !fin.some((f) => solapa(b, f) > 0.5));
+      c.rotulos = [...fin, ...desde];
+      // (el encuadre llegó sin rótulos —el módulo del paso todavía cargaba—: los que ya aparecieron en la página)
+      if (!c.rotulos.length) c.rotulos = rotulosDom();
     } else if (!prog || prog.evento !== 'narrar') {
-      c.rotulos = [...documento.querySelectorAll('.lbl-p, .lbl-pin')].filter(visibleEl).map(rect).filter(Boolean);
+      c.rotulos = rotulosDom();
     } else c.rotulos = [];
     c.foco = union([...documento.querySelectorAll('.foco')].map(rect));
     return c;
   }
   /** Lo que vistas.js necesita saber de la ventana y de la página */
-  function contexto({ nuevo = false } = {}) {
+  function contexto({ nuevo = false, domManda = false } = {}) {
     const vw = VW(), vh = VH(), chica = vw <= CHICA_PX;
     const cl = pres()?.classList;
-    return { chica, VW: vw, VH: vh, horizontal: chica && vh < HORIZONTAL_PX, nuevo, reducido,
+    return { chica, VW: vw, VH: vh, horizontal: chica && vh < HORIZONTAL_PX, nuevo, reducido, domManda,
       dom: { conInmersion: !!cl?.contains('con-inmersion'), conDetalle: !!cl?.contains('con-detalle'), sinPanel: !!cl?.contains('sin-panel') },
       anterior };
   }
@@ -391,17 +434,23 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   function planDe(e) {
     const ctx = contexto();
     const a = ancla() || ultimaAncla;
-    let rotulo = null, panelX1 = null;
+    let rotulo = null, panelX1 = null, techo = null;
     if (e.vista === 'rotulo') {
       const c = leerCajas(a);
-      rotulo = rotuloDe(ctx, c);
+      // (el que ya está, si es un rótulo: una seguidilla de escenas con el atlas no cambia el círculo con cada panel)
+      const antes = esRotulo(planDestino()) ? planDestino() : null;
+      rotulo = rotuloDe(ctx, { ...c, antes: antes ? { modo: antes.modo, lado: antes.lado } : null });
       panelX1 = c.panel?.x1 ?? null;
+      // (de lado, con la ficha abierta: el subtítulo la monta; el círculo no pisa lo resaltado de ella)
+      if (ctx.horizontal && c.ficha && c.sub && c.ficha.y1 > c.sub.y0 && c.ficha.x1 > c.sub.x1 - 8 - rotulo.lado) techo = c.ficha.y1;
     }
     const m = medidas(e.vista, ctx, { cierre: !!e.cierre, subAlto: a?.height || 0, rotulo });
-    return { ...m, s: m.p / A, chica: ctx.chica, VW: ctx.VW, VH: ctx.VH, panelX1 };
+    return { ...m, s: m.p / A, chica: ctx.chica, VW: ctx.VW, VH: ctx.VH, panelX1, techo };
   }
-  const mismoTamano = (a, b) => !!a && !!b && a.Wc === b.Wc && a.Hc === b.Hc && a.plano === b.plano && Math.abs(a.p - b.p) < 0.5
-    && (a.modo || null) === (b.modo || null);
+  // (dos rótulos del mismo modo que difieren en menos de 8 px son el mismo: no se funde por un píxel)
+  const mismoTamano = (a, b) => !!a && !!b && a.plano === b.plano && (a.modo || null) === (b.modo || null)
+    && (a.vista === 'rotulo' && b.vista === 'rotulo' ? Math.abs(a.lado - b.lado) < 8
+      : a.Wc === b.Wc && a.Hc === b.Hc && Math.abs(a.p - b.p) < 0.5);
   const esRotulo = (pl = plan) => pl?.vista === 'rotulo';
   // el plan al que va (si una transición lo está llevando a otro)
   const planDestino = () => trans?.hasta?.plan || pendiente?.plan || plan;
@@ -475,7 +524,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     }
     const otroPlan = !!np && !mismoTamano(np, plan);
     // (otra vista del mismo tamaño: solo gira)
-    if (np && !otroPlan) ponerPlan({ ...np, panelX1: np.panelX1 ?? plan?.panelX1 ?? null });
+    if (np && !otroPlan) ponerPlan({ ...np, panelX1: np.panelX1 ?? plan?.panelX1 ?? null, techo: np.techo ?? null });
     const destino = { plan: otroPlan ? np : plan, x: conX ? nx : xCuerpo };
     const otroLugar = conX && Number.isFinite(xCuerpo) && Math.abs(nx - xCuerpo) >= 3 && !esRotulo(destino.plan);
     if (!otroPlan && !otroLugar) { if (conX && !esRotulo(destino.plan)) xCuerpo = nx; return; }
@@ -504,7 +553,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       tr.x0 = xCuerpo;
       anim.reubicar(0);
       const dist = destino.x - xCuerpo;
-      const pxs = Math.max(CAMINAR_PX_S, Math.abs(dist) / CAMINAR_MAX_S);
+      const pxs = Math.max(CAMINAR_U_S * plan.s, Math.abs(dist) / CAMINAR_MAX_S);
       anim.caminarA(dist / plan.s, { velocidad: pxs / plan.s, rumbo: 0.6, zancada: 0.65 });
     } else if (tipo === 'acercar') {
       // la cámara va de un plano al otro (colocar lo mezcla); el lienzo, el mayor de los dos mientras dura
@@ -626,7 +675,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   }
   /** Elegir (o revisar) el lugar de la escena con lo que hay en la página. Cuenta los cambios (a lo sumo uno). Con `np`
    * (otro plano), el lugar para ese plano, y van juntos en una sola transición */
-  function decidirLugar(np = null) {
+  function decidirLugar(np = null, { ciego: aCiegas = false } = {}) {
     if (!plan || !eleccion) return;
     const a = ancla();
     // sin el subtítulo a la vista (se está cambiando): lo decide colocar() en cuanto vuelva
@@ -645,7 +694,10 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     // oculto (o subiendo) elige sin histéresis: moverse no se ve (entre dos escenas el subtítulo se apaga un momento,
     // se agacha y se asoma ya en el lugar de la escena nueva, como quien salta detrás del atril)
     const visto = aLaVista() && !esRotulo();
-    const r = elegirLugar(eleccion, m, ctx, c, { x: visto ? xCuerpo : null, cambios: cambiosLugar, ms: prog?.d?.ms }, { punto });
+    // (elegido antes de que llegara el encuadre: sin la obra ni sus rótulos; cuando llega, lo que trae manda)
+    const ciego = aCiegas || (!!prog?.ciego && prog.tEncuadre !== null);
+    const r = elegirLugar(eleccion, m, ctx, c, { x: visto ? xCuerpo : null, cambios: cambiosLugar, ms: prog?.d?.ms, ciego }, { punto });
+    if (prog) prog.ciego = prog.evento === 'narrar' && prog.tEncuadre === null;
     if (!r) { if (np) cambiarA({ plan: np }); return; }
     ultimoLugar = r;
     previsto = punto;
@@ -695,8 +747,9 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     const a = ancla();
     anclaCuadro = a;
     if (a) ultimaAncla = a;
-    // sin subtítulo (agachándose) se queda en la última línea donde estaba; sin ninguno nunca, abajo de todo
-    const r = a || ultimaAncla || { left: vw * 0.3, right: vw * 0.7, top: vh - 96, bottom: vh - 40, width: vw * 0.4, height: 56 };
+    // sin subtítulo (agachándose) se queda en la última línea donde estaba (o en la del vidrio que lo espera: se quitó la
+    // narración y cambió de alto); sin ninguno nunca, abajo de todo
+    const r = a || (saliendo ? vidrioQueEspera() : null) || ultimaAncla || { left: vw * 0.3, right: vw * 0.7, top: vh - 96, bottom: vh - 40, width: vw * 0.4, height: 56 };
     if (a && (xCuerpo === null || lugarPendiente)) { lugarPendiente = false; decidirLugar(); }
     // el subtítulo cambió y la cadera quedaría en el aire: se vuelve a elegir (cuenta como el cambio de la escena)
     // (a lo sumo dos veces por segundo: si ningún lugar sirve, no lee la página en cada cuadro)
@@ -757,7 +810,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   /** El rótulo: el círculo en su lugar (bajo el panel o acoplado al subtítulo), con la cabeza y los hombros adentro. El
    * lienzo se dibuja a su tamaño y se muestra a la medida del subtítulo de ahora y de su animación (scale) */
   function colocarRotulo(r) {
-    const pos = posRotulo(plan, { x0: r.left, y0: r.top, x1: r.right, y1: r.bottom }, plan.panelX1);
+    const pos = posRotulo(plan, { x0: r.left, y0: r.top, x1: r.right, y1: r.bottom }, plan.panelX1, { techo: plan.techo });
     const L = pos?.L ?? W;
     const cxV = pos ? pos.x0 + L / 2 : r.left + L / 2, cyV = pos ? pos.y0 + L / 2 : r.top - L / 2;
     xCuerpo = cxV;
@@ -778,16 +831,24 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
   /** La ventana cambió de tamaño (o es la primera vez): la vista para la ventana nueva, en su lugar preferido */
   function cambioDeVentana() {
     const antes = eleccion;
-    const e = ultimoEvento ? elegirVista({ ...(ultimaEscena || {}), evento: ultimoEvento }, contexto()) : eleccion || elegirVista({ evento: 'explicar' }, contexto());
+    // (ya en la escena, lo que se ve manda: la ficha, el panel o el atlas pudieron cambiar desde que empezó)
+    const domManda = !!prog && ahora() - prog.t0 > 1500;
+    const e = ultimoEvento ? elegirVista({ ...(ultimaEscena || {}), evento: ultimoEvento }, contexto({ domManda })) : eleccion || elegirVista({ evento: 'explicar' }, contexto());
     e.saludoPrimero = false;
     eleccion = e;
-    trans = null;
-    pendiente = null;
-    clearTimeout(tFundido);
-    lienzo.classList.remove('fundido');
+    // lo que la transición iba a cambiar queda hecho (sin anularla a medias: agachado o con el círculo chico)
+    terminarYa();
     anim.reubicar(0);
     ponerPlan(planDe(eleccion));
     xCuerpo = null;
+    // si quedó agachado (saltaba) o el círculo a medio encoger, vuelve a verse en la vista nueva
+    if (arriba && !saliendo && corriendo) {
+      const abajo = personaje.cuerpo.position.y < -0.005 && !['entra', 'asoma'].includes(anim.estado().entrando);
+      if (esRotulo()) {
+        if (abajo) { anim.entrar(null, { instante: true }); circulo(1, 1, reducido ? FUNDIDO_MS / 1000 : CRECE_S, null, { k: 0.6, op: 0 }); }
+        else if (circ.op < 0.999 || circ.k < 0.999) circulo(1, 1, reducido ? FUNDIDO_MS / 1000 : CRECE_S);
+      } else if (abajo) anim.asomarse(null, { hondo: hondoDe(plan) });
+    }
     if (prog) {
       prog.lugarHecho = true;
       prog.e = e;
@@ -874,8 +935,13 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     avanzarTrans();
     colocar(dt);
     avanzarLuces();
-    // el subtítulo se fue (o ya no lo quieren): se agacha; volvió (y terminó de aparecer) mientras se agachaba: se asoma
-    if (arriba && (!enEscena || !anclaCuadro)) agachar({ despedida: !enEscena && ultimoCierre });
+    // el subtítulo se fue (o ya no lo quieren): se agacha; volvió (y terminó de aparecer) mientras se agachaba: se asoma.
+    // El rótulo (sin corte que se vea) espera un momento si sigue en escena: entre dos pasos de un recorrido el subtítulo
+    // se apaga hasta que llega la narración del paso siguiente, y el círculo no se encoge y vuelve a crecer cada vez
+    if (anclaCuadro || !enEscena) tSinAncla = 0;
+    else if (!tSinAncla) tSinAncla = ahora();
+    const espera = esRotulo() && enEscena && tSinAncla && ahora() - tSinAncla < ROTULO_ESPERA_MS;
+    if (arriba && (!enEscena || !anclaCuadro) && !espera) agachar({ despedida: !enEscena && ultimoCierre });
     else if (!arriba && enEscena && llena(anclaCuadro) && permitido) subir();
     avanzar();
     dibujar();
@@ -925,6 +991,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     const oculto = lienzo.hidden || !corriendo || !personaje.grupo.visible;
     arriba = true;
     saliendo = false;
+    esperarVidrio(false);
     if (trans && trans.tipo !== 'acercar') terminarYa();
     // (vuelve sin despedirse)
     if (anim.estado().gesto === 'despedirse') anim.detenerGesto();
@@ -962,6 +1029,8 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     if (!arriba) return;
     arriba = false;
     saliendo = true;
+    // el vidrio del subtítulo lo espera mientras baja (después se apaga en sus 0.25 s): nunca el corte sin el vidrio
+    if (seVe()) esperarVidrio(true);
     cancelarEsperas();
     anim.callar();
     anim.mirarA(null);
@@ -986,6 +1055,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     clearTimeout(tFuera);
     arriba = false;
     saliendo = false;
+    esperarVidrio(false);
     terminarYa();
     anim.callar();
     anim.detenerGesto();
@@ -998,8 +1068,12 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     lienzo.style.transition = '';
     desfase = 0;
     subTopAntes = null;
-    // la escena vuelve a empezar si se asoma de nuevo (el gesto de entrada otra vez)
-    if (prog && (prog.fase === 'gesto' || prog.fase === 'sosten')) prog.fase = 'espera';
+    // la escena vuelve a empezar si se asoma de nuevo (el gesto de entrada otra vez, con lo resaltado que haya entonces:
+    // el plazo para seguir sin él vuelve a correr)
+    if (prog && (prog.fase === 'gesto' || prog.fase === 'sosten')) {
+      prog.fase = 'espera';
+      prog.tFoco = null; prog.foco = null; prog.iguales = 0; prog.focoVisto = false;
+    }
     if (enEscena) vigilar();
     // ya no lo quieren: el subtítulo deja de hacerle lugar cuando terminó de irse (no se reacomoda mientras se apaga)
     else { clearTimeout(tAcople); tAcople = setTimeout(() => { if (!arriba && !enEscena) acoplar(0); }, 300); }
@@ -1089,7 +1163,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       orientar();
     }
     if (p.fase === 'espera') {
-      // ningún gesto de brazos mientras camina, salta o se funde (como mucho 1.2 s)
+      // ningún gesto de brazos mientras camina, salta o se funde (como mucho 2 s)
       if (trans && ahora() - trans.t0 < ESPERA_TRANS_MS) return;
       // el cambio de capítulo: mira el panel un momento antes del gesto
       if (p.e.transicionCapitulo && !p.tCapitulo) {
@@ -1101,6 +1175,13 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
         return;
       }
       if (p.tCapitulo && ahora() - p.tCapitulo < CAPITULO_MS) return;
+      // el encuadre llegó sin rótulos (el módulo del paso cargaba) y ya aparecieron: el lugar se vuelve a puntuar con
+      // ellos, una vez, antes del gesto
+      if (!p.revisado && p.evento === 'narrar' && p.tEncuadre !== null && ahora() - p.tEncuadre > REVISAR_MS) {
+        p.revisado = true;
+        const enc = avisos.encuadre?.caja;
+        if (enc && !(enc.titulos || enc.rotulos || []).length && rotulosDom().length) { decidirLugar(null, { ciego: true }); return; }
+      }
       if (p.frase0 === null && t < FRASE0_MS) return;
       if (p.e.objetivo === 'foco') {
         const f = focoQuieto();
@@ -1109,6 +1190,14 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
           const plazo = Math.max(FOCO_MS, p.tEncuadre !== null ? p.tEncuadre - p.t0 + FOCO_APLICAR_MS : t < 2500 ? Infinity : 0);
           if (p.tFoco === null && t > plazo) sinResaltado();
           return;
+        }
+        // lo resaltado apareció: el lugar se eligió con lo que se preveía (el borde del panel a la altura del hombro);
+        // si quedó en otro lado (más arriba: el panel no lo pudo traer a la mano), se vuelve a puntuar con lo de verdad,
+        // aunque ya haya cambiado (y el gesto espera a que llegue)
+        if (!p.focoVisto) {
+          p.focoVisto = true;
+          const real = puntoDe(p.e, leerCajas(), { prever: true });
+          if (real && previsto && Math.hypot(real.x - previsto.x, real.y - previsto.y) > 40) { decidirLugar(null, { ciego: true }); return; }
         }
       }
       // el golpe del gesto cae en la tónica de la palabra clave de la primera frase (la cifra, lo que sigue a «esta es»,
@@ -1155,7 +1244,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     // señalando: la punta del dedo nunca baja del corte (se apunta un poco más arriba lo justo)
     if (punto && e.vista === 'senala' && c.sub) punto = apuntable(xCuerpo, punto, { p: plan.p, subTop: c.sub.y0, yc: plan.yc, rumbo: anim.estado().rumboBase });
     objetivoPx = punto;
-    const g = gestoDe(e);
+    let g = gestoDe(e);
     frente = !!e.frente && !APUNTAN.includes(g);
     orientar(punto);
     const opciones = {};
@@ -1163,6 +1252,9 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     else if (punto && (APUNTAN.includes(g) || g === 'mirar_maqueta')) opciones.punto = alMundo(punto.x, punto.y);
     // presentar barre con la palma (los pines de la portada, los años del cronograma): de un punto al otro
     const b = g === 'presentar' && punto ? barridoDe(p.d, e, c, punto) : null;
+    // señalando lo que el dedo no alcanza (el panel muy arriba del hombro): el índice con el brazo estirado hacia ahí,
+    // no la palma (que quedaría sobre la maqueta: «esto de la maqueta»)
+    if (g === 'presentar' && !b && e.vista === 'senala' && lejos(punto, c)) g = 'senalar';
     if (b) {
       opciones.punto = alMundo(b.desde.x, b.desde.y); opciones.hasta = alMundo(b.hasta.x, b.hasta.y);
       objetivoPx = b.hasta; p.barrido = b;
@@ -1182,8 +1274,26 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     // el dedo llega: lo señalado late; la cabeza vuelve a la sala al rato (la mano sigue)
     if (g === 'senalar' && e.objetivo === 'foco') despues(450, pulso);
     if (APUNTAN.includes(g) && e.objetivo !== 'obra') despues(MIRAR_MS, () => { if (prog === p && p.fase === 'gesto') anim.mirarSala((p.tSosten - ahora()) / 1000 + 0.2); });
-    if (e.vista === 'rotulo' && punto) { anim.mirarA(alMundo(punto.x, punto.y)); }
-    if (e.lado === 'hoja' && punto) { anim.mirarA(alMundo(punto.x, punto.y)); }
+    // el rótulo y el busto que muestra la hoja miran lo que explican un momento y vuelven a la sala (la cara sostenida
+    // hacia abajo se ve desde arriba, con ceño, y no se reconoce): un vistazo a lo de abajo (la hoja, la ficha), un
+    // rato al modelo del atlas (al costado); después, un vistazo al empezar cada frase
+    // (el modelo del atlas que todavía carga —«Cargando…»— no se mira: lo mira cuando el aviso `atlas` dice que está)
+    if ((e.vista === 'rotulo' || e.lado === 'hoja') && punto && !(e.objetivo === 'marco' && !atlasListo(p))) vistazo(p, punto);
+  }
+  /** Mira `punto` un momento y vuelve a la sala: un vistazo a lo de abajo (la hoja, la ficha); al modelo del atlas (al
+   * costado), un rato */
+  function vistazo(p, punto) {
+    colocar();
+    anim.mirarA(alMundo(punto.x, punto.y));
+    const abajo = punto.y > (aVentana(0, H).y + aVentana(0, 0).y) / 2;
+    despues(p.e.objetivo === 'marco' && !abajo ? 2 * MIRAR_MS : VISTAZO_MS, () => { if (prog === p) anim.mirarA(null); });
+  }
+  // ¿El modelo del atlas de la escena ya cargó? (el aviso `atlas` {rid, n, listo}; sin el aviso de esta escena, si la
+  // escena trae un modelo del atlas, todavía carga)
+  function atlasListo(p) {
+    const a = avisos.atlas;
+    if (!a || (a.n != null && p.d.n != null && a.n !== p.d.n) || (a.rid != null && p.d.rid != null && a.rid !== p.d.rid)) return !p.d.atlas;
+    return a.listo !== false;
   }
   /** Un gesto fuera de la escena (pensar, contar, invitar, asentir): en el rótulo, con la cara y la cabeza */
   const gestoVista = (nombre, o = {}) => anim.gesto(nombre, esRotulo() ? { ...o, soloCara: true } : o);
@@ -1257,13 +1367,27 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       return;
     }
     colocar();
-    // la mano baja un poco más que el dedo: lo que está abajo del hombro se apunta con más margen sobre el corte
     const c = e.vista === 'senala' ? leerCajas() : null;
+    // el dedo no llega (lo señalado muy arriba del hombro, el panel lejos): sigue el índice con el brazo estirado en la
+    // recta hacia lo que señala (la palma baja quedaría sobre la maqueta y se leería «esto de la maqueta»)
+    p.lejos = !!c?.sub && lejos(punto, c);
+    if (p.lejos) {
+      if (anim.estado().gesto !== 'senalar') anim.gesto('senalar', { punto: alMundo(punto.x, punto.y), sostener: true });
+      return;
+    }
+    // la mano baja un poco más que el dedo: lo que está abajo del hombro se apunta con más margen sobre el corte
     const pt = c?.sub ? apuntable(xCuerpo, punto, { p: plan.p, subTop: c.sub.y0, yc: plan.yc, rumbo: anim.estado().rumboBase, margen: 30 }) : punto;
     // presentando la obra la mira (y si la cámara viaja o la maqueta simula, la sigue, con un vistazo a la sala cada 3 s);
     // lo demás, la sala
     anim.gesto('indicar', { punto: alMundo(pt.x, pt.y), sostener: true, mirar: e.objetivo === 'obra',
       ...(e.objetivo === 'obra' && viaja(p.d) ? { mirada: 'sigue' } : {}) });
+  }
+  /** ¿El dedo no llega a `punto` desde donde está parado? (la punta del brazo estirado a más de LEJOS_PX) */
+  function lejos(punto, c) {
+    if (!punto || !c?.sub || !plan || !Number.isFinite(xCuerpo) || !Number.isFinite(plan.yc)) return false;
+    // (o muy arriba del hombro: la palma alzada se leería como una mano levantada)
+    if (alturaHombro(c.sub.y0, plan) - punto.y > ALTO_PX) return true;
+    return distPunta(xCuerpo, punto, { p: plan.p, subTop: c.sub.y0, yc: plan.yc, rumbo: anim.estado().rumboBase }) > LEJOS_PX;
   }
   // ¿Se simuló algo en el modelo en esta escena? (el aviso `simulacion` con su narración)
   const simuladaEn = (p) => {
@@ -1289,7 +1413,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     }
     if (k === 0) { p.frase0 = ahora(); return; }
     if (p.fase !== 'sosten' || !objetivoPx) return;
-    if (p.e.vista === 'senala' && anim.estado().gesto === 'indicar') {
+    if (p.e.vista === 'senala' && ['indicar', 'senalar'].includes(anim.estado().gesto)) {
       let tk = 0.6;
       try { const c = planHabla(texto, { claves: clavesDe(p.d), dura: voz ? null : decirS(texto) }).clave; if (Number.isFinite(c)) tk = Math.min(2, c * (voz ? anim.estado().ritmo || 1 : 1)); } catch { /* nada */ }
       despues(Math.max(0, tk - 0.1) * 1000, () => { if (prog === p && p.fase === 'sosten') anim.acentuar(); });
@@ -1349,6 +1473,7 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       avisos: Object.keys(avisos).filter((k) => avisos[k] !== null),
       prog: prog ? { t: Math.round(ahora() - prog.t0), frase0: prog.frase0 === null ? null : Math.round(prog.frase0 - prog.t0),
         encuadre: prog.tEncuadre === null ? null : Math.round(prog.tEncuadre - prog.t0), iguales: prog.iguales, sinFoco: !!prog.sinFoco,
+        lejos: !!prog.lejos,
         sosten: prog.tSosten ? Math.round(prog.tSosten - prog.t0) : null, dedos: prog.cierre?.k ?? null,
         barrido: prog.barrido ? { desde: { x: Math.round(prog.barrido.desde.x), y: Math.round(prog.barrido.desde.y) },
           hasta: { x: Math.round(prog.barrido.hasta.x), y: Math.round(prog.barrido.hasta.y) } } : null } : null,
@@ -1382,11 +1507,13 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     /** Una escena del recorrido (la n): elige la vista con lo que se explica (docs/presentador.md), se ubica, se
      * orienta y arma el gesto de entrada, que arranca con la primera frase */
     narrar(d = {}) {
-      if (!permitido) return;
       d = d || {};
       ultimaEscena = d;
       ultimoEvento = 'narrar';
       ultimoCierre = false;
+      // apagado («Presentador»): se anota, para empezar en esta escena (y no en la vieja) si lo vuelven a prender
+      if (!permitido) { escenaApagado = true; return; }
+      escenaApagado = false;
       limpiarEscena();
       pausado = false;
       if (anim.estado().gesto === 'enumerar' || anim.estado().gesto === 'escuchar') anim.detenerGesto();
@@ -1462,13 +1589,19 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       } else {
         anim.callar();
         gestoVista('invitar', { sostener: true });
-        // a los 4.5 s pasa a la casa, esperando; asiente cada tanto
+        // espera las preguntas con las palmas que siguen invitando (sostenido: los dedos llaman despacio y la mirada
+        // recorre la sala; no queda un busto quieto); a los 4.5 s las cejas arriba y, cada 3.5 a 5 s, un asentimiento
+        // sin soltar las manos (en el círculo, que no tiene las manos, asiente)
         const p = prog;
         despues(4500, () => {
           if (prog !== p) return;
-          if (anim.estado().gesto === 'invitar') anim.detenerGesto();
-          anim.alzarCejas(0.5);   // (las cejas arriba: esperando)
-          const asentir = () => { if (prog !== p) return; if (!anim.estado().gesto) gestoVista('asentir'); despues(3500, asentir); };
+          anim.alzarCejas(0.5);
+          const asentir = () => {
+            if (prog !== p) return;
+            if (anim.estado().gesto === 'invitar') anim.reaccionar(0.4);
+            else if (!anim.estado().gesto) gestoVista('asentir');
+            despues(3500 + 1500 * Math.random(), asentir);
+          };
           despues(1200, asentir);
         });
       }
@@ -1491,9 +1624,19 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     quitar() { retirar(); },
     /** La preferencia del panel: false lo oculta en el acto */
     mostrar(v) {
+      const antes = permitido;
       permitido = v !== false;
-      if (!permitido) ocultarYa();
-      else if (subtitulo()?.classList.contains('visible')) aparecer();
+      if (!permitido) { ocultarYa(); return; }
+      // vuelve a prenderse: si mientras estaba apagado llegó otra escena, empieza en esa (sin saludo: ya saludó)
+      if (!antes && escenaApagado && ultimaEscena && ultimoEvento === 'narrar') {
+        escenaApagado = false;
+        limpiarEscena();
+        pausado = false;
+        const e = elegirVista({ ...ultimaEscena, evento: 'narrar' }, contexto({ nuevo: true }));
+        e.saludoPrimero = false;
+        empezar(ultimaEscena, e, { nuevo: true });
+      }
+      if (subtitulo()?.classList.contains('visible')) aparecer();
     },
     // Los avisos de lo que pasa en la escena (mando.js)
     /** Dónde quedará la obra encuadrada y sus rótulos: el lugar se vuelve a puntuar (si todavía no cambió) */
@@ -1502,10 +1645,19 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       const p = prog;
       if (!p || !c || (c.n != null && p.d.n != null && c.n !== p.d.n)) return;
       if (p.tEncuadre === null) p.tEncuadre = ahora();
+      // el lugar se vuelve a puntuar con la obra y sus rótulos: si se había elegido sin ellos, aunque ya haya cambiado o
+      // el gesto haya empezado (si todavía no se ve, sin gastar el cambio de la escena)
       if (!p.lugarHecho && arriba) { p.lugarHecho = true; decidirLugar(); }
-      else if (p.fase === 'espera' && cambiosLugar === 0) decidirLugar();
+      else if (p.ciego || (p.fase === 'espera' && cambiosLugar === 0)) decidirLugar();
     },
-    atlas(a) { avisos.atlas = a ?? null; },
+    /** El modelo del atlas de la escena cargó (o no): el rótulo lo mira cuando está (mientras carga, mira a la sala) */
+    atlas(a) {
+      avisos.atlas = a ?? null;
+      const p = prog;
+      if (!p || !arriba || !a?.listo || !esRotulo() || p.e?.objetivo !== 'marco' || !['gesto', 'sosten'].includes(p.fase) || !atlasListo(p)) return;
+      const punto = puntoDe(p.e, leerCajas());
+      if (punto) vistazo(p, punto);
+    },
     simulacion(s) { avisos.simulacion = s ?? null; },
     /** La luz de la maqueta (la hora y el lado del sol): la suya la sigue, en 0.6 s */
     ambiente(l) { avisos.ambiente = l ?? null; seguirLuz(); },
@@ -1540,20 +1692,25 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     },
   };
 
-  // «Solo 3D», la ficha o el atlas que se abren o se cierran fuera de una escena: se vuelve a elegir la vista con lo
-  // último que se explicó (sin gesto de entrada: el sostén hacia lo nuevo)
+  // «Solo 3D», la ficha o el atlas que se abren o se cierran a mitad de una escena (el botón, una orden `visual` del
+  // asistente) o fuera de ella: se vuelve a elegir la vista con lo último que se explicó y lo que se ve ahora (manda la
+  // página: la escena pedía otra cosa), sin gesto de entrada: el sostén hacia lo nuevo. En el primer momento de una
+  // escena, la página todavía se está poniendo como la escena pide: se mira cuando termina ese momento. (A los 0.5 s:
+  // el panel que vuelve de «Solo 3D» terminó de deslizarse y lo resaltado está donde queda)
   let tReelegir = 0;
-  function reelegir() {
+  function reelegir(ms = 500) {
     clearTimeout(tReelegir);
     tReelegir = setTimeout(() => {
-      if (!prog || !arriba || !ultimoEvento || ahora() - prog.t0 < 1500) return;
-      const e = elegirVista({ ...(ultimaEscena || {}), evento: ultimoEvento }, contexto());
+      if (!prog || !arriba || !ultimoEvento) return;
+      const falta = 1500 - (ahora() - prog.t0);
+      if (falta > 0) { reelegir(falta); return; }
+      const e = elegirVista({ ...(ultimaEscena || {}), evento: ultimoEvento }, contexto({ domManda: true }));
       if (e.vista === eleccion?.vista && e.lado === eleccion?.lado) return;
       e.saludoPrimero = false;
       prog.e = e;
       ponerVista(e, { lugarYa: true });
       if (prog.fase === 'sosten' || prog.fase === 'gesto') { objetivoPx = puntoDe(e, leerCajas()); sostener(); }
-    }, 150);
+    }, ms);
   }
   let observador = null;
   try {

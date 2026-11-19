@@ -39,7 +39,11 @@
   (y sus giros son los de app/recorrido.py); el lugar deja la punta del dedo fuera del panel y de la ficha, con
   histéresis, un cambio por escena y ninguno en una escena corta; las transiciones (girar, acercarse, caminar, saltar, el
   rótulo y, con movimiento reducido, solo fundirse o girar); el rótulo (bajo el panel si cabe, si no acoplado al
-  subtítulo, que no lo pasa); los tiempos del resumen.
+  subtítulo, que no lo pasa); los tiempos del resumen. Y lo que corrigió la revisión: no se mueve por poco; señalando
+  lo que el dedo no alcanza se para lo más cerca que se puede del panel, y desde lejos se va aunque ya haya cambiado;
+  no tapa los títulos de la maqueta si hay un lugar que llegue sin taparlos; el rótulo de una seguidilla no cambia con
+  cada panel y de lado no pisa la ficha; a mitad de la escena, lo que se ve («Solo 3D», el atlas, la ficha) manda.
+* El vidrio del subtítulo que se quitó espera al presentador mientras se agacha detrás (propuesta.html y presentador.js).
 """
 import re
 import subprocess
@@ -1047,6 +1051,20 @@ def test_el_presentador_solo_usa_lo_que_el_sitio_publica():
         (WEB / "propuesta.html").read_text(encoding="utf-8")
 
 
+def test_el_vidrio_espera_al_presentador_que_baja():
+    # el subtítulo que se quitó no se apaga mientras él se agacha detrás (si no, quedaba el corte en el aire, un casquete
+    # de pelo sin el vidrio): presentador.js pone .presentador-sale en #pres al agacharse y la quita al terminar de bajar
+    # (o si vuelve a subir); con la hoja grande del celular, nada (la hoja lo tapa)
+    css = (WEB / "propuesta.html").read_text(encoding="utf-8")
+    assert ".pres.presentador-sale:not(.panel-grande) .subtitulo:not(.visible) { visibility: visible; opacity: 1;" in css
+    js = (PRESENTADOR / "presentador.js").read_text(encoding="utf-8")
+    cuerpo = lambda nombre: js[js.index(f"function {nombre}("):js.index("\n  }\n", js.index(f"function {nombre}("))]
+    assert "esperarVidrio(true)" in cuerpo("agachar")
+    assert "esperarVidrio(false)" in cuerpo("esconder") and "esperarVidrio(false)" in cuerpo("subir")
+    # mientras baja, el corte sigue al vidrio que lo espera (el subtítulo cambia de alto al quitarse la cabecera)
+    assert "(saliendo ? vidrioQueEspera() : null)" in cuerpo("colocar")
+
+
 
 # ───────────────────────────── Las vistas (vistas.js): qué plano, dónde y hacia dónde ─────────────────────────────
 
@@ -1139,10 +1157,13 @@ const ma = V.medidas('anfitrion', ctx);
 const cajas = { sub, panel, obra: { x0: 900, y0: 200, x1: 1400, y1: 640 }, rotulos: [{ x0: 960, y0: 560, x1: 1040, y1: 600 }] };
 const mejor = V.lugares(anf, ma, ctx, cajas)[0];
 const cerca = V.lugares(anf, ma, ctx, cajas).find((l) => l.x !== mejor.x && l.costo <= 1.25 * mejor.costo + 0.02);
-const lejos = V.lugares(anf, ma, ctx, cajas).find((l) => l.costo > 1.25 * mejor.costo + 0.05);
+// (lejos: peor y a más de un cuarto de su alto; poco: peor pero a menos de un cuarto, sin tapar mucho más)
+const lejos = V.lugares(anf, ma, ctx, cajas).find((l) => l.costo > 1.25 * mejor.costo + 0.05 && Math.abs(l.x - mejor.x) >= 0.25 * ma.p);
+const poco = V.lugares(anf, ma, ctx, cajas).find((l) => l.costo > 1.25 * mejor.costo + 0.05 && Math.abs(l.x - mejor.x) < 0.25 * ma.p && l.costo <= mejor.costo + 0.5);
 r.histeresis = {
   mejor: mejor.x,
   queda: V.elegirLugar(anf, ma, ctx, cajas, { x: cerca.x }).razon,
+  poco: poco ? V.elegirLugar(anf, ma, ctx, cajas, { x: poco.x }).razon : null,
   cambia: V.elegirLugar(anf, ma, ctx, cajas, { x: lejos.x }),
   ya_cambio: V.elegirLugar(anf, ma, ctx, cajas, { x: lejos.x, cambios: 1 }).razon,
   corta: V.elegirLugar(anf, ma, ctx, cajas, { x: lejos.x, ms: 3000 }).razon,
@@ -1192,6 +1213,45 @@ r.rotulo = {
   posAco: V.posRotulo(aco, subR),
   posBajito: V.posRotulo(aco, { ...subR, y0: 746 }),
   posCel: V.posRotulo(cel, { x0: 10, y0: 335, x1: 380, y1: 439 }),
+};
+// en una seguidilla de escenas con el atlas el círculo no cambia con cada panel: bajo el panel conserva su tamaño mientras
+// quepa; acoplado sigue acoplado. De lado, con la ficha que el subtítulo monta, no la pisa (baja y se achica)
+r.rotuloSigue = {
+  conserva: V.rotuloDe(ESC, { sub: subR, panel: panelCorto, antes: { modo: 'panel', lado: 94 } }),
+  achica: V.rotuloDe(ESC, { sub: subR, panel: { ...panelCorto, y1: 716 }, antes: { modo: 'panel', lado: 113 } }),
+  acoplado: V.rotuloDe(ESC, { sub: subR, panel: panelCorto, antes: { modo: 'acoplado', lado: 84 } }),
+  techo: V.posRotulo(lado, { x0: 397, y0: 280, x1: 834, y1: 376 }, null, { techo: 314 }),
+};
+// lo que se ve manda (ctx.domManda: «Solo 3D», el atlas o la ficha que se abren a mitad de la escena); sin él, la escena
+const conPanel = E({ paso: 3, tipo: 'componente', resaltar: { tipo: 'especificacion', n: 2, en: 'panel' } });
+r.domManda = {
+  sinPanel: V.elegirVista(conPanel, { ...ESC, domManda: true, dom: { ...ESC.dom, sinPanel: true } }).vista,
+  atlas: V.elegirVista(E({ paso: 3, tipo: 'componente' }), { ...ESC, domManda: true, dom: { ...ESC.dom, conInmersion: true } }).vista,
+  ficha: V.elegirVista(E({ paso: 3, tipo: 'componente' }), { ...CEL, domManda: true, dom: { ...CEL.dom, conDetalle: true } }).regla,
+  atlasCerrado: V.elegirVista(E({ paso: 6, tipo: 'inmersion', atlas: 'torre_sismo' }), { ...ESC, domManda: true }).vista,
+  sinDom: V.elegirVista(conPanel, { ...ESC, dom: { ...ESC.dom, sinPanel: true } }).vista,
+};
+// señalando lo que el dedo no alcanza (la cifra de la portada, 190 px arriba del hombro): lo más cerca que se puede del
+// panel (a no más de 30 px de lo mejor); desde lejos se va aunque ya haya cambiado. Los títulos de la maqueta: no se
+// tapan si hay un lugar que llegue sin taparlos (Telesalud: San Francisco y La Soledad)
+const cifra = { sub, panel, foco: { x0: 334, y0: 345, x1: 527, y1: 463 }, obra: { x0: 597, y0: 151, x1: 1411, y1: 626 },
+  rotulos: [{ x0: 720, y0: 473, x1: 796, y1: 507 }, { x0: 957, y0: 164, x1: 1050, y1: 198 }] };
+const eC = V.elegirVista(E({ capitulo: 'portada', paso: 1, tipo: 'portada', resaltar: { tipo: 'cifra', n: 2 } }), ESC);
+const pC = V.objetivoDe(eC.objetivo, eC.lado, cifra, { yHombro: V.yHombro(sub.y0, m), VW: 1440, VH: 900 });
+const todosC = V.lugares(eC, m, ctx, cifra, { punto: pC, todos: true });
+const lC = V.elegirLugar(eC, m, ctx, cifra, {}, { punto: pC });
+const subT = { x0: 568, y0: 721, x1: 1132, y1: 814 };
+const tele = { sub: subT, panel, foco: { x0: 131, y0: 418, x1: 527, y1: 502 }, obra: { x0: 743, y0: 110, x1: 1265, y1: 667 },
+  rotulos: [{ x0: 800, y0: 75, x1: 905, y1: 87 }, { x0: 1178, y0: 634, x1: 1261, y1: 646 }, { x0: 664, y0: 494, x1: 735, y1: 506 }, { x0: 647, y0: 616, x1: 703, y1: 628 }] };
+const eT = V.elegirVista(E({ resaltar: { tipo: 'componente', id: 'telesalud' } }), ESC);
+const pT = V.objetivoDe(eT.objetivo, eT.lado, tele, { yHombro: V.yHombro(subT.y0, m), VW: 1440, VH: 900 });
+const lT = V.elegirLugar(eT, m, ctx, tele, {}, { punto: pT });
+r.lejos = {
+  dp: V.distPunta(lC.x, pC, { p: m.p, subTop: sub.y0, rumbo: V.rumboDe('senala', pC.x - lC.x) }),
+  minDp: Math.min(...todosC.filter((l) => !l.razon.some((x) => x !== 'lejos')).map((l) => l.dp)),
+  hayLejos: todosC.some((l) => l.razon.includes('lejos')),
+  desdeLejos: V.elegirLugar(eC, m, ctx, cifra, { x: 1100, ms: 9000, cambios: 1 }, { punto: pC }).razon,
+  titulo: V.lugares(eT, m, ctx, tele, { punto: pT, todos: true }).find((l) => l.x === lT.x)?.titulo,
 };
 // el cierre: un dedo al empezar cada punto
 const tc = V.tiemposCierre(['Uno: la torre del hospital.', 'Dos: el agua.', 'Tres: vivienda nueva y mejorada para todos.']);
@@ -1260,6 +1320,8 @@ def test_elegir_vista(tmp_path):
     # solo gira); si deja de servir, se va igual
     h = r["histeresis"]
     assert h["queda"] == "se_queda", h
+    # (moverse menos de un cuarto de su alto no vale la pena si desde ahí no tapa mucho más)
+    assert h["poco"] == "se_queda", h
     assert h["cambia"]["cambia"] and h["cambia"]["x"] == h["mejor"], h
     assert h["ya_cambio"] == "ya_cambio" and h["corta"] == "corta" and h["no_sirve"] == "no_sirve", h
     assert r["transiciones"] == ["giro", "acercar", "caminar", "saltar", "rotulo", "fundido", "fundido", "giro"], r["transiciones"]
@@ -1279,6 +1341,20 @@ def test_elegir_vista(tmp_path):
     c = ro["posCel"]
     assert c["x0"] + c["L"] == 380 - 8 and c["y0"] >= 335 and c["y0"] + c["L"] <= 439, ro
     assert r["cierre"]["crece"] and r["cierre"]["n"] == 3 and 0.5 < r["cierre"]["primero"] < 1 and r["cierre"]["total"] <= 16, r["cierre"]
+    # el rótulo de una seguidilla no cambia con cada panel; de lado no pisa la ficha
+    rs = r["rotuloSigue"]
+    assert rs["conserva"] == {"modo": "panel", "lado": 94, "borde": "izq"}, rs
+    assert rs["achica"]["modo"] == "panel" and 88 <= rs["achica"]["lado"] < 113, rs
+    assert rs["acoplado"]["modo"] == "acoplado", rs
+    assert rs["techo"]["y0"] >= 314 + 4 and rs["techo"]["y0"] + rs["techo"]["L"] <= 376, rs
+    # lo que se ve manda a mitad de la escena: sin el panel, el general; con el atlas, el rótulo; con la ficha en el
+    # celular, el rótulo; el atlas que se cerró ya no es rótulo. Sin domManda, manda la escena
+    assert r["domManda"] == {"sinPanel": "general", "atlas": "rotulo", "ficha": "R3", "atlasCerrado": "presenta", "sinDom": "senala"}, r["domManda"]
+    # señalando lo que el dedo no alcanza: lo más cerca que se puede (a no más de 30 px) y desde lejos se va aunque ya
+    # haya cambiado; Telesalud sin tapar los títulos de la maqueta
+    lj = r["lejos"]
+    assert lj["hayLejos"] and lj["dp"] <= lj["minDp"] + 30 and lj["desdeLejos"] == "no_sirve", lj
+    assert lj["titulo"] is not None and lj["titulo"] <= 0.3, lj
 
 
 def test_los_giros_suaves_son_los_mismos():

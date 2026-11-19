@@ -9,9 +9,10 @@
 // * elegirVista(d, ctx): las reglas, en orden (la primera que se cumple decide): lo resaltado manda (señala), después
 //   la obra pedida (presenta), después el tipo de paso; con superposiciones (la bienvenida, el gesto de cara a la sala,
 //   el cambio de capítulo).
-// * lugares / elegirLugar: dónde se para a lo largo del subtítulo, con un puntaje que castiga tapar la obra, sus
-//   rótulos, lo resaltado, el HUD y la leyenda, y descarta tapar el panel, la ficha o el marco del atlas; con
-//   histéresis (no va y viene) y a lo sumo un cambio por escena.
+// * lugares / elegirLugar: dónde se para a lo largo del subtítulo, con un puntaje que castiga tapar la obra, los títulos
+//   de sus rótulos, lo resaltado, el HUD y la leyenda (medido con la silueta: la cabeza y el torso), y descarta tapar el
+//   panel, la ficha o el marco del atlas; señalando, el dedo tiene que llegar (o quedar lo más cerca que se pueda);
+//   con histéresis (no va y viene, ni se mueve por poco) y a lo sumo un cambio por escena.
 // * objetivoDe, alcance: el punto al que apunta y hasta dónde llega la punta del índice.
 // * rotuloDe / posRotulo: el rótulo (la cara en un círculo), bajo el panel o acoplado al subtítulo.
 // * transicion: cómo pasa de una vista a otra (girar, acercarse, caminar, saltar, el rótulo, fundirse).
@@ -22,14 +23,21 @@
 export const PLANOS = {
   entero: { yb: 0, ya: 1.1, yc: 0.05, ancho: 1.05 },        // los pies apenas detrás del subtítulo
   americano: { yb: 0.26, ya: 1.1, yc: 0.37, ancho: 1.1 },   // de la cadera para arriba: el subtítulo es el atril
-  medio: { yb: 0.4, ya: 1.08, yc: 0.46, ancho: 1.2 },       // de la cintura para arriba
+  // de la cadera para arriba (medio largo): el corte bajo las manos de la casa, que se ven enteras (con el corte en la
+  // cintura asomaban dos muñones) y con ellas lo que hacen a la altura del pecho (invitar, calmar, escuchar)
+  medio: { yb: 0.34, ya: 1.08, yc: 0.4, ancho: 1.2 },
   primer: { yb: 0.52, ya: 1.06, yc: null, ancho: 1 },       // la cabeza y los hombros, en un círculo (el rótulo)
 };
 
 /** Medio ancho del cuerpo en el corte (·pxAlto, con el contorno): tiene que quedar sobre el subtítulo. Y la huella, lo
  * que tapa arriba del corte (medio ancho y alto) */
 const CORTE = { entero: 0.1, americano: 0.12, medio: 0.15, primer: 0.15 };
-const HUELLA = { entero: [0.2, 0.95], americano: [0.22, 0.74], medio: [0.3, 0.62], primer: [0.3, 0.62] };
+// (el alto, hasta lo más alto del pelo: medido, 0.633·pxAlto sobre el corte del americano)
+const HUELLA = { entero: [0.2, 0.95], americano: [0.22, 0.64], medio: [0.3, 0.6], primer: [0.3, 0.62] };
+/** La silueta, más fina que la huella: la cabeza (medio ancho 0.14·pxAlto, de lo más alto del pelo a 0.66 de su alto)
+ * y, debajo, el torso con los brazos (el medio ancho de la huella) hasta el corte. Lo que tapa de un rótulo o de lo
+ * resaltado se mide con ella: al costado de la cabeza un rótulo se lee */
+const CABEZA = { ancho: 0.14, desde: 0.66, hasta: 1.0 };
 /** Los gestos que abren los brazos a los costados: hasta dónde llega la figura desde el centro del cuerpo (·pxAlto,
  * medido con el personaje en el americano). El panel, la ficha y el atlas tampoco se tapan con ellos */
 export const ENVERGADURA = { grande: 0.42, celebrar: 0.4, invitar: 0.39, comparar: 0.38, saludar: 0.35, despedirse: 0.33,
@@ -96,7 +104,8 @@ const CRECE = /→|\bmetas?\b|\bde\s+\S+(?:\s+\S+){0,3}\s+a\s+\d/i;
  * - d: lo que trae `narrar` (docs/presentador.md) más `d.evento` ('narrar' | 'cierre' | 'preguntas' | 'preparando' |
  *   'explicar' | 'pausa').
  * - ctx: {chica, VW, VH, horizontal, nuevo (recién sube), reducido, dom: {conInmersion, conDetalle, sinPanel},
- *   anterior: {capitulo, paso, visual, vista, lado}}.
+ *   anterior: {capitulo, paso, visual, vista, lado}, domManda (la ficha, el panel y el atlas: los de la página, no los
+ *   de la escena)}.
  * `lado`: dónde está lo que explica ('panel' | 'ficha' | 'leyenda' | 'obra' | 'marco' | 'hoja' | 'arriba' | 'sala');
  * `objetivo`: a qué apunta ('foco' | 'bloque' | 'obra' | 'marco' | 'ficha' | 'sala'); `gesto`: el que pidió el asistente
  * o el de la vista; `frente`: el gesto va de cara a la sala; `regla`: la que decidió.
@@ -111,10 +120,13 @@ export function elegirVista(d = {}, ctx = {}) {
   const r = escena ? d.resaltar || null : null;
   const v = d.visual || {};
   const pedido = escena ? d.gesto || null : null;
-  // la ficha abierta y el panel oculto: lo que pide la escena (lo visual de una escena es entero) o lo que hay
-  const conFicha = escena && d.visual ? !!v.detalle : !!dom.conDetalle;
-  const sinPanel = escena && d.panel !== undefined ? d.panel === false : !!dom.sinPanel;
-  const atlas = atlasVisible(d, ctx);
+  // la ficha abierta, el panel oculto y el atlas: lo que pide la escena (lo visual de una escena es entero) o lo que
+  // hay; con `ctx.domManda` (lo que se ve cambió a mitad de la escena: «Solo 3D», la ficha o el atlas que abre una orden
+  // `visual`), lo que hay
+  const domManda = !!ctx.domManda;
+  const conFicha = escena && d.visual && !domManda ? !!v.detalle : !!dom.conDetalle;
+  const sinPanel = escena && d.panel !== undefined && !domManda ? d.panel === false : !!dom.sinPanel;
+  const atlas = domManda ? !!dom.conInmersion : atlasVisible(d, ctx);
 
   const base = (() => {
     const de = (vista, lado, objetivo, gesto, regla, extra = {}) => ({ vista, lado, objetivo, gesto, regla, ...extra });
@@ -209,7 +221,8 @@ export function medidas(vista, ctx = {}, { cierre = false, subAlto = 0, rotulo =
  * panel si entre su borde de abajo y el del subtítulo cabe el círculo (en la esquina de abajo a la derecha de la columna
  * del panel: no tapa el modelo del atlas ni su barra de tiempo); si no, acoplado al subtítulo, en su extremo izquierdo
  * (el subtítulo le hace lugar: propuesta.html, .pres.rotulo-acoplado). En la pantalla chica, acoplado a la derecha;
- * de lado, del alto del subtítulo. → {modo: 'panel' | 'acoplado', lado (el diámetro, px), borde: 'izq' | 'der'}
+ * de lado, del alto del subtítulo. `c.antes` ({modo, lado}): el rótulo que ya está (una seguidilla: no cambia con cada
+ * panel). → {modo: 'panel' | 'acoplado', lado (el diámetro, px), borde: 'izq' | 'der'}
  */
 export function rotuloDe(ctx = {}, c = {}) {
   const V = VISTAS.rotulo;
@@ -223,6 +236,11 @@ export function rotuloDe(ctx = {}, c = {}) {
   // (bajo el panel, si no cabe entero se achica hasta el mínimo)
   const lado = Math.round(acotar(V.k * VH, V.min, V.max));
   const cabe = c.panel && sub ? Math.floor(sub.y1 - (c.panel.y1 + 8)) : 0;
+  // en una seguidilla de escenas con el rótulo (`c.antes`: el que está), el círculo no cambia con cada panel: acoplado
+  // sigue acoplado; bajo el panel conserva su tamaño mientras quepa (si no, se achica lo justo o se acopla)
+  const a = c.antes;
+  if (a?.modo === 'acoplado') return { modo: 'acoplado', lado: V.acoplado, borde: 'izq' };
+  if (a?.modo === 'panel' && cabe >= V.min) return { modo: 'panel', lado: Math.min(a.lado, cabe), borde: 'izq' };
   if (cabe >= V.min) return { modo: 'panel', lado: Math.min(lado, cabe), borde: 'izq' };
   return { modo: 'acoplado', lado: V.acoplado, borde: 'izq' };
 }
@@ -232,13 +250,21 @@ export function rotuloDe(ctx = {}, c = {}) {
  * derecha), centrado en su alto y nunca más alto que él (si el subtítulo es bajo, el círculo se achica: no lo pasa ni
  * tapa lo de arriba, la barra de tiempo del simulador). → {x0, y0, L}
  */
-export function posRotulo(r, sub, panelX1 = null) {
+export function posRotulo(r, sub, panelX1 = null, { techo = null } = {}) {
   if (!r || !sub) return null;
   if (r.modo === 'panel' && Number.isFinite(panelX1)) return { x0: panelX1 - 4 - r.lado, y0: sub.y1 - r.lado, L: r.lado };
   const alto = sub.y1 - sub.y0;
-  const L = Math.max(36, Math.min(r.lado, alto - 6));
+  let L = Math.max(36, Math.min(r.lado, alto - 6));
+  let y0 = (sub.y0 + sub.y1) / 2 - L / 2;
+  // (`techo`: lo de arriba que el círculo no pisa —la ficha abierta en el celular de lado, que el subtítulo ya monta—:
+  // baja hasta 4 px debajo y, si no entra, se achica, apoyado en el pie del subtítulo)
+  if (Number.isFinite(techo) && y0 < techo + 4) {
+    y0 = techo + 4;
+    L = Math.max(36, Math.min(L, sub.y1 - 3 - y0));
+    y0 = Math.min(y0, sub.y1 - 3 - L);
+  }
   const x0 = r.borde === 'der' ? sub.x1 - 8 - L : sub.x0 + 10;
-  return { x0, y0: (sub.y0 + sub.y1) / 2 - L / 2, L };
+  return { x0, y0, L };
 }
 
 /** El rumbo de la vista hacia un punto que está en `dx` (px, + a la derecha de la pantalla) del cuerpo */
@@ -340,11 +366,34 @@ export function apuntable(x, punto, o) {
 // los pesos del puntaje: cuánto cuesta tapar cada cosa (el panel, la ficha y el marco no se tapan nunca)
 const PESOS = { obra: 1, rotulo: 2, foco: 3, hud: 3, leyenda: 3 };
 const CON_BRAZO = ['senala', 'presenta', 'general'];
+/** Señalando: el dedo «llega» si la punta queda a no más de LLEGA_PX de lo que señala. Si algún lugar llega, los que no
+ * llegan no están; si ninguno llega, solo los que quedan a no más de 30 px de lo más cerca que se puede (pararse junto
+ * al panel se lee como «esto del panel»; a 200 px, la mano cae sobre la maqueta y se lee «esto de la maqueta») */
+export const LLEGA_PX = 90;
+const BANDA_PX = 30;
+const TITULO_TAPADO = 0.3;
+/** Más lejos que esto (la punta del brazo estirado a lo que señala) el dedo no llega desde ningún lado: se sostiene el
+ * índice con el brazo en la recta hacia lo que señala, no la palma baja (presentador.js) */
+export const LEJOS_PX = 120;
+/** Lo señalado más de ALTO_PX arriba del hombro también se señala con el índice (la palma alzada, sostenida, se leería
+ * como una mano levantada) */
+export const ALTO_PX = 150;
+/** La distancia (px) de la punta del índice parado en `x` a `punto` (alcance) */
+export const distPunta = (x, punto, o) => { const a = alcance(x, punto, o).punta; return punto ? Math.hypot(a.x - punto.x, a.y - punto.y) : 0; };
 
 /** La huella del cuerpo parado en `x` (lo que tapa arriba del corte) */
 export function huella(x, m, subTop) {
   return { x0: x - m.huella[0], y0: subTop - m.huella[1], x1: x + m.huella[0], y1: subTop };
 }
+/** La silueta del cuerpo parado en `x`: [torso, cabeza] (sin el plano, la huella entera) */
+export function silueta(x, m, subTop) {
+  const h = huella(x, m, subTop);
+  if (!Number.isFinite(m.yc) || !m.p) return [h];
+  const cuello = subTop - Math.max(0, CABEZA.desde - m.yc) * m.p;
+  return [{ ...h, y0: Math.min(cuello, h.y1) },
+    { x0: x - CABEZA.ancho * m.p, y0: subTop - (CABEZA.hasta - m.yc) * m.p, x1: x + CABEZA.ancho * m.p, y1: Math.min(cuello, h.y1) }];
+}
+const areaEn = (cs, b) => cs.reduce((a, k) => a + area(corte(k, b)), 0);
 
 /** El lugar preferido de la vista (px de la ventana) con el subtítulo `sub`: el anfitrión al centro, el cierre en el
  * primer tercio, el busto (y todo en la pantalla chica) a la derecha; señala, del lado de lo que señala (el alcance lo
@@ -370,7 +419,7 @@ function preparar(e, m, ctx, c, punto) {
   // [caja, peso, cuenta el brazo, por su propia área]: la obra cuesta por lo que tapa de la huella; un rótulo o lo
   // resaltado, por lo que se tapa de ellos (chicos: medidos sobre la huella no costarían nada)
   if (obra && area(obra) > 0) blandos.push([obra, PESOS.obra, true]);
-  for (const r of c.rotulos || []) blandos.push([r, PESOS.rotulo, true, true]);
+  for (const r of c.rotulos || []) blandos.push([r, PESOS.rotulo, true, true, true]);
   if (c.foco) blandos.push([c.foco, PESOS.foco, false, true]);
   if (c.hud) blandos.push([c.hud, PESOS.hud, true]);
   if (c.leyenda && e.lado !== 'leyenda') blandos.push([c.leyenda, PESOS.leyenda, true]);
@@ -385,7 +434,7 @@ function preparar(e, m, ctx, c, punto) {
 // El costo de pararse en `x` y lo que no cumple (razon: [] si cumple todo)
 function puntuar(P, x) {
   const { e, m, sub, punto } = P;
-  const h = huella(x, m, sub.y0);
+  const h = huella(x, m, sub.y0), sil = silueta(x, m, sub.y0);
   const razon = [];
   if (h.x0 < 6 || h.x1 > P.VW - 6) razon.push('pantalla');
   if (x - m.cadera < sub.x0 + 8 || x + m.cadera > sub.x1 - 8) razon.push('cadera');
@@ -404,23 +453,50 @@ function puntuar(P, x) {
   const ah = area(h) || 1;
   const g = 0.04 * m.p;
   const brazo = a ? { x0: Math.min(a.hombro.x, a.punta.x) - g, y0: Math.min(a.hombro.y, a.punta.y) - g, x1: Math.max(a.hombro.x, a.punta.x) + g, y1: Math.max(a.hombro.y, a.punta.y) + g } : null;
-  let costo = 0;
-  for (const [b, w, conBrazo, propia] of P.blandos) {
+  let costo = 0, titulo = 0;
+  for (const [b, w, conBrazo, propia, esRotulo] of P.blandos) {
     if (!propia) {
-      costo += (w * area(corte(h, b))) / ah;
+      costo += (w * areaEn(sil, b)) / ah;
       // el brazo, con la mitad del peso (no sobre lo que señala)
       if (brazo && conBrazo) costo += (0.5 * w * area(corte(brazo, b))) / ah;
       continue;
     }
     // un rótulo o lo resaltado: poco si se tapa un poco; mucho pasado el 30 % (lo que ya no se lee)
-    const f = Math.min(1, (area(corte(h, b)) + (brazo && conBrazo ? 0.5 * area(corte(brazo, b)) : 0)) / (area(b) || 1));
+    const f = Math.min(1, (areaEn(sil, b) + (brazo && conBrazo ? 0.5 * area(corte(brazo, b)) : 0)) / (area(b) || 1));
     costo += w * (0.5 * f + 4 * Math.max(0, f - 0.25));
+    if (esRotulo) titulo = Math.max(titulo, f);
   }
   // lejos del preferido cuesta poco (señalando, más: lo más cerca que deje el alcance)
   costo += ((P.senala ? 1 : 0.15) * Math.abs(x - P.pref)) / (Math.max(40, P.hi - P.lo) + 1);
-  // señalando algo a la altura de la mano: la punta del dedo, a no más de 60 px (después, cuanto más lejos, peor)
-  if (P.senala && a && Math.abs(punto.y - a.hombro.y) <= 120) costo += Math.max(0, Math.hypot(a.punta.x - punto.x, a.punta.y - punto.y) - 60) / 100;
-  return { x, costo: Math.round(costo * 1e4) / 1e4, razon, punta: a ? { x: Math.round(a.punta.x), y: Math.round(a.punta.y) } : null };
+  // señalando: la punta del dedo, a no más de 60 px (después, cuanto más lejos, peor; más allá de la banda, no está)
+  const dp = P.senala && a ? Math.hypot(a.punta.x - punto.x, a.punta.y - punto.y) : null;
+  if (dp !== null) costo += Math.max(0, dp - 60) / 100;
+  return { x, costo: Math.round(costo * 1e4) / 1e4, razon, punta: a ? { x: Math.round(a.punta.x), y: Math.round(a.punta.y) } : null,
+    dp: dp === null ? null : Math.round(dp), titulo: Math.round(titulo * 100) / 100 };
+}
+// Los candidatos puntuados y, señalando, la banda del alcance (los que no llegan llevan la razón 'lejos')
+function candidatos(P, c, chica) {
+  const xs = new Set();
+  if (chica) { xs.add(Math.round(c.sub.x1 - P.m.margen)); xs.add(Math.round(c.sub.x0 + P.m.margen)); }
+  else {
+    // cada 40 px (señalando, cada 8: lo más cerca que deje el alcance)
+    for (let x = P.lo; x <= P.hi; x += P.senala ? 8 : 40) xs.add(Math.round(x));
+    for (const x of [P.lo, (c.sub.x0 + c.sub.x1) / 2, P.hi, P.pref]) xs.add(Math.round(x));
+  }
+  const lista = [...xs].map((x) => puntuar(P, x));
+  const banda = bandaDe(P, lista);
+  for (const l of lista) if (l.dp !== null && l.dp > banda) l.razon.push('lejos');
+  return { lista, banda };
+}
+// Señalando: hasta dónde puede quedar la punta (LLEGA_PX si algún lugar llega; si no, lo más cerca que se puede + 30).
+// Cuentan los lugares que dejan leer los títulos de la maqueta (ninguno tapado más de un 30 %); si todos tapan alguno,
+// todos (llegar a lo que señala pesa más)
+function bandaDe(P, lista) {
+  if (!P.senala) return Infinity;
+  const validos = lista.filter((l) => !l.razon.length && l.dp !== null);
+  const limpios = validos.filter((l) => l.titulo <= TITULO_TAPADO);
+  const ds = (limpios.length ? limpios : validos).map((l) => l.dp);
+  return ds.length ? Math.max(LLEGA_PX, Math.min(...ds) + BANDA_PX) : Infinity;
 }
 
 /**
@@ -435,41 +511,51 @@ export function lugares(e, m, ctx, c, { punto = null, todos = false } = {}) {
   if (!c.sub) return [];
   const chica = ctx.chica ?? (ctx.VW || 800) <= CHICA_PX;
   const P = preparar(e, m, ctx, c, punto);
-  const xs = new Set();
-  if (chica) { xs.add(Math.round(c.sub.x1 - m.margen)); xs.add(Math.round(c.sub.x0 + m.margen)); }
-  else {
-    // cada 40 px (señalando, cada 8: lo más cerca que deje el alcance)
-    for (let x = P.lo; x <= P.hi; x += P.senala ? 8 : 40) xs.add(Math.round(x));
-    for (const x of [P.lo, (c.sub.x0 + c.sub.x1) / 2, P.hi, P.pref]) xs.add(Math.round(x));
-  }
-  const lista = [...xs].map((x) => puntuar(P, x));
+  const { lista } = candidatos(P, c, chica);
   const orden = (a, b) => a.costo - b.costo || Math.abs(a.x - P.pref) - Math.abs(b.x - P.pref);
   return (todos ? lista : lista.filter((l) => !l.razon.length)).sort(orden);
 }
 
 /**
  * El lugar de la escena: el mejor de `lugares`, salvo que el de ahora (`actual.x`) siga cumpliendo todo y no sea mucho
- * peor (histéresis: costo ≤ 1.25·mejor + 0.02, con lo que señala del mismo lado). A lo sumo un cambio por escena
- * (`actual.cambios`) y ninguno en una escena corta (`actual.ms` < 3500: solo gira), salvo que el de ahora ya no cumpla
- * (la cadera en el aire, tapa el panel, la punta del dedo entraría en lo que señala). Sin ninguno que cumpla todo, el
- * que menos falla. → {x, cambia, costo, razon}
+ * peor (histéresis: costo ≤ 1.25·mejor + 0.02, con lo que señala del mismo lado y la punta del dedo a no más de 40 px
+ * de lo que llega desde el mejor), o que moverse sea poco (menos de 0.25·pxAlto, o menos de 60 px hacia el lado
+ * contrario de lo que explica: gira en el lugar). A lo sumo un cambio por escena (`actual.cambios`) y ninguno en una
+ * escena corta (`actual.ms` < 3500: solo gira), salvo que el de ahora ya no cumpla (la cadera en el aire, tapa el
+ * panel, la punta del dedo entraría en lo que señala o no llega). Sin ninguno que cumpla todo, el que menos falla.
+ * → {x, cambia, costo, razon}
  */
-export function elegirLugar(e, m, ctx, c, actual = {}, { punto = null } = {}) {
+export function elegirLugar(e, m, ctx, c, actual = {}, { punto = null } = {}) {   // actual: {x, cambios, ms, ciego}
   if (!c.sub) return null;
-  const todos = lugares(e, m, ctx, c, { punto, todos: true });
-  const grave = (l) => l.razon.reduce((a, r) => a + ({ tapa: 100, cadera: 50, pantalla: 50, alcance: 10, corte: 5 }[r] || 1), 0);
-  const mejor = todos.find((l) => !l.razon.length) || [...todos].sort((a, b) => grave(a) - grave(b) || a.costo - b.costo)[0] || null;
+  const chica = ctx.chica ?? (ctx.VW || 800) <= CHICA_PX;
+  const P = preparar(e, m, ctx, c, punto);
+  const { lista: todos, banda } = candidatos(P, c, chica);
+  const grave = (l) => l.razon.reduce((a, r) => a + ({ tapa: 100, cadera: 50, pantalla: 50, alcance: 10, lejos: 8, corte: 5 }[r] || 1), 0);
+  const orden = (a, b) => a.costo - b.costo || Math.abs(a.x - P.pref) - Math.abs(b.x - P.pref);
+  const mejor = todos.filter((l) => !l.razon.length).sort(orden)[0] || [...todos].sort((a, b) => grave(a) - grave(b) || a.costo - b.costo)[0] || null;
   const x = actual.x;
   if (!Number.isFinite(x)) return mejor ? { x: mejor.x, cambia: true, costo: mejor.costo, razon: 'primero' } : null;
   if (!mejor) return { x, cambia: false, costo: null, razon: 'sin_lugar' };
-  const ahora = puntuar(preparar(e, m, ctx, c, punto), x);
-  // (el de ahora que ya no cumple: la cadera en el aire, tapa el panel, la punta del dedo entraría en lo que señala)
+  const ahora = puntuar(P, x);
+  if (ahora.dp !== null && ahora.dp > banda) ahora.razon.push('lejos');
+  // (el de ahora que ya no cumple: la cadera en el aire, tapa el panel, la punta del dedo entraría en lo que señala o
+  // no llega)
   const valeAhora = !ahora.razon.length;
-  if (valeAhora && (actual.cambios || 0) >= 1) return { x, cambia: false, costo: ahora.costo, razon: 'ya_cambio' };
-  if (valeAhora && Number.isFinite(actual.ms) && actual.ms < 3500) return { x, cambia: false, costo: ahora.costo, razon: 'corta' };
+  // (`ciego`: el lugar de ahora se eligió sin saber dónde quedarían la obra y sus rótulos: lo que llegó manda, aunque
+  // ya haya cambiado o la escena sea corta)
+  if (valeAhora && !actual.ciego && (actual.cambios || 0) >= 1) return { x, cambia: false, costo: ahora.costo, razon: 'ya_cambio' };
+  if (valeAhora && !actual.ciego && Number.isFinite(actual.ms) && actual.ms < 3500) return { x, cambia: false, costo: ahora.costo, razon: 'corta' };
   const mismoLado = !punto || Math.sign(punto.x - x) === Math.sign(punto.x - mejor.x);
-  if (valeAhora && mismoLado && ahora.costo <= 1.25 * mejor.costo + 0.02) return { x, cambia: false, costo: ahora.costo, razon: 'se_queda' };
-  if (Math.abs(mejor.x - x) < 3) return { x, cambia: false, costo: mejor.costo, razon: 'mismo' };
+  // (señalando: desde aquí la punta queda a no más de 40 px de lo que llega desde el mejor)
+  const llegaIgual = ahora.dp === null || mejor.dp === null || ahora.dp <= mejor.dp + 40;
+  if (valeAhora && mismoLado && llegaIgual && ahora.costo <= 1.25 * mejor.costo + 0.02) return { x, cambia: false, costo: ahora.costo, razon: 'se_queda' };
+  // moverse poco no vale la pena (la histéresis lo absorbe): menos de un cuarto de su alto, o menos de 60 px en contra de
+  // lo que explica (caminar a la derecha para presentar a la izquierda se lee como ir y volver: gira en el lugar); salvo
+  // que desde aquí tape bastante más (un título de la maqueta pasado el 30 % ya cuesta más que eso)
+  const dx = mejor.x - x;
+  const enContra = !!punto && Math.abs(dx) < 60 && Math.sign(dx) !== Math.sign(punto.x - x);
+  if (valeAhora && llegaIgual && ahora.costo <= mejor.costo + 0.5 && (Math.abs(dx) < 0.25 * m.p || enContra)) return { x, cambia: false, costo: ahora.costo, razon: 'se_queda' };
+  if (Math.abs(dx) < 3) return { x, cambia: false, costo: mejor.costo, razon: 'mismo' };
   return { x: mejor.x, cambia: true, costo: mejor.costo, razon: valeAhora ? 'mejor' : 'no_sirve' };
 }
 
