@@ -112,14 +112,15 @@ export const decirS = (texto) => Math.min(16, Math.max(1.2, [...String(texto || 
 
 /**
  * El gesto que pide el texto cuando nadie pidió uno (el anfitrión que explica): una pregunta, «juntos», algo que crece
- * («crece», «aumenta», «sube», «más») o una cifra (el detalle: «exactamente esto»). null: el de la vista. Pura
+ * («crece», «aumenta») o una cifra (el detalle: «exactamente esto»). null: el de la vista. «más» y «sube» no cuentan:
+ * están en casi todo («más cerca», «sube al bus») y la mano que sube se repetiría sin sentido. Pura
  */
 export function gestoDelTexto(textos = []) {
   const t = (Array.isArray(textos) ? textos : [textos]).map((x) => String(x ?? '')).join(' ');
   const palabra = (re) => new RegExp(`(^|[^\\p{L}])(${re})(?![\\p{L}])`, 'iu').test(t);
   if (/[¿?]/.test(t)) return 'preguntar';
   if (palabra('juntos|juntas')) return 'juntos';
-  if (palabra('crece|crecen|crecer|creciendo|aumenta|aumentan|aumentar|sube|suben|subir|más')) return 'crecer';
+  if (palabra('crece|crecen|crecer|creciendo|aumenta|aumentan|aumentar')) return 'crecer';
   if (/\p{N}/u.test(t)) return 'detalle';
   return null;
 }
@@ -153,8 +154,10 @@ const HEX = /^#[0-9a-f]{6}$/i;
  *   la hemisférica, un poco del cielo y la mitad del piso de la maqueta. Su intensidad sigue a la del sol, con un piso
  *   (de noche no queda a oscuras).
  * - `oscuridad` (0 de día, 0.5 al atardecer, 1 de noche, continua en el ciclo del día) mezcla sin saltos: el relleno se
- *   entibia hacia el atardecer; de noche la principal y la hemisférica bajan a 0.6, el relleno a 0.5 y entra un
- *   contraluz frío desde atrás (separa el pelo y los hombros del fondo oscuro, sin lavar la cara)
+ *   entibia hacia el atardecer; de noche la principal y la hemisférica bajan a 0.54, la luna y el cielo tiñen poco (la
+ *   principal, algo tibia), el relleno tibio sube a 0.85 y entra un contraluz frío suave desde atrás (separa el pelo y
+ *   los hombros del fondo oscuro, sin lavar la cara): la cara baja ~30 % de luz y sigue siendo piel (con la luna azul y
+ *   un contraluz fuerte se volvía gris malva)
  */
 export function lucesDe(l) {
   const c = (v) => new THREE.Color(v);
@@ -170,12 +173,14 @@ export function lucesDe(l) {
   const sx = num(sol?.[0], NaN);
   // (el sol casi de frente o de espaldas: la luz casi de arriba; sin saltos cuando el ciclo lo cruza)
   const lado = Number.isFinite(sx) ? acotar(sx / 0.25, -1, 1) : -1;
-  const baja = 1 - 0.4 * noche;
+  const baja = 1 - 0.46 * noche;
+  // (de noche el color de la luna y del cielo entran menos —la piel se volvía gris malva— y el relleno tibio sube: la
+  // cara baja de luz pero sigue siendo piel)
   return {
-    luz: c(0xffffff).lerp(de(l.luz, hoy.luz), 0.5), luzI: 1.9 * k * baja, lado,
-    cielo: c(0xffffff).lerp(de(l.cielo, hoy.cielo), 0.35), suelo: c(0x8a7a70).lerp(de(l.piso, hoy.suelo), 0.5),
+    luz: c(0xffffff).lerp(de(l.luz, hoy.luz), 0.5 - 0.4 * noche).lerp(c(TIBIO), 0.45 * noche), luzI: 1.9 * k * baja, lado,
+    cielo: c(0xffffff).lerp(de(l.cielo, hoy.cielo), 0.35 - 0.3 * noche), suelo: c(0x8a7a70).lerp(de(l.piso, hoy.suelo), 0.5),
     hemiI: 1.15 * k * baja,
-    relleno: hoy.relleno.lerp(c(TIBIO), tibio), rellenoI: 0.7 - 0.2 * noche, contraI: 0.8 * noche,
+    relleno: hoy.relleno.lerp(c(TIBIO), tibio), rellenoI: 0.7 + 0.15 * noche, contraI: 0.25 * noche,
   };
 }
 /** Entre dos juegos de luces (u de 0 a 1), en `out` */

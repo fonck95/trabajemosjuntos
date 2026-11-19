@@ -59,6 +59,8 @@ export const VISTAS = {
   rotulo: { plano: 'primer', k: 0.125, min: 88, max: 128, acoplado: 84, chica: 64, rumbo: 0.3, margen: 0, apertura: 0.45 },
   busto: { plano: 'medio', k: 0.26, min: 150, max: 240, rumbo: 0.25, margen: 0.26, apertura: 0.5 },
 };
+// El busto en una pantalla alta: 0.16 del alto, hasta 360 px
+const BUSTO_ALTO = { k: 0.16, max: 360 };
 /** La pantalla chica (el celular, la tableta vertical): el busto en lugar del anfitrión, señala, presenta y cerca */
 export const CHICA_PX = 1080;
 export const HORIZONTAL_PX = 520;
@@ -206,6 +208,9 @@ export function medidas(vista, ctx = {}, { cierre = false, subAlto = 0, rotulo =
   }
   if (chica && V.chica) p = acotar(V.chica[0] * VH, V.chica[1], V.chica[2]);
   else p = acotar(V.k * VH, V.min, V.max);
+  // (en una pantalla alta, la tableta parada: el busto crece con el alto hasta 360 px; con el tope de 240 quedaba chico
+  // en la esquina, la cabeza en el 3.6 % del alto. En el celular, 0.16·alto no pasa de 240: no cambia)
+  if (vista === 'busto') p = Math.max(p, acotar(BUSTO_ALTO.k * VH, V.min, BUSTO_ALTO.max));
   if (vista === 'busto' && cierre) p *= 1.15;
   p = Math.round(p * 10) / 10;
   const Wc = Math.round(vista === 'busto' || vista === 'rotulo' ? Math.min(P.ancho * p, 0.7 * VW) : P.ancho * p);

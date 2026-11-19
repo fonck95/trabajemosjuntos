@@ -61,6 +61,10 @@ export const MANOS = {
   entrelazada: [0.5, 0.55, 0.6, 0.65, 0.4],
 };
 export const FORMAS_CONTAR = ['uno', 'dos', 'tres'];
+// Lo que se abre cada dedo estirado hacia los costados, en el plano de la palma (rad: índice, medio, anular, meñique;
+// doblado, nada). En abanico: con la mano ×1.3 los dedos son gruesos y, más juntos, la mano abierta se leía como una
+// manopla y los dedos que cuentan como uno solo
+const ABRE = [-0.25, -0.08, 0.09, 0.25];
 
 // ── El habla desde el texto: las sílabas de cada palabra, su tónica y lo que hace la boca en cada una ──
 // Lo que tarda en decirse un carácter sin voz (el de presentador.js `decirS`, a unos 17 por segundo)
@@ -77,7 +81,8 @@ const ATONAS = new Set(('el la los las lo le les un una unos unas de del al a en
 // tras «aquí» o «esta es», los verbos que todavía no son lo que se muestra
 const VERBOS = new Set(['es', 'son', 'está', 'están', 'esta', 'estan', 'vemos', 'ven', 'tenemos', 'tiene', 'hay', 'va', 'van', 'queda', 'quedan']);
 // la boca en cada vocal: [abrir, ancho]. La tónica abre 1.3 veces más; nunca más de ABRIR_MAX (más parece gritar)
-const VISEMAS = { a: [0.55, 1], e: [0.35, 1.05], i: [0.3, 1.05], o: [0.42, 0.8], u: [0.3, 0.8] };
+// (la o y la u, redondas: más angostas, y la sonrisa afloja un poco; con 0.8 no se distinguían de la a)
+const VISEMAS = { a: [0.55, 1], e: [0.35, 1.05], i: [0.3, 1.05], o: [0.42, 0.66], u: [0.3, 0.6] };
 const ABRIR_MAX = 0.75, ABRIR_GENERADOR = 0.65;
 // la sílaba que empieza con los labios (p, b, m y la v, que se dice como b) los cierra el primer 42 %
 const BILABIAL = 'pbmv';
@@ -251,6 +256,12 @@ const CASAS = {
 };
 // Los brazos mientras habla sin un gesto: adelante, las palmas a medio abrir
 const CASAS_MANOS = { muneca: { D: 'junta' } };
+// Con el plano medio (cerca, el busto del celular) el corte va más arriba: las manos de la casa suben un poco (el
+// hombro y el codo algo más doblados: las palmas a ~1.1, la punta de los dedos 0.05 del alto sobre el corte) para no
+// quedar cortadas por el atril (asomaban los pulgares y el dorso, dos muñones). No más: con los antebrazos más parados,
+// las manos juntas al frente se leían como brazos cruzados. Los brazos sueltos no suben
+const ALZAR_MEDIO = { hombro: -0.09, codo: -0.12 };
+const casaMedio = (c) => Object.fromEntries(Object.entries(c).map(([j, e]) => [j, e.map((x, i) => (i ? x : x + (ALZAR_MEDIO[j.slice(0, -1)] || 0)))]));
 // La casa de hablar (sin un gesto, lo que el gesto no usa): asimétrica, la mano que manda más alta y adelante (la
 // derecha, salvo que el gesto la ocupe: habla con la otra) y la otra más baja, acompañando. `chica`: lo que sube cada
 // una con el busto (el plano medio corta más arriba: las manos tienen que quedar a la vista)
@@ -298,13 +309,15 @@ const POSE = {
   comparaHoy: [[-0.36, 0, 0.3], [-1.24, -1.01, 0], [0.31, 0, -0.05]],
   comparaProyecto: [[-0.81, 0.07, 0.5], [-1.32, 1.6, 0], [-0.03, 0, 0.45]],
   // enumerar: la izquierda frente al pecho y arriba (la palma a 1.44, los dedos hasta 1.6), la palma a la sala y los dedos
-  // arriba; el índice derecho le toca la base de la palma (los dedos que cuentan quedan libres, se leen)
+  // arriba; la derecha la acompaña más abajo y a su lado (la palma arriba hacia ella, a 1.18), sin tocarla: el índice que
+  // tocaba la base de la palma quedaba sobre el reloj («se acabó el tiempo») y tapaba los dedos que cuentan
   cuentaI: [[-0.8, 0.04, -0.2], [-1.76, -1.4, 0], [0.01, 0, 0.45]],
-  cuentaToque: [[-0.66, -0.63, -0.55], [-1.18, -0.42, 0], [0.08, 0, -0.12]],
-  // crecer: las dos manos planas, la palma abajo, a la cintura (1.1); la que sube termina a 1.62, afuera
-  creceBaseI: [[-0.32, -0.2, 0.2], [-1.38, -1.33, 0], [0.24, 0, 0.05]],
-  creceBaseD: [[-0.33, -0.21, 0.2], [-1.37, -1.34, 0], [-0.15, 0, 0.03]],
-  creceArriba: [[-1.76, -0.35, 0.75], [-0.73, -0.92, 0], [-0.39, 0, -0.45]],
+  cuentaAcompana: [[-0.41, -0.31, 0], [-1.63, 1.21, 0], [0.14, 0, 0.49]],
+  // crecer: las dos manos adelante, bajas (las palmas a 1.04), con las palmas arriba; la que sube termina por delante
+  // del hombro con el codo doblado (85°: el antebrazo casi vertical), la muñeca a la altura del hombro (+0.07) y la
+  // palma arriba (a 1.46): «sube», sin el brazo estirado en alto (se leería como un saludo de brazo en alto)
+  creceBase: [[-0.26, -0.09, 0.23], [-1.27, 1.61, 0], [0.15, 0, 0.01]],
+  creceArriba: [[-1.06, -0.01, 0.31], [-1.48, 1.55, 0], [0.01, 0, 0.55]],
   // grande: las manos juntas frente al pecho (1.3), las palmas enfrentadas; abiertas, adelante y afuera, a 1.1 (unos
   // 25° bajo la horizontal), las palmas adentro y adelante
   grandeJuntaI: [[-0.59, -0.47, -0.24], [-1.51, -0.31, 0], [0.1, 0, 0.15]],
@@ -316,15 +329,13 @@ const POSE = {
   // construir: la palma izquierda arriba frente al ombligo (1.1); el puño derecho apoyado en ella y levantado
   construyePalma: [[-0.29, -0.4, -0.25], [-1.32, 1.45, 0], [0.01, 0, 0.08]],
   construyePuno: [[-0.5, -0.47, -0.57], [-1.02, -0.27, 0], [0.09, 0, 0.45]],
-  // mirar la maqueta: las manos tomadas atrás, bajas (0.88, a 0.3 detrás del eje del cuerpo): de frente se ven los brazos
-  // que bajan un poco hacia atrás, y las manos quedan detrás del cuerpo y del subtítulo
-  manosAtrasI: [[0.54, -1.31, -0.13], [-0.55, 1.6, 0], [0.6, 0, 0.45]],
-  manosAtrasD: [[0.54, -1.31, -0.19], [-0.54, 1.6, 0], [0.6, 0, 0.45]],
   // ── los de reaccionar, el lema, el cierre y la pausa (etapa 7b) ──
   // pensar: la palma hacia la cara, a 5 cm de la barbilla (el pulgar bajo el mentón, el índice a medio estirar sobre la
-  // mejilla); el otro brazo cruzado, la palma arriba bajo el codo (lo sostiene)
+  // mejilla); el otro brazo cruzado por delante del vientre, la palma arriba bajo el codo (lo sostiene): el codo afuera
+  // del costado y adelante (0.3 del centro, 0.18 delante), así el antebrazo pasa por fuera de la polo (con el codo junto
+  // al cuerpo, el brazo entero quedaba dentro del torso y la piel asomaba por la polo)
   pensarD: [[-1.1, -0.33, -0.61], [-1.47, 0.59, 0], [-0.43, 0, -0.15]],
-  pensarI: [[0.04, -0.95, -0.45], [-1.62, 1.38, 0], [-0.05, 0, 0.45]],
+  pensarI: [[-0.62, -1.33, 0.08], [-1.68, 1.68, 0], [-0.04, 0, 0.14]],
   // preguntar: la mano abierta adelante, hacia la cámara (0.66 delante del hombro, a la altura del pecho: 1.33), la palma
   // arriba y los dedos hacia la sala (y un poco afuera: de frente se lee por la silueta)
   pregunta: [[-1.52, 0.63, -0.13], [-0.24, 0.68, 0], [-0.1, 0, 0.3]],
@@ -361,6 +372,9 @@ const POSE = {
 const MARTILLO = { hombro: -0.32, codo: -0.5, muneca: -0.3 };
 // un brazo con otra x del hombro y del codo
 const alzar = ([h, c, m], dh, dc, dm = 0) => [[h[0] + dh, h[1], h[2]], [c[0] + dc, c[1], c[2]], [m[0] + dm, m[1], m[2]]];
+// un brazo más arriba para el plano medio (invitar, escuchar, calmar: el gesto se ve entero sobre el corte, a la altura
+// del pecho; ~0.15 más arriba)
+const alzarMedio = (b) => alzar(b, -0.18, -0.22);
 // la mezcla de dos poses de un brazo (los ángulos, en línea recta: para pasos intermedios cercanos)
 const entre = (a, b, u) => a.map((e, i) => e.map((x, k) => x + (b[i][k] - x) * u));
 
@@ -399,8 +413,8 @@ const entre = (a, b, u) => a.map((e, i) => e.map((x, k) => x + (b[i][k] - x) * u
  *   compatibilidad: los gestos nuevos usan `vaiven`).
  * - `mirar`: un punto (Vector3, del mundo); `mirada`: cómo lo mira: 'objetivo' (todo el gesto), 'sala', 'sigue' (el
  *   punto, con un vistazo a la sala cada 3 s) o {objetivo: s, cada: [a, b], dura} (el punto `s` segundos y después la
- *   sala, con otro vistazo cada a–b s) o 'recorre' (salta entre puntos de la obra, asiente a la mitad y a los 2.2 s
- *   vuelve a la sala, en ciclo); por omisión, {objetivo: 0.8}. `resto`: mirando a la sala, la cara se queda hasta esos
+ *   sala, con otro vistazo cada a–b s) o 'recorre' (salta entre puntos de la obra, asiente a la mitad y a los 1.2 s
+ *   vuelve a la sala 1.1 s, en ciclo); por omisión, {objetivo: 0.8}. `resto`: mirando a la sala, la cara se queda hasta esos
  *   radianes hacia el punto. `salto`: un saltito (true, o {t, dur, alto}: cuándo despega, lo que dura en el aire y lo
  *   que sube; celebrar). `parpadeos`: [t, …] los parpadeos del gesto (la espera de la pregunta, el primer asentimiento).
  * - `deriva`: {amp, cada: [a, b]}: aunque no hable, la mirada recorre la sala (invitar, sostenido: cada a–b s, de un lado
@@ -435,9 +449,12 @@ export const GESTOS = {
     const llega = Math.min(0.5, d * 0.32);
     // tres vaivenes a 2.2 Hz (si hay tiempo), y baja
     const fin = Math.max(llega + 0.35, Math.min(d - 0.4, llega + 0.05 + 3 / 2.2));
-    const dedos = [[0, 'relajada'], [llega - 0.15, 'abierta']];
-    for (let k = llega + 0.1; k < fin - 0.1; k += 1 / 2.2) dedos.push([k, 'explica'], [k + 0.2, 'abierta']);
-    return { dur: d, entra: Math.min(0.45, llega), sale: 0.38,
+    // (la mano se abre antes de subir, los dedos un poco antes que el brazo: si sube cerrada, se lee un puño en alto)
+    const dedos = [[0, 'abierta']];
+    // (en cada ida los dedos se aflojan apenas: a medio camino de la palma que explica, nunca un puño)
+    const afloja = entreManos('abierta', 'explica', 0.5);
+    for (let k = llega + 0.1; k < fin - 0.1; k += 1 / 2.2) dedos.push([k, afloja], [k + 0.2, 'abierta']);
+    return { dur: d, entra: Math.min(0.45, llega), sale: 0.38, retraso: { dedos: -0.12, dedosSale: 0.3 },
       claves: [[llega, { ...arriba, cabeza: [0.02, 0, 0.12 * s] }, 'anticipa']],
       manos: { [l]: dedos },
       cuerpo: { pecho: [0, -0.08 * s, 0], peso: -0.7 * s },
@@ -457,9 +474,11 @@ export const GESTOS = {
     const llega = Math.min(0.32, d * 0.25), fin = Math.max(llega + 0.35, d - 0.3);
     // dos idas y vueltas (o las que entren, a no más de 2.6 por segundo)
     const frec = lim(2 / (fin - llega), 2.2, 2.6);
-    const dedos = [[0, 'relajada'], [llega - 0.12, 'abierta']];
-    for (let k = llega + 0.08; k < fin - 0.1; k += 1 / frec) dedos.push([k, 'explica'], [k + 0.18, 'abierta']);
-    return { dur: d, entra: Math.min(0.3, llega), sale: 0.3, curva: 'sosten',
+    // (la mano ya abierta al subir: en la salida, lo que se ve antes de agacharse es la mano que saluda, no un puño)
+    const dedos = [[0, 'abierta']];
+    const afloja = entreManos('abierta', 'explica', 0.5);
+    for (let k = llega + 0.08; k < fin - 0.1; k += 1 / frec) dedos.push([k, afloja], [k + 0.18, 'abierta']);
+    return { dur: d, entra: Math.min(0.3, llega), sale: 0.3, curva: 'sosten', retraso: { dedos: -0.12, dedosSale: 0.3 },
       claves: [[llega, { ...arriba, cabeza: [0.02, 0, 0.08 * s] }, 'sosten']],
       manos: { [l]: dedos },
       cuerpo: { pecho: [0, -0.06 * s, 0], peso: -0.5 * s },
@@ -473,17 +492,19 @@ export const GESTOS = {
   // los dedos «llaman» despacio (cada 1.6 s), respira y la mirada recorre la sala
   invitar: (o) => {
     const d = o.dur || 3.0, sost = o.sostener === true;
+    // (de cerca, el plano medio: las palmas a la altura del pecho, 0.15 más arriba, para que no queden en el corte)
+    const pose = o.plano === 'medio' ? alzarMedio(POSE.invita) : POSE.invita;
     // (los dedos que llaman: de abiertos a un poco cerrados y de vuelta, despacio, mientras dure)
     const llamar = [[0, 'explica'], [0.4, 'abierta']];
     if (sost) for (let t = 1.6; t < 40; t += 1.6) for (let k = 1; k <= 4; k++) llamar.push([t + k * 0.2, entreManos('abierta', 'llama', k / 4)], [t + 0.8 + k * 0.2, entreManos('llama', 'abierta', k / 4)]);
     return { dur: d, sostener: sost, entra: 0.55, curva: 'sosten', sale: 0.5,
-      claves: [[0.55, { ...dos(...POSE.invita), cabeza: [-0.02, 0, 0.08] }, 'sosten']],
+      claves: [[0.55, { ...dos(...pose), cabeza: [-0.02, 0, 0.08] }, 'sosten']],
       manos: { I: llamar, D: llamar },
       cuerpo: { columna: [0.04, 0, 0], pecho: [-0.05, 0, 0] },
       golpes: [{ t: 0.6, art: 'cabeza', eje: 0, amp: 0.06, ida: 0.15, vuelta: 0.35 }, { t: 0.6, art: 'cuello', eje: 0, amp: 0.025, ida: 0.15, vuelta: 0.35 }],
       deriva: sost ? { amp: 0.15, cada: [1.8, 2.4] } : null,
       cara: { cejas: [[0.2, 0.85], [1.4, 0.6]], abrir: [[0.3, 0], [0.5, 0.12], [0.9, 0]], sonrisa: 1, duchenne: true },
-      relajada: dos(...alzar(POSE.invita, 0.1, -0.08)) };
+      relajada: dos(...alzar(pose, 0.1, -0.08)) };
   },
   // ── Mostrar ──
   // «esta es…»: mira lo resaltado y prepara (la mano frente al pecho), y en el golpe estira el brazo (nunca del todo)
@@ -517,7 +538,8 @@ export const GESTOS = {
     const ap = o.apunta || [-0.9, 0, 0.6];
     // (hacia arriba el antebrazo gira menos: la palma mira a lo que presenta y no al cielo)
     const giro = 1.45 - 0.85 * (o.arriba || 0);
-    const codo = v === 1 ? [-0.72, giro, 0] : [-0.45, giro, 0];
+    // (y el codo más doblado: el brazo no sube más de ~11°; lo de más arriba lo muestran el codo, la palma y la mirada)
+    const codo = [(v === 1 ? -0.72 : -0.45) - 0.35 * (o.arriba || 0), giro, 0];
     const final = brazo(l, ap, codo, [-0.3, 0, 0]);
     const claves = [[0.2, brazo(l, ...POSE.presentaCentro), 'suave'], [0.72, final, 'sosten']];
     let d = o.dur || 2.8;
@@ -535,22 +557,18 @@ export const GESTOS = {
       cara: { cejas: [[0.2, 0.3], [0.7, 0.5], [1.5, 0.3]], abrir: [[0.5, 0], [0.72, 0.12], [1, 0]], sonrisa: 1 },
       acento: { cada: [4, 6], golpes: [{ t: 0, art: `muneca${l}`, eje: 0, amp: 0.08, ida: 0.1, vuelta: 0.2 }] } };
   },
-  // «miren esto conmigo»: mira la obra saltando entre puntos de ella, asiente a la mitad y a los 2.2 s vuelve a la sala
-  // (en ciclo, si se sostiene), con el cuerpo en 3/4 hacia ahí y el peso en el pie de atrás. (variantes: las manos tomadas
-  // atrás; una mano abierta y baja hacia la maqueta, como indicar)
+  // «miren esto conmigo»: mira la obra saltando entre puntos de ella, asiente a la mitad y al rato (1.2 s) vuelve a la
+  // sala (en ciclo, si se sostiene), con el cuerpo en 3/4 hacia ahí y el peso en el pie de atrás; la mano del lado de la
+  // obra, abierta y baja hacia ella (la palma a la sala), la otra en la casa. Sin un punto, las manos en la casa (las
+  // manos tomadas atrás dejaban una silueta sin brazos). (variantes: la palma baja; la palma arriba, el codo más doblado,
+  // «se los muestro»)
   mirar_maqueta: (o) => {
-    const d = o.dur || 3.2, l = o.lado || 'D', s = o.punto ? (l === 'D' ? 1 : -1) : 0;
-    const atras = !o.apunta || !o.variante;
-    // (las manos van atrás y vuelven por los costados: por delante pasarían por la cadera)
-    const lados = dos([0.22, 0, 0.2], [-0.35, 0.3, 0], [0, 0, 0]);
-    const tomadas = { ...brazo('I', ...POSE.manosAtrasI), ...brazo('D', ...POSE.manosAtrasD) };
-    const sueltas = { ...brazo('I', ...alzar(POSE.manosAtrasI, -0.05, 0.2)), ...brazo('D', ...alzar(POSE.manosAtrasD, -0.05, 0.2)), hombroI: [0.45, -0.7, 0.3], hombroD: [0.45, -0.7, 0.3] };
-    const forma = atras ? { claves: [[0.3, lados], [0.62, tomadas, 'sosten'], [d - 0.85, tomadas], [d - 0.62, sueltas], [d - 0.4, lados]] }
-      : { pose: brazo(l, o.apunta, [-0.6, 1.3, 0], [-0.2, 0, 0]) };
-    return { dur: d, entra: atras ? 0.3 : 0.5, sale: atras ? 0.38 : 0.5, ...forma, manos: atras ? { I: 'entrelazada', D: 'entrelazada' } : { [l]: 'abierta' },
+    const d = o.dur || 3.2, l = o.lado || 'D', s = o.punto ? (l === 'D' ? 1 : -1) : 0, v = o.variante === 1;
+    const forma = o.apunta ? { pose: brazo(l, o.apunta, v ? [-0.85, 1.45, 0] : [-0.6, 1.3, 0], [-0.2, 0, 0]) } : { pose: {} };
+    return { dur: d, entra: 0.5, sale: 0.5, ...forma, manos: o.apunta ? { [l]: v ? 'explica' : 'abierta' } : {},
       mirar: o.punto || null, mirada: 'recorre',
       cuerpo: { columna: [0.02, -0.12 * s, 0], cadera: [0, -0.06 * s, 0], pecho: [-0.03, 0, 0], peso: -0.6 * s },
-      cara: { cejas: 0.4, sonrisa: 0.9, labios: 1 } };
+      cara: { cejas: 0.4, sonrisa: 0.9, labios: LABIOS_REPOSO } };
   },
   // ── Explicar ──
   // (variantes: las dos manos; solo la que manda, la otra acompaña abajo; las palmas de canto, «ordenando»)
@@ -578,7 +596,8 @@ export const GESTOS = {
         { t, art: 'cabeza', eje: 0, amp: 0.05 * f, ida: 0.12, vuelta: 0.25 });
       if (v === 0) golpes.push({ t: t + 0.05, art: 'codoI', eje: 0, amp: 0.06 * f, ida: 0.12, vuelta: 0.25 });
     }
-    return { dur: d, entra: 0.4, sale: 0.42, claves, batuta: 'D', golpes, golpesCallado: true,
+    // (hablando, la otra mano también golpea cada 2–3 golpes del habla: `batutaOtra`; con una sola mano, no)
+    return { dur: d, entra: 0.4, sale: 0.42, claves, batuta: 'D', batutaOtra: v !== 1, golpes, golpesCallado: true,
       manos: { D: [[0, forma(arriba)], [g1 + 0.12, forma(canto)], [g2 + 0.12, forma(arriba)]], I: v === 1 ? 'relajada' : [[0, forma(arriba)], [g1 + 0.12, forma(canto)], [g2 + 0.12, forma(arriba)]] },
       cuerpo: { pecho: [0.03, 0, 0], columna: [0.02, 0, 0] },
       cara: { cejas: [[0.4, 0.3], [0.6, 0.5], [1.3, 0.3]] } };
@@ -591,7 +610,9 @@ export const GESTOS = {
     const arriba = brazo(l, ...(canto ? POSE.destacaCanto : POSE.destacaIndice));
     return { dur: d, entra: 0.15, sale: 0.4,
       claves: [[0.15, brazo(l, ...POSE.destacaAtras)], [0.4, { ...arriba, cabeza: [0.04, 0, 0] }, 'golpe']],
-      manos: { [l]: [[0, 'relajada'], [0.12, canto ? 'canto' : 'uno']] },
+      // (el índice se forma cuando la mano ya sube por delante del pecho: formado antes, pasaba apuntando a la sala a la
+      // altura de la cintura, un «¡tú!»)
+      manos: { [l]: [[0, 'relajada'], [0.22, canto ? 'canto' : 'uno']] },
       golpes: [{ t: 0.58, art: `muneca${l}`, eje: 0, amp: canto ? 0.18 : 0.25, ida: 0.1, vuelta: 0.25 }, { t: 0.58, art: `codo${l}`, eje: 0, amp: canto ? 0.22 : 0.06, ida: 0.1, vuelta: 0.25 },
         { t: 0.58, art: 'cabeza', eje: 0, amp: 0.08, ida: 0.1, vuelta: 0.3 }, { t: 0.58, art: 'cuello', eje: 0, amp: 0.03, ida: 0.1, vuelta: 0.3 }],
       cuerpo: { pecho: [0.04, 0, 0], columna: [[0.4, [0, 0, 0]], [0.6, [0.03, 0, 0]], [1.0, [0.015, 0, 0]]] },
@@ -614,22 +635,23 @@ export const GESTOS = {
         peso: [[0.5, -0.6], [1.5, -0.6], [1.85, 0.6]] },
       cara: { labios: [[0.5, 1], [1.5, 1], [1.8, 0]], sonrisa: [[0.4, 0.55], [1.5, 0.55], [1.85, 1]], cejas: [[0.4, 0.2], [1.5, 0.2], [1.85, 0.8], [2.6, 0.5]] } };
   },
-  // una lista, un dedo por frase: la izquierda frente al pecho (no junto a la oreja), la palma a la sala, y el índice
-  // derecho le toca los dedos. Con cada frase (`seguir`) la mano sube y baja mientras el dedo nuevo salta, el índice
-  // vuelve a tocarla y la cabeza se ladea hacia ella
+  // una lista, un dedo por frase: la izquierda frente al pecho (no junto a la oreja), la palma a la sala, y la derecha
+  // la acompaña abajo, la palma arriba hacia ella (sin taparla: los dedos que cuentan se leen). Con cada frase (`seguir`)
+  // la mano sube y baja mientras el dedo nuevo salta, la derecha la señala con un golpe de la palma y la cabeza se ladea
+  // hacia ella; hablando, la derecha golpea con lo que dice (`batuta`)
   enumerar: (o) => {
     const n = Math.max(1, Math.min(3, o.n || 1));
-    const beat = [{ art: 'hombroI', eje: 0, amp: -0.1, ida: 0.08, vuelta: 0.22 }, { art: 'codoD', eje: 0, amp: -0.08, ida: 0.08, vuelta: 0.2, t: 0.04 },
+    const beat = [{ art: 'hombroI', eje: 0, amp: -0.1, ida: 0.08, vuelta: 0.22 }, { art: 'codoD', eje: 0, amp: -0.1, ida: 0.08, vuelta: 0.2, t: 0.04 },
       { art: 'cabeza', eje: 2, amp: -0.06, ida: 0.15, vuelta: 0.4 }];
-    return { dur: o.dur || 3.2, sostener: o.sostener === true, entra: 0.55, curva: 'sosten',
-      pose: { ...brazo('I', ...POSE.cuentaI), ...brazo('D', ...POSE.cuentaToque), cabeza: [0.03, 0.06, -0.04] },
-      manos: { I: [[0, 'puno'], [0.3, FORMAS_CONTAR[n - 1]]], D: 'senala' }, golpes: beat.map((g) => ({ ...g, t: 0.45 + (g.t || 0) })), alSeguir: beat,
+    return { dur: o.dur || 3.2, sostener: o.sostener === true, entra: 0.55, curva: 'sosten', batuta: 'D',
+      pose: { ...brazo('I', ...POSE.cuentaI), ...brazo('D', ...POSE.cuentaAcompana), cabeza: [0.03, 0.06, -0.04] },
+      manos: { I: [[0, 'puno'], [0.3, FORMAS_CONTAR[n - 1]]], D: 'explica' }, golpes: beat.map((g) => ({ ...g, t: 0.45 + (g.t || 0) })), alSeguir: beat,
       cuerpo: { pecho: [0.02, 0.04, 0] }, cara: { cejas: [[0.3, 0.5], [1, 0.3]] },
-      relajada: { ...brazo('I', ...alzar(POSE.cuentaI, 0.1, 0.06)), ...brazo('D', ...alzar(POSE.cuentaToque, 0.1, 0.1)) } };
+      relajada: { ...brazo('I', ...alzar(POSE.cuentaI, 0.1, 0.06)), ...brazo('D', ...alzar(POSE.cuentaAcompana, 0.06, 0.08)) } };
   },
   // el resumen del cierre, un dedo al empezar cada punto (`seguir`): como enumerar (la izquierda frente al pecho y arriba,
-  // la palma a la sala, el índice derecho que la toca), y entre punto y punto un cabeceo y la mirada que cambia de lado
-  // de la sala. Sin `seguir` cuenta solo hasta `n` (el taller, las pruebas)
+  // la palma a la sala, la derecha que la acompaña abajo), y entre punto y punto un cabeceo y la mirada que cambia de
+  // lado de la sala. Sin `seguir` cuenta solo hasta `n` (el taller, las pruebas)
   contar: (o) => {
     const n = Math.max(1, Math.min(3, o.n || 3));
     const c = GESTOS.enumerar({ ...o, n: o.sostener || o.seguir ? n : 1 });
@@ -644,21 +666,22 @@ export const GESTOS = {
     c.cambiaMirada = true;
     return c;
   },
-  // crece, aumenta, mejora: las dos manos planas, la palma abajo, marcan el nivel de hoy a la cintura; una sube hacia
-  // arriba y afuera, acelerando (o en tres escalones, con un golpecito en cada uno), y la otra se queda en el nivel de
-  // partida. El pecho se abre, sube en puntas, las cejas arriba y la boca se abre en la cima. (variantes: en curva; en
-  // escalones)
+  // crece, aumenta, mejora: las dos manos adelante y bajas, las palmas arriba (lo de hoy); una sube por delante y
+  // afuera, acelerando (o en tres escalones, con un golpecito en cada uno), con el codo doblado y la palma arriba, hasta
+  // la altura del hombro, y la otra se queda en el nivel de partida. El pecho se abre, sube en puntas, las cejas arriba y
+  // la boca se abre en la cima. Nunca el brazo estirado en alto ni la palma abajo arriba del hombro. (variantes: en
+  // curva; en escalones)
   crecer: (o) => {
-    const d = o.dur || 2.9, l = o.lado || 'D', q = otro(l), escalones = o.variante === 1;
-    const base = { ...brazo(l, ...(l === 'D' ? POSE.creceBaseD : POSE.creceBaseI)), ...brazo(q, ...(q === 'D' ? POSE.creceBaseD : POSE.creceBaseI)) };
-    const desde = l === 'D' ? POSE.creceBaseD : POSE.creceBaseI;
-    const en = (u) => ({ ...base, ...brazo(l, ...entre(desde, POSE.creceArriba, u)) });
+    const d = o.dur || 2.9, l = o.lado || 'D', escalones = o.variante === 1;
+    const base = dos(...POSE.creceBase);
+    const en = (u) => ({ ...base, ...brazo(l, ...entre(POSE.creceBase, POSE.creceArriba, u)) });
     const claves = escalones
       ? [[0.45, base], [0.8, en(0.38), 'golpe'], [1.0, en(0.38)], [1.32, en(0.7), 'golpe'], [1.52, en(0.7)], [1.85, { ...en(1), cabeza: [-0.06, 0, 0] }, 'golpe']]
       : [[0.45, base], [0.65, base], [1.85, { ...en(1), cabeza: [-0.06, 0, 0] }, 'golpe']];
-    const tap = (t) => ({ t, art: `muneca${l}`, eje: 0, amp: 0.12, ida: 0.06, vuelta: 0.18 });
+    // (el golpecito: la palma sube un poco y vuelve, como quien levanta algo)
+    const tap = (t) => ({ t, art: `muneca${l}`, eje: 0, amp: -0.12, ida: 0.06, vuelta: 0.18 });
     return { dur: d, entra: 0.45, sale: 0.45, claves,
-      manos: { I: 'plana', D: 'plana' }, golpes: escalones ? [tap(0.8), tap(1.32), tap(1.85)] : [tap(1.85)],
+      manos: { [l]: [[0, 'explica'], [1.6, 'abierta']], [otro(l)]: 'explica' }, golpes: escalones ? [tap(0.8), tap(1.32), tap(1.85)] : [tap(1.85)],
       cuerpo: { pecho: [[0.6, [0, 0, 0]], [1.85, [-0.06, 0, 0]]], alto: [[0.7, 0], [1.85, 0.02], [d - 0.5, 0.02], [d, 0]] },
       cara: { cejas: [[0.4, 0.4], [1.85, 0.85]], abrir: [[1.6, 0], [1.9, 0.3], [2.3, 0.08]], sonrisa: 1 } };
   },
@@ -759,7 +782,7 @@ export const GESTOS = {
         { t, art: 'columna', eje: 0, amp: 0.02 * (a / 0.16), ida: 0.12, vuelta: 0.2 }];
     });
     return { dur: d, pose: {}, entra: 0.1, sale: 0.15, golpes, parpadeos: [0.16],
-      cara: { cejas: 0.3, sonrisa: [[0, 0.85], [d - 0.3, 1]], entrecierra: [[0, 0], [0.25, 0.25], [d - 0.2, 0.1]], duchenne: true, labios: 1 } };
+      cara: { cejas: 0.3, sonrisa: [[0, 0.85], [d - 0.3, 1]], entrecierra: [[0, 0], [0.25, 0.25], [d - 0.2, 0.1]], duchenne: true, labios: LABIOS_REPOSO } };
   },
   // «eso no», sin agresividad: el índice arriba frente al pecho que se agita desde la muñeca (tres veces, cada vez menos)
   // y la cabeza que niega a la mitad de esa frecuencia; la boca cerrada con una sonrisa leve que crece al final (nunca el
@@ -785,10 +808,10 @@ export const GESTOS = {
   // hacia la sala; dos presiones hacia abajo (la segunda más chica), el pecho que exhala, un asentimiento lento, los ojos
   // suaves y la boca cerrada sonriendo
   calmar: (o) => {
-    const d = o.dur || 2.6;
+    const d = o.dur || 2.6, pose = o.plano === 'medio' ? alzarMedio(POSE.calma) : POSE.calma;
     const presion = (t, a) => LADOS.flatMap((x) => [{ t, art: `codo${x}`, eje: 0, amp: 0.16 * a, ida: 0.35, vuelta: 0.3 },
       { t, art: `muneca${x}`, eje: 0, amp: -0.1 * a, ida: 0.35, vuelta: 0.3 }]);
-    return { dur: d, entra: 0.45, curva: 'sosten', sale: 0.45, pose: dos(...POSE.calma),
+    return { dur: d, entra: 0.45, curva: 'sosten', sale: 0.45, pose: dos(...pose),
       manos: { I: 'plana', D: 'plana' },
       golpes: [...presion(0.55, 1), ...presion(1.3, 0.6), { t: 0.6, art: 'cabeza', eje: 0, amp: 0.05, ida: 0.35, vuelta: 0.5 }],
       cuerpo: { pecho: [[0.5, [0, 0, 0]], [0.9, [0.03, 0, 0]], [1.7, [0.01, 0, 0]]] },
@@ -875,24 +898,28 @@ export const GESTOS = {
   // escucha: las manos entrelazadas al frente, a la altura de la cintura (no los puños), el peso en una pierna, la
   // cabeza ladeada hacia la sala y la sonrisa cerrada. Sostenido: asiente despacio cada tanto y ladea la cabeza. Al
   // soltarlo (vuelve a hablar), inspira
-  escuchar: (o) => ({ dur: o.dur || 3, sostener: o.sostener !== false, entra: 0.55, curva: 'sosten',
-    pose: { ...brazo('D', ...POSE.escuchaD), ...brazo('I', ...POSE.escuchaI), cabeza: [0.03, 0, 0.1] },
+  escuchar: (o) => {
+    const [pD, pI] = o.plano === 'medio' ? [alzarMedio(POSE.escuchaD), alzarMedio(POSE.escuchaI)] : [POSE.escuchaD, POSE.escuchaI];
+    return { dur: o.dur || 3, sostener: o.sostener !== false, entra: 0.55, curva: 'sosten',
+    pose: { ...brazo('D', ...pD), ...brazo('I', ...pI), cabeza: [0.03, 0, 0.1] },
     manos: { I: 'entrelazada', D: 'entrelazada' },
     cuerpo: { peso: 0.8 },
     cara: { cejas: 0.2, sonrisa: 0.9, labios: 1 },
     // sostenido: ladea la cabeza hacia la sala, despacio
     acento: { cada: [4, 6], golpes: [{ t: 0, art: 'cabeza', eje: 2, amp: 0.07, ida: 0.45, vuelta: 0.9 }, { t: 0, art: 'cuello', eje: 2, amp: 0.03, ida: 0.45, vuelta: 0.9 }] },
-    relajada: { ...brazo('D', ...alzar(POSE.escuchaD, 0.04, 0.02)), ...brazo('I', ...alzar(POSE.escuchaI, 0.04, 0.02)), cabeza: [0.04, 0, 0.13] },
+    relajada: { ...brazo('D', ...alzar(pD, 0.04, 0.02)), ...brazo('I', ...alzar(pI, 0.04, 0.02)), cabeza: [0.04, 0, 0.13] },
     alSoltar: () => ({ dur: 0.6, entra: 0.15, sale: 0.3, pose: {}, cuerpo: { pecho: [[0, [0, 0, 0]], [0.3, [-0.03, 0, 0]], [0.6, [0, 0, 0]]] },
-      cara: { cejas: 0.35 } }) }),
+      cara: { cejas: 0.35 } }) };
+  },
   // ── Lo hace solo el presentador ──
   // la mano abierta, baja, hacia lo que se explica (después del primer golpe de señalar o de presentar): el brazo
   // apunta al objetivo (`o.punto`) un poco más abajo, el codo a medio doblar y la palma hacia la sala. Se sostiene
   // la escena entera (`sostener`) mientras la otra mano acompaña lo que dice. `o.mirar`: mirarlo mientras dura
   indicar: (o) => {
-    const l = o.lado || 'D', s = l === 'D' ? 1 : -1;
-    return { dur: o.dur || 2.4, entra: 0.5, sale: 0.42, pose: brazo(l, o.apunta || [-0.35, 0, 0.45], [-0.6, 1.3, 0], [-0.2, 0, 0]),
-      manos: { [l]: 'abierta' }, mirar: o.mirar ? o.punto || null : null, cara: { cejas: 0.2 }, resto: 0.12,
+    const l = o.lado || 'D', s = l === 'D' ? 1 : -1, arriba = o.arriba || 0;
+    // (lo que está más arriba que el hombro: el brazo no sube más de ~11° y el codo se dobla más, la palma de costado)
+    return { dur: o.dur || 2.4, entra: 0.5, sale: 0.42, pose: brazo(l, o.apunta || [-0.35, 0, 0.45], [-0.6 - 0.35 * arriba, 1.3 - 0.3 * arriba, 0], [-0.2, 0, 0]),
+      manos: { [l]: arriba > 0.3 ? 'explica' : 'abierta' }, mirar: o.mirar ? o.punto || null : null, cara: { cejas: 0.2 }, resto: 0.12,
       // (el torso abierto hacia lo que indica y el peso en ese pie)
       cuerpo: { columna: [0, -0.06 * s, 0], peso: 0.5 * s },
       // dos toques hacia lo que indica (cada tanto y en cada frase que sigue hablando de eso: `acentuar`)
@@ -1047,10 +1074,14 @@ const ANDAR = { hombro: [-0.06, 0, 0.12], codo: [-0.75, 0.35, 0], muneca: [0, 0,
 // lugar
 const HONDO = 1.6;
 const ENTRAR_S = 0.8, SALIR_S = 0.45, AGACHARSE_S = 0.3, ASOMARSE_S = 0.45, GRACIAS_S = 0.15;
+// Lo más que la cabeza (con el cuello) se alza para mirar algo de arriba (rad de la mirada); el resto, los ojos
+const CABEZA_ARRIBA = 0.13;
 // El parpadeo: cierra en 60 ms y abre en 120 ms
 const CIERRA_S = 0.06, ABRE_S = 0.12;
-// La sonrisa callado: la de la foto, con los labios cerrados (hablando, la de siempre)
-const SONRISA_REPOSO = 1;
+// La sonrisa callado: la de la foto, amplia; los labios entreabiertos, con la fila de los dientes de arriba a la vista
+// (con los labios cerrados, y las cejas gruesas, la cara callada se leía seria o socarrona y no la del candidato). Los
+// labios cerrados quedan para los gestos que los piden (pensar, el corazón, escuchar) y las p, b y m del habla
+const SONRISA_REPOSO = 1, LABIOS_REPOSO = 0.38;
 
 // Ruido suave de una dimensión (gradientes de Perlin) con la semilla de `azar`: de −1 a 1, sin repetirse a la vista
 function crearRuido(azar) {
@@ -1133,6 +1164,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   // la casa de hablar: cuánto la mano derecha es la que manda (1) o la izquierda (0), la forma de la mano que manda y
   // los golpes (en la tónica de las palabras clave; cada 3–4 cambia la forma)
   let wHabla = 0, domD = 1, formaHabla = 0, golpesForma = 0, cadaForma = 3, ultimoGolpe = -9, golpesHabla = 0;
+  let golpesOtra = 0, cadaOtra = 2;   // (la otra mano de explicar: cada cuántos golpes del habla golpea también)
   const dedosGolpe = { I: { t0: -9, f: 0 }, D: { t0: -9, f: 0 } };
   // la mirada que deriva por la sala mientras habla (se queda en una «persona» 2–4 s) y el ladeo de las preguntas
   let deriva = 0, derivaP = 0, proxDeriva = 0, ladeo = 0;
@@ -1175,6 +1207,8 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   // entera); `casaDe` → `casaA` en 0.9 s
   let casaDe = 'junta', casaA = 'junta', tCasa = -9, proxCasa = 10 + azar() * 10;
   const qCasas = Object.fromEntries(Object.entries(CASAS).map(([n, c]) => [n, Object.fromEntries(Object.entries(c).map(([j, e]) => [j, qDe(j, e)]))]));
+  const qCasasMedio = Object.fromEntries(Object.entries(CASAS).map(([n, c]) => [n, Object.fromEntries(Object.entries(n === 'sueltos' ? c : casaMedio(c)).map(([j, e]) => [j, qDe(j, e)]))]));
+  let wMedio = 0;           // cuánto manda el plano medio (las manos de la casa más arriba), con 0.25 s de transición
   let asiento = 9;          // el asentamiento del peso al terminar de caminar (s desde que frenó)
 
   // ── Los pies: dónde está apoyado cada uno (en el mundo), hacia dónde mira y, si da un paso, su vuelo ──
@@ -1206,6 +1240,10 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   // cuánto baja la recta del hombro a la punta de los dedos respecto de la recta al punto: el índice apunta justo; la
   // palma (presentar) y la mano abierta (indicar), un poco por debajo, sin dejar de caer en lo que se muestra
   const BAJAR = { senalar: 0, presentar: 0.12, indicar: 0.05, mirar_maqueta: 0.05 };
+  // lo más que sube la recta del hombro a la mano abierta sobre la horizontal (rad, ≈ 11°): lo que está más arriba lo
+  // muestran el codo más doblado, la palma y la mirada (el brazo estirado en alto con la mano plana se lee como un saludo
+  // de brazo en alto). El índice (señalar) sí apunta arriba
+  const TOPE = { presentar: 0.2, indicar: 0.2, mirar_maqueta: 0.2 };
   function gesto(nombre, o = {}) {
     // (mostrar_panel: señalar el dato del panel, con las cejas y la boca de «fíjense»; sin un punto, presentar)
     if (!GESTOS[nombre] && ALIAS[nombre]) { const [g, extra] = ALIAS[nombre](o); return gesto(g, { ...o, ...extra }); }
@@ -1238,14 +1276,15 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       opciones.arriba = lim(Math.atan2(tmpV2.y, Math.hypot(tmpV2.x, tmpV2.z)) / 0.7, 0, 1);
       // primero el brazo apuntado; después, con el codo, la muñeca y la mano de ese gesto (la pose con la que apunta),
       // la punta del índice
-      const borrador = hacer({ ...opciones, apunta: apuntar(lado, o.punto, bajar), apuntaHasta: o.hasta ? apuntar(lado, o.hasta, bajar) : null });
+      const tope = TOPE[nombre] ?? null;
+      const borrador = hacer({ ...opciones, apunta: apuntar(lado, o.punto, bajar, null, null, tope), apuntaHasta: o.hasta ? apuntar(lado, o.hasta, bajar, null, null, tope) : null });
       const pose = borrador.poseApunta || borrador.pose || null;
       const forma = borrador.manoApunta || (typeof borrador.manos?.[lado] === 'string' ? borrador.manos[lado] : null);
-      opciones.apunta = apuntar(lado, o.punto, bajar, pose, forma);
-      opciones.apuntaHasta = o.hasta ? apuntar(lado, o.hasta, bajar, pose, forma) : null;
+      opciones.apunta = apuntar(lado, o.punto, bajar, pose, forma, tope);
+      opciones.apuntaHasta = o.hasta ? apuntar(lado, o.hasta, bajar, pose, forma, tope) : null;
       grupo.rotation.y = r0;
       grupo.updateMatrixWorld(true);
-      apuntaA = { lado, bajar, pose, forma, puntos: [[o.punto.clone(), opciones.apunta]] };
+      apuntaA = { lado, bajar, pose, forma, tope, puntos: [[o.punto.clone(), opciones.apunta]] };
       if (o.hasta) apuntaA.puntos.push([o.hasta.clone(), opciones.apuntaHasta]);
     }
     const nuevo = hacer(opciones);
@@ -1314,7 +1353,9 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     const ret = (j) => propio[j] ?? propio[familia(j)] ?? RETRASO[familia(j)] ?? 0;
     c.ret = Object.fromEntries(ARTICULACIONES.map((j) => [j, ret(j)]));
     c.retDedos = propio.dedos ?? RETRASO.dedos;
-    const mas = Math.max(0, c.retDedos, ...c.articulaciones.map((j) => c.ret[j]));
+    // (`dedosSale`: el retraso de los dedos al soltar, si es otro: la mano que saluda sigue abierta hasta que bajó)
+    c.retDedosSale = propio.dedosSale ?? c.retDedos;
+    const mas = Math.max(0, c.retDedos, c.retDedosSale, ...c.articulaciones.map((j) => c.ret[j]));
     const menos = Math.min(0, ...c.articulaciones.map((j) => c.ret[j]));
     c.retMax = mas;
     c.vida = c.dur + mas;
@@ -1334,7 +1375,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       return sig?.art ? [uno, { ...uno, art: sig.art, amp: sig.amp, atras: sig.retraso ?? 0.085 }] : [uno];
     });
     // la mirada: el plan (mira el punto un rato y vuelve a la sala, con otro vistazo cada tanto). 'recorre': mira la
-    // obra saltando entre puntos de ella (cada 0.6–0.9 s), asiente a la mitad y a los 2.2 s vuelve a la sala (0.8 s), en
+    // obra saltando entre puntos de ella (cada 0.5–0.8 s), asiente a la mitad y a los 1.2 s vuelve a la sala (1.1 s), en
     // ciclo. `resto`: mirando a la sala, la cara se queda un poco (rad) hacia el punto (el torso sigue abierto a él)
     if (c.mirar) {
       const m = c.mirada ?? { objetivo: 0.8 };
@@ -1456,8 +1497,9 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   // El ángulo del hombro (Euler 'XZY') que deja el brazo apuntando a `punto`; `bajar` lo baja (presentar: la palma
   // abierta hacia lo que se muestra, no el dedo). Con `pose` (el codo y la muñeca del gesto) y `forma` (la mano), lo
   // que apunta es la recta del hombro a la punta del índice, no el brazo: el codo, la muñeca y la mano la desvían
-  // (señalar con el brazo apuntado erraba unos 8°: 50 px a tamaño de presentación)
-  function apuntar(lado, punto, bajar = 0, pose = null, forma = null) {
+  // (señalar con el brazo apuntado erraba unos 8°: 50 px a tamaño de presentación). `tope`: lo más que sube la recta
+  // sobre la horizontal (rad; la mano abierta: lo de más arriba no se alcanza con el brazo en alto)
+  function apuntar(lado, punto, bajar = 0, pose = null, forma = null, tope = null) {
     const h = huesos[`hombro${lado}`];
     grupo.updateMatrixWorld(true);
     const desdeH = new THREE.Vector3().setFromMatrixPosition(h.matrixWorld);
@@ -1466,6 +1508,10 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     tmpM.copy(h.parent.matrixWorld).invert();
     d.transformDirection(tmpM);
     if (bajar) { d.y -= bajar * Math.hypot(d.x, d.z); d.normalize(); }
+    if (tope !== null && d.y > Math.sin(tope)) {
+      const hz = Math.max(1e-6, Math.hypot(d.x, d.z)), k = Math.cos(tope) / hz;
+      d.set(d.x * k, Math.sin(tope), d.z * k);
+    }
     // nunca hacia atrás del cuerpo ni cruzado por delante del pecho
     d.z = Math.max(d.z, 0.15);
     d.x = Math.max(d.x, 0.08);
@@ -1473,16 +1519,18 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     const euler = (v) => [Math.atan2(-v.z, -v.y), 0, Math.asin(Math.max(-1, Math.min(1, v.x)))];
     const v = pose ? puntaEnHombro(lado, pose, forma) : null;
     if (!v) return euler(d);
-    // la dirección a pedirle al hombro para que la punta caiga en la recta: unas vueltas de corrección
+    // la dirección a pedirle al hombro para que la punta caiga en la recta: unas vueltas de corrección. El brazo nunca
+    // va detrás del cuerpo: si la recta lo pide (lo que apunta está muy al costado), queda al costado, lo más cerca que
+    // se puede (una sola solución que cambia de a poco con el punto: antes saltaba al brazo apuntado y el brazo subía o
+    // bajaba 30° de golpe en un sostén cuando la mirada movía el pecho)
     const pedido = d.clone(), w = new THREE.Vector3(), q = new THREE.Quaternion(), corr = new THREE.Quaternion();
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 8; i++) {
       qDe(`hombro${lado}`, euler(pedido), q);
       w.copy(v).applyQuaternion(q);
       corr.setFromUnitVectors(w, d);
       pedido.applyQuaternion(corr).normalize();
+      if (pedido.z < 0.05) { const k = Math.sqrt((1 - 0.05 * 0.05) / Math.max(1e-9, pedido.x * pedido.x + pedido.y * pedido.y)); pedido.set(pedido.x * k, pedido.y * k, 0.05); }
     }
-    // (si la corrección deja el brazo detrás del cuerpo, lo que apunta está muy al costado: mejor el brazo apuntado)
-    if (pedido.z < 0.02) return euler(d);
     return euler(pedido);
   }
   // Hacia dónde queda la punta del índice desde el hombro (en el espacio del hombro, sin girar) con el codo y la muñeca
@@ -1495,7 +1543,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     if (pose[`codo${lado}`]) qDe(`codo${lado}`, pose[`codo${lado}`], c.quaternion);
     if (pose[`muneca${lado}`]) qDe(`muneca${lado}`, pose[`muneca${lado}`], m.quaternion);
     const v0 = MANOS[forma]?.[0] ?? 0;
-    base.rotation.set(-0.14 * (1 - v0), 0, -1.5 * v0);
+    base.rotation.set(ABRE[0] * (1 - v0), 0, -1.5 * v0);
     punta.rotation.set(0, 0, -1.3 * v0);
     h.updateMatrixWorld(true);
     const v = h.worldToLocal(punta.localToWorld(new THREE.Vector3(0, -0.044, 0)));
@@ -1549,7 +1597,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     if (hablando) terminarFrase();
     hablando = false;
   }
-  // al terminar de decir algo: un asentimiento chico (y la sonrisa cerrada, que vuelve sola)
+  // al terminar de decir algo: un asentimiento chico (y la sonrisa de reposo, que vuelve sola)
   function terminarFrase() {
     golpe('cabeza', 0, 0.04, 0.15, 0.3);
     golpe('cuello', 0, 0.015, 0.15, 0.3);
@@ -1647,6 +1695,15 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       golpe(`hombro${l}`, 0, 0.03 * f, 0.12, 0.25);
       dedosGolpe[l].t0 = t;
       dedosGolpe[l].f = f;
+      // (el gesto de las dos manos, explicar: cada 2–3 golpes la otra también, un poco después y más chico; si no, la
+      // otra mano quedaba quieta toda la frase)
+      if (clip?.batutaOtra && ++golpesOtra >= cadaOtra) {
+        const o = otro(l);
+        golpe(`codo${o}`, 0, 0.14 * f, 0.12, 0.25, t + 0.06);
+        golpe(`muneca${o}`, 0, 0.07 * f, 0.12, 0.25, t + 0.06);
+        golpesOtra = 0;
+        cadaOtra = 2 + (azar() < 0.5 ? 1 : 0);
+      }
     }
     if (++golpesForma >= cadaForma) {
       formaHabla = (formaHabla + 1) % FORMAS_HABLA.length;
@@ -1897,12 +1954,13 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     if (p.modo === 'objetivo') return true;
     if (p.modo === 'sigue') return tau % 3 < 2.4;
     if (p.modo === 'recorre') {
-      const ciclo = Math.floor(tau / 3), fase = tau - 3 * ciclo;
+      // (1.2 s la obra y 1.1 s la sala: más tiempo mirando la obra, la cara queda fuera de la sala; de lado y hacia abajo)
+      const ciclo = Math.floor(tau / 2.3), fase = tau - 2.3 * ciclo;
       if (ciclo !== p.ciclo) { p.ciclo = ciclo; p.asintio = false; }
-      if (fase >= 2.2) return false;
+      if (fase >= 1.2) return false;
       // salta entre puntos de la obra (alrededor del suyo) y a la mitad asiente
-      if (tau >= p.proxSalto) { p.ofs.set((azar() * 2 - 1) * 0.5, (azar() * 2 - 1) * 0.2, 0); p.proxSalto = tau + 0.6 + azar() * 0.3; }
-      if (fase >= 1.1 && !p.asintio) { p.asintio = true; golpe('cabeza', 0, 0.05, 0.15, 0.3); golpe('cuello', 0, 0.02, 0.15, 0.3); }
+      if (tau >= p.proxSalto) { p.ofs.set((azar() * 2 - 1) * 0.5, (azar() * 2 - 1) * 0.2, 0); p.proxSalto = tau + 0.5 + azar() * 0.3; }
+      if (fase >= 0.6 && !p.asintio) { p.asintio = true; golpe('cabeza', 0, 0.05, 0.15, 0.3); golpe('cuello', 0, 0.02, 0.15, 0.3); }
       return true;
     }
     if (tau < p.objetivo) return true;
@@ -1981,9 +2039,15 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     }
     {
       const u = suave((t - tCasa) / 0.9);
-      const de = qCasas[casaDe], a = qCasas[casaA];
-      if (u < 1 && de) for (const j of Object.keys(de)) objetivo[j].copy(de[j]).slerp(a[j], u);
-      else if (casaA !== 'junta') for (const j of Object.keys(a)) objetivo[j].copy(a[j]);
+      wMedio += ((api.plano === 'medio' ? 1 : 0) - wMedio) * acercar(8, dt);
+      const de = qCasas[casaDe] || qCasas.junta, a = qCasas[casaA] || qCasas.junta;
+      if (u < 1 || casaA !== 'junta' || wMedio > 0.001) {
+        const deM = qCasasMedio[casaDe] || qCasasMedio.junta, aM = qCasasMedio[casaA] || qCasasMedio.junta;
+        for (const j of Object.keys(a)) {
+          objetivo[j].copy(de[j]).slerp(a[j], u);
+          if (wMedio > 0.001) objetivo[j].slerp(tmpQ.copy(deM[j]).slerp(aM[j], u), wMedio);
+        }
+      }
     }
 
     // ── el reposo vivo: el peso en una pierna, la respiración y la cabeza (sin nada de eso con movimiento reducido) ──
@@ -2080,7 +2144,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       const ap = c.apuntaA;
       if (ap) ap.puntos.forEach(([pt], k) => {
         if (!c.aim[k]?.length) return;
-        qDe(`hombro${ap.lado}`, apuntar(ap.lado, pt, ap.bajar, ap.pose, ap.forma), tmpQ3);
+        qDe(`hombro${ap.lado}`, apuntar(ap.lado, pt, ap.bajar, ap.pose, ap.forma, ap.tope), tmpQ3);
         for (const qq of c.aim[k]) qq.copy(tmpQ3);
       });
       for (const j of c.articulaciones) {
@@ -2209,13 +2273,15 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       yawObj = recortado;
     }
     hT[hI] = t; hY[hI] = yawObj; hP[hI] = pitchObj; hI = (hI + 1) % HIST;
-    // los ojos ya; la cabeza y el cuello 0.1 s después; la columna y la cadera, 0.2 s
-    const [yC, pC] = miradaDe(0.1);
+    // los ojos ya; la cabeza y el cuello 0.1 s después; la columna y la cadera, 0.2 s. Hacia arriba la cabeza sube a lo
+    // sumo 0.13 rad y el resto lo hacen los ojos (la cabeza muy alzada, en 3/4, perdía la línea de la mandíbula: la cara
+    // y el cuello en un solo bloque, un muñeco sobre un palo)
+    const [yC, pC0] = miradaDe(0.1), pC = Math.min(pC0, CABEZA_ARRIBA);
     // (el torso que gira con el gesto no se lleva la cara: el cuello y la cabeza lo descuentan)
     sumar('cuello', -pC * 0.35, yC * 0.3 - 0.5 * torsion, 0);
     sumar('cabeza', -pC * 0.55, yC * 0.4 - 0.5 * torsion, 0);
     {
-      const [yT, pT] = miradaDe(0.2);
+      const [yT, pT0] = miradaDe(0.2), pT = Math.min(pT0, CABEZA_ARRIBA);
       sumar('columna', -pT * 0.1, yT * 0.18, 0);
       sumar('cadera', 0, yT * 0.12, 0);
     }
@@ -2289,7 +2355,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     // ── las manos: la forma del gesto (los dedos un poco después que la muñeca; el acento del sostenido), la del gesto
     // anterior mientras este entra, la de hablar (la que manda con su forma, la otra relajada) o la de la casa; en un
     // golpe del habla, los dedos se cierran un poco ──
-    const pesoDedos = clip ? pesoBase(clip, tClip - clip.retDedos) : 0;
+    const pesoDedos = clip ? Math.max(0, entrando(clip, tClip - clip.retDedos)) * saliendo(clip, tClip - clip.retDedosSale) : 0;
     const tDedos = clip ? tClip - clip.retDedos : 0;
     for (const l of LADOS) {
       let forma = MANOS.relajada;
@@ -2324,7 +2390,8 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       }
     } else if (enParpadeo > -0.5) { enParpadeo -= dt; if (enParpadeo <= -0.2) { enParpadeo = 0; parpadeos++; } }
     // la boca: hablando, la de la sílaba de ahora (con los labios que se cierran en la p, la b y la m, y en las pausas);
-    // callado, la sonrisa cerrada (los labios juntos), salvo lo que abra el gesto. La sonrisa en reposo, cálida
+    // callado, la sonrisa de la foto con los dientes de arriba (los labios entreabiertos: LABIOS_REPOSO), salvo lo que
+    // pida o abra el gesto. La sonrisa en reposo, cálida
     const minAbrir = (clipCara?.abrir || 0) * wClip;
     if (boca) {
       abrir = Math.max(boca[0], minAbrir);
@@ -2334,14 +2401,16 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       abrir += (minAbrir - abrir) * acercar(26, dt);
       // (lo ancho de la boca que pida el gesto: «¡así de grande!», más redonda)
       ancho += ((clipCara?.ancho !== undefined ? 1 + (clipCara.ancho - 1) * wClip : 1) - ancho) * acercar(20, dt);
-      const labiosLibre = minAbrir > 0.02 ? 0 : 1;
+      const labiosLibre = minAbrir > 0.02 ? 0 : LABIOS_REPOSO;
       const labiosObj = clipCara?.labios !== undefined ? labiosLibre + (clipCara.labios - labiosLibre) * wClip : labiosLibre;
       labios += (labiosObj - labios) * acercar(12, dt);
     }
     const sonrisaLibre = hablando ? 1 : SONRISA_REPOSO;
     const sonrisaObj = clipCara?.sonrisa !== undefined ? sonrisaLibre + (clipCara.sonrisa - sonrisaLibre) * wClip : sonrisaLibre;
     sonrisa += (sonrisaObj - sonrisa) * acercar(6, dt);
-    cara.boca.poner({ abrir, ancho, sonrisa: Math.max(0, Math.min(1, sonrisa - 0.12 * abrir)), labios: Math.max(0, Math.min(1, labios)) });
+    // (la boca redonda, la o y la u del habla o el «¡así de grande!», estira menos las comisuras)
+    const redonda = Math.max(0, 1 - ancho);
+    cara.boca.poner({ abrir, ancho, sonrisa: Math.max(0, Math.min(1, sonrisa - 0.12 * abrir - 0.6 * redonda)), labios: Math.max(0, Math.min(1, labios)) });
     // las cejas: un pico que decae (la primera tónica de la frase y las cifras, un golpe, un gesto) y lo del gesto, cada
     // una por su lado (`cejasI`, `cejasD`: una más alta que la otra al pensar o al preguntar)
     cejasPico *= 1 - acercar(2.2, dt);
@@ -2405,9 +2474,8 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   }
 
   function ponerMano(m, v) {
-    const abre = [-0.14, -0.04, 0.05, 0.14];
     m.dedos.forEach(([b, p], i) => {
-      b.rotation.set(abre[i] * (1 - v[i]), 0, -1.5 * v[i]);
+      b.rotation.set(ABRE[i] * (1 - v[i]), 0, -1.5 * v[i]);
       p.rotation.set(0, 0, -1.3 * v[i]);
     });
     m.ponerPulgar(v[4]);

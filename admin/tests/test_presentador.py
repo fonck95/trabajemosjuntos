@@ -18,6 +18,10 @@
   polo, la mano se apoya en el pecho, las manos se toman al escuchar y la despedida sigue saludando mientras se agacha;
   los sostenidos siguen vivos y aflojan, pensar termina con su «¡ya está!», el dedo de contar aparece enseguida y en el
   rótulo los gestos son con la cara.
+* Lo que no se tiene que leer: ningún brazo estirado en alto con la mano plana (ni la mano abierta hacia lo que está muy
+  arriba), ningún puño en alto al saludar, ningún antebrazo dentro del torso, el índice nunca en la muñeca del reloj, el
+  brazo que apunta sin saltos, callado la sonrisa con los dientes de la foto, las manos del plano medio sobre el corte y
+  la cabeza que no se alza de más.
 * El diseño y la luz: las medidas siguen en su rango; la boca con los labios (cerrada, a medias o con cualquier valor)
   y el nivel de la cara (de 0 con la cabeza grande a 1 con la chica, y de vuelta a las tiras de siempre) no dejan nada sin
   número; lo que no recibe luz empieza sin teñir. Las luces siguen a la de la maqueta (`lucesDe`): sin aviso, las de
@@ -373,13 +377,14 @@ def test_el_diseno_del_personaje_y_la_luz(tmp_path):
     assert L["tarde"]["lado"] == 1 and L["tarde"]["luzI"] == 1.9 and L["tarde"]["contraI"] == 0 and L["tarde"]["luz"] != "ffffff", L["tarde"]
     # al atardecer (el tema oscuro): el relleno tibio y algo menos de luz
     assert L["atardecer"]["relleno"] == "ffd9b0" and L["atardecer"]["luzI"] < 1.9 and L["atardecer"]["contraI"] == 0, L["atardecer"]
-    # de noche: desde el lado de la luna, la principal y la hemisférica bajan (al 60 % del piso), el relleno tibio a 0.5 y
-    # entra el contraluz frío; sin `oscuridad`, la hora la dice; a medio camino, a medio camino (sin saltos)
+    # de noche: desde el lado de la luna, la principal y la hemisférica bajan (al 54 % del piso), el relleno tibio sube a
+    # 0.85 y entra un contraluz frío suave (la piel sigue siendo piel: no gris malva); sin `oscuridad`, la hora la dice; a
+    # medio camino, a medio camino (sin saltos)
     n = L["noche"]
-    assert n["lado"] == -1 and abs(n["luzI"] - 1.9 * 0.55 * 0.6) < 0.01 and abs(n["hemiI"] - 1.15 * 0.55 * 0.6) < 0.01, n
-    assert n["relleno"] == "ffd9b0" and n["rellenoI"] == 0.5 and n["contraI"] == 0.8, n
+    assert n["lado"] == -1 and abs(n["luzI"] - 1.9 * 0.55 * 0.54) < 0.01 and abs(n["hemiI"] - 1.15 * 0.55 * 0.54) < 0.01, n
+    assert n["relleno"] == "ffd9b0" and n["rellenoI"] == 0.85 and n["contraI"] == 0.25, n
     assert L["porHora"] == n
-    assert n["luzI"] < L["medio"]["luzI"] < 1.9 * 0.55 and L["medio"]["contraI"] == 0.4, L["medio"]
+    assert n["luzI"] < L["medio"]["luzI"] < 1.9 * 0.55 and L["medio"]["contraI"] == 0.125, L["medio"]
 
 
 NODE_GESTOS = r"""import { register } from 'node:module';
@@ -480,17 +485,18 @@ for (const g of LISTA) {
   for (let i = 1; i < d.length - 1; i++) if (d[i] < d[i - 1] && d[i] <= d[i + 1] && d[i] < 0.12) min.push(r3(d[i]));
   r.construir = min;
 }
-// enumerar: el dedo nuevo aparece enseguida (cuando se pasa a la mitad de estirado) y el índice de la otra mano la toca
+// enumerar: el dedo nuevo aparece enseguida (cuando se pasa a la mitad de estirado) y la otra mano la acompaña sin
+// tocarla: el índice derecho nunca va a la muñeca izquierda, la del reloj («se acabó el tiempo»)
 {
   const x = correr([[0, 'enumerar', { n: 1, sostener: true }], [2, 'enumerar', { n: 2, seguir: true }], [3.5, 'enumerar', { n: 3, seguir: true }]], { T: 4.5 });
   const aparece = [2, 3.5].map((t0, k) => { const i = x.serie.findIndex((s) => s.t >= t0 && s.dedos[k + 1] < 0.5); return r3(x.serie[i].t - t0); });
-  const seg = new THREE.Line3(), cp = new THREE.Vector3();
-  const toque = Math.min(...x.serie.slice(60).map((s) => { seg.set(s.mI, s.pI); seg.closestPointToPoint(s.iD, true, cp); return cp.distanceTo(s.iD); }));
-  r.enumerar = { aparece, toque: r3(toque), sigue: x.estado.gesto };
+  const reloj = Math.min(...x.serie.slice(20).map((s) => s.iD.distanceTo(s.mI)));
+  r.enumerar = { aparece, reloj: r3(reloj), sigue: x.estado.gesto };
 }
 // presentar con `hasta`: barre la palma de un punto al otro (más largo); mostrar_panel señala
 {
-  const desde = new THREE.Vector3(-2.7, 3.4, 0.3), hasta = new THREE.Vector3(-1.5, 3.4, 0.3);
+  // (de un punto lejano sobre el hombro, la fila de los años, a uno a la altura del hombro: el cronograma)
+  const desde = new THREE.Vector3(-2.7, 2.2, 0.3), hasta = new THREE.Vector3(-1.2, 1.8, 1.2);
   const x = correr([[0, 'presentar', { punto: desde, hasta, variante: 0 }]], { rumbo: -0.35, T: 2.5 });
   p.grupo.updateMatrixWorld(true);
   inv.copy(p.grupo.matrixWorld).invert();
@@ -535,11 +541,196 @@ def test_los_gestos_de_mostrar_y_explicar(tmp_path):
     assert r["crecer"] >= 0.35, r["crecer"]
     assert len(r["construir"]) >= 3 and all(d < 0.09 for d in r["construir"][:3]), r["construir"]
     e = r["enumerar"]
-    assert all(t <= 0.12 for t in e["aparece"]) and e["toque"] < 0.08 and e["sigue"] == "enumerar", e
+    assert all(t <= 0.12 for t in e["aparece"]) and e["reloj"] >= 0.15 and e["sigue"] == "enumerar", e
     b = r["barrido"]
     # (al llegar la palma está en el primero; al terminar de barrer, mucho más cerca del segundo)
     assert b["dur"] >= 3.4 and b["antes"][0] < b["antes"][1] and b["despues"][1] < b["antes"][1] - 8, b
     assert r["mostrarPanel"] == "senalar"
+
+
+NODE_LECTURAS = r"""import { register } from 'node:module';
+import { pathToFileURL } from 'node:url';
+const [cargador, dir] = process.argv.slice(2);
+register(pathToFileURL(cargador).href);
+const THREE = await import('three');
+const { crearPersonaje } = await import(pathToFileURL(`${dir}/personaje.js`).href);
+const { crearAnimador, GESTOS_AGENTE, VARIANTES } = await import(pathToFileURL(`${dir}/animador.js`).href);
+const p = crearPersonaje({ documento: null });
+const A = p.medidas.alto, H = p.huesos;
+const mallas = (o) => o.children.filter((c) => c.isMesh && c.geometry?.attributes?.position?.count > 200);
+const torso = [...mallas(H.columna), ...mallas(H.cadera)];
+for (const m of torso) { m.material = m.material.clone(); m.material.side = THREE.DoubleSide; }
+const rc = new THREE.Raycaster();
+const DIRS = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map((d) => new THREE.Vector3(...d));
+const dentro = (v) => DIRS.filter((d) => { rc.set(v, d); return rc.intersectObjects(torso, false).length % 2 === 1; }).length >= 3;
+const W = (o) => new THREE.Vector3().setFromMatrixPosition(o.matrixWorld);
+const palma = { I: p.manos.I.grupo.children.find((c) => c.isMesh), D: p.manos.D.grupo.children.find((c) => c.isMesh) };
+const dedosDe = (l) => p.manos[l].dedos.map(([b]) => -b.rotation.z / 1.5).reduce((x, y) => x + y, 0) / 4;
+const r3 = (x) => Math.round(x * 1000) / 1000;
+// (cada animador nuevo parte del personaje como se armó: la cadera y el cuerpo en su lugar)
+const cadera0 = H.cadera.position.clone(), cuerpo0 = p.cuerpo.position.clone();
+function nuevo(rumbo = 0, plano = null) {
+  H.cadera.position.copy(cadera0); p.cuerpo.position.copy(cuerpo0);
+  let k = 7;
+  const a = crearAnimador(p, { azar: () => ((k = (k * 16807) % 2147483647) / 2147483647) });
+  a.camara = { position: new THREE.Vector3(0, 0.86 * A, 8) };
+  p.grupo.position.set(0, 0, 0); p.grupo.rotation.set(0, 0, 0);
+  if (plano) a.plano = plano;
+  a.girar(rumbo, { ya: true });
+  for (let i = 0; i < 36; i++) a.actualizar(1 / 60);
+  return a;
+}
+// cada cuadro de un brazo: la muñeca sobre el hombro, lo que dobla el codo (°), su elevación (°) y los dedos
+function brazo(l) {
+  const s = W(H[`hombro${l}`]), c = W(H[`codo${l}`]), m = W(H[`muneca${l}`]);
+  const flex = (Math.acos(Math.min(1, c.clone().sub(s).normalize().dot(m.clone().sub(c).normalize()))) * 180) / Math.PI;
+  const elev = (Math.asin(Math.max(-1, Math.min(1, m.clone().sub(s).normalize().y))) * 180) / Math.PI;
+  return { sobre: m.y - s.y, flex, elev, dedos: dedosDe(l), s, c, m };
+}
+const enAlto = (b) => b.sobre > 0.15 && b.flex < 50 && b.dedos < 0.15;
+const r = { alto: {}, antebrazo: {}, reloj: {}, puno: {} };
+const PUNTO = new THREE.Vector3(-1.6, 1.45, 0.6);
+for (const g of GESTOS_AGENTE) for (const rumbo of [0, -0.5]) for (let v = 0; v < (VARIANTES[g] || 1); v++) {
+  const a = nuevo(rumbo);
+  const apunta = ['senalar', 'presentar', 'mostrar_panel', 'mirar_maqueta'].includes(g);
+  const d = a.gesto(g, { punto: apunta ? PUNTO : undefined, variante: v, n: 3 });
+  const T = Math.min(4, Number.isFinite(d) ? d + 0.3 : 4), clave = `${g}#${v}@${rumbo}`;
+  let alto = 0, ante = 0, reloj = 9, puno = 0;
+  for (let f = 0; f < T * 60; f++) {
+    a.actualizar(1 / 60);
+    p.grupo.updateMatrixWorld(true);
+    for (const l of ['I', 'D']) {
+      const b = brazo(l);
+      if (enAlto(b)) alto++;
+      if (['saludar', 'despedirse'].includes(g) && palma[l].getWorldPosition(new THREE.Vector3()).y > b.s.y - 0.1 && b.dedos > 0.15) puno++;
+      if (f % 6 === 0 && f > 20) { let n = 0; for (let i = 0; i <= 10; i++) if (dentro(b.c.clone().lerp(b.m, i / 10))) n++; ante = Math.max(ante, n); }
+    }
+    // (el índice derecho estirado nunca va a la muñeca izquierda, la del reloj)
+    const punta = p.manos.D.dedos[0][1].localToWorld(new THREE.Vector3(0, -0.044, 0));
+    if (f > 20 && -p.manos.D.dedos[0][0].rotation.z / 1.5 < 0.3) reloj = Math.min(reloj, punta.distanceTo(W(H.munecaI)));
+  }
+  r.alto[clave] = alto; r.antebrazo[clave] = ante; r.reloj[clave] = r3(reloj); if (puno) r.puno[clave] = puno;
+}
+// pensar: el brazo que sostiene el codo va por delante del vientre (el húmero, a lo sumo como en reposo)
+{
+  const a = nuevo();
+  a.gesto('pensar', { sostener: true });
+  let hum = 0;
+  for (let f = 0; f < 8 * 60; f++) {
+    a.actualizar(1 / 60);
+    if (f % 30) continue;
+    p.grupo.updateMatrixWorld(true);
+    const b = brazo('I');
+    let n = 0; for (let i = 0; i <= 10; i++) if (dentro(b.s.clone().lerp(b.c, i / 10))) n++;
+    hum = Math.max(hum, n);
+  }
+  r.pensarHumero = hum;
+}
+// la mano abierta hacia lo que está muy arriba (indicar, presentar): nunca el brazo en alto
+r.arriba = {};
+for (const g of ['indicar', 'presentar']) for (const [rumbo, pt] of [[0.35, [1.8, 2.3, 0.6]], [0.35, [2.5, 3.4, 0.6]], [-0.35, [-0.9, 2.8, 0.6]]]) {
+  const a = nuevo(rumbo);
+  a.gesto(g, { punto: new THREE.Vector3(...pt), sostener: true });
+  let peor = -9, alto = 0;
+  for (let f = 0; f < 3 * 60; f++) {
+    a.actualizar(1 / 60);
+    if (f < 60) continue;
+    p.grupo.updateMatrixWorld(true);
+    for (const l of ['I', 'D']) { const b = brazo(l); peor = Math.max(peor, b.sobre); if (enAlto(b)) alto++; }
+  }
+  r.arriba[`${g}@${pt}`] = { sobre: r3(peor), alto };
+}
+// apuntar sostenido, hablando (la mirada mueve el pecho): la elevación del brazo cambia de a poco (nunca 30° de golpe)
+r.salto = {};
+for (const [g, rumbo, pt] of [['indicar', 0, [-3, 1.6, 1]], ['senalar', 0, [-2.5, 1.0, 0]], ['presentar', 0, [-3.5, 3.0, 0]], ['indicar', 0.35, [-2.5, 2.2, 0]]]) {
+  const a = nuevo(rumbo);
+  const P = new THREE.Vector3(...pt);
+  a.gesto(g, { punto: P, sostener: true });
+  a.hablar(5, { texto: 'Aquí ven el puesto de salud. Atiende a toda la vereda. Tiene consultorio y farmacia' });
+  p.grupo.updateMatrixWorld(true);
+  const l = (() => { const v = P.clone(); p.grupo.worldToLocal(v); return v.x >= 0 ? 'I' : 'D'; })();
+  let antes = null, peor = 0;
+  for (let f = 0; f < 5 * 60; f++) {
+    a.actualizar(1 / 60);
+    if (f < 60) continue;
+    p.grupo.updateMatrixWorld(true);
+    const e = brazo(l).elev;
+    if (antes !== null) peor = Math.max(peor, Math.abs(e - antes));
+    antes = e;
+  }
+  r.salto[`${g}@${pt}`] = r3(peor);
+}
+// callado en reposo, la sonrisa de la foto con los dientes de arriba (los labios entreabiertos); pensando, cerrada
+{
+  const a = nuevo();
+  a.hablar(1, { texto: 'Hola a todos.' });
+  for (let i = 0; i < 180; i++) a.actualizar(1 / 60);
+  r.labiosReposo = a.estado().boca.labios;
+  a.gesto('pensar', { sostener: true });
+  for (let i = 0; i < 90; i++) a.actualizar(1 / 60);
+  r.labiosPensar = a.estado().boca.labios;
+}
+// el plano medio (cerca, el busto): las manos de la casa, de invitar, de escuchar y de calmar quedan sobre el corte
+{
+  const CORTE_MEDIO = 0.4 * A;
+  r.medio = {};
+  for (const g of [null, 'invitar', 'escuchar', 'calmar']) {
+    const a = nuevo(0, 'medio');
+    if (g) a.gesto(g, { sostener: g !== 'calmar' });
+    for (let i = 0; i < 90; i++) a.actualizar(1 / 60);
+    p.grupo.updateMatrixWorld(true);
+    // lo más bajo de las dos manos (la palma y la punta de los dedos), sobre el corte, en fracciones del alto
+    const bajo = Math.min(...['I', 'D'].flatMap((l) => [palma[l].getWorldPosition(new THREE.Vector3()).y,
+      ...p.manos[l].dedos.map(([, q]) => q.localToWorld(new THREE.Vector3(0, -0.03, 0)).y)]));
+    r.medio[g || 'casa'] = r3((bajo - CORTE_MEDIO) / A);
+  }
+}
+// mirando algo de arriba, la cabeza se alza poco (lo demás, los ojos)
+{
+  const a = nuevo(0.3);
+  a.mirarA(new THREE.Vector3(-1, 4.5, 0.6));
+  for (let i = 0; i < 90; i++) a.actualizar(1 / 60);
+  p.grupo.updateMatrixWorld(true);
+  const fwd = new THREE.Vector3(0, 0, 1).transformDirection(H.cabeza.matrixWorld);
+  r.cabezaArriba = r3(Math.asin(fwd.y));
+}
+p.liberar();
+console.log(JSON.stringify(r));
+"""
+
+
+@requiere_node
+def test_los_gestos_no_se_leen_mal(tmp_path):
+    """Lo que no se tiene que leer (los jueces de animación y de diseño): ningún gesto deja el brazo estirado en alto con
+    la mano plana (se leería como un saludo de brazo en alto; el saludo y la despedida van con la palma a la sala y la mano
+    ya abierta al subir: nunca un puño en alto), la mano abierta hacia lo que está muy arriba no sube más de ~11°, ningún
+    antebrazo queda dentro del torso (pensar sostiene el codo por delante del vientre), el índice derecho nunca va a la
+    muñeca del reloj (contar no dice «se acabó el tiempo»), el brazo que apunta no salta de una solución a otra, callado
+    sonríe con los dientes de arriba como en la foto, en el plano medio las manos quedan sobre el corte y la cabeza no se
+    alza de más para mirar arriba."""
+    (tmp_path / "cargador.mjs").write_text(CARGADOR, encoding="utf-8")
+    (tmp_path / "prueba.mjs").write_text(NODE_LECTURAS, encoding="utf-8")
+    p = subprocess.run(["node", str(tmp_path / "prueba.mjs"), str(tmp_path / "cargador.mjs"), str(PRESENTADOR)],
+                       capture_output=True, text=True, timeout=300, cwd=ADMIN,
+                       env={"PATH": "/usr/bin:/bin:/usr/local/bin:/opt/node22/bin", "VENDOR_THREE": str(VENDOR_THREE)})
+    assert p.returncode == 0, p.stderr
+    import json
+    r = json.loads(p.stdout.strip().splitlines()[-1])
+    # el brazo en alto (la muñeca 0.15 sobre el hombro, el codo casi recto y la mano plana): ninguno, salvo el saludo y la
+    # despedida, que son eso con la palma a la sala; y esos dos nunca suben la mano cerrada
+    altos = {k: v for k, v in r["alto"].items() if v and not k.startswith(("saludar", "despedirse"))}
+    assert altos == {}, altos
+    assert r["puno"] == {}, r["puno"]
+    for k, x in r["arriba"].items():
+        assert x["alto"] == 0 and x["sobre"] < 0.1, (k, x)
+    # ningún antebrazo dentro del torso; pensar, el brazo de abajo por delante (el húmero, como en reposo)
+    assert all(v <= 3 for v in r["antebrazo"].values()), {k: v for k, v in r["antebrazo"].items() if v > 3}
+    assert r["pensarHumero"] <= 7, r["pensarHumero"]
+    assert all(v >= 0.15 for v in r["reloj"].values()), {k: v for k, v in r["reloj"].items() if v < 0.15}
+    assert all(v < 3 for v in r["salto"].values()), r["salto"]
+    assert 0.25 <= r["labiosReposo"] <= 0.5 and r["labiosPensar"] > 0.9, (r["labiosReposo"], r["labiosPensar"])
+    assert r["medio"]["casa"] >= 0.04 and r["medio"]["invitar"] >= 0.1 and min(r["medio"].values()) > 0.02, r["medio"]
+    assert r["cabezaArriba"] < 0.25, r["cabezaArriba"]
 
 
 NODE_REACCIONES = r"""import { register } from 'node:module';

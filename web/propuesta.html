@@ -293,6 +293,10 @@ a.chip:hover { border-color: var(--ink); }
    círculo con el color del capítulo, encima del subtítulo, bajo el panel o acoplado a un extremo del subtítulo, que le
    hace lugar (presentador.js pone la clase y el diámetro más 10 px en --pres-rotulo); el texto se reacomoda */
 .presentador.rotulo { z-index: 10; border-radius: 50%; background: color-mix(in srgb, var(--mc, var(--accent)) 12%, #fff); box-shadow: 0 0 0 3px var(--mc, var(--accent)), 0 6px 16px rgba(0, 0, 0, 0.25); filter: none; }
+/* en el tema oscuro, el disco oscuro y tibio, con el color del capítulo (casi blanco era lo más brillante de la mitad de
+   abajo) */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .presentador.rotulo { background: color-mix(in srgb, var(--mc, var(--accent)) 22%, #3a3330); } }
+:root[data-theme="dark"] .presentador.rotulo { background: color-mix(in srgb, var(--mc, var(--accent)) 22%, #3a3330); }
 @media (min-width: 1081px) { .pres.rotulo-acoplado .subtitulo { padding-left: calc(22px + var(--pres-rotulo, 0px)); } }
 @media (max-width: 1080px) { .pres.rotulo-acoplado .subtitulo { padding-right: calc(14px + var(--pres-rotulo, 0px)); } }
 @media print { .presentador { display: none !important; } }

@@ -1886,7 +1886,7 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
           + (1 - arco) * 0.006 * Math.max(0, u) ** 3
           + arco * (0.002 + 0.004 * Math.exp(-(((u - 0.4) / 0.45) ** 2)) - 0.016 * Math.max(0, u - 0.55) ** 2)
           + 0.016 * alza * (1 - 0.3 * u) - 0.008 * ceno * (1 - u) / 2
-          + 0.0028 * chico * (1 - u) / 2;   // chica y gruesa, con la cabeza algo más alta: si no, se leía ceñuda
+          + 0.0048 * chico * (1 - u) / 2;   // chica y gruesa, con la cabeza más alta: si no, se leía ceñuda (en V)
         // fina en la cabeza, más gruesa en el cuerpo; la cabeza roma (^10) y la cola que se afina en punta (^4)
         // (chico: hasta 1,7 veces más gruesa, menos en la cabeza, para que a 70–100 px de cabeza se lea como un trazo
         // y no como una sombra)
