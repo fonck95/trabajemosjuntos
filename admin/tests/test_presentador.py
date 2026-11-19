@@ -7,6 +7,10 @@
   lo muestran y lo ocultan. Detrás del subtítulo: entra agachado sin pasarse (y saluda antes de terminar de subir), se
   agacha y sale sin subir antes (con el «gracias» de la despedida, un poco más), se asoma desde donde esté, camina con
   la velocidad y el rumbo que le piden; con movimiento reducido, todo eso en el acto y el cuerpo gira en el acto.
+* Los gestos de mostrar y de explicar: ninguno pasa por la T ni mete un dedo en el cuerpo, y la mano que lo hace queda
+  arriba del corte; señalar apunta justo, el saludo va y viene cada vez menos, explicar es asimétrico, destacar va
+  adelante, comparar sube la mano del proyecto sin cruzar, crecer sube, el puño de construir toca la palma, el dedo
+  nuevo de enumerar aparece enseguida, presentar barre con `hasta` y mostrar_panel señala.
 * El diseño y la luz: las medidas siguen en su rango; la boca con los labios (cerrada, a medias o con cualquier valor)
   y el nivel de la cara (de 0 con la cabeza grande a 1 con la chica, y de vuelta a las tiras de siempre) no dejan nada sin
   número; lo que no recibe luz empieza sin teñir. Las luces siguen a la de la maqueta (`lucesDe`): sin aviso, las de
@@ -365,6 +369,166 @@ def test_el_diseno_del_personaje_y_la_luz(tmp_path):
     assert n["relleno"] == "ffd9b0" and n["rellenoI"] == 0.5 and n["contraI"] == 0.8, n
     assert L["porHora"] == n
     assert n["luzI"] < L["medio"]["luzI"] < 1.9 * 0.55 and L["medio"]["contraI"] == 0.4, L["medio"]
+
+
+NODE_GESTOS = r"""import { register } from 'node:module';
+import { pathToFileURL } from 'node:url';
+const [cargador, dir] = process.argv.slice(2);
+register(pathToFileURL(cargador).href);
+const THREE = await import('three');
+const { crearPersonaje } = await import(pathToFileURL(`${dir}/personaje.js`).href);
+const { crearAnimador, MANOS } = await import(pathToFileURL(`${dir}/animador.js`).href);
+const p = crearPersonaje({ documento: null });
+const A = p.medidas.alto, CORTE = 0.37 * A;
+const H = p.huesos;
+const mallas = (o) => o.children.filter((c) => c.isMesh && c.geometry?.attributes?.position?.count > 200);
+const cuerpo = [...mallas(H.columna), ...mallas(H.cadera), ...mallas(H.musloI), ...mallas(H.musloD)];
+p.craneo.traverse((o) => { if (o.isMesh && o.geometry?.attributes?.position?.count > 400) cuerpo.push(o); });
+for (const m of cuerpo) { m.material = m.material.clone(); m.material.side = THREE.DoubleSide; }
+const rc = new THREE.Raycaster();
+const DIRS = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map((d) => new THREE.Vector3(...d));
+const dentro = (v) => DIRS.filter((d) => { rc.set(v, d); return rc.intersectObjects(cuerpo, false).length % 2 === 1; }).length >= 3;
+const palma = { I: p.manos.I.grupo.children.find((c) => c.isMesh), D: p.manos.D.grupo.children.find((c) => c.isMesh) };
+const PUNTA = new THREE.Vector3(0, -0.03, 0);
+const inv = new THREE.Matrix4();
+const en = (o, ofs = null) => (ofs ? o.localToWorld(ofs.clone()) : o.getWorldPosition(new THREE.Vector3())).applyMatrix4(inv);
+// un gesto (o una lista de [t, nombre, opciones]) cuadro a cuadro: lo de las manos en el espacio del personaje
+function correr(lista, { rumbo = 0, T = 4 } = {}) {
+  let k = 7;
+  const a = crearAnimador(p, { azar: () => ((k = (k * 16807) % 2147483647) / 2147483647) });
+  a.camara = { position: new THREE.Vector3(0, 0.86 * A, 8) };
+  p.grupo.position.set(0, 0, 0); p.grupo.rotation.set(0, 0, 0);
+  a.girar(rumbo, { ya: true });
+  for (let i = 0; i < 36; i++) a.actualizar(1 / 60);
+  const serie = [], pen = new Set(), estados = [];
+  let enT = 0, j = 0;
+  for (let f = 0; f < T * 60; f++) {
+    while (j < lista.length && lista[j][0] <= f / 60 + 1e-9) { const [, g, o] = lista[j++]; estados.push(a.gesto(g, o)); }
+    a.actualizar(1 / 60);
+    p.grupo.updateMatrixWorld(true);
+    inv.copy(p.grupo.matrixWorld).invert();
+    const s = { t: f / 60, dedos: p.manos.I.dedos.map(([b]) => -b.rotation.z / 1.5) };
+    for (const l of ['I', 'D']) {
+      s[`m${l}`] = en(H[`muneca${l}`]); s[`p${l}`] = en(palma[l]); s[`i${l}`] = en(p.manos[l].dedos[0][1], PUNTA); s[`s${l}`] = en(H[`hombro${l}`]);
+      if (f % 2 === 0) for (const v of [palma[l].getWorldPosition(new THREE.Vector3()), ...p.manos[l].dedos.map(([, q]) => q.localToWorld(PUNTA.clone()))]) if (dentro(v)) pen.add(l);
+    }
+    // en T: las dos muñecas a la altura del hombro, afuera y sin adelanto
+    if (['I', 'D'].every((l) => Math.abs(s[`m${l}`].y - s[`s${l}`].y) <= 0.08 && Math.abs(s[`m${l}`].x - s[`s${l}`].x) >= 0.45 && s[`m${l}`].z - s[`s${l}`].z < 0.2)) enT++;
+    serie.push(s);
+  }
+  return { serie, pen: [...pen], enT, estado: a.estado(), estados, a };
+}
+const media = (xs) => xs.reduce((x, y) => x + y, 0) / xs.length;
+const tramo = (serie, t0, t1) => serie.filter((s) => s.t >= t0 && s.t < t1);
+const r3 = (x) => Math.round(x * 1000) / 1000;
+const r = { manos: ['ok', 'ele', 'entrelazada', 'canto', 'llama'].every((m) => Array.isArray(MANOS[m]) && MANOS[m].length === 5), gestos: {} };
+const PUNTO = new THREE.Vector3(-1.6, 1.45, 0.6);
+const LISTA = ['saludar', 'senalar', 'presentar', 'indicar', 'mirar_maqueta', 'explicar', 'destacar', 'comparar', 'enumerar', 'crecer', 'grande', 'detalle', 'construir'];
+for (const g of LISTA) {
+  const apunta = ['senalar', 'presentar', 'indicar', 'mirar_maqueta'].includes(g);
+  for (const variante of [0, 1]) {
+    const x = correr([[0, g, { punto: apunta ? PUNTO : undefined, variante }]], { rumbo: apunta ? -0.35 : 0 });
+    // lo más bajo de la mano que hace el gesto mientras está entero (las manos atrás de mirar la maqueta, aparte)
+    const enGesto = tramo(x.serie, 0.9, 1.8);
+    r.gestos[`${g}#${variante}`] = { T: x.enT, pen: x.pen, bajo: r3(Math.min(...enGesto.map((s) => Math.max(s.pI.y, s.pD.y))) - CORTE) };
+  }
+}
+// señalar: la recta del hombro a la punta del índice cae en el punto
+{
+  const x = correr([[0, 'senalar', { punto: PUNTO }]], { rumbo: -0.35, T: 2 });
+  p.grupo.updateMatrixWorld(true);
+  const s = x.serie[x.serie.length - 1], P = PUNTO.clone().applyMatrix4(inv.copy(p.grupo.matrixWorld).invert());
+  r.senalar = r3((Math.acos(s.iD.clone().sub(s.sD).normalize().dot(P.sub(s.sD).normalize())) * 180) / Math.PI);
+}
+// saludar: el antebrazo va y viene (los extremos del codo, cada vez menos)
+{
+  const x = correr([[0, 'saludar', {}]], { T: 2.6 });
+  const cod = x.serie.map((s) => s.mD.x).slice(33);
+  const ex = [];
+  for (let i = 1; i < cod.length - 1; i++) if ((cod[i] - cod[i - 1]) * (cod[i + 1] - cod[i]) < 0) ex.push(cod[i]);
+  const amp = ex.slice(1).map((v, i) => Math.abs(v - ex[i]));
+  r.saludar = { semiciclos: amp.length, primero: r3(amp[0]), ultimo: r3(amp[Math.min(amp.length - 1, 4)]), arriba: r3(Math.max(...x.serie.map((s) => s.pD.y))) };
+}
+// explicar: las muñecas a alturas distintas
+{ const x = correr([[0, 'explicar', { variante: 0 }]]); const h = tramo(x.serie, 0.8, 2.8); r.explicar = r3(Math.abs(media(h.map((s) => s.mI.y)) - media(h.map((s) => s.mD.y)))); }
+// destacar: el índice delante del hombro
+{ const x = correr([[0, 'destacar', { variante: 0 }]]); r.destacar = r3(Math.max(...tramo(x.serie, 0.6, 1.8).map((s) => s.iD.z - s.sD.z))); }
+// comparar: «con el proyecto» más alta que «hoy» y las manos nunca se cruzan
+{
+  const x = correr([[0, 'comparar', {}]]);
+  r.comparar = { masAlta: r3(media(tramo(x.serie, 2.4, 3.0).map((s) => s.mD.y)) - media(tramo(x.serie, 0.9, 1.4).map((s) => s.mI.y))),
+    cruzan: x.serie.filter((s) => s.pD.x > s.pI.x - 0.02).length };
+}
+// crecer: la que sube termina más alta que la otra
+{ const x = correr([[0, 'crecer', { variante: 0 }]]); const h = tramo(x.serie, 2.0, 2.4); r.crecer = r3(media(h.map((s) => s.mD.y)) - media(h.map((s) => s.mI.y))); }
+// construir: el puño toca la palma en cada golpe (los mínimos de su distancia)
+{
+  const x = correr([[0, 'construir', {}]], { T: 2.4 });
+  const d = x.serie.map((s) => s.pI.distanceTo(s.pD));
+  const min = [];
+  for (let i = 1; i < d.length - 1; i++) if (d[i] < d[i - 1] && d[i] <= d[i + 1] && d[i] < 0.12) min.push(r3(d[i]));
+  r.construir = min;
+}
+// enumerar: el dedo nuevo aparece enseguida (cuando se pasa a la mitad de estirado) y el índice de la otra mano la toca
+{
+  const x = correr([[0, 'enumerar', { n: 1, sostener: true }], [2, 'enumerar', { n: 2, seguir: true }], [3.5, 'enumerar', { n: 3, seguir: true }]], { T: 4.5 });
+  const aparece = [2, 3.5].map((t0, k) => { const i = x.serie.findIndex((s) => s.t >= t0 && s.dedos[k + 1] < 0.5); return r3(x.serie[i].t - t0); });
+  const seg = new THREE.Line3(), cp = new THREE.Vector3();
+  const toque = Math.min(...x.serie.slice(60).map((s) => { seg.set(s.mI, s.pI); seg.closestPointToPoint(s.iD, true, cp); return cp.distanceTo(s.iD); }));
+  r.enumerar = { aparece, toque: r3(toque), sigue: x.estado.gesto };
+}
+// presentar con `hasta`: barre la palma de un punto al otro (más largo); mostrar_panel señala
+{
+  const desde = new THREE.Vector3(-2.7, 3.4, 0.3), hasta = new THREE.Vector3(-1.5, 3.4, 0.3);
+  const x = correr([[0, 'presentar', { punto: desde, hasta, variante: 0 }]], { rumbo: -0.35, T: 2.5 });
+  p.grupo.updateMatrixWorld(true);
+  inv.copy(p.grupo.matrixWorld).invert();
+  const ang = (s, q) => (Math.acos(s.pD.clone().sub(s.sD).normalize().dot(q.clone().applyMatrix4(inv).sub(s.sD).normalize())) * 180) / Math.PI;
+  const s1 = x.serie[Math.round(0.8 * 60)], s2 = x.serie[x.serie.length - 1];
+  r.barrido = { dur: x.estados[0], antes: [r3(ang(s1, desde)), r3(ang(s1, hasta))], despues: [r3(ang(s2, desde)), r3(ang(s2, hasta))] };
+  const m = correr([[0, 'mostrar_panel', { punto: PUNTO }]], { rumbo: -0.35, T: 0.5 });
+  r.mostrarPanel = m.estado.gesto;
+}
+p.liberar();
+console.log(JSON.stringify(r));
+"""
+
+
+@requiere_node
+def test_los_gestos_de_mostrar_y_explicar(tmp_path):
+    """Los gestos de mostrar y de explicar (etapa 7a): ninguno pasa por la T ni mete un dedo en el cuerpo; cada uno
+    cumple lo suyo (señalar apunta justo, el saludo decrece, explicar es asimétrico, destacar va adelante, comparar sube
+    la mano del proyecto sin cruzar, crecer sube, el puño de construir toca la palma, el dedo de enumerar aparece
+    enseguida, presentar barre con `hasta`, mostrar_panel señala)."""
+    (tmp_path / "cargador.mjs").write_text(CARGADOR, encoding="utf-8")
+    (tmp_path / "prueba.mjs").write_text(NODE_GESTOS, encoding="utf-8")
+    p = subprocess.run(["node", str(tmp_path / "prueba.mjs"), str(tmp_path / "cargador.mjs"), str(PRESENTADOR)],
+                       capture_output=True, text=True, timeout=180, cwd=ADMIN,
+                       env={"PATH": "/usr/bin:/bin:/usr/local/bin:/opt/node22/bin", "VENDOR_THREE": str(VENDOR_THREE)})
+    assert p.returncode == 0, p.stderr
+    import json
+    r = json.loads(p.stdout.strip().splitlines()[-1])
+    assert r["manos"]
+    for g, x in r["gestos"].items():
+        assert x["T"] == 0 and x["pen"] == [], (g, x)
+        # la mano del gesto, arriba del corte del americano (las manos tomadas atrás de mirar la maqueta van detrás del
+        # cuerpo)
+        if not g.startswith("mirar_maqueta#0"):
+            assert x["bajo"] > 0, (g, x)
+    assert r["senalar"] < 1.5, r["senalar"]
+    s = r["saludar"]
+    assert s["semiciclos"] >= 4 and s["primero"] > s["ultimo"] and s["arriba"] > 1.8, s
+    assert r["explicar"] >= 0.06, r["explicar"]
+    assert r["destacar"] >= 0.25, r["destacar"]
+    assert r["comparar"]["masAlta"] >= 0.15 and r["comparar"]["cruzan"] == 0, r["comparar"]
+    assert r["crecer"] >= 0.35, r["crecer"]
+    assert len(r["construir"]) >= 3 and all(d < 0.09 for d in r["construir"][:3]), r["construir"]
+    e = r["enumerar"]
+    assert all(t <= 0.12 for t in e["aparece"]) and e["toque"] < 0.08 and e["sigue"] == "enumerar", e
+    b = r["barrido"]
+    # (al llegar la palma está en el primero; al terminar de barrer, mucho más cerca del segundo)
+    assert b["dur"] >= 3.4 and b["antes"][0] < b["antes"][1] and b["despues"][1] < b["antes"][1] - 8, b
+    assert r["mostrarPanel"] == "senalar"
 
 
 NODE_PEREZOSO = r"""import { pathToFileURL } from 'node:url';

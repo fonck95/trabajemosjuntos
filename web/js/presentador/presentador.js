@@ -26,9 +26,12 @@
 //   señala, cuando lo resaltado apareció y dejó de moverse; se sostiene la primera frase y después queda la mano baja
 //   hacia lo que explica (`indicar`) hasta la escena siguiente, mirando a la sala al empezar cada frase (señalando, con
 //   dos toques en la palabra clave de cada frase que sigue). Sin un gesto pedido, el anfitrión hace el que pide el texto
-//   (una pregunta, «juntos», algo que crece, una cifra). La boca va por las sílabas de cada frase (con voz, al ritmo que
-//   tuvo la voz en las anteriores). En la primera escena saluda antes (corto si ya hay un dato que señalar). El resumen
-//   del cierre lo cuenta con los dedos, un dedo al empezar cada punto (por el largo de cada uno; con voz, a su ritmo).
+//   (una pregunta, «juntos», algo que crece, una cifra). Presentando la portada, la palma barre los pines de la
+//   maqueta; el cronograma, su fila de años de punta a punta (`presentar` con `hasta`); «mostrar el panel» señala el
+//   dato con las cejas y la boca de «fíjense»; «mirar la maqueta» la recorre con la mirada. La boca va por las sílabas de
+//   cada frase (con voz, al ritmo que tuvo la voz en las anteriores). En la primera escena saluda antes (corto si ya hay
+//   un dato que señalar). El resumen del cierre lo cuenta con los dedos, un dedo al empezar cada punto (por el largo de
+//   cada uno; con voz, a su ritmo).
 // * La LUZ sigue a la de la maqueta (el aviso `ambiente`: la hora y el lado del sol), en 0.6 s: de tarde desde el lado
 //   del sol, al atardecer (el tema oscuro) más tibia, de noche más baja y con un contraluz frío; el rótulo, con la de
 //   siempre. Lo que no recibe luz (los ojos, los dientes, las cejas) se tiñe en proporción. Lo pegado al corte se
@@ -74,6 +77,7 @@ const FRASE0_MS = 800;     // el gesto de entrada espera la primera frase; si no
 // después), sigue sin él; si está pero se mueve (el panel se desplaza hasta él), lo espera hasta 2 s más
 const FOCO_MS = 1200, FOCO_APLICAR_MS = 1300, FOCO_QUIETO_MS = 2000;
 const SOSTEN_MS = 2500;    // el primer gesto se sostiene la primera frase, al menos 2.5 s; después, la mano hacia el objetivo
+const BARRIDO_MS = 2800;   // (presentar con barrido: la palma tarda 2.2 s en ir de un punto al otro y se queda un momento)
 const PULSO_MS = 900;      // el anillo de lo señalado late cuando llega el dedo (propuesta.html: .foco.senalado)
 const MIRAR_MS = 1000;     // cada frase empieza mirando a la sala; después, un vistazo a lo que explica
 const VISTAZO_MS = 800;
@@ -1151,16 +1155,25 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
     frente = !!e.frente && !APUNTAN.includes(g);
     orientar(punto);
     const opciones = {};
-    if (punto && APUNTAN.includes(g)) opciones.punto = alMundo(punto.x, punto.y);
-    // (la obra mientras la cámara viaja: la sigue con la mirada)
-    if (opciones.punto && e.objetivo === 'obra' && viaja(p.d)) opciones.mirada = 'sigue';
+    if (punto && (APUNTAN.includes(g) || g === 'mirar_maqueta')) opciones.punto = alMundo(punto.x, punto.y);
+    // presentar barre con la palma (los pines de la portada, los años del cronograma): de un punto al otro
+    const b = g === 'presentar' && punto ? barridoDe(p.d, e, c, punto) : null;
+    if (b) {
+      opciones.punto = alMundo(b.desde.x, b.desde.y); opciones.hasta = alMundo(b.hasta.x, b.hasta.y);
+      objetivoPx = b.hasta; p.barrido = b;
+      orientar(b.hasta);
+    }
+    // (mostrar_panel: «fíjense en este dato», con las cejas y la boca)
+    if (e.gesto === 'mostrar_panel') opciones.dato = true;
+    // (la obra mientras la cámara viaja: la sigue con la mirada; mirar la maqueta la recorre a su manera)
+    if (opciones.punto && e.objetivo === 'obra' && viaja(p.d) && g !== 'mirar_maqueta') opciones.mirada = 'sigue';
     if (g === 'enumerar') { opciones.n = 1; opciones.sostener = true; }
     // el índice se sostiene la primera frase (al menos 2.5 s); los demás, lo que duran
     const sostenido = g === 'senalar' || g === 'presentar';
     if (sostenido) opciones.sostener = true;
     const dur = g ? anim.gesto(g, opciones) : 0;
     const fin = p.finFrase0 ?? (p.frase0 !== null ? p.frase0 + decirS(p.d.textos?.[0]) * 1000 : null);
-    p.tSosten = ahora() + (sostenido ? acotar((fin ?? 0) - ahora(), SOSTEN_MS, 6000) : g === 'enumerar' ? Infinity : Math.max(0, (Number.isFinite(dur) ? dur : 0) * 1000 - 350));
+    p.tSosten = ahora() + (sostenido ? acotar((fin ?? 0) - ahora(), b ? BARRIDO_MS : SOSTEN_MS, 6000) : g === 'enumerar' ? Infinity : Math.max(0, (Number.isFinite(dur) ? dur : 0) * 1000 - 350));
     // el dedo llega: lo señalado late; la cabeza vuelve a la sala al rato (la mano sigue)
     if (g === 'senalar' && e.objetivo === 'foco') despues(450, pulso);
     if (APUNTAN.includes(g) && e.objetivo !== 'obra') despues(MIRAR_MS, () => { if (prog === p && p.fase === 'gesto') anim.mirarSala((p.tSosten - ahora()) / 1000 + 0.2); });
@@ -1180,8 +1193,39 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       return g;
     }
     if (e.objetivo === 'bloque') return g === 'mostrar_panel' ? 'presentar' : g || 'presentar';
-    if (e.objetivo === 'obra' || e.objetivo === 'ficha') return g === 'mirar_maqueta' ? 'indicar' : g || 'presentar';
+    if (e.objetivo === 'ficha') return g === 'mirar_maqueta' ? 'indicar' : g || 'presentar';
+    if (e.objetivo === 'obra') return g || 'presentar';
     return g;
+  }
+  /** El barrido de la palma de presentar (`hasta`), en px de la ventana: en la portada, sobre los pines de la maqueta del
+   * lado donde hay más, del más cercano al más lejano (o de la obra a su único pin); en el cronograma, en diagonal sobre
+   * el Gantt, del primer año (en la fila de los años) al último (a la altura del hombro). null: sin barrido */
+  function barridoDe(d, e, c, punto) {
+    if (!d || !Number.isFinite(xCuerpo) || !plan) return null;
+    if (d.tipo === 'cronograma' && e.objetivo === 'bloque') {
+      // (en diagonal sobre el Gantt: del primer año, en su fila de arriba, al último a la altura del hombro; a lo largo de
+      // una sola fila los años quedarían en la misma recta desde él y la palma casi no se movería)
+      const crono = rect(documento.querySelector?.('.cronograma'));
+      const anios = [...(documento.querySelectorAll?.('.cronograma .g-anios b') || [])].map(rect)
+        .filter((r) => r && r.y1 > 0 && r.y0 < VH() && !(c.panel && (r.y0 < c.panel.y0 || r.y1 > c.panel.y1)));
+      if (!crono || anios.length < 2) return null;
+      const xs = anios.map((r) => (r.x0 + r.x1) / 2), y = (anios[0].y0 + anios[0].y1) / 2;
+      const yFin = acotar(punto.y, y + 40, Math.max(y + 40, Math.min(crono.y1, c.panel?.y1 ?? VH()) - 20));
+      return { desde: { x: Math.min(...xs), y }, hasta: { x: Math.max(...xs), y: yFin } };
+    }
+    if (d.tipo === 'portada' && e.objetivo === 'obra') {
+      // los pines a la vista que no caen sobre el panel ni la ficha, a más de 0.15·p del cuerpo; del lado donde hay más
+      const todos = [...(documento.querySelectorAll?.('.lbl-pin') || [])].map(rect)
+        .filter((r) => r && r.x1 - r.x0 > 2 && r.x1 > 0 && r.x0 < VW() && r.y1 > 0 && r.y0 < VH())
+        .map((r) => ({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 }))
+        .filter((q) => Math.abs(q.x - xCuerpo) > 0.15 * plan.p && !(c.panel && q.x < c.panel.x1 + 10) && !(c.ficha && q.x > c.ficha.x0 - 10));
+      const izq = todos.filter((q) => q.x < xCuerpo), der = todos.filter((q) => q.x >= xCuerpo);
+      const pins = izq.length > der.length || (izq.length === der.length && punto.x < xCuerpo) ? izq : der;
+      if (!pins.length) return null;
+      pins.sort((a, b) => Math.abs(a.x - xCuerpo) - Math.abs(b.x - xCuerpo));
+      return pins.length === 1 ? { desde: punto, hasta: pins[0] } : { desde: pins[0], hasta: pins[pins.length - 1] };
+    }
+    return null;
   }
   /** El anillo de lo señalado late (0.9 s) cuando llega el dedo */
   function pulso() {
@@ -1282,7 +1326,9 @@ export function crearPresentador({ ventana = globalThis.window, documento = glob
       avisos: Object.keys(avisos).filter((k) => avisos[k] !== null),
       prog: prog ? { t: Math.round(ahora() - prog.t0), frase0: prog.frase0 === null ? null : Math.round(prog.frase0 - prog.t0),
         encuadre: prog.tEncuadre === null ? null : Math.round(prog.tEncuadre - prog.t0), iguales: prog.iguales, sinFoco: !!prog.sinFoco,
-        sosten: prog.tSosten ? Math.round(prog.tSosten - prog.t0) : null, dedos: prog.cierre?.k ?? null } : null,
+        sosten: prog.tSosten ? Math.round(prog.tSosten - prog.t0) : null, dedos: prog.cierre?.k ?? null,
+        barrido: prog.barrido ? { desde: { x: Math.round(prog.barrido.desde.x), y: Math.round(prog.barrido.desde.y) },
+          hasta: { x: Math.round(prog.barrido.hasta.x), y: Math.round(prog.barrido.hasta.y) } } : null } : null,
       get cajas() { return { figura: cajaDe(personaje.grupo), cabeza: cajaDe(personaje.craneo) }; },
       get punta() { return puntaPx(); },
       get apunta() {
