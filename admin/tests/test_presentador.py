@@ -16,6 +16,10 @@
   queda la obra (`encuadre`, después de aplicar), el modelo del atlas que cargó (`atlas`), lo que se accionó
   (`simulacion`) y la luz de la maqueta (`ambiente`). Una escena que cambia de paso no lo despide en el camino, y un
   presentador (o una capa visual) que falla no rompe nada de la presentación.
+* Las vistas (vistas.js, con Node): qué vista, lado y regla toma cada caso de la especificación (lo resaltado, la obra
+  pedida, el tipo de paso, la pantalla chica, el atlas, el cierre); el movimiento suave del recorrido no cuenta como obra
+  (y sus giros son los de app/recorrido.py); el lugar deja la punta del dedo fuera del panel y de la ficha, con
+  histéresis, un cambio por escena y ninguno en una escena corta; las transiciones; los tiempos del resumen.
 """
 import re
 import subprocess
@@ -443,6 +447,200 @@ def test_el_presentador_solo_usa_lo_que_el_sitio_publica():
     assert ".presentador { position: fixed; z-index: 8; left: 0; top: 0; pointer-events: none; }" in \
         (WEB / "propuesta.html").read_text(encoding="utf-8")
 
+
+
+# ───────────────────────────── Las vistas (vistas.js): qué plano, dónde y hacia dónde ─────────────────────────────
+
+NODE_VISTAS = r"""import { pathToFileURL } from 'node:url';
+const [dir] = process.argv.slice(2);
+const V = await import(pathToFileURL(`${dir}/vistas.js`).href);
+const V0 = { enfoque: null, camara: 'paso', rumbo: null, elevacion: null, zoom: null, mirar: null, girar: false,
+  comparar: 'proyecto', detalle: null, inmersion: null, mostrar: [], ocultar: [], aislar: null, sin: [] };
+// una escena como la manda mando.js (salud/2 por omisión)
+const E = (o = {}) => ({ evento: 'narrar', n: 2, de: 4, capitulo: 'salud', paso: 2, tipo: 'componentes', lista: 0, cambio: null,
+  panel: true, resaltar: null, atlas: null, modo: null, animar: false, simular: null, mover: null, gesto: null,
+  textos: ['Una frase.'], ...o, visual: { ...V0, ...(o.visual || {}) } });
+const ESC = { chica: false, VW: 1440, VH: 900, horizontal: false, nuevo: false, reducido: false,
+  dom: { conInmersion: false, conDetalle: false, sinPanel: false }, anterior: null };
+const CEL = { ...ESC, chica: true, VW: 390, VH: 844 };
+const casos = {
+  bienvenida: [E({ capitulo: 'portada', paso: 1, n: 1, tipo: 'portada' }), { ...ESC, nuevo: true }],
+  cifra: [E({ capitulo: 'portada', paso: 1, tipo: 'portada', resaltar: { tipo: 'cifra', n: 2 } }), ESC],
+  cifra_celular: [E({ capitulo: 'portada', paso: 1, tipo: 'portada', resaltar: { tipo: 'cifra', n: 2 } }), CEL],
+  portadilla_capitulo: [E({ capitulo: 'vivienda', paso: 1, n: 1, tipo: 'portadilla', cambio: 'capitulo' }), ESC],
+  portadilla_pregunta: [E({ capitulo: 'tic', paso: 1, n: 1, tipo: 'portadilla', cambio: 'capitulo', textos: ['¿Por qué una granja solar?'] }), ESC],
+  portadilla_sigue: [E({ capitulo: 'vivienda', paso: 1, n: 2, tipo: 'portadilla' }), ESC],
+  lista: [E({ capitulo: 'aguas', tipo: 'texto', lista: 5 }), ESC],
+  punto: [E({ capitulo: 'aguas', tipo: 'texto', lista: 5, resaltar: { tipo: 'punto', n: 3 } }), ESC],
+  metas: [E({ capitulo: 'vivienda', paso: 6, tipo: 'metas' }), ESC],
+  metas_crecen: [E({ capitulo: 'vivienda', paso: 6, tipo: 'metas', textos: ['Pasamos de 120 a 300 viviendas.'] }), ESC],
+  telesalud: [E({ resaltar: { tipo: 'componente', id: 'telesalud' } }), ESC],
+  automatica: [E({ paso: 3, tipo: 'componente', mover: { giro: 12, zoom: 1.06 }, animar: true }), ESC],
+  metas_suave: [E({ paso: 10, tipo: 'metas', mover: { giro: -10 } }), ESC],
+  metas_pedido: [E({ paso: 10, tipo: 'metas', mover: { giro: 40, elevacion: 60 } }), ESC],
+  animar_solo: [E({ capitulo: 'tic', paso: 6, tipo: 'texto', animar: true }), ESC],
+  ficha_dato: [E({ paso: 3, tipo: 'componente', visual: { detalle: 'torre' }, resaltar: { tipo: 'especificacion', n: 3, en: 'ficha' } }), ESC],
+  ficha: [E({ paso: 3, tipo: 'componente', visual: { detalle: 'torre' } }), ESC],
+  ficha_celular: [E({ paso: 3, tipo: 'componente', visual: { detalle: 'torre' } }), CEL],
+  espec_panel: [E({ paso: 3, tipo: 'componente', resaltar: { tipo: 'especificacion', n: 2, en: 'panel' } }), ESC],
+  leyenda: [E({ capitulo: 'aguas', paso: 3, tipo: 'comparacion', resaltar: { tipo: 'leyenda', n: 2 } }), ESC],
+  leyenda_celular: [E({ capitulo: 'aguas', paso: 3, tipo: 'comparacion', resaltar: { tipo: 'leyenda', n: 2 } }), CEL],
+  comparacion: [E({ capitulo: 'aguas', paso: 3, tipo: 'comparacion' }), ESC],
+  hoy: [E({ capitulo: 'urbanismo', paso: 3, tipo: 'componente', visual: { comparar: 'hoy' } }),
+    { ...ESC, anterior: { capitulo: 'urbanismo', paso: 3, visual: { ...V0 }, vista: 'presenta', lado: 'obra' } }],
+  proyecto_otro_paso: [E({ capitulo: 'aguas', paso: 2, tipo: 'texto', lista: 5, visual: { comparar: 'proyecto' } }), ESC],
+  enfoque: [E({ paso: 3, tipo: 'componente', visual: { enfoque: 'torre', camara: 'cerca' } }), ESC],
+  aislar: [E({ paso: 3, tipo: 'componente', visual: { aislar: 'torre', sin: ['torre.cubierta'] } }), ESC],
+  solo3d: [E({ paso: 3, tipo: 'componente', panel: false }), ESC],
+  solo3d_leyenda: [E({ capitulo: 'aguas', paso: 3, tipo: 'comparacion', panel: false, resaltar: { tipo: 'leyenda', n: 1 } }), ESC],
+  inmersion: [E({ paso: 6, tipo: 'inmersion', atlas: 'torre_sismo', modo: 'sismo' }), ESC],
+  inmersion_maqueta: [E({ paso: 6, tipo: 'inmersion', visual: { inmersion: 'maqueta' } }), ESC],
+  noche: [E({ capitulo: 'urbanismo', paso: 3, tipo: 'componente', simular: { modelo: 'maqueta', controles: ['hora'] } }), ESC],
+  cronograma: [E({ capitulo: 'ruta', paso: 1, tipo: 'cronograma' }), ESC],
+  senalar: [E({ capitulo: 'aguas', paso: 2, tipo: 'texto', gesto: 'senalar' }), ESC],
+  senalar_enfoque: [E({ paso: 3, tipo: 'componente', gesto: 'senalar', visual: { enfoque: 'torre' } }), ESC],
+  horizontal: [E({ paso: 3, tipo: 'componente' }), { ...ESC, chica: true, horizontal: true, VW: 844, VH: 390 }],
+  texto: [E({ capitulo: 'tic', paso: 6, tipo: 'texto', lista: 0 }), ESC],
+  cierre: [{ evento: 'cierre' }, ESC],
+  cierre_celular: [{ evento: 'cierre' }, CEL],
+  preguntas: [{ evento: 'preguntas' }, ESC],
+  preparando: [{ evento: 'preparando' }, ESC],
+  preparando_atlas: [{ evento: 'preparando' }, { ...ESC, dom: { ...ESC.dom, conInmersion: true } }],
+  explicar: [{ evento: 'explicar' }, ESC],
+  saludar_al_subir: [E({ capitulo: 'portada', paso: 1, n: 1, tipo: 'portada', gesto: 'saludar' }), { ...ESC, nuevo: true }],
+  dato_al_subir: [E({ capitulo: 'portada', paso: 1, n: 1, tipo: 'portada', resaltar: { tipo: 'cifra', n: 1 } }), { ...ESC, nuevo: true }],
+};
+const r = { vistas: {} };
+for (const [k, [d, ctx]] of Object.entries(casos)) {
+  const e = V.elegirVista(d, ctx);
+  r.vistas[k] = { vista: e.vista, lado: e.lado, regla: e.regla, gesto: e.gesto, frente: e.frente, objetivo: e.objetivo,
+    saludo: e.saludoPrimero, corto: e.saludoCorto, capitulo: e.transicionCapitulo };
+}
+r.suaves = [{ giro: 12, zoom: 1.06 }, { giro: -10 }, { giro: 14, zoom: 1.7 }, { giro: 40 }, { giro: 12, elevacion: 60 }, { zoom: 1.3 }, null].map(V.esSuave);
+// el lugar, con las cajas de 1440x900 (el subtítulo a la derecha del panel)
+const ctx = { ...ESC };
+const sub = { x0: 627, y0: 721, x1: 1365, y1: 814 }, panel = { x0: 100, y0: 76, x1: 552, y1: 818 };
+const senala = { vista: 'senala', lado: 'panel', objetivo: 'foco' };
+const m = V.medidas('senala', ctx);
+r.medidas = { p: m.p, Wc: m.Wc, Hc: m.Hc, bajo: m.bajo, plano: m.plano };
+const punto = { x: 528, y: V.yHombro(sub.y0, m) };
+const al = V.elegirLugar(senala, m, ctx, { sub, panel }, {}, { punto });
+const punta = V.alcance(al.x, punto, { p: m.p, subTop: sub.y0, rumbo: V.rumboDe('senala', punto.x - al.x) }).punta;
+// el más cerca que deja el alcance: 40 px más a la izquierda la punta entraría al panel
+const masCerca = V.lugares(senala, m, ctx, { sub, panel }, { punto, todos: true }).filter((l) => l.x < al.x - 20 && l.x > al.x - 60);
+r.panel = { x: al.x, punta: punta.x, borde: panel.x1, masCerca: masCerca.map((l) => l.razon) };
+// la ficha a la derecha: la punta no entra en ella
+const subF = { x0: 568, y0: 696, x1: 1010, y1: 814 }, ficha = { x0: 1024, y0: 76, x1: 1424, y1: 814 };
+const puntoF = { x: ficha.x0 + 6, y: V.yHombro(subF.y0, m) };
+const alF = V.elegirLugar({ vista: 'senala', lado: 'ficha', objetivo: 'foco' }, m, ctx, { sub: subF, panel, ficha }, {}, { punto: puntoF });
+r.ficha = { x: alF.x, punta: V.alcance(alF.x, puntoF, { p: m.p, subTop: subF.y0, rumbo: 0.35 }).punta.x, borde: ficha.x0 };
+// histéresis: el anfitrión con la obra a la derecha y un rótulo en el centro
+const anf = { vista: 'anfitrion', lado: 'sala', objetivo: 'sala' };
+const ma = V.medidas('anfitrion', ctx);
+const cajas = { sub, panel, obra: { x0: 900, y0: 200, x1: 1400, y1: 640 }, rotulos: [{ x0: 960, y0: 560, x1: 1040, y1: 600 }] };
+const mejor = V.lugares(anf, ma, ctx, cajas)[0];
+const cerca = V.lugares(anf, ma, ctx, cajas).find((l) => l.x !== mejor.x && l.costo <= 1.25 * mejor.costo + 0.02);
+const lejos = V.lugares(anf, ma, ctx, cajas).find((l) => l.costo > 1.25 * mejor.costo + 0.05);
+r.histeresis = {
+  mejor: mejor.x,
+  queda: V.elegirLugar(anf, ma, ctx, cajas, { x: cerca.x }).razon,
+  cambia: V.elegirLugar(anf, ma, ctx, cajas, { x: lejos.x }),
+  ya_cambio: V.elegirLugar(anf, ma, ctx, cajas, { x: lejos.x, cambios: 1 }).razon,
+  corta: V.elegirLugar(anf, ma, ctx, cajas, { x: lejos.x, ms: 3000 }).razon,
+  // la cadera en el aire (más allá del subtítulo): se va aunque ya haya cambiado
+  no_sirve: V.elegirLugar(anf, ma, ctx, cajas, { x: sub.x1 - 10, cambios: 1 }).razon,
+  lejos: lejos.x,
+};
+// las transiciones
+const A = { vista: 'anfitrion', plano: 'americano', p: 324, x: 996 };
+r.transiciones = [
+  V.transicion(A, { ...A, vista: 'senala' }),
+  V.transicion(A, { vista: 'cerca', plano: 'medio', p: 450, x: 996 }),
+  V.transicion(A, { ...A, vista: 'senala', x: 800 }),
+  V.transicion(A, { ...A, vista: 'presenta', x: 680 }),
+  V.transicion(A, { vista: 'rotulo', plano: 'medio', p: 180, x: 700 }),
+  V.transicion(A, { ...A, x: 800 }, { reducido: true }),
+  V.transicion(A, { vista: 'cerca', plano: 'medio', p: 450, x: 996 }, { reducido: true }),
+  V.transicion(A, { ...A, vista: 'senala' }, { reducido: true }),
+];
+// el cierre: un dedo al empezar cada punto
+const tc = V.tiemposCierre(['Uno: la torre del hospital.', 'Dos: el agua.', 'Tres: vivienda nueva y mejorada para todos.']);
+r.cierre = { crece: tc.inicios.every((t, i) => i === 0 || t > tc.inicios[i - 1]), primero: tc.inicios[0], total: tc.total, n: tc.inicios.length };
+console.log(JSON.stringify(r));
+"""
+
+# la vista esperada de cada caso: [vista, lado, regla] y, si importa, el gesto
+VISTAS_ESPERADAS = {
+    "bienvenida": ["anfitrion", "sala", "R10"], "cifra": ["senala", "panel", "R5"],
+    "cifra_celular": ["busto", "hoja", "R5c", "destacar"], "portadilla_capitulo": ["anfitrion", "sala", "R10", "explicar"],
+    "portadilla_pregunta": ["anfitrion", "sala", "R10", "pensar"], "portadilla_sigue": ["presenta", "obra", "R10", "mirar_maqueta"],
+    "lista": ["senala", "panel", "R10", "enumerar"], "punto": ["senala", "panel", "R5"],
+    "metas": ["senala", "panel", "R10", "mostrar_panel"], "metas_crecen": ["senala", "panel", "R10", "crecer"],
+    "telesalud": ["senala", "panel", "R5"], "automatica": ["presenta", "obra", "R10", "presentar"],
+    "metas_suave": ["senala", "panel", "R10"], "metas_pedido": ["presenta", "obra", "R8"],
+    "animar_solo": ["anfitrion", "sala", "R10", "explicar"], "ficha_dato": ["senala", "ficha", "R4"],
+    "ficha": ["senala", "ficha", "R6", "presentar"], "ficha_celular": ["rotulo", "ficha", "R3"],
+    "espec_panel": ["senala", "panel", "R5"], "leyenda": ["senala", "leyenda", "R4"],
+    "leyenda_celular": ["busto", "arriba", "R4c", "senalar"], "comparacion": ["senala", "panel", "R10", "comparar"],
+    "hoy": ["presenta", "obra", "R8", "comparar"], "proyecto_otro_paso": ["senala", "panel", "R10"],
+    "enfoque": ["presenta", "obra", "R8", "presentar"], "aislar": ["presenta", "obra", "R8", "detalle"],
+    "solo3d": ["general", "obra", "R7"], "solo3d_leyenda": ["senala", "leyenda", "R4"], "inmersion": ["rotulo", "marco", "R2"],
+    "inmersion_maqueta": ["presenta", "obra", "R10"], "noche": ["presenta", "obra", "R8"],
+    "cronograma": ["senala", "panel", "R10", "presentar"], "senalar": ["senala", "panel", "R9", "senalar"],
+    "senalar_enfoque": ["presenta", "obra", "R8", "senalar"], "horizontal": ["rotulo", "sala", "R1"],
+    "texto": ["anfitrion", "sala", "R10", "explicar"], "cierre": ["cerca", "sala", "cierre", "contar"],
+    "cierre_celular": ["busto", "sala", "cierre", "contar"], "preguntas": ["cerca", "sala", "cierre", "invitar"],
+    "preparando": ["anfitrion", "sala", "preparando", "pensar"], "preparando_atlas": ["rotulo", "marco", "R2"],
+    "explicar": ["anfitrion", "sala", "explicar", "explicar"], "saludar_al_subir": ["anfitrion", "sala", "R10"],
+    "dato_al_subir": ["senala", "panel", "R5"],
+}
+
+
+@requiere_node
+def test_elegir_vista(tmp_path):
+    r = _node(tmp_path, NODE_VISTAS, str(PRESENTADOR))
+    v = r["vistas"]
+    assert set(v) == set(VISTAS_ESPERADAS), set(v) ^ set(VISTAS_ESPERADAS)
+    for k, esperado in VISTAS_ESPERADAS.items():
+        x = v[k]
+        assert [x["vista"], x["lado"], x["regla"]] == esperado[:3], (k, x)
+        if len(esperado) > 3:
+            assert x["gesto"] == esperado[3], (k, x)
+    # la bienvenida: saluda al subir (y es el mismo saludo si lo pidió el asistente); con un dato que señalar, corto
+    assert v["bienvenida"]["saludo"] and not v["bienvenida"]["corto"] and v["bienvenida"]["objetivo"] == "obra"
+    assert v["saludar_al_subir"]["saludo"] and v["saludar_al_subir"]["gesto"] is None
+    assert v["dato_al_subir"]["saludo"] and v["dato_al_subir"]["corto"]
+    assert not v["cifra"]["saludo"] and not v["inmersion"]["saludo"]
+    # el cambio de capítulo mira el panel antes del gesto; el gesto de cara a la sala gira de frente
+    assert v["portadilla_capitulo"]["capitulo"] and not v["portadilla_sigue"]["capitulo"]
+    assert v["portadilla_capitulo"]["frente"] and v["metas_crecen"]["frente"] and not v["cifra"]["frente"]
+    # lo resaltado se señala (el .foco); el panel sin resaltado, el bloque; la ficha sin dato, su centro
+    assert v["cifra"]["objetivo"] == v["leyenda"]["objetivo"] == v["ficha_dato"]["objetivo"] == "foco"
+    assert v["metas"]["objetivo"] == "bloque" and v["ficha"]["objetivo"] == "ficha" and v["enfoque"]["objetivo"] == "obra"
+    # el movimiento suave del recorrido no es «obra pedida»
+    assert r["suaves"] == [True, True, True, False, False, False, False], r["suaves"]
+    # el americano a 1440x900: la cabeza crece sin que el lienzo pase de 1.45 veces el de antes (257 × 270)
+    assert r["medidas"]["plano"] == "americano" and r["medidas"]["p"] == 324 and r["medidas"]["Wc"] * r["medidas"]["Hc"] <= 1.45 * 257 * 270
+    # señalando el panel: la punta del índice queda fuera de su vidrio (6 px) y no más lejos de lo que hace falta
+    assert r["panel"]["punta"] >= r["panel"]["borde"] + 6, r["panel"]
+    assert r["panel"]["masCerca"] and all("alcance" in x for x in r["panel"]["masCerca"]), r["panel"]
+    # y la ficha, del otro lado: la punta 12 px antes de su borde
+    assert r["ficha"]["punta"] <= r["ficha"]["borde"] - 12, r["ficha"]
+    # la histéresis: se queda si no es más de un 25 % peor; si lo es, cambia (una vez por escena; en una escena corta
+    # solo gira); si deja de servir, se va igual
+    h = r["histeresis"]
+    assert h["queda"] == "se_queda", h
+    assert h["cambia"]["cambia"] and h["cambia"]["x"] == h["mejor"], h
+    assert h["ya_cambio"] == "ya_cambio" and h["corta"] == "corta" and h["no_sirve"] == "no_sirve", h
+    assert r["transiciones"] == ["giro", "acercar", "caminar", "saltar", "rotulo", "fundido", "fundido", "giro"], r["transiciones"]
+    assert r["cierre"]["crece"] and r["cierre"]["n"] == 3 and 0.5 < r["cierre"]["primero"] < 1 and r["cierre"]["total"] <= 16, r["cierre"]
+
+
+def test_los_giros_suaves_son_los_mismos():
+    from app import recorrido as rec
+    js = (PRESENTADOR / "vistas.js").read_text(encoding="utf-8")
+    m = re.search(r"export const GIROS_SUAVES = \[([^\]]+)\];", js)
+    assert m and tuple(int(x) for x in m.group(1).split(",")) == tuple(rec.GIROS_SUAVES)
 
 # ───────────────────────────── La serie de gestos que pide el asistente ─────────────────────────────
 

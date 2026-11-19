@@ -204,6 +204,15 @@ export const GESTOS = {
   escuchar: (o) => ({ dur: o.dur || 3, sostener: o.sostener !== false,
     pose: { ...dos([-0.22, 0, -0.06], [-1.35, 0.95, 0], [0.1, 0, 0]), cabeza: [0.04, 0, 0.09] }, manos: { I: 'junta', D: 'junta' },
     cara: { cejas: 0.2 } }),
+  // ── Lo hace solo el presentador ──
+  // la mano abierta, baja, hacia lo que se explica (después del primer golpe de señalar o de presentar): el brazo
+  // apunta al objetivo (`o.punto`) un poco más abajo, el codo a medio doblar y la palma hacia la sala. Se sostiene
+  // la escena entera (`sostener`) mientras la otra mano acompaña lo que dice. `o.mirar`: mirarlo mientras dura
+  indicar: (o) => {
+    const l = o.lado || 'D';
+    return { dur: o.dur || 2.4, entra: 0.5, pose: brazo(l, o.apunta || [-0.35, 0, 0.45], [-0.6, 1.3, 0], [-0.2, 0, 0]),
+      manos: { [l]: 'abierta' }, mirar: o.mirar ? o.punto || null : null, cara: { cejas: 0.2 } };
+  },
 };
 // Para el asistente: los gestos que puede pedir en cada paso del plan (`gesto`: app/recorrido.py y el puente tienen la
 // misma lista; una prueba las compara). Los demás los hace el presentador solo: contar el resumen y escuchar en pausa.
@@ -218,7 +227,9 @@ const acercar = (k, dt) => 1 - Math.exp(-k * dt);
 
 /**
  * crearAnimador(personaje, {reducido}) → {actualizar(dt), gesto(nombre, opciones), detenerGesto(), hablar(seg|true),
- * callar(), mirarA(punto|null), caminarA(x), entrar(), salir(alTerminar), estado(), camara}.
+ * callar(), mirarA(punto|null), mirarSala(seg), caminarA(x), reubicar(x), entrar(), salir(alTerminar), estado(),
+ * girar(rumbo), camara, apertura}.
+ * `gesto(nombre, {sostener: true})` sostiene cualquier gesto hasta otro o hasta detenerGesto().
  * `reducido` (prefers-reduced-motion): sin saltos ni vaivenes del cuerpo, entra y sale sin animación.
  */
 export function crearAnimador(personaje, { reducido = false, azar = Math.random } = {}) {
@@ -241,24 +252,43 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
   let parpado = 1, proxParpadeo = 2 + azar() * 3, enParpadeo = -1, doble = false;
   let cejas = 0, cejasPico = 0, sonrisa = 1, ceno = 0;
   let mira = null;          // un punto del mundo; null: la cámara (la sala)
+  let salaHasta = 0;        // hasta cuándo mira a la sala pase lo que pase (mirarSala)
   let yaw = 0, pitch = 0, ojoX = 0, ojoY = 0;
   let destinoX = grupo.position.x, fase = 0, wCaminar = 0, rumbo = 0, rumboBase = 0;
   let entrada = null;       // {desde, hasta, dur, t, al}
   let salto = 0;
-  const api = { camara: null };
+  // `apertura`: lo más que la cara se aparta de la sala (el rumbo del cuerpo más el giro de la cabeza), en radianes
+  const api = { camara: null, apertura: 0.55 };
 
   // ── Los gestos ──
+  // cuánto baja la recta del hombro a la punta de los dedos respecto de la recta al punto: el índice apunta justo; la
+  // palma (presentar) y la mano abierta (indicar), un poco por debajo, sin dejar de caer en lo que se muestra
+  const BAJAR = { senalar: 0, presentar: 0.12, indicar: 0.05 };
   function gesto(nombre, o = {}) {
     const hacer = GESTOS[nombre];
     if (!hacer) return 0;
     const opciones = { ...o };
-    // señalar y presentar: el brazo del lado del punto y el ángulo del hombro que lo apunta
-    if ((nombre === 'senalar' || nombre === 'presentar') && o.punto) {
+    // señalar, presentar e indicar: el brazo del lado del punto y el ángulo del hombro que lo apunta, medidos con el
+    // rumbo al que va el cuerpo (si está girando, apunta a donde quedará)
+    let apuntaA = null;
+    if (BAJAR[nombre] !== undefined && o.punto) {
+      const r0 = grupo.rotation.y;
+      grupo.rotation.y = rumboBase;
       const lado = o.lado || ladoDe(o.punto);
       opciones.lado = lado;
-      opciones.apunta = apuntar(lado, o.punto, nombre === 'presentar' ? 0.38 : 0);
+      // primero el brazo apuntado; después, con el codo, la muñeca y la mano de ese gesto, la punta del índice
+      const borrador = hacer({ ...opciones, apunta: apuntar(lado, o.punto, BAJAR[nombre]) });
+      const forma = typeof borrador.manos?.[lado] === 'string' ? borrador.manos[lado] : null;
+      opciones.apunta = apuntar(lado, o.punto, BAJAR[nombre], borrador.pose || null, forma);
+      grupo.rotation.y = r0;
+      grupo.updateMatrixWorld(true);
+      apuntaA = { lado, punto: o.punto.clone(), bajar: BAJAR[nombre], pose: borrador.pose || null, forma };
     }
     const nuevo = hacer(opciones);
+    // (y en cada cuadro el hombro vuelve a apuntar: el pecho se mueve con la respiración, la mirada y el giro)
+    if (apuntaA && nuevo.pose?.[`hombro${apuntaA.lado}`]) nuevo.apuntaA = apuntaA;
+    // cualquier gesto se puede sostener hasta otro (o hasta detenerGesto)
+    if (o.sostener === true) nuevo.sostener = true;
     // el mismo gesto que sigue (enumerar: un dedo más con cada frase): cambia sus manos sin volver a empezar
     if (o.seguir && clip && nombreClip === nombre) {
       clip.manosEn = normalizarManos(nuevo.manos);
@@ -303,8 +333,10 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     return tmpV.x >= 0 ? 'I' : 'D';
   }
   // El ángulo del hombro (Euler 'XZY') que deja el brazo apuntando a `punto`; `bajar` lo baja (presentar: la palma
-  // abierta hacia lo que se muestra, no el dedo)
-  function apuntar(lado, punto, bajar = 0) {
+  // abierta hacia lo que se muestra, no el dedo). Con `pose` (el codo y la muñeca del gesto) y `forma` (la mano), lo
+  // que apunta es la recta del hombro a la punta del índice, no el brazo: el codo, la muñeca y la mano la desvían
+  // (señalar con el brazo apuntado erraba unos 8°: 50 px a tamaño de presentación)
+  function apuntar(lado, punto, bajar = 0, pose = null, forma = null) {
     const h = huesos[`hombro${lado}`];
     grupo.updateMatrixWorld(true);
     const desdeH = new THREE.Vector3().setFromMatrixPosition(h.matrixWorld);
@@ -317,9 +349,37 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     d.z = Math.max(d.z, 0.15);
     d.x = Math.max(d.x, 0.08);
     d.normalize();
-    const a = Math.asin(Math.max(-1, Math.min(1, d.x)));
-    const f = Math.atan2(-d.z, -d.y);
-    return [f, 0, a];
+    const euler = (v) => [Math.atan2(-v.z, -v.y), 0, Math.asin(Math.max(-1, Math.min(1, v.x)))];
+    const v = pose ? puntaEnHombro(lado, pose, forma) : null;
+    if (!v) return euler(d);
+    // la dirección a pedirle al hombro para que la punta caiga en la recta: unas vueltas de corrección
+    const pedido = d.clone(), w = new THREE.Vector3(), q = new THREE.Quaternion(), corr = new THREE.Quaternion();
+    for (let i = 0; i < 5; i++) {
+      qDe(`hombro${lado}`, euler(pedido), q);
+      w.copy(v).applyQuaternion(q);
+      corr.setFromUnitVectors(w, d);
+      pedido.applyQuaternion(corr).normalize();
+    }
+    return euler(pedido);
+  }
+  // Hacia dónde queda la punta del índice desde el hombro (en el espacio del hombro, sin girar) con el codo y la muñeca
+  // de `pose` y la mano `forma`: se ponen un momento y se restauran
+  function puntaEnHombro(lado, pose, forma) {
+    const h = huesos[`hombro${lado}`], c = huesos[`codo${lado}`], m = huesos[`muneca${lado}`];
+    const [base, punta] = manos[lado].dedos[0];
+    const guardado = [h.quaternion.clone(), c.quaternion.clone(), m.quaternion.clone(), base.rotation.clone(), punta.rotation.clone()];
+    h.quaternion.identity();
+    if (pose[`codo${lado}`]) qDe(`codo${lado}`, pose[`codo${lado}`], c.quaternion);
+    if (pose[`muneca${lado}`]) qDe(`muneca${lado}`, pose[`muneca${lado}`], m.quaternion);
+    const v0 = MANOS[forma]?.[0] ?? 0;
+    base.rotation.set(-0.14 * (1 - v0), 0, -1.5 * v0);
+    punta.rotation.set(0, 0, -1.3 * v0);
+    h.updateMatrixWorld(true);
+    const v = h.worldToLocal(punta.localToWorld(new THREE.Vector3(0, -0.044, 0)));
+    h.quaternion.copy(guardado[0]); c.quaternion.copy(guardado[1]); m.quaternion.copy(guardado[2]);
+    base.rotation.copy(guardado[3]); punta.rotation.copy(guardado[4]);
+    h.updateMatrixWorld(true);
+    return v.lengthSq() > 1e-8 ? v.normalize() : null;
   }
 
   // ── Hablar ──
@@ -333,7 +393,15 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
 
   // ── Moverse ──
   function caminarA(x) { destinoX = Number.isFinite(x) ? x : destinoX; }
+  /** Ponerlo en `x` sin caminar (el presentador mueve la cámara con él: no se nota) */
+  function reubicar(x) {
+    if (!Number.isFinite(x)) return;
+    grupo.position.x = x;
+    destinoX = x;
+  }
   function mirarA(p) { mira = p ? p.clone() : null; }
+  /** Mirar a la sala (la cámara) `seg` segundos, aunque el gesto o mirarA pidan otra cosa (el comienzo de una frase) */
+  function mirarSala(seg = 1) { salaHasta = t + Math.max(0, Number(seg) || 0); }
   function entrar(al) {
     grupo.visible = true;
     if (reducido) { cuerpo.position.y = 0; al?.(); return; }
@@ -450,7 +518,12 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
         const [t0, p0] = ks[k], [t1, p1] = ks[Math.min(k + 1, ks.length - 1)];
         const u = t1 > t0 ? suave((tClip - t0) / (t1 - t0)) : 1;
         for (const j of Object.keys(p0)) objetivo[j].slerp(tmpQ2.slerpQuaternions(p0[j], p1[j], tClip < t0 ? 0 : u), wClip);
-      } else for (const [j, q] of Object.entries(clip.qPose)) objetivo[j].slerp(q, wClip);
+      } else {
+        // el brazo que apunta sigue apuntando al punto con el pecho como esté ahora
+        const ap = clip.apuntaA;
+        if (ap) qDe(`hombro${ap.lado}`, apuntar(ap.lado, ap.punto, ap.bajar, ap.pose, ap.forma), clip.qPose[`hombro${ap.lado}`]);
+        for (const [j, q] of Object.entries(clip.qPose)) objetivo[j].slerp(q, wClip);
+      }
       if (!reducido || clip.nombre !== 'celebrar') {
         for (const [j, eje, amp, frec, desde, hasta] of clip.osc || []) {
           if (tClip < desde || tClip > hasta) continue;
@@ -461,9 +534,10 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       }
     }
 
-    // hacia dónde mira: el punto del gesto, el de mirarA o la cámara
-    const objetivoMira = (clip && wClip > 0.3 && clip.mirar) || mira || api.camara?.position || null;
-    let yawObj = 0, pitchObj = 0;
+    // hacia dónde mira: la sala si se lo pidieron (mirarSala), el punto del gesto, el de mirarA o la cámara
+    const aLaSala = t < salaHasta;
+    const objetivoMira = (!aLaSala && ((clip && wClip > 0.3 && clip.mirar) || mira)) || api.camara?.position || null;
+    let yawObj = 0, pitchObj = 0, yawOjos = 0;
     if (objetivoMira) {
       grupo.updateMatrixWorld(true);
       tmpV.copy(objetivoMira);
@@ -471,6 +545,12 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
       const ox = tmpV.x, oy = tmpV.y - 1.85, oz = tmpV.z;
       yawObj = Math.max(-0.62, Math.min(0.62, Math.atan2(ox, Math.max(0.05, oz))));
       pitchObj = Math.max(-0.5, Math.min(0.45, Math.atan2(oy, Math.hypot(ox, oz))));
+      // la apertura: la cara nunca se aparta de la sala más que `apertura` (rumbo del cuerpo + giro de la cabeza, que
+      // es 0.9 del pedido: columna, cuello y cabeza); lo que falta lo hacen los ojos. En 3/4, nunca de perfil
+      const ap = Math.max(0.1, Number(api.apertura) || 0.55);
+      const recortado = Math.max((-ap - rumbo) / 0.9, Math.min((ap - rumbo) / 0.9, yawObj));
+      yawOjos = Math.max(-1, Math.min(1, (yawObj - recortado) * 1.6));
+      yawObj = recortado;
     }
     yaw += (yawObj - yaw) * acercar(5, dt);
     pitch += (pitchObj - pitch) * acercar(5, dt);
@@ -549,7 +629,7 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     for (const c of cara.cejas) c.poner({ alza: cejas, ceno });
     // los ojos: hacia donde mira, más de lo que gira la cabeza
     const ojos = clipCara?.ojos && wClip > 0.4 ? clipCara.ojos : null;
-    const ox = ojos ? ojos[0] : Math.max(-1, Math.min(1, (yawObj - yaw) * 2.5 + yawObj * 0.4));
+    const ox = ojos ? ojos[0] : Math.max(-1, Math.min(1, (yawObj - yaw) * 2.5 + yawObj * 0.4 + yawOjos));
     const oy = ojos ? ojos[1] : Math.max(-1, Math.min(1, (pitchObj - pitch) * 2.5 + pitchObj * 0.6));
     ojoX += (ox - ojoX) * acercar(18, dt);
     ojoY += (oy - ojoY) * acercar(18, dt);
@@ -566,12 +646,21 @@ export function crearAnimador(personaje, { reducido = false, azar = Math.random 
     m.ponerPulgar(v[4]);
   }
 
-  /** Lo que está haciendo (para el taller y las pruebas) */
+  /** Lo que está haciendo (para el taller y las pruebas). `cara`: hacia dónde mira la cara respecto de la sala (el
+   * rumbo del cuerpo más el giro de la cabeza, en radianes; nunca más que la apertura) */
+  const fwd = new THREE.Vector3();
+  const r3 = (v) => Math.round(v * 1000) / 1000;
   function estado() {
-    return { gesto: nombreClip, hablando, caminando: Math.abs(destinoX - grupo.position.x) > 0.01, x: grupo.position.x,
-      visible: grupo.visible, entrando: entrada?.tipo || null };
+    return { gesto: nombreClip, sostenido: !!clip?.sostener, hablando, caminando: Math.abs(destinoX - grupo.position.x) > 0.01,
+      x: grupo.position.x, visible: grupo.visible, entrando: entrada?.tipo || null,
+      rumbo: r3(rumbo), rumboBase: r3(rumboBase), aLaSala: t < salaHasta,
+      get cara() {
+        huesos.cabeza.updateWorldMatrix(true, false);
+        fwd.set(0, 0, 1).transformDirection(huesos.cabeza.matrixWorld);
+        return r3(Math.atan2(fwd.x, fwd.z));
+      } };
   }
 
-  return Object.assign(api, { actualizar, gesto, detenerGesto, hablar, callar, mirarA, caminarA, entrar, salir, estado,
-    girar(r) { rumboBase = Math.max(-1.2, Math.min(1.2, Number(r) || 0)); } });
+  return Object.assign(api, { actualizar, gesto, detenerGesto, hablar, callar, mirarA, mirarSala, caminarA, reubicar, entrar,
+    salir, estado, girar(r) { rumboBase = Math.max(-1.2, Math.min(1.2, Number(r) || 0)); } });
 }

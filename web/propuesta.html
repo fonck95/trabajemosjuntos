@@ -322,9 +322,12 @@ a.chip:hover { border-color: var(--ink); }
 .foco { position: relative; outline: 2px solid var(--mc, var(--accent)); outline-offset: 2px; border-radius: 6px; background-color: color-mix(in srgb, var(--mc, var(--accent)) 9%, transparent); animation: foco 0.6s ease-in-out 2; }
 @keyframes foco { 50% { outline-offset: 5px; } }
 .con-foco > :not(.foco) { opacity: 0.5; transition: opacity 0.3s; }
+/* cuando llega el dedo del presentador (js/presentador/presentador.js), el anillo late una vez */
+.foco.senalado { animation: senalado 0.9s ease-out 1; }
+@keyframes senalado { 35% { outline-width: 3px; outline-offset: 6px; } }
 /* en una hoja de especificaciones el anillo va en el valor y la etiqueta toma el color: una sola fila señalada */
 dl.hoja dt.foco { outline: none; background: none; animation: none; color: var(--mc, var(--accent)); }
-@media (prefers-reduced-motion: reduce) { .sub-voz i, .subtitulo.preparando p::after, .foco { animation: none; } .sub-puntos i { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .sub-voz i, .subtitulo.preparando p::after, .foco { animation: none; } .sub-puntos i { transition: none; } .foco.senalado { animation: none; outline-width: 3px; } }
 
 /* ---------- fichas para imprimir */
 .fichas { position: fixed; inset: 0; z-index: 40; overflow-y: auto; background: var(--bg); padding: 28px max(24px, 6vw) 60px; }
