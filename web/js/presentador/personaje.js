@@ -31,15 +31,17 @@ import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometr
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 export const COLORES = {
-  piel: 0xdca291, pielBrazo: 0xcf9480, pielSombra: 0x9e5e50, pielLinea: 0x8a4f45, oreja: 0xeca292, labio: 0xd68c92, labioSup: 0xc6827e,
-  labioBrillo: 0xe6a9ab,
+  piel: 0xdca291, pielBrazo: 0xcf9480, pielMano: 0xd59b88, pielSombra: 0x9e5e50, pielLinea: 0x8a4f45, oreja: 0xeca292,
+  labio: 0xd68c92, labioSup: 0xc6827e, labioBrillo: 0xe6a9ab,
   pelo: 0x29252e, peloLado: 0x2f2a30, peloBorde: 0x705c5e, peloBrillo: 0x75727e, peloCana: 0x9a9494,
   ceja: 0x5d4138,
-  polo: 0xbe2537, poloOscuro: 0x951a2b, jeanClaro: 0x97a8c5, jean: 0x445d8a, jeanOscuro: 0x283a5f,
+  polo: 0xbe2537, poloOscuro: 0x951a2b, poloFilo: 0xd5293e, jeanClaro: 0x97a8c5, jean: 0x445d8a, jeanOscuro: 0x283a5f,
   zapato: 0x3a2a22, suela: 0x2a201b,
   dientes: 0xfdfcf8, boca: 0x4a1416, lengua: 0xc0545a, ojo: 0xe0d3ca, iris: 0x2e1d17, pupila: 0x080504,
   reloj: 0x1b1b20, bisel: 0x4a4d57, esfera: 0x3a3b45, agujas: 0xf2f2f2, pulsera: 0xc8303a, cuenta: 0xe4c47e,
   boton: 0xf2e6e6, contorno: 0x1e130e, contornoPiel: 0x6e3b2e,
+  // el contorno de la ropa, del color de la tela en muy oscuro (no negro): la polo en vino y el jean en azul
+  contornoPolo: 0x4a0d16, contornoJean: 0x1f2b47,
 };
 
 const R = 0.32;          // el radio de la cabeza (antes de esculpirla)
@@ -61,8 +63,10 @@ function rampaDeTonos(tonos, suaveRampa = false, tinte = [1, 1, 1]) {
  * pantalla, a lo largo de la normal. `uniformes` se comparte entre todos: el presentador fija la resolución. El casco
  * se corre además un poco hacia atrás, a lo largo del rayo de la cámara (no cambia dónde cae en la pantalla): así no
  * asoma en motas por delante de la piel en las zonas cóncavas o de canto (las cuencas, los costados del puente, los
- * lados de la polo), y la silueta y los bordes que están más adelante que eso (la nariz, las orejas, el pelo) siguen igual */
-function materialContorno(uniformes) {
+ * lados de la polo), y la silueta y los bordes que están más adelante que eso (la nariz, las orejas, el pelo) siguen igual.
+ * `atras`: cuánto se corre (las piezas finas apoyadas sobre otra, como el cuello de la polo, van con menos: si no, el
+ * borde que se apoya queda detrás de la tela de abajo y la línea sale cortada) */
+function materialContorno(uniformes, atras = 0.006) {
   return new THREE.ShaderMaterial({
     uniforms: uniformes,
     side: THREE.BackSide,
@@ -71,7 +75,7 @@ function materialContorno(uniformes) {
       uniform vec2 resolucion;
       void main() {
         vec4 vista = modelViewMatrix * vec4(position, 1.0);
-        vista.xyz += normalize(vista.xyz) * 0.006;
+        vista.xyz += normalize(vista.xyz) * ${atras.toFixed(4)};
         vec3 n = normalize(normalMatrix * normal);
         vec4 clip = projectionMatrix * vista;
         vec2 d = (projectionMatrix * vec4(n, 0.0)).xy;
@@ -186,8 +190,9 @@ function tenir(geo, f) {
  * - `huesos`: los pivotes que mueve animador.js (cadera, columna, pecho, cuello, cabeza, hombro/codo/muneca y
  *   muslo/rodilla/tobillo de cada lado: …I es el izquierdo, …D el derecho, que vive en un grupo espejo).
  * - `manos.I` / `manos.D`: {dedos: [[base, punta] × 4], pulgar, ponerPulgar(p)}: índice, medio, anular y meñique.
- * - `cara`: {boca: {poner({abrir, ancho, sonrisa})}, ojos: [{poner({abierto, sonrisa, mira})}],
- *   cejas: [{poner({alza, ceno})}]}.
+ * - `cara`: {boca: {poner({abrir, ancho, sonrisa, labios})}, ojos: [{poner({abierto, sonrisa, mira})}],
+ *   cejas: [{poner({alza, ceno})}], nivel(pxCabeza)}. `labios` (0 por omisión: los dientes de la foto; 1: la sonrisa
+ *   cerrada); `nivel`: el detalle de la cara según lo que mide la cabeza en la pantalla (sin llamarlo, como de cerca).
  * - `craneo`: el grupo de la cabeza (la cara, el pelo, las orejas), para medirla o encuadrarla.
  * - `contorno`: los uniformes del contorno ({grosor, resolucion, color}).
  */
@@ -203,8 +208,12 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
   // la piel con una línea más cálida (un café rojizo): la cara no queda recortada en negro. Comparte el grosor y la
   // resolución (los mismos objetos), así el presentador los sigue controlando
   const matContornoPiel = materialContorno({ ...contorno, color: { value: new THREE.Color(COLORES.contornoPiel) } });
-  mats.add(matContorno);
-  mats.add(matContornoPiel);
+  // la ropa con el contorno de su color (no negro: la polo se separa del jean y el dibujo se ve menos duro)
+  const matContornoPolo = materialContorno({ ...contorno, color: { value: new THREE.Color(COLORES.contornoPolo) } });
+  const matContornoJean = materialContorno({ ...contorno, color: { value: new THREE.Color(COLORES.contornoJean) } });
+  // el del cuello de la polo, apoyado en el pecho: con poco corrimiento hacia atrás (ver materialContorno)
+  const matContornoCuello = materialContorno({ ...contorno, color: { value: new THREE.Color(COLORES.contornoPolo) } }, 0.0012);
+  for (const m of [matContorno, matContornoPiel, matContornoPolo, matContornoJean, matContornoCuello]) mats.add(m);
   // la ropa en tonos (caricatura); la piel con una transición suave entre ellos: el relieve de la cara se lee sin
   // manchas. La de la piel cae parejo en los tonos de lo que mira de frente (la cara tiene volumen: la frente, los
   // pómulos y la nariz más claros que la mandíbula y los costados, como en la foto; con la de antes, todo lo que miraba
@@ -222,7 +231,10 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
   const plano = (color, extra = {}) => { const m = new THREE.MeshBasicMaterial({ color, ...extra }); mats.add(m); return m; };
   const M = {
     piel: toon(COLORES.piel, { gradientMap: rampaPiel }),
-    pielBrazo: toon(COLORES.pielBrazo, { gradientMap: rampaPiel }),   // los brazos y las manos, más tostados que la cara
+    pielBrazo: toon(COLORES.pielBrazo, { gradientMap: rampaPiel }),   // los brazos, más tostados que la cara
+    // las manos, a medio camino entre el brazo y la cara: chicas en la pantalla y rodeadas de contorno, con el tono del
+    // brazo se leían como una mancha oscura
+    pielMano: toon(COLORES.pielMano, { gradientMap: rampaPiel }),
     cuello: toon(0xffffff, { gradientMap: rampaPiel, vertexColors: true }),   // la piel, con su sombra por vértice
     oreja: toon(COLORES.oreja, { gradientMap: rampaPiel, vertexColors: true }),
     pelo: toon(0xffffff, { vertexColors: true }),   // su color va por vértice (el negro, los lados, el gel)
@@ -236,12 +248,16 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
       polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 }),
   };
 
-  // Una malla con su contorno (un hijo con la misma geometría y el material del contorno: el café rojizo en la piel)
-  const deLaPiel = new Set([M.piel, M.pielBrazo, M.oreja, M.cuello, M.nariz]);
-  function malla(geo, mat, { borde = true } = {}) {
+  // Una malla con su contorno (un hijo con la misma geometría y el material del contorno: el café rojizo en la piel, el
+  // vino en la polo y el azul en el jean)
+  const deLaPiel = new Set([M.piel, M.pielBrazo, M.pielMano, M.oreja, M.cuello, M.nariz]);
+  const dePolo = new Set([M.polo, M.poloDoble, M.poloOscuro]), deJean = new Set([M.jean, M.jeanOscuro]);
+  const contornoDe = (mat) => (deLaPiel.has(mat) ? matContornoPiel : dePolo.has(mat) ? matContornoPolo
+    : deJean.has(mat) ? matContornoJean : matContorno);
+  function malla(geo, mat, { borde = true, contorno: cont } = {}) {
     const m = new THREE.Mesh(g(geo), mat);
     if (borde) {
-      const c = new THREE.Mesh(geo, deLaPiel.has(mat) ? matContornoPiel : matContorno);
+      const c = new THREE.Mesh(geo, cont || contornoDe(mat));
       c.raycast = () => {};
       m.add(c);
     }
@@ -530,20 +546,11 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
   function brazo(lado) {
     const raiz = lado === 'D' ? espejo() : new THREE.Group();
     huesos.pecho.add(raiz);
-    // el hombro: una bola aplastada que llena la unión de la manga con la polo, sin asomar por encima de la línea del
-    // hombro (antes abullonaba las mangas)
-    const bola = malla(new THREE.SphereGeometry(0.086, 24, 16), M.polo);
-    bola.position.set(0.29, 0.135, 0);
-    bola.scale.set(1, 0.62, 0.95);
-    raiz.add(bola);
     const hombro = hueso(`hombro${lado}`, 'XZY'), codo = hueso(`codo${lado}`, 'XYZ'), muneca = hueso(`muneca${lado}`, 'XYZ');
-    hombro.position.copy(bola.position);
+    hombro.position.set(0.29, 0.135, 0);
     raiz.add(hombro);
-    // la manga corta, recta y algo suelta, hasta dos tercios del brazo; el puño es una banda acanalada del mismo rojo,
-    // con una costura arriba
-    const manga = malla(new THREE.CylinderGeometry(0.088, 0.09, 0.19, 24, 1, true), M.poloDoble);
-    manga.position.y = -0.085;
-    hombro.add(manga);
+    manga(raiz, hombro);
+    // el puño de la manga es una banda acanalada del mismo rojo, con una costura arriba
     const puno = malla(new THREE.CylinderGeometry(0.087, 0.084, 0.036, 24, 1, true), M.poloDoble);
     puno.position.y = -0.196;
     hombro.add(puno);
@@ -551,9 +558,10 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     costuraPuno.position.y = -0.184;
     hombro.add(costuraPuno);
     // el brazo: fuerte, el bíceps algo marcado. Abajo se angosta hasta meterse entero en la bola del codo, y el
-    // antebrazo nace de adentro de ella: el codo no se ve cortado, como el de un muñeco
+    // antebrazo nace de adentro de ella: el codo no se ve cortado, como el de un muñeco. Arriba termina redondo bastante
+    // debajo del hombro (adentro de la manga, que con el brazo levantado se queda un poco atrás)
     const brazoGeo = new THREE.LatheGeometry([[0.0, -0.135], [0.05, -0.13], [0.061, -0.1], [0.071, -0.04], [0.073, 0.02],
-      [0.068, 0.08], [0.056, 0.12], [0.0, 0.13]].map(([r, y]) => new THREE.Vector2(r, y)), 20);
+      [0.066, 0.07], [0.048, 0.093], [0.0, 0.1]].map(([r, y]) => new THREE.Vector2(r, y)), 20);
     const sup = malla(suavizarNormales(brazoGeo), M.pielBrazo);
     sup.position.y = -0.17;
     sup.scale.z = 0.95;
@@ -573,6 +581,61 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     if (lado === 'I') reloj(codo); else manilla(codo);
     manos[lado] = mano(muneca);
     Object.assign(huesos, { [`hombro${lado}`]: hombro, [`codo${lado}`]: codo, [`muneca${lado}`]: muneca });
+  }
+
+  /** La manga corta, recta y algo suelta, hasta dos tercios del brazo, y el hombro: una sola pieza (un solo contorno,
+   * sin el escalón de la bola del hombro contra la manga), con la copa del hombro aplastada (no asoma por encima de la
+   * línea del hombro de la polo). Cuelga del pecho, no del brazo: en cada cuadro, cada anillo gira una parte del giro del
+   * hombro, de casi nada en la copa a todo desde 0,08 bajo el hombro (como la tela, que se queda en el hombro y sigue
+   * al brazo). Con el brazo arriba (celebrar, saludar) la manga hace una curva redonda del hombro al brazo, sin la hombrera
+   * angulosa ni el brazo que salía por encima de la polo */
+  const qManga = new THREE.Quaternion(), qUno = new THREE.Quaternion(), vManga = new THREE.Vector3();
+  function manga(raiz, hombro) {
+    const perfilManga = [[0.09, -0.18], [0.0895, -0.15], [0.089, -0.12], [0.0888, -0.095], [0.0885, -0.07],
+      [0.0882, -0.045], [0.088, -0.022], [0.088, 0]];
+    for (let i = 1; i <= 6; i++) {   // la copa: un cuarto de elipse (0,088 de ancho, 0,054 de alto)
+      const a = (i / 6) * (Math.PI / 2);
+      perfilManga.push([0.088 * Math.cos(a), 0.054 * Math.sin(a)]);
+    }
+    const geo = suavizarNormales(new THREE.LatheGeometry(perfilManga.map(([r, y]) => new THREE.Vector2(Math.max(0, r), y)), 24));
+    const m = malla(geo, M.poloDoble);
+    m.position.copy(hombro.position);
+    m.frustumCulled = false;
+    m.children[0].frustumCulled = false;
+    raiz.add(m);
+    const pos = geo.attributes.position, reposo = pos.array.slice();
+    const nor = geo.attributes.normal, reposoN = nor.array.slice();
+    // cuánto del giro del hombro sigue cada vértice, según su altura (los anillos: un giro por altura): la copa casi
+    // nada, del borde de la copa para abajo cada vez más y todo desde 0,08 bajo el hombro (si llega más abajo, el brazo
+    // asoma por adentro de la manga al levantarlo)
+    const peso = (y) => 1 - suave(-0.08, 0.04, y);
+    const alturas = [...new Set(Array.from({ length: pos.count }, (_, i) => reposo[i * 3 + 1].toFixed(5)))];
+    const anillo = Array.from({ length: pos.count }, (_, i) => alturas.indexOf(reposo[i * 3 + 1].toFixed(5)));
+    const pesos = alturas.map((y) => peso(+y)), giros = alturas.map(() => new THREE.Quaternion());
+    let ultimo = null;
+    // Cada anillo gira entero (la posición y la normal de cada vértice), sin recalcular las normales. Con el hombro casi
+    // quieto (la respiración, de pie) no se rehace: menos de una milésima de radián no se ve
+    const deformar = () => {
+      qManga.copy(hombro.quaternion);
+      if (ultimo && Math.abs(ultimo.dot(qManga)) > 1 - 1e-7) return;
+      ultimo = (ultimo || new THREE.Quaternion()).copy(qManga);
+      pesos.forEach((w, k) => giros[k].slerpQuaternions(qUno, qManga, w));
+      for (let i = 0; i < pos.count; i++) {
+        const q = giros[anillo[i]];
+        vManga.fromArray(reposo, i * 3).applyQuaternion(q);
+        pos.setXYZ(i, vManga.x, vManga.y, vManga.z);
+        vManga.fromArray(reposoN, i * 3).applyQuaternion(q);
+        nor.setXYZ(i, vManga.x, vManga.y, vManga.z);
+      }
+      pos.needsUpdate = true;
+      nor.needsUpdate = true;
+    };
+    // se deforma justo antes de calcular su matriz del mundo (el animador ya puso el hombro de este cuadro)
+    m.updateMatrixWorld = (forzar) => {
+      deformar();
+      THREE.Object3D.prototype.updateMatrixWorld.call(m, forzar);
+    };
+    return m;
   }
 
   // El reloj negro y grande (muñeca izquierda): la correa negra, plana y ancha; la caja redonda con el bisel gris
@@ -664,11 +727,15 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     cabo.matrixWorldNeedsUpdate = false;
   }
 
-  // La mano: la palma hacia el cuerpo (−x), los dedos hacia abajo (−y) y el pulgar adelante (+z)
+  // La mano: la palma hacia el cuerpo (−x), los dedos hacia abajo (−y) y el pulgar adelante (+z). Grande, como en un
+  // muñeco: el grupo se agranda 1,3 veces desde la muñeca (su pivote no se mueve; el reloj y la manilla siguen en su
+  // lugar), así a tamaño de presentación el dedo que señala y los que cuentan se leen
+  const ESCALA_MANO = 1.3;
   function mano(muneca) {
     const m = new THREE.Group();
+    m.scale.setScalar(ESCALA_MANO);
     muneca.add(m);
-    const palma = malla(new RoundedBoxGeometry(0.058, 0.108, 0.1, 3, 0.024), M.pielBrazo);
+    const palma = malla(new RoundedBoxGeometry(0.058, 0.108, 0.1, 3, 0.024), M.pielMano);
     palma.position.y = -0.059;
     m.add(palma);
     const dedos = [];
@@ -677,13 +744,13 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
       const base = hueso('dedo', 'XYZ');
       base.position.set(0, -0.108, z);
       m.add(base);
-      const f1 = malla(capsula(0.0165, 0.025 * largo, 8), M.pielBrazo);
+      const f1 = malla(capsula(0.0165, 0.025 * largo, 8), M.pielMano);
       f1.position.y = -0.021 * largo;
       base.add(f1);
       const punta = hueso('punta', 'XYZ');
       punta.position.y = -0.043 * largo;
       base.add(punta);
-      const f2 = malla(capsula(0.0154, 0.019 * largo, 8), M.pielBrazo);
+      const f2 = malla(capsula(0.0154, 0.019 * largo, 8), M.pielMano);
       f2.position.y = -0.017 * largo;
       punta.add(f2);
       dedos.push([base, punta]);
@@ -691,7 +758,7 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     const pulgar = hueso('pulgar', 'XYZ');
     pulgar.position.set(-0.008, -0.032, 0.048);
     m.add(pulgar);
-    const p1 = malla(capsula(0.019, 0.043, 8), M.pielBrazo);
+    const p1 = malla(capsula(0.019, 0.043, 8), M.pielMano);
     p1.position.y = -0.032;
     pulgar.add(p1);
     // Hacia dónde apunta el pulgar: −1 afuera (mano abierta, pulgar arriba), 0 en reposo, 1 doblado sobre la palma
@@ -1020,11 +1087,65 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     for (let i = 0; i < pos.length; i += 3) todo.set([-pos[i], pos[i + 1], pos[i + 2]], pos.length + i);
     const idx2 = idx.slice();
     for (let i = 0; i < idx.length; i += 3) idx2.push(idx[i] + 2 * N, idx[i + 2] + 2 * N, idx[i + 1] + 2 * N);
+    // el filo: los bordes que se ven (el de abajo y el de la V) un poco más claros que la tela, como la luz en el canto
+    // de la tela doblada: separa el cuello de su sombra
+    const tela = color(COLORES.polo), filo = color(COLORES.poloFilo), cv = new THREE.Color();
+    const colores = new Float32Array(todo.length);
+    for (let i = 0; i < todo.length / 3; i++) {
+      const r = i % N, k = Math.floor(r / (J + 1)), j = r % (J + 1);
+      const f = Math.max(j === J ? 1 : j === J - 1 ? 0.3 : 0, k === K ? 1 : k === K - 1 ? 0.3 : 0);
+      cv.copy(tela).lerp(filo, f);
+      colores.set([cv.r, cv.g, cv.b], i * 3);
+    }
     let geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(todo, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colores, 3));
     geo.setIndex(idx2);
     geo = suavizarNormales(geo);
-    huesos.columna.add(malla(geo, M.polo));
+    huesos.columna.add(malla(geo, toon(0xffffff, { vertexColors: true }), { contorno: matContornoCuello }));
+    // la sombra del cuello sobre la polo: una banda oscura pegada al borde de abajo, más ancha bajo las puntas (≈0,012)
+    // y que se afina hacia atrás y hacia la V. Con ella el cuello se lee como cuello (apoyado y con volumen) de lejos
+    {
+      const bp = [], bc = [], bi = [], oscuro = color(COLORES.poloOscuro);
+      const e = new THREE.Vector3(), d = new THREE.Vector3(), q1 = new THREE.Vector3(), q2 = new THREE.Vector3();
+      for (const lado of [1, -1]) {
+        const base = bp.length / 3;
+        for (let k = 0; k <= K; k++) {
+          const u = k / K, ancho = 0.012 * (0.35 + 0.65 * suave(0.45, 0.8, u)) * (1 - suave(0.9, 0.995, u));
+          e.copy(P[k][J]);
+          d.subVectors(P[k][J], P[k][J - 1]).normalize();
+          q1.copy(e).addScaledVector(d, -0.003);
+          q2.copy(e).addScaledVector(d, Math.max(0.0005, ancho));
+          for (const [q, c] of [[q1, oscuro], [q2, tela]]) {
+            sobreTorso(q, 0.0012);
+            bp.push(q.x * lado, q.y, q.z);
+            bc.push(c.r, c.g, c.b);
+          }
+          if (k < K) {
+            const a = base + 2 * k;
+            if (lado > 0) bi.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+            else bi.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+          }
+        }
+      }
+      const bandaGeo = new THREE.BufferGeometry();
+      bandaGeo.setAttribute('position', new THREE.Float32BufferAttribute(bp, 3));
+      bandaGeo.setAttribute('color', new THREE.Float32BufferAttribute(bc, 3));
+      bandaGeo.setIndex(bi);
+      bandaGeo.computeVertexNormals();
+      // hacia afuera de la polo (si el orden de los vértices la dejó al revés, se da vuelta)
+      const nb = bandaGeo.attributes.normal, pb = bandaGeo.attributes.position;
+      let haciaAfuera = 0;
+      for (let i = 0; i < nb.count; i++) haciaAfuera += nb.getX(i) * pb.getX(i) + nb.getZ(i) * pb.getZ(i);
+      if (haciaAfuera < 0) {
+        const ix = bandaGeo.index.array;
+        for (let i = 0; i < ix.length; i += 3) [ix[i + 1], ix[i + 2]] = [ix[i + 2], ix[i + 1]];
+        bandaGeo.computeVertexNormals();
+      }
+      const banda = malla(bandaGeo, toon(0xffffff, { vertexColors: true, polygonOffset: true, polygonOffsetFactor: -1,
+        polygonOffsetUnits: -2 }), { borde: false });
+      huesos.columna.add(banda);
+    }
     // el escote: la piel que se ve en la V, entre los bordes del cuello, hasta la tapeta (pegada a la polo; arriba se
     // mete detrás del cuello). Del color de la base del cuello, a la sombra
     const filas = 8, cols = 6, ep = [], ei = [];
@@ -1613,7 +1734,11 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
 
   // La cara
   function construirCara(padre, cabeza) {
-    const ojos = [], cejas = [];
+    const ojos = [], cejas = [], pliegues = [];
+    // El nivel de detalle según el tamaño en la pantalla (cara.nivel): 0 como de cerca; 1 con la cabeza chica (menos de
+    // ~100 px), donde las cejas finas se pierden y el ojo queda en una raya: cejas más gruesas y oscuras, pestañas más
+    // marcadas, el ojo más abierto, el iris más grande y el pliegue de la sonrisa más marcado
+    let chico = 0;
     // el pliegue de la sonrisa (del lado izquierdo, +x): una curva de Bézier de la aleta de la nariz a la comisura.
     // Devuelve el punto en t (0..1) y hacia dónde va la curva (en radianes)
     const PLIEGUE = [[0.07, -0.078], [0.124, -0.088], [0.134, -0.166]];
@@ -1677,23 +1802,26 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
       const anillo = disco(raizLado, 0x1c110d, 3, dentro);
       const pupila = disco(raizLado, COLORES.pupila, 4, dentro, 20);
       const brillo = disco(raizLado, 0xffffff, 5, dentro, 12);
-      let ultimo = '';
+      let ultimo = '', pedido = {};
       /** abierto 0..1 (0: cerrado), sonrisa 0..1 (el párpado de abajo sube y aparecen las patas de gallo), mira [x, y]
        * de −1 a 1 */
       const poner = ({ abierto = 1, sonrisa = 1, mira = [0, 0] } = {}) => {
-        const clave = `${abierto.toFixed(3)}|${sonrisa.toFixed(3)}|${mira[0].toFixed(3)}|${mira[1].toFixed(3)}`;
+        const clave = `${abierto.toFixed(3)}|${sonrisa.toFixed(3)}|${mira[0].toFixed(3)}|${mira[1].toFixed(3)}|${chico.toFixed(2)}`;
         if (clave === ultimo) return;
         ultimo = clave;
-        const hb = 0.0135 - 0.0085 * sonrisa;
+        pedido = { abierto, sonrisa, mira };
+        // chico: el ojo un 25 % más abierto (los dos párpados se separan) y el iris un 10 % más grande
+        const abre = 1 + 0.25 * chico, ki = 1 + 0.1 * chico;
+        const hb = (0.0135 - 0.0085 * sonrisa) * abre;
         const abajo = (u) => OY - hb * Math.pow(Math.max(0, 1 - u * u), 0.8) + 0.004 * sonrisa * (u + 1) * 0.5 - 0.0005 * u;
-        const ht = 0.023 - 0.004 * sonrisa;
+        const ht = (0.023 - 0.004 * sonrisa) * abre;
         const arribaAbierto = (u) => OY + ht * Math.pow(Math.max(0, 1 - u * u), 0.5) * (1 - 0.14 * u) - 0.0005 * u;
         const arriba = (u) => { const b = abajo(u); return b + (arribaAbierto(u) - b) * abierto; };
         blanco(OX, A, arriba, abajo, 0.0015);
         sombraOjo(OX, A, (u) => arriba(u) + 0.001, (u) => arriba(u) - 0.0055 * raiz(1 - u * u), 0.0034);
         // las pestañas de arriba: finas junto al lagrimal, más gruesas hacia la cola
         pestanas(OX + 0.001, A * 1.03,
-          (u) => arriba(u / 1.015) + 0.0034 * Math.pow(Math.max(0, 1 - u * u), 0.3) * (1 + 0.2 * u) + 0.0008,
+          (u) => arriba(u / 1.015) + 0.0034 * (1 + 0.5 * chico) * Math.pow(Math.max(0, 1 - u * u), 0.3) * (1 + 0.2 * u) + 0.0008,
           (u) => arriba(u / 1.015) - 0.0006, 0.0024);
         parpadoBajo(OX, A * 0.92, (u) => abajo(u / 0.92) + 0.0006, (u) => abajo(u / 0.92) - 0.0022 * raiz(1 - u * u), 0.0022);
         // el pliegue del párpado de arriba, que sigue al ojo abierto: una línea fina que pasa la cola y baja (la
@@ -1716,24 +1844,25 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
         // izquierda» es −x: así los dos ojos miran, y brillan, hacia el mismo lado
         const sx = lado === 'D' ? -1 : 1;
         const mx = OX + sx * mira[0] * 0.015, my = OY + 0.005 + mira[1] * 0.007;
-        anillo(mx, my, 0.0185, 0.0185, 0.00245);
-        iris(mx, my, 0.0158, 0.0158, 0.0026);
-        pupila(mx, my, 0.0082, 0.0082, 0.0032);
-        brillo(mx + sx * 0.0055, my + 0.004, 0.0033, 0.0033, 0.0038);
+        anillo(mx, my, 0.0185 * ki, 0.0185 * ki, 0.00245);
+        iris(mx, my, 0.0158 * ki, 0.0158 * ki, 0.0026);
+        pupila(mx, my, 0.0082 * ki, 0.0082 * ki, 0.0032);
+        brillo(mx + sx * 0.0055 * ki, my + 0.004 * ki, 0.0033 * ki, 0.0033 * ki, 0.0038);
       };
       poner();
-      ojos.push({ poner });
+      ojos.push({ poner, rehacer: () => poner(pedido) });
       // ── la ceja: castaña (más clara que el pelo), de borde ralo, casi recta: sube apenas desde la cabeza hasta un
       // arco suave en el tercio de afuera y cae en la cola. Baja, cerca del ojo (a un tercio de lo que va del ojo a la
       // línea del pelo: la frente queda alta), y sin la cuña hacia la nariz, que daba cara de enojado ──
       const ceja = tira(raizLado, COLORES.ceja, 1, {}, 26, 3);
       const cejaRala = tira(raizLado, COLORES.ceja, 0, linea(0.4), 26, 2);   // el borde ralo, más claro
       const arco = lado === 'I' ? 1 : 0;   // su ceja izquierda arquea un poco más y cae más en la cola
-      let ultimaCeja = '';
+      let ultimaCeja = '', pedidoCeja = {};
       const ponerCeja = ({ alza = 0, ceno = 0 } = {}) => {
-        const clave = `${alza.toFixed(3)}|${ceno.toFixed(3)}`;
+        const clave = `${alza.toFixed(3)}|${ceno.toFixed(3)}|${chico.toFixed(2)}`;
         if (clave === ultimaCeja) return;
         ultimaCeja = clave;
+        pedidoCeja = { alza, ceno };
         const CX = 0.102, CA = 0.066;
         // la línea media (u = −1 la cabeza, junto a la nariz; 1 la cola): ≈0,046 sobre las esquinas del ojo en el
         // centro, la cabeza algo más baja y la cola que cae. La derecha casi no cae en la cola; la izquierda va un poco
@@ -1741,16 +1870,19 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
         const base = (u) => 0.0602 + 0.0078 * u - 0.0073 * u * u - 0.0093 * u ** 3
           + (1 - arco) * 0.006 * Math.max(0, u) ** 3
           + arco * (0.002 + 0.004 * Math.exp(-(((u - 0.4) / 0.45) ** 2)) - 0.016 * Math.max(0, u - 0.55) ** 2)
-          + 0.016 * alza * (1 - 0.3 * u) - 0.008 * ceno * (1 - u) / 2;
+          + 0.016 * alza * (1 - 0.3 * u) - 0.008 * ceno * (1 - u) / 2
+          + 0.0028 * chico * (1 - u) / 2;   // chica y gruesa, con la cabeza algo más alta: si no, se leía ceñuda
         // fina en la cabeza, más gruesa en el cuerpo; la cabeza roma (^10) y la cola que se afina en punta (^4)
-        const grosorCeja = (u) => 0.012 + 0.0012 * u - 0.003 * u * u;
+        // (chico: hasta 1,7 veces más gruesa, menos en la cabeza, para que a 70–100 px de cabeza se lea como un trazo
+        // y no como una sombra)
+        const grosorCeja = (u) => (0.012 + 0.0012 * u - 0.003 * u * u) * (1 + 0.7 * chico * (0.8 + 0.2 * u));
         const punta = (u) => raiz(1 - Math.abs(u * 0.98) ** (u < 0 ? 10 : 4));
         ceja(CX, CA, (u) => base(u) + grosorCeja(u) * 0.5 * punta(u), (u) => base(u) - grosorCeja(u) * 0.5 * punta(u), 0.0016);
         cejaRala(CX, CA * 1.03, (u) => base(u) + (grosorCeja(u) * 0.5 + 0.0034) * punta(u),
           (u) => base(u) - (grosorCeja(u) * 0.5 + 0.0026) * punta(u), 0.0013);
       };
       ponerCeja();
-      cejas.push({ poner: ponerCeja });
+      cejas.push({ poner: ponerCeja, rehacer: () => ponerCeja(pedidoCeja), mallas: [ceja.malla, cejaRala.malla] });
       // ── la oreja: grande y despegada; abre hacia adelante (de frente se le ve la concha) y arriba se separa más de
       // la cabeza que en el lóbulo. Va de entre la ceja y el ojo a entre la nariz y la boca ──
       const o = tocar(cabeza, 3, -0.066, -0.02, [-1, 0, 0]) || { p: new THREE.Vector3(0.24, -0.066, -0.02) };
@@ -1763,7 +1895,12 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
       // ── el pliegue de la sonrisa: un paréntesis que nace junto a la aleta de la nariz, se abre hacia la mejilla y
       // baja casi vertical hasta pasar por fuera de la comisura, como en la foto (una curva de Bézier) ──
       const pliegue = trazo(raizLado, COLORES.pielLinea, 1, linea(0.46), 24);
-      pliegue((t) => enPliegue(t).slice(0, 2), (t) => 0.0046 * Math.pow(Math.sin(Math.PI * t), 0.6), 0.0016);
+      const ponerPliegue = () => {
+        pliegue((t) => enPliegue(t).slice(0, 2), (t) => 0.0046 * (1 + 0.35 * chico) * Math.pow(Math.sin(Math.PI * t), 0.6), 0.0016);
+        pliegue.malla.material.opacity = 0.46 + 0.16 * chico;
+      };
+      ponerPliegue();
+      pliegues.push(ponerPliegue);
     }
     // ── la nariz: ancha y trapezoidal, con la punta redonda y grande fundida con las aletas, el puente ancho y las fosas
     // que asoman abajo. De ala a ala mide casi un tercio del ancho de la cara (±0,074) ──
@@ -1839,7 +1976,21 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
       nariz.add(fosa);
     }
     const boca = crearBoca(padre);
-    return { ojos, cejas, boca, nariz };
+    const colorCeja = color(COLORES.ceja), cejaChica = color(0x3a2721);
+    /** El nivel de detalle para una cabeza de `pxCabeza` px CSS en la pantalla (el presentador lo llama al cambiar de
+     * vista). Con 120 o más, como de cerca (lo de siempre, también sin llamarlo); con 100 o menos, el nivel chico entero;
+     * en el medio, una mezcla (así un acercamiento no salta) */
+    function nivel(pxCabeza) {
+      const k = Number.isFinite(pxCabeza) ? 1 - suave(100, 120, pxCabeza) : 0;
+      if (Math.abs(k - chico) < 0.005) return chico;
+      chico = k;
+      for (const c of cejas) for (const m of c.mallas) m.material.color.copy(colorCeja).lerp(cejaChica, k);
+      for (const c of cejas) c.rehacer();
+      for (const o of ojos) o.rehacer();
+      for (const p of pliegues) p();
+      return chico;
+    }
+    return { ojos, cejas, boca, nariz, nivel };
   }
 
   // La boca: los labios (el de arriba con su arco de cupido, el de abajo lleno y rosado, con su brillo), el fondo oscuro,
@@ -1856,35 +2007,56 @@ export function crearPersonaje({ documento = globalThis.document } = {}) {
     const lengua = tira(padre, COLORES.lengua, 2);
     const dientesSup = tira(padre, COLORES.dientes, 3, texDientes ? { map: texDientes, color: 0xffffff } : {});
     const dientesInf = tira(padre, 0xf1ede4, 3);
+    // la línea entre los labios cuando la boca está cerrada (encima de los dos labios)
+    const comisura = trazo(padre, 0x6a2c2e, 2, { transparent: true, opacity: 0.9, depthWrite: false }, 24);
     let ultimo = '';
     /** abrir 0..1 (0: la sonrisa de la foto, con los dientes de arriba a la vista), ancho 0.7..1.15 (menos: una «o»),
-     * sonrisa 0..1 (las comisuras arriba) */
-    function poner({ abrir = 0, ancho = 1, sonrisa = 1 } = {}) {
-      const clave = `${abrir.toFixed(3)}|${ancho.toFixed(3)}|${sonrisa.toFixed(3)}`;
+     * sonrisa 0..1 (las comisuras arriba), labios 0..1 (0: los labios dejan ver los dientes, como en la foto; 1: la
+     * sonrisa cerrada, sin dientes ni el fondo de la boca: al escuchar, al pensar, en reposo) */
+    function poner({ abrir = 0, ancho = 1, sonrisa = 1, labios = 0 } = {}) {
+      const L = Math.max(0, Math.min(1, Number(labios) || 0));
+      const clave = `${abrir.toFixed(3)}|${ancho.toFixed(3)}|${sonrisa.toFixed(3)}|${L.toFixed(3)}`;
       if (clave === ultimo) return;
       ultimo = clave;
-      const w = 0.103 * (0.9 + 0.1 * sonrisa) * ancho;
+      // cerrada es algo más angosta: la sonrisa estira menos la boca
+      const w = 0.103 * (0.9 + 0.1 * sonrisa) * ancho * (1 - 0.07 * L);
       const c = (u) => Math.max(0, 1 - u * u);
       // la sonrisa de la foto es una medialuna ancha y plana: el borde de arriba casi recto, con las comisuras apenas
-      // por encima del centro, y la curva la hace el borde de abajo
-      const arriba = (u) => Y0 + 0.009 + 0.003 * sonrisa * u ** 4 + 0.002 * sonrisa * u * u - 0.006 * (1 - sonrisa) * c(u);
-      const hondo = (u) => (0.024 + 0.066 * abrir - 0.008 * (1 - ancho)) * Math.pow(c(u), 0.5);
+      // por encima del centro, y la curva la hace el borde de abajo. Cerrada, la curva pasa a la línea de los labios: el
+      // medio baja y las comisuras quedan arriba
+      const arriba = (u) => Y0 + 0.009 + 0.003 * sonrisa * u ** 4 + 0.002 * sonrisa * u * u - 0.006 * (1 - sonrisa) * c(u)
+        - 0.009 * L * sonrisa * c(u) ** 1.2;
+      // con los labios cerrados la boca no tiene hondo: el borde de abajo sube hasta el de arriba
+      const hondo = (u) => (0.024 + 0.066 * abrir - 0.008 * (1 - ancho)) * Math.pow(c(u), 0.5) * (1 - L);
       const abajo = (u) => arriba(u) - hondo(u);
-      // el labio de arriba: más grueso al medio, con el arco de cupido, y fino hacia las comisuras
-      labioSup(0, w * 1.02, (u) => arriba(u) + (0.006 + 0.015 * c(u) - 0.0035 * Math.exp(-((u / 0.08) ** 2))) * c(u) ** 0.25 + 0.0006,
+      // el labio de arriba: más grueso al medio, con el arco de cupido, y fino hacia las comisuras (cerrado, estirado
+      // por la sonrisa, más fino)
+      labioSup(0, w * 1.02,
+        (u) => arriba(u) + (0.006 + 0.015 * c(u) - 0.0035 * Math.exp(-((u / 0.08) ** 2))) * c(u) ** 0.25 * (1 - 0.15 * L) + 0.0006,
         (u) => arriba(u) - 0.0004, 0.0015);
       // el de abajo: lleno y redondo
-      labioInf(0, w * 0.97, (u) => abajo(u * 0.97) + 0.0008, (u) => abajo(u * 0.97) - (0.032 + 0.004 * abrir) * c(u) ** 0.75, 0.0015);
+      labioInf(0, w * 0.97, (u) => abajo(u * 0.97) + 0.0008,
+        (u) => abajo(u * 0.97) - (0.032 + 0.004 * abrir) * (1 - 0.3 * L) * c(u) ** 0.75, 0.0015);
       brilloInf(0.2 * w, w * 0.28, (u) => abajo(0.2 + u * 0.28) - 0.009 * (1 - 0.3 * u * u),
         (u) => abajo(0.2 + u * 0.28) - (0.009 + 0.011 * c(u) ** 0.7), 0.0019);
       fondo(0, w, arriba, abajo, 0.002);
       lengua(0, w * 0.6, (u) => abajo(u * 0.6) + 0.4 * hondo(u * 0.6) * Math.min(1, abrir * 1.6) * (1 - u * u),
         (u) => abajo(u * 0.6), 0.0025);
       // los dientes de arriba no llegan a las comisuras: a los lados queda el rincón oscuro de la boca
-      dientesSup(0, w * 0.86, (u) => arriba(u * 0.86), (u) => arriba(u * 0.86) - Math.min(0.026 * Math.pow(c(u), 0.3),
+      dientesSup(0, w * 0.86, (u) => arriba(u * 0.86), (u) => arriba(u * 0.86) - Math.min(0.026 * Math.pow(c(u), 0.3) * (1 - L),
         0.8 * hondo(u * 0.86)), 0.003);
       dientesInf(0, w * 0.7, (u) => abajo(u * 0.7) + Math.min(0.012 * Math.pow(c(u), 0.4),
         0.2 * hondo(u * 0.7)), (u) => abajo(u * 0.7), 0.003);
+      // cerrada: la línea de los labios, fina al medio y más marcada en las comisuras, que pasa un poco más allá
+      comisura.malla.visible = L > 0.02;
+      if (comisura.malla.visible) {
+        comisura.malla.material.opacity = 0.9 * L;
+        // (gruesa para una línea de la cara: a 100 px de cabeza mide algo más de un píxel)
+        comisura((t) => {
+          const u = (2 * t - 1) * 1.05;
+          return [u * w, arriba(Math.max(-1, Math.min(1, u))) + 0.005 * Math.max(0, Math.abs(u) - 0.9) / 0.15];
+        }, (t) => 0.0042 + 0.0035 * Math.abs(2 * t - 1) ** 3, 0.0024);
+      }
     }
     poner();
     return { poner };
