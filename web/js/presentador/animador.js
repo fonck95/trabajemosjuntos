@@ -1,7 +1,7 @@
 // Lo que mueve al presentador (personaje.js): una pose por capas que se recalcula en cada cuadro y que las
 // articulaciones siguen con suavidad (así ningún cambio da un salto).
 //
-//   1. el reposo: de pie, los brazos sueltos;
+//   1. el reposo: de pie, las manos juntas al frente (la casa);
 //   2. lo que hace siempre: respira, se balancea un poco y parpadea;
 //   3. caminar (cuando va a otra x) o el salto de entrada y de salida;
 //   4. hablar: la boca por sílabas, la cabeza que acompaña y, si los brazos están libres, las manos que explican con
@@ -44,10 +44,14 @@ export const MANOS = {
 };
 export const FORMAS_CONTAR = ['uno', 'dos', 'tres'];
 
+// El reposo. Los brazos, en «la casa»: las manos juntas y sueltas al frente, a la altura del ombligo (las palmas a
+// y ≈ 1.0), la izquierda un poco más alta, sobre la derecha, sin tocarse del todo ni tocar la polo. En la presentación
+// el borde de arriba del subtítulo corta al presentador a la altura de la cadera (el plano americano, 0.37·alto ≈ 0.85):
+// con los brazos colgando las manos quedaban debajo del corte; así quedan arriba (≈ 0.08 de margen)
 const REPOSO = {
   cadera: [0, 0, 0], columna: [0.03, 0, 0], pecho: [0, 0, 0], cuello: [0.02, 0, 0], cabeza: [-0.02, 0, 0],
-  hombroI: [0.02, 0, 0.11], codoI: [-0.3, 0.35, 0], munecaI: [0, 0, -0.06],
-  hombroD: [0.02, 0, 0.11], codoD: [-0.3, 0.35, 0], munecaD: [0, 0, -0.06],
+  hombroI: [-0.23, -0.55, -0.04], codoI: [-1.34, 0.2, 0], munecaI: [0.12, 0, 0],
+  hombroD: [-0.19, -0.55, -0.04], codoD: [-1.27, 0.4, 0], munecaD: [0.15, 0, 0],
   musloI: [0, 0, 0.035], rodillaI: [0.03, 0, 0], tobilloI: [-0.03, 0, -0.035],
   musloD: [0, 0, 0.035], rodillaD: [0.03, 0, 0], tobilloD: [-0.03, 0, -0.035],
 };
