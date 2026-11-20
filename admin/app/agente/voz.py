@@ -211,8 +211,8 @@ LATIDO = linea({"tipo": "latido"})
 # frases): `\b` y `\d` de ASCII (por eso `re.ASCII`) y `\s` de JavaScript (`_S`: con los espacios de Unicode, que en
 # Python con `re.ASCII` no lo serían)
 _S = "[\\t\\n\\v\\f\\r \\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]"
-_ESPACIOS_JS = "\t\n\v\f\r              " \
-               "    　﻿"
+_ESPACIOS_JS = ("\t\n\v\f\r \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a"
+                "\u2028\u2029\u202f\u205f\u3000\ufeff")   # lo que quita `trim()` de JavaScript
 TABLA_DECIR = (
     (rf"(\d){_S}*m²", r"\1 metros cuadrados"), (rf"(\d){_S}*m³", r"\1 metros cúbicos"),
     (rf"(\d){_S}*km\b", r"\1 kilómetros"), (rf"(\d){_S}*ha\b", r"\1 hectáreas"),
@@ -235,13 +235,26 @@ def para_decir(t: Any) -> str:
     return _JUNTAR.sub(" ", s).strip(_ESPACIOS_JS)
 
 
+_NO_SE_OYEN = frozenset({"Cc", "Cf", "Cs", "Co", "Cn"})
+_SALTOS = frozenset("\t\n\r\v\f\u2028\u2029")
+
+
+def audible(t: str) -> str:
+    """El texto sin lo que no se ve ni se oye: caracteres de control, de formato (el espacio de ancho cero, las marcas
+    de dirección), sustitutos sueltos, de uso privado o sin asignar; los saltos de renglón, como espacios. Es lo que se
+    revisa (`hablable`) y lo que se le manda a Mnemo: un número partido por un carácter invisible se mira entero."""
+    return "".join(" " if c in _SALTOS else c for c in t if c in _SALTOS
+                   or unicodedata.category(c) not in _NO_SE_OYEN)
+
+
 def hablable(t: Any) -> bool:
     """¿Se puede decir en voz alta ante una sala? Lo dicho es como lo proyectado (`proyectable.texto_proyectable`):
-    sin «@» (un correo, un usuario) ni números de 7 o más dígitos (cédulas, teléfonos), buscados en la forma NFKC; y con
-    algo que decir (una letra o un dígito). Los costos sí se pueden decir: una respuesta puede hablar de plata."""
+    sin «@» (un correo, un usuario) ni números de 7 o más dígitos (cédulas, teléfonos), buscados en la forma NFKC de lo
+    que se oye (`audible`); y con algo que decir (una letra o un dígito). Los costos sí se pueden decir: una respuesta
+    puede hablar de plata."""
     if not isinstance(t, str):
         return False
-    k = " ".join(unicodedata.normalize("NFKC", t).split())
+    k = " ".join(unicodedata.normalize("NFKC", audible(t)).split())
     return bool(k) and "@" not in k and numero_largo(k) is None and any(c.isalnum() for c in k)
 
 
@@ -285,10 +298,16 @@ _ENLACE = re.compile(r"\[([^\]\n]*)\]\([^)\s]*\)")
 _CORCHETES = re.compile(r"\[([^\]\n]*)\](?=[^(]|$)")
 _CODIGO = re.compile(r"`[^`\n]*`")
 _ETIQUETA = re.compile(r"<[^>\n]*>")
-_URL = re.compile(r"(?:https?://|www\.)\S+", re.IGNORECASE)
+_URL = re.compile(r"(?:https?://|www\.)\S*[^\s.,;:!?…)\]»\"'”’]", re.IGNORECASE)   # sin la puntuación que la sigue
 _RUTA = re.compile(r"(?<![\w/.])/[A-Za-z_][\w-]*(?:/[\w.-]+)*/?")
 _MASCARA = re.compile(r"[·•∙]{2,}\s*\d*")
 _ENFASIS = re.compile(r"\*+|~~|__|(?<!\w)_+|_+(?!\w)")
+_VACIOS = re.compile(r"\(\s*\)|\[\s*\]")   # los paréntesis que se quedaron sin nada (tenían una dirección)
+# Dónde se quitó algo (una dirección, una ruta, un código…) mientras se limpia un renglón: si lo quitado iba justo antes
+# de un signo, el espacio que lo precedía sobra («la ficha o https://…/x.» → «la ficha o.»), salvo tras el final de
+# una frase (que ya pudo cortarse: lo cortado no cambia cuando llega más texto)
+_QUITADO = "\x00"
+_PEGADO = re.compile(r"(?<=[^\s.?!:;…])\s+\x00+(?=[.,;:!?…])")
 _ABIERTO_ENLACE = re.compile(r"!?\[")
 
 
@@ -313,14 +332,13 @@ def _abierto(s: str) -> int:
 def _limpiar(s: str) -> str:
     """Un renglón de Markdown como se dice: los enlaces, su texto; sin imágenes, código, etiquetas, direcciones web,
     rutas del panel («/personas/123»), datos enmascarados («···123») ni marcas de énfasis."""
-    s = _IMAGEN.sub("", s)
+    s = _IMAGEN.sub(_QUITADO, s.replace(_QUITADO, ""))
     s = _ENLACE.sub(r"\1", s)
     s = _CORCHETES.sub(r"\1", s)
-    s = _CODIGO.sub("", s)
-    s = _ETIQUETA.sub("", s)
-    s = _URL.sub("", s)
-    s = _RUTA.sub("", s)
-    s = _MASCARA.sub("", s)
+    for patron in (_CODIGO, _ETIQUETA, _URL, _RUTA, _MASCARA):
+        s = patron.sub(_QUITADO, s)
+    s = _PEGADO.sub("", s).replace(_QUITADO, "")
+    s = _VACIOS.sub("", s)
     s = _ENFASIS.sub("", s)
     return " ".join(s.split())
 
@@ -335,25 +353,33 @@ def _plano(texto: str, final: bool) -> str:
     for i, cruda in enumerate(lineas):
         incompleta = not final and i == len(lineas) - 1
         s = cruda.strip()
+        # (lo que no se dice deja su renglón vacío: el anterior sigue terminado en un salto de renglón, como cuando
+        # llegue lo que sigue, y la frase que ya cortó no cambia)
         if _FENCE.match(s):
             en_codigo = not en_codigo
+            salida.append("")
             continue
         if en_codigo or s.startswith("|") or _REGLA.fullmatch(s):
+            salida.append("")
             continue
+        # Lo que puede ser el comienzo de un bloque que no se dice («`», «~», «-», «*», «_»: código o una regla)
+        if incompleta and (not s or set(s) <= set("`~-*_ ")):
+            salida.append("")
+            continue
+        # Sin las marcas del comienzo (encabezado, cita, viñeta), que se reconocen por el espacio que las sigue: así
+        # «1. » a medio llegar ya es una viñeta y no una frase que termina en «1.»
+        t = _VINETA.sub("", _CITA.sub("", _ENCABEZADO.sub("", cruda.lstrip())))
         espacio = False   # el renglón a medio llegar termina en un espacio: lo último ya es una palabra entera
-        if incompleta:
-            # Lo que puede ser el comienzo de un bloque que no se dice («`», «~», «-», «*», «_»: código o una regla)
-            if not s or set(s) <= set("`~-*_ "):
-                continue
-            if cruda[-1:].isspace():
+        s = t.strip()
+        if incompleta and s:
+            if t[-1:].isspace():
                 espacio = True
-            else:
+            else:  # sin la última palabra, pero con el espacio que la separaba (lo de antes ya es una palabra entera)
                 corte = max(s.rfind(" "), s.rfind("\t"))
-                s = s[:corte] if corte >= 0 else ""
+                s, espacio = (s[:corte], True) if corte >= 0 else ("", False)
             abierto = _abierto(s)
-            if abierto < len(s):
-                s, espacio = s[:abierto], False
-        s = _VINETA.sub("", _CITA.sub("", _ENCABEZADO.sub("", s)))
+            if abierto < len(s):  # (si lo abierto iba tras un espacio, lo de antes ya terminó en una palabra entera)
+                s, espacio = s[:abierto], s[:abierto][-1:].isspace()
         s = _limpiar(s)
         # (el espacio del final se conserva: un punto ahí ya cierra la frase, como lo hará con lo que siga)
         salida.append(s + " " if espacio and s else s)
@@ -383,6 +409,9 @@ def _cortar(plano: str, final: bool) -> list[str]:
                 buf = ""
             elif limpio:
                 buf = limpio + ("" if limpio[-1] in _TERMINA + "," else ".") + " "
+            i += 1
+            continue
+        if c in ".,;:" and not buf.strip():   # un signo suelto al comienzo de una frase no se dice
             i += 1
             continue
         buf += c
@@ -446,6 +475,10 @@ class Frases:
         while p < len(actuales) and p < len(nuevas) and actuales[p] == nuevas[p]:
             p += 1
         eventos: list[dict] = []
+        if p < len(actuales) and not final and p == len(nuevas):
+            # Faltan frases ya dichas pero ninguna cambió: lo último a medio llegar (un código o un enlace sin cerrar)
+            # las dejó sin terminar por ahora. Se espera a lo que sigue; al cerrar la ronda se decide
+            return eventos
         if p < len(actuales):
             desde = self.inicio_ronda + p
             del self.emitidas[desde:]
@@ -613,15 +646,17 @@ def puede(app: Any, conexion: Any, ajustes_voz: dict, huella: str) -> bool:
 
 def estado_de(app: Any, db: Any, quien: Any, ajustes: dict, conexion: dict) -> dict:
     """`voz` de `GET /api/agente/estado`: `{"disponible": bool (esta persona puede hacer sonar la voz clonada: `puede` y
-    su rol en `agente_voz.roles`), "nombre": el de la voz | None, "respuestas": bool, "automatica": bool}`. Lee MongoDB
-    (la huella de la cuenta) solo si hace falta."""
+    su rol en `agente_voz.roles`), "nombre": el de la voz | None, "respuestas": bool (la voz lee las respuestas del
+    asistente: disponible y `agente_voz.respuestas`), "automatica": bool (narra también la presentación automática:
+    disponible y `agente_voz.automatica`)}`. Sin la voz, todo en falso: el panel usa la del navegador. Lee MongoDB (la
+    huella de la cuenta) solo si hace falta."""
     av = ajustes.get("agente_voz") if isinstance(ajustes.get("agente_voz"), dict) else politica.ajustes_voz(ajustes)
     disponible = False
     if (av["motor"] == "mnemo" and av["voz"] and getattr(quien, "rol", None) in av["roles"]
             and isinstance(conexion, dict) and conexion.get("estado") == "conectada" and conexion.get("voz") is True):
         disponible = puede(app, conexion, av, mnemo_conexion.huella_cuenta(db))
     return {"disponible": disponible, "nombre": (av["nombre"] or None) if disponible else None,
-            "respuestas": av["respuestas"], "automatica": av["automatica"]}
+            "respuestas": disponible and av["respuestas"], "automatica": disponible and av["automatica"]}
 
 
 def respuestas_para(app: Any, quien: Any, ajustes: dict) -> bool:
@@ -715,6 +750,8 @@ async def listar(app: Any) -> dict:
         if len(voces) >= MAX_VOCES:
             break
     elegida = next((v for v in voces if v["id"] == av["voz"]), None) if av["voz"] and av["cuenta"] == huella else None
+    if elegida is not None:  # Mnemo la ofrece otra vez (se volvió a marcar para apps, cambió el plan): se olvida el «no»
+        _recordar(app, conexion, av["voz"], False)
     return {"voces": voces, "elegida": elegida, "conexion": info}
 
 
@@ -907,10 +944,10 @@ class Vuelo:
         dar el primer audio y, si no llegó nada por el avance, el audio entero (partido en trozos de `TROZO_B64`)."""
         datos = res.get("structuredContent") if isinstance(res, dict) else None
         datos = datos if isinstance(datos, dict) else {}
-        if self.inicio is None:
-            self.empezar(_inicio_de(datos))
         audio = datos.get("audio")
         if not self.trozos and isinstance(audio, str) and audio:
+            if self.inicio is None:  # (sin audio no se empieza: el error sale antes del flujo, como JSON)
+                self.empezar(_inicio_de(datos))
             for i in range(0, len(audio), TROZO_B64):
                 trozo = audio[i:i + TROZO_B64]
                 n = _bytes_de(trozo)
@@ -1089,7 +1126,10 @@ def texto_de_narracion(db: Any, uid: Any, rid: str, n: int | None = None, frase:
     tiene guardado su pantalla (`pantalla.recorrido_de`) o, con la presentación automática sonando, el último que no
     era suyo (`recorrido_previo`: «Volver a reproducir» de su tarjeta). Si no es ninguno, 409 `plan_vencido`; si la
     frase no está, 422 `texto`. El cierre: «En resumen. » y sus puntos, como lo dice `reproductor.js`. Lee MongoDB."""
-    g = guion_presentacion.cargar()
+    try:
+        g = guion_presentacion.cargar()
+    except ValueError:  # el guion del despliegue está dañado: no hay plan que valga
+        g = None
     doc = pantalla.leer(db, uid) if g is not None else None
     candidatos = (pantalla.recorrido_de(doc, g), pantalla.recorrido_previo(doc, g)) if g is not None else ()
     r = next((x for x in candidatos if x and x.get("id") == rid), None)
@@ -1155,7 +1195,7 @@ async def hablar(request: Any, quien: Any, pedido: dict) -> StreamingResponse:
                                               pedido.get("frase"), pedido.get("cierre") is True)
         if auto and not av["automatica"]:
             raise ErrorVoz(409, "voz_apagada", MENSAJE_SIN_AUTOMATICA)
-    dicho = para_decir(texto)
+    dicho = para_decir(audible(texto))
     if not hablable(texto) or not dicho or len(dicho) > MAX_DICHO:
         raise ErrorVoz(422, "texto", MENSAJE_TEXTO)
     # La conexión: «conectada», con `mnemo:voice` y de la misma cuenta con que se eligió la voz

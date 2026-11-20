@@ -158,9 +158,10 @@ def test_las_llamadas_internas_no_dejan_datos_en_el_registro(sesion, caplog):
     assert "panel.interno" not in texto and "71234567" not in texto and "3001234567" not in texto
 
 
-@pytest.mark.parametrize("ruta", ["/api/agente/mensajes", "/api/agente/confirmaciones"])
+@pytest.mark.parametrize("ruta", ["/api/agente/mensajes", "/api/agente/confirmaciones", "/api/agente/voz"])
 def test_las_rutas_en_flujo_no_se_comprimen_y_las_demas_si(sesion, ruta):
-    """El GZip de Starlette retiene el flujo entero hasta el final: esas dos rutas van sin comprimir."""
+    """El GZip de Starlette retiene el flujo entero hasta el final: esas rutas van sin comprimir (los turnos del
+    asistente y el audio de la voz clonada, que suena a medida que llega)."""
     from app.main import RUTAS_EN_FLUJO
     assert ruta in RUTAS_EN_FLUJO
     assert "/api/agente/conversaciones" not in RUTAS_EN_FLUJO and "/api/agente/estado" not in RUTAS_EN_FLUJO

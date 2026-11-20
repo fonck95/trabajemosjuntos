@@ -709,6 +709,10 @@ class Turno:
         # Y dónde va el recorrido narrado, si hay uno sonando (o terminó hace poco), en cualquier pantalla
         recorrido = (await run_in_threadpool(sistema.recorrido_del_contexto, self.db, self.quien.uid)
                      if "presentacion" in self.herramientas else "")
+        # La respuesta hablada se pide al modelo solo si de verdad se va a decir (`frases`): si no (la voz no está para
+        # esta persona, la conversación trae datos de habitantes), la respuesta es la escrita de siempre
+        if isinstance(contexto, dict) and "voz" in contexto and self.frases is None:
+            contexto = {k: v for k, v in contexto.items() if k != "voz"}
         contexto_panel = sistema.contexto_del_panel(contexto, _ahora(), etiquetas, guion, pantalla, recorrido)
         bloques = conv_db.limpio(bloques + [{"type": "text", "text": contexto_panel}, {"type": "text", "text": texto}])
         await self._guardar("user", bloques, texto=texto, herramientas=ui)

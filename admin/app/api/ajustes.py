@@ -250,8 +250,8 @@ def guardar_ajustes(body: AjustesIn, db: Database = Depends(obtener_db),
             datos[k] = v
     if "agente_voz" in datos:
         voz = datos["agente_voz"]
-        if not voz.get("voz"):  # sin voz, ni su nombre
-            voz["nombre"] = ""
+        if not voz.get("voz") or (voz["voz"] != actuales["agente_voz"]["voz"] and body.agente_voz.nombre is None):
+            voz["nombre"] = ""  # sin voz, ni su nombre; otra voz sin el suyo no se queda con el de la anterior
         voz["cuenta"] = _cuenta_de_la_voz(db, actuales["agente_voz"], voz)
     # Lo que no cambia el valor guardado no cuenta: el formulario del coordinador puede reenviar todo sin tocarlos
     datos = {k: v for k, v in datos.items() if v != actuales.get(k)}

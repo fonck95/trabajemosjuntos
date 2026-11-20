@@ -31,6 +31,7 @@ from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, field_validator, model_validator
 from pymongo.database import Database
 
+from .. import recorrido as rec
 from ..acceso import Quien, requiere
 from ..agente import conversaciones as conv_db
 from ..agente import politica, proveedores
@@ -69,8 +70,8 @@ class ConfirmacionIn(BaseModel):
     voz: StrictBool | None = None
 
 
-# Lo que se puede pedir a la voz clonada: una referencia, nunca un texto libre (salvo la frase firmada de una respuesta)
-MAX_ESCENAS, MAX_FRASES = 12, 3   # `recorrido.MAX_ESCENAS` y `MAX_FRASES` (una prueba los compara)
+# Lo que se puede pedir a la voz clonada: una referencia, nunca un texto libre (salvo la frase firmada de una respuesta,
+# `agente/voz.py`). Los rangos de la narración son los del recorrido (como `api/pantalla.ProgresoEntrada`)
 
 
 class VozIn(BaseModel):
@@ -79,8 +80,8 @@ class VozIn(BaseModel):
     `{prueba: true}` (la frase de prueba de Ajustes, solo el administrador)."""
     model_config = ConfigDict(extra="forbid")
     rid: str | None = Field(None, pattern=r"^[0-9a-f]{12}$")
-    n: StrictInt | None = Field(None, ge=1, le=MAX_ESCENAS)
-    frase: StrictInt | None = Field(None, ge=0, le=MAX_FRASES - 1)
+    n: StrictInt | None = Field(None, ge=1, le=rec.MAX_ESCENAS)
+    frase: StrictInt | None = Field(None, ge=0, le=rec.MAX_FRASES - 1)
     cierre: StrictBool | None = None
     conversacion: StrictInt | None = Field(None, ge=1, le=ID_MAX)
     texto: str | None = Field(None, min_length=1, max_length=400)
@@ -89,7 +90,7 @@ class VozIn(BaseModel):
 
     @model_validator(mode="after")
     def _uno(self):
-        dado = {k for k in self.model_fields if getattr(self, k) is not None}
+        dado = {k for k in type(self).model_fields if getattr(self, k) is not None}
         if dado not in ({"rid", "n", "frase"}, {"rid", "cierre"}, {"conversacion", "texto", "firma"}, {"prueba"}):
             raise ValueError("Pida una frase del plan ({rid, n, frase}), su cierre ({rid, cierre: true}), una frase de "
                              "una respuesta ({conversacion, texto, firma}) o la prueba ({prueba: true})")
