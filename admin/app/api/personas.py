@@ -130,6 +130,7 @@ def listar(f: Filtros = Depends(filtros_query), orden: str = "nombre", pagina: i
                 .skip((pagina - 1) * por_pagina).limit(por_pagina))
     acceso.registrar_lecturas(db, quien, [p["_id"] for p in docs])
     ctx = proyeccion.contexto(db)
+    proyeccion.cargar_lideres(db, ctx, docs, quien)  # «Liderado por» de cada fila (A y K)
     return {"total": total, "pagina": pagina, "por_pagina": por_pagina,
             "filas": proyeccion.filas_para(quien, [proyeccion.fila_completa(p, ctx) for p in docs])}
 
@@ -1163,15 +1164,37 @@ class NuevaPersona(PersonaIn):
     lideres: list[int] | None = Field(None, max_length=10)
 
 
+def _por_cedula(db: Database, cedula: str | None, prefijo: str | None, excluir: int | None) -> list[tuple[dict, float]]:
+    """Parecidas solo por la cédula, sin nombre (el alta mientras se escribe el documento): la misma cédula (actual o
+    anterior) primero y, con `prefijo` (solo A y K), las que empiezan por esos dígitos. Puntaje 1 la exacta y 0,5 las
+    que solo empiezan igual."""
+    o: list[dict] = []
+    if cedula:
+        o += [{"cedula": cedula}, {"cedulas_anteriores": cedula}]
+    if prefijo:
+        o.append({"cedula": {"$regex": f"^{re.escape(prefijo)}"}})
+    if not o:
+        return []
+    cand = db.personas.find({**bd.ACTIVA, "_id": {"$ne": excluir}, "$or": o}, proyeccion.CAMPOS_PARA_FILA) \
+        .sort("cedula", ASCENDING).limit(40)
+    out = [(c, 1.0 if cedula and (c.get("cedula") == cedula or cedula in (c.get("cedulas_anteriores") or [])) else 0.5)
+           for c in cand]
+    out.sort(key=lambda x: (-x[1], str(x[0].get("cedula") or "")))
+    return out[:8]
+
+
 def _parecidas(db: Database, nombre: str, telefonos: list[str] | None = None, cedula: str | None = None,
-               excluir: int | None = None, estricta: bool = False) -> list[tuple[dict, float]]:
-    """Fichas parecidas (2.4): candidatas por clave fonética, por cualquiera de sus números, por la cédula o por la
-    palabra más rara del nombre; puntaje con `ComparadorNombres`. Corte: 0,80, o mismo teléfono y 0,60. Con
-    `estricta` (el asistente), a quien no autorizó solo lo trae el nombre (0,80): que coincida en un número diría que
-    ese número es suyo."""
+               excluir: int | None = None, estricta: bool = False,
+               prefijo: str | None = None) -> list[tuple[dict, float]]:
+    """Fichas parecidas (2.4): candidatas por clave fonética, por cualquiera de sus números, por la cédula (actual o
+    anterior; con `prefijo`, también las que empiezan por esos dígitos) o por la palabra más rara del nombre; puntaje
+    con `ComparadorNombres`. Corte: 0,80, o mismo teléfono y 0,60; la misma cédula entra siempre y una que empieza
+    igual, con un nombre parecido (0,60). Sin nombre, solo por la cédula (`_por_cedula`). Con `estricta` (el
+    asistente), a quien no autorizó solo lo trae el nombre (0,80): que coincida en un número diría que ese número es
+    suyo."""
     toks = tx.tokens_nombre(nombre)
     if not toks:
-        return []
+        return [] if estricta else _por_cedula(db, cedula, prefijo, excluir)
     n = tx.nombre_norm(nombre)
     claves = modelo.claves_foneticas(nombre)
     nums = [t for t in telefonos or [] if t]
@@ -1181,7 +1204,9 @@ def _parecidas(db: Database, nombre: str, telefonos: list[str] | None = None, ce
     if nums:
         por_numero += [{"telefonos.numero": {"$in": nums}}, {"telefono": {"$in": nums}}, {"telefono2": {"$in": nums}}]
     if cedula:
-        por_numero.append({"cedula": cedula})
+        por_numero += [{"cedula": cedula}, {"cedulas_anteriores": cedula}]
+    if prefijo and not estricta:
+        por_numero.append({"cedula": {"$regex": f"^{re.escape(prefijo)}"}})
     if por_numero and estricta:
         o.append({"$or": por_numero, "consentimiento": {"$ne": "no"}})
     else:
@@ -1197,20 +1222,32 @@ def _parecidas(db: Database, nombre: str, telefonos: list[str] | None = None, ce
                 out.append((c, s))
             continue
         mismo_tel = bool(set(nums) & {t.get("numero") for t in modelo.telefonos_de(c)})
-        if s >= 0.80 or (mismo_tel and s >= 0.60) or (cedula and c.get("cedula") == cedula):
+        misma_cedula = bool(cedula and (c.get("cedula") == cedula or cedula in (c.get("cedulas_anteriores") or [])))
+        empieza = bool(prefijo and str(c.get("cedula") or "").startswith(prefijo))
+        if misma_cedula:
+            out.append((c, max(s, 1.0)))
+        elif s >= 0.80 or (mismo_tel and s >= 0.60) or (empieza and s >= 0.60):
             out.append((c, s))
     out.sort(key=lambda x: -x[1])
     return out[:8]
 
 
-def filas_parecidas(db: Database, quien: Quien, encontradas: list[tuple[dict, float]], cedula: str | None) -> list[dict]:
+def filas_parecidas(db: Database, quien: Quien, encontradas: list[tuple[dict, float]], cedula: str | None,
+                    prefijo: str | None = None) -> list[dict]:
+    """Las parecidas como filas del rol, con `parecido` (0-100) y cómo coincide la cédula escrita: `coincide_cedula`
+    «exacta» (la misma, o una anterior de esa ficha) o «inicio» (empieza por lo escrito: el número puede estar
+    incompleto), y `cedula_distinta` si tiene otra que no empieza igual (es otra persona)."""
     acceso.registrar_lecturas(db, quien, [c["_id"] for c, _ in encontradas])
     ctx = proyeccion.contexto(db)
     filas = proyeccion.filas_para(quien, [proyeccion.fila_completa(c, ctx) for c, _ in encontradas])
     for f, (c, s) in zip(filas, encontradas):
-        f["parecido"] = round(s * 100)
-        f["tiene_cedula"] = bool(c.get("cedula"))
-        f["cedula_distinta"] = bool(cedula and c.get("cedula") and c["cedula"] != cedula)
+        suya = c.get("cedula")
+        exacta = bool(cedula and (suya == cedula or cedula in (c.get("cedulas_anteriores") or [])))
+        inicio = bool(not exacta and prefijo and suya and str(suya).startswith(prefijo))
+        f["parecido"] = round(min(s, 1.0) * 100)
+        f["tiene_cedula"] = bool(suya)
+        f["coincide_cedula"] = "exacta" if exacta else "inicio" if inicio else None
+        f["cedula_distinta"] = bool(cedula and suya and not exacta and not inicio)
     return filas
 
 
@@ -1376,12 +1413,19 @@ def parecidas_alta(nombre: str = Query("", max_length=160), cedula: str | None =
                    telefono: str | None = Query(None, max_length=60), estricta: int = 0,
                    db: Database = Depends(obtener_db),
                    quien: Quien = Depends(requiere("personas.parecidas", limitar=True))):
-    """Búsqueda en vivo del alta (7.6): filas del rol. `estricta`: la del asistente (ver `_parecidas`)."""
+    """Búsqueda en vivo del alta (7.6): filas del rol, por el nombre (3 letras o más) o por la cédula aunque no se haya
+    escrito el nombre. La misma cédula, para todos; las que empiezan por lo escrito (5 dígitos o más, mientras se
+    escribe el número), solo para A y K: P no recorre la base por partes de un número. `estricta`: la del asistente
+    (ver `_parecidas`)."""
+    digitos = re.sub(r"\D", "", cedula or "")
+    c = tx.cedula(digitos) or None
+    prefijo = digitos if quien.administra and not estricta and 5 <= len(digitos) <= 11 else None
     if len(tx.nombre_norm(nombre)) < 3:
-        return []
-    c = tx.cedula(cedula) or None
+        if estricta or not (c or prefijo):
+            return []
+        nombre = ""
     return filas_parecidas(db, quien, _parecidas(db, nombre, tx.telefonos(telefono) if telefono else [], c,
-                                                 estricta=bool(estricta)), c)
+                                                 estricta=bool(estricta), prefijo=prefijo), c, prefijo)
 
 
 @r.get("/personas/{pid}/parecidas")

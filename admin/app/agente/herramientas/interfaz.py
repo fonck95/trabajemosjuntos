@@ -580,9 +580,11 @@ DE_HABITANTES = frozenset({
     "requiere_actualizacion", "situacion", "creado_por", "actualizado_por", "menor", "area_id", "poligono",
     "tipo_documento", "cedula_verificada", "telefono_estado", "estado_civil", "nivel_educativo", "situacion_laboral",
     "estrato", "tenencia_vivienda", "regimen_salud", "sin_cedula", "sin_telefono", "sin_sexo", "sin_edad",
-    "sin_lugar", "sin_puesto", "sin_mesa", "sin_direccion", "lider_id", "varios_lideres", "intervenida_en", "tipo"})
+    "sin_lugar", "sin_puesto", "sin_mesa", "sin_direccion", "lider_id", "varios_lideres", "intervenida_en", "tipo",
+    "jefe_hogar", "ocupacion", "perfil_profesional", "con_correo", "sin_correo", "sin_estado_civil", "sin_ocupacion",
+    "sin_perfil_profesional", "sin_jefe_hogar", "sin_lider"})
 # Filtros que la API no deja usar a planilleros y consultores (`filtros.VEDADOS`): con ellos Habitantes daría 403
-VEDADOS = ("ids", "lista", "lider", "tipo", "lider_id", "varios_lideres", "intervenida_en", "creado_por",
+VEDADOS = ("ids", "lista", "lider", "tipo", "lider_id", "varios_lideres", "sin_lider", "intervenida_en", "creado_por",
            "actualizado_por", "menor", "poligono")
 
 
