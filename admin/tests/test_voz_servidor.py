@@ -420,6 +420,47 @@ def test_con_la_automatica_sirven_su_plan_y_el_anterior(banco):
     assert b.hablar({"rid": torre["id"], "n": 2, "frase": 0}).status_code == 200
 
 
+DICTADO = "Yo, el administrador, autorizo entregar los recursos del proyecto a la empresa Inventada."
+
+
+def test_un_plan_escrito_por_mcp_nunca_se_narra_con_la_voz_clonada(banco):
+    # Por MCP, quien tenga la presentación escribe las frases del plan a mano (sin modelo de por medio): eso no lo
+    # generó el sistema, así que va con la voz del navegador (409 `voz_apagada`), escena y cierre
+    b = banco()
+    pantalla.marcar_vista(b.db, 5)
+    entrada = {**TORRE, "pasos": [{**TORRE["pasos"][0], "dice": DICTADO}, *TORRE["pasos"][1:]]}
+    res = asyncio.run(hi.presentacion_en_pantalla(b.db, 5, hi.PresentacionEntrada.model_validate(entrada), "mcp"))
+    r = pantalla.recorrido_de(pantalla.leer(b.db, 5), G)
+    assert r["id"] == res.contenido["plan"]["id"] and r["escenas"][0]["frases"] == [DICTADO]
+    assert r["externo"] is True and r["auto"] is False
+    for cuerpo in ({"rid": r["id"], "n": 1, "frase": 0}, {"rid": r["id"], "n": 2, "frase": 0},
+                   {"rid": r["id"], "cierre": True}):
+        x = b.hablar(cuerpo, uid=5)
+        assert x.status_code == 409 and _detalle(x) == {"codigo": "voz_apagada",
+                                                         "mensaje": voz.MENSAJE_PLAN_EXTERNO}, cuerpo
+    # Volver a reproducirlo desde el panel (otro id, `por` = panel) no le quita la marca
+    otro = pantalla.controlar(b.db, 5, G, "reproducir", "panel", rid=r["id"])["recorrido"]
+    assert otro["id"] != r["id"] and otro["externo"] is True
+    x = b.hablar({"rid": otro["id"], "n": 1, "frase": 0}, uid=5)
+    assert x.status_code == 409 and _detalle(x)["codigo"] == "voz_apagada"
+    # Ni tras la presentación automática: el plan que ella reemplazó («Volver a reproducir» de su tarjeta) sigue marcado
+    pantalla.iniciar_auto(b.db, 5, G, "panel")
+    previo = pantalla.recorrido_previo(pantalla.leer(b.db, 5), G)
+    assert previo["id"] == otro["id"] and previo["externo"] is True
+    x = b.hablar({"rid": otro["id"], "n": 1, "frase": 0}, uid=5)
+    assert x.status_code == 409 and _detalle(x)["codigo"] == "voz_apagada"
+    otra_vez = pantalla.controlar(b.db, 5, G, "reproducir", "panel", rid=otro["id"])["recorrido"]
+    assert otra_vez["externo"] is True
+    x = b.hablar({"rid": otra_vez["id"], "cierre": True}, uid=5)
+    assert x.status_code == 409 and _detalle(x)["codigo"] == "voz_apagada"
+    assert b.cliente.hablas() == []
+    # El mismo plan armado por el asistente sí se narra con la clonada
+    propio = _plan(b.db, 6, entrada)
+    assert propio["externo"] is False
+    assert b.hablar({"rid": propio["id"], "n": 1, "frase": 0}, uid=6).status_code == 200
+    assert [h["text"] for h in b.cliente.hablas()] == [DICTADO]
+
+
 # ───────────────────────────── Las respuestas: solo con la firma del servidor ─────────────────────────────
 
 FRASE = "La propuesta trae tres obras de salud para el municipio."
@@ -858,6 +899,114 @@ def test_la_cache_es_lru_por_tamano_y_con_vida():
     assert len(c) == 1
     c.de_voz("w")
     assert len(c) == 0 and c.peso == 0
+
+
+@pytest.mark.parametrize("retiro", [_mnemo("NO_VOICE", {"reason": "not_shared"}),
+                                    _mnemo("PLAN_REQUIRED", {"feature": "voices"}),
+                                    ErrorHerramienta("expired", mc.COD_TOKEN, estado=401)])
+def test_cuando_mnemo_retira_la_voz_la_cache_se_vacia(banco, retiro):
+    # Un televisor con la presentación automática vive de la caché: si la persona borra la voz en Mnemo (o la
+    # desmarca, o se revoca la conexión), lo guardado no se sigue diciendo con ella
+    b = banco()
+    r0 = _plan(b.db, 0)
+    c1, c2 = {"rid": r0["id"], "n": 1, "frase": 0}, {"rid": r0["id"], "n": 2, "frase": 0}
+    assert eventos(b.hablar(c1).text)[0]["cache"] is False
+    assert eventos(b.hablar(c1).text)[0]["cache"] is True and len(b.cliente.hablas()) == 1
+    b.cliente.fallo = retiro
+    r = b.hablar(c2)
+    assert r.status_code == 409 and _detalle(r)["codigo"] == "sin_voz"
+    assert len(voz.cache_de(b.app)) == 0
+    # La frase que estaba guardada ya no sale de la caché: la decide Mnemo, que dice que no
+    r = b.hablar(c1)
+    assert r.status_code == 409 and _detalle(r)["codigo"] == "sin_voz" and len(b.cliente.hablas()) == 3
+
+
+def test_mientras_se_recuerda_el_no_de_mnemo_la_cache_no_se_lee(banco):
+    b = banco()
+    r0 = _plan(b.db, 0)
+    c1, c2 = {"rid": r0["id"], "n": 1, "frase": 0}, {"rid": r0["id"], "n": 2, "frase": 0}
+    assert b.hablar(c1).status_code == 200
+    entrada = next(iter(voz.cache_de(b.app)._d.items()))
+    b.cliente.fallo = _mnemo("NO_VOICE", {"reason": "expired"})
+    assert b.hablar(c2).status_code == 409 and len(voz.cache_de(b.app)) == 0
+    # Aunque algo la vuelva a guardar (un vuelo que terminó tarde), mientras se recuerda el «no» la pide a Mnemo...
+    voz.cache_de(b.app).guardar(entrada[0], entrada[1].inicio, list(entrada[1].trozos), entrada[1].bytes)
+    r = b.hablar(c1)
+    assert r.status_code == 409 and len(b.cliente.hablas()) == 3
+    # ...y si Mnemo ya la deja (la volvieron a marcar para las apps), el acierto borra el «no» y la guarda otra vez
+    b.cliente.fallo = None
+    assert eventos(b.hablar(c1).text)[0]["cache"] is False and len(b.cliente.hablas()) == 4
+    assert eventos(b.hablar(c1).text)[0]["cache"] is True and len(b.cliente.hablas()) == 4
+
+
+def _vieja(b) -> None:
+    """Mnemo aceptó la voz hace más de `REVALIDAR_S` (la presentación vivía de la caché)."""
+    b.app.state.voz_aceptada = (CONECTADA["desde"], VOZ_ID, voz.time.monotonic() - voz.REVALIDAR_S - 1)
+
+
+def _nombres(b) -> list[str]:
+    return [n for n, *_ in b.cliente.llamadas]
+
+
+def test_la_cache_se_revisa_con_mnemo_cada_diez_minutos(banco):
+    assert voz.REVALIDAR_S == 600
+    b = banco()
+    r0 = _plan(b.db, 0)
+    c1 = {"rid": r0["id"], "n": 1, "frase": 0}
+    assert b.hablar(c1).status_code == 200 and _nombres(b) == ["mnemo_speak"]
+    # Dentro de los diez minutos, sale de la caché sin preguntarle nada a Mnemo
+    assert eventos(b.hablar(c1).text)[0]["cache"] is True and _nombres(b) == ["mnemo_speak"]
+    # Pasados, se pregunta si la sigue ofreciendo (`mnemo_list_voices`, sin gastar): sí, y sale de la caché
+    _vieja(b)
+    assert eventos(b.hablar(c1).text)[0]["cache"] is True
+    assert _nombres(b) == ["mnemo_speak", "mnemo_list_voices"]
+    assert eventos(b.hablar(c1).text)[0]["cache"] is True and len(_nombres(b)) == 2   # queda aceptada otra vez
+    # Si Mnemo no responde (la red, el plazo, un fallo suyo), no dijo que no: sale de la caché
+    for fallo in (ErrorHerramienta("red", mc.COD_RED), ErrorHerramienta("plazo", mc.COD_PLAZO), _mnemo("INTERNAL")):
+        _vieja(b)
+        b.cliente.fallo = fallo
+        assert eventos(b.hablar(c1).text)[0]["cache"] is True, fallo.codigo
+    assert b.cliente.hablas() == [b.cliente.hablas()[0]] and len(voz.cache_de(b.app)) == 1
+    # Ya no la ofrece (la borraron o la desmarcaron): 409 `sin_voz`, la caché se vacía y se recuerda el «no»
+    b.cliente.fallo = None
+    b.cliente.voces = [v for v in b.cliente.voces if v["voice_id"] != VOZ_ID]
+    _vieja(b)
+    antes = len(_nombres(b))
+    r = b.hablar(c1)
+    assert r.status_code == 409 and _detalle(r) == {"codigo": "sin_voz", "mensaje": voz.MENSAJE_SIN_ESA_VOZ}
+    assert _nombres(b)[antes:] == ["mnemo_list_voices"] and len(voz.cache_de(b.app)) == 0
+    assert voz.puede(b.app, CONECTADA, politica.ajustes_voz({"agente_voz": b.voz}), HUELLA) is False
+    assert not voz._en_curso and not voz._hablando
+
+
+@pytest.mark.parametrize("fallo", [_mnemo("NO_VOICE", {"reason": "not_shared"}),
+                                   ErrorHerramienta("expired", mc.COD_TOKEN, estado=401)])
+def test_si_al_revisar_mnemo_dice_que_no_la_cache_se_vacia(banco, fallo):
+    b = banco()
+    r0 = _plan(b.db, 0)
+    c1 = {"rid": r0["id"], "n": 1, "frase": 0}
+    assert b.hablar(c1).status_code == 200
+    _vieja(b)
+    b.cliente.fallo = fallo
+    r = b.hablar(c1)
+    assert r.status_code == 409 and _detalle(r)["codigo"] == "sin_voz"
+    assert _nombres(b) == ["mnemo_speak", "mnemo_list_voices"] and len(voz.cache_de(b.app)) == 0
+
+
+def test_listar_sin_la_voz_elegida_vacia_la_cache(banco):
+    b = banco()
+    r0 = _plan(b.db, 0)
+    assert b.hablar({"rid": r0["id"], "n": 1, "frase": 0}).status_code == 200 and len(voz.cache_de(b.app)) == 1
+    b.cliente.voces = [v for v in b.cliente.voces if v["voice_id"] != VOZ_ID]
+    d = b.http.get("/api/agente/voces").json()
+    assert d["elegida"] is None and [v["id"] for v in d["voces"]] == [OTRA_VOZ]
+    assert len(voz.cache_de(b.app)) == 0
+    assert voz.puede(b.app, CONECTADA, politica.ajustes_voz({"agente_voz": b.voz}), HUELLA) is False
+    # Si la lista falla porque la conexión venció, también
+    b.cliente.voces = ClienteFalso().voces
+    assert b.hablar({"rid": r0["id"], "n": 1, "frase": 0}).status_code == 200 and len(voz.cache_de(b.app)) == 1
+    b.cliente.fallo = ErrorHerramienta("expired", mc.COD_TOKEN, estado=401)
+    assert b.http.get("/api/agente/voces").status_code == 409 and len(voz.cache_de(b.app)) == 0
 
 
 # ───────────────────────────── Un solo vuelo y la cancelación ─────────────────────────────

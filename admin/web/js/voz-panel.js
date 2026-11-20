@@ -11,7 +11,8 @@
 // * La narración manda: mientras suena un plan en esta ventana (`ocupada` de la narración: el reproductor tiene uno que
 //   no está en pausa) o la voz dice una de sus frases, una respuesta no se dice (`decir` resuelve 'cortada'; el locutor
 //   ya espera antes a que el plan se pause); y un plan que empieza (su primera precarga o su primera frase) calla la
-//   respuesta en curso. `callar` de cada quien calla solo lo suyo: la
+//   respuesta en curso: cada frase de la narración (o la prueba) suelta lo pedido de la respuesta, también su
+//   precarga, antes de decirse. `callar` de cada quien calla solo lo suyo: la
 //   vista que se va (o el reproductor entre dos pasos) no corta la respuesta que se está leyendo, ni el asistente que
 //   deja de leer corta la narración. La prueba de Ajustes es un clic del administrador: calla lo que suene.
 // * El audio de la voz clonada lo pide `flujo('/api/agente/voz', ref, …)` de api.js (con la sesión y el CSRF, como el
@@ -133,6 +134,10 @@ export function tomarVoz(quien = 'narracion', { ocupada = null } = {}) {
   function decir(texto, o = {}) {
     if (!viva()) return Promise.resolve('fallo');
     if (quien === 'respuestas' && narracionOcupada(c)) return Promise.resolve('cortada');
+    // La narración o la prueba toman la voz: lo pedido de una respuesta (la frase que sonaba y la precargada) se suelta
+    // ya, con sus peticiones (si no, se pagaban sin oírse y ocupaban los lugares de la precarga de la narración). La
+    // narración guardada se queda: una pausa la repite al instante
+    if (quien !== 'respuestas') c.voz.callar();
     const mia = ++c.turno;
     c.hablando = quien;
     return c.voz.decir(texto, o).then((r) => {
@@ -160,6 +165,7 @@ export function tomarVoz(quien = 'narracion', { ocupada = null } = {}) {
     gesto: () => { if (viva()) c.voz.gesto(); },
     decir, callar, preparar,
     motor: () => (viva() ? c.voz.motor() : 'navegador'),
+    estadoNavegador: () => (viva() ? c.voz.estadoNavegador() : 'sin_voces'),
     nivel: () => (viva() && c.hablando === quien ? c.voz.nivel() : 0),
     alCambiar(f) {
       if (typeof f !== 'function') return () => {};

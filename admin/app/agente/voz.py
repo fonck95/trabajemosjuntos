@@ -31,12 +31,14 @@ Por qué está hecho así:
   Mnemo.
 * La voz clonada solo dice lo que el sistema generó: el navegador nunca manda un texto libre. La narración se pide por
   referencia al plan guardado de esa persona (`{rid, n, frase}` o `{rid, cierre: true}`; el texto sale de
-  `pantalla.recorrido_de` o de `recorrido_previo`, y si el plan ya no es ese, 409 `plan_vencido`); una frase de una
-  respuesta del asistente, con la firma que le puso el servidor al emitirla (`firmar`: HMAC-SHA256 de `uid`,
-  conversación y texto, con una clave derivada de la del administrador, `seguridad.llave_mnemo`); y la prueba de
-  Ajustes es una frase fija (solo el administrador). Todo texto pasa además las reglas de lo que se dice en voz alta
-  ante una sala (`hablable`: sin «@» ni números de 7 o más dígitos, como lo proyectado) y la tabla de pronunciación de
-  `web/js/voz.js` (`para_decir`, el mismo `paraDecir`: una prueba compara las dos tablas).
+  `pantalla.recorrido_de` o de `recorrido_previo`, y si el plan ya no es ese, 409 `plan_vencido`). Un plan que escribió
+  una aplicación externa por MCP (`externo`, también su copia al volver a reproducirlo) trae frases que escribió quien
+  la usa, sin modelo de por medio: nunca se narra con la voz clonada (409 `voz_apagada`: va con la del navegador). Una
+  frase de una respuesta del asistente se pide con la firma que le puso el servidor al emitirla (`firmar`: HMAC-SHA256
+  de `uid`, conversación y texto, con una clave derivada de la del administrador, `seguridad.llave_mnemo`); y la
+  prueba de Ajustes es una frase fija (solo el administrador). Todo texto pasa además las reglas de lo que se dice en
+  voz alta ante una sala (`hablable`: sin «@» ni números de 7 o más dígitos, como lo proyectado) y la tabla de
+  pronunciación de `web/js/voz.js` (`para_decir`, el mismo `paraDecir`: una prueba compara las dos tablas).
 * Quién la hace sonar: la voz es de la cuenta de Mnemo del administrador (un dato biométrico suyo) y gasta sus
   créditos. Solo los roles de `agente_voz.roles` (403 `voz_rol`), solo con `agente_voz.motor` en «mnemo» y una voz
   elegida con la cuenta conectada ahora (`agente_voz.cuenta`, la huella de `mnemo_conexion.huella_cuenta`), y solo
@@ -51,7 +53,11 @@ Por qué está hecho así:
   conexión, aparte de los modelos.
 * Caché en memoria SOLO de la narración y de la prueba (texto público de la presentación, que se repite: «Volver a
   reproducir», la pausa, la presentación automática en un televisor): por `sha256(voz, formato, texto dicho)`, LRU por
-  tamaño (`CACHE_BYTES`) y con vida (`CACHE_S`). Se vacía al cambiar de voz. Las respuestas del asistente nunca se
+  tamaño (`CACHE_BYTES`) y con vida (`CACHE_S`). Se vacía al cambiar de voz y en cuanto Mnemo dice que la voz ya no se
+  puede usar (`_retirar_voz`: se borró, dejó de estar para las apps, el plan, la conexión vencida o revocada); mientras
+  se recuerda ese «no», ni se lee. Y como una presentación que se repite podría vivir de la caché sin volver a llamar a
+  Mnemo, una frase guardada solo se sirve si Mnemo aceptó esta voz en los últimos `REVALIDAR_S`; si no, antes se le
+  pregunta si la sigue ofreciendo (`mnemo_list_voices`, que no gasta créditos). Las respuestas del asistente nunca se
   guardan: pueden traer datos de personas.
 * Un solo vuelo: dos peticiones iguales a la vez (la precarga y la reproducción, o dos ventanas) se cuelgan del mismo
   productor y reciben lo ya producido y lo que viene. Si se van todas, la llamada a Mnemo se cancela (Mnemo deja de
@@ -117,6 +123,7 @@ ESPERA_CUPO_S = 10.0
 VIGILA_S = 0.25
 ESPERA_TURNO_S = 3
 OLVIDO_S = 3600.0               # lo que se recuerda que esta conexión no puede hablar con esa voz
+REVALIDAR_S = 600.0             # sin que Mnemo acepte la voz en este tiempo, la caché se sirve tras preguntarle
 CACHE_BYTES = 48 * 1024 * 1024  # lo que ocupa la caché de la narración (en base64: lo que se guarda y se manda)
 CACHE_S = 12 * 3600.0
 ESPERA_ARRANQUE_S = 30.0        # si la respuesta no empieza a leerse en este tiempo, el vuelo la suelta
@@ -155,6 +162,7 @@ MENSAJE_SIN_RESPUESTAS = ("La voz clonada no lee las respuestas del asistente (l
 MENSAJE_SIN_AUTOMATICA = ("La voz clonada no narra la presentación automática (lo decide el administrador en Ajustes → "
                           "Asistente).")
 MENSAJE_PLAN_VENCIDO = "Ese plan ya no es el vigente: no se narra."
+MENSAJE_PLAN_EXTERNO = "Ese plan lo armó una aplicación externa por MCP: se narra con la voz del navegador."
 MENSAJE_NO_ESTA = "Esa frase no está en el plan."
 MENSAJE_CON_PERSONAS = ("Esta conversación ya trae datos de habitantes: sus respuestas no se leen en voz alta con la "
                         "voz clonada.")
@@ -390,13 +398,34 @@ def _abreviatura(previo: str) -> bool:
     return bool(_ABREVIATURA.search(previo))
 
 
+# Lo que puede ir entre dos grupos de cifras de un mismo número con espacios alrededor («300 123 4567», «300 - 123 -
+# 4567», «(300) 123»): un corte por largo ahí partiría el número en dos frases que, cada una sola, pasan `hablable`
+_ENTRE_CIFRAS = frozenset(" /()-\u2010\u2011\u2012\u2013\u2014\u2015\u2212")
+
+
+def _entre_cifras(buf: str, k: int) -> bool:
+    """¿El espacio en `k` está dentro de un número (cifras a los dos lados, quizá con guiones, barras o paréntesis de
+    por medio)? Mira solo `buf`: si a la derecha no quedan más que separadores, cuenta como que sí (lo que siga puede
+    ser una cifra), así la decisión no depende de lo que todavía no llegó."""
+    i = k - 1
+    while i >= 0 and buf[i] in _ENTRE_CIFRAS:
+        i -= 1
+    if i < 0 or not buf[i].isdigit():
+        return False
+    j = k + 1
+    while j < len(buf) and buf[j] in _ENTRE_CIFRAS:
+        j += 1
+    return j >= len(buf) or buf[j].isdigit()
+
+
 def _cortar(plano: str, final: bool) -> list[str]:
     """Las frases de `plano`: se corta tras «.», «?», «!», «:», «;» o «…» seguidos de un espacio o de un salto de
     renglón, y en un salto de renglón, si la frase ya tiene `MIN_FRASE` caracteres (si no, sigue con lo que viene; un
     renglón corto, como un título, se cierra con un punto); nunca tras una abreviatura o una sigla («Sr.», «E.S.E.»).
     Una frase que llega a `MAX_FRASE` sin un corte se corta en la última coma (o punto y coma) o, si no hay, en el
-    último espacio. Sin `final`, lo que queda al final sin cortar todavía no es una frase. Cada decisión depende solo de
-    lo anterior y del carácter que sigue: las frases ya cortadas no cambian cuando llega más texto."""
+    último espacio que no está dentro de un número (`_entre_cifras`: un teléfono partido en dos frases pasaría
+    `hablable` en cada una). Sin `final`, lo que queda al final sin cortar todavía no es una frase. Cada decisión
+    depende solo de lo anterior y del carácter que sigue: las frases ya cortadas no cambian cuando llega más texto."""
     frases: list[str] = []
     buf = ""
     i, n = 0, len(plano)
@@ -431,14 +460,38 @@ def _cortar(plano: str, final: bool) -> list[str]:
             k = max(ventana.rfind(", "), ventana.rfind("; "))
             k = k + 1 if k + 1 >= MIN_FRASE else -1
             if k < 0:
+                # (aquí `buf` tiene `MAX_FRASE` + 1 caracteres: lo que se mira a la derecha del espacio ya llegó)
                 k = ventana.rfind(" ")
-                k = k if k >= MIN_FRASE else MAX_FRASE
+                while k > 0 and _entre_cifras(buf, k):
+                    k = ventana.rfind(" ", 0, k)
+                if k < MIN_FRASE:   # sin un espacio donde cortar: en el tope, pero no a mitad de un número
+                    k = MAX_FRASE
+                    while k > MIN_FRASE and buf[k - 1].isdigit() and buf[k].isdigit():
+                        k -= 1
+                    k = k if k > MIN_FRASE else MAX_FRASE
             frases.append(buf[:k])
             buf = buf[k:]
         i += 1
     if final and buf.strip():
         frases.append(buf)
     return [" ".join(f.split()) for f in frases]
+
+
+# El eco: una frase que repite lo que escribió la persona (en el mensaje o antes en la conversación) no se firma. La
+# firma prueba que el servidor emitió la frase, no que el sistema la pensó: sin esto, «repite textualmente: …» le haría
+# decir a la voz clonada del administrador cualquier cosa. Se compara en forma NFKC, sin mayúsculas ni signos
+# (`_normal`): una frase de al menos `ECO_PALABRAS` palabras que está entera en lo que escribió la persona, o que
+# comparte con ello `ECO_RACHA` palabras seguidas. Una respuesta que retoma dos o tres palabras de la pregunta sí se
+# dice. (No lo cierra todo: una paráfrasis o una traducción pasan; por eso `agente_voz.roles` es de confianza)
+ECO_PALABRAS = 4
+ECO_RACHA = 8
+
+
+def _normal(t: str) -> str:
+    """El texto para comparar ecos: NFKC, sin mayúsculas, lo que no es letra ni dígito como espacio, y un solo espacio
+    entre palabras."""
+    t = unicodedata.normalize("NFKC", t).casefold()
+    return " ".join("".join(c if c.isalnum() else " " for c in t).split())
 
 
 def frases_de(texto: str, final: bool = True) -> list[str]:
@@ -457,19 +510,40 @@ class Frases:
     * `{"tipo": "frases_descartar", "desde"}` — las frases desde la `desde` ya no valen (la ronda se descartó o su texto
       final no es el que se venía diciendo): el navegador deja de decirlas, y las que siguen vuelven a numerarse desde
       ahí.
+    * `{"tipo": "frases_ronda", "desde"}` — al cerrar una ronda que tuvo un `frases_descartar`: la ronda siguiente
+      empieza en `desde`. El navegador no repite lo que ya dijo de la ronda que se rehízo, y con esto sabe dónde
+      termina: si la versión nueva fue más corta que lo que ya había dicho, lo de la ronda siguiente sí se dice.
 
     `agregar(trozo)` con cada `texto`; `reemplazar(texto)` con un `texto_ronda` (rehace las frases contra el texto
     final: emite solo las nuevas o, si lo ya emitido no es el comienzo, descarta desde donde cambió); `cerrar_ronda()`
-    cuando la ronda terminó bien (emite lo que quedaba); `descartar()` cuando se descarta (`descartar` del turno)."""
+    cuando la ronda terminó bien (emite lo que quedaba); `descartar()` cuando se descarta (`descartar` del turno).
 
-    def __init__(self, firmar_frase: Callable[[str], str]):
+    `eco`: lo que escribió la persona (el mensaje y sus mensajes anteriores: `conversaciones.textos_de_la_persona`; no
+    el contexto del panel, que es del sistema). Una frase que lo repite no se emite ni se firma (ver `ECO_PALABRAS`):
+    la decisión es de cada frase sola, así que lo ya cortado sigue sin cambiar cuando llega más texto."""
+
+    def __init__(self, firmar_frase: Callable[[str], str], eco: str = ""):
         self.firmar = firmar_frase
         self.emitidas: list[str] = []
         self.inicio_ronda = 0
         self.texto = ""
+        self.recortada = False   # la ronda en curso tuvo un `frases_descartar` (`cerrar_ronda` emite `frases_ronda`)
+        palabras = _normal(eco).split() if isinstance(eco, str) else []
+        self._eco = f" {' '.join(palabras)} " if palabras else ""
+        self._rachas = {tuple(palabras[i:i + ECO_RACHA]) for i in range(len(palabras) - ECO_RACHA + 1)}
+
+    def _es_eco(self, f: str) -> bool:
+        """¿La frase repite lo que escribió la persona? Entera (con al menos `ECO_PALABRAS` palabras) o en una racha de
+        `ECO_RACHA` palabras seguidas."""
+        if not self._eco:
+            return False
+        p = _normal(f).split()
+        if len(p) >= ECO_PALABRAS and f" {' '.join(p)} " in self._eco:
+            return True
+        return any(tuple(p[i:i + ECO_RACHA]) in self._rachas for i in range(len(p) - ECO_RACHA + 1))
 
     def _sincronizar(self, final: bool) -> list[dict]:
-        nuevas = frases_de(self.texto, final)
+        nuevas = [f for f in frases_de(self.texto, final) if not self._es_eco(f)]
         actuales = self.emitidas[self.inicio_ronda:]
         p = 0
         while p < len(actuales) and p < len(nuevas) and actuales[p] == nuevas[p]:
@@ -482,6 +556,7 @@ class Frases:
         if p < len(actuales):
             desde = self.inicio_ronda + p
             del self.emitidas[desde:]
+            self.recortada = True
             eventos.append({"tipo": "frases_descartar", "desde": desde})
         for f in nuevas[p:]:
             eventos.append({"tipo": "frase", "n": len(self.emitidas), "texto": f, "firma": self.firmar(f)})
@@ -508,12 +583,16 @@ class Frases:
     def cerrar_ronda(self) -> list[dict]:
         eventos = self._sincronizar(True)
         self.inicio_ronda, self.texto = len(self.emitidas), ""
+        if self.recortada:
+            self.recortada = False
+            eventos.append({"tipo": "frases_ronda", "desde": self.inicio_ronda})
         return eventos
 
     def descartar(self) -> list[dict]:
         hubo = len(self.emitidas) > self.inicio_ronda
         del self.emitidas[self.inicio_ronda:]
         self.texto = ""
+        self.recortada = self.recortada or hubo
         return [{"tipo": "frases_descartar", "desde": self.inicio_ronda}] if hubo else []
 
 
@@ -633,6 +712,38 @@ def _recordar(app: Any, conexion: dict, voz: str, sin: bool) -> None:
         pass
 
 
+def _aceptar(app: Any, conexion: dict, voz: str) -> None:
+    """Anota que Mnemo aceptó ahora, con esta conexión, esta voz (dijo una frase con ella o la ofreció en la lista):
+    la caché se sirve sin preguntarle hasta `REVALIDAR_S`."""
+    try:
+        app.state.voz_aceptada = (conexion.get("desde"), voz, time.monotonic())
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _aceptada(app: Any, conexion: dict, voz: str) -> bool:
+    a = getattr(getattr(app, "state", None), "voz_aceptada", None)
+    return (isinstance(a, tuple) and len(a) == 3 and a[0] == conexion.get("desde") and a[1] == voz
+            and time.monotonic() - a[2] < REVALIDAR_S)
+
+
+def _retirar_voz(app: Any, conexion: dict, voz: str, recordar: bool = True) -> None:
+    """Mnemo dijo que esta voz ya no se puede usar (o que la conexión venció): la caché se vacía (no se sigue diciendo
+    con una voz que su dueño retiró) y, con `recordar`, se recuerda el «no» (`_recordar`)."""
+    if recordar:
+        _recordar(app, conexion, voz, True)
+    cache_de(app).vaciar()
+    try:
+        app.state.voz_aceptada = None
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _token_vencido(e: ErrorHerramienta) -> bool:
+    """¿La conexión venció, se revocó o le falta el alcance? (no un cambio de conexión a mitad, que es pasajero)"""
+    return e.codigo == mc.COD_TOKEN and not (isinstance(e.detalle, dict) and e.detalle.get("conexion") == "cambio")
+
+
 def puede(app: Any, conexion: Any, ajustes_voz: dict, huella: str) -> bool:
     """¿Esta instalación puede hablar ahora con la voz clonada elegida? Motor «mnemo» con una voz elegida con la cuenta
     conectada (`huella`), una conexión «conectada» con `mnemo:voice`, y Mnemo no dijo hace poco, con esta conexión y
@@ -728,14 +839,15 @@ async def listar(app: Any) -> dict:
     except ErrorHerramienta as e:
         error, recordar = traducir(e)
         log.info("Voz: no se listaron las voces (%s)", error.codigo)
-        if recordar and av["voz"]:
-            _recordar(app, conexion, av["voz"], True)
+        if (recordar or _token_vencido(e)) and av["voz"]:
+            _retirar_voz(app, conexion, av["voz"], recordar)
         raise error from None
-    datos = res.get("structuredContent") if isinstance(res, dict) else None
-    crudas = datos.get("voices") if isinstance(datos, dict) else None
-    if not isinstance(crudas, list):
+    crudas = _crudas(res)
+    if crudas is None:
         log.warning("Voz: la respuesta de Mnemo no trae las voces")
         raise ErrorVoz(502, "mnemo", MENSAJE_FALLO)
+    if av["voz"] and av["cuenta"] == huella and av["voz"] not in _ofrecidas(crudas):
+        _retirar_voz(app, conexion, av["voz"])   # la voz elegida ya no está para las apps (se borró, se desmarcó)
     voces, vistas = [], set()
     for v in crudas:
         if not isinstance(v, dict) or v.get("status", "ready") != "ready":
@@ -752,7 +864,47 @@ async def listar(app: Any) -> dict:
     elegida = next((v for v in voces if v["id"] == av["voz"]), None) if av["voz"] and av["cuenta"] == huella else None
     if elegida is not None:  # Mnemo la ofrece otra vez (se volvió a marcar para apps, cambió el plan): se olvida el «no»
         _recordar(app, conexion, av["voz"], False)
+        _aceptar(app, conexion, av["voz"])
     return {"voces": voces, "elegida": elegida, "conexion": info}
+
+
+def _crudas(res: Any) -> list | None:
+    """Las voces de la salida de `mnemo_list_voices` (sin revisar), o None si no las trae."""
+    datos = res.get("structuredContent") if isinstance(res, dict) else None
+    crudas = datos.get("voices") if isinstance(datos, dict) else None
+    return crudas if isinstance(crudas, list) else None
+
+
+def _ofrecidas(crudas: list) -> set[str]:
+    """Los ids de las voces que Mnemo ofrece listas (todas: sin el tope de `MAX_VOCES` de la lista para elegir)."""
+    return {v["voice_id"] for v in crudas if isinstance(v, dict) and v.get("status", "ready") == "ready"
+            and isinstance(v.get("voice_id"), str)}
+
+
+async def _sigue_ofrecida(app: Any, cliente: Any, conexion: dict, voz: str) -> None:
+    """Antes de servir de la caché una frase cuando Mnemo no aceptó esta voz en `REVALIDAR_S`: ¿la sigue ofreciendo?
+    (`mnemo_list_voices`, que no gasta créditos). Si no (o dice que no puede, o la conexión venció), la retira
+    (`_retirar_voz`) y responde el error (409 `sin_voz`). Si Mnemo no responde o falla de otra forma, no dijo que no:
+    se sirve la caché."""
+    try:
+        res = await cliente.llamar(HERRAMIENTA_VOCES, {}, PLAZO_VOCES_S)
+    except ErrorHerramienta as e:
+        error, recordar = traducir(e)
+        if recordar or _token_vencido(e):
+            log.info("Voz: Mnemo ya no deja usar la voz (%s)", error.codigo)
+            _retirar_voz(app, conexion, voz, recordar)
+            raise error from None
+        log.info("Voz: no se pudo revisar la voz con Mnemo (%s): sale de la caché", error.codigo)
+        return
+    crudas = _crudas(res)
+    if crudas is None:
+        log.warning("Voz: la respuesta de Mnemo no trae las voces")
+        return
+    if voz not in _ofrecidas(crudas):
+        log.info("Voz: Mnemo ya no ofrece la voz elegida")
+        _retirar_voz(app, conexion, voz)
+        raise ErrorVoz(409, SIN_VOZ, MENSAJE_SIN_ESA_VOZ)
+    _aceptar(app, conexion, voz)
 
 
 # ───────────────────────────── La caché y los vuelos ─────────────────────────────
@@ -986,6 +1138,7 @@ async def _producir(app: Any, vuelo: Vuelo, cliente: Any, conexion: dict, voz: s
                                                      "language": IDIOMA}, PLAZO_S, vuelo.al_progreso, tope=TOPE_S)
         vuelo.cerrar_con(res)
         _recordar(app, conexion, voz, False)
+        _aceptar(app, conexion, voz)
         if not vuelo.trozos:
             log.warning("Voz: Mnemo no mandó audio")
             vuelo.fallar(ErrorVoz(502, "mnemo", MENSAJE_FALLO))
@@ -996,8 +1149,8 @@ async def _producir(app: Any, vuelo: Vuelo, cliente: Any, conexion: dict, voz: s
     except ErrorHerramienta as e:
         error, recordar = traducir(e)
         log.info("Voz: no se dijo la frase (%s)", error.codigo)
-        if recordar:
-            _recordar(app, conexion, voz, True)
+        if recordar or _token_vencido(e):   # la voz ya no se puede usar: tampoco desde la caché
+            _retirar_voz(app, conexion, voz, recordar)
         vuelo.fallar(error)
     except ErrorVoz as e:   # el cupo del proceso, o un audio demasiado grande
         log.info("Voz: no se dijo la frase (%s)", e.codigo)
@@ -1124,8 +1277,10 @@ def texto_de_narracion(db: Any, uid: Any, rid: str, n: int | None = None, frase:
                        cierre: bool = False) -> tuple[str, bool]:
     """(el texto de una frase del plan `rid` de esta persona, ¿es de la presentación automática?). El plan es el que
     tiene guardado su pantalla (`pantalla.recorrido_de`) o, con la presentación automática sonando, el último que no
-    era suyo (`recorrido_previo`: «Volver a reproducir» de su tarjeta). Si no es ninguno, 409 `plan_vencido`; si la
-    frase no está, 422 `texto`. El cierre: «En resumen. » y sus puntos, como lo dice `reproductor.js`. Lee MongoDB."""
+    era suyo (`recorrido_previo`: «Volver a reproducir» de su tarjeta). Si no es ninguno, 409 `plan_vencido`; si lo
+    escribió una aplicación externa por MCP (`externo`: sus frases son texto libre de quien la usa, no del sistema),
+    409 `voz_apagada` (esas frases van con la voz del navegador); si la frase no está, 422 `texto`. El cierre: «En
+    resumen. » y sus puntos, como lo dice `reproductor.js`. Lee MongoDB."""
     try:
         g = guion_presentacion.cargar()
     except ValueError:  # el guion del despliegue está dañado: no hay plan que valga
@@ -1135,6 +1290,8 @@ def texto_de_narracion(db: Any, uid: Any, rid: str, n: int | None = None, frase:
     r = next((x for x in candidatos if x and x.get("id") == rid), None)
     if r is None:
         raise ErrorVoz(409, "plan_vencido", MENSAJE_PLAN_VENCIDO)
+    if r.get("externo"):
+        raise ErrorVoz(409, "voz_apagada", MENSAJE_PLAN_EXTERNO)
     if cierre:
         puntos = (r.get("cierre") or {}).get("puntos") if isinstance(r.get("cierre"), dict) else None
         if not isinstance(puntos, list) or not puntos or not all(isinstance(p, str) for p in puntos):
@@ -1218,7 +1375,11 @@ async def hablar(request: Any, quien: Any, pedido: dict) -> StreamingResponse:
         clave = clave_de(voz, dicho, None if guardar else f"respuesta\x1f{quien.uid}")
         bucle = asyncio.get_running_loop()
         registro = vuelos_de(app)
-        entrada = cache.leer(clave) if guardar else None
+        # La caché, solo si Mnemo no dijo hace poco que no (si no, que decida Mnemo: un acierto borra el «no») y si
+        # aceptó esta voz en `REVALIDAR_S` o la sigue ofreciendo
+        entrada = cache.leer(clave) if guardar and not _recordado(app, conexion, voz) else None
+        if entrada is not None and not _aceptada(app, conexion, voz):
+            await _sigue_ofrecida(app, cliente, conexion, voz)
         vuelo = Vuelo.de_la_cache(clave, entrada) if entrada is not None else None
         if vuelo is None:
             vuelo = registro.get(clave)

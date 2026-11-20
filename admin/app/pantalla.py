@@ -227,7 +227,9 @@ def para_pantalla(e: dict, doc: dict | None = None, guion: Any = None, ahora: da
 def recorrido_de(doc: dict | None, guion: Any) -> dict | None:
     """El recorrido guardado, si sigue valiendo contra el guion vigente (`recorrido.validar`) y tiene destino; si no
     (el guion cambió, un texto ya no pasa las reglas, alguien lo tocó en la base), None. `auto`: lo armó la
-    presentación automática (no tiene tarjeta en el chat ni es un plan del asistente)."""
+    presentación automática (no tiene tarjeta en el chat ni es un plan del asistente). `externo`: lo escribió una
+    aplicación externa por MCP (o es una copia de uno así: «reproducir»), con frases que no generó el sistema: la voz
+    clonada no lo narra (`agente/voz.py`)."""
     r = (doc or {}).get("recorrido")
     if not isinstance(r, dict) or r.get("destino") not in rec.DESTINOS or not isinstance(r.get("cerrado"), bool):
         return None
@@ -236,7 +238,7 @@ def recorrido_de(doc: dict | None, guion: Any) -> dict | None:
     if rec.validar(absoluto, guion):
         return None
     return {**absoluto, "destino": r["destino"], "cerrado": r["cerrado"], "creado": r.get("creado"),
-            "auto": r.get("auto") is True}
+            "auto": r.get("auto") is True, "externo": r.get("externo") is True}
 
 
 def progreso_de(doc: dict | None, r: dict | None) -> dict | None:
@@ -271,9 +273,11 @@ def a_la_vista(doc: dict | None, guion: Any, r: dict | None = None) -> dict | No
 
 def _poner_recorrido(absoluto: dict, destino: str, por: str) -> dict:
     """Lo que se escribe al guardar un recorrido nuevo: sin control ni avance, con la base en su última escena y sin
-    explicación."""
+    explicación. `externo`: lo escribió un agente por MCP, o es la copia de uno así (`controlar` «reproducir» la pasa
+    con `externo`): la marca no se pierde aunque otro lo vuelva a reproducir."""
     return {**rec.estado_de_escena(absoluto["escenas"][-1]),
-            "recorrido": {**absoluto, "destino": destino, "creado": _ahora(), "cerrado": False, "auto": por == "auto"},
+            "recorrido": {**absoluto, "destino": destino, "creado": _ahora(), "cerrado": False, "auto": por == "auto",
+                          "externo": por == "mcp" or absoluto.get("externo") is True},
             "control_recorrido": None, "progreso": None, "actualizada": _ahora(), "por": por}
 
 
@@ -366,14 +370,16 @@ def controlar(db: Database, uid: int, guion: Any, accion: str, por: str, rid: st
     if not r or (rid is not None and r["id"] != rid) or (r["cerrado"] and accion != "reproducir"):
         previo = recorrido_previo(doc, guion) if accion == "reproducir" and rid is not None else None
         if previo and previo["id"] == rid:
-            nuevo = {**{k: previo[k] for k in ("titulo", "escenas", "cierre")}, "id": secrets.token_hex(6)}
+            nuevo = {**{k: previo[k] for k in ("titulo", "escenas", "cierre")}, "id": secrets.token_hex(6),
+                     "externo": previo["externo"]}
             doc = guardar_recorrido(db, uid, nuevo, previo["destino"], por)
             return {"recorrido": recorrido_de(doc, guion), "doc": doc}
         raise ValueError("sin_recorrido")
     a = auto_de(doc, guion)
     es_auto = bool(a and a["activa"] and a["rid"] == r["id"])
     if accion == "reproducir":
-        nuevo = {**{k: r[k] for k in ("titulo", "escenas", "cierre")}, "id": secrets.token_hex(6)}
+        nuevo = {**{k: r[k] for k in ("titulo", "escenas", "cierre")}, "id": secrets.token_hex(6),
+                 "externo": r["externo"]}
         doc = (_guardar_plan_auto(db, uid, nuevo, a) if es_auto else None) or \
             guardar_recorrido(db, uid, nuevo, r["destino"], por)
         return {"recorrido": recorrido_de(doc, guion), "doc": doc}

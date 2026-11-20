@@ -399,7 +399,25 @@ for (const [codigo, estado] of [['sin_voz', 409], ['voz_rol', 403]]) {
   const estado = a.voz.estado();
   const d = decir(a, 'Sin audio de la ventana.', REF(8, 0));
   await a.reloj.avanzar(400);
-  out.sin_reanudar = { estado, res: d.res, dichos: a.respaldo.dichos, fin: d.marcas.find((m) => m[0] === 'fin')?.[1]?.error?.codigo };
+  // Y las que siguen (la narración y una respuesta): ninguna se le pide a Mnemo, que la cobraría sin que se oyera
+  const fines = [d.marcas.find((m) => m[0] === 'fin')?.[1]?.error?.codigo];
+  const res = [d.res];
+  for (const [t, ref] of [['Segunda frase.', REF(8, 1)], ['Tercera frase.', REF(8, 2)], ['Una respuesta.', RESP('Una respuesta.')]]) {
+    const x = decir(a, t, ref);
+    await a.reloj.avanzar(400);
+    res.push(x.res);
+    fines.push(x.marcas.find((m) => m[0] === 'fin')?.[1]?.error?.codigo);
+  }
+  out.sin_reanudar = { estado, res: d.res, dichos: a.respaldo.dichos, fin: fines[0], fines, todas: res,
+    pedidos: a.srv.pedidos.length, sonando: a.registro.sonando().length };
+}
+
+// El estado de la voz del navegador sola (la vista lo usa con el plan automático sin la voz clonada): sin voces en
+// español, 'sin_voces' aunque la clonada esté activa
+{
+  const a = await encendida();
+  a.respaldo.e = 'sin_voces';
+  out.estado_navegador = { estado: a.voz.estado(), navegador: a.voz.estadoNavegador(), motor: a.voz.motor() };
 }
 
 // La preferencia es la de voz.js (`yj_voz`)
@@ -495,7 +513,8 @@ console.log(JSON.stringify(out));
 def test_la_voz_clonada_con_un_audio_falso(tmp_path):
     r = _node(tmp_path, NODE_CLONADA, CLONADA_JS.as_uri(), VOZ_JS.as_uri())
     # La forma exacta de voz.js, más lo suyo
-    assert set(r["forma"]["clonada"]) == set(r["forma"]["navegador"]) | {"preparar", "motor", "nivel"}
+    assert set(r["forma"]["clonada"]) == set(r["forma"]["navegador"]) | {"preparar", "motor", "nivel",
+                                                                         "estadoNavegador"}
     c = r["constantes"]
     assert c["CLAVE"] == c["CLAVE_VOZ"] == "yj_voz"
     assert c["A_LA_VEZ"] == voz_srv.A_LA_VEZ_PERSONA and c["MAX_FRASE"] == voz_srv.MAX_AUDIO
@@ -573,8 +592,13 @@ def test_la_voz_clonada_con_un_audio_falso(tmp_path):
     # El gesto: el audio se crea en el gesto (o al crearse, si la página ya tuvo uno), nunca sin voz clonada
     assert r["gesto"] == {"antes": 0, "oye": True, "despues": 1, "corre": "running", "mudo": 1, "gestos": 1,
                           "tocada": "running", "sin_clonada": 0}
-    assert r["sin_reanudar"] == {"estado": "activa", "res": "dicha", "dichos": ["Sin audio de la ventana."],
-                                 "fin": "sin_activar"}
+    # Sin el audio de la ventana, ninguna frase se le pide a Mnemo (se pagaría sin oírse): todas van con la del navegador
+    assert r["sin_reanudar"] == {"estado": "activa", "res": "dicha",
+                                 "dichos": ["Sin audio de la ventana.", "Segunda frase.", "Tercera frase.",
+                                            "Una respuesta."],
+                                 "fin": "sin_activar", "fines": ["sin_activar"] * 4, "todas": ["dicha"] * 4,
+                                 "pedidos": 0, "sonando": 0}
+    assert r["estado_navegador"] == {"estado": "activa", "navegador": "sin_voces", "motor": "clonada"}
 
     # La preferencia de voz.js: apagada, ni se pide; encender y apagar cambian las dos voces
     pr = r["preferencia"]
@@ -690,6 +714,43 @@ const out = {};
   out.descartar_dicho = { dichos: w.dichos, vieja };
 }
 
+// frases_ronda: la ronda rehecha fue más corta que lo que ya se había dicho; lo de la ronda siguiente sí se dice
+{
+  const v = vozFalsa();
+  const l = L.crearLocutor({ voz: v });
+  l.empezar(5);
+  for (const n of [0, 1, 2, 3]) l.frase(F(n, `Vieja ${n}.`));
+  await espera();
+  await v.terminar();
+  await v.terminar();
+  await v.terminar();          // la 0, la 1 y la 2, dichas; suena la 3
+  l.descartar(0);              // la ronda se repite: la 3 se corta
+  await espera();
+  const nuevas = [l.frase(F(0, 'Nueva 0.')), l.frase(F(1, 'Nueva 1.'))];   // ya dichas por número: no se repiten
+  await espera();
+  l.ronda(2);                  // la ronda siguiente empieza en la 2
+  for (const n of [2, 3, 4]) l.frase(F(n, `Después ${n}.`));
+  await espera();
+  await v.terminar();
+  await v.terminar();
+  await v.terminar();
+  // una ronda que no hace falta ajustar (lo dicho no pasó de `desde`) no cambia nada, ni sonando una frase
+  const w = vozFalsa();
+  const m = L.crearLocutor({ voz: w });
+  m.empezar(5);
+  m.frase(F(0, 'La única de la ronda.'));
+  await espera();
+  m.ronda(0);
+  m.ronda(1);
+  await w.terminar();
+  m.frase(F(1, 'La de la ronda siguiente.'));
+  await espera();
+  await w.terminar();
+  m.ronda(-1);
+  m.ronda('2');
+  out.ronda = { dichos: v.dichos, nuevas, otra: w.dichos, activo: l.activo() };
+}
+
 // callar: el resto del turno ya no se dice, hasta un turno nuevo
 {
   const v = vozFalsa();
@@ -783,6 +844,11 @@ def test_el_locutor_de_las_respuestas(tmp_path):
     assert dd["vieja"] is False
     assert dd["dichos"] == ["Frase número 0 de la respuesta.", "Frase número 1 de la respuesta.",
                             "Frase número 2 de la respuesta.", "La dos nueva sí.", "La tres."]
+    # `frases_ronda`: tras una ronda rehecha más corta, la siguiente se dice entera (antes se saltaba «Después 2.»)
+    ro = r["ronda"]
+    assert ro["dichos"] == ["Vieja 0.", "Vieja 1.", "Vieja 2.", "Vieja 3.", "Después 2.", "Después 3.", "Después 4."]
+    assert ro["nuevas"] == [False, False] and ro["activo"] is True
+    assert ro["otra"] == ["La única de la ronda.", "La de la ronda siguiente."]
     c = r["callar"]
     assert c["dichos"] == ["Se va a cortar esta frase.", "Un turno nuevo sí se dice."] and c["callados"] >= 1
     assert c["tarde"] is False and c["activo"] is False and c["ref"]["conversacion"] == 6
@@ -914,6 +980,33 @@ const out = {};
   r.soltar();
 }
 
+// La narración (o la prueba) toma la voz con una respuesta sonando y su frase siguiente precargada: las dos peticiones
+// de la respuesta se cortan (se pagaban sin oírse) y la precarga de la narración tiene su lugar
+for (const quien of ['narracion', 'prueba']) {
+  const n = P.tomarVoz('narracion');
+  const r = P.tomarVoz('respuestas');
+  const otra = quien === 'prueba' ? P.tomarVoz('prueba') : null;
+  n.activar();
+  await dormir(10);
+  const antes = voces('/panel/api/agente/voz').length;
+  let resUno = null;
+  r.decir('Uno.', { ref: { conversacion: 7, texto: 'Uno.', firma: 'f'.repeat(43) } }).then((x) => { resUno = x; });
+  await dormir(20);
+  r.preparar([{ texto: 'Dos.', ref: { conversacion: 7, texto: 'Dos.', firma: 'f'.repeat(43) } }]);
+  await dormir(20);
+  if (otra) otra.decir('', { ref: { prueba: true } });
+  else {
+    n.decir('La frase del plan.', { ref: { rid: 'abcdef123456', n: 1, frase: 0 } });
+    n.preparar([{ texto: 'La siguiente del plan.', ref: { rid: 'abcdef123456', n: 1, frase: 1 } }]);
+  }
+  await dormir(30);
+  const ps = voces('/panel/api/agente/voz').slice(antes);
+  out[`toma_${quien}`] = { cuerpos: ps.map((p) => p.cuerpo), abortadas: ps.map((p) => !!p.abortada), resUno };
+  (otra || n).callar();
+  for (const v of [n, r, otra]) v?.soltar();
+  await dormir(10);
+}
+
 // Lo que llega en el estado se limpia; lo que no tiene la forma es «sin voz»
 out.estados = [{ disponible: true, nombre: 'x'.repeat(80), respuestas: true, automatica: true }, { disponible: 'si' }, null, [1],
   { disponible: true, nombre: 7 }].map((v) => P.vozDelEstado(v));
@@ -946,6 +1039,15 @@ def test_una_sola_voz_por_ventana(tmp_path):
     assert m["nivelRespuesta"] is True and m["nivelNarracion"] == 0
     assert m["precarga"] == {"rid": "abcdef123456", "n": 1, "frase": 0}
     assert r["cae"] == {"res": "fallo", "motor": "navegador", "avisado": 1, "releyo": 0}
+    # La narración toma la voz: la frase de la respuesta y su precarga se cortan (las dos), y la narración pide la suya y
+    # la siguiente; la prueba de Ajustes, igual
+    uno = {"conversacion": 7, "texto": "Uno.", "firma": FIRMA}
+    dos = {"conversacion": 7, "texto": "Dos.", "firma": FIRMA}
+    assert r["toma_narracion"] == {"cuerpos": [uno, dos, {"rid": "abcdef123456", "n": 1, "frase": 0},
+                                               {"rid": "abcdef123456", "n": 1, "frase": 1}],
+                                   "abortadas": [True, True, False, False], "resUno": "cortada"}
+    assert r["toma_prueba"] == {"cuerpos": [uno, dos, {"prueba": True}], "abortadas": [True, True, False],
+                                "resUno": "cortada"}
     assert r["estados"][0] == {"disponible": True, "nombre": "x" * 60, "respuestas": True, "automatica": True}
     assert r["estados"][1:4] == [sin] * 3 and r["estados"][4]["nombre"] is None
     assert "narracion, respuestas, prueba" in r["quien"]
@@ -1004,6 +1106,56 @@ def test_el_reproductor_da_la_referencia_y_precarga_lo_que_sigue(tmp_path):
                                           ["decir", "Solo una.", {"rid": "bbbbbbbbbbbb", "n": 1, "frase": 0}]]
 
 
+NODE_AUTO_SIN_CLONADA = FALSOS + r"""
+// El plan de la presentación automática con `automatica` apagado en Ajustes (la vista le quita la referencia: va con la
+// voz del navegador), en un navegador sin voces en español y con el audio de la ventana andando
+const { crearReproductor } = await import(process.argv[2]);
+const V = await import(process.argv[3]);
+const VI = { enfoque: null, camara: 'paso', rumbo: null, elevacion: null, zoom: null, mirar: null, girar: false, comparar: 'proyecto',
+  detalle: null, inmersion: null, mostrar: [], ocultar: [], aislar: null, sin: [] };
+const esc = (paso, frases) => ({ capitulo: 'salud', paso, panel: true, visual: VI, resaltar: null, mover: null, animar: false, frases, sostener_ms: 1300 });
+const out = {};
+for (const nombre of ['vista', 'sin_su_estado']) {
+  const reloj = relojFalso();
+  const { AudioContextFalso } = audioFalso(reloj.ahora);
+  const srv = servidorFalso();
+  const respaldo = respaldoFalso();
+  respaldo.e = 'sin_voces';
+  respaldo.resultado = 'fallo';
+  const voz = V.crearVozClonada({ ventana: { AudioContext: AudioContextFalso, atob, AbortController, addEventListener() {},
+    removeEventListener() {} }, pedir: srv.pedir, respaldo, almacen: almacenFalso(), reloj, disponible: () => true });
+  voz.activar();
+  await reloj.avanzar(1);
+  let rep = null;
+  const sinClonada = () => rep.recorrido()?.auto === true;
+  // como `vozConBoca` de vistas/presentacion.js (y, para comparar, sin su `estado`)
+  const conVista = { ...voz,
+    ...(nombre === 'vista' ? { estado: () => (sinClonada() ? voz.estadoNavegador() : voz.estado()) } : {}),
+    decir: (t, o = {}) => voz.decir(t, { ...o, ...(sinClonada() ? { ref: null } : {}) }),
+    preparar: (items) => { if (!sinClonada()) voz.preparar(items); } };
+  const progresos = [];
+  rep = crearReproductor({ reloj, voz: conVista, orden: async () => ({ ok: true }), avisar: (p) => progresos.push(p) });
+  rep.iniciar({ id: 'bbbbbbbbbbbb', titulo: 'Salud', auto: true, cierre: null, escenas: [esc(1, ['Solo una frase.', 'Y otra más.'])] },
+    { previa: 0 });
+  await reloj.avanzar(60000);
+  out[nombre] = { avisos: progresos.filter((p) => p.aviso === 'voz').length, voces: [...new Set(progresos.map((p) => p.voz))],
+    dichos: respaldo.dichos, pedidos: srv.pedidos.length, fin: progresos.at(-1)?.fase };
+}
+console.log(JSON.stringify(out));
+"""
+
+
+@requiere_node
+def test_el_plan_automatico_sin_la_voz_clonada_usa_el_estado_del_navegador(tmp_path):
+    r = _node(tmp_path, NODE_AUTO_SIN_CLONADA, REPRODUCTOR_JS.as_uri(), CLONADA_JS.as_uri())
+    # Con el estado de la voz del navegador (sin voces): se lee en silencio, sin «la voz no pudo hablar» en cada frase,
+    # y el avance dice 'sin_voces'
+    assert r["vista"] == {"avisos": 0, "voces": ["sin_voces"], "dichos": [], "pedidos": 0, "fin": "fin"}
+    # Con el de la voz clonada (lo de antes): 'activa', y un aviso por frase sin que suene nada
+    assert r["sin_su_estado"]["avisos"] == 2 and r["sin_su_estado"]["voces"] == ["activa"]
+    assert r["sin_su_estado"]["pedidos"] == 0
+
+
 # ───────────────────────────── Lo estático ─────────────────────────────
 
 def test_los_modulos_puros_no_dependen_del_panel():
@@ -1037,12 +1189,19 @@ def test_el_chat_lee_las_respuestas_en_voz_alta():
     assert "JSON.stringify({ abierto, conversacion: conv, uid: sesion.uid, hablar })" in codigo
     assert "hablar: g.hablar === true" in codigo and "localStorage" not in AGENTE_JS
     # El turno pide la voz con el botón encendido o si la pregunta llegó por voz; la confirmación también
-    assert "const leer = puedeHablar() && (hablar || vozEntregando);" in codigo
+    assert "const leer = puedeHablar() && (hablar || vozEntregando) && !vozApagada();" in codigo
+    assert "const leer = puedeHablar() && hablar && !vozApagada();" in codigo
+    # Con la voz de la ventana apagada (el botón «Voz» de la presentación) el botón se ve apagado y no se pide la
+    # respuesta hablada; lo sigue (alCambiar), y un toque la vuelve a encender
+    assert "const si = puede && hablar && !vozApagada();" in codigo
+    assert "v.alCambiar(() => aplicarHablar());" in codigo and "return v.estado() === 'apagada';" in codigo
+    assert "hablar = !hablar || apagada;" in codigo and "if (apagada) v.encender(); else v.activar();" in codigo
     assert "contexto: contexto({ voz: leer })" in codigo and "...(voz ? { voz: true } : {})," in codigo
     assert "...(leer ? { voz: true } : {})" in codigo
     # Las frases y su resincronización van al locutor; la voz es la de la ventana
     assert "case 'frase': if (t.hablar && turno === t) locutor.frase(ev); break;" in codigo
     assert "case 'frases_descartar': if (t.hablar && turno === t) locutor.descartar(ev.desde); break;" in codigo
+    assert "case 'frases_ronda': if (t.hablar && turno === t) locutor.ronda(ev.desde); break;" in codigo
     assert "tomarVoz('respuestas')" in codigo and "fijarInfoVoz(info.voz);" in codigo
     assert "voz: vozDelEstado(o.voz)," in codigo
     # Se calla: el micrófono (antes del permiso), escribir, enviar, Detener, Escape, cerrar, otra conversación, un plan
@@ -1096,5 +1255,9 @@ def test_la_presentacion_narra_con_la_voz_de_la_ventana():
     assert "const sinClonada = () => rep.recorrido()?.auto === true && !infoVoz().automatica;" in VISTA_JS
     assert "...(sinClonada() ? { ref: null } : {})" in VISTA_JS
     assert "preparar: (items) => { if (!sinClonada()) voz.preparar(items); } };" in VISTA_JS
+    # y su estado es el de la voz del navegador (sin voces, el reproductor lee en silencio), también en el botón «Voz»
+    assert "estado: () => (sinClonada() ? voz.estadoNavegador() : voz.estado())," in VISTA_JS
+    assert "const e = vozConBoca.estado();" in VISTA_JS
+    assert "if (vozConBoca.estado() === 'activa') voz.apagar(); else voz.encender();" in VISTA_JS
     # La boca y el botón siguen como antes (test_presentador.py, test_plan_guiado.py)
     assert "orden, voz: vozConBoca," in VISTA_JS and "limpiezas.push(() => voz.soltar());" in VISTA_JS

@@ -845,12 +845,24 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
    * con «Leer respuestas» en Ajustes (`voz` del estado). */
   const puedeHablar = () => !!info?.disponible && info.voz.disponible && info.voz.respuestas;
 
-  /** El botón «Leer las respuestas en voz alta»: a la vista solo si se puede; apretado si la persona lo encendió. */
+  /** ¿La voz de la ventana está apagada? (el botón «Voz» de la presentación o el interruptor de la tarjeta del chat la
+   * apagan: es la misma). Entonces las respuestas no se leen: el botón se ve apagado y el mensaje no pide la respuesta
+   * hablada. La primera vez se sigue a la voz, para que el botón cambie con ella. */
+  let siguiendoVoz = false;
+  const vozApagada = () => {
+    if (!puedeHablar()) return false;
+    const v = vozHablada();
+    if (!siguiendoVoz) { siguiendoVoz = true; v.alCambiar(() => aplicarHablar()); }
+    return v.estado() === 'apagada';
+  };
+
+  /** El botón «Leer las respuestas en voz alta»: a la vista solo si se puede; apretado si la persona lo encendió y la
+   * voz de la ventana no está apagada. */
   function aplicarHablar() {
     const puede = puedeHablar();
     const tenia = document.activeElement === hablarBtn;
     hablarBtn.hidden = !puede;
-    const si = puede && hablar;
+    const si = puede && hablar && !vozApagada();
     hablarBtn.setAttribute('aria-pressed', String(si));
     const nombre = info?.voz.nombre ? ` «${info.voz.nombre}»` : '';
     const t = si ? `Dejar de leer las respuestas en voz alta (con la voz clonada de Mnemo${nombre}, una voz sintética)`
@@ -1349,7 +1361,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     if (msj) { actual = { el: msj }; ultima = null; }
     const decisiones = lote.map((t) => ({ id: t.id, aprobar: t.decision }));
     // la respuesta que sigue a la aprobación también se oye, si se están leyendo
-    const leer = puedeHablar() && hablar;
+    const leer = puedeHablar() && hablar && !vozApagada();
     correr('/api/agente/confirmaciones', { conversacion: conv, decisiones, ...(leer ? { voz: true } : {}) },
       { tipo: 'confirmacion', lote, msj: enAsistente(), hablar: leer });
   }
@@ -1594,6 +1606,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       // Las respuestas habladas (locutor.js): una frase firmada para decir, o las que ya no valen
       case 'frase': if (t.hablar && turno === t) locutor.frase(ev); break;
       case 'frases_descartar': if (t.hablar && turno === t) locutor.descartar(ev.desde); break;
+      case 'frases_ronda': if (t.hablar && turno === t) locutor.ronda(ev.desde); break;
       case 'confirmar': alConfirmar(ev); break;
       case 'descartar': descartar(); break;
       // Es de la ronda (y se va con ella si se repite) solo si llega en medio de ella, como el paso a un modelo de
@@ -1700,7 +1713,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     locutor.callar();
     // Con «Leer las respuestas en voz alta» encendido, o si la pregunta llegó por voz, la respuesta se oye (enviar suele
     // ser un gesto: destraba el audio de la ventana)
-    const leer = puedeHablar() && (hablar || vozEntregando);
+    const leer = puedeHablar() && (hablar || vozEntregando) && !vozApagada();
     if (leer) vozHablada().gesto();
     // Lo pendiente que no se decidió queda sin aprobar: el servidor lo rechaza al recibir el mensaje (y lo avisa)
     const sinAprobar = pendientesSinEnviar();
@@ -2288,12 +2301,14 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     turno.control.abort();
   });
   hablarBtn.addEventListener('click', () => {
-    hablar = !hablar;
+    // con la voz de la ventana apagada el botón se ve apagado: el toque la enciende (y deja encendido leer)
+    const apagada = vozApagada();
+    hablar = !hablar || apagada;
     guardar();
     if (hablar) {
       // el clic es el gesto que deja sonar la voz en esta ventana (y la enciende si la persona la había apagado)
       const v = vozHablada();
-      if (v.estado() === 'apagada') v.encender(); else v.activar();
+      if (apagada) v.encender(); else v.activar();
     } else locutor.callar();
     aplicarHablar();
   });

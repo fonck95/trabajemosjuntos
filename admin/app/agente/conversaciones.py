@@ -264,6 +264,13 @@ def historial(db: Database, cid: int) -> list[dict]:
     return out
 
 
+def textos_de_la_persona(db: Database, cid: int) -> list[str]:
+    """Lo que escribió la persona en la conversación, en orden: el `texto` de sus mensajes (sin el contexto del panel ni
+    los resultados de herramientas). La respuesta hablada no repite esto con la voz clonada (`voz.Frases`, el eco)."""
+    return [d["texto"] for d in db[MENSAJES].find({"conversacion": cid, "rol": "user"}, {"texto": 1}).sort("seq", 1)
+            if isinstance(d.get("texto"), str)]
+
+
 def mensajes_de(db: Database, cid: int) -> list[dict]:
     return list(db[MENSAJES].find({"conversacion": cid}).sort("seq", 1))
 
