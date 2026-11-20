@@ -17,9 +17,11 @@ Por qué está hecho así:
   se vuelve a validar al rehacerlo: viene de un servidor externo y pasó por MongoDB.
 * Lista blanca por defecto (`POR_DEFECTO`): las 30 de Mnemo pesan 10–15 k tokens, y estudiar, vender o generar mazos
   no es trabajo del panel. `MNEMO_HERRAMIENTAS` la cambia: nombres separados por comas, o `*` para todas las que
-  permita la conexión, salvo `NUNCA` (`mnemo_model_complete` es el modelo, no una herramienta para él, y
-  `mnemo_transcribe` transcribe las preguntas por voz del panel, `agente/dictado.py`). La conexión pide justo los
-  alcances de esas herramientas (`ALCANCES`, sacados del catálogo de Mnemo), nunca `mnemo:forms.responses`.
+  permita la conexión, salvo `NUNCA` (`mnemo_model_complete` es el modelo, no una herramienta para él;
+  `mnemo_transcribe` transcribe las preguntas por voz del panel, `agente/dictado.py`; y `mnemo_speak` y
+  `mnemo_list_voices` son la voz clonada con que el panel narra y lee las respuestas, `agente/voz.py`). La conexión
+  pide justo los alcances de esas herramientas (`ALCANCES`, sacados del catálogo de Mnemo), nunca
+  `mnemo:forms.responses`.
 * Nombres: el remoto si ya empieza por `mnemo_`; si no, `mnemo_<nombre>` (`search` y `fetch` son demasiado genéricos
   junto a las del panel, y el `system` reconoce a las de Mnemo por el prefijo). Sin repetir y con los caracteres que
   acepta la API de Anthropic. La descripción dice que es de Mnemo y cómo se llama allá (sus instrucciones y
@@ -73,9 +75,11 @@ POR_DEFECTO = (
 )
 PREFIJO = "mnemo_"
 # Lo de Mnemo que nunca es una herramienta para el modelo, ni con `*`: `mnemo_model_complete` ES el modelo (lo usa el
-# proveedor del modelo, alcance `mnemo:model`), no algo que el asistente llame; y `mnemo_transcribe` es del panel, que
-# transcribe con ella las preguntas por voz (`agente/dictado.py`): el modelo no tiene audio que mandarle
-NUNCA = frozenset({"mnemo_model_complete", "mnemo_transcribe"})
+# proveedor del modelo, alcance `mnemo:model`), no algo que el asistente llame; `mnemo_transcribe` es del panel, que
+# transcribe con ella las preguntas por voz (`agente/dictado.py`): el modelo no tiene audio que mandarle; y
+# `mnemo_speak` y `mnemo_list_voices` (alcance `mnemo:voice`) son la voz clonada del panel (`agente/voz.py`): la voz
+# clonada solo dice lo que el sistema generó, nunca lo que el modelo le pida, y el audio no le sirve al modelo
+NUNCA = frozenset({"mnemo_model_complete", "mnemo_transcribe", "mnemo_speak", "mnemo_list_voices"})
 PERMISOS = ("agente.usar",)  # A y K lo tienen con «*»; quién más, lo decide `disponible_para`
 PISTAS = ("readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint")
 

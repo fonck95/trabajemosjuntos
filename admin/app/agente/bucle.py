@@ -24,6 +24,12 @@ Cómo corre un turno (docs/agente.md):
   espera que dice el proveedor, si cabe en el tope del turno.
 * Nada lanza fuera del flujo una vez abierto: cualquier fallo sale como `error` + `fin`, y al registro va solo el tipo
   de la excepción (nunca datos de personas ni lo que escribió el modelo).
+* La respuesta hablada (docs/agente.md, «La voz clonada de Mnemo»): si el mensaje lo pide (`contexto.voz`, o `voz` en
+  una confirmación), la voz clonada está disponible para esa persona y lee respuestas (`voz.respuestas_para`) y la
+  conversación no trae datos de habitantes, el turno arma las frases a medida que llega el texto (`voz.Frases`) y
+  emite cada una con su firma (`frase`), las descarta con la ronda (`frases_descartar`) y las rehace contra el texto
+  final (`texto_ronda`). Desde que el modelo recibe datos de una persona (`_anotar`), deja de emitirlas. Nada de esto
+  impide el turno: si algo falla, la respuesta sigue sin voz.
 """
 from __future__ import annotations
 
@@ -48,6 +54,7 @@ from .. import db as bd
 from ..seguridad import SIN_BASE
 from . import conversaciones as conv_db
 from . import politica, proveedores, sistema
+from . import voz as voz_clonada
 # El plazo de una herramienta del panel es uno solo: el de `herramientas/base.py` (con él calcula una escritura cuánto
 # le queda, `Contexto.plazo_escritura`)
 from .herramientas.base import (PLAZO_HERRAMIENTA_S, Confirmacion, Contexto, ErrorHerramienta, Herramienta, Resultado,
@@ -444,6 +451,8 @@ class Turno:
         # Lo que ya lleva la conversación (TOPE_IMAGENES_CONVERSACION y MAX_IMAGENES_CONVERSACION): base64 y cantidad
         self.imagenes_conv = self.imagenes_n = 0
         self.servido = 0  # caracteres de resultados de herramientas que se le pasaron al modelo en el turno
+        # Las frases de la respuesta hablada (`voz.Frases`), si el mensaje la pidió y se puede; None si no
+        self.frases: voz_clonada.Frases | None = None
 
     # ── El productor y la respuesta ──
     def lanzar(self, trabajo: Callable[[], Awaitable[str]]) -> None:
@@ -647,6 +656,18 @@ class Turno:
             self.emitir({"tipo": "aviso", "texto": texto, "nivel": nivel})
         await self._guardar("aviso", replay=False, texto=texto, nivel=nivel)
 
+    def _frases(self, metodo: str, *args: Any) -> None:
+        """Pasa un cambio del texto a las frases de la respuesta hablada (si las hay) y emite sus eventos. Un fallo aquí
+        deja el turno sin voz, nunca sin respuesta."""
+        if self.frases is None:
+            return
+        try:
+            for ev in getattr(self.frases, metodo)(*args):
+                self.emitir(ev)
+        except Exception as e:  # noqa: BLE001 - la respuesta sigue, sin voz
+            log.warning("Asistente: las frases de la respuesta hablada fallaron (%s)", type(e).__name__)
+            self.frases = None
+
     def _herramienta(self, tid: str, nombre: str, etiqueta: str, estado: str, resumen: str | None = None) -> None:
         ev = {"tipo": "herramienta", "id": tid, "nombre": nombre, "etiqueta": etiqueta, "estado": estado}
         if resumen is not None:
@@ -688,6 +709,10 @@ class Turno:
         # Y dónde va el recorrido narrado, si hay uno sonando (o terminó hace poco), en cualquier pantalla
         recorrido = (await run_in_threadpool(sistema.recorrido_del_contexto, self.db, self.quien.uid)
                      if "presentacion" in self.herramientas else "")
+        # La respuesta hablada se pide al modelo solo si de verdad se va a decir (`frases`): si no (la voz no está para
+        # esta persona, la conversación trae datos de habitantes), la respuesta es la escrita de siempre
+        if isinstance(contexto, dict) and "voz" in contexto and self.frases is None:
+            contexto = {k: v for k, v in contexto.items() if k != "voz"}
         contexto_panel = sistema.contexto_del_panel(contexto, _ahora(), etiquetas, guion, pantalla, recorrido)
         bloques = conv_db.limpio(bloques + [{"type": "text", "text": contexto_panel}, {"type": "text", "text": texto}])
         await self._guardar("user", bloques, texto=texto, herramientas=ui)
@@ -799,6 +824,7 @@ class Turno:
                     reintentos += 1
                     log.warning("Asistente: se repite la ronda (%s)", _tipo(e))
                     self.emitir({"tipo": "descartar"})
+                    self._frases("descartar")
                     await dormir(espera)
                     continue
                 log.warning("Asistente: falló la petición al modelo (%s)", _tipo(e))
@@ -839,6 +865,10 @@ class Turno:
                 self._herramienta(tid, nombre, anunciadas[-1][2], "inicio")
             elif tipo in proveedores.EVENTOS:
                 self.emitir(ev)
+                if tipo == "texto":
+                    self._frases("agregar", ev.get("texto"))
+                elif tipo == "texto_ronda":
+                    self._frases("reemplazar", ev.get("texto"))
 
         return await self.proveedor.generar(self.sistema, historial, self.definiciones,
                                             max_tokens=self.proveedor.max_tokens, esfuerzo=self.cfg.agente_esfuerzo,
@@ -870,8 +900,11 @@ class Turno:
             log.info("Asistente: el modelo no continuó (categoría %s)", (r.detalles or {}).get("category"))
             await self._guardar("assistant", contenido, replay=False, **meta)
             self.emitir({"tipo": "descartar"})
+            self._frases("descartar")
             await self._avisar(AVISO_RECHAZO, "alerta")
             return "rechazo"
+        # La ronda terminó bien: lo que quedaba de su texto es la última frase (antes de sus herramientas)
+        self._frases("cerrar_ronda")
         if not contenido:
             # El modelo a veces termina sin bloques (sobre todo tras resultados de herramientas): queda solo para
             # auditoría. Reenviarlo sería un 400 en cada petición siguiente (solo el último mensaje del asistente puede
@@ -993,7 +1026,10 @@ class Turno:
         herramienta las leía no encontró esta. Si pasó, la conversación se borra como lo habrían hecho ellos y el turno
         termina sin mandarle esos datos al modelo. En lo que devuelve una escritura aprobada, las personas de su
         tarjeta (`anotadas`) no se miran así: ya estaban anotadas (su «no» borró la conversación), y una revocatoria
-        aprobada es la escritura misma; las demás sí (las parecidas que devuelve crear_persona)."""
+        aprobada es la escritura misma; las demás sí (las parecidas que devuelve crear_persona). Desde aquí la respuesta
+        ya no se dice con la voz clonada: lo que escriba el modelo puede traer esos datos."""
+        if personas:
+            self.frases = None
         await run_in_threadpool(conv_db.sumar_personas, self.db, self.cid, personas)
         if await run_in_threadpool(conv_db.suprimidas, self.db, personas) or (
                 personas - anotadas and await run_in_threadpool(conv_db.dejaron_de_autorizar, self.db,
@@ -1203,6 +1239,23 @@ async def _contar(db: Any, quien: Any, ajustes: dict) -> dict:
     return {"usados": usados, "maximo": maximo}
 
 
+async def _frases_para(app: Any, quien: Any, ajustes: dict, cid: int, conv: dict | None, pedida: bool):
+    """Las frases de la respuesta hablada de este turno (`voz.Frases`, firmadas para esta persona y esta conversación)
+    si se pidió (`pedida`), la voz clonada está disponible para esa persona y lee respuestas, y la conversación no trae
+    datos de habitantes; si no, None. Nunca impide el turno."""
+    if not pedida or (conv or {}).get("personas"):
+        return None
+    try:
+        if not await run_in_threadpool(voz_clonada.respuestas_para, app, quien, ajustes):
+            return None
+        llave = await run_in_threadpool(voz_clonada.llave_respuestas, app.state.cfg)
+    except Exception as e:  # noqa: BLE001 - el turno sigue, sin voz
+        log.warning("Asistente: no se pudo preparar la respuesta hablada (%s)", type(e).__name__)
+        return None
+    uid = quien.uid
+    return voz_clonada.Frases(lambda t: voz_clonada.firmar(llave, uid, cid, t))
+
+
 async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, contexto: Any) -> StreamingResponse:
     """POST /api/agente/mensajes: las comprobaciones previas y el turno en flujo."""
     app = request.app
@@ -1232,6 +1285,8 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
         limite = await _contar(db, quien, ajustes)
         turno = Turno(app=app, quien=quien, ajustes=ajustes, agente=agente, api=ApiInterna.desde_peticion(request),
                       conv=conv, cid=cid, titulo=titulo, turno=turno_id, limite=limite, proveedor=proveedor)
+        turno.frases = await _frases_para(app, quien, ajustes, cid, conv,
+                                          isinstance(contexto, dict) and contexto.get("voz") is True)
         turno.lanzar(lambda: turno.mensaje(texto, contexto))
     except BaseException:
         await _liberar(app, quien.uid, cid, turno_id)
@@ -1239,12 +1294,14 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
     return _respuesta(turno)
 
 
-async def abrir_confirmacion(request: Any, quien: Any, cid: int, decisiones: dict[str, bool]) -> StreamingResponse:
+async def abrir_confirmacion(request: Any, quien: Any, cid: int, decisiones: dict[str, bool],
+                             voz: bool = False) -> StreamingResponse:
     """POST /api/agente/confirmaciones: las comprobaciones previas y el turno que sigue tras la decisión. Cada decisión
     tiene que ser sobre algo que espera aprobación ahora (si no, 409): una pestaña vieja (o un «Reintentar» cuya
     respuesta no llegó) decide sobre tarjetas que ya no están, y lo nuevo, sin decisión, quedaría rechazado sin que la
     persona lo viera. Lo aprobado tiene que tener una tarjeta que mostró los valores enteros (`_entera`): lo que guardó
-    una versión anterior del panel queda rechazado, con 409."""
+    una versión anterior del panel queda rechazado, con 409. `voz`: la respuesta que sigue se dice con la voz clonada
+    (como `contexto.voz` de un mensaje)."""
     app = request.app
     db, cfg = app.state.db, app.state.cfg
     ajustes, agente = await run_in_threadpool(politica.leer, db)
@@ -1278,6 +1335,7 @@ async def abrir_confirmacion(request: Any, quien: Any, cid: int, decisiones: dic
         turno = Turno(app=app, quien=quien, ajustes=ajustes, agente=agente, api=ApiInterna.desde_peticion(request),
                       conv=conv, cid=cid, titulo=conv.get("titulo") or "Conversación", turno=turno_id, limite=limite,
                       proveedor=proveedor)
+        turno.frases = await _frases_para(app, quien, ajustes, cid, conv, voz is True)
         turno.lanzar(lambda: turno.confirmacion(decisiones))
     except BaseException:
         await _liberar(app, quien.uid, cid, turno_id)

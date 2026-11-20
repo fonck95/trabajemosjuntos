@@ -5,7 +5,8 @@
   nueva (`proveedor`: «mnemo», «anthropic» o None; ver `agente/proveedores.py`). Para el administrador y el
   coordinador trae además la conexión con Mnemo (`mnemo.conexion`, `mnemo_conexion.vista`; al coordinador, sin la
   cuenta personal de Mnemo del administrador ni la dirección sugerida); conectarla y desconectarla está en
-  `api/agente_mnemo.py`. Y `dictado`: si esta instalación puede transcribir por Mnemo las preguntas por voz.
+  `api/agente_mnemo.py`. Y `dictado`: si esta instalación puede transcribir por Mnemo las preguntas por voz; y `voz`:
+  si esta persona puede hacer sonar la voz clonada de Mnemo (`agente/voz.py`).
 * GET /api/agente/conversaciones, GET y DELETE /api/agente/conversaciones/{cid} — las conversaciones propias: solo
   su dueño las ve o las borra (de otra persona es un 404, como si no existiera).
 * POST /api/agente/mensajes y POST /api/agente/confirmaciones — un turno en flujo (NDJSON, `bucle.py`). Lo que impide
@@ -13,6 +14,10 @@
   de un proveedor del modelo que ya no está.
 * POST /api/agente/transcribir — una pregunta por voz: el cuerpo es el audio crudo que grabó el panel y la respuesta,
   su texto (`agente/dictado.py`, que se lo pide a la cuenta de Mnemo conectada). No guarda nada.
+* GET /api/agente/voces — las voces clonadas de la cuenta de Mnemo conectada que se pueden usar desde el panel (solo
+  el administrador, que la elige en Ajustes → Asistente) y POST /api/agente/voz — una frase dicha con la voz clonada,
+  en flujo (NDJSON): la narración del plan guardado, una frase firmada de una respuesta del asistente o la prueba de
+  Ajustes (`agente/voz.py`). No guarda nada.
 
 El módulo del bucle (y con él el catálogo de herramientas) se importa al usarlo: `crear_app` no depende de que cada
 herramienta cargue, y una herramienta rota deja sin asistente, no sin panel."""
@@ -23,9 +28,10 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from fastapi.concurrency import run_in_threadpool
-from pydantic import BaseModel, Field, StrictBool, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, field_validator, model_validator
 from pymongo.database import Database
 
+from .. import recorrido as rec
 from ..acceso import Quien, requiere
 from ..agente import conversaciones as conv_db
 from ..agente import politica, proveedores
@@ -60,6 +66,37 @@ class DecisionIn(BaseModel):
 class ConfirmacionIn(BaseModel):
     conversacion: int = Field(..., ge=1, le=ID_MAX)
     decisiones: list[DecisionIn] = Field(..., min_length=1, max_length=20)
+    # La respuesta que sigue se dice con la voz clonada (como `contexto.voz` de un mensaje)
+    voz: StrictBool | None = None
+
+
+# Lo que se puede pedir a la voz clonada: una referencia, nunca un texto libre (salvo la frase firmada de una respuesta,
+# `agente/voz.py`). Los rangos de la narración son los del recorrido (como `api/pantalla.ProgresoEntrada`)
+
+
+class VozIn(BaseModel):
+    """Exactamente uno de: `{rid, n, frase}` o `{rid, cierre: true}` (la narración del plan guardado de la persona),
+    `{conversacion, texto, firma}` (una frase de una respuesta del asistente, con la firma del evento `frase`) o
+    `{prueba: true}` (la frase de prueba de Ajustes, solo el administrador)."""
+    model_config = ConfigDict(extra="forbid")
+    rid: str | None = Field(None, pattern=r"^[0-9a-f]{12}$")
+    n: StrictInt | None = Field(None, ge=1, le=rec.MAX_ESCENAS)
+    frase: StrictInt | None = Field(None, ge=0, le=rec.MAX_FRASES - 1)
+    cierre: StrictBool | None = None
+    conversacion: StrictInt | None = Field(None, ge=1, le=ID_MAX)
+    texto: str | None = Field(None, min_length=1, max_length=400)
+    firma: str | None = Field(None, pattern=r"^[A-Za-z0-9_-]{43}$")
+    prueba: StrictBool | None = None
+
+    @model_validator(mode="after")
+    def _uno(self):
+        dado = {k for k in type(self).model_fields if getattr(self, k) is not None}
+        if dado not in ({"rid", "n", "frase"}, {"rid", "cierre"}, {"conversacion", "texto", "firma"}, {"prueba"}):
+            raise ValueError("Pida una frase del plan ({rid, n, frase}), su cierre ({rid, cierre: true}), una frase de "
+                             "una respuesta ({conversacion, texto, firma}) o la prueba ({prueba: true})")
+        if self.cierre is False or self.prueba is False:
+            raise ValueError("cierre y prueba solo pueden ser true")
+        return self
 
 
 def _exigir_rol(quien: Quien, agente: dict) -> None:
@@ -68,7 +105,8 @@ def _exigir_rol(quien: Quien, agente: dict) -> None:
 
 
 SIN_CONEXION = {"estado": "sin_conectar", "motivo": None, "url": None, "cuenta": None, "alcances": [],
-                "modelo": False, "ofrece_modelo": None, "desde": None}
+                "modelo": False, "ofrece_modelo": None, "voz": False, "ofrece_voz": None, "desde": None}
+SIN_VOZ = {"disponible": False, "nombre": None, "respuestas": False, "automatica": False}
 
 
 def _conexion(db: Database, cfg: Any) -> dict:
@@ -105,6 +143,17 @@ def _dictado(app: Any, conexion: dict) -> bool:
         return False
 
 
+def _voz(app: Any, db: Database, quien: Quien, ajustes: dict, conexion: dict) -> dict:
+    """¿Esta persona puede hacer sonar la voz clonada de Mnemo? (`voz.estado_de`). Sin eso el panel narra y lee con la
+    voz del navegador. El estado nunca falla por esto."""
+    try:
+        from ..agente import voz
+        return voz.estado_de(app, db, quien, ajustes, conexion)
+    except Exception as e:  # noqa: BLE001
+        log.warning("Asistente: no se pudo saber si hay voz clonada (%s)", type(e).__name__)
+        return dict(SIN_VOZ)
+
+
 def _etiquetas(conv: dict) -> dict[str, str]:
     """La etiqueta (en gerundio) de cada herramienta de la conversación, para pintar el historial."""
     try:
@@ -127,11 +176,13 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
     `configurado` es `proveedor` no None. `mnemo`: `{"activo": bool (esta persona usa las herramientas de Mnemo),
     "origen": scheme://host de Mnemo | None}` para todos y, para el administrador y el coordinador (que la ve en solo
     lectura en Ajustes), `"conexion"`: `mnemo_conexion.vista(db, cfg)` (`estado`, `motivo`, `url`, `cuenta`,
-    `alcances`, `modelo`, `ofrece_modelo`, `desde` y `url_sugerida`). Al coordinador le llegan `cuenta` y
-    `url_sugerida` en None: la cuenta es la personal del administrador (nombre y correo) y la dirección sugerida solo
-    le sirve a quien conecta. `dictado`: True si las preguntas por voz se pueden transcribir por Mnemo (hay una
-    conexión con `mnemo:model` y Mnemo no dijo hace poco que no transcribe); con False el panel usa el reconocimiento
-    de voz del navegador."""
+    `alcances`, `modelo`, `ofrece_modelo`, `voz`, `ofrece_voz`, `desde` y `url_sugerida`). Al coordinador le llegan
+    `cuenta` y `url_sugerida` en None: la cuenta es la personal del administrador (nombre y correo) y la dirección
+    sugerida solo le sirve a quien conecta. `dictado`: True si las preguntas por voz se pueden transcribir por Mnemo
+    (hay una conexión con `mnemo:model` y Mnemo no dijo hace poco que no transcribe); con False el panel usa el
+    reconocimiento de voz del navegador. `voz`: `{"disponible": bool (esta persona puede hacer sonar la voz clonada
+    elegida en Ajustes), "nombre": el de la voz | None, "respuestas": bool (la voz lee las respuestas del asistente),
+    "automatica": bool (narra también la presentación automática)}`; sin ella, la voz del navegador."""
     cfg = request.app.state.cfg
     ajustes, agente = politica.leer(db)
     sesion = (request.scope.get("state") or {}).get("sesion")
@@ -146,6 +197,7 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
             "proveedor": proveedor, "es_admin": quien.es_admin, "escritura": agente["escritura"],
             "limite": {"usados": conv_db.uso_de(db, quien.uid), "maximo": politica.mensajes_diarios(ajustes, quien.rol)},
             "mnemo": mnemo, "dictado": _dictado(request.app, conexion),
+            "voz": _voz(request.app, db, quien, ajustes, conexion),
             "sugerencias": politica.sugerencias(quien.rol) if motivo is None else []}
 
 
@@ -192,7 +244,7 @@ async def mensajes(cuerpo: MensajeIn, request: Request, quien: Quien = Depends(r
 async def confirmaciones(cuerpo: ConfirmacionIn, request: Request, quien: Quien = Depends(requiere("agente.usar"))):
     from ..agente import bucle
     return await bucle.abrir_confirmacion(request, quien, cuerpo.conversacion,
-                                          {d.id: d.aprobar for d in cuerpo.decisiones})
+                                          {d.id: d.aprobar for d in cuerpo.decisiones}, voz=cuerpo.voz is True)
 
 
 @r.post("/agente/transcribir")
@@ -227,3 +279,30 @@ async def transcribir(request: Request, quien: Quien = Depends(requiere("agente.
         audio = await dictado.leer_audio(request)
         texto = await dictado.mientras_siga(request, dictado.transcribir_con_cupo(app, audio, mime))
     return {"texto": texto, "via": "mnemo"}
+
+
+@r.get("/agente/voces")
+async def voces(request: Request, quien: Quien = Depends(requiere("agente.conectar"))):
+    """Las voces clonadas de la cuenta de Mnemo conectada que la persona marcó para las apps (`mnemo_list_voices`):
+    `{"voces": [{"id", "nombre", "idioma", "motor"}], "elegida": la de Ajustes si está entre ellas y es de esta cuenta |
+    None, "conexion": {"voz": bool (la conexión tiene `mnemo:voice`), "ofrece_voz": bool (ese Mnemo lo ofrece)}}`. Sin
+    conexión o sin `mnemo:voice`, sin voces. Solo el administrador: la voz es de su cuenta. Errores de Mnemo, `{codigo,
+    mensaje}`: 409 `sin_voz`, 402 `mnemo_creditos`, 429 `frecuencia`, 502 `mnemo` o `mnemo_red`."""
+    from ..agente import voz
+    return await voz.listar(request.app)
+
+
+@r.post("/agente/voz")
+async def voz_clonada(cuerpo: VozIn, request: Request, quien: Quien = Depends(requiere("presentacion.ver"))):
+    """Una frase con la voz clonada de Mnemo, en flujo (`application/x-ndjson`): `{"tipo": "inicio", "formato":
+    "pcm_s16le" | "mp3" | "wav"…, "muestreo", "canales", "cache": bool, "voz": nombre}`, `{"tipo": "audio", "datos":
+    base64}` mientras Mnemo la genera y `{"tipo": "fin", "ms_primer_audio", "ms_mnemo", "bytes"}` o `{"tipo": "error",
+    "codigo", "mensaje"}`. El texto sale del servidor (`VozIn`): el plan guardado de la persona, una frase firmada de
+    una respuesta o la prueba. Con `presentacion.ver` y el rol en `agente_voz.roles` (403 `voz_rol`; la prueba, solo el
+    administrador). Lo que lo impide sale antes, `{codigo, mensaje}`: 409 `sin_voz` (sin voz elegida, sin
+    `mnemo:voice`, otra cuenta o Mnemo no puede: el navegador sigue con su voz), `voz_apagada` (la voz no lee
+    respuestas o no narra la presentación automática), `plan_vencido` o `con_personas`, 404 `no_existe`, 422 `texto`,
+    402 `mnemo_creditos`, 429 `frecuencia` o `volumen`, 502 `mnemo` o `mnemo_red`. No guarda ni registra el texto ni el
+    audio (`agente/voz.py`)."""
+    from ..agente import voz
+    return await voz.hablar(request, quien, cuerpo.model_dump(exclude_none=True))

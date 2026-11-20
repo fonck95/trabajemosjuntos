@@ -104,6 +104,10 @@ NUEVAS = [
     ("POST", "/api/agente/mnemo/conectar", {"agente.conectar"}, "agente"),
     ("POST", "/api/agente/mnemo/volver", {"agente.conectar"}, "agente"),
     ("DELETE", "/api/agente/mnemo", {"agente.conectar"}, "agente"),
+    # Su voz clonada: las voces de su cuenta de Mnemo, solo el administrador (las elige en Ajustes); una frase dicha con
+    # ella, quien ve la presentación (su rol lo decide `agente_voz.roles`, agente/voz.py)
+    ("GET", "/api/agente/voces", {"agente.conectar"}, "agente"),
+    ("POST", "/api/agente/voz", {"presentacion.ver"}, "agente"),
 ]
 TABLA = ACTUALES + NUEVAS
 # Rutas que ya existían antes de la ampliación: las de otros grupos se comparan cuando su grupo llega

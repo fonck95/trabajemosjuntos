@@ -65,6 +65,7 @@ def test_cada_ruta_declara_un_solo_requiere(cliente):
                           ("GET", "/api/agente/conversaciones/{cid}"), ("DELETE", "/api/agente/conversaciones/{cid}"),
                           ("POST", "/api/agente/mensajes"), ("POST", "/api/agente/confirmaciones"),
                           ("POST", "/api/agente/transcribir"),
+                          ("GET", "/api/agente/voces"), ("POST", "/api/agente/voz"),
                           ("POST", "/api/agente/mnemo/conectar"), ("POST", "/api/agente/mnemo/volver"),
                           ("DELETE", "/api/agente/mnemo")}
     for (m, ruta), r in rutas.items():
@@ -74,8 +75,11 @@ def test_cada_ruta_declara_un_solo_requiere(cliente):
             if hasattr(d.call, "permisos"):
                 deps.append(d.call.permisos)
             pendientes.extend(d.dependencies)
+        # Las voces de la cuenta de Mnemo: solo el administrador (las elige en Ajustes); una frase con la voz clonada:
+        # quien ve la presentación (la narra), y su rol lo decide `agente_voz.roles` (agente/voz.py)
         esperado = ({"cuenta"} if ruta == "/api/agente/estado" else
-                    {"agente.conectar"} if ruta.startswith("/api/agente/mnemo") else {"agente.usar"})
+                    {"agente.conectar"} if ruta.startswith("/api/agente/mnemo") or ruta == "/api/agente/voces" else
+                    {"presentacion.ver"} if ruta == "/api/agente/voz" else {"agente.usar"})
         assert deps == [frozenset(esperado)], (m, ruta, deps)
 
 
@@ -87,7 +91,9 @@ def test_sin_sesion_401(cliente):
 # ───────────────────────────── Estado ─────────────────────────────
 
 SIN_CONECTAR = {"estado": "sin_conectar", "motivo": None, "url": None, "cuenta": None, "alcances": [],
-                "modelo": False, "ofrece_modelo": None, "desde": None, "url_sugerida": None}
+                "modelo": False, "ofrece_modelo": None, "voz": False, "ofrece_voz": None, "desde": None,
+                "url_sugerida": None}
+SIN_VOZ = {"disponible": False, "nombre": None, "respuestas": False, "automatica": False}
 
 
 def test_estado_sin_clave(sesion):
@@ -95,7 +101,7 @@ def test_estado_sin_clave(sesion):
     assert e == {"disponible": False, "motivo": "sin_configurar", "configurado": False, "proveedor": None,
                  "es_admin": True, "escritura": True, "limite": {"usados": 0, "maximo": 300},
                  "mnemo": {"activo": False, "origen": None, "conexion": SIN_CONECTAR}, "sugerencias": [],
-                 "dictado": False}
+                 "dictado": False, "voz": SIN_VOZ}
 
 
 def test_estado_con_clave_y_tope_diario(sesion, falsas):

@@ -1013,7 +1013,8 @@ def test_con_el_permiso_del_asistente(banco):
 # ───────────────────────────── `mnemo_transcribe` no es una herramienta para el modelo ─────────────────────────────
 
 def test_mnemo_transcribe_no_se_ofrece_al_modelo():
-    assert mnemo.NUNCA == {"mnemo_model_complete", "mnemo_transcribe"}
+    # (y la voz clonada del panel, `agente/voz.py`: tampoco es del modelo; test_voz_servidor.py lo prueba)
+    assert mnemo.NUNCA == {"mnemo_model_complete", "mnemo_transcribe", "mnemo_speak", "mnemo_list_voices"}
     assert dictado.HERRAMIENTA == "mnemo_transcribe"
     falso = _mnemo_que_transcribe()
 

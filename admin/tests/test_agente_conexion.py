@@ -138,8 +138,9 @@ def test_conectar_descubre_registra_y_arma_la_autorizacion(sesion, falso):
     assert q["code_challenge_method"] == "S256" and len(q["code_challenge"]) == 43 and len(q["state"]) >= 43
     assert q["resource"] == URL
     pedidos = q["scope"].split()
-    assert pedidos[:4] == ["openid", "profile", "email", "mnemo:model"]
-    assert set(pedidos[4:]) == {"mnemo:read", "mnemo:workspace.write", "mnemo:memory.write", "mnemo:share",
+    # Los del panel primero: el modelo y la voz clonada (que este Mnemo ofrece: los anuncia en sus metadatos)
+    assert pedidos[:5] == ["openid", "profile", "email", "mnemo:model", "mnemo:voice"]
+    assert set(pedidos[5:]) == {"mnemo:read", "mnemo:workspace.write", "mnemo:memory.write", "mnemo:share",
                                 "mnemo:publish"}  # las de la lista blanca de herramientas/mnemo.py
     assert "mnemo:forms.responses" not in pedidos  # datos de otras personas: nunca
     assert [(p["metodo_http"], p["ruta"]) for p in falso.peticiones] == [
@@ -361,9 +362,9 @@ def test_volver_conecta_sin_tokens_en_claro(sesion, falso, caplog):
     v = r.json()
     assert v == {"estado": "conectada", "motivo": None, "url": URL,
                  "cuenta": "Ana Inventada (ana.inventada@example.org)", "alcances": v["alcances"], "modelo": True,
-                 "ofrece_modelo": True, "desde": v["desde"], "url_sugerida": URL}
-    assert set(v["alcances"]) == {"mnemo:model", "mnemo:read", "mnemo:workspace.write", "mnemo:memory.write",
-                                  "mnemo:share", "mnemo:publish"}
+                 "ofrece_modelo": True, "voz": True, "ofrece_voz": True, "desde": v["desde"], "url_sugerida": URL}
+    assert set(v["alcances"]) == {"mnemo:model", "mnemo:voice", "mnemo:read", "mnemo:workspace.write",
+                                  "mnemo:memory.write", "mnemo:share", "mnemo:publish"}
     assert datetime.fromisoformat(v["desde"]) > datetime.now(timezone.utc) - timedelta(minutes=1)
     # El canje: PKCE, la vuelta, el cliente y el recurso, en form-urlencoded
     canje = next(p for p in falso.peticiones if p["ruta"] == "/oauth/token")
@@ -463,7 +464,7 @@ def test_el_estado_muestra_la_conexion_al_administrador_y_al_coordinador(sesion,
     e = sesion.get("/api/agente/estado").json()["mnemo"]
     assert e == {"activo": False, "origen": None, "conexion": {
         "estado": "sin_conectar", "motivo": None, "url": None, "cuenta": None, "alcances": [], "modelo": False,
-        "ofrece_modelo": None, "desde": None, "url_sugerida": None}}
+        "ofrece_modelo": None, "voz": False, "ofrece_voz": None, "desde": None, "url_sugerida": None}}
     sesion.app.state.cfg = replace(sesion.app.state.cfg, mnemo_url=URL)
     assert sesion.get("/api/agente/estado").json()["mnemo"]["conexion"]["url_sugerida"] == URL
     conectar_mnemo(sesion.app, falso=falso)
@@ -679,7 +680,8 @@ def test_desconectar_revoca_con_el_refresh(sesion, falso):
     r = sesion.delete("/api/agente/mnemo")
     assert r.status_code == 200, r.text
     assert r.json() == {"estado": "sin_conectar", "motivo": None, "url": None, "cuenta": None, "alcances": [],
-                        "modelo": False, "ofrece_modelo": None, "desde": None, "url_sugerida": URL, "revocada": True}
+                        "modelo": False, "ofrece_modelo": None, "voz": False, "ofrece_voz": None, "desde": None,
+                        "url_sugerida": URL, "revocada": True}
     assert falso.revocaciones == [{"token": tokens["refresh"], "token_type_hint": "refresh_token",
                                    "client_id": clientes[0]["client_id"], "tipo": "refresh"}]  # nunca con el access
     g = falso.concesion_de(tokens["refresh"])
@@ -941,3 +943,80 @@ def test_mnemo_token_se_ignora_y_mnemo_modelo_se_valida(tmp_path, monkeypatch, c
         with caplog.at_level(logging.WARNING, logger="panel"):
             assert config.cargar().mnemo_modelo == esperado, valor
         assert ("MNEMO_MODELO" in caplog.text) == (esperado == "" and valor.strip() != "")
+
+
+# ───────────────────────────── La voz clonada (`mnemo:voice`) ─────────────────────────────
+
+def test_la_voz_se_pide_si_mnemo_la_ofrece_y_la_persona_puede_no_marcarla(sesion, falso):
+    """`mnemo:voice` (la voz clonada con que el panel narra y lee las respuestas, agente/voz.py) se pide cuando Mnemo lo
+    anuncia en sus metadatos. Si la persona no deja marcada esa casilla en Mnemo, el panel se conecta igual (sigue con
+    la voz del navegador) y la vista lo dice: `voz` en falso y `ofrece_voz` en verdadero (es una casilla sin marcar)."""
+    r = _conectar(sesion)
+    assert "mnemo:voice" in _consulta(r.json()["autorizar"])["scope"].split()
+    assert _doc(sesion.app)["pendiente"]["ofrece_voz"] is True
+    falso.marcar = {"mnemo:model", "mnemo:read", "mnemo:workspace.write", "mnemo:memory.write", "mnemo:share",
+                    "mnemo:publish"}
+    v = sesion.post("/api/agente/mnemo/volver", json=falso.seguir(r.json()["autorizar"])).json()
+    assert v["estado"] == "conectada" and v["modelo"] is True and v["voz"] is False and v["ofrece_voz"] is True
+    assert mcx.con_voz(sesion.app.state.db) is False and mcx.con_modelo(sesion.app.state.db) is True
+    # Vuelve a conectar dejándola marcada: ahora sí
+    falso.marcar = None
+    v = _conectado(sesion, falso)
+    assert v["voz"] is True and "mnemo:voice" in v["alcances"] and mcx.con_voz(sesion.app.state.db) is True
+
+
+def test_un_mnemo_anterior_a_las_voces_se_conecta_sin_pedirla(sesion, falso):
+    falso.anuncia_voz = False
+    r = _conectar(sesion)
+    assert r.status_code == 200, r.text
+    pedidos = _consulta(r.json()["autorizar"])["scope"].split()
+    assert "mnemo:voice" not in pedidos and pedidos[:4] == ["openid", "profile", "email", "mnemo:model"]
+    v = sesion.post("/api/agente/mnemo/volver", json=falso.seguir(r.json()["autorizar"])).json()
+    assert v["estado"] == "conectada" and v["voz"] is False and v["ofrece_voz"] is False and v["modelo"] is True
+    assert sesion.get("/api/agente/estado").json()["mnemo"]["conexion"]["ofrece_voz"] is False
+    # Sin `scopes_supported` no se sabe: se supone que sí (como con el modelo)
+    falso.anuncia_voz, falso.metadatos_extra = True, {"scopes_supported": None}
+    r = _conectar(sesion)
+    assert "mnemo:voice" in _consulta(r.json()["autorizar"])["scope"].split()
+
+
+def test_un_pendiente_de_antes_de_la_voz_vale_y_uno_cambiado_no(sesion, falso):
+    """Un pendiente que guardó un panel anterior a la voz clonada no trae `ofrece_voz` (ni en la base ni en su copia
+    cifrada): vale igual, sin la voz (no se pidió). Cambiarlo solo en la base no canjea nada."""
+    llave = seguridad.llave_mnemo(sesion.app.state.cfg)
+    r = _conectar(sesion)
+    p = _doc(sesion.app)["pendiente"]
+    atado = cifrado.descifrar(llave, p["verificador_cifrado"], f"mnemo_pendiente|{p['state_h']}")
+    viejo = {k: v for k, v in atado.items() if k != "ofrece_voz"}
+    viejo["pedidos"] = [a for a in viejo["pedidos"] if a != "mnemo:voice"]
+    sesion.app.state.db.meta.update_one({"_id": mcx.ID}, {
+        "$set": {"pendiente.verificador_cifrado": cifrado.cifrar(llave, viejo, f"mnemo_pendiente|{p['state_h']}"),
+                 "pendiente.pedidos": viejo["pedidos"]},
+        "$unset": {"pendiente.ofrece_voz": ""}})
+    assert mcx._pendiente_valido(viejo) is viejo and mcx._pendiente_valido({**viejo, "ofrece_voz": "si"}) is None
+    url = r.json()["autorizar"].replace("+mnemo%3Avoice", "").replace("%20mnemo%3Avoice", "")
+    v = sesion.post("/api/agente/mnemo/volver", json=falso.seguir(url)).json()
+    assert v["estado"] == "conectada" and v["voz"] is False and v["ofrece_voz"] is True, v
+    # Ahora uno de esta versión al que le cambian `ofrece_voz` en la base: no se canjea
+    r = _conectar(sesion)
+    sesion.app.state.db.meta.update_one({"_id": mcx.ID}, {"$set": {"pendiente.ofrece_voz": False}})
+    r = sesion.post("/api/agente/mnemo/volver", json=falso.seguir(r.json()["autorizar"]))
+    assert r.status_code == 400 and _detalle(r)["codigo"] == "estado"
+
+
+def test_con_voz_y_la_huella_de_la_cuenta(cliente):
+    db = cliente.app.state.db
+    assert mcx.con_voz(db) is False and mcx.huella_cuenta(db) == ""
+    conectar_mnemo(cliente.app)   # sin `mnemo:voice`
+    v = mcx.vista(db)
+    assert v["voz"] is False and v["ofrece_voz"] is True and mcx.con_voz(db) is False
+    huella = mcx.huella_cuenta(db)
+    assert len(huella) == 32 and all(c in "0123456789abcdef" for c in huella)
+    assert CUENTA["sub"] not in huella and CUENTA["email"] not in huella   # una huella, no la cuenta
+    conectar_mnemo(cliente.app, alcances=("mnemo:read", "mnemo:model", "mnemo:voice"))
+    assert mcx.con_voz(db) is True and mcx.vista(db)["voz"] is True and mcx.huella_cuenta(db) == huella
+    # Otra cuenta, otra huella; caída o sin conectar, ninguna
+    conectar_mnemo(cliente.app, alcances=("mnemo:voice",), cuenta=OTRA_CUENTA)
+    assert mcx.huella_cuenta(db) not in ("", huella)
+    db.meta.update_one({"_id": mcx.ID}, {"$set": {"estado": "caida", "motivo": "revocada"}})
+    assert mcx.huella_cuenta(db) == "" and mcx.con_voz(db) is False and mcx.vista(db)["voz"] is False
