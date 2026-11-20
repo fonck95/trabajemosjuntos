@@ -28,6 +28,7 @@
 .fuente[data-fuente="titular"] { --fx: var(--ok); }
 .fuente[data-fuente="tramites"] { --fx: var(--s7); }
 .fuente[data-fuente="cedulas"] { --fx: var(--s2); }
+.fuente[data-fuente="general"] { --fx: var(--s6); }
 .fuente[data-fuente="otra_base"], .fuente[data-fuente="otra"] { --fx: var(--muted); }
 .fuente[data-fuente="fusion"] { --fx: var(--axis); }
 

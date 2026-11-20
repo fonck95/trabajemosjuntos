@@ -300,6 +300,7 @@ export const CATALOGOS = {
     "nivel_educativo": "Nivel educativo",
     "situacion_laboral": "Situación laboral",
     "ocupacion": "Ocupación",
+    "perfil_profesional": "Perfil profesional",
     "personas_hogar": "Personas en el hogar",
     "jefe_hogar": "Jefe de hogar",
     "tenencia_vivienda": "Tenencia de la vivienda",
@@ -316,6 +317,15 @@ export const CATALOGOS = {
     "mesa",
     "direccion",
     "autorizacion"
+  ],
+  "TIPOS_PERSONA": {
+    "concejal": "Concejal",
+    "lider": "Líder",
+    "votante": "Votante"
+  },
+  "TIPOS_LIDERAN": [
+    "concejal",
+    "lider"
   ]
 };
 // catalogos:fin
@@ -324,7 +334,7 @@ export const { SEXOS, TIPOS_DOCUMENTO, NIVELES, ESTADOS_CIVILES, SITUACIONES_LAB
   RANGOS_EDAD, SENSIBLES, NOMBRES_ROL, ESTADOS_AUTORIZACION, MEDIOS_AUTORIZACION, MEDIOS_POR_ROL,
   CANALES_AUTORIZACION, CANALES_IMPLICITOS, CANALES, RESULTADOS, SIN_EXITO, FRANJAS, ESTADOS_ABORDAJE, SITUACIONES,
   MOTIVOS_ACTUALIZACION, CAMPOS_NO_DISPONIBLE, MOTIVOS_NO_DISPONIBLE, ESTADOS_TELEFONO, USABLES, TIPOS_TELEFONO,
-  ESTADOS_VOTACION, DONDE_VOTA, ETIQUETAS_CAMPOS, CAMPOS_FALTAN } = CATALOGOS;
+  ESTADOS_VOTACION, DONDE_VOTA, ETIQUETAS_CAMPOS, CAMPOS_FALTAN, TIPOS_PERSONA, TIPOS_LIDERAN } = CATALOGOS;
 
 /** Número para el enlace tel: (solo dígitos); a un fijo de 7 dígitos le antepone el indicativo 604. */
 export const marcable = (n) => {

@@ -3,10 +3,10 @@
 import { api, ErrorApi, nuevaClave, registrarPendiente, sesion } from '../api.js';
 import { BASES, CASCO, baseSegunTema, cargarMapLibre, dentroDeYondo } from '../mapa3d.js';
 import {
-  CAMPOS_FALTAN, CAMPOS_NO_DISPONIBLE, CANALES_AUTORIZACION, ETIQUETAS_CAMPOS, MAS_DATOS, MEDIOS_AUTORIZACION,
-  MEDIOS_POR_ROL, MOTIVOS_NO_DISPONIBLE, SEXOS, TIPOS_DOCUMENTO, edadDesde,
+  CAMPOS_FALTAN, CAMPOS_NO_DISPONIBLE, CANALES_AUTORIZACION, ESTADOS_CIVILES, ETIQUETAS_CAMPOS, MAS_DATOS,
+  MEDIOS_AUTORIZACION, MEDIOS_POR_ROL, MOTIVOS_NO_DISPONIBLE, SEXOS, TIPOS_DOCUMENTO, TIPOS_PERSONA, edadDesde,
 } from '../modelo.js';
-import { $, $$, aviso, avisoError, datosForm, debounce, dialogo, hoy, html, montar, titulo } from '../ui.js';
+import { $, $$, aviso, avisoError, datosForm, debounce, dialogo, hoy, html, icono, montar, titulo } from '../ui.js';
 
 /** ¿Administrador o coordinador? Lo que la especificación reserva a «A» en el manejo de datos (adenda 1). */
 export const administra = () => sesion.rol === 'admin' || sesion.rol === 'coordinador';
@@ -29,35 +29,96 @@ export function errorRangoHora(datos) {
   return null;
 }
 
-// ───────── Líderes (solo A y K): quién trajo a quién ─────────
+// ───────── Tipo de persona y líderes (solo A y K): concejal, líder, votante y quién trajo a quién ─────────
 
-/** Los líderes con cuántas personas trajo cada uno (GET /api/lideres): {lideres: [...], personas_con_varios}. */
+/** Chips del tipo de persona de una ficha o una fila (concejal, líder, votante; solo A y K los reciben). */
+export const chipsTipo = (p) => html`${Object.entries(TIPOS_PERSONA).filter(([k]) => p?.[k] === true)
+  .map(([k, t]) => html`<span class="chip ${k === 'votante' ? 'verde' : k === 'concejal' ? 'azul' : 'rojo'}">${t}</span>`)}`;
+
+/** Los líderes y concejales con cuántas personas trajo cada uno (GET /api/lideres): {lideres: [...], personas_con_varios}. */
 export const cargarLideres = () => api.get('/api/lideres');
 
+const normaTexto = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+/** Quienes pueden liderar (fichas marcadas como líder o concejal) que casan con `q` por nombre o por cédula (3 dígitos o
+ * más), sin los ids de `fuera`. Con `q` vacío, todos (la API ya los manda por cuántas personas trajo). */
+export function filtrarLideres(lista, q = '', fuera = new Set()) {
+  const t = normaTexto(String(q).trim());
+  const d = String(q).replace(/\D/g, '');
+  return (lista || []).filter((l) => l.marcado && !fuera.has(Number(l.id))
+    && (!t || normaTexto(l.nombre).includes(t) || (d.length >= 3 && String(l.cedula || '').includes(d))));
+}
+
+const detalleLider = (l) => [TIPOS_PERSONA[l.tipo], l.cedula ? `CC ${l.cedula}` : null, l.lugar ? titulo(l.lugar) : null,
+  `lidera ${l.traidas}`, l.compartidas ? `${l.compartidas} con otro líder` : null].filter(Boolean).join(' · ');
+
 /**
- * Elegir un líder (una ficha marcada como líder) en un diálogo con búsqueda: devuelve {id, nombre} o null. `excluir`:
- * ids que no se ofrecen (la persona misma y los que ya tiene).
+ * Barra de búsqueda de líderes y concejales dentro de un formulario (no en un diálogo): se escribe el nombre o la
+ * cédula y se elige con un toque (o con Enter, el primero). `excluir()` da los ids que no se ofrecen (la persona misma y
+ * los que ya tiene); `alElegir({id, nombre, tipo, …})` recibe el elegido.
+ */
+export function buscadorLider(caja, { excluir = () => [], alElegir, persona = '' } = {}) {
+  let lista = null, cargando = null;
+  montar(caja, html`<label class="buscador"><span class="sr">Buscar líder o concejal${persona ? ` de ${persona}` : ''}</span>${icono('buscar')}<input class="entrada" type="search" data-buscar-lider placeholder="Buscar líder o concejal por nombre o cédula…" autocomplete="off"></label>
+    <div class="resultados resultados-lider" data-res-lider aria-live="polite"></div>`);
+  const entrada = $('[data-buscar-lider]', caja), res = $('[data-res-lider]', caja);
+  const pintar = async () => {
+    if (!lista) {
+      cargando ||= cargarLideres().then((r) => { lista = r.lideres || []; }).catch((e) => { cargando = null; avisoError(e); });
+      await cargando;
+      if (!lista || !caja.isConnected) return;
+    }
+    const q = entrada.value.trim();
+    const ls = filtrarLideres(lista, q, new Set(excluir().map(Number))).slice(0, 8);
+    if (!ls.length) {
+      montar(res, html`<div class="sec">${q ? `Ningún líder ni concejal con «${q}».` : 'No hay líderes ni concejales marcados.'} Para agregar uno, márquelo como Líder o Concejal en su ficha.</div>`);
+      return;
+    }
+    montar(res, html`${q ? '' : html`<div class="sec">Los que más personas lideran:</div>`}${ls.map((l) => html`<div class="resultado"><div class="q"><b>${l.nombre}</b><small>${detalleLider(l)}</small></div>
+      <button type="button" class="btn chico primario" data-lider="${l.id}">Elegir</button></div>`)}`);
+  };
+  const buscar = debounce(pintar, 150);
+  entrada.addEventListener('input', buscar);
+  entrada.addEventListener('focus', () => { if (!res.childElementCount) pintar(); });
+  entrada.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault(); // dentro de un formulario, Enter no lo envía: elige el primero
+    $('[data-lider]', res)?.click();
+  });
+  res.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-lider]');
+    if (!b) return;
+    const l = (lista || []).find((x) => String(x.id) === b.dataset.lider);
+    if (!l) return;
+    entrada.value = '';
+    res.replaceChildren();
+    alElegir?.(l);
+  });
+  return { enfocar: () => entrada.focus(), cancelar: () => buscar.cancel() };
+}
+
+/**
+ * Elegir un líder o concejal en un diálogo con búsqueda (por nombre o cédula): devuelve {id, nombre, tipo} o null.
+ * `excluir`: ids que no se ofrecen (la persona misma y los que ya tiene).
  */
 export async function elegirLider({ excluir = [], persona = '' } = {}) {
   let lista;
   try { lista = (await cargarLideres()).lideres || []; } catch (e) { avisoError(e); return null; }
   const fuera = new Set(excluir.map(Number));
-  const candidatos = lista.filter((l) => l.marcado && !fuera.has(l.id));
+  const candidatos = filtrarLideres(lista, '', fuera);
   const { el: d, cerrar, listo } = dialogo({
-    titulo: persona ? `Líder que trajo a ${titulo(persona)}` : 'Elegir líder',
-    cuerpo: html`<label class="buscador"><input class="entrada" id="buscar-lider" type="search" placeholder="Buscar líder por nombre…" autocomplete="off"></label>
+    titulo: persona ? `Quién lidera a ${titulo(persona)}` : 'Elegir líder o concejal',
+    cuerpo: html`<label class="buscador"><span class="sr">Buscar</span>${icono('buscar')}<input class="entrada" id="buscar-lider" type="search" placeholder="Buscar líder o concejal por nombre o cédula…" autocomplete="off"></label>
       <div class="resultados" id="res-lider"></div>
-      <p class="sec" style="margin-top:10px">Solo aparecen las fichas marcadas como «Líder comunitario». Para agregar uno, márquelo en su ficha.</p>`,
+      <p class="sec" style="margin-top:10px">Solo aparecen las fichas marcadas como «Líder» o «Concejal». Para agregar uno, márquelo en su ficha.</p>`,
     ancho: true,
   });
-  const norma = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const pintar = () => {
-    const q = norma($('#buscar-lider', d).value.trim());
-    const ls = candidatos.filter((l) => !q || norma(l.nombre).includes(q)).slice(0, 60);
+    const ls = filtrarLideres(candidatos, $('#buscar-lider', d).value).slice(0, 60);
     montar($('#res-lider', d), ls.length ? html`${ls.map((l) => html`<div class="resultado">
-        <div class="q"><b>${l.nombre}</b><small>${[l.lugar ? titulo(l.lugar) : null, `trajo ${l.traidas}`, l.compartidas ? `${l.compartidas} con otro líder` : null].filter(Boolean).join(' · ')}</small></div>
+        <div class="q"><b>${l.nombre}</b><small>${detalleLider(l)}</small></div>
         <button class="btn chico primario" data-lider="${l.id}">Elegir</button></div>`)}`
-      : html`<div class="sec">${candidatos.length ? 'Ningún líder con ese nombre.' : 'No hay otros líderes marcados.'}</div>`);
+      : html`<div class="sec">${candidatos.length ? 'Ningún líder ni concejal con ese nombre o cédula.' : 'No hay otros líderes ni concejales marcados.'}</div>`);
   };
   $('#buscar-lider', d).addEventListener('input', pintar);
   d.addEventListener('click', (e) => {
@@ -386,16 +447,17 @@ function valorMas(p, k) {
 // ───────── Nueva persona (7.6) ─────────
 
 /**
- * Alta de una persona con búsqueda en vivo de parecidas. `prellenado` trae lo buscado ({nombre|cedula|telefono});
- * `hogar` copia dirección, lugar, ficha y ubicación («Nueva persona en este hogar»). `reunionId` la registra además
- * como asistente. `alCrear(p)` recibe la ficha nueva o {id, existente: true} si era una que ya estaba.
+ * Alta de una persona con búsqueda en vivo de parecidas. `prellenado` trae lo buscado ({nombre|cedula|telefono}) y,
+ * para A y K, el tipo de persona ({tipo: 'votante'}: abre la barra «Liderado por»); `hogar` copia dirección, lugar,
+ * ficha y ubicación («Nueva persona en este hogar»). `reunionId` la registra además como asistente. `alCrear(p)` recibe
+ * la ficha nueva o {id, existente: true} si era una que ya estaba.
  */
-export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = '', prellenado = {}, hogar = null, alCrear }) {
+export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = '', prellenado = {}, hogar = null, lideres = [], alCrear }) {
   const necesidades = (cat.etiquetas || []).filter((e) => e.grupo === 'necesidad');
   const ini = { nombre: nombreInicial, ...prellenado };
   let clave = nuevaClave();
   const { el, cerrar, listo } = dialogo({
-    titulo: reunionId ? 'Registrar asistente nuevo' : hogar ? 'Nueva persona en este hogar' : 'Nueva persona',
+    titulo: reunionId ? 'Registrar asistente nuevo' : hogar ? 'Nueva persona en este hogar' : ini.tipo && TIPOS_PERSONA[ini.tipo] ? `Nuevo ${TIPOS_PERSONA[ini.tipo].toLowerCase()}` : 'Nueva persona',
     cuerpo: html`<form class="form una-columna" id="f-nueva" novalidate>
       ${hogar ? html`<p class="aviso-legal ancho">Se copian la dirección, el barrio${hogar.ficha ? ', la ficha del hogar' : ''}${hogar.lat != null ? ' y la ubicación' : ''} de ${titulo(hogar.nombre || 'la otra persona')}.</p>` : ''}
       <label class="campo ancho"><span>Nombre completo *</span><input name="nombre" required minlength="3" maxlength="160" autocomplete="off" value="${ini.nombre || ''}"></label>
@@ -403,19 +465,30 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
         <div class="fila-campos"><select name="tipo_documento" aria-label="Tipo de documento">${Object.entries(TIPOS_DOCUMENTO).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select>
         <input name="cedula" inputmode="numeric" autocomplete="off" placeholder="Número" aria-label="Número de documento" maxlength="15" value="${ini.cedula || ''}"></div>
         <label class="casilla"><input type="checkbox" name="cedula_verificada"> Vi el documento</label></div>
+      ${administra() ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Tipo de persona</span>
+        <div class="opciones-radio">${Object.entries(TIPOS_PERSONA).map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="tipo_${k}" ${ini.tipo === k ? 'checked' : ''}> ${t}</label>`)}</div></div>
+      <div class="grupo-campo ancho" id="bloque-liderado" hidden><span class="titulo-campo">Liderado por</span>
+        <div class="chips" id="lideres-elegidos"></div>
+        <div id="buscador-lider"></div>
+        <small class="nota">El líder o concejal que la trajo. Puede elegir más de uno.</small></div>` : ''}
       <div class="grupo-campo ancho"><span class="titulo-campo">Teléfonos</span>
         <div class="fila-campos"><input name="telefono" inputmode="tel" placeholder="Celular" aria-label="Celular" maxlength="30" value="${ini.telefono || ''}"><input name="telefono2" inputmode="tel" placeholder="Otro teléfono" aria-label="Otro teléfono" maxlength="30"></div></div>
       <div class="ancho" id="parecidas" aria-live="polite"></div>
       <div class="grupo-campo ancho"><span class="titulo-campo">Sexo</span><div class="opciones-radio">${Object.entries(SEXOS).map(([k, t]) => html`<label class="chip opcion"><input type="radio" name="sexo" value="${k}"> ${t}</label>`)}</div></div>
       <div class="grupo-campo ancho"><span class="titulo-campo">Fecha de nacimiento</span>
         <div class="fila-campos">${camposEdad()}</div></div>
-      <label class="campo ancho"><span>Barrio o vereda</span><select name="lugar_id">${opcionesLugares(cat, hogar?.lugar_id)}</select></label>
+      <label class="campo ancho"><span>Correo electrónico</span><input name="correo" type="email" inputmode="email" maxlength="120" autocomplete="off"></label>
       <label class="campo ancho"><span>Dirección</span><input name="direccion" maxlength="240" placeholder="CL 49 # 45-12" value="${hogar?.direccion || ''}"></label>
+      <label class="campo ancho"><span>Barrio o vereda</span><select name="lugar_id">${opcionesLugares(cat, hogar?.lugar_id)}</select><small class="nota" id="zona-alta" aria-live="polite"></small></label>
+      <div class="grupo-campo ancho"><span class="titulo-campo">Perfil</span>
+        <div class="form">
+          <label class="campo"><span>Perfil profesional</span><input name="perfil_profesional" maxlength="160" placeholder="Docente, enfermera, técnico agropecuario…"></label>
+          <label class="campo"><span>Ocupación</span><input name="ocupacion" maxlength="120" placeholder="A qué se dedica hoy"></label>
+          <label class="campo"><span>Estado civil</span><select name="estado_civil"><option value="">—</option>${ESTADOS_CIVILES.map((e) => html`<option value="${e}">${e}</option>`)}</select></label>
+          <label class="campo"><span>Jefe de hogar</span><select name="jefe_hogar"><option value="">—</option><option value="si">Sí</option><option value="no">No</option></select></label>
+        </div></div>
       <div class="grupo-campo ancho"><span class="titulo-campo">Puesto y mesa</span><div class="form">${camposVotacion(cat, {})}</div></div>
       ${necesidades.length ? html`<div class="campo ancho"><span>Necesidades</span><div class="chips">${necesidades.map((e) => html`<button type="button" class="chip" data-et="${e.id}" aria-pressed="false">${e.nombre}</button>`)}</div></div>` : ''}
-      ${administra() ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Traída por (líder)</span>
-        <div class="chips" id="lideres-elegidos"></div>
-        <div><button type="button" class="btn chico" data-elegir-lider>Agregar líder</button></div></div>` : ''}
       ${camposAutorizacion(cat)}
       <div class="ancho" id="conflicto" aria-live="polite"></div>
     </form>`,
@@ -433,25 +506,44 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   let terminado = false;
   const quitarPendiente = registrarPendiente(() => tocado && !terminado);
   form.addEventListener('click', (e) => { const c = e.target.closest('[data-et]'); if (c) { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') !== 'true'); tocado = true; } });
-  // Los líderes que la trajeron (A y K): se eligen en un diálogo y van con el alta (o, si es una ficha que ya existe, se
-  // le asignan al completarla)
-  const lideresElegidos = [];
+  // Tipo de persona y «Liderado por» (A y K): al marcarla como votante (o líder) se abre la barra para buscar al líder
+  // o concejal que la trajo; los elegidos van con el alta (o, si es una ficha que ya existe, se le asignan al completarla)
+  const lideresElegidos = administra() ? lideres.filter((l) => l?.id != null).map((l) => ({ id: l.id, nombre: l.nombre, tipo: l.tipo })) : [];
+  const bloqueLiderado = $('#bloque-liderado', el);
   const pintarLideres = () => {
     const caja = $('#lideres-elegidos', el);
-    if (caja) montar(caja, html`${lideresElegidos.map((l) => html`<button type="button" class="chip" data-quitar-elegido="${l.id}" aria-label="Quitar a ${l.nombre}">${l.nombre} ✕</button>`)}`);
+    if (caja) montar(caja, html`${lideresElegidos.map((l) => html`<button type="button" class="chip ${l.tipo === 'concejal' ? 'azul' : ''}" data-quitar-elegido="${l.id}" aria-label="Quitar a ${l.nombre}">${l.nombre}${l.tipo ? ` · ${TIPOS_PERSONA[l.tipo]}` : ''} ✕</button>`)}`);
   };
-  form.addEventListener('click', async (e) => {
+  const buscador = bloqueLiderado ? buscadorLider($('#buscador-lider', el), {
+    excluir: () => lideresElegidos.map((x) => x.id),
+    persona: ini.nombre || '',
+    alElegir: (l) => { lideresElegidos.push({ id: l.id, nombre: l.nombre, tipo: l.tipo }); tocado = true; pintarLideres(); },
+  }) : null;
+  const verLiderado = ({ enfocar = false } = {}) => {
+    if (!bloqueLiderado) return;
+    const abierto = ['votante', 'lider'].some((k) => form[`tipo_${k}`]?.checked) || lideresElegidos.length > 0;
+    const antes = bloqueLiderado.hidden;
+    bloqueLiderado.hidden = !abierto;
+    if (abierto && antes && enfocar) buscador?.enfocar();
+  };
+  form.addEventListener('change', (e) => { if (e.target.name?.startsWith('tipo_')) verLiderado({ enfocar: true }); });
+  form.addEventListener('click', (e) => {
     const q = e.target.closest('[data-quitar-elegido]');
-    if (q) {
-      const i = lideresElegidos.findIndex((l) => String(l.id) === q.dataset.quitarElegido);
-      if (i >= 0) lideresElegidos.splice(i, 1);
-      pintarLideres();
-      return;
-    }
-    if (!e.target.closest('[data-elegir-lider]')) return;
-    const l = await elegirLider({ excluir: lideresElegidos.map((x) => x.id), persona: form.nombre.value.trim() });
-    if (l) { lideresElegidos.push({ id: l.id, nombre: l.nombre }); tocado = true; pintarLideres(); }
+    if (!q) return;
+    const i = lideresElegidos.findIndex((l) => String(l.id) === q.dataset.quitarElegido);
+    if (i >= 0) lideresElegidos.splice(i, 1);
+    pintarLideres();
+    verLiderado();
   });
+  pintarLideres();
+  verLiderado();
+  // La zona (urbana o rural) sale del barrio o vereda elegido
+  const zonaAlta = () => {
+    const lg = (cat.lugares || []).find((l) => String(l.id) === String(form.lugar_id.value));
+    $('#zona-alta', el).textContent = lg?.zona ? `Zona ${lg.zona === 'urbana' ? 'urbana (casco)' : 'rural'}` : '';
+  };
+  form.lugar_id.addEventListener('change', zonaAlta);
+  zonaAlta();
 
   // Búsqueda en vivo (400 ms, 3 caracteres o más en nombre, documento o celular): «¿Es alguna de estas?» antes de seguir
   let turno = 0;
@@ -479,7 +571,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   });
   // Deja de contar como pendiente (y se cancela la búsqueda por salir) cuando el diálogo termina de verdad (`listo`): si
   // el navegador lo cierra solo, `dialogo` lo vuelve a abrir con lo escrito y un 401 debe seguir sin recargar
-  listo.then(() => { terminado = true; quitarPendiente(); buscarParecidas.cancel(); });
+  listo.then(() => { terminado = true; quitarPendiente(); buscarParecidas.cancel(); buscador?.cancelar(); });
   if (ini.nombre || ini.cedula || ini.telefono) buscarParecidas();
 
   let forzar = false, enCurso = false;
@@ -488,7 +580,11 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   function cuerpo() {
     const d = datosForm(form);
     const c = { nombre: d.nombre };
-    for (const k of ['tipo_documento', 'cedula', 'telefono', 'telefono2', 'fecha_nacimiento', 'edad', 'direccion']) if (d[k] != null) c[k] = d[k];
+    for (const k of ['tipo_documento', 'cedula', 'telefono', 'telefono2', 'fecha_nacimiento', 'edad', 'direccion', 'correo',
+      'perfil_profesional', 'ocupacion', 'estado_civil']) if (d[k] != null) c[k] = d[k];
+    if (d.jefe_hogar) c.jefe_hogar = d.jefe_hogar === 'si';
+    // Solo los tipos marcados: un «no» no se manda (no impide que una importación lo marque después)
+    for (const k of Object.keys(TIPOS_PERSONA)) if (form[`tipo_${k}`]?.checked) c[k] = true;
     if (!c.cedula) delete c.tipo_documento;
     else c.cedula_verificada = !!d.cedula_verificada;
     if (c.fecha_nacimiento) delete c.edad;

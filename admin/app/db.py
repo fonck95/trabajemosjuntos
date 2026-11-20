@@ -50,13 +50,16 @@ PERSONA_VACIA: dict[str, Any] = {
     "nombre": None, "nombre_norm": None, "cedula": None, "sexo": None, "edad": None, "fecha_nacimiento": None,
     "telefono": None, "telefono2": None, "correo": None, "direccion": None, "direccion_norm": None, "lugar_id": None,
     "lugar_texto": None, "zona": None, "lat": None, "lon": None, "geo_precision": None, "geo_manual": False,
-    "ficha": None, "puesto_votacion": None, "mesa": None, "ocupacion": None, "nivel_educativo": None,
-    "personas_hogar": None, "lider": False, "consentimiento": "pendiente", "consentimiento_fecha": None,
+    "ficha": None, "puesto_votacion": None, "mesa": None, "ocupacion": None, "perfil_profesional": None,
+    "nivel_educativo": None, "personas_hogar": None, "consentimiento": "pendiente", "consentimiento_fecha": None,
+    # Tipo de persona en la campaña (modelo.TIPOS_PERSONA): uno o varios. Datos políticos: solo A y K
+    "lider": False, "votante": False, "concejal": False,
     "observaciones": None, "extra": {}, "fuentes": [], "clave_tramites": None, "completitud": 0, "ultimo_contacto": None,
     "fusionada_en": None, "eliminado": False, "listas": [], "etiquetas": [], "tramites": [], "notas": [], "origen": [],
     "asistencias": [], "claves_tramites": [], "reunion_origen": None,
-    # Quién la trajo: [{id (la ficha del líder), asignado_en, asignado_por, asignado_por_uid}] (app/api/lideres.py)
-    "lideres": [],
+    # Quién la trajo: [{id (la ficha del líder), asignado_en, asignado_por, asignado_por_uid}] (app/api/lideres.py), y
+    # los que alguien le quitó a mano (ids): la importación de la base general no se los vuelve a poner
+    "lideres": [], "lideres_quitados": [],
     # Identidad
     "tipo_documento": None, "cedula_verificada": False, "cedula_origen": None, "cedulas_anteriores": [],
     # Demografía (la edad declarada vale desde edad_ref; nac_* se derivan)
@@ -84,7 +87,7 @@ GEO = ("lat", "lon", "geo_precision", "lugar_id", "lugar_texto", "zona", "direcc
        "geo_fuente", "precision_m")
 # Fuente de un teléfono según la fuente con que se crea la ficha
 FUENTE_TELEFONO = {"manual": "panel", "panel": "panel", "reunion": "reunion", "tramites": "tramites",
-                   "cedulas": "cedulas", "planilla": "planilla", "consultor": "consultor"}
+                   "cedulas": "cedulas", "general": "general", "planilla": "planilla", "consultor": "consultor"}
 
 
 def ahora() -> str:
@@ -323,8 +326,9 @@ def _mascara_cedula(v: Any) -> Any:
 
 
 def enmascarar(db: Database, detalle: Any) -> Any:
-    """`detalle` sin datos sensibles ni cédulas en claro (1.9): `sensibles`, `lider`, las etiquetas sensibles y los
-    campos propios sensibles quedan «(oculto)»; las cédulas, con sus 3 últimos dígitos."""
+    """`detalle` sin datos sensibles ni cédulas en claro (1.9): `sensibles`, el tipo de persona (`lider`, `votante`,
+    `concejal`), los líderes, las etiquetas sensibles y los campos propios sensibles quedan «(oculto)»; las cédulas,
+    con sus 3 últimos dígitos."""
     cache: dict[str, set] = {}
 
     def sensibles(col: str, clave: str) -> set:
@@ -356,7 +360,7 @@ def enmascarar(db: Database, detalle: Any) -> Any:
             k = str(k)
             if k in CLAVES_CEDULA:
                 out[k] = _mascara_cedula(x)
-            elif k in ("lider", "lideres", "lider_id", "sensibles") or k.startswith("sensibles."):
+            elif k in (*modelo.TIPOS_PERSONA, "lideres", "lider_id", "sensibles") or k.startswith("sensibles."):
                 out[k] = OCULTO
             elif k == "etiquetas":
                 out[k] = etiquetas(x)
@@ -682,7 +686,7 @@ class FusionImposible(HTTPException):
 # Campos que se llenan desde el origen si el destino no los tiene, sin alternos (los que no tienen procedencia)
 FUSION_SIMPLES = ("ficha", "personas_hogar", "observaciones", "tenencia_vivienda", "estrato", "regimen_salud",
                   "reunion_origen")
-_LISTAS_UNION = ("fuentes", "listas", "etiquetas", "claves_tramites", "cedulas_anteriores")
+_LISTAS_UNION = ("fuentes", "listas", "etiquetas", "claves_tramites", "cedulas_anteriores", "lideres_quitados")
 
 
 def _lit(v: Any) -> dict:
@@ -820,7 +824,7 @@ def _pipeline_fusion(o: dict, origen: int, uid: Any) -> list[dict]:
                                       con_la_del_origen, s.get("procedencia", "$procedencia")]}
     if o.get("requiere_actualizacion"):
         s["requiere_actualizacion"] = {"$ifNull": ["$requiere_actualizacion", _lit(o["requiere_actualizacion"])]}
-    for k in ("reclamo_en_tramite", "lider"):
+    for k in ("reclamo_en_tramite", *modelo.TIPOS_PERSONA):
         if o.get(k):
             s[k] = True
     if o.get("ultimo_contacto"):
@@ -1137,7 +1141,7 @@ def grupo_fusion(db: Database, pid: int) -> list[int]:
     return sorted(ids)
 
 
-FUENTES_CON_CEDULA = ("cedulas", "planilla")
+FUENTES_CON_CEDULA = ("cedulas", "general", "planilla")
 
 
 def cedulas_de(p: dict) -> set[str]:
@@ -1193,6 +1197,7 @@ def limpiar_ligados(db: Database, ids: list[int], cedulas: Iterable[str] = ()) -
     db.conflictos_cedula.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"cedula": {"$in": cedulas}}]})
     db.idempotencia.delete_many({"persona_id": {"$in": ids}})
     db.personas.update_many({"lideres.id": {"$in": ids}}, {"$pull": {"lideres": {"id": {"$in": ids}}}})
+    db.personas.update_many({"lideres_quitados": {"$in": ids}}, {"$pull": {"lideres_quitados": {"$in": ids}}})
     db.acercamientos.update_many({"persona_id": {"$in": ids}}, {"$set": {
         "persona_id": None, "telefono": None, "nota": None, "datos_dictados": [], "suprimido": True}})
     db.autorizaciones.update_many({"persona_id": {"$in": ids}}, {"$set": {

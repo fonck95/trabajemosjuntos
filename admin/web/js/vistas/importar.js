@@ -4,7 +4,8 @@ import { refrescarInsignias } from '../app.js';
 import { $, aviso, avisoError, dialogo, fecha, hayEscrito, html, icono, montar, num } from '../ui.js';
 
 const MAX_ARCHIVOS = 6; // el servidor procesa como máximo 6 archivos por importación
-const TIPOS = { tramites: 'trámites', cedulas: 'base con cédula', planilla: 'planilla de campo' };
+const TIPOS = { tramites: 'trámites', cedulas: 'base con cédula', general: 'base general de la campaña', planilla: 'planilla de campo' };
+const TIPOS_PERSONA_PLURAL = { concejal: 'concejales', lider: 'líderes', votante: 'votantes' };
 
 const tablaHistorial = (historial) => (historial.length ? html`<div class="envoltura-tabla"><table class="tabla"><thead><tr><th>Fecha</th><th>Usuario</th><th>Archivos</th><th class="num">Personas nuevas</th><th class="num">Trámites nuevos</th><th class="num">Cédulas cruzadas</th><th class="num">Por revisar</th><th>Autorizaciones</th></tr></thead>
   <tbody>${historial.map((h) => html`<tr style="cursor:default"><td>${fecha(h.ts, true)}</td><td>${h.usuario}</td><td>${h.archivo}</td>
@@ -29,6 +30,11 @@ function resumen(r) {
       ${kpi('Ubicadas', ubicadas, `${num(geo.direccion || 0)} con dirección exacta`)}
     </div>
     <p class="sec">Archivos procesados: ${(r.archivos || []).map((a) => `${a.archivo} (${TIPOS[a.tipo] || a.tipo}, ${num(a.filas)} filas)`).join(' · ')}${porFuente ? ` — ${porFuente}` : ''}</p>
+    ${Object.keys(r.tipos_marcados || {}).length || r.lideres_asignados || r.lideres_sin_resolver ? html`<p class="sec">Base general: ${[
+      ...Object.entries(r.tipos_marcados || {}).map(([k, n]) => `${num(n)} ${TIPOS_PERSONA_PLURAL[k] || k} marcados`),
+      `${num(r.lideres_asignados || 0)} personas enlazadas con su líder o concejal`,
+      ...(r.lideres_sin_resolver ? [`${num(r.lideres_sin_resolver)} «Liderado por» sin resolver (sin cédula, con otro nombre o sin autorización)`] : []),
+    ].join(' · ')}.</p>` : ''}
     ${r.omitidas_sin_autorizacion ? html`<p class="sec">${num(r.omitidas_sin_autorizacion)} filas de personas que no autorizaron: no se les agregó ningún dato.</p>` : ''}
     ${r.votacion_por_confirmar ? html`<p class="sec">${num(r.votacion_por_confirmar)} puestos o mesas quedaron «por confirmar» (puesto ambiguo, mesa fuera de rango o dato de otra base).</p>` : ''}
     ${r.autorizaciones_por_confirmar ? html`<div class="aviso-legal">${num(r.autorizaciones_por_confirmar)} autorizaciones «declaradas en planilla» no habilitan llamadas hasta que usted las confirme con la evidencia física (en el historial).</div>` : ''}
@@ -48,7 +54,7 @@ export async function vistaImportar(el) {
         <h2>Importar archivos de Excel</h2>
         <label class="zona-subida" id="zona" style="display:block"><input type="file" id="archivos" accept=".xlsx" multiple class="sr">
           <b>Arrastre aquí los archivos .xlsx o haga clic</b>
-          <span class="sec">Base de trámites por vereda, base unificada con cédula y planillas de campo. Se reconocen por sus columnas.</span></label>
+          <span class="sec">Base de trámites por vereda, base unificada con cédula, base general de la campaña (CC, nombre, líder, grupo…) y planillas de campo. Se reconocen por sus columnas.</span></label>
         <div id="elegidos" class="chips" style="margin:12px 0"></div>
         <div class="form" style="margin-bottom:12px">
           <label class="campo"><span>Capturado por (planillas)</span><select id="capturado">

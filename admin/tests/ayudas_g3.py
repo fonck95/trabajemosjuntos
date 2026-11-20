@@ -7,8 +7,9 @@ from fastapi.testclient import TestClient
 from conftest import CLAVE_USUARIO, crear_usuario, insertar_personas
 
 # Claves y valores que P y C nunca reciben (3.8, 9.5)
-VEDADAS = {"sensibles", "listas", "lider", "historial", "origen", "procedencia", "cedulas_anteriores", "partido",
-           "mesa_testigo", "cedula_en_traspaso", "lideres", "lideres_n", "traidas", "intervenciones"}
+VEDADAS = {"sensibles", "listas", "lider", "votante", "concejal", "historial", "origen", "procedencia",
+           "cedulas_anteriores", "partido", "mesa_testigo", "cedula_en_traspaso", "lideres", "lideres_n", "traidas",
+           "intervenciones", "lideres_quitados"}
 
 
 def persona(db, **campos) -> int:
@@ -58,12 +59,12 @@ def recorrer(x, ruta=""):
 
 
 def sin_vedados(x, contexto=""):
-    """Ninguna clave vedada y el valor «cedulas» en ninguna `fuente` o `fuentes`."""
+    """Ninguna clave vedada y los valores «cedulas» y «general» (bases políticas) en ninguna `fuente` o `fuentes`."""
     for ruta, k, v in recorrer(x):
         assert k not in VEDADAS, (contexto, ruta, k)
         if k in ("fuente", "fuentes", "cedula_origen"):
             vals = v if isinstance(v, list) else [v]
-            assert "cedulas" not in vals, (contexto, ruta, k, v)
+            assert "cedulas" not in vals and "general" not in vals, (contexto, ruta, k, v)
 
 
 def puesto(db, _id: int, nombre: str, codigo: str, mesas: int | None = 5, **extra) -> dict:

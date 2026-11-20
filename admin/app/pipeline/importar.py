@@ -3,8 +3,11 @@
 Se puede correr las veces que haga falta con archivos nuevos o actualizados:
 * los trámites se identifican por su ID (o, si no traen ID, por ficha, fecha, tipo y nombre) y no se duplican;
 * las personas de trámites por su nombre agrupado (también los nombres de las fichas que se unieron); las de las
-  fuentes con cédula (base unificada, planilla de campo) por la cascada de identidad de 2.3, con la cédula como
-  identificador definitivo: dos cédulas distintas nunca se unen y una cédula que ya existe nunca cambia;
+  fuentes con cédula (base unificada, base general de la campaña, planilla de campo) por la cascada de identidad de
+  2.3, con la cédula como identificador definitivo: dos cédulas distintas nunca se unen y una cédula que ya existe
+  nunca cambia;
+* la base general marca el tipo de persona (concejal, líder, votante) y enlaza a cada persona con el líder o concejal
+  que la trajo (`lideres`), creando la ficha del líder si no estaba; nunca deshace lo que alguien marcó o quitó a mano;
 * cada campo guarda su procedencia: un campo vacío se llena; uno con otro valor solo lo reemplaza una fuente de más
   confianza que no sea una persona, y el valor que no queda pasa a `alternos` (nada se pierde). Todo se decide en la
   escritura, con condiciones sobre lo guardado: lo que se edite en el panel mientras corre no se pisa;
@@ -81,6 +84,11 @@ class Resumen:
     votacion_por_confirmar: int = 0
     autorizaciones_por_confirmar: int = 0
     planilleros_desconocidos: list = field(default_factory=list)
+    # Base general: tipos marcados por la importación ({concejal, lider, votante}: n), personas enlazadas con su líder
+    # y referencias a un líder que no se pudieron resolver (sin cédula, con otro nombre, o el líder no autorizó)
+    tipos_marcados: dict = field(default_factory=dict)
+    lideres_asignados: int = 0
+    lideres_sin_resolver: int = 0
 
     def dict(self) -> dict:
         return copy.deepcopy(self.__dict__)
@@ -114,7 +122,9 @@ CANONICOS = {"votacion": "puesto", "fecha_nacimiento": "edad", "telefonos": "tel
 # Lo que se fotografía de una ficha antes de cambiarla: sirve para las condiciones de la escritura y los completados
 _FOTO = (*modelo.CAMPOS_PROCEDENCIA, "procedencia", "puesto_votacion", "mesa", "edad_ref", "telefonos", "telefono",
          "telefono2", "lugar_id", "punto", "lat", "lon", "consentimiento", "personas_hogar", "jefe_hogar", "estrato",
-         *modelo.CAMPOS_AVANCE)
+         *modelo.CAMPOS_AVANCE, *modelo.TIPOS_PERSONA)
+# Tope de líderes por persona (como `api.lideres.MAX_LIDERES`)
+MAX_LIDERES = 10
 
 
 class _Almacen:
@@ -271,7 +281,7 @@ class _Almacen:
             c = self.cambios[d["_id"]] = {
                 "foto": {k: copy.deepcopy(d.get(k)) for k in _FOTO}, "proc": set(), "simples": {}, "tramites": [],
                 "origen": {}, "contacto": None, "telefonos": [], "alternos": [], "cedula": None, "cedula_origen": None,
-                "datos": False, "campos": set(), **{k: [] for k in self.LISTAS}}
+                "datos": False, "campos": set(), "tipos": {}, "lideres": [], **{k: [] for k in self.LISTAS}}
         return c
 
     def _alterno(self, campo: str, valor, fuente: str | None) -> dict:
@@ -334,6 +344,41 @@ class _Almacen:
             c["simples"][campo] = valor
             c["campos"].add(campo)
             c["datos"] = True
+
+    def marcar_tipo(self, d: dict, tipo: str, fuente: str) -> bool:
+        """Marca a la persona como concejal, líder o votante. Nunca quita un tipo, y no toca uno que ya decidió una
+        persona o una fuente (el tipo tiene procedencia: alguien lo marcó o lo quitó a mano en el panel)."""
+        if d.get(tipo) is True or (d.get("procedencia") or {}).get(tipo):
+            return False
+        c = self._cambio(d)
+        prov = {"fuente": fuente, "ts": self.ts, "uid": self.actor["uid"]}
+        d[tipo] = True
+        if not isinstance(d.get("procedencia"), dict):
+            d["procedencia"] = {}
+        d["procedencia"][tipo] = prov
+        if c is not None:
+            c["tipos"][tipo] = prov
+            c["datos"] = True
+        self.res.tipos_marcados[tipo] = self.res.tipos_marcados.get(tipo, 0) + 1
+        return True
+
+    def asignar_lider(self, d: dict, lid: int, fuente: str) -> bool:
+        """Agrega `lid` a quienes trajeron a la persona (`lideres`), sin repetir, sin ser su propio líder, hasta 10, y
+        no si alguien lo quitó a mano (`lideres_quitados`)."""
+        actuales = [l.get("id") for l in d.get("lideres") or [] if isinstance(l, dict)]
+        if lid == d["_id"] or lid in actuales or lid in (d.get("lideres_quitados") or []) \
+                or len(actuales) >= MAX_LIDERES:
+            return False
+        entrada = {"id": lid, "asignado_en": self.ts, "asignado_por": self.actor["usuario"],
+                   "asignado_por_uid": self.actor["uid"], "fuente": fuente}
+        d["lideres"] = [*(d.get("lideres") or []), entrada]
+        c = self._cambio(d)
+        if c is not None:
+            c["lideres"].append(entrada)
+            c["datos"] = True
+            c["campos"].add("lideres")
+        self.res.lideres_asignados += 1
+        return True
 
     def fijar_cedula(self, d: dict, cedula: str, origen: str, fuente: str, r: Registro | None = None) -> None:
         """La cédula solo completa una ficha sin cédula, con una escritura condicional (`cedula: null`)."""
@@ -453,8 +498,13 @@ class _Almacen:
             self.fijar_cedula(d, r.cedula, fuente, fuente, r)
         if r.cedula and d.get("cedula") == r.cedula:
             self.aplicar(d, "tipo_documento", r.tipo_documento, fuente)
-        for campo in ("sexo", "edad", "fecha_nacimiento", "correo", "direccion"):
+        for campo in ("sexo", "edad", "fecha_nacimiento", "correo", "direccion", "estado_civil", "ocupacion",
+                      "perfil_profesional"):
             self.aplicar(d, campo, getattr(r, campo), fuente)
+        self.simple(d, "jefe_hogar", r.jefe_hogar)
+        for tipo in r.tipos:
+            if tipo in modelo.TIPOS_PERSONA:
+                self.marcar_tipo(d, tipo, fuente)
         planilla = fuente == "planilla"
         v = modelo.armar_votacion(r.puesto_texto, r.mesa_texto, self.puestos, fuente=fuente,
                                   eleccion=self.vigente if planilla else None,
@@ -555,6 +605,12 @@ class _Almacen:
             s["cedula_origen"] = {"$cond": [libre, _lit(c["cedula_origen"]), "$cedula_origen"]}
             proc.append({"$cond": [libre, {"cedula": _lit(d["procedencia"]["cedula"])}, {}]})
             filtro["cedula"] = {"$in": [None, c["cedula"]]}
+        for tipo, prov in c["tipos"].items():
+            # Solo si nadie lo decidió mientras corría la importación: ni marcado, ni con procedencia (quitado a mano)
+            libre = {"$and": [{"$ne": [f"${tipo}", True]},
+                              {"$eq": [{"$type": f"$procedencia.{tipo}"}, "missing"]}]}
+            s[tipo] = {"$cond": [libre, True, f"${tipo}"]}
+            proc.append({"$cond": [libre, {tipo: _lit(prov)}, {}]})
         if proc:
             s["procedencia"] = {"$mergeObjects": [{"$ifNull": ["$procedencia", {}]}, *proc]}
         for k, v in c["simples"].items():
@@ -572,6 +628,12 @@ class _Almacen:
                 _lit(list(c["origen"].values()))]}
         if c["contacto"]:
             s["ultimo_contacto"] = {"$max": ["$ultimo_contacto", _lit(c["contacto"])]}
+        if c["lideres"]:
+            actuales = {"$ifNull": ["$lideres", []]}
+            fuera = {"$concatArrays": [{"$map": {"input": actuales, "as": "t", "in": "$$t.id"}},
+                                       {"$ifNull": ["$lideres_quitados", []]}]}
+            s["lideres"] = {"$slice": [{"$concatArrays": [actuales, {"$filter": {
+                "input": _lit(c["lideres"]), "as": "x", "cond": {"$not": [{"$in": ["$$x.id", fuera]}]}}}]}, MAX_LIDERES]}
         etapas: list = []
         if c["telefonos"]:
             etapas.append(modelo.ETAPA_RECONCILIAR_TELEFONOS)
@@ -733,7 +795,7 @@ def _importar(db: Database, rutas: list[Path], usuario: str | None, nombres: lis
               capturado_por: int | None, dueño: str) -> Resumen:
     res = Resumen()
     tramites: list[lectores.FilaTramite] = []
-    registros: dict[str, list] = {"cedulas": [], "planilla": []}
+    registros: dict[str, list] = {"cedulas": [], "general": [], "planilla": []}
     huellas: dict[str, str] = {}
     for i, ruta in enumerate(rutas):
         nombre = (nombres or [])[i] if nombres and i < len(nombres) else Path(ruta).name
@@ -762,7 +824,7 @@ def _importar(db: Database, rutas: list[Path], usuario: str | None, nombres: lis
     alm.res = res
     if tramites:
         _importar_tramites(alm, tramites, res)
-    for fuente in ("cedulas", "planilla"):  # de menos a más confianza
+    for fuente in ("cedulas", "general", "planilla"):  # de menos a más confianza
         for archivo, sha, filas in registros[fuente]:
             _importar_registros(alm, fuente, filas, imp_id, res, capturado_por, archivo=archivo, sha=sha)
     bd.renovar_turno(db, "importando", dueño, TURNO_MIN)
@@ -909,8 +971,15 @@ def _importar_registros(alm: _Almacen, fuente: str, registros, imp_id: int, res:
                         capturado_por: int | None = None, *, archivo: str | None = None, sha: str | None = None) -> None:
     """Cascada de identidad para cada registro: 0) supresión; 1) llave ya vinculada; 2) cédula exacta (con el
     nombre); 3) cédula anterior; 4) cruce en lote de todas las demás; 5) ficha nueva. Las filas repetidas (misma cédula
-    o misma llave) esperan y completan la ficha que resulte."""
+    o misma llave) esperan y completan la ficha que resulte.
+
+    La base general trae además quién trajo a cada persona (`lider_ref`): el líder que no tiene fila propia entra como
+    una fila más con su cédula y su nombre (la misma cascada: no se duplica), y al final cada persona se enlaza con el
+    suyo (`_vincular_lideres`)."""
     alm.res = res
+    registros = list(registros)
+    if fuente == "general":
+        registros += _lideres_sin_fila(registros)
     pendientes, repetidas, vistas = [], [], set()
     for r in registros:
         cap = alm.capturador(r, capturado_por) if fuente == "planilla" else None
@@ -934,6 +1003,56 @@ def _importar_registros(alm: _Almacen, fuente: str, registros, imp_id: int, res:
         if not _por_identidad(alm, r, ctx, res):
             _cruzar_registros(alm, [(r, ctx)], res)
     _posible_digitacion(alm)
+    if fuente == "general":
+        _vincular_lideres(alm, fuente, registros, res)
+
+
+def _lideres_sin_fila(registros: list[Registro]) -> list[Registro]:
+    """Una fila por cada líder nombrado en «Liderado por» con cédula y nombre que no tiene fila propia en el archivo:
+    así entra por la misma cascada (si ya está en la base, se reconoce por su cédula; si no, se crea su ficha). Su
+    llave es la cédula, como la de una fila con cédula: si el líder aparece después con fila propia, es la misma."""
+    con_fila = {r.cedula for r in registros if r.cedula}
+    out: dict[str, Registro] = {}
+    for r in registros:
+        ref = r.lider_ref or {}
+        ced, nombre = ref.get("cedula"), ref.get("nombre")
+        if not ced or not nombre or ced in con_fila or ced in out:
+            continue
+        out[ced] = Registro(fuente=r.fuente, fila=0, clave_fila=ced, cedula=ced, tipo_documento="CC", nombre=nombre,
+                            datos={"nombre": nombre, "cedula": ced, "nombrado_como_lider": True})
+    return list(out.values())
+
+
+def _vincular_lideres(alm: _Almacen, fuente: str, registros: list[Registro], res: Resumen) -> None:
+    """Enlaza cada fila con el líder o concejal que la trajo (`lider_ref`), por su cédula. El líder queda marcado como
+    líder si no era líder ni concejal. No se enlaza si la fila quedó en conflicto, si el líder no se encuentra, si su
+    ficha tiene otro nombre (una cédula mal escrita en «Liderado por»), si alguna de las dos no autorizó o si alguien
+    lo quitó a mano: lo que no se resuelve se cuenta en `lideres_sin_resolver`."""
+    comp = alm.comparador()
+    for r in registros:
+        ref = r.lider_ref
+        if not ref:
+            continue
+        d = alm.docs.get(alm.por_llave.get((fuente, r.clave_fila)))
+        if d is None or alm.es_no(d):
+            continue  # la fila quedó en conflicto (no se escribió) o la persona no autorizó
+        lid = alm.por_cedula.get(ref.get("cedula")) if ref.get("cedula") else None
+        lider = alm.docs.get(lid)
+        if lider is None or alm.es_no(lider):
+            res.lideres_sin_resolver += 1
+            continue
+        if lid == d["_id"]:
+            continue
+        toks = tx.tokens_nombre(ref.get("nombre"))
+        if len(toks) >= 2:  # con una sola palabra no hay con qué comparar: manda la cédula
+            nombres = [lider.get("nombre"), *((o.get("datos") or {}).get("nombre") for o in lider.get("origen") or [])]
+            mejor = max((comp.puntaje(toks, tx.tokens_nombre(n))[0] for n in nombres if n), default=0.0)
+            if mejor < UMBRAL_MISMA_EVIDENCIA:
+                res.lideres_sin_resolver += 1
+                continue
+        if not modelo.lidera(lider):
+            alm.marcar_tipo(lider, "lider", fuente)
+        alm.asignar_lider(d, lid, fuente)
 
 
 def _por_identidad(alm: _Almacen, r: Registro, ctx: tuple, res: Resumen) -> bool:
@@ -1059,15 +1178,20 @@ def aplicar_registro(db: Database, pid: int, registro: dict, quien=None) -> bool
     cambiar su cédula). False si la ficha ya no está activa."""
     actor = {"uid": getattr(quien, "uid", 0), "usuario": getattr(quien, "usuario", None) or (quien or "sistema"),
              "rol": getattr(quien, "rol", "admin")}
-    alm = _Almacen(db, ids=[pid], actor=actor)
+    campos = {k: v for k, v in registro.items() if k in Registro.__dataclass_fields__}
+    r = Registro(**campos)
+    # La fila de la base general trae quién la trajo: su ficha se carga también, para enlazarlas
+    ced_lider = (r.lider_ref or {}).get("cedula")
+    lider = db.personas.find_one({"cedula": ced_lider, **bd.ACTIVA}, {"_id": 1}) if ced_lider else None
+    alm = _Almacen(db, ids=[pid, *([lider["_id"]] if lider else [])], actor=actor)
     d = alm.docs.get(pid)
     if d is None:
         return False
-    campos = {k: v for k, v in registro.items() if k in Registro.__dataclass_fields__}
-    r = Registro(**campos)
     if d.get("cedula") and r.cedula != d["cedula"]:
         r.cedula = None
     alm.completar_registro(d, r, (r.fuente, None, None, None, None))
+    if lider:
+        _vincular_lideres(alm, r.fuente, [r], alm.res)
     alm.guardar()
     alm.despues_de_guardar(None, actor["usuario"])
     bd.derivar(db, [pid])

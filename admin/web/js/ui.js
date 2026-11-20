@@ -253,7 +253,7 @@ export const chipPrecision = (p) => {
   return html`<span class="chip ${clase}">${precisionNombre(p)}</span>`;
 };
 export const FUENTES = {
-  tramites: 'Trámites', cedulas: 'Base con cédula', reunion: 'Reunión', manual: 'Registro manual',
+  tramites: 'Trámites', cedulas: 'Base con cédula', general: 'Base general', reunion: 'Reunión', manual: 'Registro manual',
   planilla: 'Planilla de campo', consultor: 'Consultor', otra_base: 'Otra base', panel: 'Panel',
 };
 
@@ -269,6 +269,7 @@ export const FUENTES_INFO = {
   consultor: { nombre: 'Consultor', letra: 'C', grupo: 'equipo', ayuda: 'lo dictó el titular a un consultor.' },
   planilla: { nombre: 'Planilla de campo', letra: 'P', grupo: 'equipo', ayuda: 'planilla que llenó el equipo en campo.' },
   cedulas: { nombre: 'Base con cédula', letra: 'B', grupo: 'base', ayuda: 'base unificada con cédula, importada.' },
+  general: { nombre: 'Base general', letra: 'G', grupo: 'base', ayuda: 'base general de la campaña (concejales, líderes, votantes y grupos), importada.' },
   otra_base: { nombre: 'Otra base', letra: 'O', grupo: 'base', ayuda: 'una base importada.' },
   tramites: { nombre: 'Trámites', letra: 'T', grupo: 'base', ayuda: 'base de trámites por vereda, sin cédula.' },
   fusion: { nombre: 'Ficha unida', letra: 'U', grupo: 'otra', ayuda: 'vino de una ficha que se unió a esta.' },
@@ -307,9 +308,10 @@ export function insigniasFuentes(lista, { conNombre = false } = {}) {
   return claves.length ? html`<span class="fuentes">${claves.map((k) => insigniaFuente(k, { conNombre }))}</span>` : '';
 }
 
-/** Las fuentes que cada rol puede ver: A y K ven «cedulas» tal cual; P la recibe como «otra_base»
- * (`proyeccion.neutralizar_fuente`), porque esa base trae listas de origen y partido. */
-export const fuentesVisibles = (administra) => ORDEN_FUENTES.filter((k) => (administra ? k !== 'otra_base' : k !== 'cedulas'));
+/** Las fuentes que cada rol puede ver: A y K ven «cedulas» y «general» tal cual; P las recibe como «otra_base»
+ * (`proyeccion.neutralizar_fuente`), porque esas bases traen listas de origen, partido y liderazgo. */
+const BASES_POLITICAS = ['cedulas', 'general'];
+export const fuentesVisibles = (administra) => ORDEN_FUENTES.filter((k) => (administra ? k !== 'otra_base' : !BASES_POLITICAS.includes(k)));
 
 /** Leyenda plegable de los colores, solo con las fuentes de `claves` (las que el rol puede ver: `fuentesVisibles`). */
 export function leyendaFuentes(claves) {
