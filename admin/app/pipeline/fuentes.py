@@ -1,9 +1,9 @@
 """Registro de las fuentes que alimentan la base única y forma común de sus filas (2.1).
 
 Cada fuente se reconoce por sus columnas (`tipo_de_archivo` las prueba de mayor a menor prioridad: la planilla antes
-que la base con cédula, que comparte columnas con ella) y entrega `Registro`s. Los trámites siguen con su agrupación
-propia (`cruce.agrupar_tramites`). Para sumar una fuente basta una función `leer_x(ruta) -> Iterator[Registro]` y su
-entrada en `FUENTES`.
+que la base general y que la base con cédula, que comparten columnas con ella; a igual prioridad, en el orden de
+`FUENTES`) y entrega `Registro`s. Los trámites siguen con su agrupación propia (`cruce.agrupar_tramites`). Para sumar
+una fuente basta una función `leer_x(ruta) -> Iterator[Registro]` y su entrada en `FUENTES`.
 """
 from __future__ import annotations
 
@@ -40,6 +40,13 @@ class Registro:
     planillero: str | None = None
     fecha: str | None = None
     observaciones: str | None = None
+    # Base general de la campaña (y cualquier fuente que los traiga)
+    ocupacion: str | None = None
+    perfil_profesional: str | None = None
+    estado_civil: str | None = None
+    jefe_hogar: bool | None = None
+    tipos: list[str] = field(default_factory=list)       # modelo.TIPOS_PERSONA que la fila marca
+    lider_ref: dict | None = None                         # «Liderado por»: {cedula, nombre} del líder o concejal
     datos: dict = field(default_factory=dict)
 
     def dict(self) -> dict:
@@ -61,7 +68,7 @@ def clave_fila(cedula: str | None, nombre: str, nacimiento: str | int | None, te
 class Fuente:
     clave: str
     nombre: str
-    columnas: frozenset[str]
+    columnas: frozenset[str | tuple[str, ...]]  # cada una, un nombre o una tupla de nombres alternativos (basta uno)
     prioridad: int
     leer: Callable[[Path], Iterator[Registro]] | None  # None: trámites (agrupación propia)
     tiene_cedula: bool
@@ -78,9 +85,15 @@ def _leer(clave: str) -> Callable[[Path], Iterator[Registro]]:
 COLUMNAS_PLANILLA = frozenset({"CEDULA", "NOMBRECOMPLETO", "AUTORIZACIONDEDATOS"})
 COLUMNAS_CEDULAS = frozenset({"CEDULA", "NOMBRECOMPLETO"})
 COLUMNAS_TRAMITES = frozenset({"ID", "NUMERO", "FECHA", "NOMBRESOLICITANTE", "DIRECCION"})
+# Base general de la campaña: el documento (CC o Cédula), el nombre y algo de la campaña (líder, votante, grupo…)
+COLUMNAS_GENERAL = frozenset({
+    ("CC", "CEDULA", "DOCUMENTO", "NUMERODEDOCUMENTO"),
+    ("NOMBRECOMPLETO", "NOMBRECOMPLETPO", "NOMBRE", "NOMBRES"),
+    ("LIDER", "LIDERADOPOR", "VOTANTE", "CONCEJAL", "GRUPO", "TIPO", "TIPODEPERSONA")})
 
 PLANILLA = Fuente("planilla", "Planilla de campo", COLUMNAS_PLANILLA, 3, _leer("planilla"), True)
+GENERAL = Fuente("general", "Base general de la campaña", COLUMNAS_GENERAL, 2, _leer("general"), True)
 CEDULAS = Fuente("cedulas", "Base unificada con cédula", COLUMNAS_CEDULAS, 2, _leer("cedulas"), True)
 TRAMITES = Fuente("tramites", "Trámites por vereda", COLUMNAS_TRAMITES, 1, None, False)
-FUENTES = [PLANILLA, CEDULAS, TRAMITES]
+FUENTES = [PLANILLA, GENERAL, CEDULAS, TRAMITES]
 POR_CLAVE = {f.clave: f for f in FUENTES}

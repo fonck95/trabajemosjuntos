@@ -8,13 +8,19 @@ Reconoce cada archivo por sus encabezados, no por su nombre, para que se pueda v
   Puesto de votación, Mesa…, Lista(s), Archivo(s) de origen).
 * **Planilla de campo** (hoja «Planilla» de GET /api/plantillas/planilla.xlsx: Cédula, Repita la cédula, Nombre
   completo, teléfonos, demografía, puesto y mesa, autorización y planillero). Se prueba antes que la base con cédula.
+* **Base general de la campaña** (`leer_general`): CC (o Cédula), Nombre completo, varias columnas Contacto, Dirección,
+  Barrio, Municipio, Grupo, Líder («cédula - nombre» de quien la trajo), Líder confirmado, Votos, Puesto, Mesa, Fecha
+  de nacimiento y Profesión; también con las columnas de los 17 campos de la ficha (Sexo, Edad, Correo, Votante,
+  Liderado por, Perfil profesional, Ocupación, Estado civil, Jefe de hogar…). Se prueba antes que la base con cédula.
 
 Las fuentes con cédula entregan `fuentes.Registro` (`leer_registros`); `FilaCedula` y `leer_cedulas` siguen iguales.
 """
 from __future__ import annotations
 
+import re
 import zipfile
 import zlib
+from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, date
@@ -98,12 +104,14 @@ def _texto(v: object) -> str:
     return str(v).strip()
 
 
-def _hoja_con(wb, columnas: set[str]):
-    """Primera hoja cuya fila de encabezado (en las 5 primeras filas) contiene todas las columnas pedidas."""
+def _hoja_con(wb, columnas: set[str | tuple[str, ...]]):
+    """Primera hoja cuya fila de encabezado (en las 5 primeras filas) contiene todas las columnas pedidas. Cada una es
+    un nombre o una tupla de nombres alternativos (basta uno de ellos)."""
+    grupos = [c if isinstance(c, tuple) else (c,) for c in columnas]
     for ws in wb.worksheets:
         for i, fila in enumerate(ws.iter_rows(values_only=True, max_row=5)):
             claves = {_clave(c) for c in fila if c is not None}
-            if columnas <= claves:
+            if all(any(a in claves for a in g) for g in grupos):
                 return ws, i, [_clave(c) for c in fila]
     return None, None, None
 
@@ -147,11 +155,11 @@ def _libro(ruta: str | Path):
 
 
 def tipo_de_archivo(ruta: str | Path) -> str | None:
-    """«planilla», «cedulas» o «tramites» según las columnas (de la fuente de mayor prioridad a la de menor); None si
+    """«planilla», «general», «cedulas» o «tramites» según las columnas (de la fuente de mayor prioridad a la de menor); None si
     no es ninguna."""
     from .fuentes import FUENTES  # aquí: fuentes usa este módulo
     with _libro(ruta) as wb:
-        for f in sorted(FUENTES, key=lambda f: -f.prioridad):
+        for f in sorted(FUENTES, key=lambda f: -f.prioridad):  # estable: a igual prioridad, el orden de FUENTES
             if _hoja_con(wb, set(f.columnas))[0] is not None:
                 return f.clave
         return None
@@ -343,10 +351,206 @@ def leer_planilla(ruta: str | Path):
             yield reg
 
 
+# ───────────────────────────── Base general de la campaña ─────────────────────────────
+
+def _reparar(s: str) -> str:
+    """Un texto UTF-8 que se leyó como Latin-1 («LÃ­deres», «Familias en acciÃ³n») vuelve a su forma («Líderes»). Un
+    texto que ya está bien no cambia: sus tildes no forman UTF-8 válido al pasarlas a bytes."""
+    if not s or not any(ord(ch) > 127 for ch in s):
+        return s
+    try:
+        return s.encode("latin-1").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return s
+
+
+# Lo que dice el «Grupo» (o «Tipo») de una fila → el tipo de persona que marca (modelo.TIPOS_PERSONA). Los
+# coordinadores traen gente: son líderes, y además quedan en la lista «Coordinadores». Lo demás («Familias en acción»,
+# «Eventos», «Bd externa»…) son listas de origen, que solo ven A y K
+_TIPO_GRUPO = {"VOTANTE": "votante", "VOTANTES": "votante", "LIDER": "lider", "LIDERES": "lider",
+               "COORDINADOR": "lider", "COORDINADORES": "lider", "COORDINADORA": "lider",
+               "CANDIDATOALCONCEJO": "concejal", "CANDIDATOSALCONCEJO": "concejal", "CANDIDATAALCONCEJO": "concejal",
+               "CONCEJAL": "concejal", "CONCEJALES": "concejal"}
+_GRUPOS_TAMBIEN_LISTA = {"COORDINADOR", "COORDINADORES", "COORDINADORA"}
+# «Estado civil» escrito a mano → el catálogo de la ficha (modelo.ESTADOS_CIVILES)
+_ESTADO_CIVIL = {"SOLTERO": "Soltero(a)", "SOLTERA": "Soltero(a)", "SOLTEROA": "Soltero(a)",
+                 "CASADO": "Casado(a)", "CASADA": "Casado(a)", "CASADOA": "Casado(a)",
+                 "UNIONLIBRE": "Unión libre", "UNIONMARITAL": "Unión libre",
+                 "SEPARADO": "Separado(a) o divorciado(a)", "SEPARADA": "Separado(a) o divorciado(a)",
+                 "DIVORCIADO": "Separado(a) o divorciado(a)", "DIVORCIADA": "Separado(a) o divorciado(a)",
+                 "SEPARADOAODIVORCIADOA": "Separado(a) o divorciado(a)",
+                 "VIUDO": "Viudo(a)", "VIUDA": "Viudo(a)", "VIUDOA": "Viudo(a)"}
+
+
+def _grupos(v: object) -> tuple[list[str], list[str]]:
+    """(tipos, listas) del «Grupo» de una fila («Votante, Votante», «Candidato al concejo, Líderes»…), sin repetidos."""
+    tipos: list[str] = []
+    listas: list[str] = []
+    for parte in re.split(r"[,;]", _reparar(_texto(v))):
+        t = re.sub(r"\s+", " ", parte).strip()
+        if not t:
+            continue
+        k = _clave(t)
+        tipo = _TIPO_GRUPO.get(k)
+        if tipo and tipo not in tipos:
+            tipos.append(tipo)
+        if tipo is None or k in _GRUPOS_TAMBIEN_LISTA:
+            nombre = t[0].upper() + t[1:]
+            if all(_clave(x) != k for x in listas):
+                listas.append(nombre)
+    return tipos, listas
+
+
+def _referencia(v: object) -> dict | None:
+    """El «Liderado por» de una celda: «1042213235 - SANDRA LILIANA ECHAVARRIA», solo la cédula o solo el nombre →
+    {cedula, nombre}; None si no dice nada («  -  »)."""
+    s = _reparar(_texto(v))
+    if not s:
+        return None
+    m = re.match(r"^\s*(\d[\d.\s]*?)\s*(?:[-–—:]\s*(.*))?$", s)
+    if m:
+        cedula, nombre = tx.cedula(m.group(1)) or None, tx.nombre_visible(m.group(2) or "")
+    else:
+        cedula, nombre = None, tx.nombre_visible(s)
+    if not tx.nombre_norm(nombre):
+        nombre = ""
+    if not cedula and not nombre:
+        return None
+    return {"cedula": cedula, "nombre": nombre or None}
+
+
+def _entero(v: object, minimo: int, maximo: int) -> int | None:
+    try:
+        n = int(float(v)) if v not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
+    return n if n is not None and minimo <= n <= maximo else None
+
+
+def leer_general(ruta: str | Path):
+    """Filas de la base general de la campaña como `Registro`s (fuente «general»).
+
+    * El tipo de persona sale del «Grupo» (Votante, Líderes, Coordinadores, Candidato al concejo), de «Líder
+      confirmado» (sí: es líder) y de las columnas Votante, Líder y Concejal con sí o no. Lo demás del grupo son listas.
+    * «Líder» con «cédula - nombre» (o la columna «Liderado por») es quien trajo a la persona (`lider_ref`); con sí o
+      no, dice si la persona es líder.
+    * Todas las columnas de teléfono (Contacto, Teléfono, Celular…, aunque se repitan) se suman a la persona.
+    * Lo que no tiene campo en la ficha (votos, municipio, elección, la fecha de nacimiento que no es una fecha…) queda
+      en `datos`, que solo ve el administrador. Las filas sin nombre se saltan."""
+    from .. import modelo
+    from .fuentes import GENERAL, Registro, clave_fila
+    sexos = {**_inverso(modelo.SEXOS), **_SEXO}
+    estados_civiles = {**{_clave(e): e for e in modelo.ESTADOS_CIVILES}, **_ESTADO_CIVIL}
+    hoy = datetime.now().date()
+    with _libro(ruta) as wb:
+        ws, fila_enc, enc = _hoja_con(wb, set(GENERAL.columnas))
+        if ws is None:
+            raise ValueError("El archivo no tiene una hoja con cédula (CC), nombre completo y líder, votante o grupo")
+        col: dict[str, list[int]] = defaultdict(list)
+        for i, c in enumerate(enc):
+            col[c].append(i)
+
+        def todos(f, *opciones) -> list:
+            return [f[i] for c in opciones for i in col.get(c, ()) if i < len(f) and f[i] not in (None, "")]
+
+        def busca(f, *opciones):
+            return next(iter(todos(f, *opciones)), None)
+
+        def con_prefijo(f, prefijo: str):
+            return next((f[i] for c, idx in col.items() if c.startswith(prefijo) for i in idx
+                         if i < len(f) and f[i] not in (None, "")), None)
+
+        for i, f in enumerate(ws.iter_rows(values_only=True)):
+            if i <= fila_enc or not any(x not in (None, "") for x in f):
+                continue
+            nombre = tx.nombre_visible(_reparar(_texto(busca(f, "NOMBRECOMPLETO", "NOMBRECOMPLETPO", "NOMBRE",
+                                                               "NOMBRES"))))
+            if not tx.nombre_norm(nombre):
+                continue
+            datos: dict = {"fila": i + 1}
+            cedula = tx.cedula(busca(f, "CC", "CEDULA", "DOCUMENTO", "NUMERODEDOCUMENTO")) or None
+            tels: list[str] = []
+            for v in todos(f, "CONTACTO", "CONTACTOS", "TELEFONO", "TELEFONOS", "CELULAR", "OTROTELEFONO"):
+                for t in tx.telefonos(v):
+                    if t not in tels:
+                        tels.append(t)
+            tipos, listas = _grupos(busca(f, "GRUPO", "GRUPOS"))
+            for c, tipo in (("VOTANTE", "votante"), ("CONCEJAL", "concejal")):
+                if _si_no(busca(f, c)) and tipo not in tipos:
+                    tipos.append(tipo)
+            for v in todos(f, "TIPO", "TIPODEPERSONA"):
+                for t in _grupos(v)[0]:
+                    if t not in tipos:
+                        tipos.append(t)
+            # «Líder»: sí o no (¿es líder?) o la cédula y el nombre de quien la trajo
+            ref = _referencia(busca(f, "LIDERADOPOR", "LIDERADAPOR", "TRAIDOPOR", "TRAIDAPOR"))
+            for v in todos(f, "LIDER"):
+                si_no = _si_no(v)
+                if si_no is None:
+                    ref = ref or _referencia(v)
+                elif si_no and "lider" not in tipos:
+                    tipos.append("lider")
+            confirmado = _si_no(con_prefijo(f, "LIDERCONFIRMADO"))
+            if confirmado:
+                datos["lider_confirmado"] = True
+                if "lider" not in tipos:
+                    tipos.append("lider")
+            votos = busca(f, "VOTOS", "VOTOSCOMPROMETIDOS")
+            if votos is not None:
+                n = _entero(votos, 0, 100000)
+                if n is not None:
+                    datos["votos"] = n
+                else:
+                    datos["votos_nota"] = _reparar(_texto(votos))
+            barrio = _reparar(_texto(busca(f, "BARRIO", "BARRIOOVEREDA", "VEREDA", "BARRIOVEREDA"))) or None
+            direccion = _reparar(_texto(busca(f, "DIRECCION"))) or None
+            if barrio and tx.limpiar(barrio) not in tx.limpiar(direccion or ""):
+                direccion = f"{direccion}, {barrio}" if direccion else barrio
+            fecha_cruda = busca(f, "FECHADENACIMIENTO", "FECHANACIMIENTO")
+            fecha_nac = _fecha_local(fecha_cruda)
+            if fecha_nac and not ("1900-01-01" <= fecha_nac <= hoy.isoformat()):
+                fecha_nac = None
+            if fecha_cruda is not None and fecha_nac is None:
+                datos["fecha_nacimiento_texto"] = _reparar(_texto(fecha_cruda))
+            jefe = _si_no(busca(f, "JEFEDEHOGAR", "JEFEHOGAR", "CABEZADEHOGAR", "CABEZADEFAMILIA"))
+            civil_crudo = busca(f, "ESTADOCIVIL")
+            civil = estados_civiles.get(_clave(civil_crudo)) if civil_crudo is not None else None
+            if civil_crudo is not None and civil is None:
+                datos["estado_civil_texto"] = _reparar(_texto(civil_crudo))
+            for c, k in (("MUNICIPIO", "municipio"), ("ELECCION", "eleccion"), ("ZONA", "zona"),
+                         ("ZONAURBANAORURAL", "zona")):
+                v = busca(f, c)
+                if v is not None and k not in datos:
+                    datos[k] = _reparar(_texto(v))
+            reg = Registro(
+                fuente="general", fila=i + 1, clave_fila="", cedula=cedula, tipo_documento="CC" if cedula else None,
+                nombre=nombre, telefonos=tels, correo=tx.correo(busca(f, "CORREO", "CORREOELECTRONICO", "EMAIL"))
+                or None, direccion=direccion, lugar_texto=barrio,
+                sexo=sexos.get(_clave(busca(f, "SEXO", "GENERO"))), edad=_entero(busca(f, "EDAD"), 0, 120),
+                fecha_nacimiento=fecha_nac,
+                puesto_texto=_reparar(_texto(busca(f, "PUESTODEVOTACION", "PUESTO"))).strip() or None,
+                mesa_texto=_texto(busca(f, "MESA", "MESADONDEVOTA")) or None, listas=listas,
+                observaciones=_reparar(_texto(busca(f, "OBSERVACIONES"))) or None,
+                ocupacion=_reparar(_texto(busca(f, "OCUPACION"))) or None,
+                perfil_profesional=_reparar(_texto(busca(f, "PERFILPROFESIONAL", "PROFESION", "PROFESIONUOFICIO")))
+                or None,
+                estado_civil=civil, jefe_hogar=jefe, tipos=tipos, lider_ref=ref)
+            reg.clave_fila = clave_fila(cedula, nombre, fecha_nac or reg.edad, tels, barrio)
+            if ref:
+                datos["liderado_por"] = " - ".join(x for x in (ref["cedula"], ref["nombre"]) if x)
+            reg.datos = {**{k: v for k, v in reg.dict().items()
+                            if k not in ("fuente", "fila", "clave_fila", "datos", "lider_ref")
+                            and v not in (None, "", [], {})},
+                         **datos}
+            yield reg
+
+
 def leer_registros(ruta: str | Path, fuente: str):
     """Las filas de una fuente con cédula como `Registro`s."""
     if fuente == "planilla":
         yield from leer_planilla(ruta)
+    elif fuente == "general":
+        yield from leer_general(ruta)
     elif fuente == "cedulas":
         for i, f in enumerate(leer_cedulas(ruta), 1):
             yield a_registro(f, i)

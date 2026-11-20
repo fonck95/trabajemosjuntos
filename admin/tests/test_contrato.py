@@ -54,12 +54,13 @@ def test_catalogos_de_la_especificacion():
     assert set(modelo.CANALES_IMPLICITOS) == {"llamada", "whatsapp", "sms"}
     assert set(modelo.ESTADOS_TELEFONO) == {"sin_verificar", "confirmado", "no_usa", "equivocado", "inexistente", "retirado"}
     assert modelo.USABLES == {"sin_verificar", "confirmado"}
-    assert set(modelo.FUENTES_TEL) == {"tramites", "cedulas", "planilla", "panel", "reunion", "consultor"}
-    assert modelo.CONFIANZA == {"tramites": 1, "cedulas": 2, "planilla": 3, "consultor": 3, "panel": 4, "reunion": 4,
-                                "manual": 4}
+    # «general»: la base general de la campaña, con la confianza de la base con cédula
+    assert set(modelo.FUENTES_TEL) == {"tramites", "cedulas", "general", "planilla", "panel", "reunion", "consultor"}
+    assert modelo.CONFIANZA == {"tramites": 1, "cedulas": 2, "general": 2, "planilla": 3, "consultor": 3, "panel": 4,
+                                "reunion": 4, "manual": 4}
     assert set(modelo.CAMPOS_PROCEDENCIA) == {"cedula", "tipo_documento", "sexo", "edad", "fecha_nacimiento", "correo",
                                               "direccion", "votacion", "estado_civil", "nivel_educativo",
-                                              "situacion_laboral", "ocupacion"}
+                                              "situacion_laboral", "ocupacion", "perfil_profesional"}
     assert modelo.CAMPOS_AVANCE == ("cedula", "telefono", "sexo", "edad", "direccion", "lugar", "ubicacion", "puesto",
                                     "mesa", "autorizacion", "correo", "estado_civil", "nivel_educativo",
                                     "situacion_laboral", "ocupacion", "personas_hogar", "jefe_hogar", "tenencia_vivienda",

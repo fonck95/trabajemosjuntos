@@ -4,13 +4,13 @@
 // lista de líderes con cuántas personas trajo cada uno.
 import { api, descargar, puede, sesion } from '../api.js';
 import { url } from '../base.js';
-import { ESTADOS_ABORDAJE, ESTADOS_VOTACION, ETIQUETAS_CAMPOS, RANGOS_EDAD, SEXOS, SITUACIONES, enmascarar, rangoAParams, telefonosUsables } from '../modelo.js';
+import { ESTADOS_ABORDAJE, ESTADOS_VOTACION, ETIQUETAS_CAMPOS, RANGOS_EDAD, SEXOS, SITUACIONES, TIPOS_PERSONA, enmascarar, rangoAParams, telefonosUsables } from '../modelo.js';
 import {
   $, $$, aviso, avisoError, chipAbordaje, chipAutorizacion, debounce, dialogo, fuentesVisibles, html, icono, insigniasFuentes,
   leyendaFuentes, montar, num, titulo,
 } from '../ui.js';
 import {
-  administra, cargarLideres, chipsFaltan, dialogoCompletar, faltanDe, formularioNuevaPersona, textoCedula, textoTelefono,
+  administra, cargarLideres, chipsFaltan, chipsTipo, dialogoCompletar, faltanDe, formularioNuevaPersona, textoCedula, textoTelefono,
 } from './comunes.js';
 
 // Filtros que viajan en la URL (también los que solo llegan por enlace: Mi trabajo, tablero, mapa)
@@ -20,12 +20,12 @@ const FILTROS = ['q', 'zona', 'lugar_id', 'fuente', 'lista', 'etiqueta', 'con_ce
   'sin_acercamiento_dias', 'proximo_vencido', 'canal_autorizado', 'requiere_actualizacion', 'situacion', 'creado_por',
   'actualizado_por', 'menor', 'area_id', 'poligono', 'tipo_documento', 'cedula_verificada', 'telefono_estado', 'estado_civil',
   'nivel_educativo', 'situacion_laboral', 'estrato', 'tenencia_vivienda', 'regimen_salud', 'lider_id', 'varios_lideres',
-  'intervenida_en',
+  'intervenida_en', 'tipo',
   ...['cedula', 'telefono', 'sexo', 'edad', 'lugar', 'puesto', 'mesa', 'direccion'].map((c) => `sin_${c}`)];
 // Filtros con control propio (el resto se muestra como chip para verlo y quitarlo)
 const CON_CONTROL = new Set(['q', 'zona', 'lugar_id', 'fuente', 'lista', 'etiqueta', 'con_cedula', 'con_telefono', 'varios_telefonos',
   'consentimiento', 'sexo', 'puesto_id', 'votacion_estado', 'donde', 'con_mesa', 'abordaje_estado', 'requiere_actualizacion',
-  'situacion', 'creado_por', 'actualizado_por', 'menor', 'lider', 'varios_lideres', 'precision', 'asistio', 'ids_total']);
+  'situacion', 'creado_por', 'actualizado_por', 'menor', 'tipo', 'varios_lideres', 'precision', 'asistio', 'ids_total']);
 const PARAMS_PUESTO = ['puesto_id', 'votacion_estado', 'donde'];
 const PARAMS_TELEFONO = ['con_telefono', 'varios_telefonos'];
 
@@ -47,7 +47,8 @@ const OCULTOS = {
   sin_acercamiento_dias: (v) => `Sin acercamiento en ${v} días`,
   proximo_vencido: () => 'Volver a contactar: vencido',
   canal_autorizado: (v) => `Autorizó ${v}`,
-  lider_id: (v) => `Traídas por ${nombresLideres[v] || `el líder ${v}`}`,
+  lider_id: (v) => `Lideradas por ${nombresLideres[v] || `el líder ${v}`}`,
+  lider: () => 'Solo líderes',
   intervenida_en: (v) => `Intervenidas en la reunión ${v}`,
 };
 // Los nombres de los líderes para el chip de `lider_id` (se cargan con la lista de líderes, solo A y K)
@@ -83,8 +84,9 @@ export async function vistaPersonas(el, { q, ir }) {
     <div class="cabecera">
       <div><h1>Habitantes</h1><div class="sub" id="total">Cargando…</div></div>
       <div class="acciones">
-        ${adm ? html`<button class="btn" id="ver-lideres" title="Cuántas personas trajo cada líder y cuáles trae más de uno">Líderes</button>` : ''}
+        ${adm ? html`<button class="btn" id="ver-lideres" title="Cuántas personas lidera cada líder o concejal y cuáles trae más de uno">Líderes</button>` : ''}
         ${puede('exportar') ? html`<button class="btn" id="exportar" title="Exporta lo filtrado; omite a quien marcó «No autorizó» el tratamiento de sus datos">${icono('descargar')} Exportar a Excel</button>` : ''}
+        ${adm && puede('personas.crear') ? html`<button class="btn" id="nuevo-votante" title="Registrar un votante y buscar al líder o concejal que lo trajo">${icono('mas')} Nuevo votante</button>` : ''}
         ${puede('personas.crear') ? html`<button class="btn primario" id="nueva">${icono('mas')} Nueva persona</button>` : ''}
       </div>
     </div>
@@ -107,12 +109,12 @@ export async function vistaPersonas(el, { q, ir }) {
         <select class="entrada" data-f="situacion" aria-label="Situación">${opciones([['', 'Vigentes'], ['todas', 'Todas las situaciones'], ...Object.entries(SITUACIONES).filter(([k]) => k !== 'activa')], f.situacion)}</select>
         ${(cat.etiquetas || []).length ? html`<select class="entrada" data-f="etiqueta" aria-label="Necesidad o etiqueta">${opciones([['', 'Necesidad / etiqueta'], ...cat.etiquetas.map((e) => [e.id, e.nombre])], f.etiqueta)}</select>` : ''}
         ${adm ? html`
-          <select class="entrada" data-f="fuente" aria-label="Fuente">${opciones([['', 'Fuente'], ['tramites', 'Base de trámites'], ['cedulas', 'Base con cédula'], ['ambas', 'En las dos'], ['planilla', 'Planilla de campo'], ['reunion', 'Registradas en reunión'], ['manual', 'Registro manual']], f.fuente)}</select>
+          <select class="entrada" data-f="fuente" aria-label="Fuente">${opciones([['', 'Fuente'], ['tramites', 'Base de trámites'], ['cedulas', 'Base con cédula'], ['ambas', 'En las dos'], ['general', 'Base general'], ['planilla', 'Planilla de campo'], ['reunion', 'Registradas en reunión'], ['manual', 'Registro manual']], f.fuente)}</select>
           ${(cat.listas || []).length ? html`<select class="entrada" data-f="lista" aria-label="Lista">${opciones([['', 'Lista'], ...cat.listas.map((l) => [l, l])], f.lista)}</select>` : ''}
           ${usuarios.length ? html`<select class="entrada" data-f="creado_por" aria-label="Creado por">${opciones([['', 'Creado por'], ...usuarios], f.creado_por)}</select>
             <select class="entrada" data-f="actualizado_por" aria-label="Actualizado por">${opciones([['', 'Actualizado por'], ...usuarios], f.actualizado_por)}</select>` : ''}
           <select class="entrada" data-f="menor" aria-label="Menores">${opciones([['', 'Edad legal'], ['1', 'Menores de edad'], ['0', 'Sin menores']], f.menor)}</select>
-          <select class="entrada" data-f="lider" aria-label="Líderes">${opciones([['', 'Líderes'], ['1', 'Solo líderes']], f.lider)}</select>
+          <select class="entrada" data-f="tipo" aria-label="Tipo de persona">${opciones([['', 'Tipo'], ...Object.entries(TIPOS_PERSONA), ['sin_tipo', 'Sin tipo']], f.tipo)}</select>
           <select class="entrada" data-f="varios_lideres" aria-label="Captación">${opciones([['', 'Captación'], ['1', 'Traídas por más de un líder']], f.varios_lideres)}</select>
           <select class="entrada" data-f="precision" aria-label="Ubicación">${opciones([['', 'Ubicación'], ['exacta', 'Dirección exacta'], ['aproximada', 'Aproximada'], ['ubicada', 'Con ubicación'], ['sin', 'Sin ubicar']], f.precision)}</select>
           <select class="entrada" data-f="asistio" aria-label="Reuniones">${opciones([['', 'Reuniones'], ['1', 'Asistió'], ['0', 'Sin reunión']], f.asistio)}</select>` : ''}
@@ -146,7 +148,7 @@ export async function vistaPersonas(el, { q, ir }) {
       <td data-titulo="Nombre"><a class="nombre" href="/personas/${p.id}" data-ruta>${p.nombre}</a>
         <div class="chips chips-fila">${ced ? '' : html`<span class="chip ambar">Sin cédula</span>`}${p.abordaje !== undefined ? chipAbordaje(p.abordaje) : ''}${p.consentimiento ? chipAutorizacion(p, { conCanales: false }) : ''}
           ${p.requiere_actualizacion ? html`<span class="chip ambar">Pendiente de actualizar</span>` : ''}${p.menor ? html`<span class="chip rojo">Menor</span>` : ''}
-          ${sit ? html`<span class="chip rojo">${SITUACIONES[sit] || sit}</span>` : ''}${p.lider ? html`<span class="chip rojo">Líder</span>` : ''}${p.lideres_n > 1 ? html`<span class="chip ambar" title="Más de un líder la está captando">${p.lideres_n} líderes</span>` : ''}
+          ${sit ? html`<span class="chip rojo">${SITUACIONES[sit] || sit}</span>` : ''}${chipsTipo(p)}${p.lideres_n > 1 ? html`<span class="chip ambar" title="Más de un líder la está captando">${p.lideres_n} líderes</span>` : ''}
           ${adm ? insigniasFuentes(p.fuentes) : ''}</div></td>
       <td data-titulo="Cédula">${ced || html`<span class="sec">—</span>`}</td>
       <td data-titulo="Teléfono">${tel || html`<span class="sec">—</span>`}${p.telefonos_n > 1 ? html` <span class="chip borde" title="Números usables">${p.telefonos_n}</span>` : ''}</td>
@@ -297,6 +299,7 @@ export async function vistaPersonas(el, { q, ir }) {
     try { await descargar('/api/exportar.xlsx', f); aviso('Exportación lista (quedó registrada en la auditoría)'); } catch (e) { aviso(e.message, 'error'); }
   });
   $('#nueva', el)?.addEventListener('click', () => formularioNuevaPersona({ cat, alCrear: (p) => ir(`/personas/${p.id}`) }));
+  $('#nuevo-votante', el)?.addEventListener('click', () => formularioNuevaPersona({ cat, prellenado: { tipo: 'votante' }, alCrear: (p) => ir(`/personas/${p.id}`) }));
   $('#ver-lideres', el)?.addEventListener('click', () => dialogoLideres(ir).catch(avisoError));
   // El chip de «Traídas por…» con el nombre del líder
   if (adm && f.lider_id) cargarLideres().then((r) => { for (const l of r.lideres || []) nombresLideres[l.id] = l.nombre; if (el.isConnected) pintarChips(); }).catch(() => {});
@@ -304,22 +307,23 @@ export async function vistaPersonas(el, { q, ir }) {
   return () => buscar.cancel();
 }
 
-// Los líderes (A y K): cuántas personas trajo cada uno y cuántas de ellas trae también otro líder
+// Los líderes y concejales (A y K): cuántas personas trajo cada uno, cuántas son votantes y cuántas trae también otro
 async function dialogoLideres(ir) {
   const r = await cargarLideres();
   const ls = r.lideres || [];
   for (const l of ls) nombresLideres[l.id] = l.nombre;
   const { el: d, cerrar } = dialogo({
-    titulo: 'Líderes',
+    titulo: 'Líderes y concejales',
     ancho: true,
-    cuerpo: html`<p class="sec" style="margin-top:0">Cada persona puede tener uno o más líderes que la trajeron (se asignan en su ficha).
+    cuerpo: html`<p class="sec" style="margin-top:0">Cada persona puede estar liderada por uno o más líderes o concejales (se asignan en su ficha o al registrarla).
         ${r.personas_con_varios ? html`<a href="/personas?varios_lideres=1" data-ir>${num(r.personas_con_varios)} ${r.personas_con_varios === 1 ? 'persona tiene' : 'personas tienen'} más de un líder</a>.` : 'Nadie tiene más de un líder.'}</p>
-      ${ls.length ? html`<div class="envoltura-tabla"><table class="tabla"><thead><tr><th>Líder</th><th>Barrio / vereda</th><th>Trajo</th><th>También con otro líder</th></tr></thead>
-        <tbody>${ls.map((l) => html`<tr style="cursor:default"><td><a href="/personas/${l.id}" data-ir>${l.nombre}</a>${l.marcado ? '' : html` <span class="chip ambar">Ya no marcado</span>`}</td>
+      ${ls.length ? html`<div class="envoltura-tabla"><table class="tabla"><thead><tr><th>Líder o concejal</th><th>Barrio / vereda</th><th>Lidera</th><th>Votantes</th><th>También con otro líder</th></tr></thead>
+        <tbody>${ls.map((l) => html`<tr style="cursor:default"><td><a href="/personas/${l.id}" data-ir>${l.nombre}</a> ${l.tipo ? html`<span class="chip ${l.tipo === 'concejal' ? 'azul' : 'rojo'}">${TIPOS_PERSONA[l.tipo]}</span>` : html`<span class="chip ambar">Ya no marcado</span>`}</td>
           <td>${l.lugar ? titulo(l.lugar) : html`<span class="sec">—</span>`}</td>
           <td>${l.traidas ? html`<a href="/personas?lider_id=${l.id}" data-ir>${num(l.traidas)}</a>` : '0'}</td>
+          <td>${l.votantes ? html`<a href="/personas?lider_id=${l.id}&tipo=votante" data-ir>${num(l.votantes)}</a>` : '0'}</td>
           <td>${l.compartidas ? html`<a href="/personas?lider_id=${l.id}&varios_lideres=1" data-ir>${num(l.compartidas)}</a>` : '0'}</td></tr>`)}</tbody></table></div>`
-        : html`<div class="vacio"><b>Aún no hay líderes</b>Marque a una persona como «Líder comunitario» en su ficha.</div>`}`,
+        : html`<div class="vacio"><b>Aún no hay líderes</b>Marque a una persona como «Líder» o «Concejal» en su ficha.</div>`}`,
   });
   // Los enlaces cierran el diálogo y abren la vista (una lista filtrada se vuelve a pintar entera)
   d.addEventListener('click', (e) => {

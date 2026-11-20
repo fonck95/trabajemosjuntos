@@ -394,6 +394,12 @@ dialog .pie { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 
 .lider-asignado .q { flex: 1; min-width: 0; }
 .lider-asignado .q small { display: block; }
 .lider-asignado .q a { font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
+.lider-asignado .q .chip { margin-left: 6px; vertical-align: 1px; }
+/* Ficha, datos principales: un dato que se ve pero se cambia en otro lugar (el teléfono, la zona del barrio) */
+.campo .valor-fijo { display: block; min-height: 40px; padding: 9px 0 0; font-weight: 650; overflow-wrap: anywhere; }
+/* La barra «Liderado por» del alta y de la ficha: los resultados bajo el campo, con tope para no empujar el formulario */
+.resultados-lider { max-height: 340px; overflow-y: auto; }
+.resultados-lider:empty { display: none; }
 a.chip { text-decoration: none; }
 
 /* ───────── Calidad ───────── */

@@ -81,41 +81,58 @@ Otros casos:
 - **Unir fichas.** Lo que se le hizo a la ficha que se unió cuenta para la ficha que queda: en sus intervenciones, en
   las intervenidas de la reunión y en el filtro `intervenida_en`.
 
-## Líderes: quién trajo a quién
+## Tipo de persona y líderes: quién trajo a quién
 
-Una persona marcada como **Líder comunitario** (`lider`, en su ficha) trae a otras. Cada ficha guarda en `lideres` a
-los líderes que la trajeron, **uno o varios**, cada uno con quién lo asignó y cuándo. Si una persona tiene más de un
-líder, varios líderes la están captando.
+Cada ficha tiene tres marcas de sí o no, el **tipo de persona** en la campaña (`modelo.TIPOS_PERSONA`; no son usuarios
+del panel): **concejal** (`concejal`), **líder** (`lider`) y **votante** (`votante`). Una persona puede ser varias cosas
+(un concejal que además es líder). Líderes y concejales traen a otras personas, en general votantes: cada ficha guarda
+en `lideres` (su **«Liderado por»**) a quienes la trajeron, **uno o varios**, cada uno con quién lo asignó y cuándo. Si
+una persona tiene más de un líder, varios la están captando.
 
-- **Asignar.** Se hace desde la ficha (tarjeta **Líderes → Asignar líder**) o al registrar a alguien (**Traída por
-  (líder)**, en el alta). Solo se puede elegir una ficha activa marcada como líder, y nadie es su propio líder.
-  Asignar el mismo líder dos veces no cambia nada. El límite es de 10 líderes por persona.
+- **Marcar el tipo.** En la ficha (Datos principales → Tipo de persona), en el alta (A y K) o al importar la base
+  general. Lo que marca o quita una persona del equipo queda con su procedencia (`procedencia.<tipo>`): la importación
+  nunca lo cambia. «Completar» solo suma tipos.
+- **Asignar.** Desde la ficha (Datos principales → **Liderado por**: una barra para buscar al líder o concejal por
+  nombre o cédula) o al registrar a alguien: al marcar **Votante** (o Líder) en el alta se abre la misma barra; en
+  Habitantes, **Nuevo votante** abre el alta con Votante marcado, y la ficha de un líder o concejal tiene **Registrar
+  votante liderado**. Solo se puede elegir una ficha activa marcada como líder o como concejal, y nadie es su propio
+  líder. Asignar el mismo líder dos veces no cambia nada. El límite es de 10 líderes por persona.
   - Rutas: `POST /api/personas/{pid}/lideres` con `{lider_id}`, y `DELETE /api/personas/{pid}/lideres/{lid}` para
-    quitarlo.
+    quitarlo. Quitar uno lo anota en `lideres_quitados`: la importación de la base general no lo vuelve a poner
+    (asignarlo de nuevo lo borra de ahí).
+  - La importación de la base general enlaza a cada persona con el líder de su columna «Líder» («cédula - nombre») y
+    marca como líder a quien figura ahí (ver el README, «Base general de la campaña»).
 - **Ver.**
-  - La ficha dice quién la trajo y muestra el aviso **«Captada por N»** si tiene más de un líder.
-  - La ficha de un líder dice cuántas personas trajo y cuántas de ellas trae también otro líder, con enlaces a
-    Habitantes.
+  - La ficha dice quién la lidera (con su tipo: líder o concejal) y muestra el aviso **«Captada por N»** si tiene más
+    de un líder.
+  - La ficha de un líder o concejal dice a cuántas personas lidera, sus votantes y cuántas trae también otro líder, con
+    enlaces a Habitantes.
   - En Habitantes:
-    - los filtros `lider_id` (las que trajo ese líder) y `varios_lideres=1` (las que trae más de un líder);
-    - el chip «N líderes» en la fila;
-    - el botón **Líderes**, que lista cada líder con cuántas personas trajo y cuántas comparte con otro
-      (`GET /api/lideres`), y cuántas personas tienen más de un líder.
-  - La exportación de la base única lleva la columna «Traído por (líderes)».
-- **Quitar la marca de líder** no les quita el líder a las personas que trajo. La ficha lo muestra como «ya no
-  marcado como líder».
-- **Unir fichas.** Los líderes del origen pasan al destino. Quien tenía como líder a la ficha que se unió pasa a
-  tener a la que queda, sin repetir; nadie queda como su propio líder (`db.reapuntar_lideres`).
-- **Suprimir.** La ficha suprimida sale de los líderes de todas las demás (`db.limpiar_ligados`).
+    - los filtros `tipo` (concejal, lider, votante o sin_tipo), `lider_id` (las que lidera ese líder o concejal) y
+      `varios_lideres=1` (las que trae más de uno);
+    - los chips del tipo y «N líderes» en la fila;
+    - el botón **Líderes**, que lista cada líder y concejal con su tipo, cuántas personas lidera, cuántas son votantes
+      y cuántas comparte con otro (`GET /api/lideres`, con la cédula para buscar), y cuántas personas tienen más de
+      un líder.
+  - La exportación de la base única lleva las columnas «Concejal», «Líder», «Votante» y «Liderado por».
+- **Quitar la marca de líder** (o de concejal) no les quita el líder a las personas que trajo. La ficha lo muestra
+  como «ya no marcado como líder ni concejal».
+- **Unir fichas.** Los tipos se suman (basta que una de las dos sea votante, líder o concejal). Los líderes del origen
+  pasan al destino. Quien tenía como líder a la ficha que se unió pasa a tener a la que queda, sin repetir; nadie queda
+  como su propio líder (`db.reapuntar_lideres`).
+- **Suprimir.** La ficha suprimida sale de los líderes (y de los líderes quitados) de todas las demás
+  (`db.limpiar_ligados`).
 
 ### Privacidad
 
-El liderazgo es un dato político, como `lider`:
+El tipo de persona y el liderazgo son datos políticos:
 
-- **A y K** lo ven y lo cambian. Las rutas usan `requiere("admin")`.
-- **P y C** nunca reciben `lideres`, `lideres_n`, `traidas` ni `intervenciones`. Les está vedado usar los filtros
-  `lider_id`, `varios_lideres` e `intervenida_en`, y no pueden mandar `lideres` al registrar a alguien.
-- **El asistente** no lo recibe. `minimizar` es una lista blanca, `lideres` está en sus `OCULTOS`, y sus filtros
-  vedados y `CLAVES_FILTRO` no incluyen estos filtros.
-- **La auditoría** guarda que se asignó o se quitó un líder, pero oculta cuál: `lider_id` y `lideres` quedan
-  «(oculto)».
+- **A y K** los ven y los cambian. Las rutas de líderes usan `requiere("admin")`.
+- **P y C** nunca reciben `lider`, `votante`, `concejal`, `lideres`, `lideres_n`, `traidas` ni `intervenciones`, no
+  pueden mandarlos al editar ni al registrar a alguien (403) y les está vedado usar los filtros `tipo`, `lider`,
+  `lider_id`, `varios_lideres` e `intervenida_en`. La base general («general») la ven como «otra base» y no pueden
+  filtrar por ella.
+- **El asistente** no los recibe. `minimizar` es una lista blanca, el tipo y `lideres` están en sus `OCULTOS`, y sus
+  filtros vedados no incluyen estos filtros.
+- **La auditoría** guarda que se cambió el tipo o que se asignó o se quitó un líder, pero oculta cuál: `lider`,
+  `votante`, `concejal`, `lider_id` y `lideres` quedan «(oculto)».
