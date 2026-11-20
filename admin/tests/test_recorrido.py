@@ -1012,7 +1012,12 @@ def test_lo_que_se_pinta_es_texto_y_la_voz_solo_vive_en_el_panel():
         if f != VOZ_JS:
             assert "speechSynthesis" not in f.read_text(encoding="utf-8"), f
     vista = (JS / "vistas" / "presentacion.js").read_text(encoding="utf-8")
-    assert "crearReproductor({" in vista and "crearVoz()" in vista and "/api/pantalla/progreso" in vista
+    assert "crearReproductor({" in vista and "/api/pantalla/progreso" in vista
+    # La voz es la de la ventana (voz-panel.js, la misma que lee las respuestas): la del navegador (voz.js) de
+    # respaldo de la voz clonada de Mnemo (voz-clonada.js), que no usa la síntesis
+    assert "tomarVoz('narracion', { ocupada: () => rep.activo() && !rep.pausado() })" in vista and "crearVoz" not in vista
+    panel = (JS / "voz-panel.js").read_text(encoding="utf-8")
+    assert "respaldo: crearVoz()" in panel and "crearVozClonada({" in panel
     agente = (JS / "agente.js").read_text(encoding="utf-8")
     assert "else if (a.tipo === 'recorrido') tarjetaRecorrido(a);" in agente and "pausaPorMensaje();" in agente
     ci = (RAIZ / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")

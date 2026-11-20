@@ -39,7 +39,11 @@
 //   plan (la escena: lo que se muestra ocurre mientras se dice), la frase que suena, la pausa y el cierre. Un plan
 //   nuevo espera PREVIA_MS antes del primer paso (el chat lo muestra entero); uno que se reanuda, se vuelve a
 //   reproducir, llega traspasado de otra ventana o la pantalla en off retoma, no. Suena en la página que mira la sala
-//   (la pestaña del chat, la ventana del proyector o la pantalla en off), con la voz del navegador, que está encendida
+//   (la pestaña del chat, la ventana del proyector o la pantalla en off), con la voz de esa ventana (voz-panel.js: la
+//   misma que lee las respuestas del asistente, una sola salida de audio): la voz clonada de Mnemo si el administrador
+//   la eligió y el rol de la persona la usa (`voz` de GET /api/agente/estado; cada frase se pide por su referencia en el
+//   plan y, si no llega, se dice con la voz del navegador), o la del navegador. En el plan de la presentación
+//   automática, la clonada solo si Ajustes lo deja (`voz.automatica`). Está encendida
 //   mientras la persona no la apague (el botón «Voz» de esa ventana o el interruptor de la tarjeta del chat, que llega
 //   por el puente: `alternarVoz`); la activa el primer toque o tecla de la persona en esa ventana, también sobre la
 //   presentación (mando.js lo avisa con `gesto`: en el
@@ -66,7 +70,7 @@ import { AVISOS, CANAL, TERMINALES, VERSION, accionPresentacion, accionesPresent
   controlRecorrido, estadoDePantalla, estadoPresentacion, estadoValido, ordenesHacia, presentacionNoDisponible,
   proyectorVivo, recorridoEnCurso, registrarPresentacion, registrarVozLocal } from '../agente-presentacion.js';
 import { PREVIA_MS, crearReproductor } from '../reproductor.js';
-import { crearVoz } from '../voz.js';
+import { infoVoz, tomarVoz } from '../voz-panel.js';
 
 const ESPERA_LISTO_MS = 45000;   // la presentación carga sus datos y la maqueta 3D: si en esto no avisó, se dice
 const ESPERA_ORDEN_MS = 12000;   // un cambio de capítulo con su telón y la maqueta del módulo tarda unos segundos
@@ -383,7 +387,10 @@ export async function vistaPresentacion(el, { q } = {}) {
   limpiezas.push(() => document.removeEventListener('keydown', alTecla));
 
   // ── El recorrido narrado: el reproductor de esta página, su voz y el avance ──
-  const voz = crearVoz();
+  // La voz de esta ventana (voz-panel.js), la misma que lee las respuestas del asistente: mientras esta vista tenga un
+  // plan sonando (no en pausa: la persona que pregunta en medio del plan lo pausa y oye la respuesta), las respuestas
+  // no se leen
+  const voz = tomarVoz('narracion', { ocupada: () => rep.activo() && !rep.pausado() });
   // El avance va al servidor de a uno: el más nuevo reemplaza al que esperaba y siempre sale (no se pierde la última fase)
   let avanceEnVuelo = false, avancePendiente = null;
   async function enviarAvance(p) {
@@ -415,8 +422,13 @@ export async function vistaPresentacion(el, { q } = {}) {
   // La boca del presentador (web/js/presentador/, en la presentación): cuándo la voz empieza y termina de decir algo
   // (una frase o el resumen). Sin narración en pantalla la presentación lo ignora
   const boca = (v) => { if (rep.activo()) orden({ orden: 'narracion', habla: v }, { plazo: 3000 }); };
-  const vozConBoca = { ...voz, decir: (texto, o = {}) => voz.decir(texto, { ...o, alEmpezar: () => { boca(true); o.alEmpezar?.(); } })
-    .then((r) => { boca(false); return r; }) };
+  // El plan de la presentación automática va con la voz del navegador si la voz clonada no la narra (`automatica` en
+  // Ajustes): sin la referencia de la frase, la voz no la pide a Mnemo
+  const sinClonada = () => rep.recorrido()?.auto === true && !infoVoz().automatica;
+  const vozConBoca = { ...voz,
+    decir: (texto, o = {}) => voz.decir(texto, { ...o, ...(sinClonada() ? { ref: null } : {}), alEmpezar: () => { boca(true); o.alEmpezar?.(); } })
+      .then((r) => { boca(false); return r; }),
+    preparar: (items) => { if (!sinClonada()) voz.preparar(items); } };
   const rep = crearReproductor({
     orden, voz: vozConBoca,
     avisar: (pr) => {
@@ -429,12 +441,19 @@ export async function vistaPresentacion(el, { q } = {}) {
   limpiezas.push(() => { seFue = true; rep.detener('otra_orden'); voz.callar(); });
   limpiezas.push(() => voz.soltar());   // sus oyentes de la ventana y de la síntesis: si no, cada montaje sumaría otros
   const botonesVoz = [...el.querySelectorAll('.pres-voz')];
+  for (const b of botonesVoz) b.dataset.titulo = b.title;
   const pintarVoz = () => {
     const e = voz.estado();
+    // con la voz clonada, su título lo dice (y que es una voz sintética)
+    const clonada = voz.motor() === 'clonada';
+    const nombre = infoVoz().nombre;
     for (const b of botonesVoz) {
       b.setAttribute('aria-pressed', String(e === 'activa'));
       b.disabled = e === 'sin_voces';
       b.dataset.voz = e;
+      b.dataset.motor = clonada ? 'clonada' : 'navegador';
+      b.title = clonada ? b.dataset.titulo.replace('(la del navegador)',
+        `(la voz clonada de Mnemo${nombre ? ` «${nombre}»` : ''}: una voz sintética; si no llega, la del navegador)`) : b.dataset.titulo;
       const t = b.querySelector('span');
       if (t) t.textContent = TEXTO_VOZ[e];
       b.setAttribute('aria-label', TEXTO_VOZ[e]);

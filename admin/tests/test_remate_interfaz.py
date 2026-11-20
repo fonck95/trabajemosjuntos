@@ -158,7 +158,7 @@ def test_el_encuadre_del_mapa_va_como_lo_deja_el_servidor():
         if despues is not None:
             assert sistema._mapa(despues) == sistema._mapa(antes), (antes, despues)
     # camara() pasa por encuadreMapa() (antes mandaba el centro con 6 decimales también de cerca)
-    cuerpo = AGENTE[AGENTE.index("  function camara() {"):AGENTE.index("  function contexto() {")]
+    cuerpo = AGENTE[AGENTE.index("  function camara() {"):AGENTE.index("  function contexto(")]
     assert "return encuadreMapa(c);" in cuerpo and "r(lon, 6)" not in cuerpo
 
 

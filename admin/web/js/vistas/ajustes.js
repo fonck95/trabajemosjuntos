@@ -11,9 +11,18 @@
 // /api/agente/mnemo/volver, ya con la cookie de la sesión y el CSRF. Después (y al desconectar o guardar los ajustes
 // del asistente) le avisa al asistente con el evento `agente:estado`: así deja de decir «no está conectado» sin
 // recargar la página.
+//
+// La voz del asistente (docs/agente.md, «La voz clonada de Mnemo»): el bloque «Voz del asistente» elige con qué voz
+// habla el panel (la del navegador o una voz clonada de la cuenta de Mnemo conectada, de GET /api/agente/voces, que solo
+// se pide al administrador y con una conexión con permiso para usar las voces), quién la hace sonar, si lee las
+// respuestas y si narra la presentación automática; se guarda como `agente_voz` (PUT /api/ajustes, solo el
+// administrador). «Probar voz» dice la frase fija de prueba con la voz guardada (`{prueba: true}`, con la voz de la
+// ventana: voz-panel.js) y muestra cuánto tardó la primera palabra en el navegador y en Mnemo. La voz clonada es un dato
+// biométrico de su dueño: el bloque la marca como voz sintética y dice qué viaja a Mnemo.
 import { api, puede } from '../api.js';
 import { url } from '../base.js';
 import { $, aviso, avisoError, confirmar, datosForm, dialogo, fecha, hayEscrito, html, montar, num } from '../ui.js';
+import { tomarVoz } from '../voz-panel.js';
 
 const TIPOS = { texto: 'Texto', numero: 'Número', si_no: 'Sí / No', opcion: 'Lista de opciones', fecha: 'Fecha' };
 const GRUPOS = { necesidad: 'Necesidades', interes: 'Grupos e intereses', rol: 'Roles' };
@@ -26,7 +35,8 @@ const ROLES_AGENTE = [['admin', 'Administrador', 'administrador'], ['coordinador
 // Los permisos que puede dar una cuenta de Mnemo, como los ve el administrador (en la página de permisos de Mnemo salen
 // con su propio texto). `mnemo:model` es el que deja al asistente usar los modelos de la cuenta
 const PERMISOS_MNEMO = {
-  'mnemo:model': 'Usar sus modelos de IA y sus créditos', 'mnemo:read': 'Leer su información',
+  'mnemo:model': 'Usar sus modelos de IA y sus créditos',
+  'mnemo:voice': 'Hablar con sus voces clonadas (narrar y leer respuestas)', 'mnemo:read': 'Leer su información',
   'mnemo:workspace.write': 'Crear y editar eventos, documentos y borradores de formularios',
   'mnemo:memory.write': 'Proponer recuerdos', 'mnemo:share': 'Pedirle compartir', 'mnemo:publish': 'Pedirle publicar',
   'mnemo:study.write': 'Crear y editar mazos', 'mnemo:business.write': 'Registrar ventas y productos',
@@ -54,6 +64,10 @@ const NO_OFRECE_MODELO = 'Este Mnemo todavía no ofrece «Usar tus modelos de IA
 // El aviso al asistente (agente.js, EVENTO_ESTADO) de que su estado cambió: lo guarda unos minutos y, sin esto, seguiría
 // diciendo que no está conectado hasta recargar la página
 const EVENTO_ESTADO = 'agente:estado';
+// La voz del asistente (`agente_voz`): con qué voz habla el panel
+const MOTORES_VOZ = [['navegador', 'Voz del navegador'], ['mnemo', 'Voz clonada de Mnemo']];
+// La casilla de la página de permisos de Mnemo que deja usar las voces (`mnemo:voice`)
+const CASILLA_VOZ = '«Hablar con las voces que clonaste en Mnemo…»';
 // Lo que trae la vuelta de Mnemo a /ajustes (RFC 6749 y RFC 9207), con los topes de POST /api/agente/mnemo/volver
 const VUELTA = [['state', 200], ['code', 2000], ['iss', 300], ['error', 100], ['error_description', 500]];
 const LOOPBACK = ['127.0.0.1', 'localhost', '[::1]'];
@@ -159,7 +173,7 @@ function bloqueMnemo(c, nota) {
       <label class="campo ancho"><span>Dirección MCP de Mnemo</span><input name="url" type="url" inputmode="url" maxlength="300" value="${dir}" placeholder="https://…/mcp" autocomplete="off" spellcheck="false"></label>
       <div class="ancho mnemo-botones"><button class="btn primario" id="mnemo-conectar">${estado === 'sin_conectar' ? 'Conectar con Mnemo' : 'Volver a conectar'}</button>
         ${estado !== 'sin_conectar' ? html`<button type="button" class="btn peligro" id="mnemo-desconectar">Desconectar</button>` : ''}</div>
-      <p class="ancho mnemo-ayuda">Se abre Mnemo: inicie sesión con la cuenta que va a poner los modelos, deje marcado «Usar tus modelos de IA y tus créditos» y pulse «Permitir». Mnemo lo trae de vuelta aquí. Las casillas de escritura (eventos y documentos, recuerdos, compartir, publicar) son para que el asistente también trabaje en ese Mnemo, siempre con su aprobación: márquelas si lo quiere.${estado === 'sin_conectar' ? '' : ' Cambiar la dirección y volver a conectar cambia de Mnemo.'}</p>
+      <p class="ancho mnemo-ayuda">Se abre Mnemo: inicie sesión con la cuenta que va a poner los modelos, deje marcado «Usar tus modelos de IA y tus créditos» (y, para la voz del asistente, ${CASILLA_VOZ}) y pulse «Permitir». Mnemo lo trae de vuelta aquí. Las casillas de escritura (eventos y documentos, recuerdos, compartir, publicar) son para que el asistente también trabaje en ese Mnemo, siempre con su aprobación: márquelas si lo quiere.${estado === 'sin_conectar' ? '' : ' Cambiar la dirección y volver a conectar cambia de Mnemo.'}</p>
     </form>`;
   } else {
     acciones = html`<p class="mnemo-ayuda">Solo el administrador conecta o desconecta Mnemo.</p>`;
@@ -168,11 +182,65 @@ function bloqueMnemo(c, nota) {
     <h3>Conexión con Mnemo ${chip}</h3>${partes}${acciones}</div>`;
 }
 
+/** El bloque «Voz del asistente» de la sección Asistente. `av` es `agente_voz` de GET /api/ajustes ({motor, voz,
+ * nombre, roles, respuestas, automatica}); `lista`, lo que respondió GET /api/agente/voces ({voces, elegida, conexion}),
+ * `{error}` si falló, o null si no se pidió (no es el administrador, o la conexión con Mnemo no tiene `mnemo:voice`); `c`,
+ * la conexión con Mnemo (`mnemo.conexion` del estado) o null. El coordinador lo ve en solo lectura y sin la lista de
+ * voces (la voz es de la cuenta del administrador): solo la que está elegida. */
+function bloqueVoz(av, lista, c, soloLectura) {
+  const admin = puede('agente.conectar');
+  const v = av && typeof av === 'object' ? av : {};
+  const motor = v.motor === 'mnemo' ? 'mnemo' : 'navegador';
+  const elegida = typeof v.voz === 'string' ? v.voz : '';
+  const roles = new Set(Array.isArray(v.roles) ? v.roles : []);
+  const voces = Array.isArray(lista?.voces) ? lista.voces.filter((x) => x && typeof x.id === 'string') : null;
+  const conectada = c?.estado === 'conectada';
+  const avisos = [];
+  if (!conectada) {
+    avisos.push(html`<p class="mnemo-nota alerta">${admin ? 'Para usar una voz clonada, conecte Mnemo (arriba). Mientras tanto el asistente habla con la voz del navegador.'
+      : 'Para usar una voz clonada, el administrador conecta Mnemo. Mientras tanto el asistente habla con la voz del navegador.'}</p>`);
+  } else if (c.voz !== true) {
+    avisos.push(html`<p class="mnemo-nota alerta">${c.ofrece_voz === false
+      ? 'El Mnemo conectado todavía no ofrece sus voces a otras aplicaciones: hay que actualizar Mnemo y volver a conectar.'
+      : `La conexión con Mnemo no tiene permiso para usar sus voces: ${admin ? 'vuelva' : 'el administrador tiene que volver'} a conectar dejando marcado ${CASILLA_VOZ}.`}</p>`);
+  } else if (lista?.error) {
+    avisos.push(html`<p class="mnemo-nota error">No se pudieron traer las voces de Mnemo: ${lista.error.message || 'intente de nuevo en un momento.'}</p>`);
+  } else if (voces && !voces.length) {
+    avisos.push(html`<p class="mnemo-nota alerta">La cuenta de Mnemo conectada no tiene voces listas para las apps: clone una en Mnemo (Ajustes → Voces) y márquela «Disponible para apps conectadas».</p>`);
+  }
+  if (elegida && voces && !voces.some((x) => x.id === elegida)) {
+    avisos.push(html`<p class="mnemo-nota alerta">La voz guardada ya no está disponible en esta cuenta de Mnemo (se borró, dejó de estar marcada para las apps o es de otra cuenta): elija otra.</p>`);
+  }
+  const opciones = (voces || []).map((x) => html`<option value="${x.id}" data-nombre="${x.nombre || ''}" ${x.id === elegida ? 'selected' : ''}>${x.nombre || x.id}${x.idioma ? ` · ${x.idioma}` : ''}</option>`);
+  // La guardada que no vino en la lista (el coordinador no la pide; o ya no está en Mnemo) se ve igual
+  if (elegida && !voces?.some((x) => x.id === elegida)) {
+    opciones.unshift(html`<option value="${elegida}" data-nombre="${v.nombre || ''}" selected>${v.nombre || 'La voz guardada'}${voces ? ' (ya no está en Mnemo)' : ''}</option>`);
+  }
+  const probar = admin && !soloLectura;
+  const sinProbar = motor !== 'mnemo' || !elegida;
+  return html`<div class="mnemo-conexion voz-asistente" id="voz-asistente">
+    <h3>Voz del asistente <span class="chip ambar" title="La voz clonada imita la voz de una persona: no es ella la que habla">Voz sintética</span></h3>
+    <p>Narra el plan guiado de la presentación y, si la persona lo enciende en el chat (o pregunta por voz), lee en voz alta las respuestas del asistente. La voz clonada la clona su dueño en Mnemo (Ajustes → Voces) y la marca «Disponible para apps conectadas»; suena con los créditos de la cuenta de Mnemo conectada. Si una frase no llega a tiempo, se dice con la voz del navegador: la presentación nunca queda muda.</p>
+    ${avisos}
+    <form id="f-voz" class="form" novalidate>
+      <label class="campo"><span>Con qué voz habla</span><select name="motor">${MOTORES_VOZ.map(([k, t]) => html`<option value="${k}" ${k === motor ? 'selected' : ''}>${t}</option>`)}</select></label>
+      <label class="campo"><span>Voz clonada</span><select name="voz"><option value="">Ninguna</option>${opciones}</select></label>
+      <div class="campo ancho"><span>Quiénes la hacen sonar (habla con la voz y los créditos de la cuenta de Mnemo del administrador; los demás oyen la del navegador)</span>
+        <div class="chips">${ROLES_AGENTE.map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="voz_rol_${k}" ${roles.has(k) ? 'checked' : ''}> ${t}</label>`)}</div></div>
+      ${casilla('respuestas', v.respuestas !== false, 'Leer en voz alta las respuestas del asistente, cuando la persona lo enciende en el chat o pregunta por voz (solo en conversaciones sin datos de habitantes)')}
+      ${casilla('automatica', v.automatica !== false, 'Narrar también la presentación automática de la pantalla en off (casi siempre sale de la caché del panel: se repite)')}
+      <div class="aviso-legal ancho">La voz clonada es un dato biométrico de su dueño (Ley 1581 de 2012): úsela solo con su autorización expresa, con los roles que la necesitan, y diga ante la sala que es una voz sintética. A Mnemo solo va el texto de cada frase: la narración de la presentación (sin datos de personas) y, de las respuestas, las de conversaciones sin datos de habitantes, sin cédulas, teléfonos, correos ni enlaces. Ni Mnemo ni el panel guardan lo que se dice ni el audio.</div>
+      ${soloLectura ? SOLO_ADMIN : html`<div class="ancho mnemo-botones"><button class="btn primario">Guardar voz</button>${probar ? html`<button type="button" class="btn" id="voz-probar" title="${sinProbar ? 'Guarde una voz clonada para probarla' : 'Dice una frase fija con la voz guardada y mide cuánto tarda la primera palabra'}" ${sinProbar ? 'disabled' : ''}>Probar voz</button>` : ''}</div>`}
+      <p class="ancho mnemo-nota resultado" id="voz-resultado" role="status" hidden></p>
+    </form></div>`;
+}
+
 export async function vistaAjustes(el, { q } = {}) {
   // Lo primero, antes de cualquier await: si es la vuelta de Mnemo, sale de la dirección
   const vuelta = tomarVuelta(q);
   let filtros = {};
   let notaMnemo = null; // lo que pasó al volver de Mnemo o al desconectar: se muestra en el próximo repintado
+  let vozPrueba = null; // la voz de la ventana para «Probar voz» (voz-panel.js): se suelta al salir de Ajustes
 
   async function pintar() {
     const nota = notaMnemo;
@@ -181,6 +249,11 @@ export async function vistaAjustes(el, { q } = {}) {
     const [cat, aud, aj, est] = await Promise.all([api.get('/api/catalogos'), api.get('/api/auditoria', filtros), api.get('/api/ajustes'),
       api.get('/api/agente/estado').catch(() => null)]);
     const puestos = await api.get('/api/puestos', { eleccion: aj.eleccion_vigente, todos: 1 });
+    // Las voces clonadas de la cuenta conectada: solo al administrador y con permiso para usarlas (sin él la lista es
+    // vacía y no se le pregunta a Mnemo). Si falla, el bloque lo dice y Ajustes se pinta igual
+    const conexion = est?.mnemo?.conexion || null;
+    const voces = puede('agente.conectar') && conexion?.estado === 'conectada' && conexion.voz === true
+      ? await api.get('/api/agente/voces').catch((error) => ({ error })) : null;
     if (!el.isConnected) return;
     const av = aj.aviso_privacidad || {};
     const soloLectura = aj.puede_modificar_permisos === false;
@@ -240,7 +313,7 @@ export async function vistaAjustes(el, { q } = {}) {
         </section>
         <section class="tarjeta c-12">
           <h2>Asistente</h2>
-          <div class="asistente-cabeza">${estadoAgente(est)}${est?.mnemo?.conexion ? bloqueMnemo(est.mnemo.conexion, nota) : ''}</div>
+          <div class="asistente-cabeza">${estadoAgente(est)}${est?.mnemo?.conexion ? bloqueMnemo(est.mnemo.conexion, nota) : ''}${bloqueVoz(aj.agente_voz, voces, conexion, soloLectura)}</div>
           <form id="f-agente" class="form" style="margin-top:12px">
             <div class="campo ancho"><span>Quiénes lo usan (cada uno con los permisos, el alcance y el presupuesto diario de su rol)</span>
               <div class="chips">${ROLES_AGENTE.map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="rol_${k}" ${rolesAgente.has(k) ? 'checked' : ''}> ${t}</label>`)}</div></div>
@@ -315,7 +388,7 @@ export async function vistaAjustes(el, { q } = {}) {
         </section>
       </div>`);
     if (soloLectura) {  // el coordinador ve la política, los límites y el asistente, pero no los cambia
-      for (const id of ['#f-politica', '#f-limites', '#f-agente']) {
+      for (const id of ['#f-politica', '#f-limites', '#f-agente', '#f-voz']) {
         for (const c of $(id, el).querySelectorAll('input, select, textarea')) c.disabled = true;
       }
       const dePermisos = new Set(aj.ajustes_de_permisos || []);  // datos sensibles y compromiso: también solo A
@@ -417,6 +490,42 @@ export async function vistaAjustes(el, { q } = {}) {
     await pintar();
   }
 
+  /** «Probar voz»: la frase fija con la voz clonada guardada (`{prueba: true}`), y cuánto tardó la primera palabra en
+   * sonar aquí (desde el clic) y en Mnemo (lo que tardó en dar el primer audio). Sale de la voz de la ventana, que
+   * calla lo que estuviera sonando; nunca de la del navegador (no es lo que se prueba). */
+  function probarVoz(boton) {
+    const res = $('#voz-resultado', el);
+    const poner = (tipo, texto) => {
+      if (!res?.isConnected) return;
+      res.hidden = false;
+      res.className = `ancho mnemo-nota resultado ${tipo}`;
+      res.setAttribute('role', tipo === 'error' ? 'alert' : 'status');
+      res.textContent = texto;
+    };
+    vozPrueba ||= tomarVoz('prueba');
+    const t0 = performance.now();
+    let primer = null, medida = null;
+    boton.disabled = true;
+    poner('info', 'Diciendo la frase de prueba con la voz clonada…');
+    vozPrueba.decir('', {
+      ref: { prueba: true },
+      alEmpezar: () => { primer = Math.round(performance.now() - t0); poner('ok', `Primer audio en ${num(primer)} ms…`); },
+      alFin: (d) => { medida = d; },
+    }).then((r) => {
+      if (boton.isConnected) boton.disabled = false;
+      if (primer !== null) {
+        const mnemo = Number.isInteger(medida?.ms_mnemo) ? `${num(medida.ms_mnemo)} ms` : 'sin dato';
+        const cache = medida?.cache ? ' Salió de la caché del panel: ya se había dicho hace poco.' : '';
+        const corte = r === 'dicha' ? '' : ' Se cortó antes de terminar.';
+        poner(r === 'dicha' ? 'ok' : 'alerta', `Primer audio en ${num(primer)} ms en este navegador (Mnemo: ${mnemo}).${cache}${corte}`);
+      } else if (r === 'cortada') {
+        poner('alerta', 'Se interrumpió la prueba.');
+      } else {
+        poner('error', `No se pudo probar la voz: ${medida?.error?.mensaje || 'la voz clonada no respondió.'}`);
+      }
+    });
+  }
+
   function horario(f) {
     const h = {};
     for (const [k] of DIAS) {
@@ -490,6 +599,19 @@ export async function vistaAjustes(el, { q } = {}) {
           retencion_dias: Number(v.retencion_dias) },
         agente_mensajes_diarios: Object.fromEntries(ROLES_AGENTE.map(([k]) => [k, Number(v[`mensajes_${k}`])])) }, 'Asistente guardado',
         { asistente: true });
+      } else if (f.id === 'f-voz') {
+        const v = datosForm(f);
+        const roles = ROLES_AGENTE.map(([k]) => k).filter((k) => v[`voz_rol_${k}`] === true);
+        const motor = v.motor === 'mnemo' ? 'mnemo' : 'navegador';
+        const voz = v.voz || '';
+        if (motor === 'mnemo' && !voz) {
+          avisoError(new Error('Elija la voz clonada que va a usar el asistente (o deje la del navegador).'));
+          return;
+        }
+        // su nombre para mostrar, el que dio Mnemo (el servidor anota además con qué cuenta se eligió)
+        const nombre = voz ? f.elements.voz.selectedOptions[0]?.dataset.nombre || '' : '';
+        await guardar({ agente_voz: { motor, voz, ...(nombre ? { nombre } : {}), roles, respuestas: v.respuestas === true,
+          automatica: v.automatica === true } }, 'Voz del asistente guardada', { asistente: true });
       } else if (f.id === 'f-campo') {
         await api.post('/api/campos', { etiqueta: f.etiqueta.value, tipo: f.tipo.value, sensible: f.sensible.checked,
           opciones: f.opciones.value.split(',').map((s) => s.trim()).filter(Boolean) });
@@ -513,6 +635,9 @@ export async function vistaAjustes(el, { q } = {}) {
     try { await guardar({ eleccion_vigente: nueva }, 'Elección vigente cambiada'); } catch (err) { avisoError(err); await pintar(); }
   });
   el.addEventListener('click', async (e) => {
+    // (sin esperas antes: el clic es el gesto que deja sonar el audio de la ventana)
+    const pv = e.target.closest('#voz-probar');
+    if (pv) { probarVoz(pv); return; }
     const c = e.target.closest('[data-campo]');
     if (c) { await api.patch(`/api/campos/${c.dataset.campo}`, { activo: c.dataset.activo === '1' }); pintar(); return; }
     const p = e.target.closest('[data-puesto]');
@@ -531,4 +656,6 @@ export async function vistaAjustes(el, { q } = {}) {
   });
   if (vuelta) await volverDeMnemo(vuelta);
   await pintar();
+  // Al salir de Ajustes, la voz de «Probar voz» se devuelve (si era la última, la de la ventana se suelta)
+  return () => { vozPrueba?.soltar(); vozPrueba = null; };
 }

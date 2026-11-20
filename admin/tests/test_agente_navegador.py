@@ -1038,14 +1038,24 @@ class _ConPermisos:
         return await self.falso(scope, receive, send)
 
 
+async def _voces_inventadas(_: dict) -> dict:
+    """`mnemo_list_voices` del Mnemo falso: una voz clonada inventada, marcada para las apps y lista."""
+    from ayudas_mcp import correcto
+    return correcto({"voices": [{"voice_id": "voz_inventada_1", "name": "Voz de Ana Inventada", "language": "es",
+                                 "engine": "minimax", "status": "ready"}], "default_voice_id": "voz_inventada_1"})
+
+
 @pytest.fixture
 def panel_y_mnemo(cfg, tmp_path):
     """El panel de verdad (con `_Registro` delante) en 127.0.0.1 y un Mnemo falso por red (`OAuthFalso` con su página
     de permisos) en `http://localhost:<puerto>`: otro sitio para el navegador, como en producción. El panel habla con
-    él por red, sin transporte inyectado. Da (base del panel, app del panel, el OAuthFalso, el registro de las
-    peticiones al panel, la página de permisos)."""
-    from ayudas_mcp import EnHilo, OAuthFalso
+    él por red, sin transporte inyectado. Ese Mnemo ofrece sus voces (`mnemo:voice` y `mnemo_list_voices`, con una
+    voz inventada): Ajustes las lista en «Voz del asistente». Da (base del panel, app del panel, el OAuthFalso, el
+    registro de las peticiones al panel, la página de permisos)."""
+    from ayudas_mcp import LECTURA, EnHilo, OAuthFalso, herramienta
     falso = OAuthFalso()
+    falso.mcp.herramientas.append(herramienta("mnemo_list_voices", "List your cloned voices", {}, [], LECTURA))
+    falso.mcp.manejadores["mnemo_list_voices"] = _voces_inventadas
     permisos = _ConPermisos(falso)
     with EnHilo(permisos) as mnemo:
         falso.base = f"http://localhost:{urlsplit(mnemo.url).port}"
@@ -1086,6 +1096,16 @@ def test_conectar_mnemo_desde_ajustes(panel_y_mnemo, cfg, tmp_path):
               if p["ruta"] == "/oauth/token" and (p["form"] or {}).get("grant_type") == "authorization_code"]
     assert len(canjes) == 2 and all(c.get("code_verifier") and c["redirect_uri"] == base + "/ajustes" for c in canjes)
     assert [(r["tipo"], r["token_type_hint"]) for r in falso.revocaciones] == [("refresh", "refresh_token")]
+    # La voz del asistente: con la conexión (y su permiso para las voces), Ajustes lista la voz de esa cuenta para el
+    # administrador; el coordinador ve el bloque en solo lectura y no le pregunta a Mnemo; sin conexión, lo dice
+    assert "mnemo:voice" in a["scope"].split()
+    voz = d["voz"]
+    assert voz["opciones"] == ["Ninguna", "Voz de Ana Inventada · es"] and voz["avisos"] == [], voz
+    assert voz["botones"] == ["Guardar voz", "Probar voz"] and voz["probar_apagado"] is True and voz["sintetica"], voz
+    assert d["voz_coordinador"] == {"opciones": ["Ninguna"], "deshabilitados": True, "botones": []}, d["voz_coordinador"]
+    llamadas = [n for n, _ in falso.mcp.llamadas if n == "mnemo_list_voices"]
+    assert len(llamadas) >= 1
+    assert "conecte Mnemo (arriba)" in d["voz_desconectado"]["avisos"][0], d["voz_desconectado"]
     # En la base: sin conexión, sin tokens a la vista y la auditoría de cada paso
     doc = db.meta.find_one({"_id": "mnemo_conexion"}) or {}
     assert "estado" not in doc and "cifrado" not in doc and not doc.get("pendiente")
@@ -1148,6 +1168,17 @@ async function ingresar(page, u, c) {
   await page.click('#nav a[data-nav="ajustes"]');
   await page.waitForSelector('#mnemo-conexion', espera);
 }
+
+// El bloque «Voz del asistente»: las voces que ofrece, sus avisos y sus botones
+const bloqueVoz = (page) => page.evaluate(() => {
+  const b = document.querySelector('#voz-asistente');
+  return b && { opciones: [...b.querySelectorAll('[name=voz] option')].map((o) => o.textContent.trim()),
+    avisos: [...b.querySelectorAll('.mnemo-nota:not(.resultado)')].map((x) => x.textContent.replace(/\s+/g, ' ').trim()),
+    botones: [...b.querySelectorAll('button')].map((x) => x.textContent.trim()),
+    probar_apagado: b.querySelector('#voz-probar')?.disabled ?? null,
+    deshabilitados: [...b.querySelectorAll('input, select')].every((x) => x.disabled),
+    sintetica: b.querySelector('h3 .chip')?.textContent === 'Voz sintética' };
+});
 
 const bloque = (page) => page.evaluate(() => {
   const b = document.querySelector('#mnemo-conexion');
@@ -1283,6 +1314,10 @@ async function conectar(page, caso, decision, { sinModelos = false, durante = nu
     v.conectado = r.vuelta_quitada_antes && b.estado === 'conectada' && b.texto.includes('Conectado como Ana Inventada (ana.inventada@example.org) desde')
       && b.texto.includes(`Dirección: ${mcp}`) && b.permisos.includes('Usar sus modelos de IA y sus créditos') && b.sinModelos === null
       && b.resultado === null && JSON.stringify(b.botones) === '["Volver a conectar","Desconectar"]' && b.campo === mcp;
+    // (las voces de la cuenta conectada llegan en la misma pintada de Ajustes)
+    await page.waitForSelector('#voz-asistente [name=voz] option[value="voz_inventada_1"]', { state: 'attached', ...espera });
+    caso.datos.voz = await bloqueVoz(page);
+    await page.locator('#voz-asistente').screenshot({ path: `${capturas}/ajustes-voz.png` });
     const conectando = caso.datos.asistente_conectando;
     const nueva = await llega(page, () => document.querySelector('#agente-sub').textContent === 'Nueva conversación'
       && !document.querySelector('#agente-form').hidden && !!document.querySelector('#agente-panel:not([hidden]) .agente-bienvenida'));
@@ -1321,6 +1356,8 @@ async function conectar(page, caso, decision, { sinModelos = false, durante = nu
       && !bk.texto.includes('Ana Inventada') && !bk.texto.includes('ana.inventada@example.org') && bk.sinModelos === null
       && bk.botones.length === 0 && bk.campo === null && bk.texto.includes('Solo el administrador conecta o desconecta Mnemo.');
     await k.page.locator('#mnemo-conexion').screenshot({ path: `${capturas}/ajustes-mnemo-coordinador.png` });
+    const vk = await bloqueVoz(k.page);
+    caso.datos.voz_coordinador = { opciones: vk.opciones, deshabilitados: vk.deshabilitados, botones: vk.botones };
     await k.ctx.close();
 
     // 4. «Volver a conectar» sin marcar el permiso de los modelos: Ajustes lo avisa (sin mandar a marcar una casilla que
@@ -1350,6 +1387,7 @@ async function conectar(page, caso, decision, { sinModelos = false, durante = nu
     b = await bloque(page);
     caso.datos.desconectado = b;
     v.desconectado = JSON.stringify(b.botones) === '["Conectar con Mnemo"]' && b.campo === mcp && b.resultado === null;
+    caso.datos.voz_desconectado = await bloqueVoz(page);
     await page.click('#agente-boton');
     v.asistente_se_entera_al_desconectar = await llega(page, () => document.querySelector('#agente-sub').textContent === 'Sin conectar'
       && document.querySelector('#agente-panel:not([hidden]) .agente-explicacion h3')?.textContent === 'El asistente no está conectado');

@@ -259,8 +259,10 @@ def test_ajustes_usa_las_rutas_de_la_conexion_con_mnemo():
         metodo = {"get": "GET", "post": "POST", "del": "DELETE"}[m.group(1)]
         assert any(p.match(m.group(3)) and metodo in met for p, met in rutas), (metodo, m.group(3))
         usadas.add((metodo, m.group(3)))
+    # (y las voces clonadas de la cuenta conectada, para el bloque «Voz del asistente»)
     assert usadas == {("GET", "/api/agente/estado"), ("POST", "/api/agente/mnemo/conectar"),
-                      ("POST", "/api/agente/mnemo/volver"), ("DELETE", "/api/agente/mnemo")}, usadas
+                      ("POST", "/api/agente/mnemo/volver"), ("DELETE", "/api/agente/mnemo"),
+                      ("GET", "/api/agente/voces")}, usadas
 
 
 def test_la_vuelta_de_mnemo_sale_de_la_direccion_antes_de_cualquier_espera():
@@ -482,9 +484,12 @@ def test_el_asistente_se_entera_de_que_se_conecto_mnemo_sin_recargar():
     desconectar = _funcion(ajustes, "desconectarMnemo")
     assert desconectar.index("await api.del('/api/agente/mnemo')") < desconectar.index("avisarAlAsistente();") < \
         desconectar.index("await pintar();"), desconectar
-    assert "if (asistente) avisarAlAsistente();" in ajustes and ajustes.count("{ asistente: true }") == 1
-    agente_form = ajustes[ajustes.index("} else if (f.id === 'f-agente') {"):ajustes.index("} else if (f.id === 'f-campo') {")]
+    # (los ajustes del asistente y su voz: la voz cambia `voz` del estado, que el asistente y la narración usan)
+    assert "if (asistente) avisarAlAsistente();" in ajustes and ajustes.count("{ asistente: true }") == 2
+    agente_form = ajustes[ajustes.index("} else if (f.id === 'f-agente') {"):ajustes.index("} else if (f.id === 'f-voz') {")]
     assert "{ asistente: true }" in agente_form
+    voz_form = ajustes[ajustes.index("} else if (f.id === 'f-voz') {"):ajustes.index("} else if (f.id === 'f-campo') {")]
+    assert "{ asistente: true }" in voz_form and "agente_voz: {" in voz_form
 
 
 def test_la_explicacion_no_nombra_variables_de_entorno():

@@ -30,6 +30,13 @@
 // * Una escena que falla se salta (aviso); dos seguidas, o una presentación que no responde, detienen con «error».
 // * `avisar(progreso)` corre en cada cambio de fase y de frase: la vista lo manda al puente (la tarjeta del chat), a su
 //   barra y al servidor (POST /api/pantalla/progreso: el asistente y los agentes por MCP lo leen en `estado`).
+// * La voz (voz.js, o la voz clonada de Mnemo de voz-clonada.js, que tiene su misma forma) recibe con cada frase su
+//   referencia en el plan (`ref`: `{rid, n, frase}`, y el resumen `{rid, cierre: true}`): la voz clonada pide el audio
+//   por ella (el servidor saca el texto del plan guardado: nunca un texto que mande el navegador). Y si la voz sabe
+//   precargar (`preparar`), al empezar cada frase se le dice la que sigue (la siguiente del paso, la primera del paso
+//   siguiente o el resumen) y en la espera de un plan nuevo, la primera: cuando le toque, suena sin esperar a Mnemo.
+//   `preparar` sale después de `decir` (la frase en curso no se suelta para hacerle lugar a la siguiente). Una voz
+//   sin `preparar` (la del navegador sola, las de las pruebas) funciona igual.
 // Lógica pura: `orden`, `voz`, `reloj` y `avisar` llegan por parámetro (admin/tests lo prueba con Node y un reloj falso).
 
 // Los tiempos (los mismos de app/recorrido.py, que estima con ellos la duración: una prueba los compara)
@@ -65,7 +72,8 @@ const sinVoz = { estado: () => 'sin_voces', decir: async () => 'fallo', callar: 
 
 /**
  * orden(o, {plazo}) → Promise<{ok, error?, aviso?, sinRespuesta?}>: manda una orden a mando.js.
- * voz: {estado(), decir(texto, {alEmpezar}) → 'dicha'|'cortada'|'fallo', callar()} (voz.js).
+ * voz: {estado(), decir(texto, {alEmpezar, ref}) → 'dicha'|'cortada'|'fallo', callar(), preparar?([{texto, ref}])}
+ * (voz.js, voz-clonada.js).
  * avisar(progreso): {rid, n, de, fase, frase, voz, motivo?, aviso?, t_ms}.
  */
 export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegador, avisar = () => {} } = {}) {
@@ -92,6 +100,21 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
 
   const de = () => r?.escenas.length || 0;
   const vigente = (g) => g === gen && !!r;
+
+  // Lo que se dice y su referencia en el plan: la frase `f` (desde 0) de la escena `k` (desde 1), o el resumen
+  const itemFrase = (k, f) => ({ texto: r.escenas[k - 1].frases[f], ref: { rid: r.id, n: k, frase: f } });
+  const itemCierre = () => ({ texto: `En resumen. ${r.cierre.puntos.join('. ')}`, ref: { rid: r.id, cierre: true } });
+  /** Lo que suena después de la frase `f` de la escena `k`: la siguiente del paso, la primera del paso siguiente o el
+   * resumen (null si no hay nada más, o el plan de la presentación automática termina sin resumen). */
+  function despues(k, f) {
+    const esc = r?.escenas[k - 1];
+    if (!esc) return null;
+    if (f + 1 < esc.frases.length) return itemFrase(k, f + 1);
+    if (k < de()) return itemFrase(k + 1, 0);
+    return r.cierre ? itemCierre() : null;
+  }
+  // La voz precarga lo que viene (si sabe): nunca rompe el reloj del plan
+  const preparar = (item) => { if (item) { try { voz.preparar?.([item]); } catch { /* nada */ } } };
 
   function emitir(extra = {}) {
     if (!r) return;
@@ -175,12 +198,13 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
 
   // Una frase (de una escena o el resumen del cierre): con voz, `mostrar` corre cuando empieza a sonar; sin voz (o si la
   // voz no arrancó), corre antes y la frase se queda su tiempo de lectura. Una pausa en medio la repite desde el
-  // comienzo; la pausa suave espera a que termine (`enFrase`). `alIntentar` corre al comienzo de cada intento
-  async function decirFrase(g, texto, { alIntentar = () => {}, mostrar = async () => {} } = {}) {
+  // comienzo; la pausa suave espera a que termine (`enFrase`). `alIntentar` corre al comienzo de cada intento. `ref`
+  // (su referencia en el plan) va a la voz con la frase, y `siguiente` (lo que suena después: {texto, ref}) se precarga
+  async function decirFrase(g, texto, { alIntentar = () => {}, mostrar = async () => {}, ref = null, siguiente = null } = {}) {
     enFrase = true;
-    try { return await decirFraseYa(g, texto, alIntentar, mostrar); } finally { enFrase = false; }
+    try { return await decirFraseYa(g, texto, alIntentar, mostrar, ref, siguiente); } finally { enFrase = false; }
   }
-  async function decirFraseYa(g, texto, alIntentar, mostrar) {
+  async function decirFraseYa(g, texto, alIntentar, mostrar, ref, siguiente) {
     for (;;) {
       if (!await hastaSeguir(g)) return false;
       alIntentar();
@@ -190,12 +214,15 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
         return esperar(lecturaMs(texto), g);
       }
       let empezo = null;   // cuándo empezó a sonar (reloj.ahora())
-      const res = await voz.decir(texto, { alEmpezar: () => {
+      const dicha = voz.decir(texto, { ...(ref ? { ref } : {}), alEmpezar: () => {
         if (!vigente(g)) return;
         empezo = reloj.ahora();
         mostrar();
         emitir();
       } });
+      // después de pedir esta (si no, la precarga podía soltarla para hacerse lugar)
+      preparar(siguiente);
+      const res = await dicha;
       if (!vigente(g)) return false;
       if (pausado) continue;
       if (res === 'dicha') return true;
@@ -222,6 +249,8 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
     if (pausado) faseAntes = 'preparando'; else fase = 'preparando';
     frase = 0;
     emitir();
+    // su primera frase se precarga mientras la imagen cambia (si se llegó saltando, no la precargó la anterior)
+    preparar(itemFrase(k, 0));
     mandoEscena = true;
     // `mover`, `animar` y `simular` son de la escena (un recorrido de antes, o uno de la presentación automática, no los
     // trae: sin movimiento propio, animación ni simulación). La simulación se vuelve a accionar si la escena se repite
@@ -243,6 +272,8 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       if (pausado) faseAntes = 'preparando'; else fase = 'preparando';
       enPrevia = true;
       emitir();
+      // la espera es justo lo que la voz clonada necesita para tener lista la primera frase
+      preparar(itemFrase(desde, 0));
       const paso = await esperar(previa, g);
       if (vigente(g)) enPrevia = false;   // si no, la cortó un salto, un detener u otro recorrido: lo suyo manda
       if (!paso) return;
@@ -278,7 +309,8 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       for (let k = 0; k < esc.frases.length; k++) {
         const alIntentar = () => { fase = 'narrando'; frase = k; emitir(); };
         const mostrar = () => mandar({ orden: 'narracion', frase: k });
-        if (!await decirFrase(g, esc.frases[k], { alIntentar, mostrar })) return;
+        const item = itemFrase(n, k);
+        if (!await decirFrase(g, item.texto, { alIntentar, mostrar, ref: item.ref, siguiente: despues(n, k) })) return;
         if (suave) entrarEnPausa(motivoPausa || 'mensaje');
         if (k < esc.frases.length - 1 && !await esperar(ENTRE_FRASES_MS, g)) return;
       }
@@ -303,7 +335,8 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       if (!vigente(g)) return;
       // el resumen se dice como una frase (los puntos ya están a la vista): la persona que escribe en el chat lo deja
       // terminar, y una pausa en medio lo repite al seguir
-      if (!await decirFrase(g, `En resumen. ${r.cierre.puntos.join('. ')}`)) return;
+      const item = itemCierre();
+      if (!await decirFrase(g, item.texto, { ref: item.ref })) return;
       if (suave) entrarEnPausa(motivoPausa || 'mensaje');
       if (!await esperar(CIERRE_SOSTENER_MS, g)) return;
     }

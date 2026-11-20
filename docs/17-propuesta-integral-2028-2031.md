@@ -277,8 +277,9 @@ persona crea en su cuenta.
 - **Recorridos narrados** (`web/js/propuesta/mando.js`, la orden `escena`): el asistente arma de una vez varias escenas,
   cada una con lo que se ve y lo que se dice; el panel las reproduce con su propio reloj y la presentación cambia la
   imagen, espera a que se asiente, resalta lo que se nombra (una cifra, un punto, la leyenda, una especificación) y
-  narra frase por frase en el subtítulo, con la voz del navegador si se encendió en el panel; cierra con «En resumen» y
-  «¿Preguntas?». Ver `admin/docs/agente.md`, «Recorridos narrados».
+  narra frase por frase en el subtítulo, con la voz del navegador si se encendió en el panel (o con la voz clonada en
+  Mnemo que el administrador eligió, que llega por partes mientras se genera); cierra con «En resumen» y
+  «¿Preguntas?». Ver `admin/docs/agente.md`, «Recorridos narrados» y «La voz clonada de Mnemo».
 
 ## Ideas incorporadas de los renders del usuario
 

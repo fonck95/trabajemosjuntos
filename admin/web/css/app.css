@@ -680,6 +680,10 @@ details.bloque > summary .chip { font-weight: 650; }
 .mnemo-nota.ok { background: color-mix(in srgb, var(--ok) 12%, transparent); }
 .mnemo-nota.alerta { background: color-mix(in srgb, var(--warn) 18%, transparent); }
 .mnemo-nota.error { background: color-mix(in srgb, var(--crit) 12%, transparent); }
+.mnemo-nota.info { background: var(--sunken); }
+/* La voz del asistente (vistas/ajustes.js, «Voz del asistente»): el mismo recuadro que la conexión con Mnemo */
+.voz-asistente .form { margin-top: 2px; }
+.voz-asistente .mnemo-nota.resultado { margin: 0; }
 
 /* ═════════ Cualquier dispositivo: celular, tableta, portátil y escritorio ═════════
    Fronteras: ≤640 celular, 641–900 tableta vertical, 901–1260 tableta horizontal o portátil chico (menú fijo), >1260. */

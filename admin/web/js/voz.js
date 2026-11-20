@@ -17,6 +17,10 @@
 // * La voz: la mejor en español de las que tenga el equipo (es-CO; después es-419, es-MX, es-US; después es-ES; después
 //   cualquier es-*), las locales antes que las remotas. Una voz remota manda el texto a un servicio del fabricante del
 //   navegador: solo se usa si no hay ninguna local en español (y el texto proyectado nunca trae datos de personas).
+// * Con la voz clonada de Mnemo (voz-clonada.js, que tiene esta misma forma), esta es su respaldo de cada frase (la
+//   frase que no llega a tiempo se dice con esta) y comparte esta preferencia. Así también puede decir una frase de una
+//   respuesta hablada del asistente: el servidor solo las arma en conversaciones sin datos de habitantes y sin «@»,
+//   números largos, enlaces ni datos enmascarados. La ventana tiene una sola (voz-panel.js).
 // * `decir` habla una frase y resuelve 'dicha', 'cortada' (callar, una pausa) o 'fallo' (sin voz, un error, el vigía
 //   vencido); nunca lanza. Chrome corta las locuciones largas cerca de los 15 s: una frase de más de PARTIR caracteres
 //   se dice en partes de PARTIR como mucho (contadas sobre lo que se oye, que con las siglas y las unidades dichas crece).

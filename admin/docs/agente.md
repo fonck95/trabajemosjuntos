@@ -249,6 +249,38 @@ En el cuadro de escribir hay un botón de micrófono, **Preguntar por voz**: no 
   haberla empezado). El panel solo deja usar el micrófono a sus propias páginas (`Permissions-Policy:
   microphone=(self)`); si un despliegue lo bloquea, el botón no se muestra.
 
+### Respuestas habladas
+
+Con la [voz clonada de Mnemo](#la-voz-clonada-de-mnemo) elegida en Ajustes (y **Leer en voz alta las respuestas del
+asistente** encendido), el encabezado del asistente tiene un botón más, **Leer las respuestas en voz alta** (el ícono
+de la voz): las respuestas se oyen con esa voz mientras el modelo escribe.
+
+- **Cómo se usa.** Un toque lo enciende y otro lo apaga (`aria-pressed`); su título dice qué voz habla y que es una voz
+  sintética. Queda encendido en esa pestaña (en `sessionStorage` `yj_agente`, con lo demás del asistente: nunca en
+  `localStorage`, y se borra al cerrar sesión). El toque es además el gesto que el navegador pide para dejar sonar el
+  audio de la ventana (si la persona había apagado la voz con el botón **Voz** de la presentación, la vuelve a
+  encender: es la misma voz). Una pregunta **hecha por voz** (el micrófono) se responde hablada aunque el botón esté
+  apagado. Mientras se lee, el mensaje que se oye lleva una raya del color del asistente al costado y el botón late.
+- **Qué se dice.** Con el botón encendido (o la pregunta por voz), el mensaje lleva `contexto.voz: true` (y la
+  aprobación de tarjetas, `voz: true`): el servidor le pide al modelo frases cortas, sin listas ni tablas, y arma las
+  frases mientras el modelo escribe; cada una llega como el evento `frase`, firmada, y el navegador la pide a `POST
+  /api/agente/voz` por su referencia (`{conversacion, texto, firma}`, tal como llegó: el navegador no puede pedirle a la
+  voz otra cosa). Se dicen en orden, y mientras una suena la siguiente se precarga. Si el texto final de una ronda no
+  es el que se venía leyendo (`frases_descartar`), lo que ya no vale se quita de la cola y la frase que sonaba se corta
+  y se dice en su versión nueva; lo que ya se dijo entero no se repite. Una conversación con datos de habitantes no se
+  lee (el servidor no manda frases).
+- **Se calla** al tocar el micrófono (en el acto, antes de pedir el permiso: la respuesta no entra a la grabación), al
+  escribir en el cuadro, al enviar otro mensaje, con **Detener**, con **Escape** (la primera vez calla la voz; la
+  segunda cierra el panel), al cerrar el panel, al cambiar o empezar otra conversación, al salir de la página y al
+  apagar el botón. También cuando el turno pone un plan en la presentación: **la narración manda**. Mientras suena un
+  plan en esa ventana o en el proyector (uno que no está en pausa), la respuesta espera hasta 20 s a que se pause:
+  quien escribe en medio de un plan lo pausa al terminar la frase que suena (y quien pregunta por voz, en el acto), y
+  entonces la respuesta se oye; si el plan sigue sonando, no se lee. Un plan que empieza (o sigue) calla la que se
+  estaba leyendo (es la misma voz: `web/js/voz-panel.js`, una sola salida de audio por ventana).
+- **Respaldo.** Si una frase no llega a tiempo con la voz clonada, se dice con la del navegador; si el panel responde
+  que esa voz ya no está disponible (`sin_voz`, `voz_rol`), el resto de la sesión habla la del navegador y el asistente
+  vuelve a leer su estado (el botón se va si el servidor ya no la ofrece).
+
 ## La presentación técnica
 
 La vista **Presentación**, la pantalla en off y los agentes por MCP muestran la **presentación técnica** de la propuesta
@@ -449,7 +481,13 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
   sostiene un momento (1,3 segundos; 2,7 si hay algo que mirar). El subtítulo dice el título del plan y en qué paso va
   (puntos, sin números).
 - **La voz.** La del navegador (Web Speech, `web/js/voz.js`), en español (es-CO primero; después es-419, es-MX, es-US,
-  es-ES), con las siglas y unidades dichas como se leen (NSR-10, m², «24 h»). **Encendida por omisión**; si la persona
+  es-ES), con las siglas y unidades dichas como se leen (NSR-10, m², «24 h»); o, si el administrador la eligió y el
+  rol de la persona la usa, la [voz clonada de Mnemo](#la-voz-clonada-de-mnemo) (`web/js/voz-clonada.js`): pide cada
+  frase por su referencia en el plan guardado (`{rid, n, frase}`, y el resumen `{rid, cierre: true}`), precarga la que
+  sigue (y la primera durante la espera de un plan nuevo) y, si una no suena en 4 segundos, la dice con la del
+  navegador sin que el reproductor se entere. El plan de la [presentación automática](#presentación-automática) usa la
+  clonada solo si Ajustes lo deja (**Narrar también la presentación automática**). El título del botón **Voz** dice
+  cuál habla. **Encendida por omisión**; si la persona
   la apagó, esa preferencia se respeta (queda en ese navegador). El navegador solo deja hablar a una página que
   alguien tocó: en la pestaña del chat, enviar el mensaje ya es ese gesto; en el proyector o la pantalla en off, la
   activan tocar el panel de texto, una tecla, el control de la presentación o el botón **Voz** de esa ventana (tocar
@@ -655,6 +693,179 @@ cuesta nada: la narración sale del guion (`app/automatica.py`).
   viaja con `auto: true`; `GET /api/pantalla/recorrido` trae el mismo `auto`. `estado` de la herramienta dice además
   cuántas vueltas lleva.
 
+## La voz clonada de Mnemo
+
+El asistente puede narrar la presentación técnica y leer en voz alta sus respuestas con **una voz clonada en Mnemo** (la
+del administrador, o la de alguien que le dio su permiso expreso), en vez de la voz del navegador. La voz se clona en
+Mnemo (**Ajustes → Voces**, con la casilla de consentimiento) y se marca **Disponible para apps conectadas**; el panel
+la usa con la conexión de Mnemo del administrador y los créditos de esa cuenta. El audio llega **por partes mientras
+Mnemo lo genera**: la primera palabra suena antes de que la frase esté entera. Si la voz clonada no llega (sin permiso,
+sin créditos, la red, la demora), la frase se dice con la voz del navegador sin que se note un corte: la presentación
+nunca queda muda.
+
+**Cómo se enciende** (solo el administrador; el coordinador lo ve en solo lectura):
+
+1. En Mnemo, clone la voz en **Ajustes → Voces** y márquela **Disponible para apps conectadas**.
+2. Conecte (o vuelva a conectar) Mnemo desde **Ajustes → Asistente** dejando marcado **«Hablar con las voces que
+   clonaste en Mnemo…»** (el permiso `mnemo:voice`, ver [Conectar con Mnemo](#conectar-con-mnemo)).
+3. En **Ajustes → Asistente → Voz del asistente**, elija **Voz clonada de Mnemo**, la voz (la lista sale de
+   `GET /api/agente/voces`), quién puede hacerla sonar y para qué, pulse **Guardar voz** y después **Probar voz**: dice
+   una frase fija con la voz guardada y muestra cuánto tardó la primera palabra (en el navegador y en Mnemo).
+
+| Ajuste (`agente_voz`) | Por defecto | Qué decide |
+|---|---|---|
+| `motor` | `navegador` | `navegador` (Web Speech, como siempre) o `mnemo` (la voz clonada) |
+| `voz`, `nombre` | Ninguna | La voz de Mnemo (su id, de `GET /api/agente/voces`) y su nombre para mostrar. Al elegirla, el servidor anota además la cuenta de Mnemo conectada (`cuenta`, una huella: los primeros 32 hexadecimales del SHA-256 del emisor y el `sub`; nunca la que mande el formulario). Si después se conecta otra cuenta, esa voz deja de valer hasta elegir otra |
+| `roles` | Administrador y coordinadores | Quién hace sonar la voz clonada (habla con la voz y los créditos de la cuenta del administrador). Los demás roles oyen la del navegador |
+| `respuestas` | Sí | Si lee en voz alta las respuestas del asistente (cuando la persona lo enciende en el chat o pregunta por voz) |
+| `automatica` | Sí | Si narra también la [presentación automática](#presentación-automática) (sale de la caché casi siempre: se repite) |
+
+**Cómo funciona por dentro** (`app/agente/voz.py`).
+
+- **El audio viaja dentro de MCP.** El panel llama a la herramienta `mnemo_speak` de Mnemo con `_meta.progressToken`
+  y Mnemo manda el audio en sus avisos de progreso. Así el token de la conexión sigue yendo solo a la dirección MCP
+  atada a él (nunca a otra ruta de Mnemo) y la clave del proveedor de voz no sale de Mnemo. Ninguna de las dos
+  herramientas de la voz (`mnemo_speak`, `mnemo_list_voices`) es una herramienta del modelo, ni con
+  `MNEMO_HERRAMIENTAS=*`: la voz clonada solo dice lo que el panel decidió decir.
+- **Contrato con Mnemo.** `mnemo_list_voices` (entrada `{}`) devuelve `{voices: [{voice_id, name, language, engine,
+  status: "ready"}], default_voice_id}`: solo las voces marcadas para apps y listas. `mnemo_speak` recibe
+  `{voice_id, text (1 a 1000 caracteres), format: "pcm_s16le_24000", language: "es"}`; cada aviso de progreso trae en
+  `message` un JSON: primero `{"type": "start", "format", "mime", "sample_rate", "channels", "mode"}` y después
+  `{"type": "audio", "seq", "data": <base64 de un trozo>}` (unos 9.600 bytes: 200 ms de PCM de 16 bits, 24 kHz,
+  mono). La salida final trae `first_audio_ms` (lo que tardó Mnemo en dar el primer audio) y, si no llegó nada por
+  el avance, el audio entero en `audio`. Si Mnemo no pudo dar PCM, `format` dice cuál dio (`mp3`, `wav`) y el
+  navegador decodifica la frase entera. Los errores de Mnemo (`{error: {code, …}}`): `NO_VOICE`, `PLAN_REQUIRED`,
+  `CREDITS_EXHAUSTED`, `UNAVAILABLE` (`details.reason: "speech"`: la cuenta no tiene con qué generar la voz),
+  `RATE_LIMITED`, `TIMEOUT`, `INVALID_ARGUMENT`, `INTERNAL`.
+- **`POST /api/agente/voz`** (sesión, CSRF y permiso `presentacion.ver`) responde en flujo NDJSON, como el chat (el
+  navegador la lee con `flujo()` de `api.js`). El cuerpo es **exactamente uno** de estos (tipos estrictos, sin claves
+  de más; si no, 422):
+
+  | Cuerpo | Qué se dice |
+  |---|---|
+  | `{"rid", "n", "frase"}` | La frase `frase` (desde 0) del paso `n` (desde 1) del plan `rid` (12 hexadecimales), tal como está guardado para esa persona: el de su pantalla (`pantalla.recorrido_de`) o, con la automática sonando, el último que ella reemplazó (`recorrido_previo`) |
+  | `{"rid", "cierre": true}` | El cierre de ese plan: «En resumen. » y sus puntos unidos con «. », como lo dice `reproductor.js` |
+  | `{"conversacion", "texto", "firma"}` | Una frase de una respuesta del asistente (hasta 400 caracteres), con la firma que le puso el servidor al emitirla en el evento `frase` del chat |
+  | `{"prueba": true}` | Solo el administrador (`agente.conectar`): «Hola. Esta es la voz que usará el asistente para narrar la presentación y responder sus preguntas.» |
+
+  Nunca un texto libre. Todo texto se revisa con las reglas de lo que se dice ante una sala (como lo proyectado: sin
+  «@» ni números de 7 o más dígitos, mirados sin caracteres invisibles y en su forma NFKC) y se dice con la misma
+  tabla de pronunciación que la voz del navegador (`para_decir`, el `paraDecir` de `web/js/voz.js`: «NSR-10», «m²»,
+  «24 h»…; una prueba corre las dos tablas con las mismas frases).
+- **Los eventos del flujo**, una línea JSON cada uno:
+
+  | Evento | Qué lleva |
+  |---|---|
+  | `inicio` | `formato` (`pcm_s16le`; o `mp3`, `wav`… si Mnemo no pudo dar PCM), `muestreo` (24000), `canales` (1), `cache` (si salió de la caché) y `voz` (su nombre) |
+  | `audio` | `datos`: un trozo en base64, el de Mnemo tal cual. Lo ya producido llega primero: una petición que se colgó tarde de una frase en camino no pierde nada |
+  | `latido` | Cada 15 s sin otros eventos |
+  | `fin` | `ms_primer_audio` (desde que el panel recibió la petición hasta el primer trozo), `ms_mnemo` (el `first_audio_ms` de Mnemo, o null) y `bytes`. Siempre el último si todo salió bien |
+  | `error` | `codigo` y `mensaje`, si falla a mitad (el último) |
+
+- **Lo que impide decirla sale antes del flujo**, como JSON `{codigo, mensaje}` (la ruta espera el primer aviso de
+  Mnemo antes de abrir el flujo):
+
+  | Estado y código | Cuándo | Qué hace el navegador |
+  |---|---|---|
+  | 409 `sin_voz` | No hay voz clonada elegida; la conexión no está, no tiene `mnemo:voice` o es de otra cuenta; o Mnemo dice que no puede (la herramienta no está, `NO_VOICE`, `PLAN_REQUIRED`, `UNAVAILABLE`) | Sigue con la voz del navegador el resto de la sesión |
+  | 403 `voz_rol` | Su rol no está en `agente_voz.roles` (o pide la prueba sin ser administrador) | Igual |
+  | 409 `voz_apagada` | La voz no lee respuestas (`respuestas`) o no narra la automática (`automatica`) | Esa frase con la del navegador |
+  | 409 `plan_vencido` | El `rid` no es el plan vigente de esa persona (ni el que la automática reemplazó) | Esa frase con la del navegador |
+  | 409 `con_personas` | La conversación ya trae datos de habitantes | Esa frase con la del navegador |
+  | 404 `no_existe` | La conversación no es suya o ya no existe | Igual |
+  | 422 `texto` | La frase no está en el plan, la firma no es de esa persona y esa conversación, o el texto no se dice ante una sala | Igual |
+  | 402 `mnemo_creditos` | Se acabaron los créditos de la cuenta de Mnemo | Igual |
+  | 429 `frecuencia`, `volumen` | Los topes de abajo (con `Retry-After`, salvo `volumen`) o el tope por minuto de Mnemo | Igual |
+  | 502 `mnemo`, `mnemo_red` | Mnemo falló o no respondió | Igual |
+
+  Cuando Mnemo dice que no puede (la herramienta no está, `NO_VOICE`, `PLAN_REQUIRED`, `UNAVAILABLE` con `reason:
+  "speech"`), el panel lo recuerda una hora para esa conexión y esa voz: mientras tanto `GET /api/agente/estado`
+  dice `voz.disponible: false` y el navegador ni lo intenta. Un acierto, elegir otra voz, volver a conectar o que
+  `GET /api/agente/voces` la vuelva a traer lo olvidan.
+- **`GET /api/agente/estado`** trae `voz: {disponible, nombre, respuestas, automatica}`: `disponible` si esta persona
+  puede hacer sonar la voz clonada ahora (motor `mnemo`, voz elegida con la cuenta conectada, conexión con
+  `mnemo:voice`, su rol en `roles` y Mnemo no dijo hace poco que no); `respuestas` y `automatica`, los ajustes, solo
+  si está disponible. **`GET /api/agente/voces`** (solo el administrador) trae `{voces: [{id, nombre, idioma,
+  motor}], elegida, conexion: {voz, ofrece_voz}}`: sin conexión o sin `mnemo:voice`, la lista vacía (sin preguntarle
+  a Mnemo); sus errores son los mismos códigos.
+- **Las frases de una respuesta.** Si el mensaje del chat llega con `contexto.voz: true` (o la confirmación con
+  `voz: true`), la voz está disponible para esa persona y lee respuestas, y la conversación no trae datos de
+  habitantes, el turno arma las frases mientras el modelo escribe (`voz.Frases`): corta tras «.», «?», «!», «:», «;»
+  o «…» y en los saltos de renglón, con al menos 24 caracteres (lo más corto sigue con lo que viene) y como mucho 260
+  (corta en una coma o un espacio), nunca tras una abreviatura o una sigla («Sr.», «E.S.E.»), y limpia el Markdown:
+  los enlaces quedan en su texto y no se dicen el código, las tablas, las direcciones web, las rutas del panel ni los
+  datos enmascarados («···123»). Cada frase cerrada sale como `{"tipo": "frase", "n", "texto", "firma"}` (`n`: su
+  número en el turno, desde 0) y, si la ronda se repite o su texto final no es el que se venía diciendo,
+  `{"tipo": "frases_descartar", "desde"}` (las frases desde `desde` ya no valen; las que sigan se numeran desde ahí).
+  El modelo recibe además, en el contexto de ese mensaje (no en las instrucciones, que quedan fijas), que la
+  respuesta se oye: frases cortas, lo importante primero, sin listas, tablas ni enlaces. Desde que el modelo recibe
+  datos de una persona en ese turno, deja de emitir frases.
+- **La firma.** `firma` = HMAC-SHA256 de `uid␟conversación␟texto` (`␟` es el separador U+001F), en base64url sin
+  relleno (43 caracteres), con una clave derivada de la del administrador (`seguridad.llave_mnemo`, que no está en la
+  base) con la etiqueta `voz-respuestas-v1`. El servidor la compara en tiempo constante: el navegador no puede pedir
+  que la voz diga otra cosa, ni la frase de otra persona o de otra conversación.
+
+**En el navegador** (`web/js/voz-clonada.js`, `web/js/voz-panel.js`, `web/js/locutor.js`).
+
+- **Una sola voz por ventana.** La narración del plan (la vista de la presentación), las respuestas habladas (el
+  asistente) y la prueba de Ajustes usan la misma voz de la ventana (`tomarVoz` de `voz-panel.js`, con conteo de
+  referencias: se suelta con la última). Tiene la forma de la voz del navegador (`voz.js`) más `preparar`, `motor` y
+  `nivel`, y la del navegador es su respaldo de cada frase. La narración manda: mientras suena un plan (que no está en
+  pausa), una respuesta no se dice, y un plan que empieza calla la que se estaba leyendo.
+- **Solo si el estado lo ofrece.** El audio se pide recién cuando `GET /api/agente/estado` dice `voz.disponible` para
+  esa persona (el asistente lo pasa al leer su estado; en una ventana sin asistente, la voz lo pide sola y lo vuelve a
+  pedir con el aviso `agente:estado` de Ajustes). Si no, ni se crea el audio de la ventana ni se pide nada: habla la del
+  navegador.
+- **El audio.** Cada frase se pide con `flujo()` de `api.js` (sesión, CSRF, reingreso; sin una línea en 20 s se da por
+  cortada) y el PCM se agenda con Web Audio a medida que llega: cada trozo empieza donde termina el anterior, con un
+  colchón de 150 ms antes del primero (y otro si se quedó sin audio a mitad). La frase cuenta como empezada cuando suena
+  de verdad (el subtítulo se ilumina entonces) y como dicha cuando terminó de sonar. MP3 o WAV (Mnemo sin PCM) se
+  decodifican enteros. No hay `<audio>` ni `blob:`: la CSP del panel no cambia.
+- **El respaldo.** Si en 4 s no hay audio sonando, o la petición falla antes de sonar (`plan_vencido`, `frecuencia`,
+  `mnemo_red`…), esa frase se dice con la voz del navegador; la narración que llega tarde queda guardada para cuando
+  se repita. `sin_voz` y `voz_rol` pasan a la voz del navegador el resto de la sesión (y se avisa `agente:estado`). Un
+  flujo que ya sonó y se queda 8 s sin traer nada se corta: suena lo que llegó.
+- **La precarga y la memoria.** Se piden como mucho 2 frases a la vez (las del servidor por persona: la que suena y la
+  siguiente); la que se va a decir pasa delante y la precarga que ya no se quiere (se saltó a otro paso) deja el
+  lugar. Una pausa no tira lo de la narración: al seguir, la frase suena al instante sin volver a pedirla. Lo de una
+  respuesta o de la prueba se suelta al decirse o al callar. En la página quedan como mucho 8 frases y 24 MB, solo en
+  memoria.
+- **El gesto.** El audio de la ventana se crea y se reanuda en el gesto de la persona (un toque o una tecla, también
+  sobre la presentación, el botón **Voz**, **Leer las respuestas en voz alta** o **Probar voz**), con un búfer mudo de
+  una muestra (iOS lo pide). Si el navegador no deja reanudarlo (Safari, con el gesto dentro de un iframe de otro
+  origen), habla la del navegador.
+- **Probar voz** usa la voz de la ventana con `{prueba: true}`, espera hasta 20 s el primer audio y nunca va con la del
+  navegador (no es lo que se prueba): muestra «Primer audio en X ms en este navegador (Mnemo: Y ms)», desde el clic, y
+  si salió de la caché del panel; o el mensaje del error.
+
+**Topes** (en memoria, por proceso; la voz gasta créditos de la cuenta de Mnemo, por carácter):
+
+- Por persona: 2 frases a la vez (la que suena y la siguiente, que el navegador precarga), 90 por minuto (429
+  `frecuencia`) y 30.000 caracteres por día de lo que de verdad va a Mnemo (429 `volumen`: lo que sale de la caché o
+  se cuelga de otra petición no cuenta).
+- En el proceso: 3 llamadas a Mnemo a la vez; la cuarta espera hasta 10 s y después 429 `frecuencia` (Mnemo atiende
+  hasta 4 voces a la vez por conexión, aparte de sus modelos). En el servicio único, la ruta tiene 6 cupos propios:
+  no compite con el chat que se está leyendo en voz alta ni con la API.
+- Una frase de Mnemo dura como mucho 125 s y se corta si pasan 30 s sin un trozo; el audio de una frase, hasta 10 MB.
+
+**La caché y un solo vuelo.** El audio de la **narración** y de la **prueba** (texto público de la presentación, que
+se repite: **Volver a reproducir**, una pausa, la automática en un televisor) queda en memoria: por
+`sha256(voz␟formato␟texto dicho)`, hasta 48 MB (sale primero lo menos usado) y 12 horas; se vacía al cambiar de voz.
+Solo entra una frase que llegó entera. Las **respuestas nunca se guardan**: pueden hablar de personas. Dos peticiones
+iguales a la vez (la precarga y la reproducción, o dos ventanas) comparten una sola llamada a Mnemo y reciben lo ya
+producido y lo que viene; las de una respuesta solo se juntan con las de la misma persona. Si se van todas (el
+navegador cerró, pasó a otra frase), la llamada a Mnemo se cancela; si la respuesta no empieza a leerse en 30 s, se
+suelta igual.
+
+**Qué va a la voz** (privacidad). A Mnemo solo va el texto de cada frase, ya pasado por la tabla de pronunciación: de
+la narración, lo mismo que se proyecta (sale del guion, sin datos de personas); de una respuesta, lo que el asistente
+escribió en una conversación **sin datos de habitantes** (una conversación que los trae, o que los recibe a mitad del
+turno, ya no se lee con la voz clonada), y sin «@», números de 7 o más dígitos, código, enlaces ni datos enmascarados.
+Mnemo no guarda el texto ni el audio (sí la muestra de la voz, que es de su dueño). En el panel nada se guarda en la
+base ni se registra: ni el texto, ni el audio, ni la firma; al registro solo van códigos. La caché de la narración es
+solo de memoria y no sobrevive a un reinicio. La voz clonada es un dato biométrico de su dueño: el panel la usa solo
+con los roles que el administrador eligió, y Ajustes la marca como **voz sintética**.
+
 ## Ajustes
 
 En **Ajustes → Asistente**. Arriba dice si el asistente está encendido y con qué modelo, y está la **Conexión con
@@ -670,6 +881,7 @@ desplegar.
 | Los coordinadores también usan las herramientas de Mnemo (`agente.mnemo_coordinadores`) | No | Si los coordinadores usan las herramientas de Mnemo (documentos, calendario, formularios y memoria), con la cuenta de Mnemo del administrador. Los modelos los usan todos los roles habilitados |
 | Días que se guardan las conversaciones (`agente.retencion_dias`) | 30 | De 1 a 365, contados desde el último mensaje. Bajarlo acorta también las que ya existen |
 | Mensajes por día (`agente_mensajes_diarios`) | 300 administrador, 150 coordinador, 40 planillero, 40 consultor | Mensajes por persona y día, de 1 a 5000 (cada aprobación o rechazo de tarjetas cuenta como uno). Para que un rol no lo use se lo quita de «Quiénes lo usan» |
+| Voz del asistente (`agente_voz`) | La del navegador; la clonada, para administrador y coordinadores, con respuestas y presentación automática | La voz con que narra la presentación y lee las respuestas: la del navegador o una voz clonada de la cuenta de Mnemo conectada, quién la hace sonar y para qué (ver [La voz clonada de Mnemo](#la-voz-clonada-de-mnemo)). Es el bloque **Voz del asistente**, marcado **Voz sintética**: la lista de voces solo se le pide a Mnemo para el administrador y con una conexión que tenga `mnemo:voice` (si no la tiene, el bloque dice que hay que volver a conectar dejando marcado «Hablar con las voces que clonaste en Mnemo…», o que ese Mnemo todavía no ofrece sus voces); el coordinador ve la voz elegida en solo lectura. **Probar voz** dice una frase fija con la voz guardada y muestra cuánto tardó la primera palabra |
 
 Un planillero o consultor habilitado usa el asistente con lo mismo que tiene en el panel: su alcance, su presupuesto
 diario de personas (lo que el asistente consulta cuenta) y su límite de búsquedas por minuto. El permiso que lo deja
@@ -698,16 +910,20 @@ la estrategia de veredas?».
    «Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar dejando marcado «Usar tus modelos de IA y
    tus créditos»». Mnemo trae marcados solo ese y «Leer tu información»: los de escritura (eventos y documentos,
    recuerdos, compartir, publicar) son para que las herramientas de Mnemo también escriban (siempre con la aprobación
-   de la tarjeta); márquelos si lo quiere. Un Mnemo sin actualizar no tiene esa casilla: con él, **Conectar con
-   Mnemo** no va a Mnemo y avisa que hay que actualizarlo (ver «Lo que Mnemo necesita», más abajo).
+   de la tarjeta); márquelos si lo quiere. Para la [voz clonada](#la-voz-clonada-de-mnemo), deje marcado también
+   **«Hablar con las voces que clonaste en Mnemo…»** (`mnemo:voice`): sin él, el panel narra y lee con la voz del
+   navegador, y Ajustes avisa que hay que volver a conectar dejándolo marcado. Un Mnemo sin actualizar no tiene la
+   casilla de los modelos: con él, **Conectar con Mnemo** no va a Mnemo y avisa que hay que actualizarlo (ver «Lo que
+   Mnemo necesita», más abajo).
 4. Mnemo lo trae de vuelta a Ajustes, que muestra **Conectado como** la cuenta (nombre y correo), desde cuándo, la
    dirección y los permisos. Si canceló en Mnemo, lo dice y no conecta nada.
 
-Lo que pide el panel: `openid`, `profile` y `email` (solo para mostrar con qué cuenta se conectó), `mnemo:model` y los
-permisos que necesitan las herramientas de Mnemo que ofrece (con la lista por defecto, `mnemo:read`,
-`mnemo:workspace.write`, `mnemo:memory.write`, `mnemo:share` y `mnemo:publish`). Nunca `mnemo:forms.responses`: las
-respuestas de los formularios son datos de otras personas y llegarían al modelo. Con solo `mnemo:read`, las herramientas
-de Mnemo solo leen: lo demás responde que a la conexión le faltan permisos.
+Lo que pide el panel, en este orden: `openid`, `profile` y `email` (solo para mostrar con qué cuenta se conectó),
+`mnemo:model`, `mnemo:voice` (la voz clonada; solo si ese Mnemo lo anuncia en `scopes_supported`: uno anterior no
+lo tiene y se conecta igual, sin la voz) y los permisos que necesitan las herramientas de Mnemo que ofrece (con la
+lista por defecto, `mnemo:read`, `mnemo:workspace.write`, `mnemo:memory.write`, `mnemo:share` y `mnemo:publish`).
+Nunca `mnemo:forms.responses`: las respuestas de los formularios son datos de otras personas y llegarían al modelo. Con
+solo `mnemo:read`, las herramientas de Mnemo solo leen: lo demás responde que a la conexión le faltan permisos.
 
 **Una sola conexión para todo el panel.** Todos los roles que usan el asistente gastan los modelos y los créditos de
 esa cuenta, cada uno con su tope de mensajes por día. Las herramientas de Mnemo (documentos, calendario…) son otra
@@ -726,6 +942,7 @@ los modelos de Mnemo al instante.
 | Conectado | Rige: el asistente usa esa cuenta | Nada |
 | Conectado, con el aviso «sin permiso para usar sus modelos» | En Mnemo no quedó marcado «Usar tus modelos de IA y tus créditos», o esa versión de Mnemo todavía no lo tiene | **Volver a conectar** dejándolo marcado; si Mnemo no muestra esa casilla, actualizar Mnemo |
 | Conectado, con el aviso «Este Mnemo todavía no ofrece…» | Solo en modo directo: Mnemo no está actualizado y se conectó solo para sus herramientas | Actualizar Mnemo y **Volver a conectar** |
+| Conectado, con la voz clonada elegida y el aviso «sin permiso para usar sus voces» | En Mnemo no quedó marcado «Hablar con las voces que clonaste en Mnemo…», o la conexión es de antes de la voz clonada | **Volver a conectar** dejándolo marcado; si Mnemo no muestra esa casilla, actualizar Mnemo. Mientras tanto, la voz del navegador |
 | Conexión caída: Mnemo ya no la acepta | Se revocó en Mnemo, venció (30 días sin usarse, o un año desde el último permiso) o la cuenta se desactivó | **Volver a conectar** |
 | Conexión caída: cambió la clave del administrador | Cambiaron `ADMIN` o `password` y lo guardado ya no se puede descifrar | **Volver a conectar**; la conexión vieja puede seguir en Mnemo: revóquela ahí |
 | Conexión caída: sus datos no coinciden con los cifrados | Alguien cambió en MongoDB la conexión guardada (por ejemplo, la dirección de Mnemo): el panel dejó de usarla sin mandar nada | Revisar quién puede escribir en la base y **Volver a conectar** |
@@ -742,6 +959,9 @@ los modelos de Mnemo al instante.
   Ajustes avisa que ese Mnemo no ofrece sus modelos.
 - Que la cuenta pueda responder: un plan que incluya el chat o una clave propia de un proveedor de modelos configurada
   en Mnemo, y créditos. Si no, el asistente lo dice al responder (sin plan, sin créditos o sin un modelo disponible).
+- Para la [voz clonada](#la-voz-clonada-de-mnemo) (opcional): una versión con `mnemo_speak` y `mnemo_list_voices` y el
+  permiso `mnemo:voice`, un plan que incluya las voces clonadas, créditos y al menos una voz marcada **Disponible
+  para apps conectadas**. Sin eso, el panel sigue con la voz del navegador.
 
 **Variables** (todas opcionales; la conexión no es una variable):
 
@@ -835,6 +1055,12 @@ proyección por rol de la API (`app/agente/minimizar.py`).
 - En cada ronda, las instrucciones del asistente, las herramientas que ofrece el panel y la conversación: con Mnemo, eso
   es lo que reciben Mnemo y su proveedor de modelos.
 
+**Qué va a la voz.** Con la [voz clonada de Mnemo](#la-voz-clonada-de-mnemo), a Mnemo (y al proveedor de voz de esa
+cuenta) va solo el texto de cada frase que se dice: la narración (lo mismo que se proyecta, sin datos de personas) y,
+si la persona lo pide, las frases de las respuestas de una conversación sin datos de habitantes, sin «@», números de 7
+o más dígitos, código, enlaces ni datos enmascarados. Ni Mnemo ni el panel guardan ese texto ni el audio; el panel solo
+deja en memoria el audio de la narración, y al registro van solo códigos.
+
 **Qué nunca va al modelo.**
 
 - Los datos sensibles (salud, etnia, discapacidad, condición de víctima), las listas de origen y quién es líder, ni
@@ -926,6 +1152,13 @@ precios de Anthropic):
 Escribir en la caché cuesta 1,25 veces la entrada. `agente_uso` guarda por persona y día los mensajes y los tokens de
 entrada, salida, caché leída y caché escrita: con esos cuatro números y la tabla sale el gasto. La consola de Anthropic
 muestra el gasto de la clave; ponga ahí un límite mensual.
+
+**La voz clonada** gasta créditos de la cuenta de Mnemo por carácter dicho, según el motor de la voz (a noviembre de
+2026, entre 0,025 y 0,10 US$ por cada 1.000 caracteres; MiniMax, el recomendado, 0,06; ver la documentación de voces
+de Mnemo). La narración se repite y sale casi siempre
+de la caché del panel (no gasta); las respuestas leídas en voz alta sí, frase por frase. Topes: 2 frases a la vez, 90
+por minuto y 30.000 caracteres por día por persona, y 3 llamadas a Mnemo a la vez en el proceso (ver [La voz clonada
+de Mnemo](#la-voz-clonada-de-mnemo)).
 
 **Topes.**
 
@@ -1043,15 +1276,26 @@ se suba.
   (`POST /api/pantalla/progreso`) y los controles (`POST /api/pantalla/recorrido/control`) piden la sesión, el permiso
   `presentacion.ver` y el CSRF, con la forma exacta (listas cerradas, sin claves de más) y solo para el recorrido
   vigente. Lo mismo las dos rutas de la presentación automática (`POST /api/pantalla/auto` y `/auto/siguiente`), cuyos
-  planes no llevan texto de nadie: todo sale del guion y pasa las mismas reglas. La voz es la del navegador: con una voz local no sale nada del equipo; una remota (la del fabricante del
-  navegador) solo se usa si no hay ninguna local en español, y lo que dice es lo mismo que se proyecta, sin datos de
-  personas.
+  planes no llevan texto de nadie: todo sale del guion y pasa las mismas reglas. Con la voz del navegador, una voz
+  local no saca nada del equipo; una remota (la del fabricante del navegador) solo se usa si no hay ninguna local en
+  español, y lo que dice es lo mismo que se proyecta o, de respaldo de la voz clonada, una frase de una respuesta
+  hablada (de una conversación sin datos de habitantes, sin «@», números largos, enlaces ni datos enmascarados).
+- **La voz clonada** (`POST /api/agente/voz`) solo dice lo que el panel generó: la narración se pide por referencia al
+  plan guardado de esa persona (`rid`, paso, frase; si no es el vigente, 409), una frase de una respuesta con la firma
+  HMAC que le puso el servidor al emitirla (atada a la persona, la conversación y el texto; se compara en tiempo
+  constante) y la prueba es una frase fija del administrador. El navegador nunca manda un texto libre, y todo pasa
+  las reglas de lo que se dice ante una sala. La piden la sesión, el CSRF, `presentacion.ver` y un rol de
+  `agente_voz.roles` (la voz y los créditos son de la cuenta del administrador); las voces para elegir, solo el
+  administrador. El audio llega dentro de MCP: el token de la conexión no va a otra dirección de Mnemo, y el
+  navegador solo habla con el panel (la CSP no cambia: el PCM se reproduce con Web Audio).
 - **El flujo.** `POST` con CSRF y respuesta en flujo NDJSON (una línea JSON por evento, con un latido cada 15 s), sin
-  GZip en esas dos rutas (lo retendría hasta el final) y con cupos propios en el servicio único, que se piden con el
-  cuerpo ya leído (con el plazo y el tope del ingreso).
+  GZip en esas rutas (lo retendría hasta el final: los dos turnos del asistente y la voz clonada) y con cupos propios
+  en el servicio único (4 para los turnos, 6 para la voz), que se piden con el cuerpo ya leído (con el plazo y el
+  tope del ingreso).
 - **Registros.** Solo el tipo de cada error: nunca lo que se escribió, lo que respondió el modelo ni datos de personas.
-- **En el navegador** no queda nada de la conversación: solo `sessionStorage` `yj_agente` (si el panel estaba abierto
-  y qué conversación), que se borra al cerrar sesión. El widget sabe qué vista está abierta por el evento `vista` que
+- **En el navegador** no queda nada de la conversación: solo `sessionStorage` `yj_agente` (si el panel estaba abierto,
+  qué conversación y si se leen las respuestas en voz alta), que se borra al cerrar sesión. El audio de la voz clonada
+  queda solo en la memoria de la página (como mucho 8 frases) y lo de una respuesta se suelta al decirse. El widget sabe qué vista está abierta por el evento `vista` que
   emite `app.js` al terminar de pintar cada una, y vuelve a pedir su estado (que guarda 5 minutos) con el evento
   `agente:estado`, que emite Ajustes al volver de Mnemo, al desconectar y al guardar los ajustes del asistente; si se
   abre sin modelo, también lo vuelve a pedir.
@@ -1060,7 +1304,7 @@ se suba.
 
 | Archivo | Qué hace |
 |---|---|
-| `app/api/agente.py` | Las rutas: `GET /api/agente/estado`, `GET /api/agente/conversaciones`, `GET` y `DELETE /api/agente/conversaciones/{id}`, `POST /api/agente/mensajes` y `POST /api/agente/confirmaciones` |
+| `app/api/agente.py` | Las rutas: `GET /api/agente/estado`, `GET /api/agente/conversaciones`, `GET` y `DELETE /api/agente/conversaciones/{id}`, `POST /api/agente/mensajes`, `POST /api/agente/confirmaciones`, `POST /api/agente/transcribir`, `GET /api/agente/voces` y `POST /api/agente/voz` |
 | `app/api/agente_mnemo.py` | La conexión con Mnemo: `POST /api/agente/mnemo/conectar`, `POST /api/agente/mnemo/volver` y `DELETE /api/agente/mnemo` (solo el administrador) |
 | `app/agente/bucle.py` | El turno: comprobaciones previas, candados, rondas con el modelo, ejecución de herramientas, aprobaciones y eventos NDJSON |
 | `app/agente/proveedores.py` | De dónde sale el modelo: Mnemo si está conectado con `mnemo:model`; si no, Anthropic si hay clave. Queda fijo en cada conversación |
@@ -1074,6 +1318,8 @@ se suba.
 | `app/agente/minimizar.py` | Lo mínimo de cada persona que llega al modelo |
 | `app/agente/herramientas/` | `base.py` (contratos), `personas.py`, `gestion.py`, `interfaz.py` y `mnemo.py` |
 | `app/agente/mnemo_cliente.py` | El cliente del servidor MCP de Mnemo |
+| `app/agente/dictado.py` | Las preguntas por voz: el audio a `mnemo_transcribe`, con sus topes |
+| `app/agente/voz.py` | La [voz clonada de Mnemo](#la-voz-clonada-de-mnemo): el texto de cada pedido (el plan guardado, la frase firmada, la prueba), lo que se dice (`para_decir`, `hablable`), las frases de una respuesta (`Frases`), la firma, los topes, la caché, un solo vuelo y el flujo de `mnemo_speak` |
 | `web/js/agente.js`, `web/css/agente.css` | El botón y el panel del asistente |
 | `web/js/agente-mapa.js` | El puente entre el asistente y la vista del mapa |
 | `app/agente/guion.py`, `app/agente/propuesta_guion.json` | El guion de la presentación (lo que muestra cada paso, en texto plano): lo genera `scripts/build_propuesta.py` desde `web/data/propuesta.json` y va versionado dentro de `admin/` (también lo tiene el panel desplegado aparte) |
@@ -1083,12 +1329,15 @@ se suba.
 | `app/pantalla.py`, `app/api/pantalla.py` | La pantalla en off de cada persona (su estado, `GET /api/pantalla`), su clave MCP (`/api/pantalla/clave`), el recorrido narrado: guardarlo, colapsarlo, el avance (`POST /api/pantalla/progreso`), los controles (`POST /api/pantalla/recorrido/control`) y dónde va (`GET /api/pantalla/recorrido`), y el estado de la [presentación automática](#presentación-automática) (`POST /api/pantalla/auto` y `/auto/siguiente`) |
 | `app/automatica.py` | La presentación automática por dentro: qué se dice en cada paso, el plan de cada capítulo y por dónde sigue (sin modelo: sale del guion) |
 | `app/recorrido.py`, `app/proyectable.py` | El plan guiado por dentro (el recorrido: sus topes, la forma absoluta de la escena con `mover`, `animar` y `simular`, las frases, los tiempos, la validación contra el guion, también de los controles de la simulación) y las reglas de lo que se proyecta (también sin costos) |
-| `web/js/reproductor.js`, `web/js/voz.js` | El reproductor del plan (el reloj de la explicación, la espera inicial, pausas, saltos, cierre) y la voz del navegador |
+| `web/js/reproductor.js`, `web/js/voz.js` | El reproductor del plan (el reloj de la explicación, la espera inicial, pausas, saltos, cierre; la referencia de cada frase en el plan y la precarga de la que sigue) y la voz del navegador |
+| `web/js/voz-clonada.js` | La voz clonada en el navegador (pura, como `voz.js`): pide cada frase por su referencia, agenda el PCM con Web Audio, precarga, la memoria de la página y el respaldo con la voz del navegador |
+| `web/js/voz-panel.js` | La voz de la ventana: una sola para la narración, las respuestas habladas y la prueba de Ajustes (con conteo de referencias), con `flujo('/api/agente/voz', …)` y el `voz` del estado; la narración manda |
+| `web/js/locutor.js` | Las respuestas habladas: dice en orden las frases firmadas del turno, precarga la siguiente, se resincroniza con `frases_descartar` y se calla |
 | `web/js/agente-recorrido.js` | La tarjeta del plan en el chat y su barra fija |
 | `app/api/mcp.py` | El servidor MCP de la presentación (`POST /api/mcp`): la herramienta `presentacion` para un agente externo |
 | `web/js/vistas/cuenta.js` | Mi cuenta, con **Agentes por MCP**: la dirección del servidor y la clave |
 | `web/js/api.js` (`flujo`) | Lee la respuesta NDJSON con el CSRF de la sesión |
-| `app/api/ajustes.py`, `web/js/vistas/ajustes.js` | Los ajustes del asistente y, en la vista, la conexión con Mnemo (conectar, la vuelta y desconectar) |
+| `app/api/ajustes.py`, `web/js/vistas/ajustes.js` | Los ajustes del asistente y, en la vista, la conexión con Mnemo (conectar, la vuelta y desconectar) y el bloque **Voz del asistente** (las voces de `GET /api/agente/voces`, `agente_voz` y **Probar voz**) |
 
 **Un turno, paso a paso.**
 
@@ -1109,7 +1358,8 @@ se suba.
    interna; las de Mnemo, que no pasan por ella, vuelven a revisar antes la sesión y los ajustes); las de escritura
    quedan pendientes, emite una tarjeta por cada una (con los valores enteros, si se ven como se van a escribir) y
    termina con `fin` `confirmacion`.
-5. Al aprobar o rechazar, `POST /api/agente/confirmaciones` con `{conversacion, decisiones: [{id, aprobar}]}` (cuenta
+5. Al aprobar o rechazar, `POST /api/agente/confirmaciones` con `{conversacion, decisiones: [{id, aprobar}]}` (y
+   `voz: true` si la respuesta que sigue se lee en voz alta, como `contexto.voz` de un mensaje; cuenta
    en el tope diario; 409 `sin_pendientes` si alguna decisión es sobre algo que ya no está pendiente, o si aprueba lo
    que guardó una versión anterior del panel, que queda como rechazado) quita lo pendiente (y guarda lo que no se
    aprobó), ejecuta lo aprobado (con su clave de idempotencia), devuelve al modelo todos los resultados juntos y sigue
@@ -1129,6 +1379,8 @@ se suba.
 | `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias`, `mapa` (acciones del mapa) o `presentacion` (`op`: `ir` con `capitulo` y `paso` desde 1, `siguiente`, `anterior`, `explicar` o `quitar_explicacion`; `explicacion`, la frase para la pantalla, en todas salvo la última; `vista` con `panel`, `indice` o `fichas`; `visual` con `enfoque`, `camara`, `rumbo`, `elevacion`, `zoom`, `mirar`, `girar`, `comparar`, `detalle`, `inmersion`, `mostrar`, `ocultar`, `aislar`, `sin` o `tema`, y las acciones `mover`, `animar` y `simular`; `pantalla_completa` con `activar`; `recorrido` con el recorrido absoluto (cada escena: `capitulo`, `paso`, `panel`, `visual`, `resaltar`, `mover`, `animar`, `simular` (puede faltar), `frases` y `sostener_ms`); `control_recorrido` con `rid` y `accion`) o `recorrido` (la tarjeta del plan en el chat: `id`, `titulo`, `destino`, `duracion_ms`, `cierre`, `sugerencias` y por escena `narracion`, `donde` y `hace`) |
 | `confirmar` | La tarjeta de una escritura: `id`, `titulo`, `detalle` (pares etiqueta y valor, enteros: el widget no recorta nada, y si llegan más de 40 o uno de más de 4.000 caracteres no ofrece **Aprobar**) y `aviso`. Lo pendiente al abrir una conversación lleva lo mismo y, si lo guardó una versión anterior del panel, `vieja` (tampoco ofrece **Aprobar**) |
 | `descartar` | La ronda se repite tras un error pasajero: se borra lo que se pintó de ella |
+| `frase` | Solo si el mensaje pidió la respuesta hablada (`contexto.voz`) y la voz clonada lee respuestas para esa persona: `n` (desde 0 en el turno), `texto` y `firma`, una frase cerrada que el navegador pide a `POST /api/agente/voz` (ver [La voz clonada de Mnemo](#la-voz-clonada-de-mnemo)) |
+| `frases_descartar` | `desde`: las frases desde ese número ya no valen (la ronda se repitió o su texto final cambió); las que sigan se numeran desde ahí |
 | `aviso` | `texto` y `nivel` (`info` o `alerta`): un rechazo del modelo, el paso a un modelo de respaldo |
 | `latido` | Cada 15 s sin otros eventos, para mantener viva la conexión |
 | `error` | `mensaje` y `codigo` (ver abajo); siempre lo sigue `fin` |
@@ -1144,6 +1396,7 @@ se suba.
 | `mnemo_conexion`, `sin_configurar`, `agente_apagado` | Vuelve a leer el estado: si ya no hay modelo, al administrador le explica qué falta, con un enlace a Ajustes |
 | `sin_pendientes` | Al decidir tarjetas: vuelve a traer la conversación (en vez del mensaje), con lo que espera aprobación ahora y una nota de por qué cambió |
 | `mnemo_plan`, `mnemo_creditos`, `volumen`, `permiso` | Nada más |
+| `sin_voz`, `voz_rol` (de `POST /api/agente/voz`, al leer una respuesta o narrar) | La voz de la ventana pasa a la del navegador el resto de la sesión y el asistente vuelve a leer su estado (si ya no se ofrece, se va **Leer las respuestas en voz alta**). Cualquier otro código de la voz (`con_personas`, `plan_vencido`, `frecuencia`…) solo cambia esa frase, que se dice con la del navegador |
 
 Salvo `llm_peticion` y `mnemo_sin_modelo`, ninguno de esos ofrece **Reintentar**: repetir el mismo mensaje no lo
 arregla. Los demás (la red, un plazo vencido, el modelo saturado o caído un momento) sí. Los de Mnemo como modelo:
@@ -1164,13 +1417,13 @@ cifrados). Los índices TTL borran lo vencido.
 ## Probar en local
 
 Sin Mnemo conectado ni `ANTHROPIC_API_KEY` el panel funciona igual: el administrador ve el botón con la explicación de
-qué falta. Las pruebas nunca llaman a Anthropic ni a Mnemo: el modelo de Anthropic va simulado con el SDK de verdad y
+qué falta. Sin una voz clonada, el panel narra y lee con la voz del navegador. Las pruebas nunca llaman a Anthropic ni a Mnemo: el modelo de Anthropic va simulado con el SDK de verdad y
 un transporte falso, y Mnemo con un servidor MCP y un OAuth falsos (`tests/ayudas_mcp.py`). Necesitan MongoDB, como las
 demás:
 
 ```bash
 cd admin
-python -m pytest -q tests/test_agente_*.py
+python -m pytest -q tests/test_agente_*.py tests/test_dictado*.py tests/test_voz_*.py
 ```
 
 `tests/ayudas_agente.py` trae lo necesario para escribir una: `encender(app, *respuestas)` pone una clave inventada y
@@ -1185,6 +1438,21 @@ le pone el subtítulo, en escritorio y en el celular; con Node prueba el puente,
 Si cambia `data/propuesta/`, `python3 scripts/build_propuesta.py` regenera también el guion del asistente.
 `tests/test_automatica.py` prueba la presentación automática sin MongoDB ni modelo (los planes del guion real, el
 estado en una base en memoria, las rutas llamadas como funciones, la op `automatica` y el contexto).
+`tests/test_voz_servidor.py` prueba la voz clonada en el servidor con un cliente de Mnemo falso que manda los avisos
+de `mnemo_speak` a su ritmo (y una vez con el cliente MCP de verdad contra el Mnemo falso de `tests/ayudas_mcp.py`):
+la narración por `rid`, la firma, las conversaciones con personas, los roles, los topes, la caché, un solo vuelo, la
+cancelación cuando nadie escucha (con un ASGI crudo, para ver los trozos y la desconexión), los errores de Mnemo y
+que nada vaya al registro. `tests/test_voz_frases.py` prueba `para_decir` (corre la tabla de `web/js/voz.js` con Node
+y la compara con la de Python), las frases de una respuesta (también a trozos al azar: nunca se desdicen) y el turno
+que las emite firmadas. `tests/test_voz_clonada.py` prueba el navegador con Node: la voz clonada
+(`web/js/voz-clonada.js`, con un AudioContext, un reloj y un servidor falsos: el PCM agendado y cuándo empieza y
+termina, el respaldo con la voz del navegador, `sin_voz`, la precarga y los dos lugares, `callar`, un flujo estancado,
+MP3, el gesto, la prueba de Ajustes), el locutor de las respuestas, la voz de la ventana (`voz-panel.js`, con `fetch`
+falso: una sola, la narración manda, el flujo a `POST /api/agente/voz`), la referencia y la precarga del reproductor, y
+lo estático de agente.js, Ajustes y la presentación. `tests/test_voz_navegador.py` lee una respuesta en Chromium (con
+las rutas del asistente y de la voz contestadas desde el navegador): el botón, `contexto.voz`, las frases pedidas por
+su referencia, el audio que suena con Web Audio, Escape y sin violaciones de la CSP; y `test_conectar_mnemo_desde_ajustes`
+(en `tests/test_agente_navegador.py`) ve el bloque **Voz del asistente** con la voz de un Mnemo falso.
 
 ```python
 from ayudas_agente import T, encender, enviar, sse
@@ -1211,7 +1479,9 @@ MNEMO_E2E_DIR=/ruta/a/Mnemo CAPTURAS_AGENTE=/tmp/capturas python -m pytest -q te
 
 Para probarlo con un modelo real, arranque como siempre y conecte un Mnemo desde **Ajustes → Asistente**: el de
 producción o uno local con `PUBLIC_BASE_URL` (en local el panel acepta `http://127.0.0.1` y `http://localhost`, por
-ejemplo `MNEMO_MCP_URL=http://127.0.0.1:8080/mcp`). Para el modo directo, ponga una clave propia en `admin/.env`
+ejemplo `MNEMO_MCP_URL=http://127.0.0.1:8080/mcp`). Para la voz clonada, ese Mnemo necesita una ruta de fal (la clave
+compartida o la de la cuenta), un plan con las voces y una voz clonada marcada para apps; conecte dejando marcado
+«Hablar con las voces…», elíjala en **Ajustes → Asistente → Voz del asistente** y pulse **Probar voz**. Para el modo directo, ponga una clave propia en `admin/.env`
 (`ANTHROPIC_API_KEY=…`; Git ignora los `.env`).
 
 ```bash
