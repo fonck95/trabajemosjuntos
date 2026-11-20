@@ -57,6 +57,22 @@ SENSIBLES = {
     "victima": {"etiqueta": "Víctima del conflicto", "valores": ["Sí", "No", "Prefiere no decir"]},
 }
 NOMBRES_ROL = {"admin": "Administrador", "coordinador": "Coordinador", "planillero": "Planillero", "consultor": "Consultor"}
+# Tipo de persona en la campaña (no son usuarios del panel): cada uno es un sí/no de la ficha y una persona puede ser
+# varios (un concejal que también es líder). Líderes y concejales traen votantes: ellos son el «Liderado por» de una
+# ficha (`lideres`). Son datos políticos, como `lider`: solo A y K los ven y los cambian
+TIPOS_PERSONA = {"concejal": "Concejal", "lider": "Líder", "votante": "Votante"}
+# Los que pueden liderar a otros (el «Liderado por» de una ficha solo admite fichas con alguno de estos)
+TIPOS_LIDERAN = ("concejal", "lider")
+
+
+def lidera(p: dict | None) -> bool:
+    """¿La ficha puede ser el «Liderado por» de otra? (marcada como líder o como concejal)"""
+    return any((p or {}).get(t) is True for t in TIPOS_LIDERAN)
+
+
+def tipos_de(p: dict | None) -> list[str]:
+    """Los tipos marcados en la ficha, en el orden de TIPOS_PERSONA (concejal, líder, votante)."""
+    return [t for t in TIPOS_PERSONA if (p or {}).get(t) is True]
 
 # ───────────────────────────── Autorización del titular (1.6) ─────────────────────────────
 
@@ -126,7 +142,7 @@ ESTADOS_TELEFONO = {"sin_verificar": "Sin verificar", "confirmado": "Confirmado"
                     "equivocado": "Equivocado", "inexistente": "No existe", "retirado": "Retirado"}
 USABLES = frozenset({"sin_verificar", "confirmado"})
 TIPOS_TELEFONO = {"celular": "Celular", "fijo": "Fijo"}
-FUENTES_TEL = ("tramites", "cedulas", "planilla", "panel", "reunion", "consultor")
+FUENTES_TEL = ("tramites", "cedulas", "general", "planilla", "panel", "reunion", "consultor")
 # Forma de cada elemento de `telefonos`, con sus valores iniciales
 CAMPOS_TELEFONO = ("numero", "tipo", "fuentes", "primera_vez", "ultima_vez", "estado", "whatsapp", "no_contactar",
                    "agregado_por", "estado_por", "estado_en", "nota")
@@ -137,14 +153,16 @@ CAMBIOS_TELEFONO = ("estado", "whatsapp", "no_contactar", "nota", "estado_por", 
 
 ESTADOS_VOTACION = {"verificado": "Verificado", "sin_verificar": "Sin verificar", "por_confirmar": "Por confirmar"}
 DONDE_VOTA = {"yondo": "En Yondó", "otro_municipio": "En otro municipio", "no_inscrito": "No está inscrito"}
-FUENTES_VOTACION = ("cedulas", "planilla", "panel", "consultor", "titular")
+FUENTES_VOTACION = ("cedulas", "general", "planilla", "panel", "consultor", "titular")
 MESAS_SIN_CATALOGO = 99  # tope de la mesa cuando el puesto no dice cuántas tiene
 
 # ───────────────────────────── Procedencia, avance y auditoría (1.5, 1.9) ─────────────────────────────
 
-CONFIANZA = {"tramites": 1, "cedulas": 2, "planilla": 3, "consultor": 3, "panel": 4, "reunion": 4, "manual": 4}
+# «general»: la base general de la campaña (fuentes.GENERAL), con la misma confianza que la base con cédula
+CONFIANZA = {"tramites": 1, "cedulas": 2, "general": 2, "planilla": 3, "consultor": 3, "panel": 4, "reunion": 4,
+             "manual": 4}
 CAMPOS_PROCEDENCIA = ("cedula", "tipo_documento", "sexo", "edad", "fecha_nacimiento", "correo", "direccion", "votacion",
-                      "estado_civil", "nivel_educativo", "situacion_laboral", "ocupacion")
+                      "estado_civil", "nivel_educativo", "situacion_laboral", "ocupacion", "perfil_profesional")
 CAMPOS_AVANCE = ("cedula", "telefono", "sexo", "edad", "direccion", "lugar", "ubicacion", "puesto", "mesa", "autorizacion",
                  "correo", "estado_civil", "nivel_educativo", "situacion_laboral", "ocupacion", "personas_hogar",
                  "jefe_hogar", "tenencia_vivienda", "estrato", "regimen_salud")
@@ -153,8 +171,8 @@ ETIQUETAS_CAMPOS = {
     "lugar": "Barrio o vereda", "ubicacion": "Ubicación", "puesto": "Puesto de votación", "mesa": "Mesa",
     "autorizacion": "Autorización", "correo": "Correo", "estado_civil": "Estado civil",
     "nivel_educativo": "Nivel educativo", "situacion_laboral": "Situación laboral", "ocupacion": "Ocupación",
-    "personas_hogar": "Personas en el hogar", "jefe_hogar": "Jefe de hogar", "tenencia_vivienda": "Tenencia de la vivienda",
-    "estrato": "Estrato", "regimen_salud": "Régimen de salud",
+    "perfil_profesional": "Perfil profesional", "personas_hogar": "Personas en el hogar", "jefe_hogar": "Jefe de hogar",
+    "tenencia_vivienda": "Tenencia de la vivienda", "estrato": "Estrato", "regimen_salud": "Régimen de salud",
 }
 # «Faltan» en Habitantes, la ficha y las listas de trabajo (7.3)
 CAMPOS_FALTAN = ("cedula", "telefono", "sexo", "edad", "lugar", "puesto", "mesa", "direccion", "autorizacion")
@@ -1132,5 +1150,6 @@ CATALOGOS_WEB = {
     "MOTIVOS_ACTUALIZACION": MOTIVOS_ACTUALIZACION, "CAMPOS_NO_DISPONIBLE": list(CAMPOS_NO_DISPONIBLE),
     "MOTIVOS_NO_DISPONIBLE": MOTIVOS_NO_DISPONIBLE, "ESTADOS_TELEFONO": ESTADOS_TELEFONO, "USABLES": sorted(USABLES),
     "TIPOS_TELEFONO": TIPOS_TELEFONO, "ESTADOS_VOTACION": ESTADOS_VOTACION, "DONDE_VOTA": DONDE_VOTA,
-    "ETIQUETAS_CAMPOS": ETIQUETAS_CAMPOS, "CAMPOS_FALTAN": list(CAMPOS_FALTAN),
+    "ETIQUETAS_CAMPOS": ETIQUETAS_CAMPOS, "CAMPOS_FALTAN": list(CAMPOS_FALTAN), "TIPOS_PERSONA": TIPOS_PERSONA,
+    "TIPOS_LIDERAN": list(TIPOS_LIDERAN),
 }

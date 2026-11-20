@@ -163,12 +163,14 @@ console.log(JSON.stringify({
     assert d["claves"] == ["equipo", "equipo", "fusion", "fusion", "cedulas", "otra_base", "tramites", "titular", "reunion",
                            "planilla", "consultor", "otra", "otra", None, None, None]
     info = d["info"]
-    # Las diez claves visibles, en orden de confianza, cada una con su nombre, una letra propia y su grupo
-    assert list(info) == ["titular", "equipo", "reunion", "consultor", "planilla", "cedulas", "otra_base", "tramites", "fusion", "otra"]
+    # Las once claves visibles, en orden de confianza, cada una con su nombre, una letra propia y su grupo
+    assert list(info) == ["titular", "equipo", "reunion", "consultor", "planilla", "cedulas", "general", "otra_base", "tramites",
+                          "fusion", "otra"]
     assert {k: v["letra"] for k, v in info.items()} == {"titular": "✓", "equipo": "E", "reunion": "R", "consultor": "C", "planilla": "P",
-                                                       "cedulas": "B", "otra_base": "O", "tramites": "T", "fusion": "U", "otra": "?"}
+                                                       "cedulas": "B", "general": "G", "otra_base": "O", "tramites": "T",
+                                                       "fusion": "U", "otra": "?"}
     assert {k for k, v in info.items() if v["grupo"] == "equipo"} == {"equipo", "reunion", "planilla", "consultor", "titular"}
-    assert {k for k, v in info.items() if v["grupo"] == "base"} == {"tramites", "cedulas", "otra_base"}
+    assert {k for k, v in info.items() if v["grupo"] == "base"} == {"tramites", "cedulas", "general", "otra_base"}
     assert info["equipo"]["nombre"] == "Equipo (panel)" and info["titular"]["nombre"] == "Titular en la Registraduría"
     assert info["cedulas"]["nombre"] == "Base con cédula" and info["fusion"]["nombre"] == "Ficha unida"
     assert all(v["nombre"] and v["ayuda"] for v in info.values())
@@ -181,9 +183,9 @@ console.log(JSON.stringify({
     # Sin repetidos (manual y panel son una sola) y en orden de confianza
     assert re.findall(r'data-fuente="(\w+)"', d["lista"]) == ["titular", "equipo", "cedulas", "tramites", "fusion"]
     assert d["lista"].startswith('<span class="fuentes">')
-    # P nunca ve «cedulas» (la recibe como «otra_base»); A y K, al revés
-    assert "cedulas" not in d["visiblesP"] and "otra_base" in d["visiblesP"]
-    assert "otra_base" not in d["visiblesA"] and "cedulas" in d["visiblesA"]
+    # P nunca ve «cedulas» ni «general» (las recibe como «otra_base»); A y K, al revés
+    assert "cedulas" not in d["visiblesP"] and "general" not in d["visiblesP"] and "otra_base" in d["visiblesP"]
+    assert "otra_base" not in d["visiblesA"] and "cedulas" in d["visiblesA"] and "general" in d["visiblesA"]
     assert "cedulas" not in d["leyendaP"] and "Base con cédula" not in d["leyendaP"] and "Otra base" in d["leyendaP"]
     assert "¿Qué significan los colores?" in d["leyendaA"] and d["leyendaA"].startswith('<details class="leyenda-fuentes">')
     assert re.findall(r'<li data-fuente="(\w+)"', d["leyendaA"]) == ["equipo", "cedulas"]

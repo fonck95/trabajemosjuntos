@@ -175,8 +175,8 @@ def esquema(m: type[BaseModel]) -> dict:
 _FUERA_DE_CLAVE = re.compile(r"[^A-Za-z0-9_.:-]")
 DETALLE_PERMITIDO = ("campo", "motivo", "campos")
 # Valores que un 409 «cambiada» puede traer y que el modelo nunca recibe
-OCULTOS = {"correo", "fecha_nacimiento", "lider", "lideres", "sensibles", "regimen_salud", "consentimiento",
-           "consentimiento_fecha", "observaciones"}
+OCULTOS = {"correo", "fecha_nacimiento", "lider", "votante", "concejal", "lideres", "sensibles", "regimen_salud",
+           "consentimiento", "consentimiento_fecha", "observaciones"}
 
 
 def _clave(ctx: Contexto) -> str | None:
@@ -404,8 +404,8 @@ async def _nombres_etiquetas(ctx: Contexto, ids: list[int]) -> list[str]:
 
 class FiltrosEntrada(_Entrada):
     """Los filtros de Habitantes (`filtros.Filtros`) que el asistente puede usar, con los valores que acepta la API.
-    Fuera: `poligono` e `ids` (para el mapa), `lista`, `lider`, la fuente «cedulas» y `regimen_salud` (revelan datos
-    políticos o de salud) y las etiquetas sensibles."""
+    Fuera: `poligono` e `ids` (para el mapa), `lista`, `lider`, `tipo`, la fuente «cedulas» y `regimen_salud` (revelan
+    datos políticos o de salud) y las etiquetas sensibles."""
     zona: Literal["urbana", "rural", "sin"] | None = Field(None, description="urbana, rural o sin (sin zona)")
     lugar_id: int | None = Field(None, ge=0, le=MAX_ID, description="Barrio o vereda (id de buscar_lugar); 0 = sin "
                                                                      "barrio ni vereda reconocidos")

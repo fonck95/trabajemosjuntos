@@ -66,7 +66,8 @@ CON_ALTERNOS = frozenset({"correo", "direccion", "sexo", "edad", "fecha_nacimien
 # Fuentes que escribe una persona del equipo (ya con `clave_fuente`): dos fichas suyas no son «dos filas de la misma
 # base», son el duplicado de siempre (la misma persona dada de alta dos veces: lo que buscan las altas simultáneas)
 DEL_EQUIPO = frozenset({"equipo", "reunion", "consultor"})
-NOMBRE_FUENTE = {"tramites": "trámites", "cedulas": "la base con cédula", "planilla": "planillas de campo"}
+NOMBRE_FUENTE = {"tramites": "trámites", "cedulas": "la base con cédula", "general": "la base general",
+                 "planilla": "planillas de campo"}
 
 
 # ───────────────────────────── Lectura ─────────────────────────────

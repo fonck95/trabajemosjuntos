@@ -6,7 +6,7 @@ y quitando campos.
 * Algunos campos llevan además un recorte por dentro, que aplica quien arma la respuesta (3.8): teléfonos solo usables
   para C, sin teléfonos para P si es menor, acercamientos sin `nota` para P, trámites con `fecha`, `tipo` y `ficha`
   para P, `situacion.estado` para C, `en_curso` propio, `abordaje` con solo `estado` en `CAMPOS_NO_AUTORIZO`.
-* Para P y C la fuente «cedulas» se muestra como «otra_base» (`neutralizar_fuente`).
+* Para P y C las fuentes «cedulas» y «general» se muestran como «otra_base» (`neutralizar_fuente`).
 * `exigir_tratable` va en toda escritura sobre una persona: a quien no autorizó, P y C no lo tratan.
 """
 from __future__ import annotations
@@ -26,8 +26,8 @@ from .db import ACTIVA, cerrar_coincidencias_imposibles
 _IDENTIDAD_A = {"id", "nombre", "nombre_norm", "tipo_documento", "cedula", "cedula_verificada", "cedula_origen",
                 "cedulas_anteriores"}
 _DEMOGRAFIA = {"sexo", "edad", "edad_ref", "fecha_nacimiento", "nac_aprox", "nac_exacta", "edad_efectiva", "rango_edad",
-               "menor", "estado_civil", "nivel_educativo", "situacion_laboral", "ocupacion", "personas_hogar",
-               "jefe_hogar", "tenencia_vivienda", "estrato", "regimen_salud"}
+               "menor", "estado_civil", "nivel_educativo", "situacion_laboral", "ocupacion", "perfil_profesional",
+               "personas_hogar", "jefe_hogar", "tenencia_vivienda", "estrato", "regimen_salud"}
 _UBICACION = {"correo", "direccion", "direccion_norm", "lugar_id", "lugar_nombre", "lugar_tipo", "lugar_texto", "zona",
               "lat", "lon", "geo_precision", "geo_manual", "geo_fuente", "precision_m", "ficha"}
 _VOTACION = {"votacion", "puesto_votacion", "mesa"}
@@ -40,7 +40,8 @@ CAMPOS_FICHA: dict[str, frozenset[str]] = {
         _IDENTIDAD_A | _DEMOGRAFIA | _UBICACION | _VOTACION | _AUTORIZACION | _SEGUIMIENTO
         | {"sensibles_registrados", "sensibles_autorizados", "telefonos", "telefono", "telefono2", "autorizacion",
            "autorizacion_ultima", "reclamo_en_tramite", "abordaje", "abordaje_seq", "acercamientos", "ultimo_contacto",
-           "en_curso", "notas", "listas", "lider", "lideres", "traidas", "intervenciones", "etiquetas", "extra",
+           "en_curso", "notas", "listas", "lider", "votante", "concejal", "lideres", "traidas", "intervenciones",
+           "etiquetas", "extra",
            "observaciones", "origen", "procedencia",
            "tramites", "alternos", "avance", "historial", "coincidencias", "reuniones", "reunion_origen", "fuentes",
            "completitud", "clave_tramites", "claves_tramites", "creado_por", "actualizado_por", "creado_en",
@@ -64,7 +65,8 @@ CAMPOS_FILA: dict[str, frozenset[str]] = {
     # Las de hoy (app/api/personas.py:53-58) más las nuevas de 8.1
     "admin": frozenset({
         "id", "nombre", "cedula", "telefono", "lugar", "lugar_tipo", "zona", "precision", "completitud", "fuentes",
-        "reuniones", "lider", "lideres_n", "consentimiento", "ultimo_contacto", "tiene_cedula", "telefonos_n", "sexo",
+        "reuniones", "lider", "votante", "concejal", "lideres_n", "consentimiento", "ultimo_contacto", "tiene_cedula",
+        "telefonos_n", "sexo",
         "rango_edad",
         "menor", "puesto", "mesa", "votacion_estado", "abordaje", "faltan", "requiere_actualizacion", "situacion"}),
     "planillero": frozenset({
@@ -84,12 +86,16 @@ CAMPOS_NO_AUTORIZO = frozenset({"id", "nombre", "cedula_ult3", "lugar", "consent
 NUNCA = frozenset({"sensibles", "cedula_en_traspaso"})
 
 
+# Bases importadas que revelan listas de origen, partido o liderazgo: P y C las ven como «otra_base»
+BASES_POLITICAS = frozenset({"cedulas", "general"})
+
+
 def neutralizar_fuente(fuente: Any) -> Any:
-    """Para P y C: «cedulas» se muestra como «otra_base» (en `telefonos[].fuentes`, `alternos[].fuente`,
+    """Para P y C: «cedulas» y «general» se muestran como «otra_base» (en `telefonos[].fuentes`, `alternos[].fuente`,
     `votacion.fuente` y `cedula_origen`). Acepta un texto o una lista; una lista no repite valores."""
     if isinstance(fuente, (list, tuple)):
         return list(dict.fromkeys(neutralizar_fuente(f) for f in fuente))
-    return "otra_base" if fuente == "cedulas" else fuente
+    return "otra_base" if fuente in BASES_POLITICAS else fuente
 
 
 # Lo único que P y C pueden hacer con quien no autorizó: registrar su «sí» (con evidencia, 1.6) y una solicitud
@@ -258,7 +264,8 @@ def fila_completa(p: dict, ctx: Contexto) -> dict:
         "telefonos_n": len(us), "lugar": lg.get("nombre") or p.get("lugar_texto"), "lugar_tipo": lg.get("tipo"),
         "zona": p.get("zona"), "precision": p.get("geo_precision"), "completitud": p.get("completitud", 0),
         "fuentes": list(p.get("fuentes") or []), "reuniones": len(p.get("asistencias") or []),
-        "lider": bool(p.get("lider")), "lideres_n": len({l.get("id") for l in p.get("lideres") or [] if isinstance(l, dict)}),
+        **{t: bool(p.get(t)) for t in modelo.TIPOS_PERSONA},
+        "lideres_n": len({l.get("id") for l in p.get("lideres") or [] if isinstance(l, dict)}),
         "consentimiento": p.get("consentimiento"),
         "ultimo_contacto": p.get("ultimo_contacto"), "sexo": p.get("sexo"),
         "rango_edad": modelo.rango_edad(modelo.edad_efectiva(p, ctx.hoy)), "menor": modelo.es_menor(p, ctx.hoy),
@@ -275,7 +282,8 @@ def fila_completa(p: dict, ctx: Contexto) -> dict:
 # Lo que una fila de Habitantes, la búsqueda y las parecidas necesitan de cada ficha
 CAMPOS_PARA_FILA = {k: 1 for k in (
     "nombre", "nombre_norm", "cedula", "telefono", "telefono2", "telefonos", "lugar_id", "lugar_texto", "zona",
-    "geo_precision", "completitud", "fuentes", "asistencias.reunion_id", "lider", "lideres.id", "consentimiento",
+    "geo_precision", "completitud", "fuentes", "asistencias.reunion_id", *modelo.TIPOS_PERSONA, "lideres.id",
+    "consentimiento",
     "ultimo_contacto",
     "sexo", "edad", "edad_ref", "fecha_nacimiento", "nac_aprox", "tipo_documento", "creado_en", "votacion",
     "puesto_votacion", "mesa", "abordaje", "requiere_actualizacion", "situacion", "no_disponible", "lat", "lon", "punto",
@@ -336,11 +344,12 @@ CAMPOS_ACERCAMIENTO = ("ts", "fecha", "uid", "usuario", "rol", "canal", "telefon
                        "anulado", "anulado_por", "anulado_en", "motivo_anulacion", "alcance")
 # Campos que cada rol escribe con PATCH (3.8). C no usa PATCH: sus «editables» son los datos que puede dictar (4.2)
 EDITABLES_P = ("nombre", "cedula", "tipo_documento", "cedula_verificada", "sexo", "edad", "fecha_nacimiento",
-               "estado_civil", "nivel_educativo", "situacion_laboral", "ocupacion", "personas_hogar", "jefe_hogar",
-               "tenencia_vivienda", "estrato", "regimen_salud", "correo", "direccion", "lugar_id", "telefono",
+               "estado_civil", "nivel_educativo", "situacion_laboral", "ocupacion", "perfil_profesional",
+               "personas_hogar", "jefe_hogar", "tenencia_vivienda", "estrato", "regimen_salud", "correo", "direccion",
+               "lugar_id", "telefono",
                "telefono2", "puesto_id", "puesto_texto", "mesa", "donde", "municipio", "votacion_verificada",
                "consentimiento", "etiquetas", "extra", "sensibles", "observaciones")
-EDITABLES_A = EDITABLES_P + ("lider", "consentimiento_fecha", "puesto_votacion", "motivo_cambio_cedula")
+EDITABLES_A = EDITABLES_P + (*modelo.TIPOS_PERSONA, "consentimiento_fecha", "puesto_votacion", "motivo_cambio_cedula")
 
 
 def editables(p: dict, quien: Any) -> list[str]:
@@ -554,6 +563,7 @@ def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> 
         "en_curso": lambda: ec if (adm or (ec and ec.get("uid") == getattr(quien, "uid", None))) else None,
         "notas": lambda: _notas(p, reuniones()[1]),
         "listas": lambda: list(p.get("listas") or []), "lider": lambda: bool(p.get("lider")),
+        "votante": lambda: bool(p.get("votante")), "concejal": lambda: bool(p.get("concejal")),
         "etiquetas": lambda: _etiquetas(p, ctx, adm), "extra": lambda: sin_sensibles(p.get("extra")),
         "origen": lambda: [{"fuente": o.get("fuente"), "datos": o.get("datos")} for o in p.get("origen") or []],
         "procedencia": lambda: dict(p.get("procedencia") or {}),
@@ -567,7 +577,7 @@ def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> 
         "avance": lambda: dict(p.get("avance") or {}),
         "historial": lambda: _historial(db, pid),
         "lideres": lambda: _lideres().lideres_de(db, p),
-        "traidas": lambda: _lideres().traidas_de(db, pid) if p.get("lider") or db.personas.count_documents(
+        "traidas": lambda: _lideres().traidas_de(db, pid) if modelo.lidera(p) or db.personas.count_documents(
             {"lideres.id": pid, **ACTIVA}, limit=1) else None,
         "intervenciones": lambda: trazas.intervenciones_persona(db, pid, p.get("asistencias")),
         "coincidencias": lambda: _coincidencias(db, pid),

@@ -28,7 +28,7 @@ from ..seguridad import obtener_db
 APROXIMADAS = ["barrio", "sector", "caserio", "centro_poblado", "vereda", "corregimiento", "direccion_aprox"]
 SIN_CAMPOS = ("cedula", "telefono", "sexo", "edad", "lugar", "puesto", "mesa", "direccion")
 # Parámetros que P y C no pueden usar (3.6): darían listas políticas, de menores o de la actividad de otros
-VEDADOS = ("poligono", "ids", "lista", "lider", "lider_id", "varios_lideres", "intervenida_en", "creado_por",
+VEDADOS = ("poligono", "ids", "lista", "lider", "tipo", "lider_id", "varios_lideres", "intervenida_en", "creado_por",
            "actualizado_por", "menor")
 PERMISO = {"mensaje": "Su rol no permite usar este filtro", "codigo": "permiso"}
 
@@ -47,7 +47,9 @@ class Filtros(BaseModel):
     asistio: int | None = None
     consentimiento: str | None = None
     lider: int | None = None
-    # Las que trajo ese líder; las que trae más de un líder (app/api/lideres.py)
+    # Tipo de persona (modelo.TIPOS_PERSONA: concejal, lider o votante; «sin_tipo»: ninguno)
+    tipo: str | None = None
+    # Las que trajo ese líder (o concejal); las que trae más de uno (app/api/lideres.py)
     lider_id: int | None = None
     varios_lideres: int | None = None
     # Las que se intervinieron en esa reunión (la traza de la auditoría, app/trazas.py)
@@ -141,8 +143,9 @@ def filtros_query(
     fuente: str | None = None, lista: str | None = Query(None, max_length=120), etiqueta: int | None = None,
     con_cedula: int | None = None, con_telefono: int | None = None, precision: str | None = None,
     reunion_id: int | None = None, asistio: int | None = None, consentimiento: str | None = None,
-    lider: int | None = None, lider_id: int | None = None, varios_lideres: int | None = None,
-    intervenida_en: int | None = None, sexo: str | None = None, completitud_max: int | None = None,
+    lider: int | None = None, tipo: str | None = Query(None, max_length=20), lider_id: int | None = None,
+    varios_lideres: int | None = None, intervenida_en: int | None = None, sexo: str | None = None,
+    completitud_max: int | None = None,
     ids: str | None = Query(None, max_length=4000),
     edad_min: int | None = Query(None, ge=0, le=130), edad_max: int | None = Query(None, ge=0, le=130),
     tipo_documento: str | None = None, cedula_verificada: int | None = None, puesto_id: int | None = None,
@@ -293,7 +296,7 @@ def filtro(f: Filtros, hoy: date | None = None) -> dict:
         y.append({"lugar_id": f.lugar_id or None})
     if f.fuente == "ambas":
         y.append({"fuentes": {"$all": ["tramites", "cedulas"]}})
-    elif f.fuente in ("tramites", "cedulas", "reunion", "manual", "planilla"):
+    elif f.fuente in ("tramites", "cedulas", "general", "reunion", "manual", "planilla"):
         y.append({"fuentes": f.fuente})
     if f.lista:
         y.append({"listas": f.lista})
@@ -323,6 +326,10 @@ def filtro(f: Filtros, hoy: date | None = None) -> dict:
         y.append({"consentimiento": {"$ne": "no"}})
     if f.lider:
         y.append({"lider": True})
+    if f.tipo in modelo.TIPOS_PERSONA:
+        y.append({f.tipo: True})
+    elif f.tipo == "sin_tipo":
+        y.append({t: {"$ne": True} for t in modelo.TIPOS_PERSONA})
     if f.lider_id:
         y.append({"lideres.id": f.lider_id})
     if f.varios_lideres:
@@ -461,7 +468,7 @@ def exigir_permitidos(db: Database, quien: Any, f: Filtros) -> None:
         v = getattr(f, p)
         if v is not None and v != "":
             raise _prohibido(f"Su rol no permite filtrar por «{p}»")
-    if f.fuente in ("cedulas", "ambas"):
+    if f.fuente in ("cedulas", "general", "ambas"):
         raise _prohibido("Su rol no permite filtrar por esa fuente")
     if f.etiqueta and f.etiqueta in proyeccion.etiquetas_sensibles(db):
         raise _prohibido("Su rol no permite filtrar por esa etiqueta")

@@ -1,9 +1,12 @@
 // Ficha de un habitante (7.4): cabecera con chips, barra de acciones por rol, teléfonos con su estado, formulario por
 // bloques (los campos que el rol no puede editar quedan deshabilitados), autorización, historial con los
 // acercamientos, origen y cambios (A y K). El consultor ve una ficha reducida (`pintarConsultor`).
-// A y K ven además quién la trajo (sus líderes: «Asignar líder», y el aviso si la capta más de un líder), a quiénes trajo
-// ella si es líder, y la traza de las reuniones: en el historial, en qué reuniones se la intervino y si asistió; en
-// Cambios, cada cambio con la reunión en que se hizo (app/trazas.py).
+// Arriba, los datos principales (los 17 de la base general: nombre, cédula, sexo, edad, teléfono, nacimiento, correo,
+// dirección, barrio o vereda, zona, tipo —concejal, líder, votante—, liderado por, perfil profesional, ocupación, estado
+// civil y jefe de hogar). A y K ven además el tipo de persona y quién la lidera («Liderado por», con la barra para buscar
+// al líder o concejal y el aviso si la capta más de uno), a cuántas lidera ella si es líder o concejal, y la traza de las
+// reuniones: en el historial, en qué reuniones se la intervino y si asistió; en Cambios, cada cambio con la reunión en
+// que se hizo (app/trazas.py).
 import { api, ErrorApi, nuevaClave, puede, registrarPendiente, sesion } from '../api.js';
 import { refrescarInsignias } from '../app.js';
 import { marcarLlamada } from '../llamadas.js';
@@ -11,7 +14,7 @@ import { BASES, baseSegunTema, cargarMapLibre } from '../mapa3d.js';
 import {
   CANALES, ESTADOS_AUTORIZACION, ESTADOS_CIVILES, ESTADOS_TELEFONO, ESTADOS_VOTACION, ETIQUETAS_CAMPOS,
   MEDIOS_AUTORIZACION, MOTIVOS_ACTUALIZACION, MOTIVOS_NO_DISPONIBLE, NIVELES, REGIMENES_SALUD, SENSIBLES, SEXOS, SITUACIONES,
-  SITUACIONES_LABORALES, TENENCIAS, TIPOS_DOCUMENTO, TIPOS_TELEFONO, autorizacionDe, enlaceWhatsapp, esCelular, esUsable,
+  SITUACIONES_LABORALES, TENENCIAS, TIPOS_DOCUMENTO, TIPOS_PERSONA, TIPOS_TELEFONO, autorizacionDe, enlaceWhatsapp, esCelular, esUsable,
   etiquetaResultado, marcable, telefonosUsables,
 } from '../modelo.js';
 import {
@@ -20,9 +23,9 @@ import {
 } from '../ui.js';
 import { dialogoAcercamiento, mensajeNoContactable } from './acercamiento.js';
 import {
-  administra, camposAutorizacion, camposVotacion, chipsFaltan, cuerpoVotacion, dialogoCambiada, dialogoCompletar, elegirPunto,
-  elegirLider, enlazarAutorizacion, enlazarEdad, enlazarVotacion, faltanDe, formularioNuevaPersona, leerAutorizacion,
-  opcionesLugares, rangoHora, textoCedula, ubicarConGps,
+  administra, buscadorLider, camposAutorizacion, camposVotacion, chipsFaltan, chipsTipo, cuerpoVotacion, dialogoCambiada,
+  dialogoCompletar, elegirPunto, elegirLider, enlazarAutorizacion, enlazarEdad, enlazarVotacion, faltanDe,
+  formularioNuevaPersona, leerAutorizacion, opcionesLugares, rangoHora, textoCedula, ubicarConGps,
 } from './comunes.js';
 
 const TIPOS_SOLICITUD = { consulta: 'Consultar sus datos', correccion: 'Corregir sus datos', supresion: 'Borrar sus datos', revocatoria: 'Revocar la autorización', otro: 'Otra' };
@@ -168,14 +171,30 @@ export async function vistaFicha(el, { params, ir }) {
           </div>
           <div data-panel="datos" ${pestana === 'datos' ? '' : 'hidden'}>
             <form id="f-datos" novalidate>
-              <details class="bloque" open><summary>Identificación</summary><div class="form">
+              <details class="bloque" open><summary>Datos principales</summary><div class="form">
                 ${entrada('nombre', 'Nombre completo', { ancho: true, largo: 160 })}
                 ${selector('tipo_documento', 'Tipo de documento', [['', '—'], ...Object.entries(TIPOS_DOCUMENTO)])}
-                ${entrada('cedula', 'Número de documento', { modo: 'numeric', largo: 15 })}
+                ${entrada('cedula', 'Cédula (número de documento)', { modo: 'numeric', largo: 15 })}
                 ${adm && p.cedula ? html`<label class="campo" data-motivo-cedula hidden><span>Motivo del cambio de cédula *</span><input name="motivo_cambio_cedula" maxlength="200"></label>` : ''}
                 <label class="casilla"><input type="checkbox" name="cedula_verificada" ${p.cedula_verificada ? 'checked' : ''} ${ed('cedula_verificada') ? '' : 'disabled'}> Vi el documento</label>
                 ${noDisponible('cedula', 'No la dio')}
                 ${adm && (p.cedulas_anteriores || []).length ? html`<p class="sec ancho">Cédulas anteriores: ${p.cedulas_anteriores.join(', ')}</p>` : ''}
+                ${selector('sexo', 'Sexo', [['', '—'], ...Object.entries(SEXOS)])}
+                ${entrada('edad', 'Edad', { tipo: 'number', min: 0, max: 120, modo: 'numeric', ayuda: 'Con la fecha de nacimiento se calcula sola' + (p.edad != null && p.edad_ref ? `. Sin ella, la declarada el ${fecha(p.edad_ref)}` : '') })}
+                <div class="campo"><span>Teléfono</span><b class="valor-fijo">${p.telefono || '—'}</b><small class="nota">Se agregan y se marcan en la tarjeta «Teléfonos».</small></div>
+                ${entrada('fecha_nacimiento', 'Fecha de nacimiento', { tipo: 'date' })}
+                ${entrada('correo', 'Correo electrónico', { modo: 'email', largo: 120 })}
+                ${entrada('direccion', 'Dirección', { ancho: true, largo: 240 })}
+                <label class="campo" data-campo="lugar_id"><span>Barrio o vereda</span><select name="lugar_id" ${ed('lugar_id') ? '' : 'disabled'}>${opcionesLugares(cat, p.lugar_id)}</select></label>
+                <div class="campo"><span>Zona urbana o rural</span><b class="valor-fijo">${p.zona === 'urbana' ? 'Urbana (casco)' : p.zona === 'rural' ? 'Rural' : '—'}</b><small class="nota">Sale del barrio o vereda.</small></div>
+                <div class="fila-botones ancho"><button type="button" class="btn chico" data-gps>${icono('gps')} Estoy en su casa</button><button type="button" class="btn chico" data-ver-mapa>${icono('mapa')} Ver en el mapa</button></div>
+                ${adm ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Tipo de persona</span>
+                  <div class="opciones-radio">${Object.entries(TIPOS_PERSONA).map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="${k}" ${p[k] ? 'checked' : ''} ${ed(k) ? '' : 'disabled'}> ${t}${insigniaCampo(k)}</label>`)}</div></div>
+                  <div class="grupo-campo ancho liderado-por"><span class="titulo-campo">Liderado por</span>${lideradoPor()}</div>` : ''}
+                ${entrada('perfil_profesional', 'Perfil profesional', { largo: 160 })}
+                ${entrada('ocupacion', 'Ocupación', { largo: 120 })}
+                ${selector('estado_civil', 'Estado civil', lista(ESTADOS_CIVILES))}
+                ${selector('jefe_hogar', 'Jefe de hogar', [['', '—'], ['si', 'Sí'], ['no', 'No']], { valor: p.jefe_hogar == null ? '' : p.jefe_hogar ? 'si' : 'no' })}
               </div></details>
               <details class="bloque" ${esMovil() ? '' : 'open'}><summary>Votación ${v.estado ? html`<span class="chip ${v.estado === 'verificado' ? 'verde' : v.estado === 'por_confirmar' ? 'ambar' : 'borde'}">${ESTADOS_VOTACION[v.estado] || v.estado}</span>` : ''}${adm && (v.puesto_id || v.puesto_texto || v.mesa || v.donde) ? insigniaFuente(v.fuente || p.procedencia?.votacion?.fuente) : ''}</summary><div class="form">
                 ${camposVotacion(cat, v)}
@@ -183,25 +202,13 @@ export async function vistaFicha(el, { params, ir }) {
                 ${cat.enlace_consulta_puesto ? html`<a class="btn chico" href="${cat.enlace_consulta_puesto}" target="_blank" rel="noopener noreferrer">Consultar en la Registraduría ↗</a>` : ''}
                 <label class="casilla ancho"><input type="checkbox" name="votacion_verificada" ${v.estado === 'verificado' && v.fuente === 'titular' ? 'checked' : ''} ${ed('votacion_verificada') ? '' : 'disabled'}> Verificado en la Registraduría con el titular</label>
               </div></details>
-              <details class="bloque" ${esMovil() ? '' : 'open'}><summary>Datos personales</summary><div class="form">
-                ${selector('sexo', 'Sexo', [['', '—'], ...Object.entries(SEXOS)])}
-                ${entrada('fecha_nacimiento', 'Fecha de nacimiento', { tipo: 'date' })}
-                ${entrada('edad', 'Edad', { tipo: 'number', min: 0, max: 120, modo: 'numeric', ayuda: 'Con la fecha de nacimiento se calcula sola' + (p.edad != null && p.edad_ref ? `. Sin ella, la declarada el ${fecha(p.edad_ref)}` : '') })}
-                ${selector('estado_civil', 'Estado civil', lista(ESTADOS_CIVILES))}
+              <details class="bloque" ${esMovil() ? '' : 'open'}><summary>Más datos</summary><div class="form">
                 ${selector('nivel_educativo', 'Nivel educativo', lista(NIVELES))}
                 ${selector('situacion_laboral', 'Situación laboral', lista(SITUACIONES_LABORALES))}
-                ${entrada('ocupacion', 'Ocupación', { largo: 120 })}
                 ${entrada('personas_hogar', 'Personas en el hogar', { tipo: 'number', min: 0, max: 40, modo: 'numeric' })}
-                ${selector('jefe_hogar', 'Jefe de hogar', [['', '—'], ['si', 'Sí'], ['no', 'No']], { valor: p.jefe_hogar == null ? '' : p.jefe_hogar ? 'si' : 'no' })}
                 ${selector('tenencia_vivienda', 'Tenencia de la vivienda', lista(TENENCIAS))}
                 ${selector('estrato', 'Estrato', [['', '—'], ...['0', '1', '2', '3', '4', '5', '6'].map((x) => [x, x])])}
                 ${selector('regimen_salud', 'Régimen de salud', lista(REGIMENES_SALUD))}
-              </div></details>
-              <details class="bloque" ${esMovil() ? '' : 'open'}><summary>Contacto y ubicación</summary><div class="form">
-                ${entrada('correo', 'Correo', { modo: 'email', largo: 120 })}
-                ${entrada('direccion', 'Dirección', { ancho: true, largo: 240 })}
-                <label class="campo" data-campo="lugar_id"><span>Barrio o vereda</span><select name="lugar_id" ${ed('lugar_id') ? '' : 'disabled'}>${opcionesLugares(cat, p.lugar_id)}</select></label>
-                <div class="fila-botones ancho"><button type="button" class="btn chico" data-gps>${icono('gps')} Estoy en su casa</button><button type="button" class="btn chico" data-ver-mapa>${icono('mapa')} Ver en el mapa</button></div>
               </div></details>
               <details class="bloque" ${esMovil() ? '' : 'open'} id="bloque-autorizacion"><summary>Autorización ${chipAutorizacion(p, { conCanales: false })}</summary>
                 <div class="datos">
@@ -225,7 +232,6 @@ export async function vistaFicha(el, { params, ir }) {
                 })}
                 <div class="form" style="margin-top:12px">
                   ${campos.map((c) => campoPropio(c))}
-                  ${adm ? html`<label class="interruptor" style="align-self:end"><span>Líder comunitario</span><input type="checkbox" name="lider" ${p.lider ? 'checked' : ''}></label>` : ''}
                   <label class="campo ancho"><span>Observaciones</span><textarea name="observaciones" maxlength="4000" ${ed('observaciones') ? '' : 'disabled'}>${p.observaciones ?? ''}</textarea></label>
                 </div>
               </details>
@@ -275,6 +281,7 @@ export async function vistaFicha(el, { params, ir }) {
         </div>
       </div>`);
     vigilarBarra();
+    if (adm) montarBuscadorLider();
     formInicial = leerForm();
     // Después de leer el formulario: la edad calculada no cuenta como un cambio, y al borrar la fecha vuelve la guardada
     if ($('#f-datos', el)) enlazarEdad($('#f-datos', el));
@@ -324,7 +331,7 @@ export async function vistaFicha(el, { params, ir }) {
       ${p.menor ? html`<span class="chip rojo">Menor de edad</span>` : ''}
       ${p.requiere_actualizacion ? html`<span class="chip ambar">Pendiente de actualizar</span>` : ''}
       ${sit ? html`<span class="chip rojo">${SITUACIONES[sit.estado] || sit.estado}${sit.confirmada ? '' : ' (sin confirmar)'}</span>` : ''}
-      ${adm ? html`${insigniasFuentes(p.fuentes, { conNombre: true })}${p.lider ? html`<span class="chip rojo">Líder</span>` : ''}${(p.lideres || []).length > 1 ? html`<span class="chip ambar" title="Más de un líder la está captando">${num(p.lideres.length)} líderes</span>` : ''}${(p.listas || []).map((l) => html`<span class="chip azul">${l}</span>`)}` : ''}
+      ${adm ? html`${insigniasFuentes(p.fuentes, { conNombre: true })}${chipsTipo(p)}${(p.lideres || []).length > 1 ? html`<span class="chip ambar" title="Más de un líder la está captando">${num(p.lideres.length)} líderes</span>` : ''}${(p.listas || []).map((l) => html`<span class="chip azul">${l}</span>`)}` : ''}
     </div>`;
   }
 
@@ -496,23 +503,43 @@ export async function vistaFicha(el, { params, ir }) {
         : html`<p class="sec">No aparece en la base de trámites.</p>`}`;
   }
 
-  // ───────── Líderes (A y K): quién la trajo y a quiénes trajo ─────────
+  // ───────── Líderes (A y K): quién la lidera y a quiénes lidera ─────────
+  // «Liderado por» en los datos principales: los líderes o concejales que la trajeron y la barra para buscar otro
+  function lideradoPor() {
+    const ls = p.lideres || [];
+    return html`${ls.length ? html`${ls.map((l) => html`<div class="lider-asignado"><div class="q"><a href="/personas/${l.id}" data-ruta>${l.nombre}</a>
+          ${l.tipo ? html`<span class="chip ${l.tipo === 'concejal' ? 'azul' : 'rojo'}">${TIPOS_PERSONA[l.tipo]}</span>` : ''}
+          <small class="sec">${[l.asignado_en ? 'desde ' + fecha(l.asignado_en) : null, l.asignado_por ? 'por ' + l.asignado_por : null, l.marcado ? null : 'ya no marcado como líder ni concejal'].filter(Boolean).join(' · ')}</small></div>
+        <button type="button" class="btn chico fantasma" data-quitar-lider="${l.id}" aria-label="Quitar a ${l.nombre} como líder">✕</button></div>`)}
+      ${ls.length > 1 ? html`<p class="aviso-legal" style="margin:8px 0 0">Más de un líder la está captando.</p>` : ''}`
+      : html`<p class="sec" style="margin:0 0 6px">Sin líder ni concejal asignado.</p>`}
+      <div id="buscador-lider-ficha" style="margin-top:8px"></div>`;
+  }
+  // La barra se monta después de pintar: elegir un líder lo asigna en el momento (no espera a «Guardar cambios»)
+  function montarBuscadorLider() {
+    const caja = $('#buscador-lider-ficha', el);
+    if (!caja) return;
+    buscadorLider(caja, {
+      persona: p.nombre,
+      excluir: () => [id, ...(p.lideres || []).map((x) => x.id)],
+      alElegir: async (l) => {
+        try { p = await api.post(`/api/personas/${id}/lideres`, { lider_id: l.id }); pintar({ conservar: true }); aviso(`${titulo(l.nombre)} asignado`); } catch (err) { avisoError(err); }
+      },
+    });
+  }
+  // La tarjeta lateral: a cuántas personas lidera (solo si lidera a alguien o está marcada como líder o concejal)
   function tarjetaLideres() {
     const ls = p.lideres || [];
     const tr = p.traidas;
+    if (!tr && !p.lider && !p.concejal) return '';
     return html`<section class="tarjeta lideres-ficha">
-      <header><h2>Líderes</h2>${ls.length > 1 ? html`<span class="chip ambar">Captada por ${num(ls.length)}</span>` : ''}</header>
-      ${ls.length ? html`<div class="sec" style="margin-bottom:6px">Traída por</div>
-        ${ls.map((l) => html`<div class="lider-asignado"><div class="q"><a href="/personas/${l.id}" data-ruta>${l.nombre}</a>
-            <small class="sec">${[l.asignado_en ? 'desde ' + fecha(l.asignado_en) : null, l.asignado_por ? 'por ' + l.asignado_por : null, l.marcado ? null : 'ya no marcado como líder'].filter(Boolean).join(' · ')}</small></div>
-          <button class="btn chico fantasma" data-quitar-lider="${l.id}" aria-label="Quitar a ${l.nombre} como líder">✕</button></div>`)}
-        ${ls.length > 1 ? html`<p class="aviso-legal" style="margin:8px 0 0">Más de un líder la está captando.</p>` : ''}`
-        : html`<p class="sec" style="margin:0 0 6px">Sin líder asignado.</p>`}
-      <div class="fila-botones" style="margin-top:10px"><button class="btn chico" data-asignar-lider>${icono('mas')} Asignar líder</button></div>
-      ${tr ? html`<div class="datos" style="margin-top:12px;grid-template-columns:1fr 1fr">
-        <div><span>Personas que trajo</span><b><a href="/personas?lider_id=${p.id}" data-ruta>${num(tr.total)}</a></b></div>
-        <div><span>También con otro líder</span><b>${tr.compartidas ? html`<a href="/personas?lider_id=${p.id}&varios_lideres=1" data-ruta>${num(tr.compartidas)}</a>` : '0'}</b></div>
-      </div>` : ''}
+      <header><h2>${p.concejal ? 'Concejal' : 'Líder'}</h2>${ls.length > 1 ? html`<span class="chip ambar">Captada por ${num(ls.length)}</span>` : ''}</header>
+      <div class="datos" style="grid-template-columns:1fr 1fr">
+        <div><span>Lidera</span><b>${tr?.total ? html`<a href="/personas?lider_id=${p.id}" data-ruta>${num(tr.total)}</a>` : '0'}</b></div>
+        <div><span>Votantes</span><b>${tr?.total ? html`<a href="/personas?lider_id=${p.id}&tipo=votante" data-ruta>Ver</a>` : '0'}</b></div>
+        <div><span>También con otro líder</span><b>${tr?.compartidas ? html`<a href="/personas?lider_id=${p.id}&varios_lideres=1" data-ruta>${num(tr.compartidas)}</a>` : '0'}</b></div>
+      </div>
+      <div class="fila-botones" style="margin-top:10px"><button class="btn chico" data-nuevo-liderado>${icono('mas')} Registrar votante liderado</button></div>
     </section>`;
   }
 
@@ -750,6 +777,12 @@ export async function vistaFicha(el, { params, ir }) {
       if (esC) api.post(`/api/trabajo/tomar/${id}`, undefined, { keepalive: true }).catch(() => {});
       return; // el enlace sigue su curso (tel: o WhatsApp)
     }
+    if (e.target.closest('[data-nuevo-liderado]')) {
+      // Un votante nuevo que lidera esta persona: el alta llega con ella elegida en «Liderado por»
+      formularioNuevaPersona({ cat, prellenado: { tipo: 'votante' }, lideres: [{ id: p.id, nombre: p.nombre, tipo: p.concejal ? 'concejal' : 'lider' }],
+        alCrear: (n) => ir(`/personas/${n.id}`) });
+      return;
+    }
     if (e.target.closest('[data-asignar-lider]')) {
       // El líder se elige entre las fichas marcadas como líder; la ficha vuelve con la lista al día
       const l = await elegirLider({ excluir: [id, ...(p.lideres || []).map((x) => x.id)], persona: p.nombre });
@@ -857,7 +890,7 @@ export async function vistaFicha(el, { params, ir }) {
   }
 
   el.addEventListener('input', (e) => {
-    if (!e.target.closest('#f-datos') || e.target.name?.startsWith('aut_')) return;
+    if (!e.target.closest('#f-datos') || e.target.name?.startsWith('aut_') || e.target.matches('[data-buscar-lider]')) return;
     marcarSucio();
     // Cambiar un documento existente (A y K) pide el motivo
     if (e.target.name === 'cedula') {

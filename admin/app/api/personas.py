@@ -259,6 +259,7 @@ class PersonaIn(BaseModel):
     nivel_educativo: str | None = Field(None, max_length=60)
     situacion_laboral: str | None = Field(None, max_length=60)
     ocupacion: str | None = Field(None, max_length=120)
+    perfil_profesional: str | None = Field(None, max_length=160)
     personas_hogar: int | None = Field(None, ge=0, le=40)
     jefe_hogar: bool | None = None
     tenencia_vivienda: str | None = Field(None, max_length=60)
@@ -276,7 +277,10 @@ class PersonaIn(BaseModel):
     donde: Literal["yondo", "otro_municipio", "no_inscrito"] | None = None
     municipio: str | None = Field(None, max_length=80)
     votacion_verificada: bool | None = None
+    # Tipo de persona (modelo.TIPOS_PERSONA): solo A y K
     lider: bool | None = None
+    votante: bool | None = None
+    concejal: bool | None = None
     consentimiento: Literal["si", "no", "pendiente"] | None = None
     consentimiento_fecha: str | None = Field(None, max_length=10)
     consentimiento_medio: str | None = Field(None, max_length=40)
@@ -305,8 +309,8 @@ class PersonaIn(BaseModel):
 
 # Campos simples (un valor de primer nivel) y su clave canónica para la auditoría y los indicadores
 SIMPLES = ("nombre", "sexo", "edad", "fecha_nacimiento", "estado_civil", "nivel_educativo", "situacion_laboral",
-           "ocupacion", "personas_hogar", "jefe_hogar", "tenencia_vivienda", "estrato", "regimen_salud", "correo",
-           "direccion", "observaciones", "lider", "cedula_verificada")
+           "ocupacion", "perfil_profesional", "personas_hogar", "jefe_hogar", "tenencia_vivienda", "estrato",
+           "regimen_salud", "correo", "direccion", "observaciones", *modelo.TIPOS_PERSONA, "cedula_verificada")
 CATALOGOS = {"estado_civil": modelo.ESTADOS_CIVILES, "nivel_educativo": modelo.NIVELES,
              "situacion_laboral": modelo.SITUACIONES_LABORALES, "tenencia_vivienda": modelo.TENENCIAS,
              "regimen_salud": modelo.REGIMENES_SALUD}
@@ -316,7 +320,7 @@ CANONICO = {"fecha_nacimiento": "edad", "lugar_id": "lugar", "telefono": "telefo
             "consentimiento_fecha": "autorizacion", "tipo_documento": "cedula", "cedula_verificada": "cedula"}
 VOTACION_ENTRADA = ("puesto_id", "puesto_texto", "puesto_votacion", "mesa", "donde", "municipio", "votacion_verificada")
 # Lo que P no puede mandar (403 con el nombre del campo)
-VEDADOS_P = ("lider", "lideres", "motivo_cambio_cedula", "puesto_votacion", "consentimiento_fecha")
+VEDADOS_P = (*modelo.TIPOS_PERSONA, "lideres", "motivo_cambio_cedula", "puesto_votacion", "consentimiento_fecha")
 
 
 def _vacio(v: Any) -> bool:
@@ -353,7 +357,9 @@ def _limpiar_simple(k: str, v: Any) -> Any:
         if not c:
             raise HTTPException(422, f"Correo no válido: {v}")
         return c
-    if k in ("lider", "cedula_verificada", "jefe_hogar"):
+    if k in modelo.TIPOS_PERSONA:  # sí o no: sin dato es «no» (una ficha vieja no tiene el campo)
+        return bool(v)
+    if k in ("cedula_verificada", "jefe_hogar"):
         return None if v is None else bool(v)
     if k == "sexo":
         return v or None
@@ -800,6 +806,9 @@ def _condiciones_base(base: dict | None) -> list[dict]:
             continue
         if not (v is None or isinstance(v, (str, int, float, bool))):
             raise HTTPException(422, f"Valor de base no válido para {k}")
+        if campo in modelo.TIPOS_PERSONA:  # una ficha vieja no tiene el campo: cuenta como «no»
+            out.append({campo: True} if v else {campo: {"$ne": True}})
+            continue
         out.append({campo: {"$in": [None, ""]}} if _vacio(v) else {campo: v})
     return out
 
@@ -815,6 +824,8 @@ def _cambiada(db: Database, pid: int, base: dict, quien: Quien) -> HTTPException
         actual = p
         for parte in campo.split("."):
             actual = actual.get(parte) if isinstance(actual, dict) else None
+        if campo in modelo.TIPOS_PERSONA:
+            actual, v = bool(actual), bool(v)
         if (None if _vacio(actual) else actual) != (None if _vacio(v) else v):
             campos.append(k)
             valores[k] = None if (k in ("telefono", "telefono2") and menor and not quien.administra) else actual
@@ -826,7 +837,7 @@ def _detalle(k: str, antes: Any, despues: Any, ctx_sens: set) -> dict:
     """Entrada de la auditoría con las máscaras de 1.9 (cédulas: 3 últimos dígitos; lo sensible, oculto)."""
     if k in ("cedula", "cedulas_anteriores"):
         return {"antes": acceso.enmascarar_cedula(antes), "despues": acceso.enmascarar_cedula(despues)}
-    if k in ("lider", "lideres", "sensibles"):
+    if k in (*modelo.TIPOS_PERSONA, "lideres", "sensibles"):
         return {"antes": "(oculto)", "despues": "(oculto)"}
     if k == "etiquetas":
         f = lambda xs: ["(oculto)" if e in ctx_sens else e for e in xs or []]  # noqa: E731
@@ -864,6 +875,17 @@ def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, 
 
     def poner(k: str, v: Any) -> None:
         actual = antes.get(k)
+        if k in modelo.TIPOS_PERSONA:
+            # Sí o no (sin el campo es «no»). Completar solo suma un tipo, nunca lo quita. Lo que marca una persona
+            # queda con su procedencia: la importación no lo vuelve a cambiar (importar.marcar_tipo)
+            actual = bool(actual)
+            if actual == v or (completar and not v):
+                return
+            sets[k] = _lit(v)
+            procedencia[k] = {"fuente": "panel", "ts": ts, "uid": quien.uid}
+            diff[k] = _detalle(k, actual, v, sens_et)
+            despues[k] = v
+            return
         if (None if _vacio(actual) else actual) == v:
             return
         if v is None and not _vacio(actual) and p_rol:
@@ -1292,8 +1314,11 @@ def crear(body: NuevaPersona, request: Request, db: Database = Depends(obtener_d
     if v:
         doc["votacion"] = v
         doc.update(modelo.derivar_votacion(v))
-    procedencia = {k: {"fuente": "panel", "ts": ts, "uid": quien.uid} for k in modelo.CAMPOS_PROCEDENCIA
-                   if not _vacio(doc.get(k))}
+    # Los tipos solo si se marcaron (un «no» por defecto no impide que una importación los marque después)
+    procedencia = {k: {"fuente": "panel", "ts": ts, "uid": quien.uid}
+                   for k in modelo.CAMPOS_PROCEDENCIA if not _vacio(doc.get(k))}
+    procedencia.update({k: {"fuente": "panel", "ts": ts, "uid": quien.uid}
+                        for k in modelo.TIPOS_PERSONA if doc.get(k)})
     doc["procedencia"] = procedencia
     if body.etiquetas:
         validas = {e["_id"] for e in db.etiquetas.find({}, {"_id": 1})}
