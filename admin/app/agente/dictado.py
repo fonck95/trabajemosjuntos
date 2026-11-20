@@ -233,6 +233,13 @@ async def cupo() -> AsyncIterator[None]:
             _transcribiendo.discard(ficha)
 
 
+def transcribiendo() -> bool:
+    """¿Hay alguna transcripción en curso en el proceso (un cupo de `cupo` tomado)? La respuesta inmediata del asistente
+    con Mnemo no va mientras tanto (`bucle.Turno`): esas llamadas a Mnemo van primero."""
+    with _candado:
+        return bool(_transcribiendo)
+
+
 def diarias(base: str, uid: Any, maximo: int) -> None:
     """Cuenta una transcripción en el día de la persona (hora de Colombia, como sus mensajes): a lo sumo `maximo`; si
     no, 429 `volumen`. En memoria y por proceso, como `frecuencia`."""

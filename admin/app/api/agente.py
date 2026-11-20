@@ -5,8 +5,9 @@
   nueva (`proveedor`: «mnemo», «anthropic» o None; ver `agente/proveedores.py`). Para el administrador y el
   coordinador trae además la conexión con Mnemo (`mnemo.conexion`, `mnemo_conexion.vista`; al coordinador, sin la
   cuenta personal de Mnemo del administrador ni la dirección sugerida); conectarla y desconectarla está en
-  `api/agente_mnemo.py`. Y `dictado`: si esta instalación puede transcribir por Mnemo las preguntas por voz; y `voz`:
-  si esta persona puede hacer sonar la voz clonada de Mnemo (`agente/voz.py`).
+  `api/agente_mnemo.py`. Y `dictado`: si esta instalación puede transcribir por Mnemo las preguntas por voz; `voz`:
+  si esta persona puede hacer sonar la voz clonada de Mnemo (`agente/voz.py`); y `adelanto`: si sus preguntas reciben
+  la respuesta inmediata (`agente/adelanto.py`).
 * GET /api/agente/conversaciones, GET y DELETE /api/agente/conversaciones/{cid} — las conversaciones propias: solo
   su dueño las ve o las borra (de otra persona es un 404, como si no existiera).
 * POST /api/agente/mensajes y POST /api/agente/confirmaciones — un turno en flujo (NDJSON, `bucle.py`). Lo que impide
@@ -182,7 +183,9 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
     (hay una conexión con `mnemo:model` y Mnemo no dijo hace poco que no transcribe); con False el panel usa el
     reconocimiento de voz del navegador. `voz`: `{"disponible": bool (esta persona puede hacer sonar la voz clonada
     elegida en Ajustes), "nombre": el de la voz | None, "respuestas": bool (la voz lee las respuestas del asistente),
-    "automatica": bool (narra también la presentación automática)}`; sin ella, la voz del navegador."""
+    "automatica": bool (narra también la presentación automática)}`; sin ella, la voz del navegador. `adelanto`:
+    True si cada pregunta de esta persona recibe la respuesta inmediata mientras se prepara la completa (el asistente
+    está disponible para ella y `agente_adelanto` está encendido en Ajustes)."""
     cfg = request.app.state.cfg
     ajustes, agente = politica.leer(db)
     sesion = (request.scope.get("state") or {}).get("sesion")
@@ -198,6 +201,7 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
             "limite": {"usados": conv_db.uso_de(db, quien.uid), "maximo": politica.mensajes_diarios(ajustes, quien.rol)},
             "mnemo": mnemo, "dictado": _dictado(request.app, conexion),
             "voz": _voz(request.app, db, quien, ajustes, conexion),
+            "adelanto": motivo is None and ajustes["agente_adelanto"],
             "sugerencias": politica.sugerencias(quien.rol) if motivo is None else []}
 
 

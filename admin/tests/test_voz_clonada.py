@@ -12,15 +12,23 @@ datos inventados; nunca se llama a Mnemo ni suena un parlante de verdad.
   vez; la prueba de Ajustes nunca va con la voz del navegador; `activar`/`gesto` destraban el audio; `soltar` cierra
   todo; `nivel` sale del medidor de la salida; y una referencia de otra forma no se pide.
 * `web/js/locutor.js`, con una voz falsa: dice las frases de un turno en orden, precarga la siguiente, se resincroniza
-  con `frases_descartar` sin repetir lo ya dicho, se calla y no sigue, cede ante la narración y salta lo que falló.
+  con `frases_descartar` sin repetir lo ya dicho, se calla y no sigue, cede ante la narración y salta lo que falló. La
+  respuesta inmediata (docs/agente.md, «La respuesta inmediata») va primero: la respuesta espera a que se diga entera y
+  termine (o hasta ESPERA_ADELANTO_MS sin saber de ella), `vacio` la suelta en el acto, callar calla las dos,
+  `callarRespuesta` deja terminar la inmediata, y un plan que le cede el turno no la detiene.
 * `web/js/voz-panel.js`, con `fetch` y `AudioContext` falsos: una sola voz por ventana con conteo de referencias, la
   narración manda sobre las respuestas, el audio se pide a POST /api/agente/voz con `flujo` (CSRF, NDJSON), el estado
-  de la voz llega del asistente o se pide si no hay asistente, y `sin_voz` avisa `agente:estado`.
+  de la voz llega del asistente o se pide si no hay asistente, y `sin_voz` avisa `agente:estado`. La marca de la
+  respuesta inmediata (la ponen las respuestas, la leen todas) y la cesión del plan en su espera previa: la inmediata
+  suena, la respuesta no, y la primera precarga del plan no la calla.
 * `web/js/reproductor.js` con una voz que precarga: cada frase lleva su referencia en el plan (y el resumen la suya) y
-  se precarga la que sigue, también en la espera de un plan nuevo.
+  se precarga la que sigue, también en la espera de un plan nuevo. Esa espera se alarga mientras suena la respuesta
+  inmediata, hasta ESPERA_ADELANTO_MS (una pausa no cuenta; «siguiente» la corta; un plan que reemplaza al que
+  esperaba conserva su cesión).
 * Lo estático: los módulos puros no dependen del panel, y lo que usan agente.js, vistas/ajustes.js y
   vistas/presentacion.js de la voz (el botón «Leer las respuestas en voz alta», el bloque «Voz del asistente», la voz de
-  la ventana). Y los topes del navegador son los del servidor.
+  la ventana), la respuesta inmediata en el chat (su recuadro, el historial, cuándo la sala la oye) y la casilla
+  «Respuesta inmediata» de Ajustes. Y los topes del navegador son los del servidor.
 """
 import json
 import re
@@ -859,6 +867,220 @@ def test_el_locutor_de_las_respuestas(tmp_path):
     assert r["validas"] == [True, True, True] and r["invalidas"] == [None] * 10
 
 
+NODE_LOCUTOR_ADELANTO = FALSOS + r"""
+const L = await import(process.argv[2]);
+const espera = async () => { for (let i = 0; i < 5; i++) await new Promise((r) => setImmediate(r)); };
+// La voz falsa de NODE_LOCUTOR, que además anota si cada frase va como de la respuesta inmediata (`adelanto`)
+function vozFalsa() {
+  const v = { dichos: [], adelanto: [], preparados: [], callados: 0, pendiente: null,
+    decir(t, o) { return new Promise((ok) => { v.dichos.push(o.ref.texto); v.adelanto.push(o.adelanto === true); v.pendiente = { ok }; }); },
+    async terminar(r = 'dicha') { const p = v.pendiente; v.pendiente = null; p?.ok(r); await espera(); },
+    callar() { v.callados++; const p = v.pendiente; v.pendiente = null; p?.ok('cortada'); },
+    preparar(items) { v.preparados.push(items.map((x) => x.ref.texto)); } };
+  return v;
+}
+const F = (n, texto) => ({ tipo: 'frase', n, texto, firma: 'f'.repeat(43) });
+const A = (n, texto) => ({ tipo: 'adelanto_frase', n, texto, firma: 'a'.repeat(43) });
+const out = {};
+
+// La inmediata va primero: la respuesta que llega mientras suena espera a que se diga entera y termine. Se precarga lo
+// que sigue (la frase siguiente de la inmediata y, terminada ella, la primera de la respuesta)
+{
+  const v = vozFalsa(); const avisos = []; const pedidas = [];
+  const l = L.crearLocutor({ voz: v, alAdelanto: (x) => avisos.push(x), ocupada: (o) => { pedidas.push(o.adelanto); return false; } });
+  l.empezar(5);
+  l.empiezaAdelanto();                       // su primer trozo
+  const vivo = l.adelantoVivo();
+  l.fraseAdelanto(A(0, 'Buena pregunta.'));
+  await espera();
+  l.frase(F(0, 'La respuesta completa.'));   // la respuesta ya escribe: espera
+  l.fraseAdelanto(A(1, 'Enseguida le doy el detalle.'));
+  await espera();
+  const mientras = [...v.dichos];
+  await v.terminar();
+  const antesDelFin = [...v.dichos];
+  const precargas = v.preparados.length;
+  l.terminaAdelanto();
+  await espera();
+  await v.terminar();
+  const avisosAlTerminar = [...avisos];
+  await v.terminar();
+  out.orden = { vivo, mientras, antesDelFin, precargas, avisosAlTerminar, dichos: v.dichos, adelanto: v.adelanto,
+    preparados: v.preparados, avisos, pedidas, activo: l.activo(), vivoDespues: l.adelantoVivo() };
+}
+
+// Sin respuesta inmediata, la respuesta no espera nada; con `vacio`, la que esperaba sigue en el acto
+{
+  const v = vozFalsa();
+  const l = L.crearLocutor({ voz: v });
+  l.empezar(5);
+  l.frase(F(0, 'Sin respuesta inmediata.'));
+  await espera();
+  const w = vozFalsa(); const avisos = [];
+  const m = L.crearLocutor({ voz: w, alAdelanto: (x) => avisos.push(x) });
+  m.empezar(5);
+  m.empiezaAdelanto();
+  m.frase(F(0, 'Esperaba a la inmediata.'));
+  await espera();
+  const antes = [...w.dichos];
+  m.terminaAdelanto(true);
+  await espera();
+  out.vacio = { sin: v.dichos, antes, dichos: w.dichos, avisos, tarde: m.fraseAdelanto(A(0, 'Ya terminó.')) };
+}
+
+// El plazo: sin saber nada de la inmediata en ESPERA_ADELANTO_MS, la respuesta deja de esperarla y lo que llegue tarde
+// no se dice. Mientras una frase suya suena, no corre: empieza cuando termina
+{
+  const reloj = relojFalso();
+  const v = vozFalsa(); const avisos = [];
+  const l = L.crearLocutor({ voz: v, reloj, alAdelanto: (x) => avisos.push(x) });
+  l.empezar(5);
+  l.empiezaAdelanto();
+  await reloj.avanzar(1000);
+  l.frase(F(0, 'La respuesta no espera para siempre.'));
+  await reloj.avanzar(L.ESPERA_ADELANTO_MS - 1100);
+  const antes = [...v.dichos];
+  await reloj.avanzar(200);
+  const despues = [...v.dichos];
+  const tarde = l.fraseAdelanto(A(0, 'Llega tarde y no se dice.'));
+  await v.terminar();
+  const w = vozFalsa();
+  const m = L.crearLocutor({ voz: w, reloj });
+  m.empezar(5);
+  m.fraseAdelanto(A(0, 'Una frase larga de la inmediata.'));
+  m.frase(F(0, 'La respuesta.'));
+  await reloj.avanzar(L.ESPERA_ADELANTO_MS + 2000);   // sigue sonando: la respuesta espera
+  const sonando = [...w.dichos];
+  await w.terminar();
+  await reloj.avanzar(L.ESPERA_ADELANTO_MS - 500);
+  const aun = [...w.dichos];
+  await reloj.avanzar(600);
+  out.plazo = { antes, despues, tarde, avisos, dichos: v.dichos, larga: { sonando, aun, dichos: w.dichos } };
+}
+
+// callar calla las dos: lo que sonaba, lo que esperaba y lo que llegue
+{
+  const v = vozFalsa(); const avisos = [];
+  const l = L.crearLocutor({ voz: v, alAdelanto: (x) => avisos.push(x) });
+  l.empezar(5);
+  l.fraseAdelanto(A(0, 'Se corta.'));
+  l.fraseAdelanto(A(1, 'No se dice.'));
+  l.frase(F(0, 'Tampoco.'));
+  await espera();
+  l.callar();
+  await espera();
+  const tarde = [l.fraseAdelanto(A(2, 'Tarde.')), l.frase(F(1, 'Tarde.'))];
+  l.terminaAdelanto();
+  await espera();
+  out.callar = { dichos: v.dichos, callados: v.callados, tarde, avisos, activo: l.activo(), vivo: l.adelantoVivo() };
+}
+
+// callarRespuesta (el turno puso un plan aquí): la inmediata termina, la respuesta ya no se dice; sin inmediata, es callar
+{
+  const v = vozFalsa();
+  const l = L.crearLocutor({ voz: v });
+  l.empezar(5);
+  l.fraseAdelanto(A(0, 'La idea general.'));
+  l.frase(F(0, 'La respuesta no se dice.'));
+  await espera();
+  l.callarRespuesta();
+  const callados = v.callados;
+  const tarde = l.frase(F(1, 'Ni esta.'));
+  l.fraseAdelanto(A(1, 'Lo que falta de la idea.'));
+  l.terminaAdelanto();
+  await espera();
+  await v.terminar();
+  const activoAlFinal = l.activo();
+  await v.terminar();
+  const w = vozFalsa();
+  const m = L.crearLocutor({ voz: w });
+  m.empezar(5);
+  m.frase(F(0, 'Se corta.'));
+  await espera();
+  m.callarRespuesta();
+  await espera();
+  out.respuesta = { dichos: v.dichos, callados, tarde, activoAlFinal, activo: l.activo(),
+    sin: { dichos: w.dichos, callados: w.callados, activo: m.activo() } };
+}
+
+// Un plan de aquí en su espera previa le cede el turno a la inmediata (`ocupada({adelanto: true})` es false), pero no
+// a la respuesta, que espera a que se pause
+{
+  const reloj = relojFalso();
+  const v = vozFalsa();
+  let plan = true;
+  const l = L.crearLocutor({ voz: v, reloj, ocupada: ({ adelanto }) => plan && !adelanto });
+  l.empezar(5);
+  l.fraseAdelanto(A(0, 'La inmediata no espera al plan que le cede el turno.'));
+  l.terminaAdelanto();
+  l.frase(F(0, 'La respuesta sí lo espera.'));
+  await reloj.avanzar(10);
+  await v.terminar();
+  await reloj.avanzar(1000);
+  const esperando = [...v.dichos];
+  plan = false;
+  await reloj.avanzar(400);
+  out.cede = { esperando, dichos: v.dichos };
+}
+
+// frases_descartar y frases_ronda son de la respuesta: la inmediata que suena sigue
+{
+  const v = vozFalsa();
+  const l = L.crearLocutor({ voz: v });
+  l.empezar(5);
+  l.fraseAdelanto(A(0, 'Suena la inmediata.'));
+  l.frase(F(0, 'Vieja.'));
+  await espera();
+  l.descartar(0);
+  l.ronda(0);
+  const callados = v.callados;
+  l.frase(F(0, 'Nueva.'));
+  l.terminaAdelanto();
+  await v.terminar();
+  await v.terminar();
+  out.descartar = { dichos: v.dichos, callados };
+}
+console.log(JSON.stringify(out));
+"""
+
+
+@requiere_node
+def test_el_locutor_dice_primero_la_respuesta_inmediata(tmp_path):
+    """La respuesta inmediata (`adelanto_frase`) tiene su cola y va primero; la respuesta (`frase`) espera a que se diga
+    entera y termine (`adelanto_fin`), o a que se deje de saber de ella (ESPERA_ADELANTO_MS); `vacio` la suelta en el
+    acto; callar calla las dos; callarRespuesta deja terminar la inmediata."""
+    r = _node(tmp_path, NODE_LOCUTOR_ADELANTO, LOCUTOR_JS.as_uri())
+    o = r["orden"]
+    assert o["vivo"] is True and o["mientras"] == ["Buena pregunta."]
+    assert o["antesDelFin"] == ["Buena pregunta.", "Enseguida le doy el detalle."] and o["precargas"] == 1
+    assert o["dichos"] == ["Buena pregunta.", "Enseguida le doy el detalle.", "La respuesta completa."]
+    # la voz sabe cuáles son de la inmediata; `ocupada` también
+    assert o["adelanto"] == [True, True, False] and o["pedidas"] == [True, True, False]
+    # la siguiente de la inmediata se precarga mientras suena la anterior; terminada, la primera de la respuesta
+    assert o["preparados"] == [["Enseguida le doy el detalle."], ["La respuesta completa."]]
+    assert o["avisosAlTerminar"] == [True, False] and o["avisos"] == [True, False]
+    assert o["activo"] is True and o["vivoDespues"] is False
+    v = r["vacio"]
+    assert v["sin"] == ["Sin respuesta inmediata."]
+    assert v["antes"] == [] and v["dichos"] == ["Esperaba a la inmediata."] and v["avisos"] == [True, False]
+    assert v["tarde"] is False
+    p = r["plazo"]
+    assert p["antes"] == [] and p["despues"] == ["La respuesta no espera para siempre."] and p["tarde"] is False
+    assert p["avisos"] == [True, False] and p["dichos"] == ["La respuesta no espera para siempre."]
+    assert p["larga"] == {"sonando": ["Una frase larga de la inmediata."], "aun": ["Una frase larga de la inmediata."],
+                          "dichos": ["Una frase larga de la inmediata.", "La respuesta."]}
+    c = r["callar"]
+    assert c["dichos"] == ["Se corta."] and c["callados"] >= 1 and c["tarde"] == [False, False]
+    assert c["avisos"] == [True, False] and c["activo"] is False and c["vivo"] is False
+    q = r["respuesta"]
+    assert q["dichos"] == ["La idea general.", "Lo que falta de la idea."] and q["callados"] == 0 and q["tarde"] is False
+    assert q["activoAlFinal"] is True and q["activo"] is False
+    assert q["sin"] == {"dichos": ["Se corta."], "callados": 1, "activo": False}
+    assert r["cede"] == {"esperando": ["La inmediata no espera al plan que le cede el turno."],
+                         "dichos": ["La inmediata no espera al plan que le cede el turno.", "La respuesta sí lo espera."]}
+    assert r["descartar"] == {"dichos": ["Suena la inmediata.", "Nueva."], "callados": 0}
+
+
 NODE_PANEL = FALSOS + r"""
 // El panel en /panel (servicio único), con un `fetch` que la prueba maneja y una ventana con eventos
 const et = new EventTarget();
@@ -1053,6 +1275,87 @@ def test_una_sola_voz_por_ventana(tmp_path):
     assert "narracion, respuestas, prueba" in r["quien"]
 
 
+# Lo mismo que NODE_PANEL hasta antes de sus casos (el panel en /panel, `fetch` y AudioContext falsos)
+NODE_PANEL_ADELANTO = NODE_PANEL[:NODE_PANEL.index("// Sin el asistente (un rol que no lo usa)")] + r"""
+P.fijarInfoVoz({ disponible: true, nombre: 'Ana Inventada', respuestas: true, automatica: false });
+const ref = (t) => ({ conversacion: 7, texto: t, firma: 'f'.repeat(43) });
+const PLAN = (n, frase) => ({ rid: 'abcdef123456', n, frase });
+{
+  let plan = true;   // un plan nuevo en su espera previa: el reproductor lo tiene activo y sin pausa
+  const n = P.tomarVoz('narracion', { ocupada: () => plan });
+  const r = P.tomarVoz('respuestas');
+  n.activar();
+  await dormir(10);
+  // Sin ceder, el plan ocupa la voz también para la inmediata
+  out.sinCeder = { res: await r.decir('Uno.', { ref: ref('Uno.'), adelanto: true }), ocupada: r.narracionOcupada({ adelanto: true }),
+    pedidos: voces('/panel/api/agente/voz').length };
+  // Solo las respuestas marcan que suena la inmediata; todas lo leen
+  n.marcarAdelanto(true);
+  const deNarracion = n.adelantoSonando();
+  r.marcarAdelanto(true);
+  out.marca = { deNarracion, narracion: n.adelantoSonando(), respuestas: r.adelantoSonando() };
+  // El plan, en su espera previa, le cede el turno (solo la narración cede): la inmediata suena; la respuesta no
+  r.ceder(true);
+  const cedeRespuestas = r.narracionOcupada({ adelanto: true });
+  n.ceder(true);
+  out.cede = { cedeRespuestas, inmediata: r.narracionOcupada({ adelanto: true }), respuesta: r.narracionOcupada() };
+  const antes = voces('/panel/api/agente/voz').length;
+  let res = null;
+  r.decir('La idea general.', { ref: ref('La idea general.'), adelanto: true }).then((x) => { res = x; });
+  const respuesta = await r.decir('La respuesta.', { ref: ref('La respuesta.') });
+  await dormir(30);
+  const pv = voces('/panel/api/agente/voz')[antes];
+  linea(pv, { tipo: 'inicio', formato: 'pcm_s16le', muestreo: 24000, canales: 1, cache: false, voz: 'Ana Inventada' });
+  linea(pv, { tipo: 'audio', datos: pcm(2000) });
+  await dormir(300);
+  // La primera precarga del plan no calla la inmediata que suena (la espera); la pide detrás
+  n.preparar([{ texto: 'La primera del plan.', ref: PLAN(1, 0) }]);
+  await dormir(30);
+  out.suena = { cuerpo: pv.cuerpo, sinAdelanto: !Object.hasOwn(pv.cuerpo, 'adelanto'), respuesta, abortada: !!pv.abortada,
+    res, precarga: voces('/panel/api/agente/voz').at(-1).cuerpo };
+  // El plan sale de la espera: ya no cede y su primera frase toma la voz (la inmediata se corta)
+  n.ceder(false);
+  out.sale = r.narracionOcupada({ adelanto: true });
+  n.decir('La primera del plan.', { ref: PLAN(1, 0) });
+  await dormir(30);
+  out.toma = { abortada: !!pv.abortada, res };
+  r.marcarAdelanto(false);
+  out.fin = n.adelantoSonando();
+  n.callar();
+  await dormir(30);
+  // Soltar las respuestas (el asistente que se va) borra su marca: un plan ya no espera nada
+  r.marcarAdelanto(true);
+  const otra = P.tomarVoz('respuestas');
+  const antesDeSoltar = otra.adelantoSonando();
+  r.soltar();
+  out.suelta = { antes: antesDeSoltar, despues: otra.adelantoSonando(), narracion: n.adelantoSonando() };
+  n.soltar();
+  otra.soltar();
+}
+console.log(JSON.stringify(out));
+"""
+
+
+@requiere_node
+def test_la_voz_de_la_ventana_deja_terminar_la_respuesta_inmediata(tmp_path):
+    """voz-panel.js: el locutor marca que suena la respuesta inmediata (`marcarAdelanto`) y la narración lo lee
+    (`adelantoSonando`); un plan en su espera previa le cede el turno (`ceder`): las frases de la inmediata no lo esperan
+    (las de la respuesta sí) y su primera precarga no las calla. Al salir de la espera, la narración manda otra vez."""
+    r = _node(tmp_path, NODE_PANEL_ADELANTO, (JS / "api.js").as_uri(), PANEL_JS.as_uri())
+    assert r["sinCeder"] == {"res": "cortada", "ocupada": True, "pedidos": 0}
+    assert r["marca"] == {"deNarracion": False, "narracion": True, "respuestas": True}
+    assert r["cede"] == {"cedeRespuestas": True, "inmediata": False, "respuesta": True}
+    s = r["suena"]
+    # la frase de la inmediata se pide como cualquier respuesta (sin `adelanto`: eso es del navegador); la de la
+    # respuesta espera al plan
+    assert s["cuerpo"] == {"conversacion": 7, "texto": "La idea general.", "firma": FIRMA} and s["sinAdelanto"] is True
+    assert s["respuesta"] == "cortada" and s["abortada"] is False and s["res"] is None
+    assert s["precarga"] == {"rid": "abcdef123456", "n": 1, "frase": 0}
+    assert r["sale"] is True and r["toma"] == {"abortada": True, "res": "cortada"}
+    assert r["fin"] is False
+    assert r["suelta"] == {"antes": True, "despues": False, "narracion": False}
+
+
 NODE_REPRODUCTOR = FALSOS + r"""
 const { crearReproductor } = await import(process.argv[2]);
 // Una voz que precarga: cada frase empieza a los 10 ms y termina a los 500
@@ -1145,6 +1448,85 @@ console.log(JSON.stringify(out));
 """
 
 
+NODE_REPRODUCTOR_ADELANTO = FALSOS + r"""
+const { crearReproductor, PREVIA_MS, ESPERA_ADELANTO_MS } = await import(process.argv[2]);
+const V = { enfoque: null, camara: 'paso', rumbo: null, elevacion: null, zoom: null, mirar: null, girar: false, comparar: 'proyecto',
+  detalle: null, inmersion: null, mostrar: [], ocultar: [], aislar: null, sin: [] };
+const plan = (id) => ({ id, titulo: 'Prueba', cierre: null, escenas: [{ capitulo: 'salud', paso: 1, panel: true, visual: V,
+  resaltar: null, mover: null, animar: false, frases: ['La primera del plan.'], sostener_ms: 1300 }] });
+// Una voz que dice cada frase en 500 ms; `adelanto(t)` dice si suena la respuesta inmediata en el momento t. Sin `con`,
+// es una voz que no sabe de ella (la del navegador sola)
+function armar({ adelanto = () => false, estado = 'activa', con = true } = {}) {
+  const reloj = relojFalso();
+  const v = { cedidas: [], estado: () => estado, callar() {}, preparar() {},
+    decir(t, { alEmpezar } = {}) { return new Promise((ok) => { reloj.programar(() => alEmpezar?.(), 10); reloj.programar(() => ok('dicha'), 500); }); } };
+  if (con) { v.adelantoSonando = () => adelanto(reloj.ahora()); v.ceder = (x) => v.cedidas.push([x, reloj.ahora()]); }
+  const escenas = [];
+  const rep = crearReproductor({ reloj, voz: v, orden: async (o) => { if (o.orden === 'escena') escenas.push([o.rid, reloj.ahora()]); return { ok: true }; } });
+  return { reloj, v, escenas, rep };
+}
+const out = {};
+for (const [nombre, op] of [['sin', {}], ['termina', { adelanto: (t) => t < 5000 }], ['tope', { adelanto: () => true }],
+  ['apagada', { adelanto: () => true, estado: 'apagada' }], ['sin_metodos', { adelanto: () => true, con: false }]]) {
+  const a = armar(op);
+  a.rep.iniciar(plan('aaaaaaaaaaaa'), { previa: PREVIA_MS });
+  await a.reloj.avanzar(ESPERA_ADELANTO_MS + 2000);
+  out[nombre] = { escena: a.escenas[0]?.[1] ?? null, cedidas: a.v.cedidas };
+}
+// «Siguiente» en la espera: empieza ya
+{
+  const a = armar({ adelanto: () => true });
+  a.rep.iniciar(plan('aaaaaaaaaaaa'), { previa: PREVIA_MS });
+  await a.reloj.avanzar(3000);
+  a.rep.siguiente();
+  await a.reloj.avanzar(1000);
+  out.siguiente = { escena: a.escenas[0]?.[1] ?? null, cedidas: a.v.cedidas };
+}
+// Una pausa en la espera no cuenta en el tope
+{
+  const a = armar({ adelanto: () => true });
+  a.rep.iniciar(plan('aaaaaaaaaaaa'), { previa: PREVIA_MS });
+  await a.reloj.avanzar(2000);
+  a.rep.pausar('boton');
+  await a.reloj.avanzar(5000);
+  a.rep.continuar();
+  await a.reloj.avanzar(ESPERA_ADELANTO_MS);
+  out.pausa = { escena: a.escenas[0]?.[1] ?? null };
+}
+// Un plan nuevo reemplaza al que esperaba: la cesión es la suya (la del viejo, al salir, no se la quita)
+{
+  const a = armar({ adelanto: () => true });
+  a.rep.iniciar(plan('aaaaaaaaaaaa'), { previa: PREVIA_MS });
+  await a.reloj.avanzar(1000);
+  a.rep.iniciar(plan('bbbbbbbbbbbb'), { previa: PREVIA_MS });
+  await a.reloj.avanzar(1000);
+  const cediendo = a.v.cedidas.at(-1)[0];
+  await a.reloj.avanzar(ESPERA_ADELANTO_MS);
+  out.reemplazo = { cediendo, cedidas: a.v.cedidas, escenas: a.escenas };
+}
+console.log(JSON.stringify(out));
+"""
+
+
+@requiere_node
+def test_el_plan_nuevo_espera_a_que_termine_la_respuesta_inmediata(tmp_path):
+    """reproductor.js: la espera previa de un plan nuevo (PREVIA_MS) se alarga mientras la voz dice que suena la
+    respuesta inmediata (`adelantoSonando`), como mucho ESPERA_ADELANTO_MS desde que llegó (una pausa no cuenta), y
+    mientras tanto le cede el turno (`ceder`). Sin voz que suene o sin voz que sepa de ella, no espera nada."""
+    r = _node(tmp_path, NODE_REPRODUCTOR_ADELANTO, REPRODUCTOR_JS.as_uri())
+    previa, tope, tick = 1800, 15000, 250
+    assert r["sin"] == {"escena": previa, "cedidas": [[True, 0], [False, previa]]}
+    t = r["termina"]
+    assert 5000 <= t["escena"] <= 5000 + tick and t["cedidas"] == [[True, 0], [False, t["escena"]]], t
+    assert r["tope"] == {"escena": tope, "cedidas": [[True, 0], [False, tope]]}
+    assert r["apagada"]["escena"] == previa and r["sin_metodos"] == {"escena": previa, "cedidas": []}
+    assert r["siguiente"] == {"escena": 3000, "cedidas": [[True, 0], [False, 3000]]}
+    assert r["pausa"]["escena"] == tope + 5000
+    re_ = r["reemplazo"]
+    assert re_["cediendo"] is True and re_["cedidas"] == [[True, 0], [True, 1000], [False, 1000 + tope]], re_
+    assert re_["escenas"] == [["bbbbbbbbbbbb", 1000 + tope]]
+
+
 @requiere_node
 def test_el_plan_automatico_sin_la_voz_clonada_usa_el_estado_del_navegador(tmp_path):
     r = _node(tmp_path, NODE_AUTO_SIN_CLONADA, REPRODUCTOR_JS.as_uri(), CLONADA_JS.as_uri())
@@ -1169,8 +1551,8 @@ def test_los_modulos_puros_no_dependen_del_panel():
         assert not re.search(r"(?<![\w.])localStorage\b", js), f.name
     assert re.search(r"^export function crearVozClonada\(\{ ventana = globalThis, pedir = null, respaldo = null, almacen = null,",
                      CLONADA_JS.read_text(encoding="utf-8"), re.M)
-    assert re.search(r"^export function crearLocutor\(\{ voz, ocupada = \(\) => false, alHablar = \(\) => \{\}, reloj = relojDelNavegador \} = \{\}\)",
-                     LOCUTOR_JS.read_text(encoding="utf-8"), re.M)
+    assert re.search(r"^export function crearLocutor\(\{ voz, ocupada = \(\) => false, alHablar = \(\) => \{\}, alAdelanto = \(\) => \{\},\n"
+                     r"  reloj = relojDelNavegador \} = \{\}\)", LOCUTOR_JS.read_text(encoding="utf-8"), re.M)
     # La voz de la ventana pide el audio con `flujo` de api.js (CSRF, reingreso, NDJSON) y solo a esta ruta
     panel = PANEL_JS.read_text(encoding="utf-8")
     assert "export const RUTA_VOZ = '/api/agente/voz';" in panel
@@ -1196,8 +1578,9 @@ def test_el_chat_lee_las_respuestas_en_voz_alta():
     assert "const si = puede && hablar && !vozApagada();" in codigo
     assert "v.alCambiar(() => aplicarHablar());" in codigo and "return v.estado() === 'apagada';" in codigo
     assert "hablar = !hablar || apagada;" in codigo and "if (apagada) v.encender(); else v.activar();" in codigo
-    assert "contexto: contexto({ voz: leer })" in codigo and "...(voz ? { voz: true } : {})," in codigo
-    assert "...(leer ? { voz: true } : {})" in codigo
+    assert "contexto: contexto({ voz: leer, vozAdelanto: sala })" in codigo and "...(voz ? { voz: true } : {})," in codigo
+    assert "...(vozAdelanto ? { voz_adelanto: true } : {})," in codigo
+    assert "...(leer ? { voz: true } : {})" in codigo and "leer || sala ? { voz" not in codigo
     # Las frases y su resincronización van al locutor; la voz es la de la ventana
     assert "case 'frase': if (t.hablar && turno === t) locutor.frase(ev); break;" in codigo
     assert "case 'frases_descartar': if (t.hablar && turno === t) locutor.descartar(ev.desde); break;" in codigo
@@ -1219,11 +1602,109 @@ def test_el_chat_lee_las_respuestas_en_voz_alta():
     for funcion in ("function cerrar(", "function limpiarConversacion()", "function ocultar()"):
         cuerpo = codigo[codigo.index(funcion):]
         assert "locutor.callar();" in cuerpo[:cuerpo.index("\n  }\n")], funcion
-    assert "if (t.hablar && ponePlan(ev.accion)) locutor.callar();" in codigo
+    # Un plan calla la respuesta; la inmediata que suena termina si el plan es de esta ventana (su primer paso la
+    # espera), y con un proyector o una pantalla en off de otra ventana (que no la pueden esperar) se calla también
+    assert ("        if (t.hablar && ponePlan(ev.accion)) {\n          const remota = proyectorVivo()\n"
+            "            || (ev.accion?.destino === 'pantalla_off' && !('presOff' in document.documentElement.dataset));\n"
+            "          if (remota) locutor.callar();\n          else locutor.callarRespuesta();\n        }") in codigo
     assert "window.addEventListener('pagehide', () => locutor.callar());" in codigo
-    # Con un plan sonando aquí (o en el proyector), que no está en pausa, las respuestas esperan
-    assert ("ocupada: () => { const r = recorridoEnCurso(); return !!r && r.fase !== 'pausa' && (r.donde === 'aqui' "
-            "|| proyectorVivo()); },") in codigo
+    # Con un plan sonando aquí (o en el proyector), que no está en pausa, las respuestas esperan; la inmediata no espera
+    # al plan de aquí que, en su espera previa, le cede el turno
+    assert ("      const r = recorridoEnCurso();\n      if (!r || r.fase === 'pausa') return false;\n"
+            "      if (r.donde === 'aqui') return !adelanto || vozHablada().narracionOcupada({ adelanto: true });\n"
+            "      return proyectorVivo();") in codigo
+
+
+def test_la_sala_oye_la_respuesta_inmediata():
+    """Con una presentación abierta en esta ventana (o un proyector que maneja esta pestaña) y su «Voz» encendida, el
+    turno pide la voz de la respuesta inmediata (`voz_adelanto`, no `voz`: la respuesta sigue escrita) aunque «Leer
+    respuestas» esté apagado o no haya voz clonada; sin la voz clonada para las respuestas, las frases van sin referencia
+    (la voz del navegador, sin pedirle nada a Mnemo). Aprobar no trae inmediata: para la sala no pide nada."""
+    codigo = _sin_comentarios(AGENTE_JS)
+    sala = codigo[codigo.index("function salaOye() {"):]
+    sala = sala[:sala.index("\n  }\n")]
+    assert "if (!info?.disponible) return false;" in sala
+    assert "if (!(presentacionLista() || proyectorVivo() || rutaActual() === '/presentacion')) return false;" in sala
+    assert "e = vozHablada().estado();" in sala and "return e === 'activa' || e === 'sin_activar';" in sala
+    enviar = codigo[codigo.index("async function enviar("):codigo.index("function marcarInterrumpidas()")]
+    assert "const sala = !leer && salaOye();" in enviar and "if (leer || sala) vozHablada().gesto();" in enviar
+    assert "{ tipo: 'mensaje', texto: t, burbuja, msj: actual.el, sinAprobar, hablar: leer || sala, sala }" in enviar
+    assert "contexto: contexto({ voz: leer, vozAdelanto: sala })" in enviar
+    decisiones = codigo[codigo.index("function enviarDecisiones(lote) {"):]
+    decisiones = decisiones[:decisiones.index("\n  }\n")]
+    assert "salaOye" not in decisiones and "sala" not in decisiones
+    assert "...(leer ? { voz: true } : {})" in decisiones and "hablar: leer });" in decisiones
+    # Lo que se lee para la sala no es de «Leer las respuestas»: el botón no se marca
+    assert "hablarBtn.toggleAttribute('data-hablando', v && !salaLee);" in codigo
+    # Sin la voz clonada para las respuestas: sin referencia y sin precarga
+    assert "const conClonada = () => puedeHablar();" in codigo
+    assert "decir: (t, o) => vozHablada().decir(t, conClonada() ? o : { ...o, ref: null })," in codigo
+    assert "preparar: (i) => { if (conClonada()) vozHablada().preparar(i); } }," in codigo
+    # Lo que se lee para la sala no se calla porque falte la voz clonada (es la del navegador)
+    assert "if (!puede && !salaLee) locutor.callar();" in codigo
+    assert "salaLee = t.sala === true; locutor.empezar(conv);" in codigo
+    # La voz de la ventana sabe cuándo suena la inmediata (el plan nuevo la espera)
+    assert "alAdelanto: (v) => { try { vozHablada().marcarAdelanto(v); } catch (e) { console.error(e); } }," in codigo
+    # Plegar el panel (en el celular, para que se vea la vista) deja terminar la inmediata; cerrarlo también si lo que
+    # se lee es para la sala (cerrar el chat para ver la presentación entera no la deja en silencio); si no, la calla
+    assert "if (abierto && esMovil()) cerrar({ plegado: true });" in codigo
+    assert "if (plegado || salaLee) locutor.callarRespuesta();\n    else locutor.callar();" in codigo
+
+
+def test_el_chat_pinta_la_respuesta_inmediata():
+    """agente.js pinta la respuesta inmediata arriba de la respuesta de su turno, como texto, con su etiqueta; `vacio`
+    la quita; al terminar el turno la etiqueta deja de decir que se prepara el detalle; el historial la trae arriba."""
+    codigo = _sin_comentarios(AGENTE_JS)
+    assert "case 'adelanto': agregarAdelanto(ev, t); break;" in codigo
+    assert "case 'adelanto_frase': if (t.hablar && turno === t) locutor.fraseAdelanto(ev); break;" in codigo
+    assert "case 'adelanto_fin': finAdelanto(ev, t); break;" in codigo
+    assert "const ET_ADELANTO = 'Respuesta inmediata';" in codigo
+    assert "const ET_PREPARANDO = ' · preparando el detalle…';" in codigo
+    bloque = codigo[codigo.index("function bloqueAdelanto(msj, { listo = false } = {}) {"):codigo.index("function cerrarAdelanto(t)")]
+    # Solo texto: el modelo no pinta HTML
+    assert "innerHTML" not in bloque and "insertAdjacentHTML" not in bloque
+    assert "const nodo = document.createTextNode('');" in bloque and "appendData(" in bloque
+    # Arriba del mensaje: después de «Asistente:», antes de lo demás
+    assert "const sr = msj.querySelector(':scope > .sr');\n    if (sr) sr.after(b); else msj.prepend(b);" in bloque
+    assert "if (t.tipo !== 'mensaje') return;" in bloque and "t.adelanto ||= bloqueAdelanto(t.msj || enAsistente());" in bloque
+    assert "if (t.hablar && turno === t) locutor.empiezaAdelanto();" in bloque
+    assert "if (vacio && t.adelanto) { t.adelanto.el.remove(); t.adelanto = null; }" in bloque
+    assert "if (t.hablar && turno === t) locutor.terminaAdelanto(vacio);" in bloque
+    # Los lectores de pantalla: la conversación está ocupada (aria-busy) durante el turno; la inmediata se anuncia al
+    # terminar (si no se dice en voz alta) en una región aparte, fuera de ella, que se vacía al empezar otro turno. Lo
+    # que dice que se prepara el detalle no se anuncia (al quitarlo, la etiqueta no cambia)
+    plantilla = AGENTE_JS[AGENTE_JS.index('<form id="agente-form"'):AGENTE_JS.index("</form>")]
+    assert '<span class="sr" id="agente-adelanto-vivo" role="status" aria-live="polite"></span>' in plantilla
+    assert ("if (!t.hablar && !vacio && t.adelanto && turno === t) adelantoVivo.textContent = "
+            "`${ET_ADELANTO}: ${t.adelanto.nodo.data}`;") in bloque
+    assert "prep = el('span', 'agente-adelanto-prep', ET_PREPARANDO);\n      prep.setAttribute('aria-hidden', 'true');" in bloque
+    cerrar_ = codigo[codigo.index("function cerrarAdelanto(t) {"):]
+    cerrar_ = cerrar_[:cerrar_.index("\n  }\n")]
+    assert "t.adelanto.prep?.remove();" in cerrar_ and "textContent" not in cerrar_
+    # Al terminar el turno (bien o mal), la etiqueta queda en «Respuesta inmediata»
+    correr = codigo[codigo.index("async function correr("):codigo.index("async function enviar(")]
+    assert correr.index("turno = null;") < correr.index("cerrarAdelanto(t);") < correr.index("cerrarTurno(t, terminado);")
+    assert correr.index("turno = t;\n    adelantoVivo.textContent = '';") < correr.index("ponerEstado();")
+    # El historial: arriba de la respuesta de su turno, ya sin «preparando»
+    assert ("if (p.tipo === 'adelanto' && texto(p.texto, MAX_ADELANTO)) {" in codigo
+            and "bloqueAdelanto(msj, { listo: true }).nodo.appendData(texto(p.texto, MAX_ADELANTO));" in codigo)
+    # El estilo: discreto, y sin latido con movimiento reducido
+    css = (ADMIN / "web" / "css" / "agente.css").read_text(encoding="utf-8")
+    assert ".agente-adelanto {" in css and ".agente-adelanto-texto {" in css and "white-space: pre-wrap;" in css
+    reducido = css[css.index("@media (prefers-reduced-motion: reduce) {"):]
+    assert '.agente-adelanto[data-estado="preparando"] .agente-adelanto-et { animation: none; }' in reducido[:reducido.index("\n}\n")]
+
+
+def test_ajustes_enciende_la_respuesta_inmediata():
+    codigo = _sin_comentarios(AJUSTES_JS)
+    assert ("${casilla('agente_adelanto', aj.agente_adelanto !== false, 'Respuesta inmediata: mientras prepara la "
+            "respuesta o la presentación, el asistente adelanta en una o dos frases la idea general (una llamada corta "
+            "más al modelo)')}") in codigo
+    # Va en el formulario del asistente (el coordinador lo ve en solo lectura) y se guarda arriba, como `agente_adelanto`
+    form = codigo[codigo.index('<form id="f-agente"'):]
+    assert form.index("casilla('agente_adelanto'") < form.index("</form>")
+    assert "retencion_dias: Number(v.retencion_dias) }, agente_adelanto: v.agente_adelanto === true," in codigo
+    assert "for (const id of ['#f-politica', '#f-limites', '#f-agente', '#f-voz']) {" in codigo
 
 
 def test_ajustes_elige_la_voz_del_asistente():

@@ -1,8 +1,9 @@
 """Quién usa el asistente, con qué herramientas y cuánto: los ajustes del asistente leídos con valores de respaldo.
 
 * Los ajustes viven en `meta` (documento «ajustes») con los demás del panel: `agente` (`roles`, `escritura`,
-  `mnemo_coordinadores`, `retencion_dias`), `agente_mensajes_diarios` (tope por rol) y `agente_voz` (la voz del
-  asistente: la del navegador o una voz clonada de Mnemo, quién la hace sonar y para qué; `agente/voz.py`). Se leen con
+  `mnemo_coordinadores`, `retencion_dias`), `agente_mensajes_diarios` (tope por rol), `agente_voz` (la voz del
+  asistente: la del navegador o una voz clonada de Mnemo, quién la hace sonar y para qué; `agente/voz.py`) y
+  `agente_adelanto` (la respuesta inmediata de cada pregunta, `agente/adelanto.py`; encendida por defecto). Se leen con
   `modelo.leer_ajustes` y se validan aquí otra vez: un valor que falta o que no tiene la forma esperada toma el valor
   por defecto, así un ajuste guardado a mano (o de una versión anterior) no abre ni rompe nada.
 * Denegar por defecto: planilleros y consultores no usan el asistente hasta que el administrador los agrega a
@@ -35,6 +36,8 @@ MENSAJES_DIARIOS = (1, 5000)
 MOTORES_VOZ = ("navegador", "mnemo")
 VOZ_POR_DEFECTO: dict[str, Any] = {"motor": "navegador", "voz": "", "nombre": "", "cuenta": "",
                                    "roles": ["admin", "coordinador"], "respuestas": True, "automatica": True}
+# La respuesta inmediata (`agente_adelanto`): el mismo valor por defecto que `modelo.AJUSTES_POR_DEFECTO`
+ADELANTO_POR_DEFECTO = True
 ID_VOZ = re.compile(r"[A-Za-z0-9_.:-]{1,100}")   # el id de una voz en Mnemo (un ObjectId: 24 hexadecimales)
 MAX_NOMBRE_VOZ = 60
 HUELLA_CUENTA = re.compile(r"[0-9a-f]{32}")
@@ -112,6 +115,12 @@ def ajustes_voz(ajustes: dict | None) -> dict:
             "roles": roles, "respuestas": booleano("respuestas"), "automatica": booleano("automatica")}
 
 
+def adelanto(ajustes: dict | None) -> bool:
+    """¿El asistente da la respuesta inmediata (`agente_adelanto`)? Lo que no es un booleano vale lo de por defecto."""
+    v = (ajustes or {}).get("agente_adelanto")
+    return v if isinstance(v, bool) else ADELANTO_POR_DEFECTO
+
+
 def mensajes_diarios(ajustes: dict | None, rol: str | None) -> int:
     """Cuántos mensajes al asistente puede mandar una persona de ese rol en un día (hora de Colombia)."""
     crudo = (ajustes or {}).get("agente_mensajes_diarios")
@@ -120,13 +129,14 @@ def mensajes_diarios(ajustes: dict | None, rol: str | None) -> int:
 
 
 def leer(db) -> tuple[dict, dict]:
-    """(ajustes del panel, ajustes del asistente). En los del panel, `agente`, `agente_mensajes_diarios` y `agente_voz`
-    quedan ya validados: es lo que reciben las herramientas en `Contexto.ajustes`."""
+    """(ajustes del panel, ajustes del asistente). En los del panel, `agente`, `agente_mensajes_diarios`, `agente_voz` y
+    `agente_adelanto` quedan ya validados: es lo que reciben las herramientas en `Contexto.ajustes`."""
     ajustes = modelo.leer_ajustes(db)
     agente = ajustes_agente(ajustes)
     ajustes["agente"] = agente
     ajustes["agente_mensajes_diarios"] = {r: mensajes_diarios(ajustes, r) for r in ROLES}
     ajustes["agente_voz"] = ajustes_voz(ajustes)
+    ajustes["agente_adelanto"] = adelanto(ajustes)
     return ajustes, agente
 
 

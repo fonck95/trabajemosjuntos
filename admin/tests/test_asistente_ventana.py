@@ -198,8 +198,9 @@ def test_la_vista_en_off_pide_ya_registra_su_voz_y_no_se_pisa_con_el_asistente()
     assert "if (enVuelta) pronto = true;" in adelantar[:300]
     # el avance del reproductor de esta vista sigue yendo al puente (la tarjeta lo pinta en el acto)
     assert re.search(r"avisar: \(pr\) => \{\n\s+avisarRecorrido\(pr\);", vista)
-    # un Escape que ya usó el asistente (cerrarse, cancelar la grabación) no devuelve la pantalla completa
-    assert "if (e.key === 'Escape' && !e.defaultPrevented && 'presLlena' in raiz.dataset) llenar(false);" in vista
+    # un Escape que ya usó el asistente (cerrarse, cancelar la grabación) no devuelve la pantalla completa (ni la de la
+    # ventana ni, en la pestaña, la del navegador: `salirDeLlena`)
+    assert "if (e.key === 'Escape' && !e.defaultPrevented && 'presLlena' in raiz.dataset) salirDeLlena();" in vista
     # los enlaces que abren esas ventanas dicen que ahí también está el asistente
     for i in ('id="pres-otra"', 'id="pres-off"'):
         enlace = vista[vista.index(i):]
@@ -211,7 +212,8 @@ def test_la_vista_en_off_pide_ya_registra_su_voz_y_no_se_pisa_con_el_asistente()
 def test_el_boton_flotante_se_atenua_con_la_ventana_quieta():
     vista = VISTA_JS.read_text(encoding="utf-8")
     assert "const QUIETO_MS = 3000;" in vista
-    q = vista[vista.index("if (proyector || off) {\n    let ultima = 0"):]
+    # (en las tres ventanas: en la pestaña, el css solo los atenúa a pantalla completa)
+    q = vista[vista.index("  {\n    let ultima = 0"):]
     q = q[:q.index("\n  }\n") + 4]
     assert "raiz.dataset.presQuieto = '';" in q and "delete raiz.dataset.presQuieto;" in q
     assert "const tipos = [['pointermove', alRaton], ['pointerdown', () => actividad()], ['keydown', () => actividad()], ['wheel', () => actividad()]];" in q
@@ -231,8 +233,11 @@ def test_el_boton_flotante_se_atenua_con_la_ventana_quieta():
     # el gesto y las teclas de la presentación (en el proyector el iframe ocupa la ventana) despiertan el botón
     assert "if (m.tipo === 'gesto') { voz.gesto(); actividad(); return; }" in vista
     assert "if (m.tipo === 'tecla') {\n      actividad();" in vista
-    # el proyector a pantalla completa con la ventana entera: el asistente sigue a mano
-    assert "(proyector ? document.documentElement : marco).requestFullscreen?.()" in vista
+    # el proyector a pantalla completa con la ventana entera: el asistente sigue a mano (y la pestaña también, con la
+    # página entera: ya ninguna pide la pantalla completa solo para el marco)
+    assert "else document.documentElement.requestFullscreen?.().catch(() => {});" in vista
+    assert "raiz.requestFullscreen({ navigationUI: 'hide' })" in vista
+    assert "marco).requestFullscreen" not in vista and "marco.requestFullscreen" not in vista
 
 
 def _bloque(texto: str, desde: str, hasta: str) -> str:
@@ -261,11 +266,13 @@ def test_el_teclado_del_proyector_es_de_la_presentacion():
     assert vista.index("const mover = (op) =>") < vista.index("const TECLA_FUERA") and vista.index("let lista = false;") < vista.index("const TECLA_FUERA")
     # ventana #3: al cargar, el foco va a la presentación salvo que la persona ya esté en el chat
     assert "if (proyector && !document.activeElement?.closest?.('#agente-panel')) iframe.focus({ preventScroll: true });" in vista
-    assert vista.count("iframe.focus(") == 2
+    # (la otra: el toque de la persona en «Pantalla completa» de la pestaña, que deja el teclado en la presentación)
+    assert vista.count("iframe.focus(") == 3
+    assert "ponerCompleta();\n      if (lista) iframe.focus({ preventScroll: true });" in vista
     # y el asistente que se cierra en el proyector (Escape, su X) le devuelve el foco a la presentación, no a su botón
     # (con el foco a la vista, además, el botón no se atenuaba)
     agente = (JS / "agente.js").read_text(encoding="utf-8")
-    cerrar = _bloque(agente, "function cerrar({ foco = false } = {}) {", "\n  }\n")
+    cerrar = _bloque(agente, "function cerrar({ foco = false, plegado = false } = {}) {", "\n  }\n")
     assert "const pres = 'proyector' in document.documentElement.dataset ? document.getElementById('pres-iframe') : null;" in cerrar
     assert "(pres?.isConnected ? pres : boton).focus({ preventScroll: true });" in cerrar
     assert 'id="pres-iframe"' in vista
@@ -301,8 +308,9 @@ def test_en_el_celular_la_pantalla_en_off_se_ve_cuando_su_plan_empieza():
     t = _bloque(agente, "function tarjetaRecorrido(a) {", "\n  }\n")
     assert "if (v.destino === 'pantalla_off' && 'presOff' in document.documentElement.dataset) plegar();" in t
     assert t.index("enAsistente().append(t.el);") < t.index("plegar();")
-    # plegar() solo cierra en el celular; y tarjetaRecorrido solo corre con acciones en vivo (no al repintar el historial)
-    assert "function plegar() {\n    if (abierto && esMovil()) cerrar();" in agente
+    # plegar() solo cierra en el celular (sin cortar la respuesta inmediata que suena: el plan la espera); y
+    # tarjetaRecorrido solo corre con acciones en vivo (no al repintar el historial)
+    assert "function plegar() {\n    if (abierto && esMovil()) cerrar({ plegado: true });" in agente
     assert agente.count("tarjetaRecorrido(") == 2 and "else if (a.tipo === 'recorrido') tarjetaRecorrido(a);" in agente
 
 

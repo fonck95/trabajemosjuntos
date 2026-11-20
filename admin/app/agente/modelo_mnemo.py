@@ -45,6 +45,9 @@ Por qué está hecho así:
   no incluye usar sus modelos desde el panel, o no incluye el modelo de frontera elegido para el panel),
   `mnemo_creditos`, `mnemo_sin_modelo` (sin modelo disponible en la cuenta, o la conexión sin `mnemo:model`),
   `larga`, `llm_peticion`, `llm_limite`, `llm_conexion`, `llm_no_disponible` y `llm_respuesta`.
+* La respuesta inmediata del turno (`adelanto.py`) es otra llamada a `mnemo_model_complete` con `rapido`: el mismo
+  modelo, sin herramientas, `reasoning: "off"` y un tope de tokens corto. Ocupa una de las llamadas a la vez de la
+  conexión mientras dura (unos segundos).
 * Nada del contenido va al registro: solo códigos y tipos de excepción.
 """
 from __future__ import annotations
@@ -264,14 +267,16 @@ def modelo_pedido(valor: Any) -> dict | None:
 
 
 def argumentos(sistema: str, mensajes: list[dict], herramientas: list[dict], *, max_tokens: int, esfuerzo: str,
-               modelo: Any = None) -> dict:
-    """Los argumentos de `mnemo_model_complete` para una ronda (sin acotar su tamaño: `ajustar`)."""
+               modelo: Any = None, rapido: bool = False) -> dict:
+    """Los argumentos de `mnemo_model_complete` para una ronda (sin acotar su tamaño: `ajustar`). Con `rapido` (la
+    respuesta inmediata del turno, `adelanto.py`): sin herramientas y sin razonar (`reasoning: "off"`), con el mismo
+    modelo."""
     args: dict[str, Any] = {"system": _texto(sistema), "messages": para_mnemo(mensajes)}
-    tools = herramientas_para_mnemo(herramientas)
+    tools = [] if rapido else herramientas_para_mnemo(herramientas)
     if tools:
         args["tools"] = tools
     args["max_tokens"] = max_tokens
-    args["reasoning"] = ESFUERZOS.get(esfuerzo, "medium")
+    args["reasoning"] = "off" if rapido else ESFUERZOS.get(esfuerzo, "medium")
     pedido = modelo_pedido(modelo)
     if pedido is not None:
         args["model"] = pedido
@@ -448,9 +453,10 @@ class ProveedorMnemo:
         return f"ProveedorMnemo(modelo={self.modelo!r})"
 
     async def generar(self, sistema: str, mensajes: list[dict], herramientas: list[dict], *, max_tokens: int,
-                      esfuerzo: str, al_evento: Callable[[Evento], None]) -> Respuesta:
+                      esfuerzo: str, al_evento: Callable[[Evento], None], rapido: bool = False) -> Respuesta:
         # Fuera del bucle de eventos: con imágenes son megas de JSON que medir
-        args = await run_in_threadpool(self._argumentos, sistema, mensajes, herramientas, max_tokens, esfuerzo)
+        args = await run_in_threadpool(self._argumentos, sistema, mensajes, herramientas, max_tokens, esfuerzo,
+                                       rapido)
         cliente = await run_in_threadpool(mc.cliente_de, self.app)
         if cliente is None:
             raise await run_in_threadpool(_sin_cliente, self.app.state.db)
@@ -483,9 +489,10 @@ class ProveedorMnemo:
                          uso=uso_de(datos.get("usage")))
 
     def _argumentos(self, sistema: str, mensajes: list[dict], herramientas: list[dict], max_tokens: int,
-                    esfuerzo: str) -> dict:
+                    esfuerzo: str, rapido: bool = False) -> dict:
         return ajustar(conv_db.limpio(argumentos(sistema, mensajes, herramientas, max_tokens=max_tokens,
-                                                 esfuerzo=esfuerzo, modelo=getattr(self.cfg, "mnemo_modelo", ""))))
+                                                 esfuerzo=esfuerzo, modelo=getattr(self.cfg, "mnemo_modelo", ""),
+                                                 rapido=rapido)))
 
     def reintento(self, e: BaseException, intento: int) -> float | None:
         if not isinstance(e, ErrorHerramienta):

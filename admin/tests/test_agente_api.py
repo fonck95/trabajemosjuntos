@@ -101,7 +101,7 @@ def test_estado_sin_clave(sesion):
     assert e == {"disponible": False, "motivo": "sin_configurar", "configurado": False, "proveedor": None,
                  "es_admin": True, "escritura": True, "limite": {"usados": 0, "maximo": 300},
                  "mnemo": {"activo": False, "origen": None, "conexion": SIN_CONECTAR}, "sugerencias": [],
-                 "dictado": False, "voz": SIN_VOZ}
+                 "dictado": False, "voz": SIN_VOZ, "adelanto": False}
 
 
 def test_estado_con_clave_y_tope_diario(sesion, falsas):
@@ -110,6 +110,10 @@ def test_estado_con_clave_y_tope_diario(sesion, falsas):
     assert e["disponible"] is True and e["motivo"] is None and e["configurado"] is True
     assert e["proveedor"] == "anthropic"  # sin Mnemo conectado, el modo directo
     assert e["limite"] == {"usados": 1, "maximo": 300} and e["sugerencias"]
+    # La respuesta inmediata: la dice el ajuste (`encender` la deja apagada para que el guion sea el del modelo)
+    assert e["adelanto"] is False
+    sesion.app.state.db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente_adelanto": True}})
+    assert sesion.get("/api/agente/estado").json()["adelanto"] is True
     sesion.app.state.db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente_mensajes_diarios": {"admin": 7}}},
                                         upsert=True)
     assert sesion.get("/api/agente/estado").json()["limite"] == {"usados": 1, "maximo": 7}

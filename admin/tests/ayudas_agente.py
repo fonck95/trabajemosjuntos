@@ -11,6 +11,9 @@
   direcciones a las que se mandan).
 * `encender_mnemo(app, *respuestas)` y `R(*bloques, stop=…, uso=…)`: el asistente con el modelo de Mnemo (la conexión
   falsa con `mnemo:model` y `mnemo_model_complete` guionizada, `ayudas_mcp.ModeloFalso`).
+* `encender`, `encender_lento` y `encender_mnemo` apagan la respuesta inmediata (`agente_adelanto`, una petición más
+  al modelo en cada mensaje, `app/agente/adelanto.py`): cada guion es el del modelo principal. Las pruebas de la
+  respuesta inmediata la encienden (`adelanto=True`, o `poner_adelanto`) y guionizan también su petición.
 """
 from __future__ import annotations
 
@@ -155,13 +158,20 @@ def TU(id_: str, nombre: str, entrada: Any) -> dict:
 
 # ───────────────────────────── El turno completo por la API (núcleo) ─────────────────────────────
 
-def encender(app, *guion, modelo: str | None = None) -> FakeAPI:
+def poner_adelanto(app, encendido: bool) -> None:
+    """Enciende o apaga la respuesta inmediata del asistente (`agente_adelanto`) en los ajustes guardados de `app`."""
+    app.state.db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente_adelanto": encendido}}, upsert=True)
+
+
+def encender(app, *guion, modelo: str | None = None, adelanto: bool = False) -> FakeAPI:
     """Enciende el asistente en `app` con una clave inventada y la Messages API simulada (`guion` como en
-    `cliente_falso`). Devuelve el `FakeAPI` para mirar lo que se le mandó al modelo y agregar respuestas."""
+    `cliente_falso`). Devuelve el `FakeAPI` para mirar lo que se le mandó al modelo y agregar respuestas. Sin
+    `adelanto`, la respuesta inmediata queda apagada: el guion es solo el del modelo principal."""
     import dataclasses
     cambios = {"anthropic_api_key": "clave-falsa", **({"agente_modelo": modelo} if modelo else {})}
     app.state.cfg = dataclasses.replace(app.state.cfg, **cambios)
     app.state.agente_cliente, api = cliente_falso(*guion)
+    poner_adelanto(app, adelanto)
     return api
 
 
@@ -310,13 +320,14 @@ class FakeAPILenta(FakeAPI):
         return httpx2.Response(200, headers={"content-type": "text/event-stream"}, content=trozos())
 
 
-def encender_lento(app, *guion, pausa: float = 0.3) -> FakeAPILenta:
+def encender_lento(app, *guion, pausa: float = 0.3, adelanto: bool = False) -> FakeAPILenta:
     """`encender` con la Messages API lenta (`FakeAPILenta`)."""
     import dataclasses
     app.state.cfg = dataclasses.replace(app.state.cfg, anthropic_api_key="clave-falsa")
     api = FakeAPILenta(guion, pausa)
     http = httpx2.AsyncClient(transport=httpx2.MockTransport(api))
     app.state.agente_cliente = anthropic.AsyncAnthropic(api_key="clave-falsa", http_client=http, max_retries=0)
+    poner_adelanto(app, adelanto)
     return api
 
 
@@ -374,11 +385,12 @@ def R(*bloques: dict, stop: str = "end_turn", uso: dict | None = None, modelo: d
     return respuesta_modelo(*bloques, stop=stop, uso=uso, modelo=modelo, avance=avance)
 
 
-def encender_mnemo(app, *respuestas, alcances: Iterable[str] = ALCANCES_PANEL, **conectar):
+def encender_mnemo(app, *respuestas, alcances: Iterable[str] = ALCANCES_PANEL, adelanto: bool = False, **conectar):
     """El asistente de `app` con el modelo de Mnemo: la conecta a un Mnemo falso (`conectar_mnemo`, con `mnemo:model`
     por defecto) y le pone `mnemo_model_complete` guionizada: cada ronda contesta con lo siguiente de `respuestas`
     (`R(...)`, un error de Mnemo con `ayudas_mcp.fallo(...)` o una función, ver `ayudas_mcp.ModeloFalso`). Devuelve el
     `ModeloFalso` (`pedidos`: los argumentos de cada ronda; `agregar`; `oauth` y `mcp`: los servidores falsos)."""
     from ayudas_mcp import ModeloFalso
     falso = conectar_mnemo(app, alcances=alcances, **conectar)
+    poner_adelanto(app, adelanto)  # (sin `adelanto`, apagada: cada respuesta es una ronda del modelo principal)
     return ModeloFalso(falso.mcp, *respuestas, oauth=falso)

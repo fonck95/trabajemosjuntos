@@ -32,6 +32,14 @@ Cómo corre un turno (docs/agente.md):
   lo que escribió la persona no se firma (el eco: su mensaje y sus mensajes anteriores). Desde que el modelo recibe
   datos de una persona (`_anotar`), deja de emitirlas. Nada de esto impide el turno: si algo falla, la respuesta sigue
   sin voz.
+* La respuesta inmediata (docs/agente.md, «La respuesta inmediata»; `adelanto.py`): en un mensaje nuevo, con
+  `agente_adelanto` encendido, otra petición corta al mismo proveedor adelanta en una a tres frases la idea general
+  mientras el modelo principal prepara la respuesta completa (`adelanto`, `adelanto_frase` y `adelanto_fin`, entre los
+  eventos del turno). Corre en su propia tarea: si el modelo principal escribe antes de que muestre algo, se cancela
+  (`principal_escribe`); lo que empezó a mostrarse sigue hasta su final, y el turno lo espera antes de soltar los
+  candados y emitir `fin`. Nunca impide el turno ni lo cambia, y no entra en el historial del modelo principal. Con
+  Mnemo va solo si sobra (`_cabe_adelanto`: ningún otro turno ni dictado en el proceso, y una a la vez), así nunca le
+  quita a una respuesta una de las pocas llamadas al modelo que Mnemo deja a la vez.
 """
 from __future__ import annotations
 
@@ -54,6 +62,7 @@ from pymongo.errors import ConnectionFailure
 
 from .. import db as bd
 from ..seguridad import SIN_BASE
+from . import adelanto as adelanto_
 from . import conversaciones as conv_db
 from . import politica, proveedores, sistema
 from . import voz as voz_clonada
@@ -217,6 +226,11 @@ class Ocupacion:
     def ocupada(self, cid: int) -> bool:
         with self._candado:
             return cid in self.conversaciones
+
+    def turnos(self) -> int:
+        """Los turnos reservados en el proceso (también los que se están cerrando)."""
+        with self._candado:
+            return len(self.usuarios)
 
     def cerrar(self, uid: Any, cid: int | None) -> None:
         """El turno de `uid` en `cid` se está cerrando: suelta sus candados en un momento, así que quien llegue mientras
@@ -455,6 +469,12 @@ class Turno:
         self.servido = 0  # caracteres de resultados de herramientas que se le pasaron al modelo en el turno
         # Las frases de la respuesta hablada (`voz.Frases`), si el mensaje la pidió y se puede; None si no
         self.frases: voz_clonada.Frases | None = None
+        # La respuesta inmediata (`adelanto.py`): si este turno la da (`con_adelanto`, un mensaje con el ajuste
+        # encendido), sus frases para decir en voz alta (otras `voz.Frases`, o None) y, una vez lanzada, la tarea
+        self.con_adelanto = False
+        self.frases_adelanto: voz_clonada.Frases | None = None
+        self.adelanto: adelanto_.Adelanto | None = None
+        self.ficha_adelanto: object | None = None  # con Mnemo, su lugar en el proceso (`adelanto.tomar_mnemo`)
 
     # ── El productor y la respuesta ──
     def lanzar(self, trabajo: Callable[[], Awaitable[str]]) -> None:
@@ -503,6 +523,8 @@ class Turno:
                 return  # nadie leyó la respuesta (el navegador se fue antes de empezar): se sueltan los candados
             async with asyncio.timeout(TOPE_ABSOLUTO_S):
                 motivo = await trabajo()
+                # Lo que la respuesta inmediata ya empezó a mostrar sigue hasta su final (como mucho `ADELANTO_S`)
+                await self._esperar_adelanto()
         except asyncio.CancelledError:
             raise
         except TimeoutError:
@@ -520,7 +542,14 @@ class Turno:
             # de otra pestaña, espera el momento que tarda en soltarlos en vez de recibir 409)
             self._cerrandose()
             sostener.cancel()
-            await self._soltar()
+            if self.adelanto is None or self.adelanto.tarea is None:
+                self._soltar_ficha_adelanto()  # (si se lanzó, la suelta su tarea al terminar)
+            try:
+                await self._cortar_adelanto()  # (con un error o si el navegador se fue: lo mostrado se guarda antes)
+            finally:
+                # Se suelta aunque la cancelación llegue mientras se corta la respuesta inmediata (el navegador se
+                # fue justo ahora): si no, la persona quedaría sin asistente hasta que el proceso se reinicie
+                await self._soltar()
             if error is not None:
                 self.emitir({"tipo": "error", "mensaje": error[0], "codigo": error[1]})
                 motivo = "error"
@@ -529,6 +558,73 @@ class Turno:
                 fin["limite"] = self.limite
             self.emitir(fin)
             self.cola.put_nowait(None)
+
+    async def _esperar_adelanto(self) -> None:
+        """Al terminar el turno: espera a la respuesta inmediata (la que no mostró nada todavía se corta: el turno ya
+        respondió)."""
+        if self.adelanto is not None:
+            await self.adelanto.esperar()
+
+    async def _cortar_adelanto(self) -> None:
+        """Si la respuesta inmediata sigue (el turno terminó con un error, o el navegador se fue), se corta en lo que
+        haya y se espera un momento a que guarde lo mostrado: todo antes de soltar los candados. Si la cancelación del
+        turno llega en medio, la deja pasar: `_correr` suelta los candados igual (`_soltar` va en un `finally`)."""
+        a = self.adelanto
+        if a is None or a.tarea is None or a.tarea.done():
+            return
+        try:
+            a.cortar()
+            await asyncio.wait([a.tarea], timeout=adelanto_.ESPERA_CORTE_S)
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:  # noqa: BLE001 - la respuesta inmediata nunca impide cerrar el turno
+            log.warning("Asistente: no se pudo cortar la respuesta inmediata (%s)", type(e).__name__)
+
+    def _cabe_adelanto(self) -> bool:
+        """¿Va la respuesta inmediata en este turno? En modo directo, siempre. Con Mnemo, que deja pocas llamadas al
+        modelo a la vez para todo el panel, solo si sobra: el proceso no atiende el turno de otra persona ni transcribe
+        un dictado (`dictado.transcribiendo`), y no hay otra respuesta inmediata en curso (toma su lugar,
+        `adelanto.tomar_mnemo`, que se suelta cuando termina). Así nunca le quita el cupo a una respuesta."""
+        if self.proveedor.clave != proveedores.MNEMO:
+            return True
+        from . import dictado
+        if self.ocupacion.turnos() > 1 or dictado.transcribiendo():
+            return False
+        ficha = object()
+        if not adelanto_.tomar_mnemo(ficha):
+            return False
+        self.ficha_adelanto = ficha
+        return True
+
+    def _soltar_ficha_adelanto(self) -> None:
+        if self.ficha_adelanto is not None:
+            adelanto_.soltar_mnemo(self.ficha_adelanto)
+            self.ficha_adelanto = None
+
+    def _lanzar_adelanto(self, historial: list[dict], contexto_panel: str, texto: str) -> None:
+        """Lanza la respuesta inmediata (`adelanto.py`) en su propia tarea, con la conversación hasta aquí y el mensaje
+        nuevo con su contexto. Si algo falla al armarla, el turno sigue sin ella. Su lugar con Mnemo se suelta cuando
+        la tarea termina."""
+        try:
+            self.adelanto = adelanto_.Adelanto(self.proveedor, adelanto_.mensajes(historial, contexto_panel, texto),
+                                               self.emitir, self.frases_adelanto, guardar=self._guardar_adelanto)
+            self.adelanto.tarea = _en_fondo(self.adelanto.correr())
+            self.adelanto.tarea.add_done_callback(lambda _t: self._soltar_ficha_adelanto())
+        except Exception as e:  # noqa: BLE001
+            log.warning("Asistente: no se pudo lanzar la respuesta inmediata (%s)", type(e).__name__)
+            if self.adelanto is not None and self.adelanto.tarea is not None:
+                self.adelanto.tarea.cancel()
+            self.adelanto = None
+            self._soltar_ficha_adelanto()
+
+    async def _guardar_adelanto(self, texto: str, uso: Any) -> None:
+        """Lo que mostró la respuesta inmediata, con el turno (un mensaje `adelanto` que no se reenvía al modelo:
+        `conversaciones.para_interfaz` lo pinta arriba de la respuesta), y lo que gastó, en el uso del día."""
+        if texto:
+            await self._guardar("adelanto", replay=False, texto=texto)
+        if uso is not None:
+            await run_in_threadpool(conv_db.sumar_uso, self.db, self.quien.uid, uso.entrada, uso.salida,
+                                    uso.cache_lectura, uso.cache_escritura, uso.creditos)
 
     async def _sostener(self) -> None:
         """Renueva el candado de MongoDB cada `RENOVAR_S` mientras el turno corre: si el proceso muere (un despliegue,
@@ -715,9 +811,20 @@ class Turno:
         # esta persona, la conversación trae datos de habitantes), la respuesta es la escrita de siempre
         if isinstance(contexto, dict) and "voz" in contexto and self.frases is None:
             contexto = {k: v for k, v in contexto.items() if k != "voz"}
-        contexto_panel = sistema.contexto_del_panel(contexto, _ahora(), etiquetas, guion, pantalla, recorrido)
+        if isinstance(contexto, dict) and "voz_adelanto" in contexto:  # (es solo de la respuesta inmediata)
+            contexto = {k: v for k, v in contexto.items() if k != "voz_adelanto"}
+        if self.con_adelanto and not self._cabe_adelanto():
+            self.con_adelanto = False  # con Mnemo y el panel ocupado: sin respuesta inmediata (ni su renglón)
+        ahora = _ahora()
+        # Si va a haber respuesta inmediata, el modelo principal lo sabe (`sistema.ADELANTO_EN_CURSO`): no repite la
+        # idea general
+        contexto_panel = sistema.contexto_del_panel(contexto, ahora, etiquetas, guion, pantalla, recorrido,
+                                                    adelanto=self.con_adelanto)
         bloques = conv_db.limpio(bloques + [{"type": "text", "text": contexto_panel}, {"type": "text", "text": texto}])
         await self._guardar("user", bloques, texto=texto, herramientas=ui)
+        if self.con_adelanto:  # (después de guardar el mensaje: lo que muestre se guarda tras él)
+            self._lanzar_adelanto(historial, conv_db.limpio(sistema.contexto_del_panel(
+                contexto, ahora, etiquetas, guion, pantalla, recorrido)), texto)
         historial.append({"role": "user", "content": bloques})
         if aviso:
             await self._avisar(aviso, "alerta")
@@ -866,6 +973,9 @@ class Turno:
                 anunciadas.append((tid, nombre, h.etiqueta if h else nombre))
                 self._herramienta(tid, nombre, anunciadas[-1][2], "inicio")
             elif tipo in proveedores.EVENTOS:
+                if (tipo in ("texto", "texto_ronda") and self.adelanto is not None and isinstance(ev.get("texto"), str)
+                        and ev["texto"].strip()):
+                    self.adelanto.principal_escribe()  # una respuesta que ya llega no necesita adelanto
                 self.emitir(ev)
                 if tipo == "texto":
                     self._frases("agregar", ev.get("texto"))
@@ -1241,6 +1351,16 @@ async def _contar(db: Any, quien: Any, ajustes: dict) -> dict:
     return {"usados": usados, "maximo": maximo}
 
 
+async def _frases_nuevas(app: Any, quien: Any, cid: int, conv: dict | None, texto: str):
+    """Unas frases para decir en voz alta (`voz.Frases`) firmadas para esta persona y esta conversación (`voz.firmar`),
+    con el eco de lo que escribió la persona (`texto`, el mensaje nuevo, y sus mensajes anteriores de la conversación):
+    una frase que lo repite no se firma. Lee MongoDB y la primera vez deriva la clave."""
+    llave = await run_in_threadpool(voz_clonada.llave_respuestas, app.state.cfg)
+    previos = await run_in_threadpool(conv_db.textos_de_la_persona, app.state.db, cid) if conv is not None else []
+    uid = quien.uid
+    return voz_clonada.Frases(lambda t: voz_clonada.firmar(llave, uid, cid, t), eco="\n".join([texto, *previos]))
+
+
 async def _frases_para(app: Any, quien: Any, ajustes: dict, cid: int, conv: dict | None, pedida: bool,
                        texto: str = ""):
     """Las frases de la respuesta hablada de este turno (`voz.Frases`, firmadas para esta persona y esta conversación)
@@ -1253,13 +1373,25 @@ async def _frases_para(app: Any, quien: Any, ajustes: dict, cid: int, conv: dict
     try:
         if not await run_in_threadpool(voz_clonada.respuestas_para, app, quien, ajustes):
             return None
-        llave = await run_in_threadpool(voz_clonada.llave_respuestas, app.state.cfg)
-        previos = await run_in_threadpool(conv_db.textos_de_la_persona, app.state.db, cid) if conv is not None else []
+        return await _frases_nuevas(app, quien, cid, conv, texto)
     except Exception as e:  # noqa: BLE001 - el turno sigue, sin voz
         log.warning("Asistente: no se pudo preparar la respuesta hablada (%s)", type(e).__name__)
         return None
-    uid = quien.uid
-    return voz_clonada.Frases(lambda t: voz_clonada.firmar(llave, uid, cid, t), eco="\n".join([texto, *previos]))
+
+
+async def _frases_del_adelanto(app: Any, quien: Any, cid: int, conv: dict | None, pedida: bool, texto: str):
+    """Las frases de la respuesta inmediata (`adelanto.py`, como `adelanto_frase`): si el mensaje pidió la respuesta
+    hablada o solo la inmediata hablada (`pedida`: `contexto.voz` o `contexto.voz_adelanto`, la sala que oye) y la
+    conversación no trae datos de habitantes, unas `voz.Frases` propias, firmadas y con el eco
+    como las de la respuesta. Con la voz clonada o sin ella: el navegador las dice con la suya si no la hay (lo que
+    dice, con las reglas de lo que se dice ante una sala, `voz.hablable`). Si no, None. Nunca impide el turno."""
+    if not pedida or (conv or {}).get("personas"):
+        return None
+    try:
+        return await _frases_nuevas(app, quien, cid, conv, texto)
+    except Exception as e:  # noqa: BLE001 - la respuesta inmediata sigue, sin voz
+        log.warning("Asistente: no se pudo preparar la voz de la respuesta inmediata (%s)", type(e).__name__)
+        return None
 
 
 async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, contexto: Any) -> StreamingResponse:
@@ -1291,8 +1423,17 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
         limite = await _contar(db, quien, ajustes)
         turno = Turno(app=app, quien=quien, ajustes=ajustes, agente=agente, api=ApiInterna.desde_peticion(request),
                       conv=conv, cid=cid, titulo=titulo, turno=turno_id, limite=limite, proveedor=proveedor)
-        turno.frases = await _frases_para(app, quien, ajustes, cid, conv,
-                                          isinstance(contexto, dict) and contexto.get("voz") is True, texto)
+        voz_pedida = isinstance(contexto, dict) and contexto.get("voz") is True
+        # La sala oye (una presentación abierta con su «Voz») sin «Leer las respuestas»: solo la respuesta inmediata se
+        # dice (`contexto.voz_adelanto`); la respuesta sigue escrita, sin frases ni `RESPUESTA_HABLADA`
+        voz_adelanto = isinstance(contexto, dict) and contexto.get("voz_adelanto") is True
+        turno.frases = await _frases_para(app, quien, ajustes, cid, conv, voz_pedida, texto)
+        # La respuesta inmediata (`adelanto.py`): solo en un mensaje nuevo y con el ajuste encendido (con Mnemo, además,
+        # solo si sobra: lo decide el turno al lanzarla, `Turno._cabe_adelanto`)
+        if ajustes.get("agente_adelanto") is True:
+            turno.con_adelanto = True
+            turno.frases_adelanto = await _frases_del_adelanto(app, quien, cid, conv, voz_pedida or voz_adelanto,
+                                                               texto)
         turno.lanzar(lambda: turno.mensaje(texto, contexto))
     except BaseException:
         await _liberar(app, quien.uid, cid, turno_id)

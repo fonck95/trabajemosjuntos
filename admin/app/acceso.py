@@ -200,8 +200,9 @@ AJUSTES_DE_PERMISOS = frozenset({
     "sensibles_activos", "tope_cedulas_dictadas", "compromiso_version",  # qué se ve y con qué condiciones se trabaja
     # El asistente: qué roles lo usan, si propone escrituras, si los coordinadores usan Mnemo con la cuenta de A,
     # cuánto se guardan las conversaciones (traen datos de personas) y cuántos mensajes por día. Y su voz: la voz
-    # clonada es la de la cuenta de Mnemo de A (un dato biométrico suyo) y gasta sus créditos
-    "agente", "agente_mensajes_diarios", "agente_voz",
+    # clonada es la de la cuenta de Mnemo de A (un dato biométrico suyo) y gasta sus créditos. Y la respuesta
+    # inmediata: una llamada más al modelo por pregunta (gasto)
+    "agente", "agente_mensajes_diarios", "agente_voz", "agente_adelanto",
 })
 
 

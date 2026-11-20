@@ -6,8 +6,14 @@
 // escriben o se dicen: el micrófono del cuadro de escribir las transcribe (dictado.js). Y las respuestas se pueden oír:
 // con «Leer las respuestas en voz alta» encendido (o si la pregunta llegó por voz), el turno pide `contexto.voz` y el
 // servidor manda, mientras el modelo escribe, las frases firmadas que el locutor (locutor.js) dice en orden con la voz
-// de la ventana (voz-panel.js: la voz clonada de Mnemo, con la del navegador de respaldo). Vive en document.body, fuera
-// de #raiz y de #vista: sobrevive a cada cambio de vista.
+// de la ventana (voz-panel.js: la voz clonada de Mnemo, con la del navegador de respaldo). Con la respuesta inmediata
+// (docs/agente.md, «La respuesta inmediata»), cada pregunta recibe primero una o dos frases con la idea general, que se
+// pintan arriba de la respuesta del turno («Respuesta inmediata · preparando el detalle…») y se dicen antes que ella;
+// un plan que llega mientras suena espera a que termine. Con una presentación abierta en esta ventana (o un proyector
+// que maneja esta pestaña) y su «Voz» encendida, la sala oye: aunque «Leer las respuestas» esté apagado, el turno pide
+// `contexto.voz_adelanto` y se dice solo la inmediata (con la voz clonada si lee las respuestas; si no, con la del
+// navegador); la respuesta sigue escrita. Vive en document.body, fuera de #raiz y de #vista: sobrevive a cada cambio
+// de vista.
 //
 // Seguridad: nada de lo que escribe el modelo se pinta como HTML. Entra con textContent o como nodos de texto, y el
 // Markdown se convierte a nodos con una lista cerrada de elementos (lo demás, también «<img …>», queda como texto). Los
@@ -76,6 +82,7 @@ const MAX_FILTROS = 30;
 const MAPA_ZOOM_CENTRO = 14;
 const MAPA_DECIMALES = 2;
 const MAX_TEXTO_RONDA = 100000;           // `texto_ronda`: el texto final de una ronda (como en una conversación guardada)
+const MAX_ADELANTO = 600;                 // la respuesta inmediata (el servidor la corta en 420 caracteres y un «…»)
 // La tarjeta de aprobación muestra entero lo que se va a escribir: el servidor manda los valores enteros y no ofrece lo
 // que no cabe en estos topes (`TARJETA_VALOR` y `TARJETA_FILAS` de app/agente/bucle.py; las etiquetas, de hasta 80).
 // Aquí no se recorta nada: si llega algo que no se puede mostrar entero, la tarjeta no deja aprobar
@@ -656,6 +663,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
           <button type="button" class="btn fantasma chico agente-voz-cancelar" id="agente-voz-cancelar" hidden>Cancelar</button>
         </div>
         <span class="sr" id="agente-voz-vivo" role="status" aria-live="polite"></span>
+        <span class="sr" id="agente-adelanto-vivo" role="status" aria-live="polite"></span>
         <div class="agente-fila">
           <label class="sr" for="agente-texto">Mensaje para el asistente</label>
           <textarea id="agente-texto" rows="1" maxlength="4000" placeholder="Escriba su pregunta…" enterkeyhint="send" autocomplete="off" spellcheck="true"></textarea>
@@ -678,6 +686,9 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   const notaPendiente = $('#agente-nota-pendiente'), restantes = $('#agente-restantes');
   const vozBtn = $('#agente-voz'), vozEstado = $('#agente-voz-estado'), vozTexto = $('#agente-voz-texto');
   const vozParcial = $('#agente-voz-parcial'), vozCancelar = $('#agente-voz-cancelar'), vozVivo = $('#agente-voz-vivo');
+  // La respuesta inmediata para los lectores de pantalla: la conversación está «ocupada» (aria-busy) mientras dura el
+  // turno y lo de adentro no se anuncia hasta que termina; esta región, fuera de ella, la anuncia en cuanto termina
+  const adelantoVivo = $('#agente-adelanto-vivo');
   const ayuda = $('.agente-ayuda');
   // La barra fija del recorrido narrado: arriba de la conversación mientras suena uno
   montarBarraRecorrido(cuerpo, { el, ico });
@@ -716,15 +727,30 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   let hablar = false;
   let miVoz = null;
   let msjHablado = null;      // el mensaje cuya respuesta se está leyendo (se marca mientras suena)
+  let salaLee = false;        // lo que se lee es para la sala (la presentación con su «Voz»): sigue sin la voz clonada
   const vozHablada = () => (miVoz ||= tomarVoz('respuestas'));
+  // Sin la voz clonada para las respuestas (la sala oye la inmediata con la voz del navegador), cada frase va sin su
+  // referencia: la voz no le pide nada a Mnemo (el panel la rechazaría) y la dice el navegador
+  const conClonada = () => puedeHablar();
   const locutor = crearLocutor({
-    voz: { decir: (t, o) => vozHablada().decir(t, o), callar: () => miVoz?.callar(), preparar: (i) => vozHablada().preparar(i) },
-    ocupada: () => { const r = recorridoEnCurso(); return !!r && r.fase !== 'pausa' && (r.donde === 'aqui' || proyectorVivo()); },
+    voz: { decir: (t, o) => vozHablada().decir(t, conClonada() ? o : { ...o, ref: null }), callar: () => miVoz?.callar(),
+      preparar: (i) => { if (conClonada()) vozHablada().preparar(i); } },
+    // Un plan que suena aquí (o en el proyector), que no está en pausa: la frase espera. La de la respuesta inmediata no
+    // espera al plan de aquí que, en su espera previa, le cede el turno (voz-panel.js)
+    ocupada: ({ adelanto = false } = {}) => {
+      const r = recorridoEnCurso();
+      if (!r || r.fase === 'pausa') return false;
+      if (r.donde === 'aqui') return !adelanto || vozHablada().narracionOcupada({ adelanto: true });
+      return proyectorVivo();
+    },
     alHablar: (v) => {
       if (v) msjHablado?.classList.add('hablando');
       else for (const m of log.querySelectorAll('.agente-msj.hablando')) m.classList.remove('hablando');
-      hablarBtn.toggleAttribute('data-hablando', v);
+      // (lo que se lee para la sala no es de «Leer las respuestas»: el botón no lo marca)
+      hablarBtn.toggleAttribute('data-hablando', v && !salaLee);
     },
+    // La voz de la ventana sabe que suena la respuesta inmediata: el primer paso de un plan nuevo la espera
+    alAdelanto: (v) => { try { vozHablada().marcarAdelanto(v); } catch (e) { console.error(e); } },
   });
   const sucias = new Set();   // partes de texto por repintar en el próximo cuadro
   let cuadro = 0;
@@ -869,7 +895,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       : `Leer las respuestas en voz alta (con la voz clonada de Mnemo${nombre}, una voz sintética)`;
     hablarBtn.title = t;
     hablarBtn.setAttribute('aria-label', t);
-    if (!puede) locutor.callar();
+    if (!puede && !salaLee) locutor.callar();
     // Si se oculta con el foco puesto, el foco pasa a la conversación (en <body>, Escape ya no cerraría el panel)
     if (!puede && tenia && abierto) log.focus({ preventScroll: true });
   }
@@ -877,6 +903,19 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   /** ¿La acción pone un plan a narrar? (el plan guiado, la presentación automática) */
   const ponePlan = (a) => a?.tipo === 'recorrido' || a?.tipo === 'automatica'
     || (a?.tipo === 'presentacion' && a.op === 'recorrido');
+
+  /** ¿La sala oye? Hay una presentación abierta en esta ventana (la pestaña del chat, el proyector o la pantalla en off)
+   * o un proyector que maneja esta pestaña, con su «Voz» encendida: la voz de la ventana (la misma preferencia en todas
+   * las ventanas de este navegador) no está apagada ni sin voces. Entonces la respuesta inmediata se dice (con la voz
+   * clonada si lee las respuestas; si no, con la del navegador), aunque «Leer las respuestas» esté apagado: solo ella
+   * (`contexto.voz_adelanto`), la respuesta sigue escrita. */
+  function salaOye() {
+    if (!info?.disponible) return false;
+    if (!(presentacionLista() || proyectorVivo() || rutaActual() === '/presentacion')) return false;
+    let e = null;
+    try { e = vozHablada().estado(); } catch { return false; }
+    return e === 'activa' || e === 'sin_activar';
+  }
 
   async function mostrar() {
     visible = true;
@@ -924,9 +963,14 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     if (releer && !info.disponible) releerEstado();
   }
 
-  function cerrar({ foco = false } = {}) {
+  /** `plegado`: no lo cerró la persona, se plegó para que se vea la vista (`plegar`): la respuesta se calla, pero la
+   * inmediata que suena termina (el plan que se abre la espera). Lo mismo si lo que se lee es para la sala
+   * (`salaLee`): cerrar el chat para ver la presentación entera no deja a la sala en silencio. */
+  function cerrar({ foco = false, plegado = false } = {}) {
     if (vozOyendo()) dictado.cancelar();   // con el panel cerrado no se sigue oyendo
-    locutor.callar();                      // ni se sigue leyendo la respuesta
+    // ni se sigue leyendo la respuesta (sin respuesta inmediata por terminar, `callarRespuesta` calla todo)
+    if (plegado || salaLee) locutor.callarRespuesta();
+    else locutor.callar();
     abierto = false;
     panel.hidden = true;
     boton.hidden = !(visible && usable());
@@ -944,7 +988,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
 
   /** En el celular el panel tapa la vista: se pliega para que se vea lo que hizo el asistente (o la vista que se abrió). */
   function plegar() {
-    if (abierto && esMovil()) cerrar();
+    if (abierto && esMovil()) cerrar({ plegado: true });
   }
 
   /** Hace `accion()`, que quita, oculta o desactiva `quitado` (lo que se acaba de usar: una tarjeta al decidir, una
@@ -1104,6 +1148,62 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   function agregarProgreso(delta) {
     parte('progreso').nodo.appendData(delta);
     programar();
+  }
+
+  // ── La respuesta inmediata: una o dos frases con la idea general, arriba de la respuesta de su turno ──
+  const ET_ADELANTO = 'Respuesta inmediata';
+  const ET_PREPARANDO = ' · preparando el detalle…';
+
+  /** El recuadro de la respuesta inmediata, arriba del mensaje `msj` (después de «Asistente:», antes de lo demás): una
+   * etiqueta y el texto, que entra como texto. `listo`: el turno ya terminó (o es de una conversación guardada). Lo que
+   * dice que el detalle se prepara va aparte y escondido para los lectores de pantalla: al quitarlo, la etiqueta no
+   * cambia ni se vuelve a anunciar. */
+  function bloqueAdelanto(msj, { listo = false } = {}) {
+    const b = el('div', 'agente-adelanto');
+    const et = el('p', 'agente-adelanto-et', ET_ADELANTO);
+    let prep = null;
+    if (!listo) {
+      prep = el('span', 'agente-adelanto-prep', ET_PREPARANDO);
+      prep.setAttribute('aria-hidden', 'true');
+      et.append(prep);
+    }
+    const p = el('p', 'agente-adelanto-texto');
+    const nodo = document.createTextNode('');
+    p.append(nodo);
+    b.append(et, p);
+    if (!listo) b.dataset.estado = 'preparando';
+    const sr = msj.querySelector(':scope > .sr');
+    if (sr) sr.after(b); else msj.prepend(b);
+    return { el: b, et, prep, nodo };
+  }
+
+  /** `adelanto`: un trozo más de la respuesta inmediata del turno `t` (el recuadro se arma con el primero). */
+  function agregarAdelanto(ev, t) {
+    if (t.tipo !== 'mensaje') return;
+    const trozo = texto(ev.texto, MAX_ADELANTO);
+    if (!trozo || (t.adelanto && t.adelanto.nodo.length >= MAX_ADELANTO)) return;
+    t.adelanto ||= bloqueAdelanto(t.msj || enAsistente());
+    t.adelanto.nodo.appendData(trozo.slice(0, MAX_ADELANTO - t.adelanto.nodo.length));
+    if (t.hablar && turno === t) locutor.empiezaAdelanto();
+    programar();
+    aviseNovedad();
+  }
+
+  /** `adelanto_fin`: terminó. Con `vacio`, no mostró nada (y si algo quedó a la vista, se quita); si no, se queda y,
+   * si no se está diciendo en voz alta, se anuncia a los lectores de pantalla (una vez, fuera de la conversación). */
+  function finAdelanto(ev, t) {
+    const vacio = ev.vacio === true;
+    if (vacio && t.adelanto) { t.adelanto.el.remove(); t.adelanto = null; }
+    if (t.hablar && turno === t) locutor.terminaAdelanto(vacio);
+    if (!t.hablar && !vacio && t.adelanto && turno === t) adelantoVivo.textContent = `${ET_ADELANTO}: ${t.adelanto.nodo.data}`;
+  }
+
+  /** El turno terminó: la respuesta inmediata ya no anuncia que se prepara el detalle. */
+  function cerrarAdelanto(t) {
+    if (!t.adelanto) return;
+    t.adelanto.prep?.remove();
+    t.adelanto.prep = null;
+    delete t.adelanto.el.dataset.estado;
   }
 
   /** Una nota (aviso del servidor, resultado de una acción): gris si es informativa, ámbar si es una alerta. */
@@ -1360,7 +1460,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     const msj = lote[lote.length - 1].el.closest('.agente-msj');
     if (msj) { actual = { el: msj }; ultima = null; }
     const decisiones = lote.map((t) => ({ id: t.id, aprobar: t.decision }));
-    // la respuesta que sigue a la aprobación también se oye, si se están leyendo
+    // la respuesta que sigue a la aprobación también se oye, si se están leyendo (aprobar no trae respuesta inmediata:
+    // para la sala no se lee nada)
     const leer = puedeHablar() && hablar && !vozApagada();
     correr('/api/agente/confirmaciones', { conversacion: conv, decisiones, ...(leer ? { voz: true } : {}) },
       { tipo: 'confirmacion', lote, msj: enAsistente(), hablar: leer });
@@ -1593,13 +1694,24 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
         break;
       }
       case 'texto_ronda': if (typeof ev.texto === 'string') textoRonda(texto(ev.texto, MAX_TEXTO_RONDA)); break;
+      // La respuesta inmediata: su texto (arriba de la respuesta), sus frases (antes que las de la respuesta) y su fin
+      case 'adelanto': agregarAdelanto(ev, t); break;
+      case 'adelanto_frase': if (t.hablar && turno === t) locutor.fraseAdelanto(ev); break;
+      case 'adelanto_fin': finAdelanto(ev, t); break;
       case 'herramienta':
         alHerramienta(ev);
         resultadoEnVivo(ev);
         break;
       case 'accion':
-        // un plan en la presentación (o la automática) va a narrar: la respuesta que se leía se calla
-        if (t.hablar && ponePlan(ev.accion)) locutor.callar();
+        // un plan en la presentación (o la automática) va a narrar: la respuesta que se leía se calla. La inmediata que
+        // suena termina: el primer paso la espera. En el proyector o en la pantalla en off de otra ventana (u otro
+        // equipo), que no la pueden esperar, se calla también
+        if (t.hablar && ponePlan(ev.accion)) {
+          const remota = proyectorVivo()
+            || (ev.accion?.destino === 'pantalla_off' && !('presOff' in document.documentElement.dataset));
+          if (remota) locutor.callar();
+          else locutor.callarRespuesta();
+        }
         accion(ev.accion);
         nuevaRonda();
         break;
@@ -1644,13 +1756,15 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   async function correr(ruta, cuerpo, datos) {
-    const t = { control: new AbortController(), inicio: false, fin: null, error: null, excepcion: null, hablar: false, ...datos };
+    const t = { control: new AbortController(), inicio: false, fin: null, error: null, excepcion: null, hablar: false,
+      sala: false, adelanto: null, ...datos };
     turno = t;
+    adelantoVivo.textContent = '';
     nuevaRonda();
     ponerEstado();
     t.msj?.classList.add('trabajando'); // tres puntos al final mientras responde
     // Se lee en voz alta: las frases del servidor van al locutor, en el mensaje de este turno
-    if (t.hablar) { locutor.callar(); msjHablado = t.msj || null; locutor.empezar(conv); }
+    if (t.hablar) { locutor.callar(); msjHablado = t.msj || null; salaLee = t.sala === true; locutor.empezar(conv); }
     let terminado = false;
     const pedir = () => flujo(ruta, cuerpo, {
       signal: t.control.signal,
@@ -1672,6 +1786,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     vaciar();
     turno = null;
     apagarPildora();
+    cerrarAdelanto(t);
     t.msj?.classList.remove('trabajando');
     ponerEstado();
     cerrarTurno(t, terminado);
@@ -1711,16 +1826,18 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     // respuesta anterior que se leía en voz alta se calla
     pausaPorMensaje();
     locutor.callar();
-    // Con «Leer las respuestas en voz alta» encendido, o si la pregunta llegó por voz, la respuesta se oye (enviar suele
-    // ser un gesto: destraba el audio de la ventana)
+    // Con «Leer las respuestas en voz alta» encendido, o si la pregunta llegó por voz, la respuesta se oye. Si no, con
+    // una presentación abierta con su «Voz» encendida, la sala oye (`salaOye`): solo la respuesta inmediata
+    // (`voz_adelanto`; enviar suele ser un gesto: destraba el audio de la ventana)
     const leer = puedeHablar() && (hablar || vozEntregando) && !vozApagada();
-    if (leer) vozHablada().gesto();
+    const sala = !leer && salaOye();
+    if (leer || sala) vozHablada().gesto();
     // Lo pendiente que no se decidió queda sin aprobar: el servidor lo rechaza al recibir el mensaje (y lo avisa)
     const sinAprobar = pendientesSinEnviar();
     for (const x of sinAprobar) x.enviada = true;
     alFinal(true);
-    await correr('/api/agente/mensajes', { conversacion: conv, texto: t, contexto: contexto({ voz: leer }) },
-      { tipo: 'mensaje', texto: t, burbuja, msj: actual.el, sinAprobar, hablar: leer });
+    await correr('/api/agente/mensajes', { conversacion: conv, texto: t, contexto: contexto({ voz: leer, vozAdelanto: sala }) },
+      { tipo: 'mensaje', texto: t, burbuja, msj: actual.el, sinAprobar, hablar: leer || sala, sala });
   }
 
   // ── Cómo terminó el turno ──
@@ -1864,8 +1981,9 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     return encuadreMapa(c);
   }
 
-  /** `voz`: la respuesta se va a leer en voz alta (el servidor arma sus frases y le pide al modelo frases cortas). */
-  function contexto({ voz = false } = {}) {
+  /** `voz`: la respuesta se va a leer en voz alta (el servidor arma sus frases y le pide al modelo frases cortas).
+   * `vozAdelanto`: solo la respuesta inmediata (la sala oye la presentación): sus frases, y la respuesta sigue escrita. */
+  function contexto({ voz = false, vozAdelanto = false } = {}) {
     const ruta = rutaActual();
     const m = /^\/(personas|reuniones)\/(\d{1,12})$/.exec(ruta);
     return {
@@ -1877,6 +1995,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       mapa: camara(),
       presentacion: pasoPresentacion(),
       ...(voz ? { voz: true } : {}),
+      ...(vozAdelanto ? { voz_adelanto: true } : {}),
     };
   }
 
@@ -2127,10 +2246,13 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     for (const m of Array.isArray(d?.mensajes) ? d.mensajes : []) {
       if (m?.rol === 'usuario' && texto(m.texto)) { agregarUsuario(texto(m.texto)); continue; }
       if (m?.rol !== 'asistente' || !Array.isArray(m.partes)) continue;
-      nuevoAsistente();
+      const msj = nuevoAsistente().el;
       for (const p of m.partes) {
         if (!p || typeof p !== 'object') continue;
-        if (p.tipo === 'texto' && texto(p.texto, 100000)) {
+        if (p.tipo === 'adelanto' && texto(p.texto, MAX_ADELANTO)) {
+          // la respuesta inmediata de ese turno, arriba de su respuesta
+          if (!msj.querySelector(':scope > .agente-adelanto')) bloqueAdelanto(msj, { listo: true }).nodo.appendData(texto(p.texto, MAX_ADELANTO));
+        } else if (p.tipo === 'texto' && texto(p.texto, 100000)) {
           const pt = parte('texto');
           pt.fuente += texto(p.texto, 100000);
           sucias.add(pt);

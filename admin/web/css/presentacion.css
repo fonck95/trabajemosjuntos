@@ -9,6 +9,10 @@
      (html[data-pres-quieto]).
    * /presentacion?off=1 (la pantalla en off): el botón va en su barra, como en la vista normal; a pantalla completa
      (html[data-pres-llena]), flotando arriba a la derecha y atenuado con el ratón quieto, como en el proyector.
+   * La pestaña a pantalla completa (html[data-pres-llena] sin data-pres-off; con la del navegador, la página entera):
+     sin menú ni barras, como el proyector: el botón flota abajo a la izquierda con «Salir de pantalla completa» a su
+     lado, los dos atenuados con el ratón quieto; abierto el asistente en escritorio, es una columna a la derecha sobre
+     el fondo negro de la presentación, con «Salir» encima.
    * Abierto el asistente en escritorio, en las tres la presentación le deja libre su ancho; en el celular se superpone. */
 /* Contenedor: la barra se compacta por el ancho de la vista, no el de la ventana (con el asistente abierto entre 901 y
    1199 px la vista mide unos 330 a 500 px y la barra, en tres filas, le quitaba casi 200 px de alto a la presentación) */
@@ -27,7 +31,6 @@
 .pres-remoto svg { width: 18px; height: 18px; flex: none; color: var(--accent-text); }
 .pres-marco { position: relative; flex: 1; min-height: 0; background: var(--sunken); }
 .pres-marco iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
-.pres-marco:fullscreen { background: #000; }
 .pres-sin { max-width: 560px; margin: 0 auto; }
 
 /* El botón del asistente, en la barra de la vista (en el celular ya va en la barra de arriba: agente.css) */
@@ -65,9 +68,24 @@
 @media (pointer: coarse) { .pres-botones .btn { min-height: 44px; min-width: 44px; } }
 /* El celular en horizontal: debajo de la barra del panel quedan menos de 330 px de alto, y esta barra se llevaba 60 de
    ellos (la maqueta, el panel de la presentación y su explicación no cabían). Se oculta, como en el modo proyector: la
-   presentación trae abajo su capítulo y su anterior y siguiente */
+   presentación trae abajo su capítulo y su anterior y siguiente. Salvo «Pantalla completa» de la pestaña: es lo único
+   que saca la barra del panel con el dedo (el de la presentación tampoco se ve de lado), así que pasa a esa barra, a
+   la izquierda del botón del asistente (40 px a 12 del borde: agente.css), con su mismo estilo; sin él, en su lugar */
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 560px) {
   .presentacion:not(.proyector) .pres-barra { display: none; }
+  html:not([data-pres-llena]) .presentacion:not(.proyector):not(.en-off) .pres-barra:has(#pres-pantalla),
+  html:not([data-pres-llena]) .presentacion:not(.proyector):not(.en-off) .pres-barra .pres-botones { display: contents; }
+  .presentacion:not(.proyector) .pres-barra .pres-donde,
+  .presentacion:not(.proyector) .pres-barra .pres-botones > :not(#pres-pantalla) { display: none; }
+  .presentacion:not(.proyector) .pres-barra #pres-pantalla { position: fixed; z-index: 28;
+    top: calc(10px + env(safe-area-inset-top, 0px)); right: 60px; display: grid; place-items: center; width: 40px;
+    height: 40px; min-width: 40px; min-height: 40px; padding: 0; border-radius: 50%; color: #fff; background: transparent;
+    border: 1px solid rgb(255 255 255 / .22); box-shadow: none; }
+  .presentacion:not(.proyector) .pres-barra #pres-pantalla svg { width: 22px; height: 22px; }
+  .presentacion:not(.proyector) .pres-barra #pres-pantalla span { display: none; }
+  body:not(:has(#agente-boton:not([hidden]))) .presentacion:not(.proyector) .pres-barra #pres-pantalla { right: 12px; }
+  /* el título de la barra del panel les deja lugar a los dos (en 568 px se recorta con «…») */
+  body:has(#agente[data-usable]):has(#vista .presentacion #pres-pantalla) .barra-movil { padding-right: 108px; }
 }
 /* Desde 901 px (con el menú de lado) en una pantalla igual de baja, una sola fila, como en el celular: en dos o tres
    filas (según la letra) la barra se llevaba de 110 a 160 px de los 412 de alto de un 915 × 412, y al panel de la
@@ -131,10 +149,11 @@ html[data-pres-off][data-pres-llena][data-pres-quieto] #agente #agente-boton:not
 @media (prefers-reduced-motion: reduce) {
   html[data-proyector] #agente #agente-boton, html[data-pres-off][data-pres-llena] #agente #agente-boton { transition: none; }
 }
-/* En el celular el asistente abierto se superpone, como siempre: sin la barra de arriba, desde el borde de la ventana */
+/* En el celular el asistente abierto se superpone, como siempre: sin la barra de arriba, desde el borde de la ventana
+   (la franja «Llamada sin registrar» no se ve con la presentación llena: más abajo) */
 @media (max-width: 900px) {
   html[data-proyector] body:not(:has(#franja-llamada)) #agente #agente-panel,
-  html[data-pres-llena] body:not(:has(#franja-llamada)) #agente #agente-panel { top: 0; }
+  html[data-pres-llena] #agente #agente-panel { top: 0; }
 }
 /* La pantalla en off (/presentacion?off=1): su barra dice que no tiene controles; la de los botones no se ve. El
    asistente se abre en esta misma ventana (su botón va en la barra, como en la vista normal) */
@@ -178,6 +197,83 @@ html[data-pres-llena] .app { grid-template-columns: 1fr; }
 html[data-pres-llena] .contenido.lleno { height: 100vh; height: 100dvh; }
 html[data-pres-llena] .presentacion .pres-barra, html[data-pres-llena] .presentacion .pres-remoto { display: none; }
 html[data-pres-llena] .presentacion .pres-marco { background: #000; }
+/* Tampoco la franja «Llamada sin registrar»: taparía la barra de la presentación delante de la sala. Sigue pendiente
+   (llamadas.js) y vuelve a verse al salir */
+html[data-pres-llena] #franja-llamada { display: none; }
+
+/* ── La pestaña a pantalla completa (presentacion.js: `ponerCompleta`) ──
+   Como en el proyector: arriba a la derecha están las herramientas de la presentación (Índice, Fichas, Atlas…: arriba
+   a la derecha el botón tapaba «Atlas») y abajo al centro su control, así que el botón del asistente va abajo a la
+   izquierda y «Salir de pantalla completa» a su derecha, los dos redondos, del mismo tamaño y llenos (van sobre la
+   maqueta). Sin el botón del asistente (el chat abierto, o el asistente apagado), «Salir» toma su lugar. (`body:has`
+   le gana a la regla de la barra de la vista, más arriba, que lo ponía arriba a la derecha) */
+html[data-pres-llena]:not([data-pres-off]) body:has(#vista .presentacion) #agente #agente-boton {
+  top: auto; right: auto; left: 14px; bottom: 14px; width: 42px; height: 42px; }
+html[data-pres-llena]:not([data-pres-off]) body:has(#vista .presentacion) #agente #agente-boton svg { width: 22px; height: 22px; }
+.pres-salir { display: none; }
+html[data-pres-llena] .pres-salir { position: fixed; z-index: 6; left: 64px; bottom: 14px; display: grid; place-items: center;
+  width: 42px; height: 42px; padding: 0; border: 0; border-radius: 50%; background: var(--ink); color: var(--bg);
+  box-shadow: var(--sombra); cursor: pointer; transition: opacity .5s ease, transform .15s ease; }
+html[data-pres-llena] .pres-salir svg { width: 20px; height: 20px; }
+@media (hover: hover) { html[data-pres-llena] .pres-salir:hover { transform: translateY(-2px); } }
+.pres-salir:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+html[data-pres-llena] body:not(:has(#agente-boton:not([hidden]))) .pres-salir { left: 14px; }
+/* En el celular (las condiciones de web/propuesta.html), de pie, su control ocupa el pie y encima va la hoja de su
+   texto; de lado, su panel y su control llenan la columna de la izquierda. Lo que queda libre es su barra de arriba,
+   entre su marca (ahí, solo el ícono: 51 px desde el borde) y sus herramientas: los dos van ahí, a su altura */
+@media (max-width: 640px), (max-width: 1080px) and (orientation: landscape) and (max-height: 560px) {
+  html[data-pres-llena]:not([data-pres-off]) body:has(#vista .presentacion) #agente #agente-boton,
+  html[data-pres-llena] .pres-salir { top: calc(7px + env(safe-area-inset-top, 0px)); bottom: auto; width: 40px; height: 40px; }
+  html[data-pres-llena]:not([data-pres-off]) body:has(#vista .presentacion) #agente #agente-boton {
+    left: calc(max(16px, env(safe-area-inset-left, 0px)) + 60px); }
+  html[data-pres-llena] .pres-salir { left: calc(max(16px, env(safe-area-inset-left, 0px)) + 108px); }
+  html[data-pres-llena] body:not(:has(#agente-boton:not([hidden]))) .pres-salir {
+    left: calc(max(16px, env(safe-area-inset-left, 0px)) + 60px); }
+}
+/* (de lado la barra mide 52 px) */
+@media (max-width: 1080px) and (orientation: landscape) and (max-height: 560px) {
+  html[data-pres-llena]:not([data-pres-off]) body:has(#vista .presentacion) #agente #agente-boton,
+  html[data-pres-llena] .pres-salir { top: calc(6px + env(safe-area-inset-top, 0px)); }
+}
+/* En un celular de 320 a 359 px de ancho las herramientas empiezan antes: «Salir» va debajo de la marca, sobre la
+   maqueta (de pie, ahí no hay nada más de la presentación) */
+@media (max-width: 359px) and (orientation: portrait) {
+  html[data-pres-llena] .pres-salir { top: calc(61px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); }
+}
+/* Con el ratón quieto se atenúan, como en el proyector (vuelven al moverlo, al tocar, al pasarles por encima o con el
+   foco del teclado) */
+html[data-pres-llena]:not([data-pres-off]) body:has(#vista .presentacion) #agente #agente-boton {
+  transition: opacity .5s ease, transform .15s ease, box-shadow .15s ease; }
+html[data-pres-llena]:not([data-pres-off])[data-pres-quieto] body:has(#vista .presentacion) #agente #agente-boton:not(:hover):not(:focus-visible),
+html[data-pres-llena][data-pres-quieto] .pres-salir:not(:hover):not(:focus-visible) { opacity: .18; }
+/* Abierto en escritorio, el asistente es una columna a la derecha, del alto de la pantalla, sobre el mismo negro de la
+   presentación (no una tarjeta suelta sobre el fondo del panel), y «Salir» va encima de ella: abajo a la izquierda
+   taparía el control de la presentación, que con el ancho que queda se corre hacia allá */
+@media (min-width: 901px) {
+  html[data-pres-llena]:not([data-pres-off]) .presentacion { background: #000; }
+  html[data-pres-llena]:not([data-pres-off]) #agente #agente-panel { top: 78px; height: auto; }
+  /* ahí con su nombre a la vista, claro sobre el negro, y sin atenuarse: no está sobre la presentación */
+  html[data-pres-llena]:not([data-pres-off]) body:has(#agente-panel:not([hidden])) .pres-salir {
+    left: auto; bottom: auto; top: 24px; right: 24px; width: auto; height: 38px; padding: 0 16px 0 12px; gap: 8px;
+    grid-auto-flow: column; border-radius: 999px; background: rgb(255 255 255 / .1); color: #fff;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / .22); font-size: 13.5px; font-weight: 650; opacity: 1; }
+  html[data-pres-llena]:not([data-pres-off]) body:has(#agente-panel:not([hidden])) .pres-salir .sr {
+    position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  @media (hover: hover) {
+    html[data-pres-llena]:not([data-pres-off]) body:has(#agente-panel:not([hidden])) .pres-salir:hover {
+      background: rgb(255 255 255 / .18); transform: none; }
+  }
+}
+/* La presentación entra desde el negro (la maqueta se vuelve a encuadrar con el tamaño nuevo) */
+html[data-pres-llena]:not([data-pres-off]) .pres-marco iframe { animation: pres-llena .35s ease-out; }
+html[data-pres-llena] .pres-salir { animation: pres-llena .35s ease-out; }
+@keyframes pres-llena { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  html[data-pres-llena] .pres-salir, html[data-pres-llena]:not([data-pres-off]) .pres-marco iframe { animation: none; transition: none; }
+  html[data-pres-llena]:not([data-pres-off]) body:has(#vista .presentacion) #agente #agente-boton { transition: none; }
+  html[data-pres-llena] .pres-salir:hover { transform: none; }
+}
+
 /* abajo a la izquierda: arriba están las herramientas de la presentación y abajo al centro su control */
 .pres-flotantes { position: fixed; z-index: 5; left: 14px; bottom: 14px; display: flex; gap: 8px; }
 .pres-flotantes .btn { box-shadow: var(--sombra); }

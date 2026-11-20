@@ -32,8 +32,19 @@
 //   (`registrarVozLocal`). Cuenta como abierta desde que se monta (avisa con un latido mientras la presentación carga):
 //   un plan pedido en el chat de aquí antes de eso iba a la pestaña y no lo narraba nadie. Con `completa` llena la
 //   ventana, sin el menú ni las barras del panel; Escape la devuelve hasta la próxima orden de pantalla completa.
-// * En la pestaña del chat, `pantalla_completa` del asistente hace lo mismo con esta vista (el botón del asistente queda
-//   a mano para seguir hablando); Escape la devuelve.
+// * En la pestaña del chat, «Pantalla completa» (el botón de la barra; el de la presentación y su tecla F, si es del
+//   mismo origen) llena la ventana sin el menú ni las barras del panel y le pide al navegador su pantalla completa con
+//   la página entera: antes la pedía solo para el marco y el asistente quedaba fuera. Así el asistente sigue a mano: su
+//   botón flota abajo a la izquierda (arriba a la derecha están las herramientas de la presentación y abajo al centro
+//   su control), su panel se abre al lado (en el celular, encima) y el dictado y la voz siguen. Sin esa API (el iPhone)
+//   o si el navegador no la da, se queda llenando la ventana. Se sale con «Salir de pantalla completa» (flota junto al
+//   botón del asistente y, con el chat abierto en escritorio, encima de él), saliendo de la del navegador o con Escape.
+//   Con la del navegador, Escape es suyo y sale de una vez (la página no lo ve). Sin ella (llena por la orden del
+//   asistente o porque el navegador no la dio), el primer Escape con el chat abierto es del chat, también con el foco
+//   en la presentación; el siguiente sale. `pantalla_completa` del asistente llena la ventana igual y, si la persona
+//   acaba de tocar la pantalla (sin eso el navegador la rechaza), también pide la del navegador; con `activar: false`
+//   sale de las dos. Los dos botones se atenúan con el ratón quieto, como en el proyector. Con el celular de lado, la
+//   barra de la vista no se ve: «Pantalla completa» pasa a la barra del panel, junto al botón del asistente.
 // * El plan guiado (el recorrido narrado: reproductor.js, voz.js): la acción `recorrido` no se convierte en una orden;
 //   la reproduce aquí el reproductor, que lleva el reloj de la explicación y le manda a la presentación cada paso del
 //   plan (la escena: lo que se muestra ocurre mientras se dice), la frase que suena, la pausa y el cierre. Un plan
@@ -86,7 +97,7 @@ export const ESPERA_TRAS_PLAN_MS = 5000;     // desde que terminó un plan del a
 export const ESPERA_TRAS_ORDEN_MS = 45000;   // desde otra orden suelta: lo que se pidió ver se queda un rato a la vista
 export const REINTENTO_AUTO_MS = 5000;       // el servidor no tenía nada que armar (204) o no respondió: se vuelve a pedir
 const CLAVE_PRESENTADOR = 'yj_presentador';   // el botón «Presentador»: '0' oculto
-const QUIETO_MS = 3000;          // el botón flotante del asistente se atenúa tras esto sin mover el ratón ni tocar
+const QUIETO_MS = 3000;          // los botones flotantes (el del asistente) se atenúan tras esto sin mover el ratón ni tocar
 const PEDIR_PANTALLA = 'pantalla:pedir';   // el puente (`pedirPantalla`): la pantalla en off pregunta ya
 const TEXTO_VOZ = { activa: 'Voz activa', apagada: 'Voz', sin_activar: 'Toque para activar la voz', sin_voces: 'Sin voces en español' };
 const SITIO = /^(https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?|http:\/\/(127\.0\.0\.1|localhost)(:\d{1,5})?)(\/[A-Za-z0-9._~%-]*)*$/;
@@ -231,6 +242,7 @@ export async function vistaPresentacion(el, { q } = {}) {
   await cargarEstilos();
   const proyector = q?.get?.('pantalla') === '1';
   const off = !proyector && q?.get?.('off') === '1';
+  const pestana = !proyector && !off;   // la vista de la pestaña del chat (la del menú)
   const raiz = document.documentElement;
   if (proyector) raiz.dataset.proyector = '';
   if (off) raiz.dataset.presOff = '';
@@ -255,13 +267,14 @@ export async function vistaPresentacion(el, { q } = {}) {
           <button type="button" class="btn primario" id="pres-siguiente" aria-label="Paso siguiente" title="Paso siguiente" disabled><span>Siguiente</span>${icono('siguiente')}</button>
           ${off ? '' : html`<button type="button" class="btn pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta pestaña (la del navegador)">${icono('voz')}<span>Voz</span></button>
           <button type="button" class="btn pres-presentador" aria-pressed="true" title="El presentador: la caricatura que explica lo que narra el asistente (se oculta y se vuelve a mostrar en esta pestaña)">${icono('presentador')}<span>Presentador</span></button>`}
-          ${conPantalla ? html`<button type="button" class="btn" id="pres-pantalla" aria-label="Pantalla completa" title="Pantalla completa">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
+          ${pestana ? html`<button type="button" class="btn" id="pres-pantalla" aria-label="Pantalla completa" title="Pantalla completa: la presentación ocupa toda la pantalla, sin el menú ni estas barras, y el asistente sigue a mano (Escape vuelve)">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
           <a class="btn" id="pres-otra" href="${url('/presentacion?pantalla=1')}" target="_blank" rel="noopener" aria-label="Abrir en otra pantalla (proyector)" title="Abre la presentación en otra ventana para el proyector: el asistente la sigue manejando desde aquí, y en esa ventana también se abre el asistente, al lado de la presentación">${icono('proyector')}<span>Abrir en otra pantalla</span></a>
           <a class="btn" id="pres-off" href="${url('/presentacion?off=1')}" target="_blank" rel="noopener" aria-label="Pantalla en off" title="Una pantalla sin controles para el proyector o un televisor, en este equipo o en otro: solo cambia cuando se le pide al asistente o a un agente por MCP. En esa ventana también se abre el asistente, al lado de la presentación">${icono('agente')}<span>Pantalla en off</span></a>
         </div>
       </div>
       <p class="pres-remoto" id="pres-remoto" role="status" hidden>${icono('proyector')}<span>La presentación se está mostrando en otra pantalla: el asistente, estos botones y la presentación de aquí la manejan allá.</span></p>
       <div class="pres-marco" id="pres-marco"></div>
+      ${pestana ? html`<button type="button" class="pres-salir" id="pres-salir" title="Salir de pantalla completa (Escape)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr">Salir de pantalla completa</span></button>` : ''}
       ${proyector ? html`<div class="pres-flotantes">
         ${conPantalla ? html`<button type="button" class="btn oscuro pres-completa" id="pres-completa" title="Pantalla completa">${icono('pantalla')}<span>Pantalla completa</span></button>` : ''}
         <button type="button" class="btn oscuro pres-voz" aria-pressed="false" title="La voz del recorrido narrado en esta ventana (la del navegador)">${icono('voz')}<span>Voz</span></button>
@@ -275,7 +288,7 @@ export async function vistaPresentacion(el, { q } = {}) {
   const limpiezas = [() => { if (proyector) delete raiz.dataset.proyector; if (off) delete raiz.dataset.presOff; },
     () => { delete raiz.dataset.presLlena; }];
   const limpiar = () => { for (const f of limpiezas.splice(0)) { try { f(); } catch { /* nada */ } } };
-  let actividad = () => {};   // el ratón, un toque o una tecla (el proyector y la pantalla en off: el botón flotante)
+  let actividad = () => {};   // el ratón, un toque o una tecla (los botones flotantes se atenúan sin ellos)
   let enganchar = () => {};   // y los oyentes de eso sobre la presentación (su ventana, si es del mismo origen)
   let latidoPrevio = 0;       // la pantalla en off avisa que está abierta mientras la presentación carga
 
@@ -381,10 +394,61 @@ export async function vistaPresentacion(el, { q } = {}) {
   // Llenar la ventana: sin el menú ni las barras del panel (css/presentacion.css, html[data-pres-llena]). Escape la
   // devuelve; en la pantalla en off, hasta la próxima orden de pantalla completa
   const llenar = (v) => { if (v && !proyector) raiz.dataset.presLlena = ''; else delete raiz.dataset.presLlena; };
+  // En la pestaña, además, la pantalla completa del navegador con la página entera (no con el marco: el asistente
+  // quedaba fuera). `completaPropia`: la pidió esta vista, así que cuando el navegador sale de ella (su Escape, su aviso
+  // de salir) la ventana también vuelve. Si el navegador no tiene la API (el iPhone) o la rechaza, se queda llena
+  let completaPropia = false;
+  // El navegador rechazó la última que se le pidió (un permiso, un quiosco, un ajuste): con la ventana llena, la F y el
+  // botón de la presentación ya no la vuelven a pedir, salen (se olvida al salir y al pedirla otra vez)
+  let completaRechazada = false;
+  const conCompleta = () => pestana && !!document.fullscreenEnabled && typeof raiz.requestFullscreen === 'function';
+  function pedirCompleta() {
+    if (!conCompleta() || document.fullscreenElement) return;
+    completaPropia = true;
+    completaRechazada = false;
+    const rechazada = () => { completaPropia = false; completaRechazada = true; };
+    try {
+      raiz.requestFullscreen({ navigationUI: 'hide' })?.catch?.(rechazada);
+    } catch { rechazada(); }
+  }
+  /** Entra: llena la ventana y, si se puede, pide la pantalla completa del navegador (necesita un gesto reciente). */
+  function ponerCompleta() { llenar(true); pedirCompleta(); }
+  /** Sale: la ventana vuelve y, en la pestaña, también la pantalla completa del navegador que tenga la página. */
+  function salirDeLlena() {
+    llenar(false);
+    completaRechazada = false;
+    if (pestana && document.fullscreenElement === raiz) document.exitFullscreen?.()?.catch?.(() => {});
+  }
+  // El botón de pantalla completa de la presentación y su tecla F alternan: con la del navegador puesta (o ya llena y
+  // sin poder pedirla: sin la API, o porque el navegador la rechazó) salen; si no, entran (y si ya estaba llena sin la
+  // del navegador, por la orden del asistente sin un gesto, la piden)
+  const alternarCompleta = () => {
+    if (document.fullscreenElement === raiz || ('presLlena' in raiz.dataset && (!conCompleta() || completaRechazada))) {
+      salirDeLlena();
+    } else ponerCompleta();
+  };
   // (un Escape que ya usó el asistente abierto al lado, para cerrarse o cancelar la grabación de voz, no la devuelve)
-  const alTecla = (e) => { if (e.key === 'Escape' && !e.defaultPrevented && 'presLlena' in raiz.dataset) llenar(false); };
+  const alTecla = (e) => { if (e.key === 'Escape' && !e.defaultPrevented && 'presLlena' in raiz.dataset) salirDeLlena(); };
   document.addEventListener('keydown', alTecla);
   limpiezas.push(() => document.removeEventListener('keydown', alTecla));
+  if (pestana) {
+    const alCambiarCompleta = () => {
+      // (la persona salió, con Escape o «Salir», mientras el navegador todavía se la estaba dando: se suelta)
+      if (document.fullscreenElement === raiz && completaPropia && !('presLlena' in raiz.dataset)) {
+        document.exitFullscreen?.()?.catch?.(() => {});
+        return;
+      }
+      if (document.fullscreenElement || !completaPropia) return;
+      completaPropia = false;
+      llenar(false);
+    };
+    document.addEventListener('fullscreenchange', alCambiarCompleta);
+    limpiezas.push(() => {
+      document.removeEventListener('fullscreenchange', alCambiarCompleta);
+      // la vista se va (el asistente abrió otra): la pantalla completa del navegador que pidió se suelta con ella
+      if (completaPropia && document.fullscreenElement === raiz) document.exitFullscreen?.()?.catch?.(() => {});
+    });
+  }
 
   // ── El recorrido narrado: el reproductor de esta página, su voz y el avance ──
   // La voz de esta ventana (voz-panel.js), la misma que lee las respuestas del asistente: mientras esta vista tenga un
@@ -538,7 +602,15 @@ export async function vistaPresentacion(el, { q } = {}) {
         res.push({ op: p.op, ok: true });
         continue;
       }
-      if (p.op === 'pantalla_completa') { llenar(p.activar); res.push({ op: p.op, ok: true }); continue; }
+      if (p.op === 'pantalla_completa') {
+        // Llena la ventana y, si la persona acaba de tocar la pantalla, también pide la del navegador (sin un gesto
+        // reciente la rechaza: casi siempre la orden llega cuando la respuesta termina, y entonces solo la llena)
+        if (!p.activar) salirDeLlena();
+        else if (globalThis.navigator?.userActivation?.isActive) ponerCompleta();
+        else llenar(true);
+        res.push({ op: p.op, ok: true });
+        continue;
+      }
       if (rep.activo()) await rep.detener('otra_orden');
       const r = await orden(ordenDe(p));
       res.push({ op: p.op, ok: r.ok === true, ...(r.error ? { error: r.error } : {}) });
@@ -872,12 +944,26 @@ export async function vistaPresentacion(el, { q } = {}) {
     limpiezas.push(() => document.removeEventListener('keydown', alTeclaFuera));
   }
   // En el proyector, la ventana entera (es lo mismo: no tiene menú ni barra), así el asistente sigue a mano en pantalla
-  // completa; con solo el marco, quedaba fuera. En la pestaña, el marco: el menú y la barra no van
+  // completa; con solo el marco, quedaba fuera. En la pestaña también la página entera, y además llena la ventana (sin
+  // el menú ni las barras): `ponerCompleta`, más arriba
   const pantalla = () => {
     if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
-    else (proyector ? document.documentElement : marco).requestFullscreen?.().catch(() => {});
+    else document.documentElement.requestFullscreen?.().catch(() => {});
   };
-  $('#pres-pantalla', el)?.addEventListener('click', pantalla);
+  if (pestana) {
+    // El teclado (las flechas, el control remoto) va a la presentación, que ahora es lo que se ve: el botón que se tocó
+    // queda oculto con la barra
+    $('#pres-pantalla', el).addEventListener('click', () => {
+      ponerCompleta();
+      if (lista) iframe.focus({ preventScroll: true });
+    });
+    // «Salir de pantalla completa» (el ícono de «Pantalla completa» al revés, las esquinas hacia adentro): el foco vuelve
+    // al botón de la barra, que reaparece (si no, caería en la página y Escape ya no cerraría nada)
+    $('#pres-salir', el).addEventListener('click', () => {
+      salirDeLlena();
+      $('#pres-pantalla', el).focus({ preventScroll: true });
+    });
+  }
   const completa = $('#pres-completa', el);
   if (completa) {
     completa.addEventListener('click', pantalla);
@@ -886,12 +972,63 @@ export async function vistaPresentacion(el, { q } = {}) {
     limpiezas.push(() => document.removeEventListener('fullscreenchange', alCambiar));
   }
 
-  // El botón del asistente flotando sobre la presentación (el proyector; la pantalla en off a pantalla completa): tras
-  // QUIETO_MS sin mover el ratón ni tocar se atenúa (css/presentacion.css: html[data-pres-quieto]) para no distraer a
-  // la sala, y vuelve al mover el ratón, tocar o con una tecla, también sobre la presentación: su `gesto` y su `tecla` y,
-  // si es del mismo origen, su ratón (en el proyector el iframe ocupa la ventana y lo que pasa sobre él no llega aquí;
-  // de otro origen, el botón vuelve igual al pasarle el ratón por encima: css)
-  if (proyector || off) {
+  // En la pestaña, la presentación trae su propio botón de pantalla completa y su tecla F, que pedían la del navegador
+  // solo para el marco: el asistente quedaba fuera. Con su documento del mismo origen (el servicio único) hacen lo mismo
+  // que «Pantalla completa» de la barra, o salen (la F no, con sus fichas abiertas: ahí ella tampoco la usa). Y Escape
+  // con el foco en ella (sin la pantalla completa del navegador: con ella, Escape es del navegador) devuelve la ventana
+  // cuando ella no lo usa: con su índice o sus fichas abiertos los cierra, y con un plan sonando lo detiene (mando.js,
+  // que lo atiende antes); con el chat abierto, es del chat (como si el foco estuviera en él). De otro origen no se
+  // alcanzan y su botón pone a pantalla completa solo el marco, como antes
+  let engancharCompleta = () => {};
+  if (pestana) {
+    let ventanaCompleta = null;
+    const alClicDentro = (e) => {
+      if (!e.target?.closest?.('[data-accion="pantalla"]')) return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      alternarCompleta();
+    };
+    const alTeclaDentro = (e) => {
+      if (e.defaultPrevented || e.isComposing || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || '') || e.target?.isContentEditable) return;
+      let doc = null;
+      try { doc = iframe.contentDocument; } catch { doc = null; }
+      if (e.key === 'f' || e.key === 'F') {
+        // (con sus fichas abiertas la presentación no usa la F: aquí tampoco)
+        if (doc?.querySelector('.fichas:not([hidden])')) return;
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        if (!e.repeat) alternarCompleta();
+      } else if (e.key === 'Escape' && 'presLlena' in raiz.dataset) {
+        if (doc?.querySelector('.indice:not([hidden]), .fichas:not([hidden])')) return;   // los cierra ella
+        // Con el chat abierto, el primero es suyo (como con el foco en él): lo que esté oyendo o leyendo, o cerrarse
+        const chat = document.getElementById('agente-panel');
+        if (chat && !chat.hidden) {
+          e.preventDefault();
+          chat.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+          return;
+        }
+        salirDeLlena();
+      }
+    };
+    const dentro = [['click', alClicDentro], ['keydown', alTeclaDentro]];
+    // (en captura, antes que los de la presentación: main.js escucha en su documento y en su ventana sin captura)
+    engancharCompleta = (w) => {
+      ventanaCompleta = w;
+      for (const [t, f] of dentro) { try { w?.addEventListener(t, f, true); } catch { return; } }   // de otro origen
+    };
+    limpiezas.push(() => {
+      for (const [t, f] of dentro) { try { ventanaCompleta?.removeEventListener(t, f, true); } catch { /* nada */ } }
+    });
+  }
+
+  // Los botones que flotan sobre la presentación (el del asistente en el proyector y en la pantalla en off a pantalla
+  // completa; en la pestaña a pantalla completa, también «Salir de pantalla completa»): tras QUIETO_MS sin mover el
+  // ratón ni tocar se atenúan (css/presentacion.css: html[data-pres-quieto]; en la pestaña, solo a pantalla completa)
+  // para no distraer a la sala, y vuelven al mover el ratón, tocar o con una tecla, también sobre la presentación: su
+  // `gesto` y su `tecla` y, si es del mismo origen, su ratón (el iframe ocupa la ventana y lo que pasa sobre él no llega
+  // aquí; de otro origen, el botón vuelve igual al pasarle el ratón por encima: css)
+  {
     let ultima = 0, tQuieto = 0, ventanaIframe = null, docIframe = null;
     const mirarQuieto = () => {
       const falta = ultima + QUIETO_MS - Date.now();
@@ -930,6 +1067,7 @@ export async function vistaPresentacion(el, { q } = {}) {
       docIframe = doc;
       try { ventanaIframe = iframe.contentWindow; } catch { ventanaIframe = null; }
       escuchar(ventanaIframe, true);
+      engancharCompleta(ventanaIframe);
     };
     const alCargar = () => enganchar();
     escuchar(window, true);

@@ -19,6 +19,10 @@
 // administrador). «Probar voz» dice la frase fija de prueba con la voz guardada (`{prueba: true}`, con la voz de la
 // ventana: voz-panel.js) y muestra cuánto tardó la primera palabra en el navegador y en Mnemo. La voz clonada es un dato
 // biométrico de su dueño: el bloque la marca como voz sintética y dice qué viaja a Mnemo.
+//
+// La respuesta inmediata (docs/agente.md, «La respuesta inmediata»): la casilla «Respuesta inmediata» del formulario
+// del asistente (`agente_adelanto`, encendida por defecto; PUT /api/ajustes, solo el administrador) decide si cada
+// pregunta recibe primero una o dos frases con la idea general mientras se prepara la respuesta o la presentación.
 import { api, puede } from '../api.js';
 import { url } from '../base.js';
 import { $, aviso, avisoError, confirmar, datosForm, dialogo, fecha, hayEscrito, html, montar, num } from '../ui.js';
@@ -319,6 +323,7 @@ export async function vistaAjustes(el, { q } = {}) {
               <div class="chips">${ROLES_AGENTE.map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="rol_${k}" ${rolesAgente.has(k) ? 'checked' : ''}> ${t}</label>`)}</div></div>
             ${casilla('escritura', ag.escritura !== false, 'Proponer cambios en la base (notas, acercamientos, fichas, reuniones…): cada uno se aprueba en una tarjeta antes de guardarse')}
             ${casilla('mnemo_coordinadores', ag.mnemo_coordinadores === true, 'Los coordinadores también usan las herramientas de Mnemo (documentos, calendario, formularios y memoria), con la cuenta de Mnemo del administrador: lo que hagan allá queda a nombre del administrador')}
+            ${casilla('agente_adelanto', aj.agente_adelanto !== false, 'Respuesta inmediata: mientras prepara la respuesta o la presentación, el asistente adelanta en una o dos frases la idea general (una llamada corta más al modelo)')}
             ${numero('retencion_dias', ag.retencion_dias, 'Días que se guardan las conversaciones', 1, 365)}
             ${ROLES_AGENTE.map(([k, , t]) => numero(`mensajes_${k}`, mensajes[k], `Mensajes por día · ${t}`, 1, 5000))}
             <div class="aviso-legal ancho">Lo que el asistente consulta de la base viaja al proveedor del modelo: con Mnemo conectado, a Mnemo y, de ahí, al proveedor de modelos que esa cuenta tenga elegido; en modo directo, a Anthropic. Son terceros, posiblemente en el exterior: datos mínimos, cédulas y teléfonos enmascarados, nunca datos sensibles ni listas, y nada de quien no autorizó. Revise el aviso de privacidad y la autorización con un abogado antes de encenderlo para el equipo. Las conversaciones se borran solas a los días indicados desde su último mensaje; bajar el plazo acorta también las que ya existen.</div>
@@ -596,7 +601,7 @@ export async function vistaAjustes(el, { q } = {}) {
           ? 'Sin el administrador marcado, a usted tampoco le aparecerá el asistente. ¿Guardar así?'
           : 'Sin ningún rol marcado, el asistente queda apagado para todos, también para usted. ¿Guardar así?', { si: 'Guardar' })) return;
         await guardar({ agente: { roles, escritura: v.escritura === true, mnemo_coordinadores: v.mnemo_coordinadores === true,
-          retencion_dias: Number(v.retencion_dias) },
+          retencion_dias: Number(v.retencion_dias) }, agente_adelanto: v.agente_adelanto === true,
         agente_mensajes_diarios: Object.fromEntries(ROLES_AGENTE.map(([k]) => [k, Number(v[`mensajes_${k}`])])) }, 'Asistente guardado',
         { asistente: true });
       } else if (f.id === 'f-voz') {
