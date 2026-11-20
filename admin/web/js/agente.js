@@ -3,7 +3,10 @@
 // la persona en una tarjeta; las acciones que pide el servidor (navegar, recargar, insignias, mapa, presentacion,
 // recorrido, automatica) se validan aquí antes de hacerse. El plan guiado de la presentación (el recorrido narrado)
 // tiene su tarjeta y su barra fija, y la presentación automática su franja (agente-recorrido.js). Las preguntas se
-// escriben o se dicen: el micrófono del cuadro de escribir las transcribe (dictado.js). Vive en document.body, fuera
+// escriben o se dicen: el micrófono del cuadro de escribir las transcribe (dictado.js). Y las respuestas se pueden oír:
+// con «Leer las respuestas en voz alta» encendido (o si la pregunta llegó por voz), el turno pide `contexto.voz` y el
+// servidor manda, mientras el modelo escribe, las frases firmadas que el locutor (locutor.js) dice en orden con la voz
+// de la ventana (voz-panel.js: la voz clonada de Mnemo, con la del navegador de respaldo). Vive en document.body, fuera
 // de #raiz y de #vista: sobrevive a cada cambio de vista.
 //
 // Seguridad: nada de lo que escribe el modelo se pinta como HTML. Entra con textContent o como nodos de texto, y el
@@ -21,13 +24,15 @@ import { automaticaValida, crearFranjaAutomatica, crearTarjetaRecorrido, montarB
   pausaPorVoz, recorridoDelChat, tarjetaValida } from './agente-recorrido.js';
 import { sinBase, url } from './base.js';
 import { crearDictado, soporteDeDictado, textoDeEstado } from './dictado.js';
+import { crearLocutor } from './locutor.js';
 import { confirmar as preguntar, esMovil, fecha, html, icono, montar, num } from './ui.js';
+import { fijarInfoVoz, tomarVoz, vozDelEstado } from './voz-panel.js';
 
 // El validador de la acción `presentacion` (forma estricta, op en lista blanca, capítulo como id, paso de 1 a 60 y una
 // explicación que se ve tal cual): vive en el puente, que también valida lo que llega por el canal del proyector
 export { accionPresentacion };
 
-const GUARDADO = 'yj_agente';             // sessionStorage: {abierto, conversacion, uid}; se borra en olvidar() de app.js
+const GUARDADO = 'yj_agente';             // sessionStorage: {abierto, conversacion, uid, hablar}; se borra en olvidar() de app.js
 const MAX_TEXTO = 4000;                   // el tope de MensajeIn.texto en la API
 const VIGENCIA_ESTADO_MS = 5 * 60 * 1000; // el estado (disponible, tope de mensajes) se vuelve a pedir al cambiar de vista
 const REINTENTO_ESTADO_MS = 30 * 1000;    // si no se pudo leer, no se insiste en cada vista
@@ -629,6 +634,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       <header class="agente-cab">
         <span class="agente-sello" aria-hidden="true">${icono('agente')}</span>
         <div class="agente-titulos"><h2 id="agente-titulo">Asistente</h2><small id="agente-sub">Nueva conversación</small></div>
+        <button type="button" class="btn fantasma chico agente-icono agente-hablar" id="agente-hablar" aria-pressed="false" aria-label="Leer las respuestas en voz alta" title="Leer las respuestas en voz alta" hidden>${icono('voz')}</button>
         <button type="button" class="btn fantasma chico agente-icono" id="agente-nueva" aria-label="Nueva conversación" title="Nueva conversación">${icono('nueva')}</button>
         <button type="button" class="btn fantasma chico agente-icono" id="agente-ver-historial" aria-label="Conversaciones anteriores" title="Conversaciones" aria-expanded="false" aria-controls="agente-historial">${icono('historial')}</button>
         <button type="button" class="btn fantasma chico agente-icono" id="agente-cerrar" aria-label="Cerrar el asistente" title="Cerrar">${icono('cerrar')}</button>
@@ -665,6 +671,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   const $ = (sel) => caja.querySelector(sel);
   const boton = $('#agente-boton'), senalEl = $('.agente-senal'), panel = $('#agente-panel'), sub = $('#agente-sub');
   const nuevaBtn = $('#agente-nueva'), verHistBtn = $('#agente-ver-historial'), cerrarBtn = $('#agente-cerrar');
+  const hablarBtn = $('#agente-hablar');
   const historial = $('#agente-historial'), listaHist = $('#agente-lista'), volverBtn = $('#agente-volver');
   const cuerpo = $('#agente-cuerpo'), log = $('#agente-mensajes'), bajarBtn = $('#agente-bajar'), form = $('#agente-form');
   const entrada = $('#agente-texto'), enviarBtn = $('#agente-enviar'), detenerBtn = $('#agente-detener');
@@ -702,6 +709,23 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   let vez = 0;                // cambia con cada conversación que se pinta: una respuesta tardía no pisa la nueva
   const chips = new Map();    // id del tool_use → chip
   const tarjetas = new Map(); // id del tool_use → tarjeta de aprobación
+  // Las respuestas habladas: la preferencia de la pestaña («Leer las respuestas en voz alta»), la voz de la ventana
+  // (voz-panel.js: se toma la primera vez que hace falta y no se suelta) y el locutor, que dice en orden las frases del
+  // turno. Mientras la presentación de esta ventana o el proyector tienen un plan sonando (no en pausa), espera: la
+  // narración manda
+  let hablar = false;
+  let miVoz = null;
+  let msjHablado = null;      // el mensaje cuya respuesta se está leyendo (se marca mientras suena)
+  const vozHablada = () => (miVoz ||= tomarVoz('respuestas'));
+  const locutor = crearLocutor({
+    voz: { decir: (t, o) => vozHablada().decir(t, o), callar: () => miVoz?.callar(), preparar: (i) => vozHablada().preparar(i) },
+    ocupada: () => { const r = recorridoEnCurso(); return !!r && r.fase !== 'pausa' && (r.donde === 'aqui' || proyectorVivo()); },
+    alHablar: (v) => {
+      if (v) msjHablado?.classList.add('hablando');
+      else for (const m of log.querySelectorAll('.agente-msj.hablando')) m.classList.remove('hablando');
+      hablarBtn.toggleAttribute('data-hablando', v);
+    },
+  });
   const sucias = new Set();   // partes de texto por repintar en el próximo cuadro
   let cuadro = 0;
   const op = { rutaPanel, origenMnemo: null };
@@ -710,10 +734,10 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   const conAlgo = () => !!entrada.value.trim() || !!turno;
   registrarPendiente(conAlgo);
 
-  // ── Guardado en la pestaña (nada de la conversación: solo su id) ──
+  // ── Guardado en la pestaña (nada de la conversación: solo su id; y si la persona quiere oír las respuestas) ──
   function guardar() {
     try {
-      sessionStorage.setItem(GUARDADO, JSON.stringify({ abierto, conversacion: conv, uid: sesion.uid }));
+      sessionStorage.setItem(GUARDADO, JSON.stringify({ abierto, conversacion: conv, uid: sesion.uid, hablar }));
     } catch { /* bloqueado */ }
   }
   function leerGuardado() {
@@ -721,10 +745,10 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       const g = JSON.parse(sessionStorage.getItem(GUARDADO) || 'null');
       if (g && typeof g === 'object' && g.uid === sesion.uid) {
         const id = Number.isInteger(g.conversacion) && g.conversacion > 0 ? g.conversacion : null;
-        return { abierto: g.abierto === true, conversacion: id };
+        return { abierto: g.abierto === true, conversacion: id, hablar: g.hablar === true };
       }
     } catch { /* bloqueado o dañado */ }
-    return { abierto: false, conversacion: null };
+    return { abierto: false, conversacion: null, hablar: false };
   }
 
   // ── Estado del asistente para esta persona ──
@@ -743,6 +767,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       mnemo: { activo: o.mnemo?.activo === true, origen: origenSeguro(o.mnemo?.origen) },
       // ¿el panel puede transcribir por Mnemo las preguntas por voz? (si no, las transcribe el navegador)
       dictado: o.dictado === true,
+      // ¿esta persona puede oír las respuestas con la voz clonada de Mnemo? ({disponible, nombre, respuestas, automatica})
+      voz: vozDelEstado(o.voz),
       conexion: c && ['sin_conectar', 'conectada', 'caida'].includes(c.estado)
         ? { estado: c.estado, motivo: texto(c.motivo, 40) || null, modelo: c.modelo === true,
           ofreceModelo: c.ofrece_modelo !== false } : null,
@@ -756,6 +782,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       try {
         info = normalizar(await api.get('/api/agente/estado'));
         infoT = Date.now();
+        // la voz de esta ventana (la narración del plan también) usa lo que dice el estado: no lo vuelve a pedir
+        fijarInfoVoz(info.voz);
       } catch {
         infoT = Date.now() - VIGENCIA_ESTADO_MS + REINTENTO_ESTADO_MS; // se vuelve a intentar en un rato
       } finally {
@@ -785,6 +813,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     if (turno) { estadoPendiente = true; return; }
     op.origenMnemo = info?.mnemo.origen || null;
     pintarRestantes();
+    aplicarHablar();
     const util = visible && usable();
     caja.toggleAttribute('data-usable', util); // la barra del celular le hace lugar al botón (agente.css)
     boton.hidden = !util || abierto;
@@ -812,6 +841,31 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     aplicarVoz();
   }
 
+  /** ¿Se pueden oír las respuestas? El asistente está disponible y la voz clonada de Mnemo, ofrecida para esta persona
+   * con «Leer respuestas» en Ajustes (`voz` del estado). */
+  const puedeHablar = () => !!info?.disponible && info.voz.disponible && info.voz.respuestas;
+
+  /** El botón «Leer las respuestas en voz alta»: a la vista solo si se puede; apretado si la persona lo encendió. */
+  function aplicarHablar() {
+    const puede = puedeHablar();
+    const tenia = document.activeElement === hablarBtn;
+    hablarBtn.hidden = !puede;
+    const si = puede && hablar;
+    hablarBtn.setAttribute('aria-pressed', String(si));
+    const nombre = info?.voz.nombre ? ` «${info.voz.nombre}»` : '';
+    const t = si ? `Dejar de leer las respuestas en voz alta (con la voz clonada de Mnemo${nombre}, una voz sintética)`
+      : `Leer las respuestas en voz alta (con la voz clonada de Mnemo${nombre}, una voz sintética)`;
+    hablarBtn.title = t;
+    hablarBtn.setAttribute('aria-label', t);
+    if (!puede) locutor.callar();
+    // Si se oculta con el foco puesto, el foco pasa a la conversación (en <body>, Escape ya no cerraría el panel)
+    if (!puede && tenia && abierto) log.focus({ preventScroll: true });
+  }
+
+  /** ¿La acción pone un plan a narrar? (el plan guiado, la presentación automática) */
+  const ponePlan = (a) => a?.tipo === 'recorrido' || a?.tipo === 'automatica'
+    || (a?.tipo === 'presentacion' && a.op === 'recorrido');
+
   async function mostrar() {
     visible = true;
     await listos;
@@ -823,11 +877,14 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     restaurado = true;
     const g = leerGuardado();
     conv = info.disponible ? g.conversacion : null;
+    hablar = g.hablar;
+    aplicarHablar();
     if (g.abierto) abrir({ foco: false, releer: false }); // el estado se acaba de leer
   }
 
   function ocultar() {
     visible = false;
+    locutor.callar();
     turno?.control.abort();
     dictado.cancelar();   // ni se sigue oyendo ni se espera una transcripción
     caja.removeAttribute('data-usable');
@@ -857,6 +914,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
 
   function cerrar({ foco = false } = {}) {
     if (vozOyendo()) dictado.cancelar();   // con el panel cerrado no se sigue oyendo
+    locutor.callar();                      // ni se sigue leyendo la respuesta
     abierto = false;
     panel.hidden = true;
     boton.hidden = !(visible && usable());
@@ -945,6 +1003,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   function limpiarConversacion() {
     vez++;
     cargando = false;
+    locutor.callar();   // otra conversación (o ninguna): lo que se leía en voz alta se calla
     if (cuadro) cancelAnimationFrame(cuadro);
     cuadro = 0;
     sucias.clear();
@@ -1289,7 +1348,10 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     const msj = lote[lote.length - 1].el.closest('.agente-msj');
     if (msj) { actual = { el: msj }; ultima = null; }
     const decisiones = lote.map((t) => ({ id: t.id, aprobar: t.decision }));
-    correr('/api/agente/confirmaciones', { conversacion: conv, decisiones }, { tipo: 'confirmacion', lote, msj: enAsistente() });
+    // la respuesta que sigue a la aprobación también se oye, si se están leyendo
+    const leer = puedeHablar() && hablar;
+    correr('/api/agente/confirmaciones', { conversacion: conv, decisiones, ...(leer ? { voz: true } : {}) },
+      { tipo: 'confirmacion', lote, msj: enAsistente(), hablar: leer });
   }
 
   // ── Acciones que pide el servidor ──
@@ -1507,6 +1569,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       case 'inicio':
         t.inicio = true;
         fijarConversacion(ev.conversacion, ev.titulo);
+        if (t.hablar) locutor.fijarConversacion(conv);
         nuevaRonda();
         break;
       case 'progreso': if (texto(ev.texto)) agregarProgreso(texto(ev.texto)); break;
@@ -1523,9 +1586,14 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
         resultadoEnVivo(ev);
         break;
       case 'accion':
+        // un plan en la presentación (o la automática) va a narrar: la respuesta que se leía se calla
+        if (t.hablar && ponePlan(ev.accion)) locutor.callar();
         accion(ev.accion);
         nuevaRonda();
         break;
+      // Las respuestas habladas (locutor.js): una frase firmada para decir, o las que ya no valen
+      case 'frase': if (t.hablar && turno === t) locutor.frase(ev); break;
+      case 'frases_descartar': if (t.hablar && turno === t) locutor.descartar(ev.desde); break;
       case 'confirmar': alConfirmar(ev); break;
       case 'descartar': descartar(); break;
       // Es de la ronda (y se va con ella si se repite) solo si llega en medio de ella, como el paso a un modelo de
@@ -1563,11 +1631,13 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   async function correr(ruta, cuerpo, datos) {
-    const t = { control: new AbortController(), inicio: false, fin: null, error: null, excepcion: null, ...datos };
+    const t = { control: new AbortController(), inicio: false, fin: null, error: null, excepcion: null, hablar: false, ...datos };
     turno = t;
     nuevaRonda();
     ponerEstado();
     t.msj?.classList.add('trabajando'); // tres puntos al final mientras responde
+    // Se lee en voz alta: las frases del servidor van al locutor, en el mensaje de este turno
+    if (t.hablar) { locutor.callar(); msjHablado = t.msj || null; locutor.empezar(conv); }
     let terminado = false;
     const pedir = () => flujo(ruta, cuerpo, {
       signal: t.control.signal,
@@ -1624,14 +1694,20 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       burbuja = agregarUsuario(t);
       nuevoAsistente();
     }
-    // Un recorrido que suena se pausa al terminar la frase: la sala no sigue oyendo mientras se pregunta otra cosa
+    // Un recorrido que suena se pausa al terminar la frase: la sala no sigue oyendo mientras se pregunta otra cosa. Y la
+    // respuesta anterior que se leía en voz alta se calla
     pausaPorMensaje();
+    locutor.callar();
+    // Con «Leer las respuestas en voz alta» encendido, o si la pregunta llegó por voz, la respuesta se oye (enviar suele
+    // ser un gesto: destraba el audio de la ventana)
+    const leer = puedeHablar() && (hablar || vozEntregando);
+    if (leer) vozHablada().gesto();
     // Lo pendiente que no se decidió queda sin aprobar: el servidor lo rechaza al recibir el mensaje (y lo avisa)
     const sinAprobar = pendientesSinEnviar();
     for (const x of sinAprobar) x.enviada = true;
     alFinal(true);
-    await correr('/api/agente/mensajes', { conversacion: conv, texto: t, contexto: contexto() },
-      { tipo: 'mensaje', texto: t, burbuja, msj: actual.el, sinAprobar });
+    await correr('/api/agente/mensajes', { conversacion: conv, texto: t, contexto: contexto({ voz: leer }) },
+      { tipo: 'mensaje', texto: t, burbuja, msj: actual.el, sinAprobar, hablar: leer });
   }
 
   // ── Cómo terminó el turno ──
@@ -1775,7 +1851,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     return encuadreMapa(c);
   }
 
-  function contexto() {
+  /** `voz`: la respuesta se va a leer en voz alta (el servidor arma sus frases y le pide al modelo frases cortas). */
+  function contexto({ voz = false } = {}) {
     const ruta = rutaActual();
     const m = /^\/(personas|reuniones)\/(\d{1,12})$/.exec(ruta);
     return {
@@ -1786,6 +1863,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       filtros: filtrosDe(location.search),
       mapa: camara(),
       presentacion: pasoPresentacion(),
+      ...(voz ? { voz: true } : {}),
     };
   }
 
@@ -2141,6 +2219,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   function pintarVoz(e) {
     const oyendo = e.estado === 'pidiendo' || e.estado === 'escuchando';
     const activa = oyendo || e.estado === 'transcribiendo';
+    if (oyendo) locutor.callar();   // la respuesta que se leía no entra al micrófono
     vozBtn.setAttribute('aria-pressed', oyendo ? 'true' : 'false');
     vozBtn.dataset.estado = e.estado;
     if (oyendo) { vozBtn.title = 'Terminar de hablar'; vozBtn.setAttribute('aria-label', 'Terminar de hablar'); } else nombrarVoz('Preguntar por voz');
@@ -2173,6 +2252,10 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   vozBtn.addEventListener('click', () => {
+    // Tocar el micrófono corta la respuesta que se está leyendo (en el acto, antes del permiso del micrófono). Y como la
+    // respuesta a una pregunta por voz se oye, el toque destraba el audio de la ventana (Safari lo pide en el gesto)
+    locutor.callar();
+    if (puedeHablar()) vozHablada().gesto();
     const e = dictado.estado().estado;
     if (e === 'transcribiendo') return;
     if (e === 'pidiendo' || e === 'escuchando') { dictado.terminar(); return; }
@@ -2186,6 +2269,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   // el minuto y lo enviaba solo. (El reconocimiento del navegador lo corta el navegador; y en el celular, su ventana
   // del permiso no debe cancelarlo: solo cuenta `escuchando` con la vía del panel)
   window.addEventListener('pagehide', () => { if (vozActiva()) dictado.cancelar(); });
+  window.addEventListener('pagehide', () => locutor.callar());   // y lo que se leía en voz alta se calla
   document.addEventListener('visibilitychange', () => {
     const e = dictado.estado();
     if (document.hidden && e.estado === 'escuchando' && e.via === 'servidor') dictado.cancelar();
@@ -2198,9 +2282,20 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   verHistBtn.addEventListener('click', () => verHistorial(!historialAbierto));
   volverBtn.addEventListener('click', () => { verHistorial(false); entrada.focus({ preventScroll: true }); });
   detenerBtn.addEventListener('click', () => {
+    locutor.callar();
     if (!turno) return;
     detenidoEn = Date.now();
     turno.control.abort();
+  });
+  hablarBtn.addEventListener('click', () => {
+    hablar = !hablar;
+    guardar();
+    if (hablar) {
+      // el clic es el gesto que deja sonar la voz en esta ventana (y la enciende si la persona la había apagado)
+      const v = vozHablada();
+      if (v.estado() === 'apagada') v.encender(); else v.activar();
+    } else locutor.callar();
+    aplicarHablar();
   });
 
   function enviarDelCompositor() {
@@ -2225,11 +2320,14 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     entrada.style.height = `${Math.min(entrada.scrollHeight + 2, 160)}px`;
   }
   entrada.addEventListener('input', autoAltura);
+  // Escribir corta la respuesta que se está leyendo (la persona ya está preguntando otra cosa)
+  entrada.addEventListener('input', () => locutor.callar());
 
   panel.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || e.isComposing || document.querySelector('dialog[open]')) return;
     e.preventDefault();
     if (vozActiva()) { dictado.cancelar(); return; }   // primero, lo que se está oyendo o transcribiendo
+    if (locutor.hablando()) { locutor.callar(); return; }   // después, la respuesta que se está leyendo
     if (historialAbierto) { verHistorial(false); verHistBtn.focus({ preventScroll: true }); } else cerrar({ foco: true });
   });
 

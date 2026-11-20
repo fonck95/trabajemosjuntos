@@ -50,6 +50,9 @@ body:has(#franja-llamada) .agente-panel {
 .btn.agente-icono { width: 36px; height: 36px; padding: 0; flex: none; }
 .btn.agente-icono svg { width: 18px; height: 18px; }
 .btn.agente-icono[aria-expanded="true"] { background: var(--sunken); }
+/* «Leer las respuestas en voz alta» (agente.js): encendido, con el color del asistente; mientras habla, late */
+.btn.agente-hablar[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent-text); }
+.btn.agente-hablar[data-hablando] svg { animation: agente-puntos 1.2s ease-in-out infinite; }
 
 /* ───────── Mensajes ───────── */
 .agente-cuerpo { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
@@ -71,6 +74,9 @@ body:has(#franja-llamada) .agente-panel {
   background: radial-gradient(circle at 4px 4px, var(--muted) 3px, transparent 3.5px) 0 0 / 10px 8px repeat-x;
   animation: agente-puntos 1.2s ease-in-out infinite; }
 @keyframes agente-puntos { 50% { opacity: .35; } }
+/* La respuesta que se está leyendo en voz alta: una raya del color del asistente al costado */
+.agente-msj.agente-respuesta.hablando { box-shadow: -3px 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 2px; padding-left: 8px; }
 
 /* Markdown de las respuestas */
 .agente-md { min-width: 0; }
@@ -326,6 +332,7 @@ body:has(#franja-llamada) .agente-panel {
   .agente-giro { animation-duration: 2.4s; }
   .agente-msj.agente-respuesta.trabajando::after { animation: none; }
   .btn.agente-voz::before, .agente-voz-onda i { transition: none; animation: none; }
+  .btn.agente-hablar[data-hablando] svg { animation: none; }
 }
 
 /* ───────── La presentación automática: la franja de la acción `automatica` (agente-recorrido.js) ───────── */

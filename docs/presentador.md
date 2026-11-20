@@ -133,8 +133,9 @@ Lo que hace con cada orden del mando (`web/js/propuesta/mando.js`):
 | `quitar_explicacion` | Se despide y baja (si el subtítulo no vuelve enseguida: un cambio de paso dentro del plan no lo despide) |
 | `vista {presentador}` | Lo muestra u oculta (el botón **Presentador** del panel) |
 
-`habla` es la única orden nueva del lado del panel: la vista envuelve la voz del reproductor y le avisa a la presentación
-cuándo empieza y termina cada frase. No cambia los tiempos ni las fases del recorrido. Los planes del asistente y de
+`habla` es la única orden nueva del lado del panel: la vista envuelve la voz del reproductor (la del navegador o la voz
+clonada de Mnemo: la orden es la misma, y con la clonada «empieza» es cuando el audio suena de verdad) y le avisa a la
+presentación cuándo empieza y termina cada frase. No cambia los tiempos ni las fases del recorrido. Los planes del asistente y de
 los agentes por MCP no traen nada nuevo: el presentador decide sus gestos con lo que el mando ya sabe de cada escena.
 
 El botón **Presentador** (en la barra de la pestaña, en la de la pantalla en off y entre los botones del proyector) lo
