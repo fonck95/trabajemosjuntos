@@ -34,11 +34,13 @@ de un cambio si se cumple cualquiera de estas condiciones:
    no marca ninguna. `web/js/api.js` manda la cabecera
    `X-Reunion` en las escrituras de esa pantalla. La reunión entra aunque el cambio se haga fuera de su horario, por
    ejemplo al completar perfiles al día siguiente.
-3. **La reunión está en curso**, y la persona es asistente de ella o quien hace el cambio la creó.
+3. **El cambio coincide en el tiempo con la reunión**: está en curso. Se queda lo más preciso:
    - Si la persona asiste a una reunión en curso, cuentan solo esas.
    - Si no, cuentan las que creó quien hace el cambio.
-   - Una reunión en curso de otra persona del equipo, a la que la persona no asiste, no cuenta: el cambio puede venir
-     de otro lugar.
+   - Si no, y ni la ruta ni la pantalla nombran una reunión (reglas 1 y 2), cuentan todas las reuniones en curso que
+     quien hace el cambio puede ver: la suya, una abierta al equipo, o A y K todas. Así, lo que se edita, se completa o
+     se da de alta mientras dura una reunión queda ligado a ella aunque la persona no sea asistente. El consultor no
+     marca ninguna, y la reunión de otra persona del equipo que P no puede ver tampoco.
 
 Qué no lleva traza:
 
@@ -93,7 +95,7 @@ una persona tiene más de un líder, varios la están captando.
   general. Lo que marca o quita una persona del equipo queda con su procedencia (`procedencia.<tipo>`): la importación
   nunca lo cambia. «Completar» solo suma tipos.
 - **Asignar.** Desde la ficha (Datos principales → **Liderado por**: una barra para buscar al líder o concejal por
-  nombre o cédula) o al registrar a alguien: al marcar **Votante** (o Líder) en el alta se abre la misma barra; en
+  nombre o cédula) o al registrar a alguien: el alta trae la misma barra (al marcar **Votante** o Líder se enfoca); en
   Habitantes, **Nuevo votante** abre el alta con Votante marcado, y la ficha de un líder o concejal tiene **Registrar
   votante liderado**. Solo se puede elegir una ficha activa marcada como líder o como concejal, y nadie es su propio
   líder. Asignar el mismo líder dos veces no cambia nada. El límite es de 10 líderes por persona.
@@ -108,8 +110,10 @@ una persona tiene más de un líder, varios la están captando.
   - La ficha de un líder o concejal dice a cuántas personas lidera, sus votantes y cuántas trae también otro líder, con
     enlaces a Habitantes.
   - En Habitantes:
-    - los filtros `tipo` (concejal, lider, votante o sin_tipo), `lider_id` (las que lidera ese líder o concejal) y
-      `varios_lideres=1` (las que trae más de uno);
+    - los filtros `tipo` (concejal, lider, votante o sin_tipo), `lider_id` (las que lidera ese líder o concejal),
+      `sin_lider=1` (nadie la lidera) y `varios_lideres=1` (las que trae más de uno);
+    - la columna «Líder / votante · Liderado por», con el nombre de cada líder (`lideres` en la fila de A y K, con una
+      sola consulta por página);
     - los chips del tipo y «N líderes» en la fila;
     - el botón **Líderes**, que lista cada líder y concejal con su tipo, cuántas personas lidera, cuántas son votantes
       y cuántas comparte con otro (`GET /api/lideres`, con la cédula para buscar), y cuántas personas tienen más de
@@ -130,7 +134,7 @@ El tipo de persona y el liderazgo son datos políticos:
 - **A y K** los ven y los cambian. Las rutas de líderes usan `requiere("admin")`.
 - **P y C** nunca reciben `lider`, `votante`, `concejal`, `lideres`, `lideres_n`, `traidas` ni `intervenciones`, no
   pueden mandarlos al editar ni al registrar a alguien (403) y les está vedado usar los filtros `tipo`, `lider`,
-  `lider_id`, `varios_lideres` e `intervenida_en`. La base general («general») la ven como «otra base» y no pueden
+  `lider_id`, `sin_lider`, `varios_lideres` e `intervenida_en`. La base general («general») la ven como «otra base» y no pueden
   filtrar por ella.
 - **El asistente** no los recibe. `minimizar` es una lista blanca, el tipo y `lideres` están en sus `OCULTOS`, y sus
   filtros vedados no incluyen estos filtros.

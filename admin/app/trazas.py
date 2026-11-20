@@ -10,10 +10,12 @@ Una reunión entra en la traza de un cambio si:
    una persona en la reunión; o
 2. el cambio se hace desde la pantalla de la reunión (el modo reunión manda la cabecera `X-Reunion`, que llega en
    `Quien.reunion`) y quien lo hace puede ver esa reunión (la suya, una abierta al equipo, o A y K todas); o
-3. la reunión está en curso (su fecha, entre la hora de inicio y la de fin en hora de Colombia: `modelo.ventana_reunion`)
-   y la persona es asistente de ella o quien hace el cambio la creó. Si la persona asiste a una reunión en curso,
-   cuentan solo esas; si no, las que creó quien hace el cambio. Una reunión en curso de otra persona del equipo a la
-   que la persona no asiste no cuenta: el cambio puede venir de otro lugar.
+3. el cambio coincide en el tiempo con la reunión: está en curso (su fecha, entre la hora de inicio y la de fin en
+   hora de Colombia: `modelo.ventana_reunion`). Se queda lo más preciso: si la persona asiste a alguna reunión en
+   curso, esas; si no, las que creó quien hace el cambio; y si no hay nada de eso ni una reunión de las reglas 1 y 2,
+   todas las reuniones en curso que quien hace el cambio puede ver (la suya, una abierta al equipo, o A y K todas; el
+   consultor ninguna). Así, lo que el equipo hace mientras dura una reunión queda ligado a ella aunque la persona no se
+   haya registrado como asistente.
 
 No llevan traza las lecturas (`SIN_TRAZA`), lo que hace el sistema ni las importaciones (que escriben la auditoría
 aparte): subir una planilla durante una reunión no es intervenir a cada persona de la planilla.
@@ -71,13 +73,17 @@ def reuniones_del_cambio(db: Database, quien: Any, accion: str, pid: int, reunio
             r = db.reuniones.find_one({"_id": pantalla}, _PROY)
             if r is not None and _visible(r, quien):
                 ids.add(pantalla)
+        # Coincidir en el tiempo basta (regla 3): de las reuniones en curso, las de la persona; si no asiste a
+        # ninguna, las de quien hace el cambio; si no, y sin otra pista, todas las que quien hace el cambio puede ver
         curso = en_curso(db, ts)
         if curso:
             p = db.personas.find_one({"_id": pid}, {"asistencias.reunion_id": 1}) or {}
             asiste = {a.get("reunion_id") for a in p.get("asistencias") or [] if isinstance(a, dict)}
-            suyas = [r["_id"] for r in curso if r["_id"] in asiste] \
+            precisas = [r["_id"] for r in curso if r["_id"] in asiste] \
                 or [r["_id"] for r in curso if r.get("creado_por_uid") == getattr(quien, "uid", None)]
-            ids.update(suyas)
+            if not precisas and not ids:  # sin otra pista (ni la ruta ni la pantalla nombran una reunión)
+                precisas = [r["_id"] for r in curso if _visible(r, quien)]
+            ids.update(precisas)
         return sorted(ids)
     except Exception:  # noqa: BLE001 — la traza nunca impide guardar el cambio
         log.exception("No se pudo calcular la traza de reuniones de la persona %s", pid)

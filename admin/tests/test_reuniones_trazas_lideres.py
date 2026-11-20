@@ -96,11 +96,18 @@ def test_traza_por_asistencia_por_quien_la_creo_y_por_la_pantalla():
     assert t(_q(uid=5), 10) == [2]
     # No asiste a ninguna en curso: la que creó quien la cambia
     assert t(_q(uid=5), 11) == [1]
-    # Ni asiste ni la creó: una reunión en curso de otro no cuenta
+    # Ni asiste ni la creó: cuentan las reuniones en curso que quien hace el cambio puede ver. P (uid 7) no ve ninguna
+    # de las dos en curso (son de otros y no están abiertas al equipo); K las ve todas; el consultor, ninguna
     assert t(_q(uid=7), 11) == []
+    assert t(_q(rol="coordinador", uid=8), 11) == [1, 2]
+    assert t(_q(rol="consultor", uid=7), 11) == []
+    db.reuniones.docs[2]["abierta_a_equipo"] = True
+    assert t(_q(uid=7), 11) == [2]
+    db.reuniones.docs[2]["abierta_a_equipo"] = False
     # Desde la pantalla de una reunión que puede ver (abierta al equipo), aunque ya pasó; una que no ve, no
     assert t(_q(uid=7, reunion=3), 11) == [3]
     assert t(_q(uid=7, reunion=2), 11) == []
+    # Desde la pantalla de una reunión, la coincidencia de horario no suma las otras reuniones en curso
     assert t(_q(rol="coordinador", uid=8, reunion=2), 11) == [2]
     # El consultor no trabaja con reuniones: su cabecera no marca nada
     assert t(_q(rol="consultor", uid=7, reunion=3), 11) == []
@@ -189,10 +196,22 @@ def test_lo_que_se_hace_durante_la_reunion_queda_con_su_traza(sesion, como):
     assert sesion.patch(f"/api/personas/{asiste}", json={"ocupacion": "Docente"}).status_code == 200
     assert sesion.patch(f"/api/personas/{otra}", json={"ocupacion": "Pescador"}).status_code == 200
     assert _ultima(db, asiste, "editar")["reuniones"] == [rid] and _ultima(db, otra, "editar")["reuniones"] == [rid]
-    # Un planillero que no creó la reunión cambia a alguien que no asiste: no es de la reunión
+    # Un planillero que no creó la reunión ni la puede ver (no está abierta al equipo) cambia a alguien que no asiste:
+    # no es de la reunión
     p = como("planillero")
     assert p.patch(f"/api/personas/{lejos}", json={"ocupacion": "Agricultor"}).status_code == 200
     assert "reuniones" not in _ultima(db, lejos, "editar")
+    # Si la reunión está abierta al equipo, lo que el planillero hace mientras dura queda ligado a ella aunque la
+    # persona no sea asistente (coincide en el tiempo); también un alta suya
+    db.reuniones.update_one({"_id": rid}, {"$set": {"abierta_a_equipo": True}})
+    assert p.patch(f"/api/personas/{lejos}", json={"ocupacion": "Pescador"}).status_code == 200
+    assert _ultima(db, lejos, "editar")["reuniones"] == [rid]
+    r = p.post("/api/personas", json={"nombre": "PERSONA INVENTADA REGISTRADA DURANTE", "forzar": True})
+    assert r.status_code == 201, r.text
+    assert _ultima(db, r.json()["id"], "crear")["reuniones"] == [rid]
+    db.reuniones.update_one({"_id": rid}, {"$set": {"abierta_a_equipo": False}})
+    db.auditoria.delete_many({"entidad_id": {"$in": [lejos, r.json()["id"]]}, "reuniones": rid})
+    db.personas.delete_one({"_id": r.json()["id"]})
     # La ficha: cada cambio con su reunión («durante») y, por reunión, lo que se le hizo y si asistió
     f = sesion.get(f"/api/personas/{asiste}").json()
     h = next(x for x in f["historial"] if x["accion"] == "editar")

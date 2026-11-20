@@ -214,6 +214,17 @@ button.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 .filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
 .filtros .buscador { flex: 1 1 280px; }
 .filtros select { width: auto; min-width: 140px; }
+/* Habitantes: perfil profesional y ocupación son texto (`.entrada` es de ancho completo en los formularios) y «Más
+   filtros» (votación, abordaje, autorización…) va plegado en su propia línea, debajo de los datos principales */
+.filtros .campo-filtro { display: block; flex: 0 1 180px; min-width: 150px; }
+.filtros .campo-filtro .entrada { width: 100%; }
+.filtros-secundarios { flex: 1 1 100%; }
+.filtros-secundarios > summary { display: inline-flex; align-items: center; min-height: 36px; cursor: pointer; font-weight: 650;
+  color: var(--muted); list-style: none; }
+.filtros-secundarios > summary::-webkit-details-marker { display: none; }
+.filtros-secundarios > summary::before { content: '▸'; margin-right: 6px; transition: transform .15s; }
+.filtros-secundarios[open] > summary::before { transform: rotate(90deg); }
+.filtros-secundarios-cuerpo { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 
 table.tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tabla th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700;
@@ -600,7 +611,14 @@ details.bloque > summary .chip { font-weight: 650; }
   .mas-filtros { display: none; width: 100%; grid-template-columns: 1fr 1fr; gap: 8px; }
   .filtros.plegables.abiertos .mas-filtros { display: grid; }
   .mas-filtros select { width: 100%; min-width: 0; }
+  .mas-filtros .campo-filtro { min-width: 0; }
+  .mas-filtros .filtros-secundarios { grid-column: 1 / -1; }
+  .filtros-secundarios-cuerpo { display: grid; grid-template-columns: 1fr 1fr; }
 }
+/* Un correo o una dirección larga sin espacios no ensancha la tarjeta ni la columna */
+.tabla-personas .dato-largo { overflow-wrap: anywhere; }
+.tabla-personas .liderado-fila { margin-top: 4px; font-size: 13px; color: var(--ink-2); }
+.tabla-personas .liderado-fila a { font-weight: 650; }
 #chips-ocultos:empty { display: none; }
 .chips-fila { margin-top: 4px; }
 .chips-fila:empty { display: none; }
@@ -610,9 +628,10 @@ details.bloque > summary .chip { font-weight: 650; }
 .aviso-tope { color: var(--accent-text); font-weight: 650; }
 .botones-pagina { display: flex; gap: 6px; }
 @media (max-width: 640px) { .paginacion { flex-wrap: wrap; } }
-@media (max-width: 1260px) {
-  /* 5. Filas como tarjetas: cada celda lleva su título encima. Hasta 1260 px: con el menú fijo, la tableta y el portátil
-     chico tampoco tienen lugar para las columnas (medido: aun sin las secundarias la tabla pide unos 920 px) */
+@media (max-width: 1800px) {
+  /* 5. Filas como tarjetas: cada celda lleva su título encima. Hasta 1800 px: las columnas siguen los datos principales
+     de la ficha (los 17, agrupados en 8 o 9 columnas) y con el menú fijo no caben antes (medido: a 1700 la tabla pide
+     unos 60 px más que la caja); en tarjetas se leen todos con su título */
   .tabla-tarjetas, .tabla-tarjetas tbody { display: block; width: 100%; }
   .tabla-tarjetas thead { display: none; }
   .tabla-tarjetas tr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
@@ -702,24 +721,24 @@ details.bloque > summary .chip { font-weight: 650; }
 .lateral .pie .tema button[aria-pressed="true"] { background: rgb(255 255 255 / .16); color: #fff; box-shadow: none; }
 
 /* Habitantes (P3): los chips de una fila no se parten en dos líneas (el ancho automático de la tabla encogía Nombre a
-   108 px y cada fila llegaba a 222 px) y Nombre tiene un mínimo. Las 9 columnas piden unos 1 150 px: entre 1261 y
-   1520 px, con el menú fijo, se ocultan las secundarias (la edad y el puesto siguen en la ficha y en los filtros).
-   Hasta 1260, tarjetas (de tres columnas desde 641) */
+   108 px y cada fila llegaba a 222 px) y Nombre tiene un mínimo. Las columnas siguen los datos principales de la
+   ficha (8 o 9 con «Liderado por»): hasta 1800 px van en tarjetas (de tres columnas desde 641 y de cuatro desde 1100),
+   con cada dato bajo su título; desde 1801, en tabla */
 .chips-fila .chip, .faltan .chip { white-space: nowrap; }
-@media (min-width: 1261px) {
-  .tabla-personas th, .tabla-personas td { padding-left: 10px; padding-right: 10px; }
-  .tabla-personas td:first-child { min-width: 200px; }
-}
-@media (min-width: 1261px) and (max-width: 1520px) {
-  .tabla-personas th:nth-child(4), .tabla-personas td[data-titulo="Edad y sexo"],
-  .tabla-personas th:nth-child(6), .tabla-personas td[data-titulo="Puesto y mesa"] { display: none; }
-  /* Con la letra de respaldo del sistema (más ancha que Public Sans) las 7 columnas pedían 6 px más que la caja a
-     1280: «Faltan» envuelve sus chips en un ancho fijo y las celdas pierden un poco de relleno, un margen para cualquier
-     letra */
+/* Los datos de votación que faltan van al final y atenuados: no son de los datos principales */
+.faltan .chip.secundario { opacity: .7; border-style: dashed; }
+/* El alta: el puesto y la mesa y las necesidades, plegados después de los datos principales */
+details.bloque.secundario > summary { color: var(--muted); }
+@media (min-width: 1801px) {
   .tabla-personas th, .tabla-personas td { padding-left: 8px; padding-right: 8px; }
+  .tabla-personas td:first-child { min-width: 200px; }
+  /* «Faltan» envuelve sus chips en un ancho fijo y las columnas de texto no se estiran de más */
   .tabla-personas td[data-titulo="Faltan"] { width: 136px; max-width: 136px; }
+  .tabla-personas td[data-titulo="Teléfono y correo"], .tabla-personas td[data-titulo="Dirección y barrio"],
+  .tabla-personas td[data-titulo="Perfil y ocupación"] { max-width: 220px; }
 }
-@media (min-width: 641px) and (max-width: 1260px) { .tabla-tarjetas tr { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 641px) and (max-width: 1800px) { .tabla-tarjetas tr { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1100px) and (max-width: 1800px) { .tabla-tarjetas tr { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
 /* Los bloques plegables de la ficha: el chip del título («Sí autoriza (por confirmar)») baja de línea en vez de
    ensanchar la página en 320 px */
@@ -767,7 +786,7 @@ dialog .cab .cerrar-dialogo svg { width: 20px; height: 20px; }
 @media (pointer: coarse) {
   :where(input:not([type=checkbox], [type=radio], [type=range], [type=color], [type=hidden], [type=file]), select) { min-height: 44px; }
   .btn, .campo input, .campo select, .entrada, .fila-campos input, .fila-campos select, .selector-usuario select, .no-sabe select,
-  .boton-filtros, details.bloque > summary, .mas-datos > summary, .bloque-autorizacion summary, .bloque-dictados summary,
+  .boton-filtros, details.bloque > summary, .mas-datos > summary, .filtros-secundarios > summary, .bloque-autorizacion summary, .bloque-dictados summary,
   .interruptor, .nav a, .lateral .pie button { min-height: 44px; }
   .btn, button.chip, a.chip { min-width: 44px; }
   button.chip, a.chip { justify-content: center; }

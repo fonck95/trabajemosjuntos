@@ -68,11 +68,17 @@ CAMPOS_FILA: dict[str, frozenset[str]] = {
         "reuniones", "lider", "votante", "concejal", "lideres_n", "consentimiento", "ultimo_contacto", "tiene_cedula",
         "telefonos_n", "sexo",
         "rango_edad",
+        # Los datos principales de la ficha (los 17) para las columnas de Habitantes; `lideres`: quién la lidera
+        "edad_efectiva", "fecha_nacimiento", "correo", "tiene_correo", "direccion", "perfil_profesional", "ocupacion",
+        "estado_civil", "jefe_hogar", "lideres",
         "menor", "puesto", "mesa", "votacion_estado", "abordaje", "faltan", "requiere_actualizacion", "situacion"}),
     "planillero": frozenset({
         "id", "nombre", "tiene_cedula", "cedula_ult3", "telefono_mascara", "telefonos_n", "lugar", "zona", "rango_edad",
         "sexo", "puesto", "mesa", "votacion_estado", "abordaje", "consentimiento", "faltan", "requiere_actualizacion",
-        "menor", "situacion", "completitud"}),
+        "menor", "situacion", "completitud",
+        # De los datos principales, lo que no identifica (la fila también sale en /api/buscar, que busca en toda la
+        # base, y en las parecidas del alta): el correo, la dirección y la fecha exacta solo en la ficha
+        "tiene_correo", "perfil_profesional", "ocupacion", "estado_civil", "jefe_hogar"}),
     # La búsqueda del consultor
     "consultor": frozenset({"id", "nombre", "lugar", "abordaje_estado", "contactable"}),
 }
@@ -163,6 +169,8 @@ class Contexto:
     etiquetas: dict = field(default_factory=dict)
     sensibles_et: set = field(default_factory=set)
     sensibles_campos: set = field(default_factory=set)
+    # Las fichas de los líderes de una página de filas (`cargar_lideres`, solo A y K); None: no se cargaron
+    lideres: dict | None = None
 
     @property
     def eleccion(self) -> str | None:
@@ -257,6 +265,7 @@ def fila_completa(p: dict, ctx: Contexto) -> dict:
     us = modelo.usables(modelo.telefonos_de(p))
     v = p.get("votacion") if isinstance(p.get("votacion"), dict) else None
     ab = _abordaje(p)
+    edad = modelo.edad_efectiva(p, ctx.hoy)
     return {
         "id": p["_id"], "nombre": p.get("nombre"), "cedula": p.get("cedula"),
         "cedula_ult3": acceso.enmascarar_cedula(p.get("cedula")), "tiene_cedula": bool(p.get("cedula")),
@@ -268,7 +277,11 @@ def fila_completa(p: dict, ctx: Contexto) -> dict:
         "lideres_n": len({l.get("id") for l in p.get("lideres") or [] if isinstance(l, dict)}),
         "consentimiento": p.get("consentimiento"),
         "ultimo_contacto": p.get("ultimo_contacto"), "sexo": p.get("sexo"),
-        "rango_edad": modelo.rango_edad(modelo.edad_efectiva(p, ctx.hoy)), "menor": modelo.es_menor(p, ctx.hoy),
+        "rango_edad": modelo.rango_edad(edad), "menor": modelo.es_menor(p, ctx.hoy),
+        "edad_efectiva": edad, "fecha_nacimiento": p.get("fecha_nacimiento"), "correo": p.get("correo"),
+        "tiene_correo": not modelo.vacio(p.get("correo")), "direccion": p.get("direccion"),
+        **{k: p.get(k) for k in ("perfil_profesional", "ocupacion", "estado_civil", "jefe_hogar")},
+        "lideres": lideres_fila(p, ctx),
         "puesto": puesto_codigo(p, ctx) if v else p.get("puesto_votacion"),
         "mesa": (v or {}).get("mesa") if v else p.get("mesa"),
         "votacion_estado": modelo.estado_votacion_efectivo(v, ctx.eleccion), "abordaje": ab,
@@ -287,7 +300,29 @@ CAMPOS_PARA_FILA = {k: 1 for k in (
     "ultimo_contacto",
     "sexo", "edad", "edad_ref", "fecha_nacimiento", "nac_aprox", "tipo_documento", "creado_en", "votacion",
     "puesto_votacion", "mesa", "abordaje", "requiere_actualizacion", "situacion", "no_disponible", "lat", "lon", "punto",
-    "direccion", "mayor_declarado", "contacto_habilitado", "consentimiento_canales", "reclamo_en_tramite")}
+    "direccion", "mayor_declarado", "contacto_habilitado", "consentimiento_canales", "reclamo_en_tramite",
+    "correo", "perfil_profesional", "ocupacion", "estado_civil", "jefe_hogar")}
+
+
+def lideres_fila(p: dict, ctx: "Contexto") -> list[dict] | None:
+    """«Liderado por» de una fila: [{id, nombre, tipo}] con los líderes que `cargar_lideres` dejó en el contexto (solo
+    para A y K); None si no se cargaron. Un líder que ya no está activo no sale."""
+    if ctx.lideres is None:
+        return None
+    ids = dict.fromkeys(l.get("id") for l in p.get("lideres") or [] if isinstance(l, dict))
+    return [{"id": i, "nombre": ctx.lideres[i].get("nombre"),
+             "tipo": next((t for t in modelo.TIPOS_LIDERAN if ctx.lideres[i].get(t) is True), None)}
+            for i in ids if i in ctx.lideres]
+
+
+def cargar_lideres(db: Database, ctx: "Contexto", docs: Iterable[dict], quien: Any) -> None:
+    """Deja en `ctx.lideres` las fichas de los líderes de `docs` (una sola consulta por página), solo para A y K: el
+    liderazgo es un dato político y para P y C ni se consulta."""
+    if not administra(quien):
+        return
+    ids = {l["id"] for p in docs for l in p.get("lideres") or [] if isinstance(l, dict) and isinstance(l.get("id"), int)}
+    ctx.lideres = {x["_id"]: x for x in db.personas.find(
+        {"_id": {"$in": sorted(ids)}, **ACTIVA}, {"nombre": 1, **{t: 1 for t in modelo.TIPOS_LIDERAN}})} if ids else {}
 
 
 def _no_autorizo(d: dict) -> dict:

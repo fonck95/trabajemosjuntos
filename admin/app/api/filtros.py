@@ -26,10 +26,11 @@ from ..pipeline import texto as tx
 from ..seguridad import obtener_db
 
 APROXIMADAS = ["barrio", "sector", "caserio", "centro_poblado", "vereda", "corregimiento", "direccion_aprox"]
-SIN_CAMPOS = ("cedula", "telefono", "sexo", "edad", "lugar", "puesto", "mesa", "direccion")
+SIN_CAMPOS = ("cedula", "telefono", "sexo", "edad", "lugar", "puesto", "mesa", "direccion", "correo", "estado_civil",
+              "ocupacion", "perfil_profesional", "jefe_hogar")
 # Parámetros que P y C no pueden usar (3.6): darían listas políticas, de menores o de la actividad de otros
-VEDADOS = ("poligono", "ids", "lista", "lider", "tipo", "lider_id", "varios_lideres", "intervenida_en", "creado_por",
-           "actualizado_por", "menor")
+VEDADOS = ("poligono", "ids", "lista", "lider", "tipo", "lider_id", "varios_lideres", "sin_lider", "intervenida_en",
+           "creado_por", "actualizado_por", "menor")
 PERMISO = {"mensaje": "Su rol no permite usar este filtro", "codigo": "permiso"}
 
 
@@ -82,6 +83,12 @@ class Filtros(BaseModel):
     varios_telefonos: int | None = None
     telefono_estado: str | None = None
     estado_civil: str | None = None
+    # Datos principales de la ficha: jefe de hogar («si» o «no»), ocupación y perfil profesional (texto que contiene,
+    # sin importar tildes ni mayúsculas) y con correo
+    jefe_hogar: str | None = None
+    ocupacion: str | None = None
+    perfil_profesional: str | None = None
+    con_correo: int | None = None
     nivel_educativo: str | None = None
     situacion_laboral: str | None = None
     estrato: int | None = None
@@ -96,6 +103,13 @@ class Filtros(BaseModel):
     sin_mesa: int | None = None
     sin_direccion: int | None = None
     sin_puesto_mesa: int | None = None
+    sin_correo: int | None = None
+    sin_estado_civil: int | None = None
+    sin_ocupacion: int | None = None
+    sin_perfil_profesional: int | None = None
+    sin_jefe_hogar: int | None = None
+    # Sin nadie que la lidere (A y K)
+    sin_lider: int | None = None
     tratables: int | None = None
     mios: int | None = None
     poligono: str | None = None
@@ -157,12 +171,16 @@ def filtros_query(
     actualizado_por: int | None = None, menor: int | None = None,
     requiere_actualizacion: str | None = Query(None, max_length=120), varios_telefonos: int | None = None,
     telefono_estado: str | None = None, estado_civil: str | None = Query(None, max_length=60),
+    jefe_hogar: str | None = Query(None, max_length=3), ocupacion: str | None = Query(None, max_length=120),
+    perfil_profesional: str | None = Query(None, max_length=160), con_correo: int | None = None,
     nivel_educativo: str | None = Query(None, max_length=60), situacion_laboral: str | None = Query(None, max_length=60),
     estrato: int | None = None, tenencia_vivienda: str | None = Query(None, max_length=60),
     regimen_salud: str | None = Query(None, max_length=60), sin_cedula: int | None = None,
     sin_telefono: int | None = None, sin_sexo: int | None = None, sin_edad: int | None = None,
     sin_lugar: int | None = None, sin_puesto: int | None = None, sin_mesa: int | None = None,
-    sin_direccion: int | None = None, sin_puesto_mesa: int | None = None, tratables: int | None = None,
+    sin_direccion: int | None = None, sin_puesto_mesa: int | None = None, sin_correo: int | None = None,
+    sin_estado_civil: int | None = None, sin_ocupacion: int | None = None, sin_perfil_profesional: int | None = None,
+    sin_jefe_hogar: int | None = None, sin_lider: int | None = None, tratables: int | None = None,
     mios: int | None = None,
     poligono: str | None = Query(None, max_length=4000), area_id: int | None = None,
     db: Database = Depends(obtener_db),
@@ -211,9 +229,23 @@ def _sin(campo: str) -> dict:
         return {"$nor": [CON_PUESTO]}
     if campo == "mesa":
         return {"$nor": [CON_MESA]}
-    if campo == "direccion":
-        return _vacio("direccion")
+    if campo in ("direccion", "correo", "estado_civil", "ocupacion", "perfil_profesional"):
+        return _vacio(campo)
+    if campo == "jefe_hogar":
+        return {"jefe_hogar": None}
     raise ValueError(campo)
+
+
+_TILDES = {"a": "aáàä", "e": "eéèë", "i": "iíìï", "o": "oóòö", "u": "uúùü", "n": "nñ"}
+
+
+def patron_texto(texto: str) -> str:
+    """Expresión regular que encuentra `texto` dentro de un campo sin importar tildes ni mayúsculas («enfermera»
+    encuentra «ENFERMERA JEFE» y «Enfermería»). Todo lo demás va escapado: el texto nunca es una expresión."""
+    out = []
+    for ch in tx.sin_tildes(texto.strip()).lower():
+        out.append(f"[{_TILDES[ch]}]" if ch in _TILDES else re.escape(ch))
+    return "".join(out)
 
 
 def no_disponible_vencido(campo: str, hoy: date, dias: int) -> dict:
@@ -414,6 +446,16 @@ def filtro(f: Filtros, hoy: date | None = None) -> dict:
             y.append({campo: v})
     if f.estrato is not None:
         y.append({"estrato": f.estrato})
+    if f.jefe_hogar in ("si", "no"):
+        y.append({"jefe_hogar": f.jefe_hogar == "si"})
+    for campo in ("ocupacion", "perfil_profesional"):
+        v = (getattr(f, campo) or "").strip()
+        if v:
+            y.append({campo: {"$regex": patron_texto(v), "$options": "i"}})
+    if f.con_correo is not None:
+        y.append(_lleno("correo") if f.con_correo else _vacio("correo"))
+    if f.sin_lider:
+        y.append({"lideres.0": {"$exists": False}})
     for campo in SIN_CAMPOS:
         if getattr(f, f"sin_{campo}"):
             y.append(falta(campo, hoy, f._dias_dato))

@@ -6,7 +6,7 @@ import {
   CAMPOS_FALTAN, CAMPOS_NO_DISPONIBLE, CANALES_AUTORIZACION, ESTADOS_CIVILES, ETIQUETAS_CAMPOS, MAS_DATOS,
   MEDIOS_AUTORIZACION, MEDIOS_POR_ROL, MOTIVOS_NO_DISPONIBLE, SEXOS, TIPOS_DOCUMENTO, TIPOS_PERSONA, edadDesde,
 } from '../modelo.js';
-import { $, $$, aviso, avisoError, datosForm, debounce, dialogo, hoy, html, icono, montar, titulo } from '../ui.js';
+import { $, $$, aviso, avisoError, datosForm, debounce, dialogo, fecha, hoy, html, icono, montar, titulo } from '../ui.js';
 
 /** ¿Administrador o coordinador? Lo que la especificación reserva a «A» en el manejo de datos (adenda 1). */
 export const administra = () => sesion.rol === 'admin' || sesion.rol === 'coordinador';
@@ -276,14 +276,24 @@ export function faltanDe(p) {
   return CAMPOS_FALTAN.filter((c) => vacio[c] && !nd[c]);
 }
 
-export const chipsFaltan = (faltan) => (faltan?.length
-  ? html`<span class="faltan" title="Datos que faltan">${faltan.map((c) => html`<span class="chip borde">${ETIQUETAS_CAMPOS[c] || c}</span>`)}</span>` : '');
+// Lo que falta, en el orden de los datos principales; el puesto y la mesa (votación) van al final, como secundarios
+const ORDEN_FALTAN = ['cedula', 'sexo', 'edad', 'telefono', 'direccion', 'lugar', 'autorizacion'];
+const DE_VOTACION = ['puesto', 'mesa'];
+
+/**
+ * Chips de lo que falta. Primero los datos principales (en su orden) y después, atenuados, el puesto y la mesa. Con
+ * `principales` (la columna «Faltan» de Habitantes) solo los principales: la votación se filtra en «Más filtros».
+ */
+export function chipsFaltan(faltan, { principales = false } = {}) {
+  const lista = Array.isArray(faltan) ? faltan : [];
+  const orden = (c) => (ORDEN_FALTAN.includes(c) ? ORDEN_FALTAN.indexOf(c) : ORDEN_FALTAN.length);
+  const prim = lista.filter((c) => !DE_VOTACION.includes(c)).sort((a, b) => orden(a) - orden(b));
+  const vot = principales ? [] : lista.filter((c) => DE_VOTACION.includes(c));
+  if (!prim.length && !vot.length) return '';
+  return html`<span class="faltan" title="Datos que faltan">${prim.map((c) => html`<span class="chip borde">${ETIQUETAS_CAMPOS[c] || c}</span>`)}${vot.map((c) => html`<span class="chip borde secundario" title="Dato de votación (secundario)">${ETIQUETAS_CAMPOS[c] || c}</span>`)}</span>`;
+}
 
 // ───────── «No lo tiene / No sabe» ─────────
-
-/** La fecha de nacimiento y, al lado, la edad: se calcula con la fecha o se escribe si no se sabe la fecha (`enlazarEdad`). */
-const camposEdad = () => html`<input type="date" name="fecha_nacimiento" max="${hoy()}" aria-label="Fecha de nacimiento">
-  <input type="number" name="edad" min="0" max="120" inputmode="numeric" placeholder="o la edad" aria-label="Edad (se calcula con la fecha de nacimiento)">`;
 
 /**
  * Fecha de nacimiento y edad de un formulario: con la fecha, la edad se calcula sola (años cumplidos, de solo lectura)
@@ -326,34 +336,81 @@ async function marcarNoDisponibles(pid, form) {
 // ───────── Completar (7.3) ─────────
 
 /**
- * «Completar» desde Habitantes o una reunión: paso 1 con solo lo que falta (cada campo con «No lo tiene / No sabe»)
- * y el paso opcional «Más datos» con chips de un toque. Guarda con `PATCH ?modo=completar` e Idempotency-Key.
- * Resuelve con {ficha, siguiente} («Guardar y siguiente») o null.
+ * «Completar» desde Habitantes, la ficha o una reunión: primero los datos principales de la ficha, en su orden (los
+ * 17: nombre, cédula, sexo, edad, teléfono, fecha de nacimiento, correo, dirección, barrio o vereda, zona, tipo de
+ * persona y «Liderado por» —A y K—, perfil profesional, ocupación, estado civil y jefe de hogar): lo que ya tiene se ve
+ * fijo y lo que falta se puede escribir (cédula, teléfono, sexo y edad con «No lo tiene / No sabe»). Después la
+ * autorización y, plegados, el puesto y la mesa y «Más datos». Guarda con `PATCH ?modo=completar` e Idempotency-Key
+ * (solo lo que se escribió: lo que ya tenía no se toca) y luego los líderes elegidos. Resuelve con {ficha, siguiente}
+ * («Guardar y siguiente») o null.
  */
 export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
   const faltan = faltanDe(p);
   const hay = (c) => faltan.includes(c);
   const v = p.votacion || {};
+  const adm = administra();
+  const vacio = (k) => p[k] == null || p[k] === '';
+  // Los principales que faltan: los de «Faltan» según el servidor (respeta «No lo tiene / No sabe»); el resto, por su valor
+  const falta = {
+    cedula: hay('cedula'), sexo: hay('sexo'), edad: hay('edad'), telefono: hay('telefono'), direccion: hay('direccion'),
+    lugar: hay('lugar'), fecha_nacimiento: vacio('fecha_nacimiento'), correo: vacio('correo'),
+    perfil_profesional: vacio('perfil_profesional'), ocupacion: vacio('ocupacion'), estado_civil: vacio('estado_civil'),
+    jefe_hogar: p.jefe_hogar == null,
+  };
+  const tipos = Object.keys(TIPOS_PERSONA);
+  const faltaPrincipal = Object.values(falta).some(Boolean) || (adm && (!tipos.some((k) => p[k] === true) || !(p.lideres || []).length));
+  const zonaDe = (z) => (z === 'urbana' ? 'Urbana (casco)' : z === 'rural' ? 'Rural' : '—');
+  // Un dato que ya tiene: fijo, con su título
+  const fijo = (t, valor) => html`<div class="campo ancho dato-fijo"><span>${t}</span><b class="valor-fijo">${valor == null || valor === '' ? '—' : valor}</b></div>`;
+  const masDatos = MAS_DATOS.filter(([k]) => !['estado_civil', 'jefe_hogar'].includes(k));
   let clave = nuevaClave();
   const { el, cerrar, listo } = dialogo({
     titulo: `Completar · ${titulo(p.nombre || '')}`,
     cuerpo: html`<form class="form una-columna" id="f-completar" novalidate>
-      ${faltan.length ? '' : html`<p class="sec ancho">No le falta ningún dato básico. Puede agregar «Más datos».</p>`}
-      ${hay('cedula') ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Documento</span>
+      ${faltaPrincipal || hay('autorizacion') || hay('puesto') || hay('mesa') ? '' : html`<p class="sec ancho">No le falta ningún dato principal. Puede agregar «Más datos».</p>`}
+      <p class="titulo-campo ancho completar-seccion">Datos principales</p>
+      ${fijo('Nombre', p.nombre)}
+      ${falta.cedula ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Cédula</span>
         <div class="fila-campos"><select name="tipo_documento" aria-label="Tipo de documento">${Object.entries(TIPOS_DOCUMENTO).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select>
         <input name="cedula" inputmode="numeric" autocomplete="off" placeholder="Número" aria-label="Número de documento" maxlength="15"></div>
-        <label class="casilla"><input type="checkbox" name="cedula_verificada"> Vi el documento</label>${noSabe('cedula')}</div>` : ''}
-      ${hay('telefono') ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Teléfono</span>
-        <div class="fila-campos"><input name="telefono" inputmode="tel" placeholder="Celular" aria-label="Celular" maxlength="30"><input name="telefono2" inputmode="tel" placeholder="Otro teléfono" aria-label="Otro teléfono" maxlength="30"></div>${noSabe('telefono')}</div>` : ''}
-      ${hay('sexo') ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Sexo</span><div class="opciones-radio">${Object.entries(SEXOS).map(([k, t]) => html`<label class="chip opcion"><input type="radio" name="sexo" value="${k}"> ${t}</label>`)}</div>${noSabe('sexo')}</div>` : ''}
-      ${hay('edad') ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Fecha de nacimiento</span>
-        <div class="fila-campos">${camposEdad()}</div>${noSabe('edad')}</div>` : ''}
-      ${hay('lugar') ? html`<label class="campo ancho"><span>Barrio o vereda</span><select name="lugar_id">${opcionesLugares(cat)}</select></label>` : ''}
-      ${hay('direccion') ? html`<label class="campo ancho"><span>Dirección</span><input name="direccion" maxlength="240" placeholder="CL 49 # 45-12"></label>` : ''}
-      ${hay('puesto') || hay('mesa') ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Puesto y mesa</span><div class="form">${camposVotacion(cat, v)}</div>${noSabe(hay('puesto') ? 'puesto' : 'mesa')}</div>` : ''}
+        <label class="casilla"><input type="checkbox" name="cedula_verificada"> Vi el documento</label>${noSabe('cedula')}</div>`
+        : fijo('Cédula', textoCedula(p) || (p.no_disponible?.cedula ? 'No la tiene o no la dio' : null))}
+      ${falta.sexo ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Sexo</span><div class="opciones-radio">${Object.entries(SEXOS).map(([k, t]) => html`<label class="chip opcion"><input type="radio" name="sexo" value="${k}"> ${t}</label>`)}</div>${noSabe('sexo')}</div>`
+        : fijo('Sexo', SEXOS[p.sexo] || (p.no_disponible?.sexo ? 'No lo dio' : null))}
+      ${falta.edad ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Edad</span>
+        <div class="fila-campos"><input type="number" name="edad" min="0" max="120" inputmode="numeric" placeholder="Años cumplidos" aria-label="Edad"></div>${noSabe('edad')}</div>`
+        : fijo('Edad', p.edad_efectiva != null ? `${p.edad_efectiva} años` : p.rango_edad ? `${p.rango_edad} años` : null)}
+      ${falta.telefono ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Teléfono</span>
+        <div class="fila-campos"><input name="telefono" inputmode="tel" placeholder="Celular" aria-label="Celular" maxlength="30"><input name="telefono2" inputmode="tel" placeholder="Otro teléfono" aria-label="Otro teléfono" maxlength="30"></div>${noSabe('telefono')}</div>`
+        : fijo('Teléfono', textoTelefono(p) || (p.no_disponible?.telefono ? 'No lo tiene o no lo dio' : null))}
+      ${falta.fecha_nacimiento ? html`<label class="campo ancho"><span>Fecha de nacimiento</span><input type="date" name="fecha_nacimiento" max="${hoy()}"></label>`
+        : fijo('Fecha de nacimiento', fecha(p.fecha_nacimiento))}
+      ${falta.correo ? html`<label class="campo ancho"><span>Correo electrónico</span><input name="correo" type="email" inputmode="email" maxlength="120" autocomplete="off"></label>`
+        : fijo('Correo electrónico', p.correo)}
+      ${falta.direccion ? html`<label class="campo ancho"><span>Dirección</span><input name="direccion" maxlength="240" placeholder="CL 49 # 45-12"></label>`
+        : fijo('Dirección', p.direccion)}
+      ${falta.lugar ? html`<label class="campo ancho"><span>Barrio o vereda</span><select name="lugar_id">${opcionesLugares(cat)}</select></label>`
+        : fijo('Barrio o vereda', p.lugar_nombre ? titulo(p.lugar_nombre) : p.lugar ? titulo(p.lugar) : null)}
+      <div class="campo ancho dato-fijo"><span>Zona urbana o rural</span><b class="valor-fijo" id="zona-completar" aria-live="polite">${zonaDe(p.zona)}</b></div>
+      ${adm ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Líder · Votante · Concejal</span>
+        <div class="opciones-radio">${['lider', 'votante', 'concejal'].map((k) => html`<label class="chip opcion"><input type="checkbox" name="tipo_${k}" ${p[k] === true ? 'checked disabled' : ''}> ${TIPOS_PERSONA[k]}</label>`)}</div>
+        <small class="nota">Completar solo suma: un tipo marcado se quita en la ficha.</small></div>
+      <div class="grupo-campo ancho"><span class="titulo-campo">Liderado por</span>
+        <div class="chips" id="lideres-completar">${(p.lideres || []).map((l) => html`<span class="chip">${l.nombre}${l.tipo ? ` · ${TIPOS_PERSONA[l.tipo]}` : ''}</span>`)}</div>
+        <div id="buscador-lider-completar"></div></div>` : ''}
+      ${falta.perfil_profesional ? html`<label class="campo ancho"><span>Perfil profesional</span><input name="perfil_profesional" maxlength="160" placeholder="Docente, enfermera, técnico agropecuario…"></label>`
+        : fijo('Perfil profesional', p.perfil_profesional)}
+      ${falta.ocupacion ? html`<label class="campo ancho"><span>Ocupación</span><input name="ocupacion" maxlength="120" placeholder="A qué se dedica hoy"></label>`
+        : fijo('Ocupación', p.ocupacion)}
+      ${falta.estado_civil ? html`<label class="campo ancho"><span>Estado civil</span><select name="estado_civil"><option value="">—</option>${ESTADOS_CIVILES.map((e) => html`<option value="${e}">${e}</option>`)}</select></label>`
+        : fijo('Estado civil', p.estado_civil)}
+      ${falta.jefe_hogar ? html`<label class="campo ancho"><span>Jefe de hogar</span><select name="jefe_hogar"><option value="">—</option><option value="si">Sí</option><option value="no">No</option></select></label>`
+        : fijo('Jefe de hogar', p.jefe_hogar ? 'Sí' : 'No')}
       ${hay('autorizacion') ? camposAutorizacion(cat, { obligatoria: false, estados: ['si', 'no'] }) : ''}
-      <details class="mas-datos ancho" ${faltan.length ? '' : 'open'}><summary>Más datos</summary>
-        ${MAS_DATOS.map(([k, t, ops]) => html`<div class="grupo-campo"><span class="titulo-campo">${t}</span><div class="chips" data-chips="${k}">
+      ${hay('puesto') || hay('mesa') ? html`<details class="bloque ancho secundario" id="completar-votacion" ${faltaPrincipal ? '' : 'open'}><summary>Puesto y mesa de votación</summary>
+        <div class="form">${camposVotacion(cat, v)}</div>${noSabe(hay('puesto') ? 'puesto' : 'mesa')}</details>` : ''}
+      <details class="mas-datos ancho" ${faltaPrincipal || hay('autorizacion') ? '' : 'open'}><summary>Más datos</summary>
+        ${masDatos.map(([k, t, ops]) => html`<div class="grupo-campo"><span class="titulo-campo">${t}</span><div class="chips" data-chips="${k}">
           ${ops.map((o) => html`<button type="button" class="chip" data-valor="${o}" aria-pressed="${valorMas(p, k) === o}">${o}</button>`)}</div></div>`)}
       </details>
     </form>`,
@@ -368,6 +425,27 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
   enlazarAutorizacion(form);
   enlazarEdad(form);
   let tocado = false, enCurso = false, resultado = null;
+  // La zona sale del barrio o vereda que se elige
+  form.lugar_id?.addEventListener('change', () => {
+    const lg = (cat?.lugares || []).find((l) => String(l.id) === String(form.lugar_id.value));
+    $('#zona-completar', el).textContent = zonaDe(lg?.zona || p.zona);
+  });
+  // «Liderado por» (A y K): los líderes elegidos se asignan después de guardar lo demás
+  const nuevosLideres = [];
+  const pintarNuevos = () => montar($('#lideres-completar', el), html`${(p.lideres || []).map((l) => html`<span class="chip">${l.nombre}${l.tipo ? ` · ${TIPOS_PERSONA[l.tipo]}` : ''}</span>`)}${nuevosLideres.map((l) => html`<button type="button" class="chip azul" data-quitar-nuevo="${l.id}" aria-label="Quitar a ${l.nombre}">${l.nombre}${l.tipo ? ` · ${TIPOS_PERSONA[l.tipo]}` : ''} ✕</button>`)}`);
+  const buscador = adm && $('#buscador-lider-completar', el) ? buscadorLider($('#buscador-lider-completar', el), {
+    persona: p.nombre || '',
+    excluir: () => [p.id, ...(p.lideres || []).map((l) => l.id), ...nuevosLideres.map((l) => l.id)],
+    alElegir: (l) => { nuevosLideres.push({ id: l.id, nombre: l.nombre, tipo: l.tipo }); tocado = true; pintarNuevos(); },
+  }) : null;
+  form.addEventListener('click', (e) => {
+    const q = e.target.closest('[data-quitar-nuevo]');
+    if (!q) return;
+    const i = nuevosLideres.findIndex((l) => String(l.id) === q.dataset.quitarNuevo);
+    if (i >= 0) nuevosLideres.splice(i, 1);
+    pintarNuevos();
+  });
+  listo.then(() => buscador?.cancelar());
   const quitarPendiente = registrarPendiente(() => tocado);
   form.addEventListener('input', () => { tocado = true; });
   form.addEventListener('click', (e) => {
@@ -382,16 +460,20 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
   function cuerpo() {
     const d = datosForm(form);
     const c = {};
-    for (const k of ['tipo_documento', 'cedula', 'cedula_verificada', 'telefono', 'telefono2', 'fecha_nacimiento', 'edad', 'direccion']) {
+    for (const k of ['tipo_documento', 'cedula', 'cedula_verificada', 'telefono', 'telefono2', 'fecha_nacimiento', 'edad', 'direccion',
+      'correo', 'perfil_profesional', 'ocupacion', 'estado_civil']) {
       if (d[k] != null && d[k] !== '' && d[k] !== false) c[k] = d[k];
     }
+    if (d.jefe_hogar) c.jefe_hogar = d.jefe_hogar === 'si';
+    // Los tipos que se marcaron ahora (A y K): completar solo suma
+    if (adm) for (const k of Object.keys(TIPOS_PERSONA)) { const x = form[`tipo_${k}`]; if (x && x.checked && !x.disabled) c[k] = true; }
     if (!c.cedula) { delete c.tipo_documento; delete c.cedula_verificada; }
     if (c.fecha_nacimiento) delete c.edad;
     const sexo = form.querySelector('[name="sexo"]:checked')?.value;
     if (sexo) c.sexo = sexo;
     if (d.lugar_id) c.lugar_id = Number(d.lugar_id);
     if (form.puesto) Object.assign(c, cuerpoVotacion(form.puesto.value, { texto: d.puesto_texto, municipio: d.municipio, mesa: d.mesa }));
-    for (const [k] of MAS_DATOS) {
+    for (const [k] of masDatos) {
       const b = form.querySelector(`[data-chips="${k}"] [aria-pressed="true"]`);
       const antes = valorMas(p, k);
       const val = b?.dataset.valor ?? null;
@@ -416,6 +498,10 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
       clave = nuevaClave();
       ficha = (await marcarNoDisponibles(p.id, form)) || ficha;
       if (aut) ficha = await api.post(`/api/personas/${p.id}/autorizacion`, aut, { clave: nuevaClave() });
+      while (nuevosLideres.length) {
+        ficha = await api.post(`/api/personas/${p.id}/lideres`, { lider_id: nuevosLideres[0].id });
+        nuevosLideres.shift();
+      }
       for (const a of ficha?.avisos || []) aviso(typeof a === 'string' ? a : a.mensaje || '', 'ok', 7000);
       resultado = { ficha: ficha || p, siguiente: seguir };
       tocado = false;
@@ -461,34 +547,32 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     cuerpo: html`<form class="form una-columna" id="f-nueva" novalidate>
       ${hogar ? html`<p class="aviso-legal ancho">Se copian la dirección, el barrio${hogar.ficha ? ', la ficha del hogar' : ''}${hogar.lat != null ? ' y la ubicación' : ''} de ${titulo(hogar.nombre || 'la otra persona')}.</p>` : ''}
       <label class="campo ancho"><span>Nombre completo *</span><input name="nombre" required minlength="3" maxlength="160" autocomplete="off" value="${ini.nombre || ''}"></label>
-      <div class="grupo-campo ancho"><span class="titulo-campo">Documento</span>
+      <div class="grupo-campo ancho"><span class="titulo-campo">Cédula</span>
         <div class="fila-campos"><select name="tipo_documento" aria-label="Tipo de documento">${Object.entries(TIPOS_DOCUMENTO).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select>
         <input name="cedula" inputmode="numeric" autocomplete="off" placeholder="Número" aria-label="Número de documento" maxlength="15" value="${ini.cedula || ''}"></div>
         <label class="casilla"><input type="checkbox" name="cedula_verificada"> Vi el documento</label></div>
-      ${administra() ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Tipo de persona</span>
-        <div class="opciones-radio">${Object.entries(TIPOS_PERSONA).map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="tipo_${k}" ${ini.tipo === k ? 'checked' : ''}> ${t}</label>`)}</div></div>
-      <div class="grupo-campo ancho" id="bloque-liderado" hidden><span class="titulo-campo">Liderado por</span>
-        <div class="chips" id="lideres-elegidos"></div>
-        <div id="buscador-lider"></div>
-        <small class="nota">El líder o concejal que la trajo. Puede elegir más de uno.</small></div>` : ''}
-      <div class="grupo-campo ancho"><span class="titulo-campo">Teléfonos</span>
+      <div class="grupo-campo ancho"><span class="titulo-campo">Sexo</span><div class="opciones-radio">${Object.entries(SEXOS).map(([k, t]) => html`<label class="chip opcion"><input type="radio" name="sexo" value="${k}"> ${t}</label>`)}</div></div>
+      <label class="campo ancho"><span>Edad</span><input type="number" name="edad" min="0" max="120" inputmode="numeric" placeholder="Años cumplidos"><small class="nota">Con la fecha de nacimiento se calcula sola.</small></label>
+      <div class="grupo-campo ancho"><span class="titulo-campo">Teléfono</span>
         <div class="fila-campos"><input name="telefono" inputmode="tel" placeholder="Celular" aria-label="Celular" maxlength="30" value="${ini.telefono || ''}"><input name="telefono2" inputmode="tel" placeholder="Otro teléfono" aria-label="Otro teléfono" maxlength="30"></div></div>
       <div class="ancho" id="parecidas" aria-live="polite"></div>
-      <div class="grupo-campo ancho"><span class="titulo-campo">Sexo</span><div class="opciones-radio">${Object.entries(SEXOS).map(([k, t]) => html`<label class="chip opcion"><input type="radio" name="sexo" value="${k}"> ${t}</label>`)}</div></div>
-      <div class="grupo-campo ancho"><span class="titulo-campo">Fecha de nacimiento</span>
-        <div class="fila-campos">${camposEdad()}</div></div>
+      <label class="campo ancho"><span>Fecha de nacimiento</span><input type="date" name="fecha_nacimiento" max="${hoy()}"></label>
       <label class="campo ancho"><span>Correo electrónico</span><input name="correo" type="email" inputmode="email" maxlength="120" autocomplete="off"></label>
       <label class="campo ancho"><span>Dirección</span><input name="direccion" maxlength="240" placeholder="CL 49 # 45-12" value="${hogar?.direccion || ''}"></label>
-      <label class="campo ancho"><span>Barrio o vereda</span><select name="lugar_id">${opcionesLugares(cat, hogar?.lugar_id)}</select><small class="nota" id="zona-alta" aria-live="polite"></small></label>
-      <div class="grupo-campo ancho"><span class="titulo-campo">Perfil</span>
-        <div class="form">
-          <label class="campo"><span>Perfil profesional</span><input name="perfil_profesional" maxlength="160" placeholder="Docente, enfermera, técnico agropecuario…"></label>
-          <label class="campo"><span>Ocupación</span><input name="ocupacion" maxlength="120" placeholder="A qué se dedica hoy"></label>
-          <label class="campo"><span>Estado civil</span><select name="estado_civil"><option value="">—</option>${ESTADOS_CIVILES.map((e) => html`<option value="${e}">${e}</option>`)}</select></label>
-          <label class="campo"><span>Jefe de hogar</span><select name="jefe_hogar"><option value="">—</option><option value="si">Sí</option><option value="no">No</option></select></label>
-        </div></div>
-      <div class="grupo-campo ancho"><span class="titulo-campo">Puesto y mesa</span><div class="form">${camposVotacion(cat, {})}</div></div>
-      ${necesidades.length ? html`<div class="campo ancho"><span>Necesidades</span><div class="chips">${necesidades.map((e) => html`<button type="button" class="chip" data-et="${e.id}" aria-pressed="false">${e.nombre}</button>`)}</div></div>` : ''}
+      <label class="campo ancho"><span>Barrio o vereda</span><select name="lugar_id">${opcionesLugares(cat, hogar?.lugar_id)}</select></label>
+      <div class="campo ancho"><span>Zona urbana o rural</span><b class="valor-fijo" id="zona-alta" aria-live="polite">—</b><small class="nota">Sale del barrio o vereda.</small></div>
+      ${administra() ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Líder · Votante · Concejal</span>
+        <div class="opciones-radio">${['lider', 'votante', 'concejal'].map((k) => html`<label class="chip opcion"><input type="checkbox" name="tipo_${k}" ${ini.tipo === k ? 'checked' : ''}> ${TIPOS_PERSONA[k]}</label>`)}</div></div>
+      <div class="grupo-campo ancho" id="bloque-liderado"><span class="titulo-campo">Liderado por</span>
+        <div class="chips" id="lideres-elegidos"></div>
+        <div id="buscador-lider"></div>
+        <small class="nota">El líder o concejal que la trajo: búsquelo por nombre o cédula. Puede elegir más de uno.</small></div>` : ''}
+      <label class="campo ancho"><span>Perfil profesional</span><input name="perfil_profesional" maxlength="160" placeholder="Docente, enfermera, técnico agropecuario…"></label>
+      <label class="campo ancho"><span>Ocupación</span><input name="ocupacion" maxlength="120" placeholder="A qué se dedica hoy"></label>
+      <label class="campo ancho"><span>Estado civil</span><select name="estado_civil"><option value="">—</option>${ESTADOS_CIVILES.map((e) => html`<option value="${e}">${e}</option>`)}</select></label>
+      <label class="campo ancho"><span>Jefe de hogar</span><select name="jefe_hogar"><option value="">—</option><option value="si">Sí</option><option value="no">No</option></select></label>
+      <details class="bloque ancho secundario" id="alta-votacion"><summary>Puesto y mesa de votación (opcional)</summary><div class="form">${camposVotacion(cat, {})}</div></details>
+      ${necesidades.length ? html`<details class="bloque ancho secundario"><summary>Necesidades (opcional)</summary><div class="chips">${necesidades.map((e) => html`<button type="button" class="chip" data-et="${e.id}" aria-pressed="false">${e.nombre}</button>`)}</div></details>` : ''}
       ${camposAutorizacion(cat)}
       <div class="ancho" id="conflicto" aria-live="polite"></div>
     </form>`,
@@ -506,8 +590,9 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   let terminado = false;
   const quitarPendiente = registrarPendiente(() => tocado && !terminado);
   form.addEventListener('click', (e) => { const c = e.target.closest('[data-et]'); if (c) { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') !== 'true'); tocado = true; } });
-  // Tipo de persona y «Liderado por» (A y K): al marcarla como votante (o líder) se abre la barra para buscar al líder
-  // o concejal que la trajo; los elegidos van con el alta (o, si es una ficha que ya existe, se le asignan al completarla)
+  // Tipo de persona y «Liderado por» (A y K): la barra para buscar al líder o concejal que la trajo está siempre a la
+  // vista (es un dato principal) y, al marcarla como votante o líder, se enfoca si todavía no se eligió ninguno. Los
+  // elegidos van con el alta (o, si es una ficha que ya existe, se le asignan al completarla)
   const lideresElegidos = administra() ? lideres.filter((l) => l?.id != null).map((l) => ({ id: l.id, nombre: l.nombre, tipo: l.tipo })) : [];
   const bloqueLiderado = $('#bloque-liderado', el);
   const pintarLideres = () => {
@@ -519,33 +604,27 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     persona: ini.nombre || '',
     alElegir: (l) => { lideresElegidos.push({ id: l.id, nombre: l.nombre, tipo: l.tipo }); tocado = true; pintarLideres(); },
   }) : null;
-  const verLiderado = ({ enfocar = false } = {}) => {
-    if (!bloqueLiderado) return;
-    const abierto = ['votante', 'lider'].some((k) => form[`tipo_${k}`]?.checked) || lideresElegidos.length > 0;
-    const antes = bloqueLiderado.hidden;
-    bloqueLiderado.hidden = !abierto;
-    if (abierto && antes && enfocar) buscador?.enfocar();
-  };
-  form.addEventListener('change', (e) => { if (e.target.name?.startsWith('tipo_')) verLiderado({ enfocar: true }); });
+  form.addEventListener('change', (e) => {
+    if (['tipo_votante', 'tipo_lider'].includes(e.target.name) && e.target.checked && !lideresElegidos.length) buscador?.enfocar();
+  });
   form.addEventListener('click', (e) => {
     const q = e.target.closest('[data-quitar-elegido]');
     if (!q) return;
     const i = lideresElegidos.findIndex((l) => String(l.id) === q.dataset.quitarElegido);
     if (i >= 0) lideresElegidos.splice(i, 1);
     pintarLideres();
-    verLiderado();
   });
   pintarLideres();
-  verLiderado();
   // La zona (urbana o rural) sale del barrio o vereda elegido
   const zonaAlta = () => {
-    const lg = (cat.lugares || []).find((l) => String(l.id) === String(form.lugar_id.value));
-    $('#zona-alta', el).textContent = lg?.zona ? `Zona ${lg.zona === 'urbana' ? 'urbana (casco)' : 'rural'}` : '';
+    const lg = (cat?.lugares || []).find((l) => String(l.id) === String(form.lugar_id.value));
+    $('#zona-alta', el).textContent = lg?.zona === 'urbana' ? 'Urbana (casco)' : lg?.zona === 'rural' ? 'Rural' : '—';
   };
   form.lugar_id.addEventListener('change', zonaAlta);
   zonaAlta();
 
-  // Búsqueda en vivo (400 ms, 3 caracteres o más en nombre, documento o celular): «¿Es alguna de estas?» antes de seguir
+  // Búsqueda en vivo (400 ms): por el nombre (3 letras o más) o por la cédula (5 dígitos o más, aunque no haya nombre:
+  // la misma cédula y, para A y K, las que empiezan por lo escrito): «¿Es alguna de estas?» antes de seguir
   let turno = 0;
   const filasDe = (r) => (Array.isArray(r) ? r : r?.filas || r?.parecidas || []);
   const pintarParecidas = (lista, { titulo: t = '¿Es alguna de estas?', ayuda = 'Si es una de ellas, elíjala para no duplicarla.' } = {}) => {
@@ -553,15 +632,16 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     if (!lista.length) { cont.replaceChildren(); return; }
     cont.innerHTML = String(html`<div class="aviso-legal parecidas"><b>${t}</b> ${ayuda}
       <div class="resultados">${lista.map((x) => html`<div class="resultado"><div class="q"><b>${x.nombre}</b><small>${[textoCedula(x) || 'sin cédula', textoTelefono(x) || 'sin teléfono', titulo(x.lugar || '')].filter(Boolean).join(' · ')}</small>
+        ${x.coincide_cedula === 'exacta' ? html`<small class="chip verde">Misma cédula</small>` : x.coincide_cedula === 'inicio' ? html`<small class="chip azul">La cédula empieza igual</small>` : ''}
         ${x.cedula_distinta ? html`<small class="chip ambar">Otra cédula: es otra persona</small>` : ''}</div>
         ${x.cedula_distinta ? '' : html`<button type="button" class="btn chico" data-elegir="${x.id}">Es esta</button>`}</div>`)}</div></div>`);
   };
   const buscarParecidas = debounce(async () => {
     const nombre = form.nombre.value.trim(), cedula = form.cedula.value.replace(/\D/g, ''), telefono = form.telefono.value.replace(/\D/g, '');
-    if (nombre.length < 3 && cedula.length < 3 && telefono.length < 3) { pintarParecidas([]); return; }
+    if (nombre.length < 3 && cedula.length < 5) { pintarParecidas([]); return; }
     const mio = ++turno;
     try {
-      const r = await api.get('/api/parecidas', { nombre: nombre.length >= 3 ? nombre : null, cedula: cedula.length >= 3 ? cedula : null, telefono: telefono.length >= 3 ? telefono : null });
+      const r = await api.get('/api/parecidas', { nombre: nombre.length >= 3 ? nombre : null, cedula: cedula.length >= 5 ? cedula : null, telefono: telefono.length >= 3 ? telefono : null });
       if (mio === turno && el.isConnected) pintarParecidas(filasDe(r));
     } catch { /* la búsqueda en vivo es una ayuda: el servidor revisa de nuevo al guardar */ }
   }, 400);
@@ -591,7 +671,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     const sexo = form.querySelector('[name="sexo"]:checked')?.value;
     if (sexo) c.sexo = sexo;
     c.lugar_id = d.lugar_id ? Number(d.lugar_id) : null;
-    Object.assign(c, cuerpoVotacion(form.puesto.value, { texto: d.puesto_texto, municipio: d.municipio, mesa: d.mesa }));
+    if (form.puesto) Object.assign(c, cuerpoVotacion(form.puesto.value, { texto: d.puesto_texto, municipio: d.municipio, mesa: d.mesa }));
     c.etiquetas = $$('[data-et][aria-pressed="true"]', form).map((b) => Number(b.dataset.et));
     if (hogar?.ficha) c.ficha = hogar.ficha;
     if (lideresElegidos.length) c.lideres = lideresElegidos.map((l) => l.id);
@@ -653,6 +733,8 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
 
   async function guardar() {
     // Un doble clic (o Enter y clic) no debe crear dos fichas: una sola petición a la vez
+    // Un dato inválido dentro de un bloque plegado (una mesa fuera de rango) abre su bloque para que se vea el error
+    for (const x of $$(':invalid', form)) x.closest('details')?.setAttribute('open', '');
     if (enCurso || !form.reportValidity()) return;
     const { c, d } = cuerpo();
     const { aut, error } = leerAutorizacion(form);

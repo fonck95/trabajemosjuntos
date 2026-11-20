@@ -261,8 +261,9 @@ def _telefonos(p: dict) -> tuple[str, str]:
 def filtros_auditables(f: Filtros) -> dict:
     """Los filtros de una exportación para la auditoría: lo buscado nunca va en claro, solo su largo."""
     d = f.model_dump(exclude_none=True)
-    if "q" in d:
-        d["q_longitud"] = len(d.pop("q"))
+    for k in ("q", "ocupacion", "perfil_profesional"):  # texto escrito: solo su largo
+        if k in d:
+            d[f"{k}_longitud"] = len(d.pop(k))
     return d
 
 
