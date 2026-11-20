@@ -333,13 +333,21 @@ def recorrido_del_contexto(db: Any, uid: Any) -> str:
     return "\n".join(x for x in lineas if x)
 
 
+# El renglón del contexto cuando la persona oye la respuesta (`contexto.voz`): se lee frase por frase en voz alta
+RESPUESTA_HABLADA = ("Respuesta hablada: la persona la oye en voz alta. Responde en frases cortas y completas, lo "
+                     "importante primero; sin listas, tablas, enlaces ni símbolos; cifras como se dicen.")
+
+
 def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int] | None = None,
                        guion: Any = None, pantalla: str = "", recorrido: str = "") -> str:
     """El bloque de texto con el contexto del panel para el comienzo del mensaje de la persona. `etiquetas`: las que
     pueden ir en el filtro de etiqueta (`etiquetas_del_contexto`); sin ellas, ese filtro no va (ante la duda, no se
     manda). `guion`: el de la presentación (`guion_del_contexto`); sin él, la presentación abierta no va. `pantalla`: lo
     que muestra la pantalla en off abierta (`pantalla_del_contexto`), que lo dice el servidor, no el navegador.
-    `recorrido`: dónde va el plan guiado y la presentación automática (`recorrido_del_contexto`: hasta dos renglones)."""
+    `recorrido`: dónde va el plan guiado y la presentación automática (`recorrido_del_contexto`: hasta dos renglones).
+    Con `voz` verdadero (la persona oye la respuesta en voz alta: `agente/voz.py`), un renglón que pide una respuesta
+    para decir (`RESPUESTA_HABLADA`): va aquí, por mensaje, y no en el `system`, que queda congelado con la
+    conversación."""
     c = contexto if isinstance(contexto, dict) else {}
     lineas = [f"Fecha y hora en Colombia: {_fecha(ahora)}"]
     ruta = _ruta(c.get("ruta"))
@@ -364,4 +372,6 @@ def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int]
         lineas.append(recorrido)
     if pantalla:
         lineas.append(f"Pantalla en off abierta: {pantalla}")
+    if c.get("voz") is True:
+        lineas.append(RESPUESTA_HABLADA)
     return "<contexto_del_panel>\n" + "\n".join(lineas) + "\n</contexto_del_panel>"

@@ -187,6 +187,13 @@ AJUSTES_POR_DEFECTO: dict[str, Any] = {
                "retencion_dias": 30},
     # Mensajes al asistente por persona y día (hora de Colombia), según el rol: acotan el gasto y el volumen
     "agente_mensajes_diarios": {"admin": 300, "coordinador": 150, "planillero": 40, "consultor": 40},
+    # La voz del asistente (docs/agente.md, «La voz clonada de Mnemo»): la del navegador o una voz clonada de la cuenta
+    # de Mnemo conectada (`voz`: su id en Mnemo; `nombre`, para mostrarla; `cuenta`: la huella de la cuenta con que se
+    # eligió, `mnemo_conexion.huella_cuenta`, que pone el servidor), quién la hace sonar (`roles`: habla con la voz y
+    # los créditos del administrador), si lee en voz alta las respuestas del asistente y si narra también la
+    # presentación automática. Un objeto aparte, de un nivel, como `agente`: solo lo cambia el administrador
+    "agente_voz": {"motor": "navegador", "voz": "", "nombre": "", "cuenta": "", "roles": ["admin", "coordinador"],
+                   "respuestas": True, "automatica": True},
 }
 
 

@@ -105,6 +105,41 @@ class MensajesAgente(BaseModel):
     consultor: StrictInt | None = Field(None, ge=MENSAJES_DIARIOS[0], le=MENSAJES_DIARIOS[1])
 
 
+# La voz del asistente (docs/agente.md, «La voz clonada de Mnemo»). También es de permisos: la voz clonada es la de la
+# cuenta de Mnemo del administrador y gasta sus créditos. Tipos estrictos, como `Agente`; las mismas reglas con que
+# `agente.politica.ajustes_voz` lee lo guardado (una prueba lo comprueba). `cuenta` se acepta (el formulario puede
+# reenviar lo que leyó) pero la pone el servidor: la huella de la cuenta de Mnemo conectada cuando cambia la voz
+MOTORES_VOZ = ("navegador", "mnemo")
+MAX_NOMBRE_VOZ = 60
+
+
+class VozAgente(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    motor: Literal["navegador", "mnemo"] | None = None
+    # El id de la voz en Mnemo (de `GET /api/agente/voces`), o «» para ninguna
+    voz: str | None = Field(None, max_length=100, pattern=r"^[A-Za-z0-9_.:-]*$")
+    nombre: str | None = Field(None, max_length=200)
+    cuenta: str | None = Field(None, max_length=64)
+    roles: list[RolAgente] | None = Field(None, max_length=4)
+    respuestas: StrictBool | None = None
+    automatica: StrictBool | None = None
+
+    @field_validator("nombre")
+    @classmethod
+    def _nombre(cls, v):
+        if v is None:
+            return None
+        limpio = politica.nombre_de_voz(v)
+        if limpio is None:
+            raise ValueError(f"El nombre de la voz es un renglón de hasta {MAX_NOMBRE_VOZ} caracteres")
+        return limpio
+
+    @field_validator("roles")
+    @classmethod
+    def _roles(cls, v):
+        return None if v is None else sorted(set(v))
+
+
 class AjustesIn(BaseModel):
     """PUT parcial: solo cambia lo enviado (también dentro de los objetos). La vigencia de la base solo se muestra."""
     model_config = ConfigDict(extra="forbid")
@@ -125,6 +160,7 @@ class AjustesIn(BaseModel):
     enlace_consulta_puesto: str | None = Field(None, max_length=300)
     agente: Agente | None = None
     agente_mensajes_diarios: MensajesAgente | None = None
+    agente_voz: VozAgente | None = None
 
     @field_validator("eleccion_vigente")
     @classmethod
@@ -146,6 +182,17 @@ class AjustesIn(BaseModel):
 # `acceso` (una sola fuente): presupuestos, sesiones, tope de cédulas dictadas, política de contacto, datos sensibles,
 # versión del compromiso y el asistente.
 AJUSTES_DE_PERMISOS = acceso.AJUSTES_DE_PERMISOS
+
+
+def _cuenta_de_la_voz(db: Database, actual: dict, nueva: dict) -> str:
+    """La `cuenta` de `agente_voz` que se guarda: la de siempre si la voz no cambia; si cambia, la huella de la cuenta
+    de Mnemo conectada ahora (con la que se eligió); sin voz, «». Nunca la que mande el formulario."""
+    if nueva.get("voz") == actual.get("voz"):
+        return actual.get("cuenta") or ""
+    if not nueva.get("voz"):
+        return ""
+    from ..agente import mnemo_conexion  # aquí y no arriba: lo demás de Ajustes no lo necesita
+    return mnemo_conexion.huella_cuenta(db)
 
 
 def _vigentes(db: Database) -> dict:
@@ -201,6 +248,11 @@ def guardar_ajustes(body: AjustesIn, db: Database = Depends(obtener_db),
             datos[k] = {**actuales[k], **{kk: vv for kk, vv in v.items() if vv is not None}}
         elif v is not None:
             datos[k] = v
+    if "agente_voz" in datos:
+        voz = datos["agente_voz"]
+        if not voz.get("voz"):  # sin voz, ni su nombre
+            voz["nombre"] = ""
+        voz["cuenta"] = _cuenta_de_la_voz(db, actuales["agente_voz"], voz)
     # Lo que no cambia el valor guardado no cuenta: el formulario del coordinador puede reenviar todo sin tocarlos
     datos = {k: v for k, v in datos.items() if v != actuales.get(k)}
     acceso.exigir_ajustes(quien, actuales, datos)

@@ -464,7 +464,10 @@ _MANEJADORES: dict[str, Manejador] = {
 BASE = "https://mnemo.example.org"
 ALCANCES_MNEMO = ("mnemo:read", "mnemo:study.write", "mnemo:memory.write", "mnemo:workspace.write",
                   "mnemo:business.write", "mnemo:forms.responses", "mnemo:share", "mnemo:publish", "mnemo:delete",
-                  "mnemo:model")
+                  "mnemo:model", "mnemo:voice")
+# Los que Mnemo anuncia solo en los metadatos del servidor de autorización, no en el PRM (el SDK de MCP pediría todo lo
+# que se anuncia allí): el modelo y la voz
+SOLO_EN_METADATOS = ("mnemo:model", "mnemo:voice")
 OIDC = ("openid", "email", "profile")
 CUENTA = {"sub": "usr_ana_inventada", "name": "Ana Inventada", "email": "ana.inventada@example.org"}
 OTRA_CUENTA = {"sub": "usr_beto_inventado", "name": "Beto Inventado", "email": "beto.inventado@example.org"}
@@ -483,7 +486,8 @@ class OAuthFalso:
       [`<base>`]; `prm_extra` lo cambia) y `GET /.well-known/oauth-authorization-server` u `openid-configuration`
       (los metadatos, con `mnemo:model` en `scopes_supported`; `metadatos_extra` los cambia). El 401 de `/mcp`
       anuncia `ruta_prm` en `resource_metadata`. `anuncia_modelo=False` es un Mnemo anterior a `mnemo:model`: no lo
-      anuncia en sus metadatos y, si se pide, lo descarta sin avisar.
+      anuncia en sus metadatos y, si se pide, lo descarta sin avisar. `anuncia_voz=False`, lo mismo con `mnemo:voice`
+      (un Mnemo anterior a las voces clonadas).
     * `POST /oauth/register` (JSON, RFC 7591): 201 con un `client_id` nuevo. `solo_loopback_http=True` rechaza una
       vuelta http que no sea de loopback, como Mnemo.
     * `GET /oauth/authorize`: cliente y vuelta registrados (si no, 400 con una página HTML que no vuelve); exige
@@ -519,6 +523,7 @@ class OAuthFalso:
         self.demora = 0.0
         self.solo_loopback_http = False
         self.anuncia_modelo = True
+        self.anuncia_voz = True
         self.prm_extra: dict = {}
         self.ruta_prm = "/.well-known/oauth-protected-resource/mcp"  # la que anuncia el 401 de /mcp
         self.metadatos_extra: dict = {}
@@ -545,12 +550,14 @@ class OAuthFalso:
 
     def prm(self) -> dict:
         return {"resource": self.recurso, "authorization_servers": [self.base],
-                "scopes_supported": [a for a in ALCANCES_MNEMO if a != "mnemo:model"],
+                "scopes_supported": [a for a in ALCANCES_MNEMO if a not in SOLO_EN_METADATOS],
                 "bearer_methods_supported": ["header"], "resource_name": "Mnemo", **self.prm_extra}
 
     def ofrecidos(self) -> tuple[str, ...]:
-        """Los alcances de Mnemo que ofrece este servidor (sin `mnemo:model` si es uno anterior: `anuncia_modelo`)."""
-        return tuple(a for a in ALCANCES_MNEMO if self.anuncia_modelo or a != "mnemo:model")
+        """Los alcances de Mnemo que ofrece este servidor (sin `mnemo:model` si es uno anterior: `anuncia_modelo`; sin
+        `mnemo:voice` si es anterior a las voces: `anuncia_voz`)."""
+        return tuple(a for a in ALCANCES_MNEMO if (self.anuncia_modelo or a != "mnemo:model")
+                     and (self.anuncia_voz or a != "mnemo:voice"))
 
     def metadatos(self) -> dict:
         e = self.endpoints()
@@ -659,7 +666,7 @@ class OAuthFalso:
         pedidos = (consulta.get("scope") or "").split()
         # Lo que este servidor no ofrece se descarta sin avisar (un Mnemo anterior, con `mnemo:model`)
         ofrecidos = self.ofrecidos()
-        mnemo = [a for a in pedidos if a in ofrecidos] or [a for a in ofrecidos if a != "mnemo:model"]
+        mnemo = [a for a in pedidos if a in ofrecidos] or [a for a in ofrecidos if a not in SOLO_EN_METADATOS]
         elegidos = [a for a in mnemo if self.marcar is None or a in self.marcar]
         if self.decision != "allow" or not elegidos:
             return volver(error="access_denied")

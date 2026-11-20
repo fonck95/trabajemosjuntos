@@ -57,12 +57,13 @@ class Estaticos(StaticFiles):
         return resto if sep and _SEGMENTO_VERSION.fullmatch(primero) else ruta
 log = logging.getLogger("panel")
 INTENTOS_ARRANQUE = 3  # panel solo: intentos de conectar a MongoDB (2 s entre uno y otro) antes de cortar el arranque
-# Las respuestas en flujo del asistente (NDJSON): cada evento tiene que llegar en cuanto sale
-RUTAS_EN_FLUJO = frozenset({"/api/agente/mensajes", "/api/agente/confirmaciones"})
+# Las respuestas en flujo del asistente (NDJSON): cada evento tiene que llegar en cuanto sale (también el audio de la
+# voz clonada, `agente/voz.py`: cada trozo suena en cuanto llega)
+RUTAS_EN_FLUJO = frozenset({"/api/agente/mensajes", "/api/agente/confirmaciones", "/api/agente/voz"})
 
 
 class GZipSalvoFlujos(GZipMiddleware):
-    """GZip para todo menos las respuestas en flujo del asistente.
+    """GZip para todo menos las respuestas en flujo del asistente (y su voz clonada).
 
     El GZipMiddleware de Starlette (0.41) escribe cada trozo de una respuesta en flujo en un GzipFile sin vaciarlo:
     zlib retiene la salida y el navegador recibía todos los eventos juntos al final del turno. Los navegadores siempre

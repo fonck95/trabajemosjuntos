@@ -107,6 +107,8 @@ EXPLICACIONES = {
     "FORBIDDEN": "Mnemo no permite esto con esta conexión",
     "UNAVAILABLE": "Eso no está disponible en este Mnemo",
     "NO_TRANSCRIBER": "Esta cuenta de Mnemo no tiene un modelo que transcriba audio",
+    "NO_VOICE": "Esa voz no está disponible en Mnemo para las apps conectadas (no existe, no está marcada para apps o "
+                "no está lista)",
     "TIMEOUT": "Mnemo tardó demasiado en hacerlo",
     "FAILED": "Mnemo no pudo completarlo",
     "INTERNAL": "Mnemo falló por un error interno",

@@ -1,7 +1,8 @@
 """Quién usa el asistente, con qué herramientas y cuánto: los ajustes del asistente leídos con valores de respaldo.
 
 * Los ajustes viven en `meta` (documento «ajustes») con los demás del panel: `agente` (`roles`, `escritura`,
-  `mnemo_coordinadores`, `retencion_dias`) y `agente_mensajes_diarios` (tope por rol). Se leen con
+  `mnemo_coordinadores`, `retencion_dias`), `agente_mensajes_diarios` (tope por rol) y `agente_voz` (la voz del
+  asistente: la del navegador o una voz clonada de Mnemo, quién la hace sonar y para qué; `agente/voz.py`). Se leen con
   `modelo.leer_ajustes` y se validan aquí otra vez: un valor que falta o que no tiene la forma esperada toma el valor
   por defecto, así un ajuste guardado a mano (o de una versión anterior) no abre ni rompe nada.
 * Denegar por defecto: planilleros y consultores no usan el asistente hasta que el administrador los agrega a
@@ -13,6 +14,7 @@
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -28,6 +30,15 @@ POR_DEFECTO: dict[str, Any] = {"roles": ["admin", "coordinador"], "escritura": T
 MENSAJES_POR_DEFECTO = {"admin": 300, "coordinador": 150, "planillero": 40, "consultor": 40}
 RETENCION_DIAS = (1, 365)
 MENSAJES_DIARIOS = (1, 5000)
+# La voz del asistente (`agente_voz`): los mismos valores por defecto que `modelo.AJUSTES_POR_DEFECTO` y la misma forma
+# que acepta `api/ajustes.py` (`VozAgente`; una prueba compara los dos lados)
+MOTORES_VOZ = ("navegador", "mnemo")
+VOZ_POR_DEFECTO: dict[str, Any] = {"motor": "navegador", "voz": "", "nombre": "", "cuenta": "",
+                                   "roles": ["admin", "coordinador"], "respuestas": True, "automatica": True}
+ID_VOZ = re.compile(r"[A-Za-z0-9_.:-]{1,100}")   # el id de una voz en Mnemo (un ObjectId: 24 hexadecimales)
+MAX_NOMBRE_VOZ = 60
+HUELLA_CUENTA = re.compile(r"[0-9a-f]{32}")
+_CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f\u2028\u2029]")
 
 SUGERENCIAS = {
     "admin": ["¿Cómo va la base? Dame los indicadores principales.",
@@ -70,6 +81,37 @@ def ajustes_agente(ajustes: dict | None) -> dict:
             "retencion_dias": dias if dias is not None else POR_DEFECTO["retencion_dias"]}
 
 
+def nombre_de_voz(v: Any) -> str | None:
+    """El nombre de una voz para mostrar: un renglón sin caracteres de control, con los espacios en uno, de hasta
+    `MAX_NOMBRE_VOZ` caracteres; None si no es texto o trae caracteres de control (vienen de Mnemo o del formulario)."""
+    if not isinstance(v, str) or _CONTROL.search(v):
+        return None
+    v = " ".join(v.split())
+    return v if len(v) <= MAX_NOMBRE_VOZ else None
+
+
+def ajustes_voz(ajustes: dict | None) -> dict:
+    """Los ajustes `agente_voz` vigentes, completos y validados (una copia nueva en cada llamada): `motor`
+    («navegador» o «mnemo»), `voz` (el id de la voz en Mnemo, o «»), `nombre`, `cuenta` (la huella de la cuenta de Mnemo
+    con que se eligió, `mnemo_conexion.huella_cuenta`, o «»), `roles` (quién la hace sonar), `respuestas` y
+    `automatica`. Lo que no tiene la forma esperada toma el valor por defecto."""
+    crudo = (ajustes or {}).get("agente_voz")
+    crudo = crudo if isinstance(crudo, dict) else {}
+    roles = crudo.get("roles")
+    if isinstance(roles, list):
+        roles = sorted({r for r in roles if isinstance(r, str) and r in ROLES})
+    else:
+        roles = list(VOZ_POR_DEFECTO["roles"])
+    booleano = lambda k: crudo[k] if isinstance(crudo.get(k), bool) else VOZ_POR_DEFECTO[k]  # noqa: E731
+    voz = crudo.get("voz")
+    voz = voz if isinstance(voz, str) and ID_VOZ.fullmatch(voz) else ""
+    cuenta = crudo.get("cuenta")
+    return {"motor": crudo["motor"] if crudo.get("motor") in MOTORES_VOZ else VOZ_POR_DEFECTO["motor"],
+            "voz": voz, "nombre": (nombre_de_voz(crudo.get("nombre")) or "") if voz else "",
+            "cuenta": cuenta if voz and isinstance(cuenta, str) and HUELLA_CUENTA.fullmatch(cuenta) else "",
+            "roles": roles, "respuestas": booleano("respuestas"), "automatica": booleano("automatica")}
+
+
 def mensajes_diarios(ajustes: dict | None, rol: str | None) -> int:
     """Cuántos mensajes al asistente puede mandar una persona de ese rol en un día (hora de Colombia)."""
     crudo = (ajustes or {}).get("agente_mensajes_diarios")
@@ -78,12 +120,13 @@ def mensajes_diarios(ajustes: dict | None, rol: str | None) -> int:
 
 
 def leer(db) -> tuple[dict, dict]:
-    """(ajustes del panel, ajustes del asistente). En los del panel, `agente` y `agente_mensajes_diarios` quedan ya
-    validados: es lo que reciben las herramientas en `Contexto.ajustes`."""
+    """(ajustes del panel, ajustes del asistente). En los del panel, `agente`, `agente_mensajes_diarios` y `agente_voz`
+    quedan ya validados: es lo que reciben las herramientas en `Contexto.ajustes`."""
     ajustes = modelo.leer_ajustes(db)
     agente = ajustes_agente(ajustes)
     ajustes["agente"] = agente
     ajustes["agente_mensajes_diarios"] = {r: mensajes_diarios(ajustes, r) for r in ROLES}
+    ajustes["agente_voz"] = ajustes_voz(ajustes)
     return ajustes, agente
 
 

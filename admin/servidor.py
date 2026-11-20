@@ -230,9 +230,13 @@ OCUPADO = "El panel está atendiendo muchas peticiones. Intente de nuevo en unos
 ESPERA_S = (2, 60)   # reintentos de crear el panel o de conectarlo a MongoDB: espera inicial y máxima
 CUPOS_PANEL = 16     # peticiones de la API del panel atendidas a la vez (anyio presta 40 hilos a todo el servidor)
 CUPOS_AGENTE = 4     # turnos del asistente en flujo a la vez: cupos propios, para no quitárselos a la API
+CUPOS_VOZ = 6        # frases de la voz clonada en flujo a la vez: cupos propios (no se los quita al chat ni a la API)
 ESPERA_CUPO_S = 2    # sin cupo en este tiempo, 503
 # Las respuestas en flujo del asistente (app/api/agente.py): retienen la conexión todo el turno (hasta minutos)
 RUTAS_AGENTE = frozenset({"/api/agente/mensajes", "/api/agente/confirmaciones"})
+# El audio de la voz clonada (app/agente/voz.py): retiene la conexión mientras Mnemo dice la frase (segundos), y el
+# navegador pide la que suena y la siguiente a la vez
+RUTAS_VOZ = frozenset({"/api/agente/voz"})
 PLAZO_CUERPO_S = 10  # el cuerpo del ingreso o de un turno del asistente llega entero en este tiempo, o 408
 SIN_CACHE = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex", "X-Content-Type-Options": "nosniff"}
 
@@ -332,14 +336,18 @@ class LimitePanel:
     flujo no retiene ninguno mientras espera). Como son pocos, su cuerpo también se lee entero antes de pedir cupo (con
     el mismo plazo y tope): si no, cualquier sesión, aun de un rol sin el asistente, los retenía con 4 cuerpos que no
     terminaban de llegar. Con el cuerpo leído, el panel responde al instante lo que impide el turno (rol apagado,
-    tope, uno suyo en curso…): solo retiene cupo un turno de verdad, uno por persona."""
+    tope, uno suyo en curso…): solo retiene cupo un turno de verdad, uno por persona.
+
+    La voz clonada (`RUTAS_VOZ`), igual, con sus propios `cupos_voz`: cada frase retiene su conexión mientras Mnemo la
+    dice y el navegador pide la que suena y la siguiente; no compite con el turno que está leyendo en voz alta ni con la
+    API (16 + 4 + 6 caben en los 40 hilos: un flujo no retiene ninguno mientras espera)."""
 
     def __init__(self, app, cupos: int, espera_s: float, sin_sesion=frozenset(), limite: int = 0,
-                 plazo_s: float = PLAZO_CUERPO_S, *, cupos_agente: int = CUPOS_AGENTE):
+                 plazo_s: float = PLAZO_CUERPO_S, *, cupos_agente: int = CUPOS_AGENTE, cupos_voz: int = CUPOS_VOZ):
         self.app, self.cupos, self.espera_s = app, cupos, espera_s
         self.sin_sesion, self.limite, self.plazo_s = frozenset(sin_sesion), limite, plazo_s
-        self.cupos_agente = cupos_agente
-        self._bucle = self._semaforo = self._semaforo_agente = None
+        self.cupos_agente, self.cupos_voz = cupos_agente, cupos_voz
+        self._bucle = self._semaforo = self._semaforo_agente = self._semaforo_voz = None
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -348,9 +356,9 @@ class LimitePanel:
         ruta = (ruta[len(raiz):] or "/") if raiz and ruta.startswith(raiz) else ruta  # como seguridad.ruta_interna
         if not ruta.startswith("/api/") and ruta != "/salud":
             return await self.app(scope, receive, send)
-        # El cuerpo entero antes del cupo: el del ingreso y el de un turno del asistente (sin tope, el panel no se
-        # pudo importar y en /panel/ queda el aviso 503, que no lee nada)
-        if ruta in self.sin_sesion or (ruta in RUTAS_AGENTE and self.limite):
+        # El cuerpo entero antes del cupo: el del ingreso, el de un turno del asistente y el de una frase de la voz (sin
+        # tope, el panel no se pudo importar y en /panel/ queda el aviso 503, que no lee nada)
+        if ruta in self.sin_sesion or ((ruta in RUTAS_AGENTE or ruta in RUTAS_VOZ) and self.limite):
             cabeceras = Headers(scope=scope)
             if cabeceras.get("content-length", "0") != "0" or "transfer-encoding" in cabeceras:
                 receive = await self._cuerpo_entero(scope, receive, send, cabeceras)
@@ -360,7 +368,9 @@ class LimitePanel:
         if self._bucle is not bucle:  # uno por bucle de eventos (en las pruebas, cada cliente abre el suyo)
             self._bucle, self._semaforo = bucle, asyncio.Semaphore(self.cupos)
             self._semaforo_agente = asyncio.Semaphore(self.cupos_agente)
-        semaforo = self._semaforo_agente if ruta in RUTAS_AGENTE else self._semaforo
+            self._semaforo_voz = asyncio.Semaphore(self.cupos_voz)
+        semaforo = (self._semaforo_agente if ruta in RUTAS_AGENTE else self._semaforo_voz if ruta in RUTAS_VOZ
+                    else self._semaforo)
         try:
             await asyncio.wait_for(semaforo.acquire(), self.espera_s)
         except TimeoutError:
@@ -456,7 +466,7 @@ def crear_servidor(cfg=None, sitio: Path | None = None) -> Starlette:
         Route("/health", salud),
         Route(PREFIJO, al_panel),
         Mount(PREFIJO, app=LimitePanel(montaje, CUPOS_PANEL, ESPERA_CUPO_S, *reglas_del_panel(), PLAZO_CUERPO_S,
-                                       cupos_agente=CUPOS_AGENTE)),
+                                       cupos_agente=CUPOS_AGENTE, cupos_voz=CUPOS_VOZ)),
         Mount("/", app=sitio_publico(sitio)),
     ]
     app = Starlette(routes=rutas, lifespan=ciclo)

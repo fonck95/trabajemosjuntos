@@ -7,9 +7,14 @@ Interfaz (la usan `api/agente_mnemo.py`, `mnemo_cliente.cliente_de`, `api/agente
 
 * `vista(db, cfg=None) -> dict` — la conexión para mostrar, sin descifrar nada: `{"estado": "sin_conectar" |
   "conectada" | "caida", "motivo": "revocada" | "clave" | "alterada" | "error" | None, "url": str | None, "cuenta":
-  str | None, "alcances": [str], "modelo": bool, "ofrece_modelo": bool | None, "desde": iso | None}`; con `cfg`,
-  además `"url_sugerida": str | None` (`MNEMO_MCP_URL`, o la última dirección con que se conectó).
+  str | None, "alcances": [str], "modelo": bool, "ofrece_modelo": bool | None, "voz": bool, "ofrece_voz": bool |
+  None, "desde": iso | None}`; con `cfg`, además `"url_sugerida": str | None` (`MNEMO_MCP_URL`, o la última dirección
+  con que se conectó).
 * `con_modelo(db) -> bool` — ¿hay una conexión «conectada» con `mnemo:model` (Mnemo puede poner el modelo)?
+* `con_voz(db) -> bool` — ¿hay una conexión «conectada» con `mnemo:voice` (Mnemo puede decir frases con una voz
+  clonada de la cuenta, `agente/voz.py`)?
+* `huella_cuenta(db) -> str` — una huella de la cuenta de Mnemo conectada (del emisor y su `sub`; «» sin conexión o
+  sin `sub`): la voz elegida en Ajustes vale solo con la cuenta con que se eligió.
 * `conectada(db) -> dict | None` — `{"version", "conexion", "url_mcp"}` de la conexión «conectada» (lo que usa
   `mnemo_cliente.cliente_de` para armar y rehacer el cliente), o None.
 * `FuenteTokens(app, conexion=None, url_mcp=None)` — los access tokens de la conexión para
@@ -28,11 +33,13 @@ Dónde vive: un documento de `meta` (`_id: "mnemo_conexion"`), sin índices nuev
 
     {_id, version: int, estado: "conectada" | "caida", motivo, conexion (id de esta conexión), url_mcp, recurso,
      emisor, endpoints: {authorize, token, register, revoke}, client_id, redirect_uri, alcances, ofrece_modelo,
-     cuenta: {sub, nombre?, correo?}, cifrado (access + refresh + direcciones: {url_mcp, recurso, token, revoke}),
+     ofrece_voz, cuenta: {sub, nombre?, correo?}, cifrado (access + refresh + direcciones: {url_mcp, recurso, token,
+     revoke}),
      vence (del access), renovando_hasta, renovador, conectada_por: {uid, usuario}, conectada_en, renovada_en,
      caida_en, ultima_url,
      pendiente: {state_h, sesion, verificador_cifrado (el verificador + una copia de lo que sigue), url_mcp, recurso,
-                 emisor, endpoints, client_id, redirect_uri, pedidos, iss_requerido, ofrece_modelo, expira} | None,
+                 emisor, endpoints, client_id, redirect_uri, pedidos, iss_requerido, ofrece_modelo, ofrece_voz,
+                 expira} | None,
      clientes: [{emisor, redirect_uri, client_id}]}
 
 Por qué está hecho así (verificado contra Mnemo en local):
@@ -57,8 +64,14 @@ Por qué está hecho así (verificado contra Mnemo en local):
   Mnemo lo conozca (un refresh inventado da `invalid_grant` si existe e `invalid_client` si no), porque un cliente
   desconocido en `/oauth/authorize` deja al administrador en una página de error de Mnemo que no vuelve al panel.
 * Se piden `openid profile email` (para «Conectado como …»: el `id_token` llega directo del endpoint por TLS y solo se
-  lee su carga, sin verificar la firma), `mnemo:model` y lo que necesitan las herramientas que ofrece el panel
+  lee su carga, sin verificar la firma), `mnemo:model`, `mnemo:voice` (si ese Mnemo lo ofrece: la voz clonada con que
+  el panel narra la presentación y lee las respuestas, `agente/voz.py`; la persona puede no marcarla en la página de
+  permisos de Mnemo y el panel sigue con la voz del navegador) y lo que necesitan las herramientas que ofrece el panel
   (`herramientas/mnemo.alcances`). Nunca `mnemo:forms.responses`: son datos de otras personas.
+* `mnemo:voice` se pide solo si Mnemo lo anuncia en sus metadatos (`ofrece_voz`; sin la lista, se supone que sí, como
+  con el modelo): uno anterior lo descartaría sin avisar y la vista mandaría a marcar una casilla que su página no
+  tiene. Un pendiente guardado por una versión anterior del panel no trae `ofrece_voz`: vale igual (no se pidió) y
+  la conexión queda sin la voz hasta volver a conectar.
 * Reconectar la MISMA cuenta con el mismo cliente nunca revoca lo viejo: en Mnemo es la misma concesión y se llevaría
   los tokens nuevos. Con otra cuenta (otro `sub`), otro cliente u otro Mnemo, el refresh viejo se revoca.
 * Desconectar revoca con el REFRESH (`token_type_hint=refresh_token`): revocar con el access deja una conexión
@@ -108,6 +121,7 @@ log = logging.getLogger("panel")
 ID = "mnemo_conexion"
 ESTADOS = ("conectada", "caida")
 ALCANCE_MODELO = "mnemo:model"
+ALCANCE_VOZ = "mnemo:voice"
 ALCANCES_OIDC = ("openid", "profile", "email")
 NOMBRE_CLIENTE = "Panel Trabajemos juntos"
 AGENTE = f"{mc.CLIENTE['name']}/{mc.CLIENTE['version']}"
@@ -130,15 +144,18 @@ GUARDAR_INTENTOS = 3
 
 # Qué se quita de la conexión al desconectar (se quedan `version`, `clientes`, `ultima_url` y el pendiente)
 CAMPOS_CONEXION = ("estado", "motivo", "conexion", "url_mcp", "recurso", "emisor", "endpoints", "client_id",
-                   "redirect_uri", "alcances", "ofrece_modelo", "cuenta", "cifrado", "vence", "renovando_hasta",
+                   "redirect_uri", "alcances", "ofrece_modelo", "ofrece_voz", "cuenta", "cifrado", "vence",
+                   "renovando_hasta",
                    "renovador", "renovada_en", "caida_en", "conectada_por", "conectada_en")
 # Las direcciones de una conexión que reciben sus secretos: el access va a `url_mcp`; el refresh, a los endpoints de
 # tokens (con el `recurso`) y de revocación. Van también dentro de lo cifrado, y solo esa copia se usa
 DIRECCIONES = ("url_mcp", "recurso", "token", "revoke")
 # Lo del pendiente que va también dentro de lo cifrado, con el verificador: lo que recibe el código y el verificador
-# (y lo que pasará a ser la conexión). `volver` usa solo esa copia
+# (y lo que pasará a ser la conexión). `volver` usa solo esa copia. `ofrece_voz` va aparte (`OPCIONALES_PENDIENTE`):
+# un pendiente de una versión anterior del panel no lo trae, y vale igual
 ATADO_PENDIENTE = ("url_mcp", "recurso", "emisor", "endpoints", "client_id", "redirect_uri", "pedidos",
                    "iss_requerido", "ofrece_modelo")
+OPCIONALES_PENDIENTE = ("ofrece_voz",)
 
 MENSAJE_SIN_CONEXION = "Mnemo no está conectado: el administrador lo conecta en Ajustes → Asistente."
 MENSAJE_CLAVE = ("La conexión con Mnemo dejó de valer porque cambió la clave del administrador del panel: hay que "
@@ -278,8 +295,10 @@ def _alterada(doc: dict, atadas: dict, *destinos: str | None) -> bool:
 
 
 def _pendiente_valido(atado: Any) -> dict | None:
-    """Lo que se cifró con el verificador (`{"v", **ATADO_PENDIENTE}`), si trae todo lo que hace falta para canjear el
-    código y guardar la conexión; None si no (otra clave, alterado o de una versión anterior del panel)."""
+    """Lo que se cifró con el verificador (`{"v", **ATADO_PENDIENTE}`, y quizá `OPCIONALES_PENDIENTE`), si trae todo
+    lo que hace falta para canjear el código y guardar la conexión; None si no (otra clave, alterado o de una versión
+    anterior del panel que no guardaba algo necesario). `ofrece_voz` puede faltar (lo guardó un panel anterior a la
+    voz clonada); si está, tiene que ser un booleano."""
     if not isinstance(atado, dict) or not isinstance(atado.get("v"), str) or not atado["v"]:
         return None
     endpoints = atado.get("endpoints")
@@ -288,7 +307,8 @@ def _pendiente_valido(atado: Any) -> dict | None:
             or not isinstance(endpoints, dict)
             or not all(isinstance(endpoints.get(k), str) and endpoints[k] for k in ("token", "revoke"))
             or not isinstance(atado.get("pedidos"), list) or not isinstance(atado.get("iss_requerido"), bool)
-            or not isinstance(atado.get("ofrece_modelo"), bool)):
+            or not isinstance(atado.get("ofrece_modelo"), bool)
+            or ("ofrece_voz" in atado and not isinstance(atado["ofrece_voz"], bool))):
         return None
     return atado
 
@@ -409,9 +429,12 @@ def vista(db: Any, cfg: Any = None) -> dict:
     `{"estado": "sin_conectar" | "conectada" | "caida", "motivo": "revocada" | "clave" | "alterada" | "error" | None
     (solo en «caida»), "url": la dirección MCP | None, "cuenta": «Nombre (correo)» | None, "alcances": [los
     concedidos], "modelo": bool (conectada y con `mnemo:model`), "ofrece_modelo": bool | None (False: ese Mnemo no
-    ofrece `mnemo:model`, hay que actualizarlo; no es una casilla que faltó marcar; None sin conexión), "desde": iso
-    de cuando se conectó | None}`. Con `cfg`, además `"url_sugerida"`: `MNEMO_MCP_URL` o la última dirección con que
-    se conectó (None si ninguna)."""
+    ofrece `mnemo:model`, hay que actualizarlo; no es una casilla que faltó marcar; None sin conexión), "voz": bool
+    (conectada y con `mnemo:voice`: el panel puede usar las voces clonadas de la cuenta), "ofrece_voz": bool | None
+    (False: ese Mnemo no ofrece `mnemo:voice`, hay que actualizarlo; una conexión de antes de la voz clonada no lo
+    sabe y dice True: volver a conectar lo averigua; None sin conexión), "desde": iso de cuando se conectó | None}`.
+    Con `cfg`, además `"url_sugerida"`: `MNEMO_MCP_URL` o la última dirección con que se conectó (None si
+    ninguna)."""
     doc = db.meta.find_one({"_id": ID}, {"cifrado": 0, "pendiente": 0, "clientes": 0}) or {}
     estado = doc.get("estado") if doc.get("estado") in ESTADOS else "sin_conectar"
     hay = estado != "sin_conectar"
@@ -423,6 +446,8 @@ def vista(db: Any, cfg: Any = None) -> dict:
            "alcances": alcances,
            "modelo": estado == "conectada" and ALCANCE_MODELO in alcances,
            "ofrece_modelo": doc.get("ofrece_modelo") is not False if hay else None,
+           "voz": estado == "conectada" and ALCANCE_VOZ in alcances,
+           "ofrece_voz": doc.get("ofrece_voz") is not False if hay else None,
            "desde": _iso(doc.get("conectada_en")) if hay else None}
     if cfg is not None:
         out["url_sugerida"] = _sugerida(doc, cfg)
@@ -433,6 +458,25 @@ def con_modelo(db: Any) -> bool:
     """¿Hay una conexión «conectada» con `mnemo:model`? (el proveedor del modelo elige Mnemo con esto). No descifra
     nada: si la clave del administrador cambió, se sabe al pedir el primer token."""
     return db.meta.count_documents({"_id": ID, "estado": "conectada", "alcances": ALCANCE_MODELO}, limit=1) == 1
+
+
+def con_voz(db: Any) -> bool:
+    """¿Hay una conexión «conectada» con `mnemo:voice`? (el panel puede pedirle a Mnemo que diga una frase con una voz
+    clonada de la cuenta, `agente/voz.py`). No descifra nada, como `con_modelo`."""
+    return db.meta.count_documents({"_id": ID, "estado": "conectada", "alcances": ALCANCE_VOZ}, limit=1) == 1
+
+
+def huella_cuenta(db: Any) -> str:
+    """Una huella de la cuenta de Mnemo de la conexión «conectada»: los primeros 32 caracteres hexadecimales del
+    SHA-256 de su emisor y su `sub`; «» sin conexión o si Mnemo no dijo la cuenta (sin `id_token`). La voz elegida en
+    Ajustes (`agente_voz.cuenta`) se guarda con ella: una voz es de una cuenta, y si el administrador conecta otra, la
+    elegida deja de valer. Es una huella y no el `sub`: el coordinador ve los ajustes en solo lectura."""
+    doc = db.meta.find_one({"_id": ID}, {"estado": 1, "emisor": 1, "cuenta": 1}) or {}
+    cuenta = doc.get("cuenta") if isinstance(doc.get("cuenta"), dict) else {}
+    sub, emisor = cuenta.get("sub"), doc.get("emisor")
+    if doc.get("estado") != "conectada" or not isinstance(sub, str) or not sub or not isinstance(emisor, str):
+        return ""
+    return hashlib.sha256(f"{emisor}\x1f{sub}".encode("utf-8")).hexdigest()[:32]
 
 
 def conectada(db: Any) -> dict | None:
@@ -454,8 +498,9 @@ def url_sugerida(db: Any, cfg: Any) -> str | None:
 
 async def _descubrir(app: Any, url_mcp: str, cfg: Any) -> dict:
     """El recurso protegido (RFC 9728) y su servidor de autorización (RFC 8414): `{recurso, emisor, endpoints,
-    iss_requerido, ofrece_modelo}`. El recurso tiene que ser la dirección que se dio (salvo una barra final). Un
-    servidor que no ofrece `mnemo:model` da `sin_modelo`, salvo que haya `ANTHROPIC_API_KEY`."""
+    iss_requerido, ofrece_modelo, ofrece_voz}`. El recurso tiene que ser la dirección que se dio (salvo una barra
+    final). Un servidor que no ofrece `mnemo:model` da `sin_modelo`, salvo que haya `ANTHROPIC_API_KEY`. Uno que no
+    ofrece `mnemo:voice` se conecta igual, sin pedirlo (el panel sigue con la voz del navegador)."""
     origen, ruta = _origen(url_mcp), urlsplit(url_mcp).path.rstrip("/")
     prm = await _json_de(app, f"{origen}/.well-known/oauth-protected-resource{ruta}")
     if prm is None:
@@ -509,10 +554,13 @@ async def _descubrir(app: Any, url_mcp: str, cfg: Any) -> dict:
         if not getattr(cfg, "anthropic_api_key", ""):
             raise ErrorConexion("sin_modelo", MENSAJE_SIN_MODELO)
         log.info("Mnemo: no ofrece mnemo:model; se conecta solo para sus herramientas (el modelo, en modo directo)")
+    # La voz clonada, igual: un Mnemo anterior a `mnemo:voice` no lo anuncia. Sin ella el panel narra y lee con la voz
+    # del navegador, así que no impide conectar
+    ofrece_voz = not isinstance(soportados, list) or ALCANCE_VOZ in soportados
     # El `resource` se manda tal como lo anuncia Mnemo: lo compara byte a byte (si no, `invalid_target`)
     return {"recurso": recurso, "emisor": emisor, "endpoints": endpoints,
             "iss_requerido": meta.get("authorization_response_iss_parameter_supported") is True,
-            "ofrece_modelo": ofrece_modelo}
+            "ofrece_modelo": ofrece_modelo, "ofrece_voz": ofrece_voz}
 
 
 async def _metadatos(app: Any, emisor: str) -> dict | None:
@@ -590,12 +638,15 @@ async def _client_id(app: Any, db: Any, d: dict, redirect_uri: str) -> str:
     return cid
 
 
-def _pedidos(cfg: Any, modelo: bool = True) -> list[str]:
-    """Los alcances que se piden: OpenID (para saber la cuenta), `mnemo:model` (si ese Mnemo lo ofrece: `modelo`) y
-    los de las herramientas que ofrece el panel (`MNEMO_HERRAMIENTAS`, o la lista blanca)."""
+def _pedidos(cfg: Any, modelo: bool = True, voz: bool = False) -> list[str]:
+    """Los alcances que se piden: OpenID (para saber la cuenta), `mnemo:model` (si ese Mnemo lo ofrece: `modelo`),
+    `mnemo:voice` (si lo ofrece: `voz`) y los de las herramientas que ofrece el panel (`MNEMO_HERRAMIENTAS`, o la lista
+    blanca)."""
     from .herramientas import mnemo as hmnemo  # aquí y no arriba: el catálogo de herramientas se carga al usarlo
-    return [*ALCANCES_OIDC, *((ALCANCE_MODELO,) if modelo else ()),
-            *(a for a in hmnemo.alcances(getattr(cfg, "mnemo_herramientas", "")) if a != ALCANCE_MODELO)]
+    propios = (*((ALCANCE_MODELO,) if modelo else ()), *((ALCANCE_VOZ,) if voz else ()))
+    return [*ALCANCES_OIDC, *propios,
+            *(a for a in hmnemo.alcances(getattr(cfg, "mnemo_herramientas", ""))
+              if a not in (ALCANCE_MODELO, ALCANCE_VOZ))]
 
 
 # ───────────────────────────── Conectar ─────────────────────────────
@@ -617,11 +668,11 @@ async def iniciar(app: Any, quien: Any, *, url: str | None, redirect_uri: str, s
     client_id = await _client_id(app, db, d, redirect_uri)
     verificador, reto = _pkce()
     state = secrets.token_urlsafe(32)
-    pedidos = _pedidos(cfg, d["ofrece_modelo"])
+    pedidos = _pedidos(cfg, d["ofrece_modelo"], d["ofrece_voz"])
     state_h = _hash(state)
     atado = {"url_mcp": url_mcp, "recurso": d["recurso"], "emisor": d["emisor"], "endpoints": d["endpoints"],
              "client_id": client_id, "redirect_uri": redirect_uri, "pedidos": pedidos,
-             "iss_requerido": d["iss_requerido"], "ofrece_modelo": d["ofrece_modelo"]}
+             "iss_requerido": d["iss_requerido"], "ofrece_modelo": d["ofrece_modelo"], "ofrece_voz": d["ofrece_voz"]}
     pendiente = {"state_h": state_h, "sesion": sesion, **atado, "uid": getattr(quien, "uid", None),
                  "expira": _ahora() + VIGENCIA_PENDIENTE}
 
@@ -721,7 +772,8 @@ def _campos(cfg: Any, datos: dict, tokens: dict, quien: Any, ahora: datetime) ->
             "url_mcp": datos["url_mcp"], "recurso": datos["recurso"],
             "emisor": datos["emisor"], "endpoints": datos["endpoints"], "client_id": datos["client_id"],
             "redirect_uri": datos["redirect_uri"], "alcances": list(datos.get("alcances") or []),
-            "ofrece_modelo": datos.get("ofrece_modelo") is not False, "cuenta": dict(datos.get("cuenta") or {}),
+            "ofrece_modelo": datos.get("ofrece_modelo") is not False,
+            "ofrece_voz": datos.get("ofrece_voz") is not False, "cuenta": dict(datos.get("cuenta") or {}),
             "cifrado": cifrado.cifrar(llave, {"access": tokens["access"], "refresh": tokens["refresh"],
                                               "direcciones": direcciones},
                                       _contexto(datos["emisor"], datos["client_id"])),
@@ -745,7 +797,8 @@ def instalar(db: Any, cfg: Any, datos: dict, tokens: dict, quien: Any = None) ->
     `recurso` y los endpoints `token` y `revoke`: si después alguien las cambia en la base, la conexión queda
     «caida» con motivo «alterada» sin mandar nada). `datos`: `{url_mcp, emisor, endpoints: {authorize, token,
     register, revoke}, client_id, redirect_uri, alcances, cuenta?: {sub, nombre?, correo?}, recurso?,
-    ofrece_modelo?}`; `tokens`: `{access, refresh, expira (segundos)}`. Reemplaza la que hubiera (sin revocarla).
+    ofrece_modelo?, ofrece_voz?}`; `tokens`: `{access, refresh, expira (segundos)}`. Reemplaza la que hubiera (sin
+    revocarla).
     Lanza `ValueError` si falta una de esas direcciones."""
     _escribir(db, cfg, {"_id": ID}, datos, tokens, quien, upsert=True)
 
@@ -806,7 +859,8 @@ async def volver(app: Any, quien: Any, *, sesion: str, state: str, code: str | N
         seguridad.llave_mnemo(cfg), p.get("verificador_cifrado"), _contexto_pendiente(p.get("state_h") or ""))))
     if atado is None:
         raise ErrorConexion("estado", MENSAJE_PENDIENTE)
-    if any(p.get(k) != atado[k] for k in ATADO_PENDIENTE):
+    if any(p.get(k) != atado[k] for k in ATADO_PENDIENTE) or any(p.get(k) != atado.get(k)
+                                                                for k in OPCIONALES_PENDIENTE):
         log.warning("Mnemo: el pendiente de la base no coincide con el cifrado; no se canjea nada")
         raise ErrorConexion("estado", MENSAJE_PENDIENTE)
     # De aquí en adelante, solo la copia cifrada: la de la base no está autenticada
@@ -836,7 +890,10 @@ async def volver(app: Any, quien: Any, *, sesion: str, state: str, code: str | N
              "endpoints": atado["endpoints"], "client_id": atado["client_id"], "redirect_uri": atado["redirect_uri"],
              "alcances": _alcances(tokens["scope"], atado["pedidos"]),
              "cuenta": _cuenta(tokens["id_token"], atado["emisor"], atado["client_id"]),
-             "ofrece_modelo": atado["ofrece_modelo"]}
+             "ofrece_modelo": atado["ofrece_modelo"],
+             # (un pendiente de un panel anterior no lo trae: no se pidió y la conexión queda sin la voz; no se sabe
+             # si ese Mnemo la ofrece, y la vista manda a volver a conectar, que lo averigua)
+             "ofrece_voz": atado.get("ofrece_voz") is not False}
     viejo = await _con_arriendo(db, lambda filtro: _escribir(db, cfg, filtro, datos, tokens, quien))
     otra = viejo.get("estado") in ESTADOS and not _misma_concesion(viejo, datos)
     if otra and viejo.get("cifrado"):
