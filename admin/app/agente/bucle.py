@@ -27,9 +27,11 @@ Cómo corre un turno (docs/agente.md):
 * La respuesta hablada (docs/agente.md, «La voz clonada de Mnemo»): si el mensaje lo pide (`contexto.voz`, o `voz` en
   una confirmación), la voz clonada está disponible para esa persona y lee respuestas (`voz.respuestas_para`) y la
   conversación no trae datos de habitantes, el turno arma las frases a medida que llega el texto (`voz.Frases`) y
-  emite cada una con su firma (`frase`), las descarta con la ronda (`frases_descartar`) y las rehace contra el texto
-  final (`texto_ronda`). Desde que el modelo recibe datos de una persona (`_anotar`), deja de emitirlas. Nada de esto
-  impide el turno: si algo falla, la respuesta sigue sin voz.
+  emite cada una con su firma (`frase`), las descarta con la ronda (`frases_descartar`, y al cerrar una ronda rehecha
+  dice dónde empieza la siguiente: `frases_ronda`) y las rehace contra el texto final (`texto_ronda`). Lo que repite
+  lo que escribió la persona no se firma (el eco: su mensaje y sus mensajes anteriores). Desde que el modelo recibe
+  datos de una persona (`_anotar`), deja de emitirlas. Nada de esto impide el turno: si algo falla, la respuesta sigue
+  sin voz.
 """
 from __future__ import annotations
 
@@ -1239,21 +1241,25 @@ async def _contar(db: Any, quien: Any, ajustes: dict) -> dict:
     return {"usados": usados, "maximo": maximo}
 
 
-async def _frases_para(app: Any, quien: Any, ajustes: dict, cid: int, conv: dict | None, pedida: bool):
+async def _frases_para(app: Any, quien: Any, ajustes: dict, cid: int, conv: dict | None, pedida: bool,
+                       texto: str = ""):
     """Las frases de la respuesta hablada de este turno (`voz.Frases`, firmadas para esta persona y esta conversación)
     si se pidió (`pedida`), la voz clonada está disponible para esa persona y lee respuestas, y la conversación no trae
-    datos de habitantes; si no, None. Nunca impide el turno."""
+    datos de habitantes; si no, None. Con el eco de lo que escribió la persona (`texto`, el mensaje nuevo, y sus
+    mensajes anteriores de la conversación): una frase que lo repite no se dice con la voz clonada. Nunca impide el
+    turno."""
     if not pedida or (conv or {}).get("personas"):
         return None
     try:
         if not await run_in_threadpool(voz_clonada.respuestas_para, app, quien, ajustes):
             return None
         llave = await run_in_threadpool(voz_clonada.llave_respuestas, app.state.cfg)
+        previos = await run_in_threadpool(conv_db.textos_de_la_persona, app.state.db, cid) if conv is not None else []
     except Exception as e:  # noqa: BLE001 - el turno sigue, sin voz
         log.warning("Asistente: no se pudo preparar la respuesta hablada (%s)", type(e).__name__)
         return None
     uid = quien.uid
-    return voz_clonada.Frases(lambda t: voz_clonada.firmar(llave, uid, cid, t))
+    return voz_clonada.Frases(lambda t: voz_clonada.firmar(llave, uid, cid, t), eco="\n".join([texto, *previos]))
 
 
 async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, contexto: Any) -> StreamingResponse:
@@ -1286,7 +1292,7 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
         turno = Turno(app=app, quien=quien, ajustes=ajustes, agente=agente, api=ApiInterna.desde_peticion(request),
                       conv=conv, cid=cid, titulo=titulo, turno=turno_id, limite=limite, proveedor=proveedor)
         turno.frases = await _frases_para(app, quien, ajustes, cid, conv,
-                                          isinstance(contexto, dict) and contexto.get("voz") is True)
+                                          isinstance(contexto, dict) and contexto.get("voz") is True, texto)
         turno.lanzar(lambda: turno.mensaje(texto, contexto))
     except BaseException:
         await _liberar(app, quien.uid, cid, turno_id)

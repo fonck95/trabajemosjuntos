@@ -10,7 +10,8 @@ ofrece la voz clonada, el turno trae frases firmadas (inventadas) y POST /api/ag
   firma}`, tal como llegó) y suena con Web Audio (fuentes agendadas, el mensaje marcado mientras suena); la frase que
   `frases_descartar` anuló no se dice y su versión nueva sí.
 * Escape calla la respuesta que se está leyendo sin cerrar el panel; apagar el botón hace que el mensaje siguiente no
-  pida la voz.
+  pida la voz. Si la voz de la ventana se apaga (el botón «Voz» de la presentación), el botón se ve apagado y el mensaje
+  tampoco la pide; un toque la vuelve a encender.
 * Sin errores de consola, sin respuestas de error del servidor y sin violaciones de la CSP del panel (el audio no usa
   `<audio>` ni `blob:`).
 """
@@ -46,6 +47,12 @@ def test_las_respuestas_se_oyen_con_la_voz_clonada(panel_vivo, cfg, tmp_path):  
     # Escape calla sin cerrar el panel
     assert d["escape"] == {"hablando": False, "abierto": True}, d["escape"]
     assert d["apagado"] == {"presionado": "false", "guardado": False}, d["apagado"]
+    # Con la voz de la ventana apagada (el botón «Voz» de la presentación), leer se ve apagado aunque la persona lo dejó
+    # encendido, y el mensaje no pide la voz; un toque la enciende y el siguiente sí
+    assert d["voz_apagada"] == {"presionado": "false", "guardado": True, "voz": "0"}, d["voz_apagada"]
+    assert "voz" not in m[3]["contexto"], m
+    assert d["reencendida"] == {"presionado": "true", "guardado": True, "voz": "1"}, d["reencendida"]
+    assert m[4]["contexto"]["voz"] is True, m
 
 
 GUION = r"""// Las respuestas habladas en Chromium. Uso: node <guion> <base del panel> <usuario> <clave> voz <capturas>
@@ -73,7 +80,13 @@ const TURNOS = [
     { tipo: 'fin', motivo: 'listo', limite: { usados: 5, maximo: 300 } }],
   [{ tipo: 'inicio', conversacion: 61, titulo: 'Puestos' }, { tipo: 'texto', texto: 'Esta ya no se lee.' },
     { tipo: 'fin', motivo: 'listo', limite: { usados: 6, maximo: 300 } }],
+  [{ tipo: 'inicio', conversacion: 61, titulo: 'Puestos' }, { tipo: 'texto', texto: 'Con la voz apagada.' },
+    { tipo: 'fin', motivo: 'listo', limite: { usados: 7, maximo: 300 } }],
+  [{ tipo: 'inicio', conversacion: 61, titulo: 'Puestos' }, { tipo: 'texto', texto: 'Con la voz encendida otra vez.' },
+    { tipo: 'fin', motivo: 'listo', limite: { usados: 8, maximo: 300 } }],
 ];
+const ultima = (t) => [...document.querySelectorAll('.agente-md')].pop()?.textContent === t
+  && document.querySelector('#agente-panel').dataset.estado === 'listo';
 // El audio de una frase: una onda de 220 Hz inventada, PCM de 16 bits a 24 kHz, en trozos de 200 ms (como Mnemo)
 function audio(segundos) {
   const n = Math.round(24000 * segundos);
@@ -176,6 +189,29 @@ function audio(segundos) {
     await page.press('#agente-texto', 'Enter');
     await page.waitForFunction(() => document.querySelector('#agente-panel').dataset.estado === 'listo'
       && [...document.querySelectorAll('.agente-md')].pop()?.textContent === 'Esta ya no se lee.', null, espera);
+
+    // 4. Encendido otra vez, pero la voz de la ventana se apaga (lo que hace el botón «Voz» de la presentación: es la
+    //    misma voz, la del módulo voz-panel.js de esta página): el botón se ve apagado y el mensaje no pide la voz. Un
+    //    toque la vuelve a encender y el siguiente sí la pide
+    await page.click('#agente-hablar');
+    await page.evaluate(async () => {
+      const url = performance.getEntriesByType('resource').map((e) => e.name).find((n) => /\/js\/voz-panel\.js/.test(n));
+      const v = (await import(url)).tomarVoz('prueba');
+      v.apagar();
+      v.soltar();
+    });
+    await page.waitForFunction(() => document.querySelector('#agente-hablar').getAttribute('aria-pressed') === 'false', null, espera);
+    d.voz_apagada = await page.evaluate(() => ({ presionado: document.querySelector('#agente-hablar').getAttribute('aria-pressed'),
+      guardado: JSON.parse(sessionStorage.getItem('yj_agente') || '{}').hablar ?? null, voz: localStorage.getItem('yj_voz') }));
+    await page.fill('#agente-texto', '¿Y en el casco urbano?');
+    await page.press('#agente-texto', 'Enter');
+    await page.waitForFunction(ultima, 'Con la voz apagada.', espera);
+    await page.click('#agente-hablar');
+    d.reencendida = await page.evaluate(() => ({ presionado: document.querySelector('#agente-hablar').getAttribute('aria-pressed'),
+      guardado: JSON.parse(sessionStorage.getItem('yj_agente') || '{}').hablar ?? null, voz: localStorage.getItem('yj_voz') }));
+    await page.fill('#agente-texto', 'Gracias otra vez.');
+    await page.press('#agente-texto', 'Enter');
+    await page.waitForFunction(ultima, 'Con la voz encendida otra vez.', espera);
     await ctx.close();
   } catch (e) {
     v.sin_excepcion = String(e.stack || e).slice(0, 1500);

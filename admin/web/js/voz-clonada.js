@@ -19,7 +19,8 @@
 //   del presentador. Si Mnemo no pudo dar PCM (`formato` mp3 o wav), se junta la frase entera y se decodifica de una
 //   vez (`decodeAudioData`).
 // * `decir(texto, {alEmpezar, ref, alFin})` resuelve 'dicha' (sonó entera), 'cortada' (`callar`, otra frase) o 'fallo'
-//   y nunca lanza, como voz.js. `alEmpezar` corre cuando el primer trozo suena de verdad (no cuando llega). Si en
+//   y nunca lanza, como voz.js. La petición sale solo con el audio de la ventana andando (si no arranca, la frase va
+//   con la voz del navegador sin pedir nada a Mnemo). `alEmpezar` corre cuando el primer trozo suena de verdad. Si en
 //   PRIMER_AUDIO_MS no hay audio sonando (la prueba de Ajustes espera PRIMER_AUDIO_PRUEBA_MS y nunca va con la voz del
 //   navegador: mide la voz clonada), o la petición falla antes de sonar, la frase se dice con `respaldo.decir` y
 //   resuelve lo que ese resuelva: el reproductor no se entera (la sala nunca queda muda por Mnemo). La petición de una
@@ -565,20 +566,25 @@ export function crearVozClonada({ ventana = globalThis, pedir = null, respaldo =
         respaldar();
         return;
       }
-      // La petición sale ya (también mientras el audio de la ventana arranca). Una que falló ya no está: se pide otra
-      const x = entrada(r);
-      enUso = x;
-      if (x.estado === 'esperando') hacerLugar();
-      bombear();
-      recortar();
       const empezar = () => {
         if (!vigente()) return;
         if (!corriendo()) {
-          if (x.tipo !== 'narracion') quitar(x);
+          // Sin el audio de la ventana no se pide nada: la frase la dice la voz del navegador, y lo pedido a Mnemo se
+          // pagaría sin oírse (Safari que no reanuda con el gesto de la presentación, un iPad «interrupted»). Lo de una
+          // respuesta que se había precargado tampoco se queda
+          const previa = entradas.get(claveDe(r));
+          if (previa && previa.tipo !== 'narracion') quitar(previa);
           try { alFin?.({ error: { codigo: 'sin_activar', mensaje: 'El audio de esta ventana no está activado: tóquela y vuelva a intentar.' } }); } catch { /* nada */ }
           respaldar();
           return;
         }
+        // La petición sale recién con el audio de la ventana andando (casi siempre ya anda; la primera frase o la
+        // prueba, en su clic, arranca en milisegundos). Una que falló ya no está: se pide otra
+        const x = entrada(r);
+        enUso = x;
+        if (x.estado === 'esperando') hacerLugar();
+        bombear();
+        recortar();
         sonar(x, a, { alEmpezar, alFin, fin, respaldar });
       };
       if (corriendo()) { empezar(); return; }
@@ -639,5 +645,8 @@ export function crearVozClonada({ ventana = globalThis, pedir = null, respaldo =
     estado, encender, apagar, activar, gesto, soltar, decir, callar,
     alCambiar(f) { oyentes.add(f); return () => oyentes.delete(f); },
     preparar, motor, nivel,
+    /** El estado de la voz del navegador sola: el de una frase que se dice sin `ref` (la vista quita la referencia del
+     * plan automático cuando la voz clonada no lo narra; si el navegador no tiene voces, no hay voz para ese plan). */
+    estadoNavegador: () => otra.estado(),
   };
 }

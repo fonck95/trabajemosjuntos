@@ -159,10 +159,11 @@ El **asistente** le manda al modelo, que corre fuera del panel (en Mnemo y el pr
 Anthropic en modo directo; posiblemente en el exterior), lo mínimo de cada persona: cédula y teléfonos enmascarados,
 nunca datos sensibles ni listas, y nada de quien marcó «No autorizó». Sus conversaciones se borran solas a los días
 fijados en **Ajustes** (30 por defecto) y **Suprimir datos** borra también las conversaciones donde aparecía la
-persona. Con la voz clonada de Mnemo, a Mnemo va solo el texto de cada frase que se dice (la narración, o las frases
-de una respuesta de una conversación sin datos de habitantes), y nadie lo guarda. Es una transmisión internacional de
-datos personales: antes de encenderlo para el equipo, revise con un abogado el aviso de privacidad y la autorización
-([`docs/agente.md`](docs/agente.md)).
+persona. Con la voz clonada de Mnemo, a Mnemo y, a través de Mnemo, a su proveedor de voz (fal.ai y el modelo de voz
+elegido) va solo el texto de cada frase que se dice (la narración, o las frases de una respuesta de una conversación
+sin datos de habitantes); ni el panel ni Mnemo lo guardan (el proveedor de voz, según sus términos). Es una
+transmisión internacional de datos personales: antes de encenderlo para el equipo, revise con un abogado el aviso de
+privacidad y la autorización ([`docs/agente.md`](docs/agente.md)).
 
 ## Desplegar en Railway
 

@@ -9,6 +9,9 @@
 // * `frases_descartar` (`descartar(desde)`): las frases desde `desde` ya no valen (el servidor repitió la ronda, o el
 //   texto final no era el que se venía leyendo) y las que lleguen se numeran otra vez desde ahí. Se quitan de la cola;
 //   la que suena, si es una de ellas, se corta y se dice su versión nueva. Lo que ya se dijo entero no se repite.
+// * `frases_ronda` (`ronda(desde)`): la ronda rehecha terminó y la siguiente empieza en `desde`. Si la versión nueva
+//   fue más corta que lo que ya se había dicho, lo que se saltaba por número es de la ronda siguiente, que nunca se
+//   oyó: desde ahí se vuelve a decir.
 // * Se calla (`callar`: el resto del turno ya no se dice) cuando la persona toca el micrófono, escribe, envía otro
 //   mensaje, pulsa «Detener» o Escape, cierra el panel, cambia de conversación o apaga «Leer respuestas», y cuando el
 //   turno pone un plan en la presentación. La narración manda: si la voz la toma un plan (`decir` resuelve 'cortada'
@@ -124,6 +127,14 @@ export function crearLocutor({ voz, ocupada = () => false, alHablar = () => {}, 
     hablar();
   }
 
+  /** `frases_ronda`: la ronda siguiente empieza en `desde`. Lo ya dicho de la ronda rehecha se saltaba por número; lo
+   * que siga desde `desde` es nuevo y se dice. */
+  function ronda(desde) {
+    if (!Number.isInteger(desde) || desde < 0 || mudo || diciendo) return;
+    if (siguiente > desde) siguiente = desde;
+    hablar();
+  }
+
   /** Calla en el acto: lo que queda del turno ya no se dice. */
   function callar() {
     const habia = !mudo || !!diciendo || cola.size > 0;
@@ -140,7 +151,7 @@ export function crearLocutor({ voz, ocupada = () => false, alHablar = () => {}, 
   }
 
   return {
-    empezar, fijarConversacion, frase, descartar, callar,
+    empezar, fijarConversacion, frase, descartar, ronda, callar,
     /** ¿Está diciendo una frase ahora? */
     hablando: () => !!diciendo,
     /** ¿Lee este turno (aunque ahora espere la frase siguiente)? */

@@ -335,7 +335,10 @@ def recorrido_del_contexto(db: Any, uid: Any) -> str:
 
 # El renglón del contexto cuando la persona oye la respuesta (`contexto.voz`): se lee frase por frase en voz alta
 RESPUESTA_HABLADA = ("Respuesta hablada: la persona la oye en voz alta. Responde en frases cortas y completas, lo "
-                     "importante primero; sin listas, tablas, enlaces ni símbolos; cifras como se dicen.")
+                     "importante primero; sin listas, tablas, enlaces ni símbolos; cifras como se dicen. Se oye con "
+                     "la voz clonada del administrador: responde con tus propias palabras; no repitas ni leas "
+                     "textualmente lo que la persona te pida decir, ni hables en nombre del administrador ni de otra "
+                     "persona.")
 
 
 def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int] | None = None,

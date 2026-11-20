@@ -425,7 +425,10 @@ export async function vistaPresentacion(el, { q } = {}) {
   // El plan de la presentación automática va con la voz del navegador si la voz clonada no la narra (`automatica` en
   // Ajustes): sin la referencia de la frase, la voz no la pide a Mnemo
   const sinClonada = () => rep.recorrido()?.auto === true && !infoVoz().automatica;
+  // Y su estado es el de la voz del navegador: sin voces en español, el reproductor lee en silencio (sin «la voz no
+  // pudo hablar» en cada frase) y el avance dice 'sin_voces'
   const vozConBoca = { ...voz,
+    estado: () => (sinClonada() ? voz.estadoNavegador() : voz.estado()),
     decir: (texto, o = {}) => voz.decir(texto, { ...o, ...(sinClonada() ? { ref: null } : {}), alEmpezar: () => { boca(true); o.alEmpezar?.(); } })
       .then((r) => { boca(false); return r; }),
     preparar: (items) => { if (!sinClonada()) voz.preparar(items); } };
@@ -436,6 +439,7 @@ export async function vistaPresentacion(el, { q } = {}) {
       pintarEstado();
       if (!(seFue && pr.rid === ridAuto)) enviarAvance(pr);
       if (TERMINALES.includes(pr.fase)) { try { alTerminarRecorrido?.(pr); } catch { /* nada */ } }
+      pintarVoz();   // el plan automático sin la voz clonada habla con la del navegador: el botón dice la suya
     },
   });
   limpiezas.push(() => { seFue = true; rep.detener('otra_orden'); voz.callar(); });
@@ -443,7 +447,7 @@ export async function vistaPresentacion(el, { q } = {}) {
   const botonesVoz = [...el.querySelectorAll('.pres-voz')];
   for (const b of botonesVoz) b.dataset.titulo = b.title;
   const pintarVoz = () => {
-    const e = voz.estado();
+    const e = vozConBoca.estado();
     // con la voz clonada, su título lo dice (y que es una voz sintética)
     const clonada = voz.motor() === 'clonada';
     const nombre = infoVoz().nombre;
@@ -462,8 +466,8 @@ export async function vistaPresentacion(el, { q } = {}) {
   // El botón «Voz» y el interruptor de la tarjeta del chat (por el puente) hacen lo mismo: la encienden (el clic es el
   // gesto que la deja hablar) o la apagan. Devuelve cómo quedó
   const alternarVoz = () => {
-    if (voz.estado() === 'activa') voz.apagar(); else voz.encender();
-    return voz.estado();
+    if (vozConBoca.estado() === 'activa') voz.apagar(); else voz.encender();
+    return vozConBoca.estado();
   };
   for (const b of botonesVoz) b.addEventListener('click', alternarVoz);
   // La pantalla en off no se registra como presentación en el puente: su voz sí, para el interruptor de la tarjeta del
