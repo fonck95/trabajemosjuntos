@@ -13,7 +13,8 @@ llama con `run_in_threadpool`.
   conversación tomada más de un minuto y medio).
 * `agente_mensajes`: un documento por mensaje, con `seq` creciente; nunca se edita lo guardado (append-only). Los
   bloques van como texto JSON (`contenido`): vuelven idénticos al reenviarlos y aceptan cualquier clave que escriba el
-  modelo (también «$x» o «a.b»). `replay` dice si el mensaje se le reenvía al modelo (un rechazo o un aviso, no).
+  modelo (también «$x» o «a.b»). `replay` dice si el mensaje se le reenvía al modelo (un rechazo o un aviso, no). La
+  respuesta inmediata de un turno (`adelanto.py`) es un mensaje `adelanto` con su `texto`, que nunca se reenvía.
 * `agente_uso`: mensajes, tokens y (con Mnemo) créditos por persona y día (hora de Colombia), para el tope diario y
   para ver el gasto.
 * `agente_olvidos`: quién dejó de autorizar en la última hora (`persona_id` y `ts`, nada más; lo anota
@@ -277,10 +278,11 @@ def mensajes_de(db: Database, cid: int) -> list[dict]:
 
 def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> dict:
     """La conversación como la pinta el widget: `mensajes` de la persona (su texto, sin el contexto del panel) y del
-    asistente (partes: texto, notas de progreso, herramientas con su estado y avisos), lo que espera aprobación (con
-    `vieja` si su tarjeta la guardó una versión anterior del panel, que no mostraba los valores enteros) y su
-    `proveedor`. Las notas de progreso son los `thinking` de Anthropic (con `display: "updates"`); los de Mnemo son
-    resúmenes del razonamiento del modelo y no se muestran."""
+    asistente (partes: texto, notas de progreso, herramientas con su estado y avisos; y, la primera, la respuesta
+    inmediata del turno, `{"tipo": "adelanto", "texto"}`, aunque se haya guardado después de otras), lo que espera
+    aprobación (con `vieja` si su tarjeta la guardó una versión anterior del panel, que no mostraba los valores enteros)
+    y su `proveedor`. Las notas de progreso son los `thinking` de Anthropic (con `display: "updates"`); los de Mnemo
+    son resúmenes del razonamiento del modelo y no se muestran."""
     proveedor = proveedor_de(conv)
     notas = proveedor == "anthropic"
     mensajes: list[dict] = []
@@ -326,6 +328,10 @@ def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> di
                     del_asistente().append(p)
         elif rol == "aviso":
             del_asistente().append({"tipo": "aviso", "texto": d.get("texto") or "", "nivel": d.get("nivel") or "info"})
+        elif rol == "adelanto" and isinstance(d.get("texto"), str) and d["texto"]:
+            # La respuesta inmediata del turno va arriba de su respuesta: se guarda cuando termina, que puede ser
+            # después de alguna ronda (el mensaje de la persona que abrió el turno ya dejó `actual` en None)
+            del_asistente().insert(0, {"tipo": "adelanto", "texto": d["texto"]})
     pendientes = []
     pend = pendiente_de(conv)
     if pend is not None:

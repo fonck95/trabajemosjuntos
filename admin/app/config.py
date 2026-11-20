@@ -4,11 +4,13 @@
 * `MONGODB_URI`: conexión a MongoDB (la del plugin de Railway o de Atlas). `MONGODB_DB` opcional; si la URI no trae
   base de datos se usa `panel_yondo`. En Railway es obligatoria; en local se usa un MongoDB en 127.0.0.1.
 * El asistente (`app/agente`, `docs/agente.md`): `ANTHROPIC_API_KEY` (opcional: el «modo directo», sin Mnemo),
-  `AGENTE_MODELO` y `AGENTE_ESFUERZO`. La conexión con Mnemo no es una variable: el administrador la hace desde
-  Ajustes → Asistente con OAuth (`agente/mnemo_conexion.py`), y los tokens quedan cifrados en la base. `MNEMO_MCP_URL`
-  (opcional) es solo la dirección que se le sugiere ahí; `MNEMO_MODELO` (opcional) elige el modelo de la cuenta de
-  Mnemo (`principal`, `ligero` o `<proveedor>/<modelo>`; vacía, el de la cuenta) y `MNEMO_HERRAMIENTAS` acota qué
-  herramientas de Mnemo se ofrecen (lista separada por comas, o `*` para todas las que permita la conexión).
+  `AGENTE_MODELO`, `AGENTE_ESFUERZO` y `AGENTE_MODELO_ADELANTO` (opcional: el modelo de la respuesta inmediata en el
+  modo directo, uno rápido como `claude-haiku-5-5`; vacía, el de `AGENTE_MODELO`). La conexión con Mnemo no es una
+  variable: el administrador la hace desde Ajustes → Asistente con OAuth (`agente/mnemo_conexion.py`), y los tokens
+  quedan cifrados en la base. `MNEMO_MCP_URL` (opcional) es solo la dirección que se le sugiere ahí; `MNEMO_MODELO`
+  (opcional) elige el modelo de la cuenta de Mnemo (`principal`, `ligero` o `<proveedor>/<modelo>`; vacía, el de la
+  cuenta) y `MNEMO_HERRAMIENTAS` acota qué herramientas de Mnemo se ofrecen (lista separada por comas, o `*` para
+  todas las que permita la conexión).
   `MNEMO_TOKEN` ya no se usa: si está definida se ignora con un aviso en el registro.
 * `SITIO_URL` (opcional): la dirección https:// del sitio público cuando el panel se despliega aparte (Root Directory =
   admin). La vista Presentación muestra de ahí la propuesta 2028–2031 en un iframe, y la CSP del panel lo permite
@@ -99,6 +101,8 @@ class Config:
     anthropic_api_key: str = field(default="", repr=False)
     agente_modelo: str = MODELO_AGENTE
     agente_esfuerzo: str = "medium"
+    # La respuesta inmediata del modo directo (`agente/adelanto.py`): «» es la de `agente_modelo`
+    agente_modelo_adelanto: str = ""
     # Mnemo: la dirección MCP que se sugiere al conectar en Ajustes (la conexión, con sus tokens, vive en la base)
     mnemo_url: str = ""
     mnemo_herramientas: str = ""
@@ -200,6 +204,7 @@ def cargar() -> Config:
         anthropic_api_key=_primera("ANTHROPIC_API_KEY").strip(),
         agente_modelo=_primera("AGENTE_MODELO").strip() or MODELO_AGENTE,
         agente_esfuerzo=esfuerzo,
+        agente_modelo_adelanto=_primera("AGENTE_MODELO_ADELANTO").strip(),
         mnemo_url=_url_mnemo(_primera("MNEMO_MCP_URL")),
         mnemo_herramientas=_primera("MNEMO_HERRAMIENTAS").strip(),
         mnemo_modelo=_modelo_mnemo(_primera("MNEMO_MODELO")),

@@ -161,6 +161,8 @@ class AjustesIn(BaseModel):
     agente: Agente | None = None
     agente_mensajes_diarios: MensajesAgente | None = None
     agente_voz: VozAgente | None = None
+    # La respuesta inmediata del asistente (docs/agente.md): de permisos (gasta del modelo) y estricta, como `agente`
+    agente_adelanto: StrictBool | None = None
 
     @field_validator("eleccion_vigente")
     @classmethod

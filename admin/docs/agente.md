@@ -152,7 +152,8 @@ y sigue igual.
   ven; sí un periodo («2028-2031», «2028–2031», «2028/2031»), una fecha que existe («15/11/2026», «2026-11-15») y un
   rango de cifras de menor a mayor («1.346–1.500 kWh»). «Siguiente» y «anterior» siguen desde el paso que dice el
   contexto. La barra de la vista muestra el capítulo y el paso, avanza y retrocede, pone la
-  presentación a **Pantalla completa** y la **Abre en otra pantalla**: una ventana del panel
+  presentación a **Pantalla completa** (con el asistente a la vista: ver
+  [Pantalla completa en la pestaña](#pantalla-completa-en-la-pestaña)) y la **Abre en otra pantalla**: una ventana del panel
   (`/presentacion?pantalla=1`) sin menú, para el proyector, que arranca en el capítulo, el paso y con la
   explicación de la pestaña del chat (el asistente también se abre ahí: ver
   [El asistente en la misma ventana](#el-asistente-en-la-misma-ventana)). Mientras esa ventana está abierta, manda ella: el asistente (y los botones de la
@@ -271,6 +272,12 @@ de la voz): las respuestas se oyen con esa voz mientras el modelo escribe.
   y se dice en su versión nueva; lo que ya se dijo entero no se repite (y si la versión nueva fue más corta, el
   servidor dice dónde empieza la ronda siguiente, `frases_ronda`, para que esa sí se oiga entera). Una conversación con
   datos de habitantes no se lee (el servidor no manda frases), ni una frase que repite lo que escribió la persona.
+- **La sala oye.** Con una presentación abierta en esa ventana (la pestaña del chat, el proyector o la pantalla en
+  off) o un proyector que maneja la pestaña, y su botón **Voz** encendido, el mensaje pide que se diga la
+  [respuesta inmediata](#la-respuesta-inmediata) aunque este botón esté apagado (`contexto.voz_adelanto`): la sala
+  está escuchando. Solo ella: la respuesta sigue escrita (sin frases ni el estilo hablado) y no gasta la voz clonada;
+  para oírla también, este botón. El botón no se marca mientras suena lo de la sala (no es suyo). Aprobar una tarjeta
+  no trae respuesta inmediata: para la sala no pide nada.
 - **Se calla** al tocar el micrófono (en el acto, antes de pedir el permiso: la respuesta no entra a la grabación), al
   escribir en el cuadro, al enviar otro mensaje, con **Detener**, con **Escape** (la primera vez calla la voz; la
   segunda cierra el panel), al cerrar el panel, al cambiar o empezar otra conversación, al salir de la página y al
@@ -278,10 +285,92 @@ de la voz): las respuestas se oyen con esa voz mientras el modelo escribe.
   plan en esa ventana o en el proyector (uno que no está en pausa), la respuesta espera hasta 20 s a que se pause:
   quien escribe en medio de un plan lo pausa al terminar la frase que suena (y quien pregunta por voz, en el acto), y
   entonces la respuesta se oye; si el plan sigue sonando, no se lee. Un plan que empieza (o sigue) calla la que se
-  estaba leyendo (es la misma voz: `web/js/voz-panel.js`, una sola salida de audio por ventana).
+  estaba leyendo (es la misma voz: `web/js/voz-panel.js`, una sola salida de audio por ventana). La excepción es la
+  [respuesta inmediata](#la-respuesta-inmediata) que suena cuando llega un plan nuevo a esa ventana: el plan la espera.
+  En el celular, el panel que se pliega para mostrar la vista calla la respuesta pero deja terminar la inmediata. Lo
+  que se lee para la sala (ver «La sala oye») tampoco se calla al cerrar el panel: se cierra para ver la presentación
+  entera y la sala la oye hasta el final (para callarla, **Escape** mientras suena, **Detener** o el micrófono).
 - **Respaldo.** Si una frase no llega a tiempo con la voz clonada, se dice con la del navegador; si el panel responde
   que esa voz ya no está disponible (`sin_voz`, `voz_rol`), el resto de la sesión habla la del navegador y el asistente
   vuelve a leer su estado (el botón se va si el servidor ya no la ofrece).
+
+### La respuesta inmediata
+
+Preparar la respuesta completa toma tiempo: el modelo razona antes de escribir y, si arma un plan para la
+presentación, escribirlo entero toma más. Para que nadie espere en silencio, con **Respuesta inmediata** encendido en
+**Ajustes → Asistente** (`agente_adelanto`, encendido por defecto) cada pregunta recibe primero una respuesta corta, de
+una a tres frases: reconoce la pregunta, da la idea general sin cifras ni datos que no estén ya en la conversación y
+dice que el detalle viene enseguida («enseguida se lo muestro en la presentación», si hay una abierta y la pregunta
+pide mostrar algo de la propuesta; si no, «enseguida le doy el detalle»). Va arriba de la respuesta de ese turno, y la
+respuesta completa (o el plan) llega después, como siempre.
+
+- **Cómo funciona.** Es otra petición al mismo modelo (`app/agente/adelanto.py`), a la par con la primera ronda de la
+  respuesta completa, que no la espera: con sus propias instrucciones fijas (`sistema.SISTEMA_ADELANTO`), sin
+  herramientas, sin razonar (o lo mínimo, con el esfuerzo `low`, si el modelo no deja apagarlo, como Claude Opus 5.5) y
+  con un tope corto de tokens. Lee los últimos 8 mensajes de la conversación en texto plano (lo que escribió la persona
+  y lo que respondió el asistente; sin herramientas, resultados, imágenes ni razonamiento) y el mensaje nuevo con el
+  contexto de la vista. Con Mnemo va por `mnemo_model_complete` con `reasoning: "off"` y el mismo modelo; en modo
+  directo, con el modelo de `AGENTE_MODELO_ADELANTO` si se eligió uno más rápido (por ejemplo `claude-haiku-5-5`), o
+  con el del asistente.
+- **Cuándo no aparece.** Si el mensaje es un saludo, una orden simple («siguiente», «pausa», «pantalla completa»…),
+  una aprobación o algo que se responde en una frase, el modelo contesta solo «—» y no se muestra nada. Si la
+  respuesta completa empieza a escribirse antes de que la inmediata muestre algo, la inmediata se cancela: no hace
+  falta. Lo que ya empezó a mostrarse sigue hasta el final, como mucho 20 segundos (si se corta, termina en «…»), y el
+  turno la espera antes de terminar. Aprobar o rechazar tarjetas nunca la pide. Si falla, no se ve nada, la respuesta
+  completa sigue igual y al registro va solo el tipo del error.
+- **Lo que muestra** va en texto plano (sin Markdown), palabra por palabra y como mucho 420 caracteres, cortados en el
+  final de una frase. El modelo de la respuesta completa sabe que puede haber una (un renglón del contexto de la vista,
+  `sistema.ADELANTO_EN_CURSO`, no de sus instrucciones fijas): no vuelve a saludar ni repite la idea general, salvo en
+  lo que no lleva respuesta inmediata (un saludo, una orden simple, una aprobación, algo de una frase), donde responde
+  como siempre (a un saludo, saluda).
+- **Hablada.** Si el mensaje pidió la respuesta hablada (`contexto.voz`) o solo la inmediata hablada
+  (`contexto.voz_adelanto`, la sala que oye una presentación: ver «Cuándo se oye»), sus frases llegan aparte (el evento
+  `adelanto_frase`, numerado desde 0 aparte de `frase`) y firmadas igual, así que `POST /api/agente/voz` las acepta
+  como las de la respuesta; las mismas reglas: nada en una conversación con datos de habitantes, ni lo que repite lo
+  que escribió la persona, ni lo que no se dice ante una sala. Salen también sin la voz clonada: entonces las dice la
+  voz del navegador.
+- **En el chat** (`web/js/agente.js`). Aparece en cuanto llega su primer trozo, en un recuadro discreto arriba de la
+  respuesta del turno (después de «Asistente:», antes de todo lo demás), con la etiqueta **Respuesta inmediata ·
+  preparando el detalle…** mientras el turno sigue y **Respuesta inmediata** cuando termina. Entra como texto, nunca
+  como HTML. Si termina sin mostrar nada (`vacio`), no queda nada. Al reabrir la conversación aparece igual, arriba de
+  su respuesta (la parte `adelanto` del historial). Para los lectores de pantalla: la conversación está ocupada
+  (`aria-busy`) mientras dura el turno y lo de adentro no se anuncia hasta que termina, así que la inmediata que no se
+  dice en voz alta se anuncia una vez, en cuanto termina, en una región aparte (`#agente-adelanto-vivo`, fuera de la
+  conversación); «· preparando el detalle…» va escondido para ellos, así la etiqueta no se vuelve a anunciar.
+- **Cuándo se oye.** Como la [respuesta hablada](#respuestas-habladas): con **Leer las respuestas en voz alta**
+  encendido o si la pregunta llegó por voz. Y además cuando la sala está oyendo: una presentación abierta en esa ventana
+  (la pestaña del chat, el proyector o la pantalla en off) o un proyector que maneja la pestaña, con su botón **Voz**
+  encendido. Entonces, si el botón del chat está apagado o no hay voz clonada, el mensaje pide solo la voz de la
+  inmediata (`contexto.voz_adelanto`, aparte de `contexto.voz`): el servidor manda sus `adelanto_frase` y ninguna
+  `frase` de la respuesta, que sigue escrita y no se lee (tampoco con la voz clonada; para oírla, **Leer las
+  respuestas**).
+  Sin la voz clonada que lee las respuestas, la inmediata se dice con la voz del navegador (sus frases van sin
+  referencia: no se le pide nada a Mnemo); con ella, con la voz clonada. Aprobar tarjetas no la trae, así que para la
+  sala no pide nada. Una pantalla en off de otro equipo no cuenta: la voz suena en la ventana del chat.
+- **Va primero** (`web/js/locutor.js`). Sus frases tienen su propia cola: las de la respuesta que llegan mientras
+  suena esperan a que se diga entera y termine (`adelanto_fin`; con `vacio`, siguen en el acto). El servidor manda ese
+  `vacio` antes del primer texto de la respuesta si la inmediata no alcanzó a mostrar nada, así que sin ella la
+  respuesta no espera. Si no se sabe nada de la inmediata en 8 s (no llega ni suena nada suyo), la respuesta deja de
+  esperarla y lo que llegue tarde no se dice. Lo que calla la respuesta calla las dos: el micrófono, escribir,
+  **Detener**, **Escape**, cerrar el panel (salvo lo que se lee para la sala, que termina: se cierra el chat para ver
+  la presentación), otra conversación.
+- **El plan la espera.** Si el turno pone un plan en la presentación de esa ventana mientras suena la inmediata, la
+  respuesta se calla como siempre, pero la inmediata termina: la espera de 1,8 s antes del primer paso del plan se
+  alarga hasta que termine, como mucho 15 s desde que llegó el plan (`ESPERA_ADELANTO_MS` de
+  `web/js/reproductor.js`; una pausa no cuenta y **Siguiente** empieza ya). Mientras espera, el plan le cede la voz de
+  la ventana (`web/js/voz-panel.js`: sus frases no lo esperan y su primera precarga no las calla); después de esa
+  espera, la narración manda como siempre. Con un proyector abierto, o con un plan para la pantalla en off de otra
+  ventana u otro equipo (allá no la pueden esperar), el plan la calla. La sala oye la idea general entera y después el
+  plan.
+- **Se guarda** con el turno (un mensaje `adelanto` de la conversación, que nunca se le reenvía al modelo y cuenta en
+  su tope de 400 mensajes) y se ve al reabrir la conversación, arriba de la respuesta de su turno.
+- **Costo.** Una llamada corta más al modelo por pregunta (ver [Límites y costos](#límites-y-costos)); no cuenta en el
+  tope de mensajes por día. Se apaga en **Ajustes → Asistente** con la casilla **Respuesta inmediata** (del
+  formulario del asistente: solo el administrador la cambia; el coordinador la ve en solo lectura).
+- **Con Mnemo, solo si sobra.** Mnemo deja pocas llamadas al modelo a la vez para todo el panel, así que la respuesta
+  inmediata va solo cuando el proceso no está atendiendo el turno de otra persona ni transcribiendo un dictado, y una a
+  la vez (`adelanto.tomar_mnemo`): nunca le quita el cupo a una respuesta. Si no va, el modelo de la respuesta completa
+  tampoco recibe el renglón que la anuncia. En modo directo va siempre.
 
 ## La presentación técnica
 
@@ -338,6 +427,35 @@ maqueta 3D del territorio real, con lo que se agrega para presentar cada detalle
   capítulo lleva su mismo id). build_propuesta.py lo copia a `web/data/propuesta.json` y lo revisa; la presentación lo
   lee de ahí y el guion del asistente (`app/agente/guion.py`) solo se queda con los ids y los nombres: el modelo conoce
   «la torre» y «su cubierta», no capas ni nodos. Se piden por id o por nombre (sin tildes ni mayúsculas).
+
+### Pantalla completa en la pestaña
+
+**Pantalla completa** en la barra de la vista hace que la presentación ocupe toda la pantalla, sin el menú ni las barras
+del panel (ni la franja «Llamada sin registrar», que sigue pendiente y vuelve al salir), y el asistente sigue a la vista
+y a mano. Antes la pantalla completa del navegador era solo la del marco de la presentación y el asistente quedaba
+fuera; ahora el navegador la da con la página entera, y si no la da (el iPhone, un permiso) la presentación llena igual
+la ventana.
+
+- **Dónde va el asistente.** Su botón flota abajo a la izquierda (arriba a la derecha están las herramientas de la
+  presentación y abajo al centro su control) y, a su lado, **Salir de pantalla completa**; en el celular, los dos en la
+  barra de arriba de la presentación, junto a su marca. Tras 3 segundos sin mover el ratón ni tocar se atenúan, como en
+  el proyector, y vuelven al moverlo o tocar.
+- **El celular de lado.** Ahí la barra de la vista no se ve (le quitaba alto a la presentación) y el botón de pantalla
+  completa de la presentación tampoco: **Pantalla completa** pasa a la barra de arriba del panel, como un ícono a la
+  izquierda del botón del asistente. Un toque saca esa barra y la presentación ocupa toda la pantalla.
+- **Abierto.** En escritorio es una columna a la derecha sobre el fondo negro de la presentación, que le deja su ancho,
+  con «Salir de pantalla completa» encima; en el celular se superpone. Escribir, preguntar por voz y oír las respuestas
+  y el plan narrado siguen igual.
+- **Salir.** Con ese botón, saliendo de la del navegador o con Escape. Con la pantalla completa del navegador, Escape es
+  del navegador y sale de una vez, aunque el chat esté abierto (la página no lo ve). Sin ella (llena por la orden del
+  asistente, o porque el navegador no la dio), con el chat abierto el primer Escape es del chat (calla lo que se lee o
+  lo cierra), también con el foco en la presentación, y el siguiente sale. El botón de pantalla completa de la propia
+  presentación y su tecla F hacen lo mismo que el de la barra, o salen; si el navegador no la dio, salen en vez de
+  pedirla otra vez. La F no hace nada con las fichas de la presentación abiertas (ahí ella tampoco la usa). Todo esto
+  con el panel y el sitio en el mismo servidor; con el sitio aparte, su botón pone a pantalla completa solo el marco,
+  como antes.
+- **El asistente.** «Ponla en pantalla completa» llena la ventana igual; la pantalla completa del navegador, solo si la
+  persona acaba de tocar la pantalla (sin eso el navegador la rechaza), y «quita la pantalla completa» sale de las dos.
 
 ### Las simulaciones del atlas
 
@@ -476,12 +594,13 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
   la lectura de cada frase, lo que se sostiene, el cierre) no pasa de 5 minutos.
 - **Quién lleva el reloj.** Lo reproduce el panel (`web/js/reproductor.js`), no el modelo: en la pestaña del chat, en
   la ventana del proyector o en la pantalla en off, donde mire la sala. Un plan nuevo espera 1,8 segundos antes del
-  primer paso (el chat muestra el plan entero: «Plan listo: empieza enseguida»). Por cada paso manda a la presentación
-  la orden `escena` con lo que durará su narración: la presentación cambia de paso sin telón, pinta la narración,
-  empieza a mover la cámara y las piezas y responde enseguida. Después de un respiro, cada frase se ilumina en el
-  subtítulo cuando empieza a sonar (o cuando aparece, sin voz) y se queda su tiempo de lectura; después la imagen se
-  sostiene un momento (1,3 segundos; 2,7 si hay algo que mirar). El subtítulo dice el título del plan y en qué paso va
-  (puntos, sin números).
+  primer paso (el chat muestra el plan entero: «Plan listo: empieza enseguida»), y más si en esa ventana suena la
+  [respuesta inmediata](#la-respuesta-inmediata): hasta que termine, como mucho 15 segundos. Por cada paso manda a la
+  presentación la orden `escena` con lo que durará su narración: la presentación cambia de paso sin telón, pinta la
+  narración, empieza a mover la cámara y las piezas y responde enseguida. Después de un respiro, cada frase se ilumina
+  en el subtítulo cuando empieza a sonar (o cuando aparece, sin voz) y se queda su tiempo de lectura; después la imagen
+  se sostiene un momento (1,3 segundos; 2,7 si hay algo que mirar). El subtítulo dice el título del plan y en qué paso
+  va (puntos, sin números).
 - **La voz.** La del navegador (Web Speech, `web/js/voz.js`), en español (es-CO primero; después es-419, es-MX, es-US,
   es-ES), con las siglas y unidades dichas como se leen (NSR-10, m², «24 h»); o, si el administrador la eligió y el
   rol de la persona la usa, la [voz clonada de Mnemo](#la-voz-clonada-de-mnemo) (`web/js/voz-clonada.js`): pide cada
@@ -610,8 +729,11 @@ ventana para ver el plan.
 
 - **Cerrado por omisión.** La ventana abre como siempre, con la presentación entera; solo se ve el botón del
   asistente. En la pantalla en off va en su barra de arriba, a la derecha (como en la vista normal). En el proyector,
-  que no tiene barra, y en la pantalla en off cuando llena la ventana, flota arriba a la derecha: tras 3 segundos sin
-  mover el ratón ni tocar se atenúa para no distraer a la sala, y vuelve a verse al mover el ratón o tocar.
+  que no tiene barra, flota abajo a la izquierda (arriba a la derecha están las herramientas de la presentación), con
+  los botones de la ventana a su lado; en la pantalla en off cuando llena la ventana, arriba a la derecha (ahí la
+  presentación no tiene herramientas). Tras 3 segundos sin mover el ratón ni tocar se atenúa para no distraer a la
+  sala, y vuelve a verse al mover el ratón o tocar. La pestaña del chat a pantalla completa hace lo mismo: ver
+  [Pantalla completa en la pestaña](#pantalla-completa-en-la-pestaña).
 - **Abierto.** En escritorio (desde 901 px) la presentación le deja libre su ancho, como en la vista normal: nada queda
   tapado y la maqueta 3D se reencuadra sola. En el celular se superpone, como siempre. Se cierra con su botón o con
   Escape (salvo mientras graba una pregunta por voz: ahí Escape cancela la grabación).
@@ -830,7 +952,10 @@ nunca queda muda.
   `nivel`, y la del navegador es su respaldo de cada frase. La narración manda: mientras suena un plan (que no está en
   pausa), una respuesta no se dice, y un plan que empieza calla la que se estaba leyendo: cada frase de la narración
   (y la prueba de Ajustes) suelta lo pedido de la respuesta, la frase que sonaba y la precargada, y corta sus
-  peticiones (no se pagan sin oírse ni le quitan el lugar a la precarga de la narración).
+  peticiones (no se pagan sin oírse ni le quitan el lugar a la precarga de la narración). La excepción es la
+  [respuesta inmediata](#la-respuesta-inmediata): el locutor marca mientras suena (`marcarAdelanto`), el plan nuevo la
+  espera (`adelantoSonando`) y, en esa espera, le cede el turno (`ceder`): sus frases (las que llegan con `adelanto:
+  true`) no esperan a ese plan y su primera precarga no las calla.
 - **Solo si el estado lo ofrece.** El audio se pide recién cuando `GET /api/agente/estado` dice `voz.disponible` para
   esa persona (el asistente lo pasa al leer su estado; en una ventana sin asistente, la voz lo pide sola y lo vuelve a
   pedir con el aviso `agente:estado` de Ajustes). Si no, ni se crea el audio de la ventana ni se pide nada: habla la del
@@ -906,6 +1031,7 @@ desplegar.
 | Los coordinadores también usan las herramientas de Mnemo (`agente.mnemo_coordinadores`) | No | Si los coordinadores usan las herramientas de Mnemo (documentos, calendario, formularios y memoria), con la cuenta de Mnemo del administrador. Los modelos los usan todos los roles habilitados |
 | Días que se guardan las conversaciones (`agente.retencion_dias`) | 30 | De 1 a 365, contados desde el último mensaje. Bajarlo acorta también las que ya existen |
 | Mensajes por día (`agente_mensajes_diarios`) | 300 administrador, 150 coordinador, 40 planillero, 40 consultor | Mensajes por persona y día, de 1 a 5000 (cada aprobación o rechazo de tarjetas cuenta como uno). Para que un rol no lo use se lo quita de «Quiénes lo usan» |
+| Respuesta inmediata (`agente_adelanto`) | Sí | Si cada pregunta recibe primero una respuesta corta, de una a tres frases, mientras se prepara la completa o la presentación (ver [La respuesta inmediata](#la-respuesta-inmediata)). Es una llamada corta más al modelo por pregunta: apagada, el asistente responde solo con la completa |
 | Voz del asistente (`agente_voz`) | La del navegador; la clonada, para administrador y coordinadores, con respuestas y presentación automática | La voz con que narra la presentación y lee las respuestas: la del navegador o una voz clonada de la cuenta de Mnemo conectada, quién la hace sonar y para qué (ver [La voz clonada de Mnemo](#la-voz-clonada-de-mnemo)). Es el bloque **Voz del asistente**, marcado **Voz sintética**: la lista de voces solo se le pide a Mnemo para el administrador y con una conexión que tenga `mnemo:voice` (si no la tiene, el bloque dice que hay que volver a conectar dejando marcado «Hablar con las voces que clonaste en Mnemo…», o que ese Mnemo todavía no ofrece sus voces); el coordinador ve la voz elegida en solo lectura. **Probar voz** dice una frase fija con la voz guardada y muestra cuánto tardó la primera palabra |
 
 Un planillero o consultor habilitado usa el asistente con lo mismo que tiene en el panel: su alcance, su presupuesto
@@ -1077,6 +1203,9 @@ proyección por rol de la API (`app/agente/minimizar.py`).
   y las direcciones quedan como están («07 / 11 / 2026», «2018 - 2022», «calle 50 # 48 - 21»). Indicadores agregados
   y reuniones.
 - Con Mnemo, lo que lee del espacio del administrador.
+- Con la [respuesta inmediata](#la-respuesta-inmediata), una petición más al mismo proveedor con el texto de los
+  últimos 8 mensajes de la conversación (sin resultados de herramientas) y el mensaje nuevo con su contexto: nada que
+  no haya recibido ya.
 - En cada ronda, las instrucciones del asistente, las herramientas que ofrece el panel y la conversación: con Mnemo, eso
   es lo que reciben Mnemo y su proveedor de modelos.
 
@@ -1186,6 +1315,19 @@ de la caché del panel (no gasta); las respuestas leídas en voz alta sí, frase
 por minuto y 30.000 caracteres por día por persona, y 3 llamadas a Mnemo a la vez en el proceso (ver [La voz clonada
 de Mnemo](#la-voz-clonada-de-mnemo)).
 
+**La [respuesta inmediata](#la-respuesta-inmediata)** es una petición más al modelo en cada mensaje (no en las
+aprobaciones): de entrada, sus instrucciones (unos 400 tokens), los últimos 8 mensajes acotados a 1.500 caracteres
+cada uno y el mensaje nuevo, sin caché; de salida, como mucho 300 tokens (con un modelo que no deja
+apagar el razonamiento, como Claude Opus 5.5, 1.000 en total con lo poco que razone), y casi siempre una o dos frases.
+Con Mnemo gasta créditos de la cuenta y ocupa unos segundos una de las llamadas al modelo a la vez de la conexión:
+por eso con Mnemo solo va cuando el panel no está atendiendo otro turno ni transcribiendo un dictado (y una a la vez),
+así nunca le quita el cupo a una respuesta. Lo que gastó se suma al día de la persona en `agente_uso` cuando la
+petición termina (también cuando contesta «—»), pero no cuenta en el tope de mensajes. Una petición que se corta a
+mitad (la respuesta completa llegó antes, el tope de lo que se muestra, el plazo o el fin del turno) no se suma, como
+una ronda cortada con **Detener**, aunque Anthropic o Mnemo cobren lo que alcanzó a gastar: el gasto exacto está en la
+consola de Anthropic o en Mnemo. Para ahorrarla, se apaga en **Ajustes → Asistente** o, en modo directo, se le pone
+un modelo más barato en `AGENTE_MODELO_ADELANTO`.
+
 **Topes.**
 
 - Por persona y día, los mensajes de **Ajustes** (429 al pasarse): cuenta cada mensaje y cada aprobación o rechazo.
@@ -1227,6 +1369,7 @@ El asistente no necesita ninguna variable: se conecta con Mnemo desde **Ajustes 
 | `MNEMO_HERRAMIENTAS` | Qué herramientas de Mnemo se ofrecen (y qué permisos se piden al conectar) |
 | `ANTHROPIC_API_KEY` | El [modo directo](#modo-directo-sin-mnemo): una clave de la consola de Anthropic, que se usa solo sin Mnemo con permiso para usar sus modelos |
 | `AGENTE_MODELO` | Solo en modo directo: `claude-opus-5-5` por defecto |
+| `AGENTE_MODELO_ADELANTO` | Solo en modo directo: el modelo de la [respuesta inmediata](#la-respuesta-inmediata), uno rápido como `claude-haiku-5-5` o `claude-sonnet-5-5` (con ellos va sin razonar); vacía, el de `AGENTE_MODELO` |
 | `AGENTE_ESFUERZO` | `medium` por defecto; `low`, `medium`, `high`, `xhigh` o `max` (otro valor usa `medium` y lo avisa en el registro). Vale con Mnemo y en modo directo |
 | `SITIO_URL` | Solo con el panel desplegado aparte (Root Directory = `admin`): la dirección `https://…` del sitio público, de donde la vista **Presentación** toma la propuesta (y la CSP del panel la deja enmarcar). En el servicio único no hace falta. Para que la presentación acepte las órdenes de ese panel, el sitio se construye con `PANEL_URL` = la dirección del panel |
 
@@ -1346,8 +1489,9 @@ se suba.
 | `app/agente/herramientas/` | `base.py` (contratos), `personas.py`, `gestion.py`, `interfaz.py` y `mnemo.py` |
 | `app/agente/mnemo_cliente.py` | El cliente del servidor MCP de Mnemo |
 | `app/agente/dictado.py` | Las preguntas por voz: el audio a `mnemo_transcribe`, con sus topes |
+| `app/agente/adelanto.py` | La [respuesta inmediata](#la-respuesta-inmediata): sus mensajes, lo que se muestra (la marca «—», palabra por palabra, el tope), sus frases para decir, la carrera con la respuesta completa, el plazo y lo que se guarda |
 | `app/agente/voz.py` | La [voz clonada de Mnemo](#la-voz-clonada-de-mnemo): el texto de cada pedido (el plan guardado, la frase firmada, la prueba), lo que se dice (`para_decir`, `hablable`), las frases de una respuesta (`Frases`), la firma, los topes, la caché, un solo vuelo y el flujo de `mnemo_speak` |
-| `web/js/agente.js`, `web/css/agente.css` | El botón y el panel del asistente |
+| `web/js/agente.js`, `web/css/agente.css` | El botón y el panel del asistente (también el recuadro de la respuesta inmediata y cuándo la sala la oye) |
 | `web/js/agente-mapa.js` | El puente entre el asistente y la vista del mapa |
 | `app/agente/guion.py`, `app/agente/propuesta_guion.json` | El guion de la presentación (lo que muestra cada paso, en texto plano): lo genera `scripts/build_propuesta.py` desde `web/data/propuesta.json` y va versionado dentro de `admin/` (también lo tiene el panel desplegado aparte) |
 | `web/js/agente-presentacion.js` | El puente entre el asistente y la vista Presentación: la cola, la navegación a `/presentacion`, el validador de la acción y el canal con la ventana del proyector |
@@ -1356,10 +1500,10 @@ se suba.
 | `app/pantalla.py`, `app/api/pantalla.py` | La pantalla en off de cada persona (su estado, `GET /api/pantalla`), su clave MCP (`/api/pantalla/clave`), el recorrido narrado: guardarlo, colapsarlo, el avance (`POST /api/pantalla/progreso`), los controles (`POST /api/pantalla/recorrido/control`) y dónde va (`GET /api/pantalla/recorrido`), y el estado de la [presentación automática](#presentación-automática) (`POST /api/pantalla/auto` y `/auto/siguiente`) |
 | `app/automatica.py` | La presentación automática por dentro: qué se dice en cada paso, el plan de cada capítulo y por dónde sigue (sin modelo: sale del guion) |
 | `app/recorrido.py`, `app/proyectable.py` | El plan guiado por dentro (el recorrido: sus topes, la forma absoluta de la escena con `mover`, `animar` y `simular`, las frases, los tiempos, la validación contra el guion, también de los controles de la simulación) y las reglas de lo que se proyecta (también sin costos) |
-| `web/js/reproductor.js`, `web/js/voz.js` | El reproductor del plan (el reloj de la explicación, la espera inicial, pausas, saltos, cierre; la referencia de cada frase en el plan y la precarga de la que sigue) y la voz del navegador |
+| `web/js/reproductor.js`, `web/js/voz.js` | El reproductor del plan (el reloj de la explicación, la espera inicial, que deja terminar la respuesta inmediata, pausas, saltos, cierre; la referencia de cada frase en el plan y la precarga de la que sigue) y la voz del navegador |
 | `web/js/voz-clonada.js` | La voz clonada en el navegador (pura, como `voz.js`): pide cada frase por su referencia, agenda el PCM con Web Audio, precarga, la memoria de la página y el respaldo con la voz del navegador |
-| `web/js/voz-panel.js` | La voz de la ventana: una sola para la narración, las respuestas habladas y la prueba de Ajustes (con conteo de referencias), con `flujo('/api/agente/voz', …)` y el `voz` del estado; la narración manda |
-| `web/js/locutor.js` | Las respuestas habladas: dice en orden las frases firmadas del turno, precarga la siguiente, se resincroniza con `frases_descartar` y `frases_ronda` y se calla |
+| `web/js/voz-panel.js` | La voz de la ventana: una sola para la narración, las respuestas habladas y la prueba de Ajustes (con conteo de referencias), con `flujo('/api/agente/voz', …)` y el `voz` del estado; la narración manda, salvo ante la respuesta inmediata que suena (la marca y la cesión del plan en su espera) |
+| `web/js/locutor.js` | Las respuestas habladas: dice en orden las frases firmadas del turno, primero las de la respuesta inmediata (su propia cola, que la respuesta espera), precarga la siguiente, se resincroniza con `frases_descartar` y `frases_ronda` y se calla |
 | `web/js/agente-recorrido.js` | La tarjeta del plan en el chat y su barra fija |
 | `app/api/mcp.py` | El servidor MCP de la presentación (`POST /api/mcp`): la herramienta `presentacion` para un agente externo |
 | `web/js/vistas/cuenta.js` | Mi cuenta, con **Agentes por MCP**: la dirección del servidor y la clave |
@@ -1409,6 +1553,9 @@ se suba.
 | `frase` | Solo si el mensaje pidió la respuesta hablada (`contexto.voz`) y la voz clonada lee respuestas para esa persona: `n` (desde 0 en el turno), `texto` y `firma`, una frase cerrada que el navegador pide a `POST /api/agente/voz` (ver [La voz clonada de Mnemo](#la-voz-clonada-de-mnemo)) |
 | `frases_descartar` | `desde`: las frases desde ese número ya no valen (la ronda se repitió o su texto final cambió); las que sigan se numeran desde ahí |
 | `frases_ronda` | `desde`: al cerrar una ronda que tuvo un `frases_descartar`, dónde empieza la siguiente (el navegador no repite lo ya dicho de la ronda rehecha, y lo de la siguiente sí lo dice) |
+| `adelanto` | Solo en un mensaje con la [respuesta inmediata](#la-respuesta-inmediata) encendida: `texto`, el trozo siguiente de ella (texto plano, que siempre termina en una palabra entera; se agrega a lo anterior). Va arriba de la respuesta del turno |
+| `adelanto_frase` | Si además el mensaje pidió la respuesta hablada (`contexto.voz`) o solo la inmediata hablada (`contexto.voz_adelanto`, sin `frase` de la respuesta): `n` (desde 0 en el turno, aparte de los de `frase`), `texto` y `firma`, como `frase` |
+| `adelanto_fin` | La respuesta inmediata terminó: lo que se mostró queda. Con `vacio: true` no se mostró nada (no hacía falta, la respuesta completa llegó antes, o falló) y no queda nada. Uno por cada respuesta inmediata que se lanzó, antes de `fin` (un turno que falla antes de lanzarla no trae ninguno) |
 | `aviso` | `texto` y `nivel` (`info` o `alerta`): un rechazo del modelo, el paso a un modelo de respaldo |
 | `latido` | Cada 15 s sin otros eventos, para mantener viva la conexión |
 | `error` | `mensaje` y `codigo` (ver abajo); siempre lo sigue `fin` |
@@ -1472,15 +1619,26 @@ la narración por `rid`, la firma, las conversaciones con personas, los roles, l
 cancelación cuando nadie escucha (con un ASGI crudo, para ver los trozos y la desconexión), los errores de Mnemo y
 que nada vaya al registro. `tests/test_voz_frases.py` prueba `para_decir` (corre la tabla de `web/js/voz.js` con Node
 y la compara con la de Python), las frases de una respuesta (también a trozos al azar: nunca se desdicen) y el turno
-que las emite firmadas. `tests/test_voz_clonada.py` prueba el navegador con Node: la voz clonada
+que las emite firmadas. `tests/test_agente_adelanto.py` prueba la respuesta inmediata: lo que se muestra (con un
+proveedor inventado), el turno con dos guiones del modelo simulado (el de la respuesta completa y el de la inmediata,
+con esperas atadas a los eventos del turno), la carrera, los fallos, lo que se guarda y el historial, el ajuste, sus
+frases con la voz clonada y la petición `rapido` de los dos proveedores. `encender`, `encender_lento` y
+`encender_mnemo` la dejan apagada (cada guion es el del modelo principal); `adelanto=True` la enciende. `tests/test_voz_clonada.py` prueba el navegador con Node: la voz clonada
 (`web/js/voz-clonada.js`, con un AudioContext, un reloj y un servidor falsos: el PCM agendado y cuándo empieza y
 termina, el respaldo con la voz del navegador, `sin_voz`, la precarga y los dos lugares, `callar`, un flujo estancado,
-MP3, el gesto, la prueba de Ajustes), el locutor de las respuestas, la voz de la ventana (`voz-panel.js`, con `fetch`
-falso: una sola, la narración manda, el flujo a `POST /api/agente/voz`), la referencia y la precarga del reproductor, y
-lo estático de agente.js, Ajustes y la presentación. `tests/test_voz_navegador.py` lee una respuesta en Chromium (con
-las rutas del asistente y de la voz contestadas desde el navegador): el botón, `contexto.voz`, las frases pedidas por
-su referencia, el audio que suena con Web Audio, Escape y sin violaciones de la CSP; y `test_conectar_mnemo_desde_ajustes`
-(en `tests/test_agente_navegador.py`) ve el bloque **Voz del asistente** con la voz de un Mnemo falso.
+MP3, el gesto, la prueba de Ajustes), el locutor de las respuestas (y su cola de la respuesta inmediata: va primero, la
+respuesta la espera, `vacio`, el plazo de 8 s, callar), la voz de la ventana (`voz-panel.js`, con `fetch` falso: una
+sola, la narración manda, el flujo a `POST /api/agente/voz`, la marca de la inmediata y la cesión del plan), la
+referencia y la precarga del reproductor y su espera a la inmediata (el tope de 15 s, la pausa, «Siguiente», un plan
+que reemplaza a otro), y lo estático de agente.js, Ajustes y la presentación. `tests/test_voz_navegador.py` lee una
+respuesta en Chromium (con las rutas del asistente y de la voz contestadas desde el navegador): el botón,
+`contexto.voz`, las frases pedidas por su referencia, el audio que suena con Web Audio, Escape y sin violaciones de la
+CSP. También la respuesta inmediata con el turno en flujo de verdad (un `fetch` que la prueba alimenta evento por
+evento): el recuadro arriba en el acto, su voz antes que la de la respuesta, `vacio` y el historial; y, con la
+presentación de verdad abierta (el sitio de `build_site.py`) y sin voz clonada, la sala la oye con la voz del
+navegador (una síntesis falsa) y el plan que llega mientras suena empieza después de ella.
+`test_conectar_mnemo_desde_ajustes` (en `tests/test_agente_navegador.py`) ve el bloque **Voz del asistente** con la voz
+de un Mnemo falso.
 
 ```python
 from ayudas_agente import T, encender, enviar, sse

@@ -194,6 +194,10 @@ AJUSTES_POR_DEFECTO: dict[str, Any] = {
     # presentación automática. Un objeto aparte, de un nivel, como `agente`: solo lo cambia el administrador
     "agente_voz": {"motor": "navegador", "voz": "", "nombre": "", "cuenta": "", "roles": ["admin", "coordinador"],
                    "respuestas": True, "automatica": True},
+    # La respuesta inmediata del asistente (docs/agente.md, «La respuesta inmediata»): mientras prepara la respuesta o
+    # la presentación, adelanta en una o dos frases la idea general (una llamada corta más al modelo por pregunta). Un
+    # booleano aparte, de un nivel: solo lo cambia el administrador (gasta del mismo modelo)
+    "agente_adelanto": True,
 }
 
 

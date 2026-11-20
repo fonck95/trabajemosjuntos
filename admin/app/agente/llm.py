@@ -13,6 +13,13 @@ el cliente, la forma de cada petición, el flujo de cada ronda y las reglas para
 * `reenviable`, `para_peticion` y `reintentable` vienen de la receta probada con el SDK 2.6.0 (ver docs/agente.md).
 * `ProveedorAnthropic.generar` es una ronda en flujo: emite el texto, las notas de progreso (`Notas`), el inicio de
   cada herramienta y el aviso de un modelo de respaldo mientras llegan, y arma la `Respuesta` con el mensaje final.
+* Con `rapido` (la respuesta inmediata del turno, `adelanto.py`) la petición es otra: el modelo de
+  `AGENTE_MODELO_ADELANTO` si está (si no, el de `AGENTE_MODELO`), sin herramientas, sin caché, sin respaldo y sin
+  pensar: el `thinking` que lo apaga en los modelos que lo permiten (`Capacidades.sin_pensar`) o nada, y el esfuerzo
+  `low` si el modelo lo admite. Un modelo que piensa siempre (Claude Opus 5.5 no deja apagarlo; Claude Opus 5 va mejor
+  con el esfuerzo `low` que apagado, que puede colar marcas de razonamiento en el texto que se dice) o que no está en
+  `CAPACIDADES` (los actuales piensan por defecto) recibe además `MARGEN_PENSAR_RAPIDO` tokens: si no, lo que razone se
+  comería la frase.
 """
 from __future__ import annotations
 
@@ -48,19 +55,54 @@ class Capacidades:
     respaldo: bool = False    # fallbacks="default" (beta server-side-fallback-2026-07-01)
     novedades: bool = False   # thinking.display="updates" (beta thinking-display-updates-2026-08-18)
     vinculo: bool = False     # thinking.block_binding (beta thinking-binding-controls-2026-08-01)
+    # El `thinking.type` que apaga el razonamiento en una petición sin herramientas (la respuesta inmediata, `rapido`),
+    # solo en los modelos que lo aceptan con el esfuerzo `low` (sin ningún otro campo): Claude Sonnet 5.5 no acepta
+    # «disabled» y sí «between_tools»; Claude Opus 5.5 no deja apagarlo (None: piensa lo que el esfuerzo `low` diga)
+    sin_pensar: str | None = None
 
 
-# Opus 5 no escribe notas de progreso (su texto entre herramientas llega como `text`), así que no lleva `display`
+# Opus 5 no escribe notas de progreso (su texto entre herramientas llega como `text`), así que no lleva `display`.
+# Claude Haiku 5.5 no tiene notas de progreso ni respaldo del lado del servidor: sirve sobre todo para la respuesta
+# inmediata (`AGENTE_MODELO_ADELANTO`)
 CAPACIDADES = {
     "claude-opus-5-5": Capacidades(adaptativo=True, esfuerzo=True, respaldo=True, novedades=True, vinculo=True),
-    "claude-sonnet-5-5": Capacidades(adaptativo=True, esfuerzo=True, respaldo=True, novedades=True, vinculo=True),
+    "claude-sonnet-5-5": Capacidades(adaptativo=True, esfuerzo=True, respaldo=True, novedades=True, vinculo=True,
+                                     sin_pensar="between_tools"),
     "claude-fable-5-1": Capacidades(adaptativo=True, esfuerzo=True, respaldo=True, novedades=True, vinculo=True),
     "claude-opus-5": Capacidades(adaptativo=True, esfuerzo=True, respaldo=True, vinculo=True),
+    "claude-haiku-5-5": Capacidades(adaptativo=True, esfuerzo=True, sin_pensar="disabled"),
 }
+# Lo que se suma al tope de tokens de una petición `rapido` a un modelo que no deja apagar el razonamiento o que no
+# está en CAPACIDADES (puede pensar por defecto): con el esfuerzo `low` lo que razona antes de una frase corta es poco,
+# pero cuenta en `max_tokens`. Lo que se muestra no crece por esto: el tope de `adelanto.ADELANTO_MAX` corta antes
+MARGEN_PENSAR_RAPIDO = 700
 
 
 def capacidades(modelo: str) -> Capacidades:
     return CAPACIDADES.get(modelo, Capacidades())
+
+
+def modelo_rapido(cfg: Any) -> str:
+    """El modelo de la respuesta inmediata: `AGENTE_MODELO_ADELANTO` si está; si no, el del asistente."""
+    return getattr(cfg, "agente_modelo_adelanto", "") or cfg.agente_modelo
+
+
+def parametros_rapido(cfg: Any, *, max_tokens: int) -> dict:
+    """Los parámetros de una petición `rapido` (la respuesta inmediata, `adelanto.py`), salvo `system` y `messages`:
+    el modelo de `modelo_rapido`, sin herramientas, caché, respaldo ni betas; sin pensar donde se puede apagar
+    (`Capacidades.sin_pensar`; si no, con `MARGEN_PENSAR_RAPIDO` tokens más, también en un modelo desconocido) y con el
+    esfuerzo `low` donde se sabe que el modelo lo admite."""
+    modelo = modelo_rapido(cfg)
+    cap = capacidades(modelo)
+    p: dict[str, Any] = {"model": modelo, "max_tokens": max_tokens, "timeout": PLAZO}
+    if cap.sin_pensar:
+        p["thinking"] = {"type": cap.sin_pensar}
+    else:  # piensa siempre, o es un modelo fuera de CAPACIDADES que puede pensar por defecto (sin `thinking`, los
+        # actuales piensan con el esfuerzo `high`): que lo que razone no se coma la frase
+        p["max_tokens"] = max_tokens + MARGEN_PENSAR_RAPIDO
+    if cap.esfuerzo:  # (solo donde se sabe que lo admite: los modelos viejos lo rechazan)
+        p["output_config"] = {"effort": "low"}
+    return p
 
 
 def parametros(cfg: Any, *, max_tokens: int = MAX_TOKENS, esfuerzo: str | None = None) -> dict:
@@ -226,11 +268,15 @@ class ProveedorAnthropic:
         return f"ProveedorAnthropic(modelo={self.modelo!r})"
 
     async def generar(self, sistema: str, mensajes: list[dict], herramientas: list[dict], *, max_tokens: int,
-                      esfuerzo: str, al_evento: Callable[[Evento], None]) -> Respuesta:
-        kw: dict[str, Any] = {"system": sistema_para_peticion(sistema), "messages": para_peticion(mensajes),
-                              **parametros(self.cfg, max_tokens=max_tokens, esfuerzo=esfuerzo)}
-        if herramientas:
-            kw["tools"] = herramientas
+                      esfuerzo: str, al_evento: Callable[[Evento], None], rapido: bool = False) -> Respuesta:
+        if rapido:  # la respuesta inmediata: sin herramientas ni caché (sus mensajes cambian en cada turno)
+            kw: dict[str, Any] = {"system": sistema, "messages": para_peticion(mensajes),
+                                  **parametros_rapido(self.cfg, max_tokens=max_tokens)}
+        else:
+            kw = {"system": sistema_para_peticion(sistema), "messages": para_peticion(mensajes),
+                  **parametros(self.cfg, max_tokens=max_tokens, esfuerzo=esfuerzo)}
+            if herramientas:
+                kw["tools"] = herramientas
         notas: Notas | None = None
         async with cliente(self.app, self.cfg).beta.messages.stream(**kw) as flujo:
             async for ev in flujo:

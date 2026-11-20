@@ -16,6 +16,11 @@
 //   quita; la imagen queda donde terminó.
 // * Un plan nuevo puede empezar con una espera (`previa`, PREVIA_MS: el chat muestra el plan entero antes del primer
 //   paso), en fase «preparando»: se pausa como las demás y la cortan un salto («siguiente» empieza ya) o un detener.
+//   Si en la ventana suena la respuesta inmediata del asistente (docs/agente.md, «La respuesta inmediata»: la voz lo
+//   dice con `adelantoSonando()`, voz-panel.js), la espera se alarga hasta que termine, como mucho ESPERA_ADELANTO_MS
+//   desde que llegó el plan: la sala oye la idea general entera y después el plan. Mientras dura, el plan le cede el
+//   turno (`voz.ceder(true)`): sus frases no lo esperan a él. Una voz sin esos dos (la del navegador sola, las de las
+//   pruebas) no espera nada.
 // * Las esperas se pueden pausar y guardan lo que les falta. Miden con `reloj.ahora()` y dan ticks de TICK_MS como
 //   mucho: una pestaña oculta, cuyos relojes el navegador espacia, no adelanta ni atrasa el ritmo.
 // * Pausa dura (un botón, la tecla p, la persona movió la maqueta): calla en el acto. Al seguir, la frase en curso se
@@ -41,6 +46,7 @@
 
 // Los tiempos (los mismos de app/recorrido.py, que estima con ellos la duración: una prueba los compara)
 export const PREVIA_MS = 1800;
+export const ESPERA_ADELANTO_MS = 15000;   // lo que un plan nuevo espera, como mucho, a que termine la respuesta inmediata
 export const RESPIRO_MS = 350;
 export const ENTRE_FRASES_MS = 250;
 export const SOSTENER_MS = 1300;
@@ -93,6 +99,7 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
   let narrando = false;    // hay una narración en pantalla (a la que se le puede mandar pausa o frase)
   let mandoEscena = false; // ya salió una orden `escena`: al terminar hay que dejarla atrás aunque no haya respondido
   let enPrevia = false;    // la espera antes de la primera escena (`previa`): «siguiente» la corta y empieza
+  let cede = 0;            // la generación cuya espera previa le cede el turno a la respuesta inmediata (0: ninguna)
   let alPrimera = null;    // resuelve la promesa de `iniciar` cuando la primera escena está a la vista (o falló)
   const despiertos = new Set();   // las esperas en curso: se despiertan al seguir o saltar
   const despertar = () => { for (const f of [...despiertos]) f(); };
@@ -115,6 +122,9 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
   }
   // La voz precarga lo que viene (si sabe): nunca rompe el reloj del plan
   const preparar = (item) => { if (item) { try { voz.preparar?.([item]); } catch { /* nada */ } } };
+  // La respuesta inmediata que suena en la ventana (si la voz lo sabe): la espera previa de un plan nuevo la deja terminar
+  const adelantoSonando = () => { try { return voz.estado() === 'activa' && voz.adelantoSonando?.() === true; } catch { return false; } };
+  const ceder = (v) => { try { voz.ceder?.(v); } catch { /* nada */ } };
 
   function emitir(extra = {}) {
     if (!r) return;
@@ -154,6 +164,18 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       despiertos.add(despierta);
       mirar();
     });
+  }
+
+  // La espera previa de un plan nuevo se alarga mientras suena la respuesta inmediata, `max` ms de reloj corrido como
+  // mucho (una pausa no los cuenta). false si la generación cambió
+  async function esperarAdelanto(g, max) {
+    let falta = max;
+    while (falta > 0 && adelantoSonando()) {
+      const t = Math.min(TICK_MS, falta);
+      if (!await esperar(t, g)) return false;
+      falta -= t;
+    }
+    return vigente(g);
   }
 
   // Espera hasta que no haya pausa (la generación puede cambiar mientras tanto)
@@ -274,7 +296,17 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       emitir();
       // la espera es justo lo que la voz clonada necesita para tener lista la primera frase
       preparar(itemFrase(desde, 0));
-      const paso = await esperar(previa, g);
+      // y mientras dura, la respuesta inmediata que suena en la ventana sigue: el plan la deja terminar
+      cede = g;
+      ceder(true);
+      let paso;
+      try {
+        paso = await esperar(previa, g);
+        if (paso) paso = await esperarAdelanto(g, ESPERA_ADELANTO_MS - previa);
+      } finally {
+        // (un plan que la reemplazó ya puso la suya: esa no se toca)
+        if (cede === g) { cede = 0; ceder(false); }
+      }
       if (vigente(g)) enPrevia = false;   // si no, la cortó un salto, un detener u otro recorrido: lo suyo manda
       if (!paso) return;
     }

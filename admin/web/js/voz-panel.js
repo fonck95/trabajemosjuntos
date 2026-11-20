@@ -15,6 +15,11 @@
 //   precarga, antes de decirse. `callar` de cada quien calla solo lo suyo: la
 //   vista que se va (o el reproductor entre dos pasos) no corta la respuesta que se está leyendo, ni el asistente que
 //   deja de leer corta la narración. La prueba de Ajustes es un clic del administrador: calla lo que suene.
+// * La respuesta inmediata (docs/agente.md, «La respuesta inmediata») va antes que el plan: el locutor de las
+//   respuestas marca mientras suena o está por sonar (`marcarAdelanto`, que agente.js le pasa del locutor) y un plan
+//   nuevo, en su espera previa (reproductor.js), la espera (`adelantoSonando`) y le cede el turno (`ceder`): mientras
+//   tanto, sus frases (las que llegan a `decir` con `adelanto: true`) no esperan a ese plan, y su primera precarga no
+//   las calla. Un plan que ya narra (o la prueba) sigue mandando sobre ellas como sobre cualquier respuesta.
 // * El audio de la voz clonada lo pide `flujo('/api/agente/voz', ref, …)` de api.js (con la sesión y el CSRF, como el
 //   chat): solo cuando GET /api/agente/estado dice que esta persona la puede usar (`voz.disponible`); si no, ni se
 //   intenta (sin errores en la consola ni pedidos de más). Ese estado lo trae el asistente cuando lo lee
@@ -48,7 +53,7 @@ let info = SIN_VOZ;
 let deAgente = false;   // el asistente trae el estado (`fijarInfoVoz`): aquí no se pide
 let leyendo = null;
 let tInfo = 0;
-let compartida = null;  // {voz, cuentas, hablando: quien | null, turno, ocupadas: Map, oyentes: Set, quitar}
+let compartida = null;  // {voz, cuentas, hablando: quien | null, turno, ocupadas: Map, ceden: Set, adelanto, oyentes: Set, quitar}
 
 const iguales = (a, b) => a.disponible === b.disponible && a.nombre === b.nombre && a.respuestas === b.respuestas
   && a.automatica === b.automatica;
@@ -95,7 +100,8 @@ function avisarTodos(c) {
 }
 
 function crear() {
-  const c = { voz: null, cuentas: 0, hablando: null, turno: 0, ocupadas: new Map(), oyentes: new Set(), quitar: [] };
+  const c = { voz: null, cuentas: 0, hablando: null, turno: 0, ocupadas: new Map(), ceden: new Set(), adelanto: false,
+    oyentes: new Set(), quitar: [] };
   const caer = () => { try { globalThis.dispatchEvent?.(new Event(EVENTO_ESTADO)); } catch { /* sin ventana */ } };
   c.voz = crearVozClonada({ ventana: globalThis, pedir, respaldo: crearVoz(), disponible: () => info.disponible, alCaer: caer });
   c.quitar.push(c.voz.alCambiar(() => avisarTodos(c)));
@@ -111,10 +117,14 @@ function crear() {
   return c;
 }
 
-/** ¿Suena (o está por sonar) la narración de un plan en esta ventana? */
-function narracionOcupada(c) {
+/** ¿Suena (o está por sonar) la narración de un plan en esta ventana? Para una frase de la respuesta inmediata
+ * (`adelanto`), un plan en su espera previa que le cede el turno (`ceden`) no cuenta: solo uno que narra. */
+function narracionOcupada(c, { adelanto = false } = {}) {
   if (c.hablando === 'narracion') return true;
-  for (const f of c.ocupadas.values()) { try { if (f() === true) return true; } catch { /* nada */ } }
+  for (const [k, f] of c.ocupadas) {
+    if (adelanto && c.ceden.has(k)) continue;
+    try { if (f() === true) return true; } catch { /* nada */ }
+  }
   return false;
 }
 
@@ -131,9 +141,9 @@ export function tomarVoz(quien = 'narracion', { ocupada = null } = {}) {
   let suelta = false;
   const viva = () => !suelta && compartida === c;
 
-  function decir(texto, o = {}) {
+  function decir(texto, { adelanto = false, ...o } = {}) {
     if (!viva()) return Promise.resolve('fallo');
-    if (quien === 'respuestas' && narracionOcupada(c)) return Promise.resolve('cortada');
+    if (quien === 'respuestas' && narracionOcupada(c, { adelanto: adelanto === true })) return Promise.resolve('cortada');
     // La narración o la prueba toman la voz: lo pedido de una respuesta (la frase que sonaba y la precargada) se suelta
     // ya, con sus peticiones (si no, se pagaban sin oírse y ocupaban los lugares de la precarga de la narración). La
     // narración guardada se queda: una pausa la repite al instante
@@ -151,9 +161,9 @@ export function tomarVoz(quien = 'narracion', { ocupada = null } = {}) {
   }
   function preparar(items) {
     if (!viva()) return;
-    if (quien === 'respuestas' && narracionOcupada(c)) return;
-    // un plan que empieza calla la respuesta que se estaba leyendo
-    if (quien === 'narracion' && c.hablando === 'respuestas') c.voz.callar();
+    if (quien === 'respuestas' && narracionOcupada(c, { adelanto: c.adelanto })) return;
+    // un plan que empieza calla la respuesta que se estaba leyendo (la inmediata no: la espera)
+    if (quien === 'narracion' && c.hablando === 'respuestas' && !c.adelanto) c.voz.callar();
     c.voz.preparar(items);
   }
 
@@ -167,6 +177,18 @@ export function tomarVoz(quien = 'narracion', { ocupada = null } = {}) {
     motor: () => (viva() ? c.voz.motor() : 'navegador'),
     estadoNavegador: () => (viva() ? c.voz.estadoNavegador() : 'sin_voces'),
     nivel: () => (viva() && c.hablando === quien ? c.voz.nivel() : 0),
+    /** Las respuestas: la respuesta inmediata suena o está por sonar (true) o terminó (false). Lo dice el locutor. */
+    marcarAdelanto(v) { if (viva() && quien === 'respuestas') c.adelanto = v === true; },
+    /** ¿Suena (o está por sonar) una respuesta inmediata en esta ventana? (un plan nuevo la espera) */
+    adelantoSonando: () => viva() && c.adelanto === true,
+    /** La narración: su plan está en la espera previa (true) y le cede el turno a la respuesta inmediata, o salió (false). */
+    ceder(v) {
+      if (!viva() || quien !== 'narracion') return;
+      if (v === true) c.ceden.add(propia); else c.ceden.delete(propia);
+    },
+    /** ¿Suena (o está por sonar) la narración de un plan que una frase de las respuestas debe esperar? (`adelanto`: es
+     * de la respuesta inmediata, y un plan que le cede el turno no cuenta) */
+    narracionOcupada: ({ adelanto = false } = {}) => viva() && narracionOcupada(c, { adelanto: adelanto === true }),
     alCambiar(f) {
       if (typeof f !== 'function') return () => {};
       c.oyentes.add(f);
@@ -179,6 +201,8 @@ export function tomarVoz(quien = 'narracion', { ocupada = null } = {}) {
       if (c.hablando === quien) c.voz.callar();
       suelta = true;
       c.ocupadas.delete(propia);
+      c.ceden.delete(propia);
+      if (quien === 'respuestas') c.adelanto = false;
       for (const f of mios) c.oyentes.delete(f);
       mios.clear();
       c.cuentas--;
