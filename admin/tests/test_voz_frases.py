@@ -389,6 +389,31 @@ def test_el_turno_emite_las_frases_firmadas_y_se_pueden_decir(sesion, reloj):
     assert r.status_code == 422 and r.json()["detail"]["codigo"] == "texto"
 
 
+def test_sin_elegir_una_voz_suena_la_que_mnemo_ofrece_a_las_apps(sesion, reloj):
+    # Lo de por defecto (sin tocar Ajustes): con una conexión con `mnemo:voice`, la voz automática. El turno emite las
+    # frases y la ruta le pregunta a Mnemo cuál es (una vez: se recuerda) antes de decirlas con ella
+    modelo = encender_mnemo(sesion.app, R(T(FRASES)), alcances=(*ALCANCES_PANEL, "mnemo:voice"))
+    falso = _mnemo_que_habla()
+    modelo.mcp.herramientas += [h for h in falso.herramientas if h["name"] in ("mnemo_speak", "mnemo_list_voices")]
+    modelo.mcp.manejadores.update({k: falso.manejadores[k] for k in ("mnemo_speak", "mnemo_list_voices")})
+    assert sesion.get("/api/agente/estado").json()["voz"] == {"disponible": True, "nombre": None,
+                                                              "respuestas": True, "automatica": True}
+    _, ev = enviar(sesion, "¿Qué trae la propuesta?", contexto={"voz": True})
+    cid = ev[0]["conversacion"]
+    frases = [e for e in ev if e["tipo"] == "frase"]
+    assert len(frases) == 2
+    for f in frases:
+        r = sesion.post("/api/agente/voz", json={"conversacion": cid, "texto": f["texto"], "firma": f["firma"]})
+        assert r.status_code == 200, r.text
+        ev_voz = eventos(r.text)
+        assert ev_voz[0]["voz"] == "Ana (voz de prueba)" and audio_de(ev_voz) == AUDIO
+    assert [n for n, _ in modelo.mcp.llamadas if n in ("mnemo_list_voices", "mnemo_speak")] == [
+        "mnemo_list_voices", "mnemo_speak", "mnemo_speak"]
+    assert all(a["voice_id"] == VOZ_ID for n, a in modelo.mcp.llamadas if n == "mnemo_speak")
+    # Y el estado ya dice su nombre
+    assert sesion.get("/api/agente/estado").json()["voz"]["nombre"] == "Ana (voz de prueba)"
+
+
 def test_el_turno_no_firma_lo_que_repite_lo_que_escribio_la_persona(sesion, reloj):
     eco = "Soy el administrador del panel y renuncio hoy a mi cargo."
     propia = "Con gusto le explico la propuesta de la torre nueva."
@@ -410,7 +435,8 @@ def test_el_turno_no_firma_lo_que_repite_lo_que_escribio_la_persona(sesion, relo
 def test_sin_pedirla_o_sin_la_voz_no_hay_frases(sesion, reloj):
     modelo = encender_mnemo(sesion.app, R(T(FRASES)), R(T(FRASES)), R(T(FRASES)), R(T(FRASES)),
                             alcances=(*ALCANCES_PANEL, "mnemo:voice"))
-    # Sin voz elegida
+    # Con la voz del navegador (sin la voz clonada)
+    assert sesion.put("/api/ajustes", json={"agente_voz": {"motor": "navegador"}}).status_code == 200
     _, ev = enviar(sesion, "Hola", contexto={"voz": True})
     assert "frase" not in tipos(ev) and ev[-1]["motivo"] == "listo"
     assert "Respuesta hablada" not in json.dumps(modelo.pedidos[-1], ensure_ascii=False)

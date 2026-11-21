@@ -252,7 +252,7 @@ En el cuadro de escribir hay un botón de micrófono, **Preguntar por voz**: no 
 
 ### Respuestas habladas
 
-Con la [voz clonada de Mnemo](#la-voz-clonada-de-mnemo) elegida en Ajustes (y **Leer en voz alta las respuestas del
+Con la [voz clonada de Mnemo](#la-voz-clonada-de-mnemo) disponible (y **Leer en voz alta las respuestas del
 asistente** encendido), el encabezado del asistente tiene un botón más, **Leer las respuestas en voz alta** (el ícono
 de la voz): las respuestas se oyen con esa voz mientras el modelo escribe.
 
@@ -833,15 +833,20 @@ nunca queda muda.
 
 1. En Mnemo, clone la voz en **Ajustes → Voces** y márquela **Disponible para apps conectadas**.
 2. Conecte (o vuelva a conectar) Mnemo desde **Ajustes → Asistente** dejando marcado **«Hablar con las voces que
-   clonaste en Mnemo…»** (el permiso `mnemo:voice`, ver [Conectar con Mnemo](#conectar-con-mnemo)).
-3. En **Ajustes → Asistente → Voz del asistente**, elija **Voz clonada de Mnemo**, la voz (la lista sale de
-   `GET /api/agente/voces`), quién puede hacerla sonar y para qué, pulse **Guardar voz** y después **Probar voz**: dice
-   una frase fija con la voz guardada y muestra cuánto tardó la primera palabra (en el navegador y en Mnemo).
+   clonaste en Mnemo…»** (el permiso `mnemo:voice`, ver [Conectar con Mnemo](#conectar-con-mnemo)). Una conexión
+   hecha antes de que existiera la voz clonada no tiene ese permiso (Mnemo solo lo da al conectar): el bloque **Voz
+   del asistente** lo avisa con el botón **Volver a conectar para usar la voz**, que hace lo mismo que **Volver a
+   conectar** del bloque de Mnemo.
+3. Listo: sin elegir nada más, el asistente usa **la voz que Mnemo ofrece a las apps** (la automática: la más
+   reciente que su dueño marcó para apps, `default_voice_id`). Para fijar otra, o cambiar quién la hace sonar y para
+   qué, use **Ajustes → Asistente → Voz del asistente** (la lista sale de `GET /api/agente/voces`) y pulse **Guardar
+   voz**. **Probar voz** dice una frase fija con la voz guardada (o la automática) y muestra cuánto tardó la primera
+   palabra (en el navegador y en Mnemo). Para no usar la voz clonada, elija **Voz del navegador**.
 
 | Ajuste (`agente_voz`) | Por defecto | Qué decide |
 |---|---|---|
-| `motor` | `navegador` | `navegador` (Web Speech, como siempre) o `mnemo` (la voz clonada) |
-| `voz`, `nombre` | Ninguna | La voz de Mnemo (su id, de `GET /api/agente/voces`) y su nombre para mostrar. Al elegirla, el servidor anota además la cuenta de Mnemo conectada (`cuenta`, una huella: los primeros 32 hexadecimales del SHA-256 del emisor y el `sub`; nunca la que mande el formulario). Si después se conecta otra cuenta, esa voz deja de valer hasta elegir otra |
+| `motor` | `mnemo` | `navegador` (Web Speech, como siempre) o `mnemo` (la voz clonada, si la conexión tiene `mnemo:voice`; si no, suena la del navegador) |
+| `voz`, `nombre` | Automática | La voz de Mnemo (su id, de `GET /api/agente/voces`) y su nombre para mostrar. Vacía, la automática: la que Mnemo ofrece a las apps (`default_voice_id` de `mnemo_list_voices`); el panel le pregunta cuál es (no gasta créditos) y lo recuerda 5 minutos por conexión, también que no hay ninguna. Al elegirla, el servidor anota además la cuenta de Mnemo conectada (`cuenta`, una huella: los primeros 32 hexadecimales del SHA-256 del emisor y el `sub`; nunca la que mande el formulario). Si después se conecta otra cuenta, esa voz deja de valer hasta elegir otra |
 | `roles` | Administrador y coordinadores | Quién hace sonar la voz clonada (habla con la voz y los créditos de la cuenta del administrador). Los demás roles oyen la del navegador. Las respuestas leídas en voz alta son texto del modelo, y quien pregunta lo puede encaminar: ponga aquí solo los roles en quienes confía para hablar con esa voz |
 | `respuestas` | Sí | Si lee en voz alta las respuestas del asistente (cuando la persona lo enciende en el chat o pregunta por voz) |
 | `automatica` | Sí | Si narra también la [presentación automática](#presentación-automática) (sale de la caché casi siempre: se repite) |
@@ -897,7 +902,7 @@ nunca queda muda.
 
   | Estado y código | Cuándo | Qué hace el navegador |
   |---|---|---|
-  | 409 `sin_voz` | No hay voz clonada elegida; la conexión no está, no tiene `mnemo:voice` o es de otra cuenta; o Mnemo dice que no puede (la herramienta no está, `NO_VOICE`, `PLAN_REQUIRED`, `UNAVAILABLE`) | Sigue con la voz del navegador el resto de la sesión |
+  | 409 `sin_voz` | El motor es `navegador`; la conexión no está, no tiene `mnemo:voice` o es de otra cuenta que la de la voz elegida; con la automática, Mnemo no ofrece ninguna voz a las apps; o Mnemo dice que no puede (la herramienta no está, `NO_VOICE`, `PLAN_REQUIRED`, `UNAVAILABLE`) | Sigue con la voz del navegador el resto de la sesión |
   | 403 `voz_rol` | Su rol no está en `agente_voz.roles` (o pide la prueba sin ser administrador) | Igual |
   | 409 `voz_apagada` | La voz no lee respuestas (`respuestas`), no narra la automática (`automatica`) o el plan lo escribió una aplicación externa por MCP | Esa frase con la del navegador |
   | 409 `plan_vencido` | El `rid` no es el plan vigente de esa persona (ni el que la automática reemplazó) | Esa frase con la del navegador |
@@ -912,13 +917,16 @@ nunca queda muda.
   "speech"`), el panel lo recuerda una hora para esa conexión y esa voz: mientras tanto `GET /api/agente/estado`
   dice `voz.disponible: false`, el navegador ni lo intenta y la caché de la narración se vacía (lo mismo con la
   conexión vencida o revocada, y cuando `GET /api/agente/voces` ya no trae la voz elegida). Un acierto, elegir otra
-  voz, volver a conectar o que `GET /api/agente/voces` la vuelva a traer lo olvidan.
+  voz, volver a conectar o que `GET /api/agente/voces` la vuelva a traer lo olvidan. Con la automática, el «no» es de
+  la automática, salvo `NO_VOICE` (esa voz dejó de estar para las apps): entonces el panel anota por 5 minutos que no
+  hay automática y después le vuelve a preguntar a Mnemo cuál es (puede haber otra).
 - **`GET /api/agente/estado`** trae `voz: {disponible, nombre, respuestas, automatica}`: `disponible` si esta persona
-  puede hacer sonar la voz clonada ahora (motor `mnemo`, voz elegida con la cuenta conectada, conexión con
-  `mnemo:voice`, su rol en `roles` y Mnemo no dijo hace poco que no); `respuestas` y `automatica`, los ajustes, solo
-  si está disponible. **`GET /api/agente/voces`** (solo el administrador) trae `{voces: [{id, nombre, idioma,
-  motor}], elegida, conexion: {voz, ofrece_voz}}`: sin conexión o sin `mnemo:voice`, la lista vacía (sin preguntarle
-  a Mnemo); sus errores son los mismos códigos.
+  puede hacer sonar la voz clonada ahora (motor `mnemo`, voz elegida con la cuenta conectada o la automática,
+  conexión con `mnemo:voice`, su rol en `roles` y Mnemo no dijo hace poco que no; con la automática, mientras el
+  panel no sabe cuál es, se ofrece y `nombre` llega en null); `respuestas` y `automatica`, los ajustes, solo si está
+  disponible. **`GET /api/agente/voces`** (solo el administrador) trae `{voces: [{id, nombre, idioma, motor}],
+  elegida, automatica, conexion: {voz, ofrece_voz}}`: sin conexión o sin `mnemo:voice`, la lista vacía (sin
+  preguntarle a Mnemo); sus errores son los mismos códigos.
 - **Las frases de una respuesta.** Si el mensaje del chat llega con `contexto.voz: true` (o la confirmación con
   `voz: true`), la voz está disponible para esa persona y lee respuestas, y la conversación no trae datos de
   habitantes, el turno arma las frases mientras el modelo escribe (`voz.Frases`): corta tras «.», «?», «!», «:», «;»

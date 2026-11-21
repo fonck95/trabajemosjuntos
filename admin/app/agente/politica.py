@@ -34,7 +34,7 @@ MENSAJES_DIARIOS = (1, 5000)
 # La voz del asistente (`agente_voz`): los mismos valores por defecto que `modelo.AJUSTES_POR_DEFECTO` y la misma forma
 # que acepta `api/ajustes.py` (`VozAgente`; una prueba compara los dos lados)
 MOTORES_VOZ = ("navegador", "mnemo")
-VOZ_POR_DEFECTO: dict[str, Any] = {"motor": "navegador", "voz": "", "nombre": "", "cuenta": "",
+VOZ_POR_DEFECTO: dict[str, Any] = {"motor": "mnemo", "voz": "", "nombre": "", "cuenta": "",
                                    "roles": ["admin", "coordinador"], "respuestas": True, "automatica": True}
 # La respuesta inmediata (`agente_adelanto`): el mismo valor por defecto que `modelo.AJUSTES_POR_DEFECTO`
 ADELANTO_POR_DEFECTO = True
@@ -97,7 +97,8 @@ def ajustes_voz(ajustes: dict | None) -> dict:
     """Los ajustes `agente_voz` vigentes, completos y validados (una copia nueva en cada llamada): `motor`
     («navegador» o «mnemo»), `voz` (el id de la voz en Mnemo, o «»), `nombre`, `cuenta` (la huella de la cuenta de Mnemo
     con que se eligió, `mnemo_conexion.huella_cuenta`, o «»), `roles` (quién la hace sonar), `respuestas` y
-    `automatica`. Lo que no tiene la forma esperada toma el valor por defecto."""
+    `automatica`. Con el motor «mnemo» y sin `voz`, suena la voz automática: la que Mnemo ofrece a las apps
+    (`voz.automatica`). Lo que no tiene la forma esperada toma el valor por defecto."""
     crudo = (ajustes or {}).get("agente_voz")
     crudo = crudo if isinstance(crudo, dict) else {}
     roles = crudo.get("roles")

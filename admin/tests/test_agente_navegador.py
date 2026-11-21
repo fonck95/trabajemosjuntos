@@ -1100,15 +1100,22 @@ def test_conectar_mnemo_desde_ajustes(panel_y_mnemo, cfg, tmp_path):
     # administrador; el coordinador ve el bloque en solo lectura y no le pregunta a Mnemo; sin conexión, lo dice
     assert "mnemo:voice" in a["scope"].split()
     voz = d["voz"]
-    assert voz["opciones"] == ["Ninguna", "Voz de Ana Inventada · es"] and voz["avisos"] == [], voz
-    assert voz["botones"] == ["Guardar voz", "Probar voz"] and voz["probar_apagado"] is True and voz["sintetica"], voz
-    assert d["voz_coordinador"] == {"opciones": ["Ninguna"], "deshabilitados": True, "botones": []}, d["voz_coordinador"]
+    # (sin elegir una, la automática: la que Mnemo ofrece a las apps, y ya se puede probar)
+    assert voz["opciones"] == ["Automática: Voz de Ana Inventada", "Voz de Ana Inventada · es"], voz
+    assert voz["avisos"] == [], voz
+    assert voz["botones"] == ["Guardar voz", "Probar voz"] and voz["probar_apagado"] is False and voz["sintetica"], voz
+    assert d["voz_coordinador"] == {"opciones": ["Automática: la que Mnemo ofrece a las apps"], "deshabilitados": True,
+                                    "botones": []}, d["voz_coordinador"]
     llamadas = [n for n, _ in falso.mcp.llamadas if n == "mnemo_list_voices"]
     assert len(llamadas) >= 1
     assert "conecte Mnemo (arriba)" in d["voz_desconectado"]["avisos"][0], d["voz_desconectado"]
     # En la base: sin conexión, sin tokens a la vista y la auditoría de cada paso
     doc = db.meta.find_one({"_id": "mnemo_conexion"}) or {}
-    assert "estado" not in doc and "cifrado" not in doc and not doc.get("pendiente")
+    assert "estado" not in doc and "cifrado" not in doc
+    # (queda la autorización que pidió el botón de la voz y se abandonó en Mnemo: pide `mnemo:voice`, sin nada a la
+    # vista y vence sola)
+    pendiente = doc.get("pendiente") or {}
+    assert "mnemo:voice" in pendiente["pedidos"] and "verificador" not in pendiente and pendiente["expira"]
     acciones = [a["accion"] for a in db.auditoria.find({"accion": {"$regex": "^mnemo_"}}, sort=[("_id", 1)])]
     assert acciones == ["mnemo_conectar", "mnemo_conectar", "mnemo_desconectar"], acciones
 
@@ -1205,7 +1212,7 @@ const llega = (page, fn) => page.waitForFunction(fn, null, espera).then(() => tr
 // respondió esa lectura. Por defecto la lectura llega al asistente antes del POST (y la prueba hace `durante` con la
 // página a medio conectar); con `enVuelo`, llega después de que Ajustes le avisó que se conectó: el asistente tiene que
 // esperarla y pedir otra
-async function conectar(page, caso, decision, { sinModelos = false, durante = null, enVuelo = false } = {}) {
+async function conectar(page, caso, decision, { sinModelos = false, sinVoz = false, durante = null, enVuelo = false } = {}) {
   await page.fill('#f-mnemo [name=url]', mcp);
   await page.click('#mnemo-conectar');
   await page.waitForURL((u) => u.origin === origenMnemo, espera); // location.assign a la autorización de Mnemo
@@ -1218,6 +1225,7 @@ async function conectar(page, caso, decision, { sinModelos = false, durante = nu
   }
   await page.waitForSelector('#permitir', espera);
   if (sinModelos) await page.uncheck('input[name=scope][value="mnemo:model"]');
+  if (sinVoz) await page.uncheck('input[name=scope][value="mnemo:voice"]');
   // Solo la primera de cada una (el resto pasa sin más). Sin `times`: al vencer una ruta con otra retenida, Playwright
   // soltaría la retenida
   let soltarVolver, soltarLectura, leida;
@@ -1360,10 +1368,11 @@ async function conectar(page, caso, decision, { sinModelos = false, durante = nu
     caso.datos.voz_coordinador = { opciones: vk.opciones, deshabilitados: vk.deshabilitados, botones: vk.botones };
     await k.ctx.close();
 
-    // 4. «Volver a conectar» sin marcar el permiso de los modelos: Ajustes lo avisa (sin mandar a marcar una casilla que
-    // puede no estar). El asistente leyó su estado con la conexión anterior (con los modelos), y esa lectura le llega
-    // después del aviso de Ajustes: la espera, pide otra y, sin recargar, al abrirlo explica qué falta
-    r = await conectar(page, caso, 'permitir', { sinModelos: true, enVuelo: true });
+    // 4. «Volver a conectar» sin marcar el permiso de los modelos (ni el de las voces): Ajustes lo avisa (sin mandar a
+    // marcar una casilla que puede no estar). El asistente leyó su estado con la conexión anterior (con los modelos), y
+    // esa lectura le llega después del aviso de Ajustes: la espera, pide otra y, sin recargar, al abrirlo explica qué
+    // falta
+    r = await conectar(page, caso, 'permitir', { sinModelos: true, sinVoz: true, enVuelo: true });
     b = await bloque(page);
     caso.datos.sin_modelos = { ...r, bloque: b };
     v.aviso_con_la_lectura_en_vuelo = caso.datos.avisado === true;
@@ -1377,6 +1386,24 @@ async function conectar(page, caso, decision, { sinModelos = false, durante = nu
     v.asistente_se_entera_sin_modelos = sinPermiso
       && (caso.datos.asistente_sin_modelos.texto || '').includes('Si Mnemo no muestra esa casilla, hay que actualizar Mnemo.');
     await page.click('#agente-cerrar');
+    // Sin el permiso de las voces, el bloque de la voz lo dice con un botón que vuelve a conectar: va a Mnemo pidiendo
+    // `mnemo:voice` (la página de Mnemo no se abre aquí: se mira adónde iba y se vuelve)
+    await page.waitForSelector('#voz-reconectar', espera);
+    caso.datos.voz_sin_permiso = await bloqueVoz(page);
+    await page.locator('#voz-asistente').screenshot({ path: `${capturas}/ajustes-voz-sin-permiso.png` });
+    const esAutorizar = (u) => u.origin === origenMnemo && u.pathname === caso.datos.autorizar.ruta;
+    let pedido = null;
+    const alAutorizar = (rt) => { pedido = new URL(rt.request().url()); return rt.fulfill({ contentType: 'text/html', body: '<p>Mnemo</p>' }); };
+    await page.route(esAutorizar, alAutorizar);
+    await page.click('#voz-reconectar');
+    await page.waitForURL((u) => u.origin === origenMnemo, espera);
+    await page.unroute(esAutorizar, alAutorizar);
+    caso.datos.voz_reconectar = { scope: pedido?.searchParams.get('scope') ?? null };
+    v.voz_sin_permiso_con_boton = caso.datos.voz_sin_permiso.avisos[0]?.includes('no tiene permiso para usar sus voces')
+      && caso.datos.voz_sin_permiso.botones.includes('Volver a conectar para usar la voz');
+    v.voz_boton_pide_el_permiso = (caso.datos.voz_reconectar.scope || '').split(' ').includes('mnemo:voice');
+    await page.goBack();
+    await page.waitForSelector('#mnemo-conexion', espera);
 
     // 5. «Desconectar», con confirmación; el asistente dice que no está conectado
     await page.click('#mnemo-desconectar');
