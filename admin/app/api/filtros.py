@@ -451,7 +451,9 @@ def filtro(f: Filtros, hoy: date | None = None) -> dict:
     for campo in ("ocupacion", "perfil_profesional"):
         v = (getattr(f, campo) or "").strip()
         if v:
-            y.append({campo: {"$regex": patron_texto(v), "$options": "i"}})
+            patron = patron_texto(v)
+            # Solo símbolos («—», un emoji): sin letras que buscar, nadie (un patrón vacío casaría con todas)
+            y.append({campo: {"$regex": patron, "$options": "i"}} if patron else {"_id": {"$in": []}})
     if f.con_correo is not None:
         y.append(_lleno("correo") if f.con_correo else _vacio("correo"))
     if f.sin_lider:

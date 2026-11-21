@@ -498,11 +498,14 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
       clave = nuevaClave();
       ficha = (await marcarNoDisponibles(p.id, form)) || ficha;
       if (aut) ficha = await api.post(`/api/personas/${p.id}/autorizacion`, aut, { clave: nuevaClave() });
+      const avisos = [...(ficha?.avisos || [])];
       while (nuevosLideres.length) {
         ficha = await api.post(`/api/personas/${p.id}/lideres`, { lider_id: nuevosLideres[0].id });
         nuevosLideres.shift();
+        pintarNuevos();
+        for (const a of ficha?.avisos || []) if (!avisos.includes(a)) avisos.push(a);
       }
-      for (const a of ficha?.avisos || []) aviso(typeof a === 'string' ? a : a.mensaje || '', 'ok', 7000);
+      for (const a of avisos) aviso(typeof a === 'string' ? a : a.mensaje || '', 'ok', 7000);
       resultado = { ficha: ficha || p, siguiente: seguir };
       tocado = false;
       cerrar(resultado);
@@ -627,7 +630,9 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   // la misma cédula y, para A y K, las que empiezan por lo escrito): «¿Es alguna de estas?» antes de seguir
   let turno = 0;
   const filasDe = (r) => (Array.isArray(r) ? r : r?.filas || r?.parecidas || []);
+  let ultimasParecidas = [];
   const pintarParecidas = (lista, { titulo: t = '¿Es alguna de estas?', ayuda = 'Si es una de ellas, elíjala para no duplicarla.' } = {}) => {
+    ultimasParecidas = lista;
     const cont = $('#parecidas', el);
     if (!lista.length) { cont.replaceChildren(); return; }
     cont.innerHTML = String(html`<div class="aviso-legal parecidas"><b>${t}</b> ${ayuda}
@@ -638,7 +643,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   };
   const buscarParecidas = debounce(async () => {
     const nombre = form.nombre.value.trim(), cedula = form.cedula.value.replace(/\D/g, ''), telefono = form.telefono.value.replace(/\D/g, '');
-    if (nombre.length < 3 && cedula.length < 5) { pintarParecidas([]); return; }
+    if (nombre.length < 3 && cedula.length < 5) { ++turno; pintarParecidas([]); return; }
     const mio = ++turno;
     try {
       const r = await api.get('/api/parecidas', { nombre: nombre.length >= 3 ? nombre : null, cedula: cedula.length >= 5 ? cedula : null, telefono: telefono.length >= 3 ? telefono : null });
@@ -683,11 +688,14 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   // (`enCurso`, el `ocupado` del diálogo): mientras el PATCH va al servidor, Escape y el fondo no preguntan
   // «¿Descartar lo escrito?» (sería falso: se guarda igual y la página se va a esa ficha), y no se cruza con un «Guardar»
   // ni con otro «Es esta». Al terminar, `cerrar` cierra sin preguntar
-  async function esEsta(id, origen) {
+  async function esEsta(id, origen, { yaTieneCedula = false } = {}) {
     if (enCurso) return;
     const { c } = cuerpo();
     const lideres = c.lideres || [];
     delete c.nombre; delete c.etiquetas; delete c.ficha; delete c.lideres;
+    // Una ficha que ya tiene cédula la conserva: la escrita puede ser solo el comienzo o una cédula anterior suya, y
+    // completar nunca cambia una cédula (el servidor respondería 422)
+    if (yaTieneCedula) { delete c.cedula; delete c.tipo_documento; delete c.cedula_verificada; }
     for (const k of Object.keys(c)) if (c[k] == null) delete c[k];
     enCurso = true;
     boton.disabled = true;
@@ -724,7 +732,11 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
 
   el.addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-elegir]');
-    if (b) { esEsta(Number(b.dataset.elegir), b); return; }
+    if (b) {
+      const x = ultimasParecidas.find((f) => String(f.id) === b.dataset.elegir);
+      esEsta(Number(b.dataset.elegir), b, { yaTieneCedula: !!(x?.tiene_cedula || x?.cedula || x?.cedula_ult3) });
+      return;
+    }
     const o = ev.target.closest('[data-completar-otra]');
     if (o) { esEsta(Number(o.dataset.completarOtra), o); return; }
     // «Abrir esa ficha» navega: el diálogo se cierra (el enlace lo atiende app.js)

@@ -34,6 +34,15 @@ const CON_CONTROL = new Set(['q', 'zona', 'lugar_id', 'fuente', 'lista', 'etique
   'situacion', 'creado_por', 'actualizado_por', 'menor', 'tipo', 'varios_lideres', 'precision', 'asistio', 'ids_total',
   'con_correo', 'sin_correo', 'sin_direccion', 'estado_civil', 'jefe_hogar', 'sin_jefe_hogar', 'ocupacion', 'perfil_profesional',
   'lider_id', 'sin_lider']);
+// Lo que el servidor no deja usar a P y C (`filtros.VEDADOS`, y las fuentes que revelan una base política): si llega
+// por un enlace, se quita al abrir la vista con un aviso (si no, la API responde 403 y la vista entera queda en «Sin
+// acceso»). tests/test_datos_principales.py compara esta lista con la del servidor
+const VEDADOS_P = ['poligono', 'ids', 'ids_total', 'lista', 'lider', 'tipo', 'lider_id', 'varios_lideres', 'sin_lider',
+  'intervenida_en', 'creado_por', 'actualizado_por', 'menor'];
+const FUENTES_VEDADAS_P = ['cedulas', 'general', 'ambas'];
+// Los que tienen control solo para A y K: para P, si llegan por un enlace, se ven como chip y se pueden quitar
+const SOLO_ADM = new Set(['tipo', 'lider_id', 'sin_lider', 'fuente', 'lista', 'creado_por', 'actualizado_por', 'menor',
+  'varios_lideres', 'precision', 'asistio']);
 const PARAMS_PUESTO = ['puesto_id', 'votacion_estado', 'donde'];
 const PARAMS_TELEFONO = ['con_telefono', 'varios_telefonos'];
 const PARAMS_CORREO = ['con_correo', 'sin_correo'];
@@ -83,6 +92,12 @@ export async function vistaPersonas(el, { q, ir }) {
   const adm = administra();
   const esP = sesion.rol === 'planillero';
   const completa = puede('personas.editar');
+  if (!adm) {
+    const quitados = VEDADOS_P.filter((k) => k in f);
+    if (FUENTES_VEDADAS_P.includes(f.fuente)) quitados.push('fuente');
+    for (const k of quitados) delete f[k];
+    if (quitados.some((k) => k !== 'ids_total')) aviso('Se quitaron filtros del enlace que su rol no puede usar', 'error', 6000);
+  }
   const opciones = (lista, valor) => lista.map(([v, t]) => html`<option value="${v}" ${String(valor ?? '') === String(v) ? 'selected' : ''}>${t}</option>`);
 
   // Valores compuestos: puesto (id, «sin puesto», «por confirmar», «otro municipio»), teléfono y rango de edad
@@ -105,8 +120,9 @@ export async function vistaPersonas(el, { q, ir }) {
     return opciones([['', 'Liderado por'], ['sin', 'Sin líder'], ...conActual,
       ...ls.map((l) => [String(l.id), `${l.nombre}${l.tipo ? ` (${TIPOS_PERSONA[l.tipo]})` : ''}`])], actual);
   };
-  const secundariosActivos = () => SECUNDARIOS.filter((k) => f[k] != null && f[k] !== '').length;
-  const ocultos = () => Object.keys(f).filter((k) => !CON_CONTROL.has(k) && !(['edad_min', 'edad_max'].includes(k) && valorRangoF()));
+  const conControl = (k) => CON_CONTROL.has(k) && (adm || !SOLO_ADM.has(k));
+  const secundariosActivos = () => SECUNDARIOS.filter((k) => conControl(k) && f[k] != null && f[k] !== '').length;
+  const ocultos = () => Object.keys(f).filter((k) => !conControl(k) && !(['edad_min', 'edad_max'].includes(k) && valorRangoF()));
   const activos = () => Object.keys(f).filter((k) => k !== 'q' && k !== 'ids_total' && f[k] != null && f[k] !== '').length;
   const usuarios = (cat.usuarios || []).map((u) => [u.id, u.nombre || u.usuario]);
 
@@ -349,7 +365,12 @@ export async function vistaPersonas(el, { q, ir }) {
   for (const x of $$('[data-texto]', el)) {
     const aplicar = () => {
       const v = x.value.trim();
-      if ((f[x.dataset.texto] || '') === v || (v && v.length < 2)) return;
+      if (v && v.length < 2) {
+        x.value = f[x.dataset.texto] || '';
+        aviso('Escriba al menos 2 letras', 'error');
+        return;
+      }
+      if ((f[x.dataset.texto] || '') === v) return;
       if (v) f[x.dataset.texto] = v; else delete f[x.dataset.texto];
       recargar();
     };

@@ -402,7 +402,7 @@ def _grupos(v: object) -> tuple[list[str], list[str]]:
 
 
 def _referencia(v: object) -> dict | None:
-    """El «Liderado por» de una celda: «1042213235 - SANDRA LILIANA ECHAVARRIA», solo la cédula o solo el nombre →
+    """El «Liderado por» de una celda: «1000000123 - ANA MARÍA INVENTADA», solo la cédula o solo el nombre →
     {cedula, nombre}; None si no dice nada («  -  »)."""
     s = _reparar(_texto(v))
     if not s:

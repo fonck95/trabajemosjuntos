@@ -132,8 +132,8 @@ def test_ayudas_del_lector():
     assert lectores._reparar("Familias en acción") == "Familias en acción"  # lo que ya está bien no cambia
     assert lectores._reparar("") == "" and lectores._reparar("EVENTOS") == "EVENTOS"
     assert lectores._referencia(" -   ") is None and lectores._referencia(None) is None
-    assert lectores._referencia("3557687 - JUAN  INVENTADO") == {"cedula": "3557687", "nombre": "JUAN INVENTADO"}
-    assert lectores._referencia("1.042.213.235") == {"cedula": "1042213235", "nombre": None}
+    assert lectores._referencia("1000000456 - JUAN  INVENTADO") == {"cedula": "1000000456", "nombre": "JUAN INVENTADO"}
+    assert lectores._referencia("1.000.000.789") == {"cedula": "1000000789", "nombre": None}
     assert lectores._referencia("SOLO NOMBRE INVENTADO") == {"cedula": None, "nombre": "SOLO NOMBRE INVENTADO"}
     tipos, listas = lectores._grupos("Votante, Votante, Bd externa, Eventos, Bd externa")
     assert tipos == ["votante"] and listas == ["Bd externa", "Eventos"]
