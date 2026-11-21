@@ -1,4 +1,4 @@
-// Infraestructura TIC y energía: el anillo de fibra óptica que une las sedes públicas con el centro de control (CCED) en
+// Conectividad y energía (módulo «tic»): el anillo de fibra óptica que une las sedes públicas con el centro de control (CCED) en
 // la alcaldía, Zonas Digitales con wifi público en parques y en la ciudadela deportiva, telemetría de las estaciones de
 // bombeo y de la PTAR, y la energía de todo eso desde una granja solar CENTRALIZADA (no paneles sobre cada sede): 1,2 MWp
 // frente a la subestación de EPM, con un bloque de reserva, más la granja de 997 kWp sobre el relleno clausurado.
@@ -22,6 +22,10 @@ const ZONAS_DIGITALES = [
 export const MASTIL_CCED = { off: [29, -11], alto: 30 };
 // de cerca (cámara a menos de CERCA m de lo que mira) la fibra va en postes con cable aéreo; de lejos, la línea animada
 const CERCA = 900;
+// los nombres que vienen de geo.json y de las sedes del atlas se muestran sin siglas: cada una, con su nombre completo
+const SIGLAS = [[/\s*\+\s*CCED\b/g, ' y centro de control'], [/\bCCED\b/g, 'centro de control'], [/\s*\(PTAP\)/g, ' potable'], [/\s*\((CIC|CPSAM)\)/g, ''], [/\bEBAR\b/g, 'estación de bombeo'], [/\bPTAR\b/g, 'planta de tratamiento'],
+  [/\bPTAP\b/g, 'planta de agua potable'], [/\bCIC\b/g, 'Centro de Integración Ciudadana'], [/\bI\.\s?E\.\s/g, 'Institución educativa '], [/\bL\. E\. Díaz\b/g, 'Luis Eduardo Díaz'], [/\s*S\.A\. E\.S\.P\./g, '']];
+const sinSiglas = (s) => { const o = String(s ?? ''), t = SIGLAS.reduce((a, [re, n]) => a.replace(re, n), o); return /^[A-ZÁÉÍÓÚ]/.test(o) ? t.charAt(0).toUpperCase() + t.slice(1) : t; };
 const barraY = new THREE.Vector3(0, 1, 0);
 // barra cilíndrica de a a b (puntos de three)
 function barra(a, b, r) {
@@ -87,12 +91,12 @@ export function crear(esc, datos) {
   const halos = [];
   const halo = (p, padre, k0 = 4, k1 = 30, tono = 0x6250d6) => { for (let k = 0; k < 2; k++) { const o = new THREE.Mesh(new THREE.RingGeometry(1, 1.12, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: tono, transparent: true, opacity: 0.6, depthWrite: false })); o.position.copy(V(p[0], p[1], 0.5 + k * 0.05)); Object.assign(o.userData, { fase: k / 2, k0, k1 }); padre.add(o); halos.push(o); esc.tenir(o.material, '--data'); } };
   halo(pM, cFib, 4, 34);
-  esc.etiqueta('<b>CCED · centro de control</b><small>en la alcaldía</small>', { pos: [pA[0], pA[1], 44], padre: cFib, color: 'var(--data)', ancla: [0.5, 1] });
+  esc.etiqueta('<b>Centro de control</b><small>en la alcaldía</small>', { pos: [pA[0], pA[1], 44], padre: cFib, color: 'var(--data)', ancla: [0.5, 1] });
   // Zonas Digitales: pines de wifi con ondas
   const zd = sitios(datos, 'tic', 'zona_digital'), lista = zd.length ? zd.map((s) => ({ nombre: s.nombre, p: [s.x, s.y] })) : ZONAS_DIGITALES;
   const ondas = [];
-  sitios(datos, 'tic', 'zona_digital_f2').forEach((s) => esc.etiqueta('', { pos: [s.x, s.y, 3], padre: cZd2, color: 'var(--muted)', cls: 'lbl-dot', titulo: `${s.nombre}: Zona Digital de la segunda fase` }));
-  const corto = (n) => n.split(' (')[0].replace(/ y parque lineal.*$/, '');
+  sitios(datos, 'tic', 'zona_digital_f2').forEach((s) => esc.etiqueta('', { pos: [s.x, s.y, 3], padre: cZd2, color: 'var(--muted)', cls: 'lbl-dot', titulo: `${sinSiglas(s.nombre)}: Zona Digital de la segunda fase` }));
+  const corto = (n) => sinSiglas(n.split(' (')[0].replace(/ y parque lineal.*$/, ''));
   // en cada Zona Digital: poste de 6 m con el punto de acceso y sus antenas, sombrilla de lona con una banca debajo y
   // gente conectada (dos sentados y uno de pie)
   const Az = acopio(), sentados = [], dePie = [], bz = [];
@@ -108,7 +112,7 @@ export function crear(esc, datos) {
   Az.volcar(cZd, { acero: mat(new THREE.Color('#a9b0b6'), { roughness: 0.35, metalness: 0.7 }), blanco: mat(new THREE.Color('#f4f4f0'), { roughness: 0.4 }), lona: matT('membrana', { color: '#cfc7f2', side: THREE.DoubleSide }) });
   if (bz.length) { cZd.add(bancas(bz)); cZd.add(gente(sentados, { sentado: true, semilla: 41 })); cZd.add(gente(dePie, { semilla: 42 })); }
   lista.forEach(({ nombre, p }) => {
-    esc.etiqueta(`<b>ZD · ${corto(nombre)}</b>`, { pos: [p[0], p[1], 14], padre: cZd, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1], titulo: `Zona Digital: ${nombre}` });
+    esc.etiqueta(`<b>${corto(nombre)}</b><small>Zona Digital</small>`, { pos: [p[0], p[1], 14], padre: cZd, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1], titulo: `Zona Digital: ${sinSiglas(nombre)}` });
     for (let k = 0; k < 2; k++) { const o = new THREE.Mesh(new THREE.RingGeometry(10, 11.2, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x6250d6, transparent: true, opacity: 0.6, depthWrite: false })); o.position.set(p[0], 1 + k * 0.1, -p[1]); o.userData.fase = k / 2; cZd.add(o); ondas.push(o); esc.tenir(o.material, color); }
   });
   esc.st.onFrame((dt, t) => { if (!cZd.visible) return false; ondas.forEach((o) => { const u = ((t * 0.45) + o.userData.fase) % 1; o.scale.setScalar(0.4 + u * 2.4); o.material.opacity = 0.65 * (1 - u); }); return true; });
@@ -142,7 +146,7 @@ export function crear(esc, datos) {
   rtus.forEach((p) => halo(p, cTel, 2, 18));
   // el mástil del CCED también en el paso de la telemetría (las estaciones le reportan a él)
   const Am2 = acopio(); Am2.poner(mastil(MASTIL_CCED.alto), pM[0], pM[1], 0.3); Am2.volcar(cTel, matMastil());
-  puntos.forEach(({ nombre, p }, i) => { esc.linea(arco(rtus[i] || p, pM, Math.min(260, Math.hypot(p[0] - pA[0], p[1] - pA[1]) * 0.12 + 30), 6.5, MASTIL_CCED.alto - 1), { color: '--data', ancho: 2.5, punteada: true, guion: 12, opacidad: 0.9, padre: cTel }); esc.etiqueta(`<b>${nombre}</b><small>telemetría${/PTAR|central/i.test(nombre) ? ' · obra nueva' : ''}</small>`, { pos: [p[0], p[1], 12], padre: cTel, color: 'var(--data)', cls: 'lbl-p mini', ancla: [0.5, 1] }); });
+  puntos.forEach(({ nombre, p }, i) => { esc.linea(arco(rtus[i] || p, pM, Math.min(260, Math.hypot(p[0] - pA[0], p[1] - pA[1]) * 0.12 + 30), 6.5, MASTIL_CCED.alto - 1), { color: '--data', ancho: 2.5, punteada: true, guion: 12, opacidad: 0.9, padre: cTel }); esc.etiqueta(`<b>${sinSiglas(nombre)}</b><small>telemetría${/PTAR|planta|central/i.test(nombre) ? ' · obra nueva' : ''}</small>`, { pos: [p[0], p[1], 12], padre: cTel, color: 'var(--data)', cls: 'lbl-p mini', ancla: [0.5, 1] }); });
   // el LED parpadea (encendido 0,25 s de cada 1,2 s) y los halos se abren: solo con la capa a la vista
   let ledOn = true;
   esc.st.onFrame((dt, t) => {
@@ -157,25 +161,25 @@ export function crear(esc, datos) {
   const con0 = trazado(datos, 'tic', 'conexion_granja')?.puntos;
   const granja = granjaSolar(poly, { kwp: kwpMeta, salida: con0?.[0] || null }); cSol.add(granja);
   const cx = poly.reduce((a, p) => a + p[0], 0) / poly.length, cy = poly.reduce((a, p) => a + p[1], 0) / poly.length;
-  esc.etiqueta(`<b>Granja solar municipal · ${granja.userData.kwp.toLocaleString('es-CO')} kWp</b><small>1,0 MW CA · energía para sedes, acueducto y PTAR desde un solo punto</small>`, { pos: [cx, cy, 16], padre: cSol, color: 'var(--power)', ancla: [0.5, 1] });
+  esc.etiqueta(`<b>Granja solar municipal · ${granja.userData.kwp.toLocaleString('es-CO')} kilovatios pico</b><small>1,0 megavatios en corriente alterna<br>energía para sedes, acueducto y planta de tratamiento desde un solo punto</small>`, { pos: [cx, cy, 16], padre: cSol, color: 'var(--power)', ancla: [0.5, 1] });
   const res = sitio(datos, 'tic', 'granja_reserva'), se = sitio(datos, 'tic', 'subestacion');
   if (res?.poligono) {
     esc.linea([...res.poligono, res.poligono[0]].map(([x, y]) => [x, y, 1]), { color: '#f0a020', ancho: 2.5, punteada: true, guion: 6, padre: cSol });
     const [rx, ry] = [res.poligono.reduce((a, q) => a + q[0], 0) / res.poligono.length, res.poligono.reduce((a, q) => a + q[1], 0) / res.poligono.length];
     esc.etiqueta('<b>Bloque B · reserva</b><small>0,49 ha para ampliar</small>', { pos: [rx, ry, 6], padre: cDet, color: 'var(--power)', cls: 'lbl-p mini', ancla: [0.5, 1] });
   }
-  if (se) esc.etiqueta('<b>Subestación Yondó · EPM</b><small>34,5/13,2 kV · conexión de 40 m</small>', { pos: [se.x, se.y, 12], padre: cDet, color: 'var(--power)', cls: 'lbl-p mini', ancla: [0.5, 1] });
+  if (se) esc.etiqueta('<b>Subestación Yondó</b><small>Empresas Públicas de Medellín<br>34,5/13,2 kilovoltios · conexión de 40 m</small>', { pos: [se.x, se.y, 12], padre: cDet, color: 'var(--power)', cls: 'lbl-p mini', ancla: [0.5, 1] });
   // línea de 13,2 kV: de la subestación elevadora de la granja a la subestación de EPM
   const con = con0 ? [granja.userData.subestacion, ...con0] : null;
   if (con) esc.flujo(con.map(([x, y]) => [x, y, 11]), { color: '#f0a020', potencia: 0.9, max: 30, tam: 1.8, tubo: 0.3, padre: cSol });
   const rel = esc.edificios.get('relleno_parque');
-  if (rel) esc.etiqueta('<b>Granja del relleno · 997 kWp</b><small>comunidad energética de estratos 1 y 2</small>', { pos: [rel.e.x, rel.e.y, 36], padre: cSol, color: 'var(--power)', cls: 'lbl-p mini' });
+  if (rel) esc.etiqueta('<b>Granja del relleno · 997 kilovatios pico</b><small>comunidad energética de estratos 1 y 2</small>', { pos: [rel.e.x, rel.e.y, 36], padre: cSol, color: 'var(--power)', cls: 'lbl-p mini' });
   // modelo descartado: paneles en cada sede (se muestra un momento para compararlo)
   const sedes = [...esc.edificios.values()].filter((it) => it.e.kwp_factible > 0 && !['relleno_parque', 'torre_hospital'].includes(it.e.id));
-  sedes.forEach((it) => esc.etiqueta('', { pos: [it.e.x, it.e.y, 14], padre: cViejo, color: 'var(--bad)', cls: 'lbl-dot', titulo: it.e.corto || it.e.nombre || '' }));
+  sedes.forEach((it) => esc.etiqueta('', { pos: [it.e.x, it.e.y, 14], padre: cViejo, color: 'var(--bad)', cls: 'lbl-dot', titulo: sinSiglas(it.e.corto || it.e.nombre || '') }));
   esc.etiqueta(`<b>Modelo descartado</b><small>paneles sobre ${sedes.length} sedes: muchas cubiertas, muchos contratos, poca escala</small>`, { pos: [0, -470, 30], padre: cViejo, color: 'var(--bad)', cls: 'lbl-p alerta', ancla: [0.5, 1] });
   // portadilla: las mismas sedes hoy, en gris (energía a tarifa oficial plena)
-  sedes.forEach((it) => esc.etiqueta('', { pos: [it.e.x, it.e.y, 14], padre: cHoy, color: 'var(--muted)', cls: 'lbl-dot', titulo: it.e.corto || it.e.nombre || '' }));
+  sedes.forEach((it) => esc.etiqueta('', { pos: [it.e.x, it.e.y, 14], padre: cHoy, color: 'var(--muted)', cls: 'lbl-dot', titulo: sinSiglas(it.e.corto || it.e.nombre || '') }));
   esc.etiqueta(`<b>${sedes.length} sedes públicas</b><small>energía a tarifa oficial plena</small>`, { pos: [pA[0], pA[1], 30], padre: cHoy, color: 'var(--muted)', cls: 'lbl-p mini', ancla: [0.5, 1] });
   const panelesSedes = (v) => sedes.forEach((it) => esc.modoEdificio(it.e.id, v ? 'proyecto' : 'hoy', ['conexion', 'equipos', 'almacenamiento', 'cubierta_nueva']));
   const verRelleno = (v) => esc.modoEdificio('relleno_parque', v ? 'proyecto' : 'hoy', ['conexion']);

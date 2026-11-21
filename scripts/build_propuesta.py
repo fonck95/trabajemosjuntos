@@ -85,7 +85,7 @@ terr = load('territorio.json') if (D / 'territorio.json').exists() else {}
 #    titulación, el capital de trabajo, un acopio en otro corregimiento) y la herramienta no lo enfoca.
 ENFOQUES = {
     'agroindustria': {'agua': {'sitios': ['ptar']}, 'predio': {'sitios': ['lote']}},
-    'salud': {'ebs': {'paso': 'rural'}, 'ambulancias': {'edificios': ['hospital']}},
+    'salud': {'ebs': {'paso': 'equipos'}, 'ambulancias': {'edificios': ['hospital']}},
     'aguas': {'linea_base': {'paso': 'sistema'}, 'impulsion': {'paso': 'sistema'}, 'scada': {'paso': 'sistema'},
               'sectorizacion': {'paso': 'sectores'}, 'macromedicion': {'paso': 'sectores'},
               'micromedicion': {'paso': 'sectores'}, 'perdidas': {'paso': 'sectores'}},

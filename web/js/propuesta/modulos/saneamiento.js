@@ -13,10 +13,10 @@ import { sitios, sitio, trazado, trazados, caja } from './comun.js';
 
 // respaldo hasta tener el levantamiento: estaciones en el borde bajo del casco, PTAR aguas abajo de la unión de los caños
 const EBAR = [
-  { id: 'ebar_progreso', nombre: 'EBAR El Progreso', x: 520, y: 640, ls: 13.52 },
-  { id: 'ebar_paraiso', nombre: 'EBAR El Paraíso', x: -390, y: 430, ls: 16.51 },
-  { id: 'ebar_prado', nombre: 'EBAR El Prado', x: 600, y: -160, ls: 10.62 },
-  { id: 'ebar_victoria', nombre: 'EBAR La Victoria', x: -110, y: -380, ls: 14.69 },
+  { id: 'ebar_progreso', nombre: 'Estación de bombeo El Progreso', x: 520, y: 640, ls: 13.52 },
+  { id: 'ebar_paraiso', nombre: 'Estación de bombeo El Paraíso', x: -390, y: 430, ls: 16.51 },
+  { id: 'ebar_prado', nombre: 'Estación de bombeo El Prado', x: 600, y: -160, ls: 10.62 },
+  { id: 'ebar_victoria', nombre: 'Estación de bombeo La Victoria', x: -110, y: -380, ls: 14.69 },
 ];
 const PTAR = { x: -70, y: 1652, rumbo: 90 };
 const KM5 = [-3764, -3955];   // centro del predio del relleno nuevo, si geo.json no lo trae
@@ -29,6 +29,9 @@ const chico = matchMedia('(max-width: 1080px)');
 export const RTU = { ebar: [5.2, -3.0], central: [9, 6] };
 // de lejos (más de LEJOS m entre la cámara y lo que mira) los interceptores van también como línea de ancho fijo
 const LEJOS = 700;
+// los nombres y rótulos que vienen de geo.json se muestran sin siglas: cada sigla, con su nombre completo
+const SIGLAS = [[/\bEBAR\b/g, 'estación de bombeo'], [/\bPTAR\b/g, 'planta de tratamiento'], [/\bECA\b/g, 'estación de reciclaje'], [/\bEOT\b/g, 'Esquema de Ordenamiento Territorial']];
+const sinSiglas = (s) => { const o = String(s ?? ''), t = SIGLAS.reduce((a, [re, n]) => a.replace(re, n), o); return /^[A-ZÁÉÍÓÚ]/.test(o) ? t.charAt(0).toUpperCase() + t.slice(1) : t; };
 
 // ---------------------------------------------------------------- piezas propias (geometría unida por material)
 const po = (k) => ({ polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -k });
@@ -150,7 +153,7 @@ export function crear(esc, datos) {
     esc.linea(v.map(([x, y]) => [x, y, 1.2]), { color: '#8a5a2b', ancho: 3, opacidad: 0.85, padre: cHoy });
     esc.flujo(v.map(([x, y]) => [x, y, 1.5]), { color: '#8a5a2b', potencia: Math.min(1, (e.ls || 12) / 16), max: 26, tam: 2.4, tubo: 0.5, padre: cHoy });
     vertimiento(Av, v, r);
-    esc.etiqueta(`<b>${e.nombre}</b><small>${e.ls ? `${String(e.ls).replace('.', ',')} L/s sin tratar` : 'sin tratamiento'}</small>`, { pos: [e.x, e.y, 14], padre: cHoy, color: 'var(--bad)', cls: 'lbl-p mini alerta' });
+    esc.etiqueta(`<b>${sinSiglas(e.nombre)}</b><small>${e.ls ? `${String(e.ls).replace('.', ',')} litros por segundo sin tratar` : 'sin tratamiento'}</small>`, { pos: [e.x, e.y, 14], padre: cHoy, color: 'var(--bad)', cls: 'lbl-p mini alerta' });
   });
   Av.volcar(cHoy, M, { sombra: false });
   // las estaciones: la misma plantilla instanciada en las cuatro (una llamada de dibujo por material)
@@ -193,7 +196,7 @@ export function crear(esc, datos) {
   esc.linea(imp.map(([x, y]) => [x, y, 1.7]), { color, ancho: 4, punteada: true, guion: 10, padre: cCol });
   esc.flujo(emisario.map(([x, y]) => [x, y, 2]), { color: '#3aa6d9', potencia: 0.9, max: 30, tam: 2, tubo: 0.5, padre: cPtar });
   instanciar(plantillaLlegada(), M, [pc], cCol);
-  const lEst = esc.etiqueta('<b>Estación de bombeo de llegada</b><small>recibe los dos interceptores y sube el agua a la PTAR</small>', { pos: [pc[0], pc[1], 12], padre: cCol, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] });
+  const lEst = esc.etiqueta('<b>Estación de bombeo de llegada</b><small>recibe los dos interceptores y sube el agua a la planta</small>', { pos: [pc[0], pc[1], 12], padre: cCol, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] });
   // laguna de pulimento al norte de la planta: el caño lleva poco caudal para diluir, así que el agua se pule antes de volver
   const lag = sitio(datos, 'saneamiento', 'ptar_laguna')?.poligono;
   if (lag) {
@@ -217,7 +220,7 @@ export function crear(esc, datos) {
   if (union) esc.etiqueta('<b>Unión de los caños</b><small>Caño Colector Shell y canal oriental</small>', { pos: [union.x, union.y, 4], padre: esc.capa('san.sitios'), color: 'var(--m-aguas)', cls: 'lbl-p mini', ancla: [1, 0.5] });   // solo en el paso de la PTAR
   // rótulos fuera de la planta (del lado oriental, lejos del caño) y a lo largo de la descarga, que vuelve al caño
   const pm = pP.userData.aModelo(0, -80);
-  const lPtar = esc.etiqueta(`<b>PTAR central</b><small>aguas abajo de la unión de los caños · UASB + filtro percolador · 50 L/s${sp?.area_m2 ? ` · predio de ${(sp.area_m2 / 10000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} ha` : ''}</small>`, { pos: [pm[0], pm[1], 14], padre: cPtar, color: `var(${color})`, ancla: [0.5, 1] });
+  const lPtar = esc.etiqueta(`<b>Planta de tratamiento de aguas residuales</b><small>aguas abajo de la unión de los caños · 50 litros por segundo<br>reactor anaerobio y filtro percolador${sp?.area_m2 ? ` · predio de ${(sp.area_m2 / 10000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} ha` : ''}</small>`, { pos: [pm[0], pm[1], 14], padre: cPtar, color: `var(${color})`, ancla: [0.5, 1] });
   const [qx, qy] = puntoEn(emisario, 0.7);
   const lDesc = esc.etiqueta(`<b>Descarga al Caño Colector Shell</b><small>${Math.round(largo(emisario) / 5) * 5} m · el agua tratada vuelve al caño, aguas abajo</small>`, { pos: [qx, qy, 6], padre: cPtar, color: 'var(--m-aguas)', cls: 'lbl-p mini', ancla: [1, 0.5] });
   // en el plano del casco (colectores y financiación) la planta queda en el borde de arriba: en escritorio el rótulo de
@@ -237,7 +240,7 @@ export function crear(esc, datos) {
   };
   // los otros sitios evaluados para la PTAR: A (alternativa), B (hacia el río) y C (cerca de viviendas), descartados
   const cSitios = esc.capa('san.sitios');
-  [['ptar_a', '#8a8f94', 'Sitio A · alternativa', 'reserva del EOT, pegada al casco'], ['ptar_b', '#d9363e', 'Sitio B · descartado', 'hacia el río: 911 m de bombeo y emisario'], ['ptar_c', '#d9363e', 'Sitio C · descartado', 'cerca de viviendas de finca'], ['ptar', '#0d8f96', '', '']].forEach(([id, col, t, sub]) => {
+  [['ptar_a', '#8a8f94', 'Sitio A · alternativa', 'pegada al casco, en la reserva del<br>Esquema de Ordenamiento Territorial'], ['ptar_b', '#d9363e', 'Sitio B · descartado', 'hacia el río: 911 m de bombeo y emisario'], ['ptar_c', '#d9363e', 'Sitio C · descartado', 'cerca de viviendas de finca'], ['ptar', '#0d8f96', '', '']].forEach(([id, col, t, sub]) => {
     const st = sitio(datos, 'saneamiento', id); if (!st?.poligono) return;
     esc.linea([...st.poligono, st.poligono[0]].map(([x, y]) => [x, y, 1.4]), { color: col, ancho: 3, punteada: true, guion: 8, padre: cSitios });
     const [cx, cy] = [st.poligono.reduce((a, q) => a + q[0], 0) / st.poligono.length, st.poligono.reduce((a, q) => a + q[1], 0) / st.poligono.length];
@@ -285,7 +288,7 @@ export function crear(esc, datos) {
     const rot = (html, p, h, color) => esc.etiqueta(html, { pos: [...p, h], padre: cRN, color, cls: 'lbl-p mini' });
     if (U.compostaje) rot('<b>Compostaje</b><small>orgánicos separados en la fuente</small>', U.compostaje, 4, '#6f5233');
     if (U.celda) rot('<b>Celda de la fase 1</b><small>tres terrazas de 3 m · geomembrana en la cara activa</small>', U.celda, 14, '#5d6b45');
-    if (U.eca) rot('<b>ECA</b><small>clasificación de reciclables</small>', U.eca, 10, `var(${color})`);
+    if (U.eca) rot('<b>Estación de reciclaje</b><small>clasificación y aprovechamiento</small>', U.eca, 10, `var(${color})`);
     if (U.lixiviados) rot('<b>Lagunas de lixiviados</b>', U.lixiviados, 4, '#55603f');
     if (port) rot('<b>Portería y báscula</b>', [port.x, port.y], 6, '#3f464c');
     // la reserva del EOT (se compra completa: lo que queda fuera del predio sirve de aislamiento y de retiro de la vía) y la
@@ -296,12 +299,12 @@ export function crear(esc, datos) {
     if (lodos?.poligono) {
       esc.linea([...lodos.poligono, lodos.poligono[0]].map(([x, y]) => [x, y, 1.2]), { color: '#8a8f94', ancho: 2.5, punteada: true, guion: 8, padre: cRN });
       const [lx, ly] = centro(lodos.poligono);
-      esc.etiqueta(`<b>Planta de lodos del EOT</b><small>${lodos.rotulo || 'vecina por el occidente'}</small>`, { pos: [lx, ly, 6], padre: cRN, color: '#8a8f94', cls: 'lbl-p mini' });
+      esc.etiqueta(`<b>Planta de lodos vecina</b><small>${sinSiglas(lodos.rotulo || 'por el occidente')}</small>`, { pos: [lx, ly, 6], padre: cRN, color: '#8a8f94', cls: 'lbl-p mini' });
     }
     // el contorno y el nombre del predio van con los sitios evaluados: se ven también en la vista de conjunto. El contorno
     // va a 4 m, por encima de la losa del predio aun con la cámara a 30 km; el rótulo, a la derecha del predio
     esc.linea([...rn.poligono, rn.poligono[0]].map(([x, y]) => [x, y, 4]), { color, ancho: 3.5, padre: cSit });
-    esc.etiqueta(`<b>Relleno nuevo · Kilómetro Cinco</b><small>predio que reserva el EOT${rn.area_m2 ? ` · ${(rn.area_m2 / 10000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} ha` : ''}</small>`, { pos: [...masAlla(U.centro, rn.poligono, R_SITIOS, 'der', 200), 0], padre: cSit, color: `var(${color})`, ancla: [0, 0.5] });
+    esc.etiqueta(`<b>Relleno nuevo · Kilómetro Cinco</b><small>predio que reserva el Esquema de Ordenamiento Territorial${rn.area_m2 ? ` · ${(rn.area_m2 / 10000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} ha` : ''}</small>`, { pos: [...masAlla(U.centro, rn.poligono, R_SITIOS, 'der', 200), 0], padre: cSit, color: `var(${color})`, ancla: [0, 0.5] });
   }
   // Las Américas en la vista de los sitios, con su propio rótulo, chico como los de los otros sitios evaluados y debajo
   // del relleno: arriba queda el sitio descartado que lo ampliaba, y el rótulo del paso del cierre lo taparía
@@ -312,7 +315,7 @@ export function crear(esc, datos) {
   [['relleno_alternativa', '#8a8f94', 'izq'], ['relleno_descartado', '#d9363e', 'lejos']].forEach(([rol, col, lado]) => sitios(datos, 'saneamiento', rol).forEach((s) => {
     if (!s.poligono) return;
     esc.linea([...s.poligono, s.poligono[0]].map(([x, y]) => [x, y, 1.4]), { color: col, ancho: 3, punteada: true, guion: 10, padre: cSit });
-    esc.etiqueta(`<b>${s.nombre}</b>${s.rotulo ? `<small>${s.rotulo.replace(/ · /g, '<br>')}</small>` : ''}`, { pos: [...masAlla(centro(s.poligono), s.poligono, R_SITIOS, lado, 40), 0], padre: cSit, color: col, cls: 'lbl-p mini', ancla: lado === 'izq' ? [1, 0.5] : [0.5, 1] });
+    esc.etiqueta(`<b>${sinSiglas(s.nombre)}</b>${s.rotulo ? `<small>${sinSiglas(s.rotulo).replace(/ · /g, '<br>')}</small>` : ''}`, { pos: [...masAlla(centro(s.poligono), s.poligono, R_SITIOS, lado, 40), 0], padre: cSit, color: col, cls: 'lbl-p mini', ancla: lado === 'izq' ? [1, 0.5] : [0.5, 1] });
   }));
   // la basura viaja por la vía al relleno nuevo (camión de la ruta: flujo café)
   if (via) {
@@ -338,7 +341,7 @@ export function crear(esc, datos) {
   esc.linea(arco, { color: '#8e44ad', ancho: 2.5, punteada: true, guion: 30, opacidad: 0.85, padre: cSit });
   // el rótulo va sobre el tramo del arco que cruza el río (a 202°), lejos de la vía y de los sitios, y el detalle en
   // dos renglones para que no sea tan ancho
-  esc.etiqueta('<b>13 km del aeropuerto Yariguíes</b><small>adentro, un relleno, una PTAR o una laguna<br>necesitan autorización de la Aerocivil</small>', { pos: [arco[31][0], arco[31][1], 4], padre: cSit, color: '#8e44ad', cls: 'lbl-p mini' });
+  esc.etiqueta('<b>13 km del aeropuerto Yariguíes</b><small>adentro, un relleno, una planta de tratamiento<br>o una laguna necesitan autorización de la Aerocivil</small>', { pos: [arco[31][0], arco[31][1], 4], padre: cSit, color: '#8e44ad', cls: 'lbl-p mini' });
   esc.sincronizarEtiquetas();
 
   const inv = () => esc.st.invalidate();

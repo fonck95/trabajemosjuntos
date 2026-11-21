@@ -12,7 +12,7 @@ import { sitio, sitios, trazado } from './comun.js';
 // distribución de respaldo en el marco local del lote (u a lo largo del lado mayor, v hacia la vía); la reemplaza geo.json
 const LOTE = { centro: [1359.7, 7459.8], rumbo: 53.4, ancho: 340, fondo: 240 };
 const COMPS = [
-  { id: 'admin', tipo: 'admin', u: 144, v: 95, w: 40, d: 22, nombre: 'Administración, laboratorio y aulas SENA' },
+  { id: 'admin', tipo: 'admin', u: 144, v: 95, w: 40, d: 22, nombre: 'Administración, laboratorio y aulas del Servicio Nacional de Aprendizaje' },
   { id: 'maquinaria', tipo: 'maquinaria', u: 144, v: 39, w: 60, d: 58, nombre: 'Banco de maquinaria agrícola y amarilla' },
   { id: 'concentrados', tipo: 'concentrados', u: -8, v: 26, w: 40, d: 40, nombre: 'Fábrica de concentrados' },
   { id: 'trilladora', tipo: 'trilladora', u: -8, v: 82, w: 40, d: 48, nombre: 'Trilladora con secado y silos' },
@@ -22,7 +22,7 @@ const COMPS = [
   { id: 'matadero', tipo: 'matadero', u: -101, v: 91, w: 60, d: 30, nombre: 'Matadero y frigorífico' },
   { id: 'corrales', tipo: 'corrales', u: -146, v: 76, w: 24, d: 60, nombre: 'Corrales de reposo' },
   { id: 'biodigestor', tipo: 'biodigestor', u: -206, v: 72, w: 60, d: 68, nombre: 'Biodigestor y compostaje' },
-  { id: 'ptar', tipo: 'ptar', u: -201, v: 3, w: 50, d: 55, nombre: 'PTAR industrial' },
+  { id: 'ptar', tipo: 'ptar', u: -201, v: 3, w: 50, d: 55, nombre: 'Planta de tratamiento de aguas industriales' },
 ];
 const ZONAS = [
   { id: 'zona_logistica', nombre: 'Zona logística', color: '#6250d6', poligono: [[55, -10], [194, -10], [194, 123], [55, 123]] },
