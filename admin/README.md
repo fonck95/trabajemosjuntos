@@ -89,6 +89,20 @@ y, para A y K, las que empiezan por lo escrito (5 dígitos o más); P no recorre
   2. *Barrio, vereda, caserío o centro poblado* del nomenclátor (`geo/gazetteer.json`: 62 veredas catastrales de la
      Gobernación de Antioquia con polígono, centros poblados del DANE, OSM, sedes educativas). En las veredas se usa
      el núcleo poblado (caserío o escuela) y no el centro del polígono.
+
+     El **barrio o vereda de su propia columna** («Barrio o vereda» de la base general y de la planilla de campo) se
+     pega al final de la dirección y queda además aparte, en el origen de la fila (`origen[].datos.lugar_texto`, con
+     su fuente). Una descripción («AL LADO DE LA ESTACION 3», «CERCA DEL MANANTIAL VIA PRINCIPAL», «ESTADERO LAS
+     MIRLAS») puede tapar lo que sigue, así que `georreferenciar` lo usa (`importar.barrio_declarado`,
+     `Nomenclator.con_declarado`): si la dirección sola no da lugar, o da uno que no es el declarado ni está dentro de
+     él, el declarado cuenta como escrito al final con su palabra clave («VEREDA X-10», «BARRIO EL PRADO»,
+     «CORREGIMIENTO SAN MIGUEL DEL TIGRE»: `PALABRA_TIPO`) y deciden las reglas de siempre. La placa del casco sigue
+     eligiendo entre homónimos («LA PAZ» barrio o vereda), un lugar de la dirección que está dentro del declarado (un
+     barrio de un centro poblado, una vereda del corregimiento) sigue ganando y lo puesto a mano (`geo_manual`) no se
+     toca. El barrio de una fila solo acompaña a la dirección de esa fila: si la dirección de la ficha vino de otra
+     fuente o alguien la cambió en el panel, deja de contar. Un barrio declarado que el nomenclátor no reconoce queda
+     como lugar escrito (`lugar_texto`) y aparece en Calidad de datos para crearlo o agregarlo como alias. La base con
+     cédula y los trámites no traen una columna de barrio: su dirección se ubica sola, como antes.
   3. Barrios sin coordenada pública: la mediana de las direcciones con placa que caen en ellos; si no hay, el
      administrador los ubica una vez en **Calidad de datos → Barrios y veredas** y todas sus personas quedan ubicadas.
 

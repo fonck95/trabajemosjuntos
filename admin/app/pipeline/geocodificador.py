@@ -4,7 +4,9 @@
    cruces de calles y carreras de OpenStreetMap) se ajusta localmente con un plano ponderado y da la coordenada
    del predio, también en calles que OSM no tiene con nombre. Precisión «direccion» (o «direccion_aprox» si la
    placa cae un poco fuera de la grilla conocida).
-2. **Barrio, vereda, caserío o centro poblado** reconocido en el nomenclátor: su punto. Precisión = tipo de lugar.
+2. **Barrio, vereda, caserío o centro poblado** reconocido en el nomenclátor: su punto. Precisión = tipo de lugar. El
+   barrio o vereda que la fuente trae en su propia columna (`declarado`) cuenta aunque la dirección lo tape con una
+   descripción («AL LADO DE LA ESTACION 3, X-10»).
 3. Nada reconocible: sin coordenada. La persona cuenta en los indicadores pero no se dibuja en el mapa.
 
 Nunca se inventa precisión: cada coordenada guarda de dónde salió, y el mapa dispersa visualmente los puntos de
@@ -31,6 +33,7 @@ class Ubicacion:
     zona: str | None        # urbana | rural
     lugar: Lugar | None
     confianza: float
+    lugar_texto: str | None = None  # el lugar como venía escrito (el barrio declarado, si de ahí salió el lugar)
 
 
 def _valor(num: str | None) -> float | None:
@@ -120,19 +123,27 @@ class Geocodificador:
         self.nom = nomenclator
         self.grilla = grilla
 
-    def ubicar(self, texto: object) -> tuple[Direccion, Ubicacion]:
+    def ubicar(self, texto: object, declarado: object = None) -> tuple[Direccion, Ubicacion]:
+        """`declarado`: el barrio o vereda que la fuente trae en su propia columna, aparte de la dirección
+        (`Nomenclator.con_declarado`)."""
         d = leer(texto)
         r = self.grilla.ubicar_direccion(d) if d.tiene_placa else None
         # Una placa que cae en la grilla del casco decide entre homónimos («LA PAZ» barrio o vereda)
-        lugar, todos, conf = self.nom.reconocer(d, casco=r is not None and r[2] <= 2.5)
+        casco = r is not None and r[2] <= 2.5
+        dd = leer(declarado) if declarado is not None and str(declarado).strip() else None
+        if dd is not None and dd.tokens:
+            lugar, conf, texto_lugar = self.nom.con_declarado(d, dd, casco=casco)
+        else:
+            lugar, _, conf = self.nom.reconocer(d, casco=casco)
+            texto_lugar = d.lugar_texto
         zona = lugar.zona if lugar else zona_por_texto(d)
         en_casco = zona != "rural" and (lugar is None or (lugar.zona == "urbana" and lugar.padre in (None, "", CASCO)))
         if r and en_casco:
             lat, lon, dist = r
             return d, Ubicacion(round(lat, 6), round(lon, 6), "direccion" if dist <= 2.5 else "direccion_aprox",
-                                "urbana", lugar, 1.0 if dist <= 2.5 else 0.7 if dist <= 4 else 0.5)
+                                "urbana", lugar, 1.0 if dist <= 2.5 else 0.7 if dist <= 4 else 0.5, texto_lugar)
         if lugar is not None:
             if lugar.lat is not None:
-                return d, Ubicacion(lugar.lat, lugar.lon, lugar.tipo, lugar.zona, lugar, conf)
-            return d, Ubicacion(None, None, None, lugar.zona, lugar, conf)
-        return d, Ubicacion(None, None, None, zona, None, 0.0)
+                return d, Ubicacion(lugar.lat, lugar.lon, lugar.tipo, lugar.zona, lugar, conf, texto_lugar)
+            return d, Ubicacion(None, None, None, lugar.zona, lugar, conf, texto_lugar)
+        return d, Ubicacion(None, None, None, zona, None, 0.0, texto_lugar)

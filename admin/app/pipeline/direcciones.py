@@ -360,6 +360,10 @@ PRIORIDAD = {"barrio": 5, "sector": 4, "caserio": 3, "centro_poblado": 3, "vered
 RURAL_EXPLICITO = {"VEREDA", "CORREGIMIENTO", "CASERIO"}
 # Lo nombrado con estas palabras manda sobre otros lugares que no estén dentro de él
 ANCLA = {"BARRIO", "URBANIZACION", "VEREDA", "CORREGIMIENTO"}
+# La palabra clave (de ANCLA, y que admite el tipo en TIPO_PALABRA) con que cuenta un barrio o vereda que la fuente trae
+# sin ella en su propia columna: «X-10» cuenta como «VEREDA X-10» y «SAN MIGUEL DEL TIGRE» como «CORREGIMIENTO …»
+PALABRA_TIPO = {"barrio": "BARRIO", "sector": "BARRIO", "vereda": "VEREDA", "caserio": "VEREDA",
+                "centro_poblado": "CORREGIMIENTO", "corregimiento": "CORREGIMIENTO"}
 
 
 class _Hallado(NamedTuple):
@@ -392,6 +396,10 @@ class Nomenclator:
                 self.por_alias.setdefault(a, []).append(lg)
         self.max_n = max((len(a.split()) for a in self.por_alias), default=1)
         self._lista = list(self.por_alias)
+        self.por_nombre: dict[str, list[Lugar]] = {}
+        for lg in lugares:
+            self.por_nombre.setdefault(lg.nombre, []).append(lg)
+        self._declarados: dict[tuple[str, bool], tuple[Lugar | None, float, bool]] = {}
 
     def _elegir(self, candidatos: list[Lugar], palabra: str | None, casco: bool = False) -> Lugar:
         if palabra and palabra in TIPO_PALABRA:
@@ -438,8 +446,61 @@ class Nomenclator:
 
         `casco`: la dirección trae una placa que cae dentro de la grilla del casco urbano. Entonces gana el homónimo
         del casco, y una vereda o un sector nombrados sin VEREDA/CORREGIMIENTO/CASERIO no se imponen a la placa."""
+        return self._decidir(d, self._hallar(d, casco), casco)
+
+    def dentro(self, lugar: Lugar, otro: Lugar) -> bool:
+        """¿`lugar` es `otro`, un homónimo suyo («LA PAZ» barrio y vereda), o queda dentro de él por su cadena de padres
+        («EL TOTUMO» está en «SAN MIGUEL DEL TIGRE»)?"""
+        if lugar.nombre == otro.nombre:
+            return True
+        padre, vistos = lugar.padre, set()
+        while padre and padre not in vistos:
+            if padre == otro.nombre:
+                return True
+            vistos.add(padre)
+            padre = next((p.padre for p in self.por_nombre.get(padre, ()) if p.padre and p.padre != p.nombre), None)
+        return False
+
+    def _declarado(self, declarado: Direccion, casco: bool) -> tuple[Lugar | None, float, bool]:
+        """El barrio o vereda declarado, reconocido solo (con la placa de la dirección para los homónimos): (lugar,
+        confianza, si el nomenclátor lo conoce aunque la placa lo descarte)."""
+        clave = (declarado.original, casco)
+        if clave not in self._declarados:
+            lugar, todos, conf = self.reconocer(declarado, casco)
+            self._declarados[clave] = (lugar, conf, bool(todos))
+        return self._declarados[clave]
+
+    def con_declarado(self, d: Direccion, declarado: Direccion,
+                      casco: bool = False) -> tuple[Lugar | None, float, str | None]:
+        """Como `reconocer`, con el barrio o vereda que la fuente trae en su propia columna («Barrio o vereda»), que una
+        referencia o un texto descriptivo de la dirección pueden haber tapado («AL LADO DE LA ESTACION 3, X-10»).
+        Devuelve (lugar, confianza, lugar escrito). El escrito es el declarado si de ahí salió el lugar, o si el
+        nomenclátor no lo conoce y la dirección no da otro (así aparece tal cual en Calidad de datos para crearlo o
+        volverlo alias); si no, el de la dirección.
+
+        Si la dirección sola no da lugar, o da uno que no es el declarado ni está dentro de él, el declarado entra como
+        si estuviera escrito al final de la dirección con su palabra clave («…, VEREDA X-10», `PALABRA_TIPO`) y deciden
+        las reglas de siempre. Así una placa del casco sigue eligiendo entre homónimos (el declarado se reconoce con
+        ella), un lugar de la dirección que está dentro del declarado (un barrio de un centro poblado) sigue ganando y
+        un lugar más preciso declarado gana al que lo contiene."""
+        lugar, _, conf = self.reconocer(d, casco)
+        propio, conf_propio, conocido = self._declarado(declarado, casco)
+        escrito = declarado.lugar_texto or d.lugar_texto
+        if propio is None or (lugar is not None and self.dentro(lugar, propio)):
+            return lugar, conf, escrito if lugar is None and not conocido else d.lugar_texto
+        palabra = declarado.tipo_lugar if declarado.tipo_lugar in TIPO_PALABRA else PALABRA_TIPO.get(propio.tipo)
+        extra = _Hallado(propio, conf_propio, palabra, declarado.lugar_texto or propio.nombre, len(d.tokens))
+        elegido, _, conf_elegido = self._decidir(d, self._hallar(d, casco, extra), casco)
+        if elegido is None:
+            return lugar, conf, d.lugar_texto
+        return elegido, conf_elegido, escrito if elegido is propio else d.lugar_texto
+
+    def _hallar(self, d: Direccion, casco: bool, extra: _Hallado | None = None) -> list[_Hallado]:
+        """Los lugares nombrados en la dirección (más `extra`, el declarado aparte, como uno nombrado al final)."""
         fuera = d.fuera if len(d.fuera) == len(d.tokens) else [False] * len(d.tokens)
         hallados = self._buscar(d, casco, fuera)
+        if extra is not None:
+            hallados.append(extra)
         if not hallados and not casco and any(fuera):
             # Solo hay lugares dentro de la referencia: «CERCA A LA VEREDA LA UNION» da al menos esa vereda, si la
             # nombra con su palabra clave, y «FRENTE A LA ESCUELA DE LA CONDOR» el centro poblado de la escuela
@@ -466,7 +527,10 @@ class Nomenclator:
                 # Un parecido no basta para mandar a una vereda a quien escribió BARRIO o una placa del casco
                 if lg.zona != "rural" or not (casco or d.tipo_lugar in ("BARRIO", "URBANIZACION")):
                     hallados.append(_Hallado(lg, round(m[1] / 100 * factor, 3), d.tipo_lugar, d.lugar_texto))
+        return hallados
 
+    def _decidir(self, d: Direccion, hallados: list[_Hallado], casco: bool) -> tuple[Lugar | None, list[Lugar], float]:
+        """Entre los lugares hallados, el de la persona (ver `reconocer`)."""
         lugares = [h.lugar for h in hallados]
         if casco:  # la placa del casco pesa más que una vereda o un sector nombrados sin su palabra clave
             hallados = [h for h in hallados if not (h.lugar.zona == "rural" and h.palabra not in RURAL_EXPLICITO
