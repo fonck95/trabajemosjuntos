@@ -29,8 +29,10 @@ const [base, rol] = process.argv.slice(2);
   await page.route('**/api/parecidas?**', (r) => {
     const u = new URL(r.request().url());
     parecidas.push({ nombre: u.searchParams.get('nombre'), cedula: u.searchParams.get('cedula') });
-    return r.fulfill(json(u.searchParams.get('cedula') === '1000000001'
-      ? [{ id: 1, nombre: 'ANA INVENTADA DE PRUEBA', cedula_ult3: '001', tiene_cedula: true, lugar: 'EL PRADO', coincide_cedula: 'exacta', cedula_distinta: false }] : []));
+    const ced = u.searchParams.get('cedula') || '';
+    const ana = { id: 1, nombre: 'ANA INVENTADA DE PRUEBA', cedula_ult3: '001', tiene_cedula: true, lugar: 'EL PRADO', cedula_distinta: false };
+    return r.fulfill(json(ced === '1000000001' ? [{ ...ana, coincide_cedula: 'exacta' }]
+      : ced.startsWith('10000') ? [{ ...ana, coincide_cedula: 'inicio' }] : []));
   });
   await page.route('**/api/personas', async (r) => {
     if (r.request().method() !== 'POST') return r.continue();
@@ -38,6 +40,8 @@ const [base, rol] = process.argv.slice(2);
     return r.fulfill({ ...json({ id: 50 + altas.length }), status: 201 });
   });
   await page.route('**/api/personas/9?modo=completar', (r) => { parches.push(r.request().postDataJSON()); return r.fulfill(json({ id: 9, nombre: 'CARLOS INVENTADO' })); });
+  const esEsta = [];
+  await page.route('**/api/personas/1?modo=completar', (r) => { esEsta.push(r.request().postDataJSON()); return r.fulfill(json({ id: 1, nombre: 'ANA INVENTADA DE PRUEBA' })); });
   await page.route('**/api/personas/9/lideres', (r) => { asignados.push(r.request().postDataJSON()); return r.fulfill({ ...json({ id: 9, nombre: 'CARLOS INVENTADO', lideres: [{ id: 7 }] }), status: 201 }); });
   await page.goto(base + '/', { waitUntil: 'networkidle' });
   const src = () => document.querySelector('script[type=module]').src;
@@ -75,6 +79,21 @@ const [base, rol] = process.argv.slice(2);
   await page.click('#guardar');
   await page.waitForFunction(() => !document.querySelector('#f-nueva'), null, { timeout: 10000 });
   v.alta_cuerpo = altas[0];
+
+  // «Es esta» en una sugerencia cuya cédula solo empieza por lo escrito: no se le manda la cédula escrita (la ficha
+  // conserva la suya; el servidor respondería 422)
+  await page.evaluate(async ([cat, src]) => {
+    const m = await import(new URL('vistas/comunes.js', src).href);
+    m.formularioNuevaPersona({ cat, alCrear() {} });
+  }, [cat, await page.evaluate(src)]);
+  await page.waitForSelector('#f-nueva');
+  await page.fill('#f-nueva [name=cedula]', '10000');
+  await page.fill('#f-nueva [name=correo]', 'ana.otra@ejemplo.org');
+  await page.waitForSelector('#parecidas [data-elegir="1"]', { timeout: 5000 });
+  v.chip_inicio = await page.$eval('#parecidas .resultado', (x) => x.textContent.includes('La cédula empieza igual'));
+  await page.click('#parecidas [data-elegir="1"]');
+  await page.waitForFunction(() => !document.querySelector('#f-nueva'), null, { timeout: 10000 });
+  v.es_esta = esEsta[0];
 
   // Completar una ficha con nombre y barrio
   const ficha = { id: 9, nombre: 'CARLOS INVENTADO', lugar_id: 1, lugar_nombre: 'EL PRADO', zona: 'urbana', consentimiento: 'si',
@@ -136,6 +155,10 @@ def test_alta_y_completar_del_administrador(panel_sin_base, tmp_path):  # noqa: 
         "carlos.inventado@ejemplo.org", "Pescador", "Unión libre", True)
     assert "lider" not in p and "concejal" not in p and "lideres" not in p and "lugar_id" not in p
     assert v["asignados"] == [{"lider_id": 7}]  # el líder se asigna después de guardar lo demás
+    # «Es esta» sobre una ficha que ya tiene cédula (sugerida porque empieza igual): completa sin tocar su cédula
+    assert v["chip_inicio"] is True
+    assert v["es_esta"]["correo"] == "ana.otra@ejemplo.org"
+    assert not {"cedula", "tipo_documento", "cedula_verificada"} & set(v["es_esta"])
 
 
 @requiere_navegador

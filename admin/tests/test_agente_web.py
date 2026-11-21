@@ -381,6 +381,7 @@ CLAVES_DE_VISTA = {"ids_total", "orden", "pagina", "p", "uid", "desde", "hasta",
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="sin Node para cargar web/js/agente.js")
 def test_el_contexto_solo_lleva_claves_de_filtro_conocidas():
+    from app.agente.sistema import CLAVES_FILTRO
     from app.api.filtros import Filtros
     filtros = set(Filtros.model_fields)
     candidatas = sorted(filtros | CLAVES_DE_VISTA | set(VUELTA) | {"session_state", "code_verifier", "token", "otra",
@@ -388,7 +389,7 @@ def test_el_contexto_solo_lleva_claves_de_filtro_conocidas():
     consultas = [
         "?code=c0de&state=st4te&iss=https%3A%2F%2Fmnemo.example.org&zona=rural&q=Ana&orden=nombre&p=solicitudes",
         "?error=access_denied&error_description=No&state=x&otra=1&zona=urbana&zona=rural",
-        "&".join(f"{k}=1" for k in sorted(filtros)[:40]),  # como mucho 30 claves
+        "&".join(f"{k}=1" for k in sorted(CLAVES_FILTRO)[:35]),  # 35 claves que pasan: llegan como mucho 30
         "?q=" + "a" * 300,
     ]
     r = subprocess.run(["node", "--input-type=module", "-e", NODE_FILTROS, json.dumps(candidatas),
@@ -398,7 +399,6 @@ def test_el_contexto_solo_lleva_claves_de_filtro_conocidas():
     # Pasan las que el servidor deja llegar al modelo (sistema.CLAVES_FILTRO: los filtros de Habitantes y el mapa que el
     # asistente también usa y el estado conocido de las vistas); nada de la vuelta de Mnemo, ni la lista de origen, el
     # liderazgo, el régimen de salud, la selección o el dibujo del mapa
-    from app.agente.sistema import CLAVES_FILTRO
     assert set(salida["claves"]) == set(CLAVES_FILTRO), set(salida["claves"]) ^ set(CLAVES_FILTRO)
     assert not {"lista", "lider", "regimen_salud", "ids", "poligono"} & set(salida["claves"])
     a, b, c, d = salida["consultas"]

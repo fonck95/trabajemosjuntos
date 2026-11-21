@@ -36,8 +36,21 @@ def test_los_filtros_de_los_datos_principales():
     (o,) = _y(ocupacion="  pescador ")
     assert o["ocupacion"]["$options"] == "i" and re.search(o["ocupacion"]["$regex"], "Pescador artesanal", re.I)
     assert _y(perfil_profesional="  ") == []
+    # Solo símbolos: sin letras que buscar no trae a nadie (un patrón vacío casaría con todas las que tienen el dato)
+    assert _y(ocupacion="——") == [{"_id": {"$in": []}}] and _y(perfil_profesional="😀") == [{"_id": {"$in": []}}]
     assert _y(sin_lider=1) == [{"lideres.0": {"$exists": False}}]
     assert "sin_lider" in F.VEDADOS and not {"jefe_hogar", "ocupacion", "perfil_profesional", "con_correo"} & set(F.VEDADOS)
+
+
+def test_habitantes_quita_a_p_los_filtros_que_el_servidor_le_veda():
+    """La lista de web/js/vistas/personas.js (VEDADOS_P) es la del servidor: un filtro vedado que llega a P por un enlace
+    se quita al abrir la vista, en vez de dejarla en «Sin acceso» por el 403."""
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1] / "web/js/vistas/personas.js").read_text(encoding="utf-8")
+    m = re.search(r"const VEDADOS_P = \[(.*?)\];", js, re.S)
+    assert m, "personas.js debe declarar VEDADOS_P"
+    en_js = set(re.findall(r"'([a-z_]+)'", m.group(1)))
+    assert en_js == set(F.VEDADOS) | {"ids_total"}, en_js ^ (set(F.VEDADOS) | {"ids_total"})
 
 
 # ───────────────────────────── API (MongoDB) ─────────────────────────────
