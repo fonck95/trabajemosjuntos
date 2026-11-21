@@ -68,7 +68,11 @@ def test_la_vista_da_la_previa_solo_al_plan_nuevo_y_registra_la_voz():
     vista = VISTA_JS.read_text(encoding="utf-8")
     assert "import { PREVIA_MS, crearReproductor } from '../reproductor.js';" in vista
     # la espera solo va cuando la vista la pide; y la pide con un plan que no reprodujo y que llega sin `desde`
-    assert "rep.iniciar(p.recorrido, { desde: p.desde || 1, ...(previa ? { previa: PREVIA_MS } : {}) })" in vista
+    assert ("rep.iniciar(p.recorrido, { desde: p.desde || 1, ...(previa ? { previa: PREVIA_MS } : {}),\n"
+            "      ...(p.abierto ? { abierto: true } : {}) })") in vista
+    # el plan en flujo que crece (`sigue`) se agrega al que suena, sin empezarlo de nuevo ni esperar la previa
+    assert "if (p.sigue) return { op: p.op, ok: rep.actualizar(p.recorrido, { abierto: p.abierto === true }) };" in vista
+    assert "const nuevo = !p.sigue && esNuevo(p.recorrido);" in vista
     assert "aplicarRecorrido(p, { previa: nuevo && p.desde === undefined })" in vista
     # la pantalla en off: el que retoma (ya tuvo avance) no espera
     assert "previa: nuevo && !pr" in vista

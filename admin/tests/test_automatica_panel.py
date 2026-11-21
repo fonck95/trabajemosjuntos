@@ -392,7 +392,7 @@ def test_la_vista_cablea_el_boton_el_sondeo_y_la_barra():
     assert "const esAuto = x.auto === true;" in vista and "if (esAuto) {\n        ridAuto = x.id;" in vista
     assert "const { edad_s: _edad, ...r } = x;" in vista and "auto: _auto" not in vista
     rec = vista[vista.index("async function recorridoDeLaPantalla(e)"):vista.index("const enSuEscena")]
-    assert rec.index("const { edad_s: _edad, ...r } = x;") < rec.index("await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde }")
+    assert rec.index("const { edad_s: _edad, ...r } = x;") < rec.index("await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde, ")
     assert "previa: nuevo && !pr && !esAuto }" in vista
     # la vista que se va (otra vista del panel) no le avisa al servidor el «detenido» del plan automático: lo cerraba y
     # apagaba la automática para todos (y cortaba a otra pantalla en off que la narrara)

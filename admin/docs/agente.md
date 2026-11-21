@@ -50,7 +50,7 @@ Las herramientas del panel (`app/agente/herramientas/`):
 | `pendientes`, `mi_trabajo`, `buscar_lugar`, `catalogos` | lectura | todos | Insignias y colas, listas de trabajo, nomenclátor de barrios y veredas, catálogos no sensibles |
 | `mapa` | interfaz | A, K | Vuela a un lugar, filtra, cambia capas y mapa base, resalta personas, abre una zona |
 | `abrir_vista` | interfaz | todos | Abre una vista o una ficha que su rol puede ver |
-| `presentacion` | interfaz | todos | La [presentación técnica](#la-presentación-técnica) de la propuesta 2028–2031 (lo que se construye, sin costos): el índice (capítulos, pasos, componentes e inmersiones), ir a un capítulo y paso (le vuelve lo que muestra ese paso para explicarlo: textos, cifras, especificaciones, referentes, sitio, plazos, metas y el modelo del atlas que muestra, todo entero y sin plata: nada se acorta, y un paso pesa a lo sumo 12 KB), siguiente y anterior, una o dos frases en pantalla, de hasta 220 caracteres (`explicar`, `quitar_explicacion`), los paneles sin cambiar de paso (`vista`: el panel de texto o solo la maqueta 3D, el índice, las fichas técnicas), lo que se ve sin cambiar de paso (`visual`: la cámara con su encuadre, su rumbo, su elevación y su acercamiento, a qué apunta y cómo viaja, la obra enfocada, su ficha técnica, hoy o con el proyecto, las piezas de la maqueta que se muestran, se ocultan o se aíslan y las partes que se les quitan, un modelo 3D del atlas y el tema, con la ficha de lo que muestra), que llene la ventana (`pantalla_completa`), qué muestra la [pantalla en off](#pantalla-en-off-y-agentes-por-mcp) (`estado`) y el [plan guiado](#el-plan-guiado-recorridos-narrados): `guion` (todo un capítulo para preparar la explicación, con las piezas de su maqueta), `recorrido` (el plan: de 1 a 12 pasos, cada uno con lo que se dice y lo que ocurre en pantalla mientras se dice, en una sola llamada) y `control_recorrido` (pausar, seguir, saltar, repetir, volver a empezar, detener); y `automatica` (enciende o apaga la [presentación automática](#presentación-automática): la pantalla en off recorre sola toda la presentación, muy resumida). Solo guarda esa pantalla: ningún dato de personas. Un agente externo la usa igual [por MCP](#pantalla-en-off-y-agentes-por-mcp) |
+| `presentacion` | interfaz | todos | La [presentación técnica](#la-presentación-técnica) de la propuesta 2028–2031 (lo que se construye, sin costos): el [plan en flujo](#el-plan-en-flujo) (`plan`: con el capítulo y un encargo, el panel escribe el plan y la sala lo oye desde su primer paso), el índice (capítulos, pasos, componentes e inmersiones), ir a un capítulo y paso (le vuelve lo que muestra ese paso para explicarlo: textos, cifras, especificaciones, referentes, sitio, plazos, metas y el modelo del atlas que muestra, todo entero y sin plata: nada se acorta, y un paso pesa a lo sumo 12 KB), siguiente y anterior, una o dos frases en pantalla, de hasta 220 caracteres (`explicar`, `quitar_explicacion`), los paneles sin cambiar de paso (`vista`: el panel de texto o solo la maqueta 3D, el índice, las fichas técnicas), lo que se ve sin cambiar de paso (`visual`: la cámara con su encuadre, su rumbo, su elevación y su acercamiento, a qué apunta y cómo viaja, la obra enfocada, su ficha técnica, hoy o con el proyecto, las piezas de la maqueta que se muestran, se ocultan o se aíslan y las partes que se les quitan, un modelo 3D del atlas y el tema, con la ficha de lo que muestra), que llene la ventana (`pantalla_completa`), qué muestra la [pantalla en off](#pantalla-en-off-y-agentes-por-mcp) (`estado`) y el [plan guiado](#el-plan-guiado-recorridos-narrados): `guion` (todo un capítulo para preparar la explicación, con las piezas de su maqueta), `recorrido` (el plan: de 1 a 12 pasos, cada uno con lo que se dice y lo que ocurre en pantalla mientras se dice, en una sola llamada) y `control_recorrido` (pausar, seguir, saltar, repetir, volver a empezar, detener); y `automatica` (enciende o apaga la [presentación automática](#presentación-automática): la pantalla en off recorre sola toda la presentación, muy resumida). Solo guarda esa pantalla: ningún dato de personas. Un agente externo la usa igual [por MCP](#pantalla-en-off-y-agentes-por-mcp) |
 
 A = administrador, K = coordinador, P = planillero. Las de Mnemo (`mnemo_…`) se describen [más abajo](#conectar-con-mnemo).
 
@@ -663,6 +663,53 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
   lo que expresa cada uno, le llega al modelo con el guion). Uno que no existe se descarta con un aviso; sin `gesto`,
   el presentador elige solo con lo que el mando sabe de la escena. El botón **Presentador** de la barra (también en el proyector y en la pantalla en off) lo oculta o
   lo muestra en ese navegador. Detalles en [`docs/presentador.md`](../../docs/presentador.md).
+
+### El plan en flujo
+
+Armar un plan a mano era lo que más hacía esperar: el modelo pedía el guion del capítulo (una ronda), lo leía entero
+(de 6.000 a 11.000 tokens), razonaba y escribía el plan completo dentro de la llamada `recorrido`, y con Mnemo esa
+llamada no llega por partes: la sala esperaba en silencio de 40 segundos a más de un minuto antes del primer paso (el
+diagnóstico, con medidas, en [`velocidad.md`](velocidad.md)). Con el **plan en flujo** la sala ve y oye el primer paso a
+los pocos segundos y el resto se escribe mientras se narra (`app/agente/redactor.py`).
+
+- **Cómo lo pide el asistente.** `presentacion` op `plan` con el `capitulo` y un `encargo` (qué mostrar y contar, de una
+  a tres frases, con lo que pidió la persona) y, si es una pregunta puntual, `largo` `corto` (de 3 a 5 pasos; si no, de
+  6 a 10; con la presentación automática encendida, corto por omisión). No pide el guion: no lo necesita, y la
+  conversación no lo carga en las rondas siguientes. Antes de la llamada escribe la línea que anuncia el plan y
+  después nada: el turno termina con el plan (`Resultado.termina_turno`), sin la ronda de la «pregunta corta», y la
+  tarjeta trae las sugerencias. `guion` y `recorrido` siguen para un plan de varios capítulos y si `plan` falla.
+- **Quién lo escribe.** El mismo proveedor de la conversación (Mnemo o el modo directo), en una petición aparte sin
+  herramientas y sin razonar (o lo mínimo: `Proveedor.generar(..., rapido=True)`; en modo directo, con el modelo de
+  `AGENTE_MODELO_ADELANTO` si se eligió uno), con instrucciones fijas y el guion del capítulo en el `system` (el mismo
+  texto para el mismo capítulo: el proveedor lo saca de su caché la próxima vez) y el encargo en el mensaje. Escribe en
+  **JSON Lines como texto**, que Mnemo sí manda a trozos: una línea con el título, una por paso (las mismas claves de un
+  paso de `recorrido`) y una con el cierre y las sugerencias.
+- **Cómo se publica.** `redactor.Lector` saca cada objeto en cuanto se cierra y `PlanEnFlujo` lo compone igual que
+  `recorrido` (`_componer`, tolerante; `recorrido.validar`, que no se relaja). Con el primer paso que vale, el plan se
+  guarda (`pantalla.guardar_recorrido` con `abierto`) y se publica con la píldora «preparando» apagada: la acción
+  `presentacion` `recorrido` con `abierto` y la tarjeta del chat. Cada paso nuevo lo hace crecer
+  (`pantalla.crecer_recorrido`, que sube la versión) y vuelve la misma acción con `sigue` (y la tarjeta con el mismo
+  id). Al terminar va entera, con su cierre y sin `abierto`. Un paso que no se puede proyectar (con costos, «@», un
+  número largo) se omite con un aviso y el plan sigue; lo que pasa de los pasos del largo (con dos de margen), de 12 o
+  de la duración máxima, también.
+- **En el navegador.** El reproductor (`web/js/reproductor.js`) recibe el plan `abierto` y lo hace crecer con
+  `actualizar` (los pasos nuevos se agregan detrás; los que ya sonaban no se tocan). Si la narración llega al último
+  paso antes que el siguiente, la imagen se queda y lo espera, hasta `ESPERA_MAS_MS` (45 s; una pausa no cuenta), y
+  después cierra con lo que hay; **Siguiente** en el último paso también espera. La vista aplica `sigue` solo si ese
+  plan suena ahí; la pantalla en off ve los pasos nuevos en su próxima pregunta al servidor, y el proyector los recibe
+  por su canal, como cualquier acción. La tarjeta (`crecer`) suma los pasos, el cierre, las sugerencias y la duración,
+  y dice «por ahora: el panel sigue escribiéndolo» mientras tanto. El avance de un plan en flujo puede contar menos
+  pasos de los guardados (el navegador recibe los nuevos un momento después): el servidor lo acepta (`en_flujo`).
+- **Si algo falla.** Si la redacción falla o no da un paso que valga en 60 s, no se guarda nada y la herramienta
+  devuelve `plan_fallo`: el modelo arma el plan como antes. Si falla a mitad, el plan queda con lo que alcanzó (con un
+  aviso). Si la persona lo detiene, otra orden cambia la pantalla o llega otro plan mientras se escribe, la redacción
+  se corta en el acto (`crecer_recorrido` ya no encuentra el vigente): no se gasta en lo que nadie va a oír.
+- **Solo del asistente.** Por MCP la op no se ofrece (no hay modelo del panel que escriba por el agente externo, ni
+  créditos que gastarle): el agente arma su plan con `recorrido`, como siempre.
+- **Costo.** Una petición más por plan (las instrucciones y el guion del capítulo de entrada, casi siempre desde la
+  caché del proveedor; de salida, unos 1.000 a 2.500 tokens), que se suma al día de la persona en `agente_uso`. A
+  cambio, el modelo principal ya no lee el guion ni escribe el plan entero, no razona sobre él y se ahorra la ronda
+  final: en total suele salir más barato.
 
 ## Pantalla en off y agentes por MCP
 
@@ -1323,6 +1370,11 @@ de la caché del panel (no gasta); las respuestas leídas en voz alta sí, frase
 por minuto y 30.000 caracteres por día por persona, y 3 llamadas a Mnemo a la vez en el proceso (ver [La voz clonada
 de Mnemo](#la-voz-clonada-de-mnemo)).
 
+**El [plan en flujo](#el-plan-en-flujo)** es una petición más al modelo por plan, sin razonar, con el guion del capítulo
+en el `system` (desde la caché del proveedor si el capítulo se presentó hace poco): de salida, de 1.000 a 2.500 tokens.
+Se suma al día de la persona en `agente_uso`. Le ahorra al modelo principal leer el guion (de 6.000 a 11.000 tokens que
+después viajaban en cada ronda de la conversación), razonar y escribir el plan, y la ronda final del turno.
+
 **La [respuesta inmediata](#la-respuesta-inmediata)** es una petición más al modelo en cada mensaje (no en las
 aprobaciones): de entrada, sus instrucciones (unos 400 tokens), los últimos 8 mensajes acotados a 1.500 caracteres
 cada uno y el mensaje nuevo, sin caché; de salida, como mucho 300 tokens (con un modelo que no deja
@@ -1497,6 +1549,7 @@ se suba.
 | `app/agente/herramientas/` | `base.py` (contratos), `personas.py`, `gestion.py`, `interfaz.py` y `mnemo.py` |
 | `app/agente/mnemo_cliente.py` | El cliente del servidor MCP de Mnemo |
 | `app/agente/dictado.py` | Las preguntas por voz: el audio a `mnemo_transcribe`, con sus topes |
+| `app/agente/redactor.py` | El [plan en flujo](#el-plan-en-flujo): las instrucciones de la redacción con el guion del capítulo, el lector de JSON Lines que llega a trozos (`Lector`), el plan que crece (`PlanEnFlujo`) y la op `plan` (`escribir`): guardar, crecer, publicar y cortar |
 | `app/agente/adelanto.py` | La [respuesta inmediata](#la-respuesta-inmediata): sus mensajes, lo que se muestra (la marca «—», palabra por palabra, el tope), sus frases para decir, la carrera con la respuesta completa, el plazo y lo que se guarda |
 | `app/agente/voz.py` | La [voz clonada de Mnemo](#la-voz-clonada-de-mnemo): el texto de cada pedido (el plan guardado, la frase firmada, la prueba), lo que se dice (`para_decir`, `hablable`), las frases de una respuesta (`Frases`), la firma, los topes, la caché, un solo vuelo y el flujo de `mnemo_speak` |
 | `web/js/agente.js`, `web/css/agente.css` | El botón y el panel del asistente (también el recuadro de la respuesta inmediata y cuándo la sala la oye) |
@@ -1555,7 +1608,7 @@ se suba.
 | `progreso`, `texto` | Trozos de una nota de progreso o de la respuesta |
 | `texto_ronda` | `texto`: el texto final de la ronda en curso cuando no coincide con lo que llegó por partes (con Mnemo, los trozos son un adelanto). Reemplaza el de la ronda |
 | `herramienta` | `id`, `nombre`, `etiqueta`, `estado` (`inicio`, `ok`, `error`, `pendiente`, `aprobada`, `rechazada`) y `resumen` |
-| `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias`, `mapa` (acciones del mapa) o `presentacion` (`op`: `ir` con `capitulo` y `paso` desde 1, `siguiente`, `anterior`, `explicar` o `quitar_explicacion`; `explicacion`, la frase para la pantalla, en todas salvo la última; `vista` con `panel`, `indice` o `fichas`; `visual` con `enfoque`, `camara`, `rumbo`, `elevacion`, `zoom`, `mirar`, `girar`, `comparar`, `detalle`, `inmersion`, `mostrar`, `ocultar`, `aislar`, `sin` o `tema`, y las acciones `mover`, `animar` y `simular`; `pantalla_completa` con `activar`; `recorrido` con el recorrido absoluto (cada escena: `capitulo`, `paso`, `panel`, `visual`, `resaltar`, `mover`, `animar`, `simular` (puede faltar), `frases` y `sostener_ms`); `control_recorrido` con `rid` y `accion`) o `recorrido` (la tarjeta del plan en el chat: `id`, `titulo`, `destino`, `duracion_ms`, `cierre`, `sugerencias` y por escena `narracion`, `donde` y `hace`) |
+| `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias`, `mapa` (acciones del mapa) o `presentacion` (`op`: `ir` con `capitulo` y `paso` desde 1, `siguiente`, `anterior`, `explicar` o `quitar_explicacion`; `explicacion`, la frase para la pantalla, en todas salvo la última; `vista` con `panel`, `indice` o `fichas`; `visual` con `enfoque`, `camara`, `rumbo`, `elevacion`, `zoom`, `mirar`, `girar`, `comparar`, `detalle`, `inmersion`, `mostrar`, `ocultar`, `aislar`, `sin` o `tema`, y las acciones `mover`, `animar` y `simular`; `pantalla_completa` con `activar`; `recorrido` con el recorrido absoluto (cada escena: `capitulo`, `paso`, `panel`, `visual`, `resaltar`, `mover`, `animar`, `simular` (puede faltar), `frases` y `sostener_ms`; el [plan en flujo](#el-plan-en-flujo) llega con `abierto` mientras se escribe y vuelve con `sigue` cada vez que crece); `control_recorrido` con `rid` y `accion`) o `recorrido` (la tarjeta del plan en el chat: `id`, `titulo`, `destino`, `duracion_ms`, `cierre`, `sugerencias`, `abierto` mientras el plan en flujo se escribe (vuelve con el mismo `id` cada vez que crece) y por escena `narracion`, `donde` y `hace`) |
 | `confirmar` | La tarjeta de una escritura: `id`, `titulo`, `detalle` (pares etiqueta y valor, enteros: el widget no recorta nada, y si llegan más de 40 o uno de más de 4.000 caracteres no ofrece **Aprobar**) y `aviso`. Lo pendiente al abrir una conversación lleva lo mismo y, si lo guardó una versión anterior del panel, `vieja` (tampoco ofrece **Aprobar**) |
 | `descartar` | La ronda se repite tras un error pasajero: se borra lo que se pintó de ella |
 | `frase` | Solo si el mensaje pidió la respuesta hablada (`contexto.voz`) y la voz clonada lee respuestas para esa persona: `n` (desde 0 en el turno), `texto` y `firma`, una frase cerrada que el navegador pide a `POST /api/agente/voz` (ver [La voz clonada de Mnemo](#la-voz-clonada-de-mnemo)) |
