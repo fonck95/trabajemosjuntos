@@ -1239,23 +1239,44 @@ def registrar_lugares_de_datos(db: Database, minimo: int = 3) -> int:
     return nuevos
 
 
+def barrio_declarado(p: dict) -> str | None:
+    """El barrio o vereda que la fuente trajo en su propia columna («Barrio o vereda» de la base general o de la
+    planilla), tal como quedó en el origen de esa fila (`origen[].datos.lugar_texto`, con su fuente e importación).
+    Solo acompaña a la dirección de esa misma fila: si la dirección de la ficha vino de otra fuente o alguien la cambió,
+    no vale. Con varias filas así, la de la fuente de la dirección y, entre ellas, la última."""
+    direccion = p.get("direccion")
+    if not direccion:
+        return None
+    filas = [o for o in p.get("origen") or [] if isinstance(o, dict) and isinstance(o.get("datos"), dict)
+             and o["datos"].get("direccion") == direccion and isinstance(o["datos"].get("lugar_texto"), str)
+             and o["datos"]["lugar_texto"].strip()]
+    if not filas:
+        return None
+    fuente = ((p.get("procedencia") or {}).get("direccion") or {}).get("fuente")
+    return next((o for o in reversed(filas) if o.get("fuente") == fuente), filas[-1])["datos"]["lugar_texto"]
+
+
 def georreferenciar(db: Database, solo_ids: list[int] | None = None) -> dict:
-    """Normaliza la dirección y ubica a cada persona (también su `punto` GeoJSON). Respeta lo puesto a mano: un punto
+    """Normaliza la dirección y ubica a cada persona (también su `punto` GeoJSON), con el barrio o vereda que la fuente
+    declaró aparte (`barrio_declarado`) cuando la dirección sola no lo deja ver. Respeta lo puesto a mano: un punto
     en el mapa no se toca, y un barrio o vereda elegido a mano se conserva (la persona sigue el punto de ese lugar, o el
     de su placa si es urbano)."""
     grilla = GrillaCasco.desde_archivo()
     filtro = {**bd.ACTIVA, "geo_manual": {"$nin": list(bd.PUNTO_MANUAL)}}
     if solo_ids:
         filtro["_id"] = {"$in": solo_ids}
+    proyeccion = {"direccion": 1, "geo_manual": 1, "lugar_id": 1, "procedencia.direccion": 1, "origen.fuente": 1,
+                  "origen.datos.direccion": 1, "origen.datos.lugar_texto": 1}
 
     def pasada() -> None:
         lugares = bd.lugares(db)
         por_id = {l.id: l for l in lugares}
         geo = Geocodificador(Nomenclator(lugares), grilla)
         ops = []
-        for p in db.personas.find(filtro, {"direccion": 1, "geo_manual": 1, "lugar_id": 1}):
-            d, u = geo.ubicar(p.get("direccion") or "")
+        for p in db.personas.find(filtro, proyeccion):
             lg = por_id.get(p.get("lugar_id")) if p.get("geo_manual") == "lugar" else None
+            # Con el barrio o vereda elegido a mano, el declarado no cuenta: solo se busca la placa
+            d, u = geo.ubicar(p.get("direccion") or "", None if lg is not None else barrio_declarado(p))
             if lg is not None:
                 cambios = {"direccion_norm": d.normalizada(lg.nombre, lg.tipo) or None, "lugar_id": lg.id,
                            "lugar_texto": d.lugar_texto, "zona": lg.zona}
@@ -1266,7 +1287,7 @@ def georreferenciar(db: Database, solo_ids: list[int] | None = None) -> dict:
             else:
                 lg = u.lugar
                 cambios = {"direccion_norm": d.normalizada(lg.nombre if lg else None, lg.tipo if lg else None) or None,
-                           "lugar_id": lg.id if lg else None, "lugar_texto": d.lugar_texto, "zona": u.zona,
+                           "lugar_id": lg.id if lg else None, "lugar_texto": u.lugar_texto, "zona": u.zona,
                            "lat": u.lat, "lon": u.lon, "geo_precision": u.precision}
             cambios["punto"] = modelo.punto(cambios["lat"], cambios["lon"])
             ops.append(UpdateOne({"_id": p["_id"]}, {"$set": cambios}))

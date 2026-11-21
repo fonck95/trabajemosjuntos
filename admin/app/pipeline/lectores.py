@@ -328,6 +328,8 @@ def leer_planilla(ruta: str | Path):
             fecha_nac = _fecha_local(busca(f, "FECHADENACIMIENTO"))
             barrio = _texto(busca(f, "BARRIOOVEREDA")) or None
             direccion = _texto(busca(f, "DIRECCION")) or None
+            # El barrio se pega a la dirección y queda además aparte (`lugar_texto`, en el origen de la fila): una
+            # descripción («AL LADO DE…») puede taparlo, y `importar.barrio_declarado` lo recupera al georreferenciar
             if barrio and tx.limpiar(barrio) not in tx.limpiar(direccion or ""):
                 direccion = f"{direccion}, {barrio}" if direccion else barrio
             mesa = busca(f, "MESA")
@@ -504,6 +506,7 @@ def leer_general(ruta: str | Path):
                     datos["votos_nota"] = _reparar(_texto(votos))
             barrio = _reparar(_texto(busca(f, "BARRIO", "BARRIOOVEREDA", "VEREDA", "BARRIOVEREDA"))) or None
             direccion = _reparar(_texto(busca(f, "DIRECCION"))) or None
+            # Como en la planilla: el barrio va también aparte (`lugar_texto`) para `importar.barrio_declarado`
             if barrio and tx.limpiar(barrio) not in tx.limpiar(direccion or ""):
                 direccion = f"{direccion}, {barrio}" if direccion else barrio
             fecha_cruda = busca(f, "FECHADENACIMIENTO", "FECHANACIMIENTO")
