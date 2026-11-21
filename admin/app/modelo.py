@@ -207,10 +207,12 @@ AJUSTES_POR_DEFECTO: dict[str, Any] = {
     "agente_mensajes_diarios": {"admin": 300, "coordinador": 150, "planillero": 40, "consultor": 40},
     # La voz del asistente (docs/agente.md, «La voz clonada de Mnemo»): la del navegador o una voz clonada de la cuenta
     # de Mnemo conectada (`voz`: su id en Mnemo; `nombre`, para mostrarla; `cuenta`: la huella de la cuenta con que se
-    # eligió, `mnemo_conexion.huella_cuenta`, que pone el servidor), quién la hace sonar (`roles`: habla con la voz y
-    # los créditos del administrador), si lee en voz alta las respuestas del asistente y si narra también la
-    # presentación automática. Un objeto aparte, de un nivel, como `agente`: solo lo cambia el administrador
-    "agente_voz": {"motor": "navegador", "voz": "", "nombre": "", "cuenta": "", "roles": ["admin", "coordinador"],
+    # eligió, `mnemo_conexion.huella_cuenta`, que pone el servidor; sin `voz`, la que Mnemo ofrece a las apps: la que
+    # su dueño marcó «Disponible para apps conectadas», si la conexión tiene `mnemo:voice`), quién la hace sonar
+    # (`roles`: habla con la voz y los créditos del administrador), si lee en voz alta las respuestas del asistente y si
+    # narra también la presentación automática. Un objeto aparte, de un nivel, como `agente`: solo lo cambia el
+    # administrador
+    "agente_voz": {"motor": "mnemo", "voz": "", "nombre": "", "cuenta": "", "roles": ["admin", "coordinador"],
                    "respuestas": True, "automatica": True},
     # La respuesta inmediata del asistente (docs/agente.md, «La respuesta inmediata»): mientras prepara la respuesta o
     # la presentación, adelanta en una o dos frases la idea general (una llamada corta más al modelo por pregunta). Un

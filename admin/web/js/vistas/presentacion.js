@@ -51,8 +51,8 @@
 //   nuevo espera PREVIA_MS antes del primer paso (el chat lo muestra entero); uno que se reanuda, se vuelve a
 //   reproducir, llega traspasado de otra ventana o la pantalla en off retoma, no. Suena en la página que mira la sala
 //   (la pestaña del chat, la ventana del proyector o la pantalla en off), con la voz de esa ventana (voz-panel.js: la
-//   misma que lee las respuestas del asistente, una sola salida de audio): la voz clonada de Mnemo si el administrador
-//   la eligió y el rol de la persona la usa (`voz` de GET /api/agente/estado; cada frase se pide por su referencia en el
+//   misma que lee las respuestas del asistente, una sola salida de audio): la voz clonada de Mnemo si está disponible
+//   (la que eligió el administrador o, sin una elegida, la que Mnemo ofrece a las apps) y el rol de la persona la usa (`voz` de GET /api/agente/estado; cada frase se pide por su referencia en el
 //   plan y, si no llega, se dice con la voz del navegador), o la del navegador. En el plan de la presentación
 //   automática, la clonada solo si Ajustes lo deja (`voz.automatica`). Está encendida
 //   mientras la persona no la apague (el botón «Voz» de esa ventana o el interruptor de la tarjeta del chat, que llega

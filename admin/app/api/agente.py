@@ -181,9 +181,10 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
     `cuenta` y `url_sugerida` en None: la cuenta es la personal del administrador (nombre y correo) y la dirección
     sugerida solo le sirve a quien conecta. `dictado`: True si las preguntas por voz se pueden transcribir por Mnemo
     (hay una conexión con `mnemo:model` y Mnemo no dijo hace poco que no transcribe); con False el panel usa el
-    reconocimiento de voz del navegador. `voz`: `{"disponible": bool (esta persona puede hacer sonar la voz clonada
-    elegida en Ajustes), "nombre": el de la voz | None, "respuestas": bool (la voz lee las respuestas del asistente),
-    "automatica": bool (narra también la presentación automática)}`; sin ella, la voz del navegador. `adelanto`:
+    reconocimiento de voz del navegador. `voz`: `{"disponible": bool (esta persona puede hacer sonar la voz clonada:
+    la elegida en Ajustes o, sin una elegida, la que Mnemo ofrece a las apps), "nombre": el de la voz | None,
+    "respuestas": bool (la voz lee las respuestas del asistente), "automatica": bool (narra también la presentación
+    automática)}`; sin ella, la voz del navegador. `adelanto`:
     True si cada pregunta de esta persona recibe la respuesta inmediata mientras se prepara la completa (el asistente
     está disponible para ella y `agente_adelanto` está encendido en Ajustes)."""
     cfg = request.app.state.cfg
@@ -289,7 +290,8 @@ async def transcribir(request: Request, quien: Quien = Depends(requiere("agente.
 async def voces(request: Request, quien: Quien = Depends(requiere("agente.conectar"))):
     """Las voces clonadas de la cuenta de Mnemo conectada que la persona marcó para las apps (`mnemo_list_voices`):
     `{"voces": [{"id", "nombre", "idioma", "motor"}], "elegida": la de Ajustes si está entre ellas y es de esta cuenta |
-    None, "conexion": {"voz": bool (la conexión tiene `mnemo:voice`), "ofrece_voz": bool (ese Mnemo lo ofrece)}}`. Sin
+    None, "automatica": la que Mnemo ofrece a las apps (la que suena sin una elegida) | None, "conexion": {"voz": bool
+    (la conexión tiene `mnemo:voice`), "ofrece_voz": bool (ese Mnemo lo ofrece)}}`. Sin
     conexión o sin `mnemo:voice`, sin voces. Solo el administrador: la voz es de su cuenta. Errores de Mnemo, `{codigo,
     mensaje}`: 409 `sin_voz`, 402 `mnemo_creditos`, 429 `frecuencia`, 502 `mnemo` o `mnemo_red`."""
     from ..agente import voz

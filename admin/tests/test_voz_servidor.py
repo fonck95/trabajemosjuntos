@@ -45,6 +45,7 @@ CONECTADA = {"estado": "conectada", "motivo": None, "url": URL, "cuenta": None,
              "voz": True, "ofrece_voz": True, "desde": "2026-11-01T10:00:00+00:00"}
 VOZ = {"motor": "mnemo", "voz": VOZ_ID, "nombre": "Ana (voz de prueba)", "cuenta": HUELLA,
        "roles": ["admin", "coordinador"], "respuestas": True, "automatica": True}
+AUTO = {**VOZ, "voz": "", "nombre": "", "cuenta": ""}   # sin una voz elegida: la que Mnemo ofrece a las apps
 QUIENES = {uid: acceso.Quien(uid=uid, usuario=f"p{uid}", rol=rol, permisos=acceso.PERMISOS[rol])
            for uid, rol in ((0, "admin"), (5, "coordinador"), (6, "coordinador"), (8, "planillero"),
                             (9, "consultor"))}
@@ -97,8 +98,9 @@ class ClienteFalso:
         if nombre == voz.HERRAMIENTA_VOCES:
             if self.fallo is not None:
                 raise self.fallo
+            por_defecto = self.voces[0]["voice_id"] if self.voces else None
             return {"structuredContent": self.salida_voces or {"voices": self.voces,
-                                                              "default_voice_id": self.voces[0]["voice_id"]}}
+                                                              "default_voice_id": por_defecto}}
         assert nombre == voz.HERRAMIENTA
         try:
             if self.fallo is not None and self.fallo_tras is None:
@@ -579,8 +581,11 @@ def test_quien_la_hace_sonar_lo_decide_agente_voz_roles(banco, uid, roles, estad
 
 
 @pytest.mark.parametrize("cambio, mensaje", [
-    ({"ajustes_voz": {**VOZ, "motor": "navegador"}}, "no hay una voz clonada"),
-    ({"ajustes_voz": {**VOZ, "voz": "", "nombre": "", "cuenta": ""}}, "no hay una voz clonada"),
+    ({"ajustes_voz": {**VOZ, "motor": "navegador"}}, "no está puesta la voz clonada"),
+    ({"ajustes_voz": {**AUTO, "motor": "navegador"}}, "no está puesta la voz clonada"),
+    ({"ajustes_voz": AUTO, "conexion": {**CONECTADA, "voz": False, "alcances": ["mnemo:read"]}},
+     "Hablar con las voces"),
+    ({"ajustes_voz": AUTO, "conexion": {**CONECTADA, "estado": "sin_conectar", "voz": False}}, "no está conectado"),
     ({"conexion": {**CONECTADA, "estado": "sin_conectar", "voz": False, "alcances": []}}, "no está conectado"),
     ({"conexion": {**CONECTADA, "estado": "caida", "motivo": "revocada", "voz": False}}, "no está conectado"),
     ({"conexion": {**CONECTADA, "voz": False, "alcances": ["mnemo:read", "mnemo:model"]}}, "Hablar con las voces"),
@@ -1257,6 +1262,7 @@ def test_las_voces_para_elegir(banco):
         {"id": OTRA_VOZ, "nombre": "Beto Inventado", "idioma": "es-CO", "motor": "qwen3"},
         {"id": "6740aa0b1c2d3e4f5a6b7c90", "nombre": "Voz sin nombre", "idioma": "es", "motor": ""}],
         "elegida": {"id": VOZ_ID, "nombre": "Ana (voz de prueba)", "idioma": "es", "motor": "minimax"},
+        "automatica": {"id": VOZ_ID, "nombre": "Ana (voz de prueba)", "idioma": "es", "motor": "minimax"},
         "conexion": {"voz": True, "ofrece_voz": True}}
     assert [n for n, *_ in b.cliente.llamadas] == ["mnemo_list_voices"]
     # La elegida con otra cuenta de Mnemo no es la elegida
@@ -1273,7 +1279,8 @@ def test_sin_el_permiso_de_la_voz_no_se_le_pregunta_a_mnemo(banco):
                            ({**CONECTADA, "voz": False}, {"voz": False, "ofrece_voz": True}),
                            ({**CONECTADA, "voz": False, "ofrece_voz": False}, {"voz": False, "ofrece_voz": False})):
         b = banco(conexion=conexion)
-        assert b.http.get("/api/agente/voces").json() == {"voces": [], "elegida": None, "conexion": info}
+        assert b.http.get("/api/agente/voces").json() == {"voces": [], "elegida": None, "automatica": None,
+                                                          "conexion": info}
         assert b.cliente.llamadas == []
 
 
@@ -1301,6 +1308,119 @@ def test_listar_la_voz_elegida_olvida_el_no_de_mnemo(banco):
     assert voz.puede(b.app, CONECTADA, av, HUELLA)
 
 
+# ───────────────────────────── La voz automática (sin una elegida) ─────────────────────────────
+
+def test_la_voz_automatica_es_la_que_mnemo_ofrece_a_las_apps(banco):
+    b = banco(ajustes_voz=AUTO, huella="fedcba9876543210fedcba9876543210")   # (la huella no cuenta: la da Mnemo)
+    b.cliente.salida_voces = {"voices": b.cliente.voces, "default_voice_id": OTRA_VOZ}
+    r0 = _plan(b.db, 0)
+    r = b.hablar({"rid": r0["id"], "n": 1, "frase": 0})
+    assert r.status_code == 200, r.text
+    ev = eventos(r.text)
+    assert ev[0]["voz"] == "Beto Inventado" and audio_de(ev) == AUDIO and ev[-1]["tipo"] == "fin"
+    assert [a["voice_id"] for a in b.cliente.hablas()] == [OTRA_VOZ]
+    # Se recuerda cuál es: la frase siguiente (y la prueba) no vuelven a preguntar
+    assert b.hablar({"rid": r0["id"], "cierre": True}).status_code == 200
+    assert b.hablar({"prueba": True}).status_code == 200
+    assert [n for n, *_ in b.cliente.llamadas] == ["mnemo_list_voices", "mnemo_speak", "mnemo_speak", "mnemo_speak"]
+    av = politica.ajustes_voz({"agente_voz": AUTO})
+    assert voz.estado_de(b.app, None, QUIENES[0], {"agente_voz": av}, CONECTADA)["nombre"] == "Beto Inventado"
+    # Sin `default_voice_id` entre las listas, la primera
+    b = banco(ajustes_voz=AUTO)
+    b.cliente.salida_voces = {"voices": b.cliente.voces, "default_voice_id": "6740aa0b1c2d3e4f5a6b7c99"}
+    assert b.hablar({"prueba": True}).status_code == 200 and b.cliente.hablas()[0]["voice_id"] == VOZ_ID
+
+
+def test_sin_voces_para_las_apps_es_409_y_se_vuelve_a_preguntar(banco, monkeypatch):
+    b = banco(ajustes_voz=AUTO)
+    b.cliente.voces = [{"voice_id": VOZ_ID, "name": "Clonando", "status": "cloning"}]
+    av = politica.ajustes_voz({"agente_voz": AUTO})
+    assert voz.puede(b.app, CONECTADA, av, None) is True   # no se sabe todavía
+    r = b.hablar({"prueba": True})
+    assert r.status_code == 409 and _detalle(r) == {"codigo": "sin_voz", "mensaje": voz.MENSAJE_SIN_VOCES}
+    assert b.cliente.hablas() == [] and voz.puede(b.app, CONECTADA, av, None) is False
+    # Mientras dure lo que se sabe, ni se le pregunta
+    assert b.hablar({"prueba": True}).status_code == 409 and len(b.cliente.llamadas) == 1
+    # Pasado `AUTO_S`, se vuelve a preguntar: la persona ya marcó una para las apps
+    b.cliente.voces = ClienteFalso().voces
+    ahora = voz.time.monotonic()
+    monkeypatch.setattr(voz.time, "monotonic", lambda: ahora + voz.AUTO_S + 1)
+    assert voz.puede(b.app, CONECTADA, av, None) is True
+    assert b.hablar({"prueba": True}).status_code == 200 and b.cliente.hablas()[0]["voice_id"] == VOZ_ID
+    assert not voz._en_curso and not voz._hablando
+
+
+def test_ajustes_ve_la_automatica_y_listarla_la_pone(banco):
+    b = banco(ajustes_voz=AUTO)
+    b.cliente.voces = []
+    assert b.hablar({"prueba": True}).status_code == 409
+    av = politica.ajustes_voz({"agente_voz": AUTO})
+    assert voz.puede(b.app, CONECTADA, av, None) is False
+    # La persona la marcó para las apps y el administrador abre Ajustes: la lista la trae y vale sin esperar
+    b.cliente.voces = ClienteFalso().voces
+    d = b.http.get("/api/agente/voces").json()
+    assert d["elegida"] is None and d["automatica"]["id"] == VOZ_ID
+    assert voz.puede(b.app, CONECTADA, av, None) is True
+    antes = len(b.cliente.llamadas)
+    assert b.hablar({"prueba": True}).status_code == 200
+    assert [n for n, *_ in b.cliente.llamadas[antes:]] == ["mnemo_speak"]
+
+
+def test_los_fallos_de_mnemo_con_la_voz_automatica(banco, monkeypatch):
+    av = politica.ajustes_voz({"agente_voz": AUTO})
+    # Esa voz dejó de estar para las apps (`NO_VOICE`): no se recuerda una hora, se anota que no hay automática por
+    # `AUTO_S` y después se pregunta otra vez cuál es
+    b = banco(ajustes_voz=AUTO)
+    assert b.hablar({"prueba": True}).status_code == 200 and len(voz.cache_de(b.app)) == 1
+    b.cliente.fallo = _mnemo("NO_VOICE", {"reason": "not_shared"})
+    voz.cache_de(b.app).vaciar()
+    r = b.hablar({"prueba": True})
+    assert r.status_code == 409 and _detalle(r)["codigo"] == "sin_voz"
+    assert voz.puede(b.app, CONECTADA, av, None) is False and len(voz.cache_de(b.app)) == 0
+    assert not voz._recordado(b.app, CONECTADA, voz.AUTOMATICA)
+    b.cliente.fallo = None
+    ahora = voz.time.monotonic()
+    monkeypatch.setattr(voz.time, "monotonic", lambda: ahora + voz.AUTO_S + 1)
+    assert voz.puede(b.app, CONECTADA, av, None) is True
+    monkeypatch.undo()
+    # El plan, o un Mnemo sin la herramienta: se recuerda una hora para la automática (no para una voz elegida)
+    for fallo in (_mnemo("PLAN_REQUIRED", {"feature": "voices"}),
+                  ErrorHerramienta("Tool mnemo_list_voices not found", mc.COD_NO_DISPONIBLE)):
+        b = banco(ajustes_voz=AUTO)
+        b.cliente.fallo = fallo
+        r = b.hablar({"prueba": True})
+        assert r.status_code == 409 and _detalle(r)["codigo"] == "sin_voz"
+        assert [n for n, *_ in b.cliente.llamadas] == ["mnemo_list_voices"]
+        assert voz.puede(b.app, CONECTADA, av, None) is False
+        assert voz.puede(b.app, CONECTADA, politica.ajustes_voz({"agente_voz": VOZ}), HUELLA) is True
+        # Un acierto lo olvida
+        b.cliente.fallo = None
+        assert b.hablar({"prueba": True}).status_code == 200 and voz.puede(b.app, CONECTADA, av, None) is True
+    # Si se acaban los créditos a mitad, la automática sigue siendo la misma
+    b = banco(ajustes_voz=AUTO)
+    assert b.hablar({"prueba": True}).status_code == 200
+    b.cliente.fallo, b.cliente.fallo_tras = _mnemo("CREDITS_EXHAUSTED"), 0
+    voz.cache_de(b.app).vaciar()
+    r = b.hablar({"prueba": True})
+    assert eventos(r.text)[-1]["codigo"] == "mnemo_creditos" and voz.puede(b.app, CONECTADA, av, None) is True
+    assert voz._auto(b.app, CONECTADA)[0] == VOZ_ID
+
+
+def test_la_cache_es_de_la_voz_automatica_de_ahora(banco, monkeypatch):
+    b = banco(ajustes_voz=AUTO)
+    r0 = _plan(b.db, 0)
+    c1 = {"rid": r0["id"], "n": 1, "frase": 0}
+    assert b.hablar(c1).status_code == 200
+    assert eventos(b.hablar(c1).text)[0]["cache"] is True and len(b.cliente.hablas()) == 1
+    # Pasado `AUTO_S`, Mnemo ofrece otra (la persona marcó una más reciente): la caché de la anterior no se sirve
+    b.cliente.salida_voces = {"voices": b.cliente.voces, "default_voice_id": OTRA_VOZ}
+    ahora = voz.time.monotonic()
+    monkeypatch.setattr(voz.time, "monotonic", lambda: ahora + voz.AUTO_S + 1)
+    ev = eventos(b.hablar(c1).text)
+    assert ev[0]["cache"] is False and ev[0]["voz"] == "Beto Inventado"
+    assert [a["voice_id"] for a in b.cliente.hablas()] == [VOZ_ID, OTRA_VOZ]
+
+
 # ───────────────────────────── `voz` en el estado ─────────────────────────────
 
 def test_el_estado_de_la_voz(monkeypatch):
@@ -1315,7 +1435,16 @@ def test_el_estado_de_la_voz(monkeypatch):
     nada = {"disponible": False, "nombre": None, "respuestas": False, "automatica": False}
     assert estado(8) == nada   # su rol no la hace sonar
     assert estado(av={**VOZ, "motor": "navegador"}) == nada
-    assert estado(av={**VOZ, "voz": ""}) == nada
+    assert estado(av={**AUTO, "motor": "navegador"}) == nada
+    # Sin una voz elegida, la automática: mientras no se sabe cuál es, se ofrece (la ruta le pregunta a Mnemo); de
+    # otra cuenta no hay nada que mirar (la da Mnemo con la conexión de ahora); sin `mnemo:voice` o sin su rol, no
+    assert estado(av=AUTO) == {"disponible": True, "nombre": None, "respuestas": True, "automatica": True}
+    assert estado(av={**AUTO, "cuenta": "fedcba9876543210fedcba9876543210"}) == estado(av=AUTO)
+    assert estado(av=AUTO, conexion={**CONECTADA, "voz": False}) == nada and estado(8, av=AUTO) == nada
+    voz._anotar_auto(app, CONECTADA, {"id": OTRA_VOZ, "nombre": "Beto Inventado"})
+    assert estado(av=AUTO) == {"disponible": True, "nombre": "Beto Inventado", "respuestas": True, "automatica": True}
+    voz._anotar_auto(app, CONECTADA, None)   # Mnemo dijo que no ofrece ninguna a las apps
+    assert estado(av=AUTO) == nada and estado() != nada
     assert estado(conexion={**CONECTADA, "voz": False}) == nada
     assert estado(conexion={**CONECTADA, "estado": "caida", "motivo": "clave"}) == nada
     assert estado(av={**VOZ, "cuenta": "fedcba9876543210fedcba9876543210"}) == nada
@@ -1360,7 +1489,7 @@ def test_la_voz_tiene_cupos_propios_en_el_servidor():
 
 # ───────────────────────────── El ajuste `agente_voz` (con MongoDB) ─────────────────────────────
 
-POR_DEFECTO = {"motor": "navegador", "voz": "", "nombre": "", "cuenta": "", "roles": ["admin", "coordinador"],
+POR_DEFECTO = {"motor": "mnemo", "voz": "", "nombre": "", "cuenta": "", "roles": ["admin", "coordinador"],
                "respuestas": True, "automatica": True}
 
 
@@ -1422,7 +1551,7 @@ def test_el_coordinador_lo_ve_y_no_lo_cambia(sesion):
     try:
         a = k.get("/api/ajustes").json()
         assert a["agente_voz"] == POR_DEFECTO
-        r = k.put("/api/ajustes", json={"agente_voz": {"motor": "mnemo"}})
+        r = k.put("/api/ajustes", json={"agente_voz": {"motor": "navegador"}})
         assert r.status_code == 403 and r.json()["detail"]["codigo"] == "permiso"
         assert r.json()["detail"]["campos"] == ["agente_voz"]
         # Reenviar lo que ve no es un cambio
@@ -1456,6 +1585,9 @@ def test_el_estado_dice_si_la_voz_esta_disponible(sesion):
     nada = {"disponible": False, "nombre": None, "respuestas": False, "automatica": False}
     assert sesion.get("/api/agente/estado").json()["voz"] == nada
     conectar_mnemo(sesion.app, alcances=(*ALCANCES_PANEL, "mnemo:voice"))
+    # Sin tocar Ajustes: la voz automática (la que Mnemo ofrece a las apps), sin su nombre hasta preguntarle cuál es
+    assert sesion.get("/api/agente/estado").json()["voz"] == {"disponible": True, "nombre": None, "respuestas": True,
+                                                              "automatica": True}
     r = sesion.put("/api/ajustes", json={"agente_voz": {"motor": "mnemo", "voz": VOZ_ID, "nombre": "Ana",
                                                         "automatica": False}})
     assert r.status_code == 200
