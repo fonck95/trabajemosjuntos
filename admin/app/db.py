@@ -52,7 +52,8 @@ PERSONA_VACIA: dict[str, Any] = {
     "lugar_texto": None, "zona": None, "lat": None, "lon": None, "geo_precision": None, "geo_manual": False,
     "ficha": None, "puesto_votacion": None, "mesa": None, "ocupacion": None, "perfil_profesional": None,
     "nivel_educativo": None, "personas_hogar": None, "consentimiento": "pendiente", "consentimiento_fecha": None,
-    # Tipo de persona en la campaña (modelo.TIPOS_PERSONA): uno o varios. Datos políticos: solo A y K
+    # Tipo de persona en la campaña (modelo.TIPOS_PERSONA): uno o varios. Datos políticos: A y K; P solo suma, en su
+    # zona (modelo.TIPOS_PERSONA lo explica)
     "lider": False, "votante": False, "concejal": False,
     "observaciones": None, "extra": {}, "fuentes": [], "clave_tramites": None, "completitud": 0, "ultimo_contacto": None,
     "fusionada_en": None, "eliminado": False, "listas": [], "etiquetas": [], "tramites": [], "notas": [], "origen": [],
@@ -327,8 +328,8 @@ def _mascara_cedula(v: Any) -> Any:
 
 def enmascarar(db: Database, detalle: Any) -> Any:
     """`detalle` sin datos sensibles ni cédulas en claro (1.9): `sensibles`, el tipo de persona (`lider`, `votante`,
-    `concejal`), los líderes, las etiquetas sensibles y los campos propios sensibles quedan «(oculto)»; las cédulas,
-    con sus 3 últimos dígitos."""
+    `concejal`), los líderes, las etiquetas sensibles y los campos propios sensibles quedan «(oculto)», los haya
+    escrito A, K o P; las cédulas, con sus 3 últimos dígitos."""
     cache: dict[str, set] = {}
 
     def sensibles(col: str, clave: str) -> set:
@@ -686,7 +687,10 @@ class FusionImposible(HTTPException):
 # Campos que se llenan desde el origen si el destino no los tiene, sin alternos (los que no tienen procedencia)
 FUSION_SIMPLES = ("ficha", "personas_hogar", "observaciones", "tenencia_vivienda", "estrato", "regimen_salud",
                   "reunion_origen")
-_LISTAS_UNION = ("fuentes", "listas", "etiquetas", "claves_tramites", "cedulas_anteriores", "lideres_quitados")
+# `reubicada_por` (los planilleros que movieron a la persona a su zona, api/personas.py `reubicada`) también: la
+# ubicación del origen puede pasar al destino
+_LISTAS_UNION = ("fuentes", "listas", "etiquetas", "claves_tramites", "cedulas_anteriores", "lideres_quitados",
+                 "reubicada_por")
 
 
 def _lit(v: Any) -> dict:

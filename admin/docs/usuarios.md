@@ -78,6 +78,15 @@ El permiso `agente.usar` (planilleros y consultores) deja entrar al asistente, p
 **Ajustes → Asistente** (ver [`agente.md`](agente.md)). Conectar el asistente con Mnemo pide `agente.conectar`, que es
 solo del administrador.
 
+Los datos políticos de una ficha (el tipo de persona —líder, votante, concejal— y el «Liderado por») los ven y los
+cambian el administrador y los coordinadores. El planillero solo suma, en las personas de su zona y en las que
+registra: `personas.tipo` marca un tipo (al registrar, en Completar y en la ficha) y `lideres.asignar` busca al líder o
+concejal en toda la campaña, por nombre (3 letras o más) o por la cédula completa, y se lo asigna; quitar un tipo o un
+líder, la lista de líderes con sus conteos, los filtros por tipo y por líder, la columna de Habitantes y la exportación
+siguen sin ser suyos. Si le cambia el barrio, la dirección o la ubicación a una persona que no era de su zona, eso no
+se la vuelve de su zona. El consultor no tiene ninguno de los dos. Ver
+[`reuniones-y-lideres.md`](reuniones-y-lideres.md#privacidad).
+
 | Rol | Menú |
 |---|---|
 | Administrador y coordinador | Panel · Mapa 3D · Habitantes · Mi trabajo · Reuniones · Calidad de datos · Importar y exportar · Usuarios · Ajustes · Mi cuenta |
@@ -89,7 +98,8 @@ En el código, lo que el administrador hace con los datos se comprueba con `quie
 `SOLO_ADMIN` (`usuarios.coordinadores`, `usuarios.roles` y `permisos.modificar`). Un ajuste de permisos se valida con
 `acceso.exigir_ajustes`.
 
-Cada ficha o fila que el panel sirve queda en `lecturas` (también las del administrador y los coordinadores).
+Cada ficha o fila que el panel sirve, y cada líder que responde la barra del «Liderado por», queda en `lecturas`
+(también las del administrador y los coordinadores).
 Planilleros y consultores tienen un **presupuesto diario** de personas distintas (1000 y 300, en **Ajustes**): al
 pasarlo reciben «Llegó al tope de personas consultadas hoy», en Usuarios aparece la alerta **Volumen** y, con 20
 rechazos en el día, se cierran sus sesiones. Las búsquedas y listas tienen además un límite de 120 consultas por minuto. El administrador y los
@@ -102,7 +112,8 @@ los coordinadores (los ven el administrador y los coordinadores):
 
 - **Administración** (administrador y coordinadores): importaciones, exportaciones, fichas unidas, supresiones y
   usuarios creados. Lo que crean o editan en las fichas cuenta como en los planilleros.
-- **Planilleros**: fichas creadas (y netas, sin las que se unieron por duplicadas), personas actualizadas, personas con
+- **Planilleros**: fichas creadas (y netas, sin las que se unieron por duplicadas), personas actualizadas (con las
+  correcciones: datos que cambió sin completarlos; marcar un tipo de persona no es una corrección), personas con
   datos nuevos, datos completados por primera vez (cédula, teléfono, puesto, mesa…), teléfonos agregados,
   autorizaciones, asistencias, ubicadas y fichas vistas. Lo que se carga de una planilla con «Capturado por» cuenta
   para ese planillero. Vaciar un dato y volver a llenarlo no suma.

@@ -3,7 +3,8 @@
 // primeros filtros son los datos principales de la ficha (los 17: nombre, cédula, sexo y edad, teléfono y correo,
 // dirección, barrio y zona, tipo y «Liderado por», perfil profesional, ocupación, estado civil y jefe de hogar); el
 // puesto y la mesa, el abordaje y lo demás van en «Más filtros». A y K filtran además por tipo de persona, por quién la
-// lidera (o sin líder) y por reunión (las intervenidas en ella), y abren la lista de líderes y concejales.
+// lidera (o sin líder) y por reunión (las intervenidas en ella), y abren la lista de líderes y concejales. «Nuevo
+// votante» (el alta con Votante marcado y la barra «Liderado por») es de quien marca el tipo: A, K y también P.
 import { api, descargar, puede, sesion } from '../api.js';
 import { url } from '../base.js';
 import {
@@ -15,7 +16,8 @@ import {
   insigniasFuentes, leyendaFuentes, montar, num, titulo,
 } from '../ui.js';
 import {
-  administra, cargarLideres, chipsFaltan, chipsTipo, dialogoCompletar, faltanDe, formularioNuevaPersona, textoCedula, textoTelefono,
+  administra, cargarLideres, chipsFaltan, chipsTipo, dialogoCompletar, faltanDe, formularioNuevaPersona, marcaTipo, textoCedula,
+  textoTelefono,
 } from './comunes.js';
 
 // Filtros que viajan en la URL (también los que solo llegan por enlace: Mi trabajo, tablero, mapa)
@@ -132,7 +134,7 @@ export async function vistaPersonas(el, { q, ir }) {
       <div class="acciones">
         ${adm ? html`<button class="btn" id="ver-lideres" title="Cuántas personas lidera cada líder o concejal y cuáles trae más de uno">Líderes</button>` : ''}
         ${puede('exportar') ? html`<button class="btn" id="exportar" title="Exporta lo filtrado; omite a quien marcó «No autorizó» el tratamiento de sus datos">${icono('descargar')} Exportar a Excel</button>` : ''}
-        ${adm && puede('personas.crear') ? html`<button class="btn" id="nuevo-votante" title="Registrar un votante y buscar al líder o concejal que lo trajo">${icono('mas')} Nuevo votante</button>` : ''}
+        ${marcaTipo() && puede('personas.crear') ? html`<button class="btn" id="nuevo-votante" title="Registrar un votante y buscar al líder o concejal que lo trajo">${icono('mas')} Nuevo votante</button>` : ''}
         ${puede('personas.crear') ? html`<button class="btn primario" id="nueva">${icono('mas')} Nueva persona</button>` : ''}
       </div>
     </div>

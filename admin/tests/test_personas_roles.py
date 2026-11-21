@@ -1,6 +1,6 @@
-"""Reglas por rol en la API de personas (3.6, 3.8): P no cambia una cédula existente ni vacía campos, conserva las
-etiquetas sensibles, no crea menores; C no edita; parámetros vedados; alcance obligatorio en Habitantes y libre en la
-búsqueda y la ficha. Solo datos inventados."""
+"""Reglas por rol en la API de personas (3.6, 3.8): P no cambia una cédula existente ni vacía campos, suma un tipo de
+persona pero no lo quita, conserva las etiquetas sensibles, no crea menores; C no edita; parámetros vedados; alcance
+obligatorio en Habitantes y libre en la búsqueda y la ficha. Solo datos inventados."""
 import pytest
 
 from ayudas_g3 import persona
@@ -45,9 +45,12 @@ def test_planillero_llena_una_cedula_vacia_y_no_vacia_campos(sesion, como):
     # A sí vacía; el valor anterior queda en alternos
     f = sesion.patch(f"/api/personas/{pid}", json={"ocupacion": None}).json()
     assert f["ocupacion"] is None and any(a["campo"] == "ocupacion" and a["valor"] == "Pescadora" for a in f["alternos"])
-    # P no puede marcar líder
+    # P marca líder (sin asignación, toda la base es su zona), pero no lo quita: eso es de A y K
     r = p.patch(f"/api/personas/{pid}", json={"lider": True})
+    assert r.status_code == 200 and r.json()["lider"] is True, r.text
+    r = p.patch(f"/api/personas/{pid}", json={"lider": False})
     assert r.status_code == 403 and r.json()["detail"]["campo"] == "lider"
+    assert db.personas.find_one({"_id": pid})["lider"] is True
 
 
 def test_planillero_conserva_las_etiquetas_sensibles(sesion, como):

@@ -6,8 +6,9 @@ fusión y supresión.
   ficha se unió o se suprimió), con `base` como comparación por campo (409 `cambiada`). Nunca se reescribe la ficha.
 * Toda escritura sobre una persona pasa por `exigir_tratable` (3.9): a quien no autorizó, P y C no lo tratan.
 * P: alcance obligatorio en Habitantes, búsqueda y ficha libres (con presupuesto), no cambia una cédula existente, no
-  vacía campos, no ve ni toca lo sensible. C: solo busca por nombre (o por un número completo) y trabaja dentro de su
-  alcance (3.6).
+  vacía campos, no ve ni toca lo sensible. El tipo de persona solo lo suma, nunca lo quita, y solo en las personas de
+  su zona o que registró (`proyeccion.tipo_visible`; al registrar, siempre). C: solo busca por nombre (o por un número
+  completo) y trabaja dentro de su alcance (3.6).
 """
 from __future__ import annotations
 
@@ -278,7 +279,8 @@ class PersonaIn(BaseModel):
     donde: Literal["yondo", "otro_municipio", "no_inscrito"] | None = None
     municipio: str | None = Field(None, max_length=80)
     votacion_verificada: bool | None = None
-    # Tipo de persona (modelo.TIPOS_PERSONA): solo A y K
+    # Tipo de persona (modelo.TIPOS_PERSONA). A y K lo marcan y lo quitan; P (`personas.tipo`) solo lo marca, y en
+    # una ficha existente solo si es de su zona o la registró (`exigir_tipos_de_p`)
     lider: bool | None = None
     votante: bool | None = None
     concejal: bool | None = None
@@ -320,8 +322,11 @@ CANONICO = {"fecha_nacimiento": "edad", "lugar_id": "lugar", "telefono": "telefo
             "municipio": "puesto", "votacion_verificada": "puesto", "consentimiento": "autorizacion",
             "consentimiento_fecha": "autorizacion", "tipo_documento": "cedula", "cedula_verificada": "cedula"}
 VOTACION_ENTRADA = ("puesto_id", "puesto_texto", "puesto_votacion", "mesa", "donde", "municipio", "votacion_verificada")
-# Lo que P no puede mandar (403 con el nombre del campo)
-VEDADOS_P = (*modelo.TIPOS_PERSONA, "lideres", "motivo_cambio_cedula", "puesto_votacion", "consentimiento_fecha")
+# Lo que P no puede mandar (403 con el nombre del campo). El tipo y los líderes no están: P los suma con
+# `personas.tipo` y `lideres.asignar` (`exigir_tipos_de_p`, `crear`, app/api/lideres.py)
+VEDADOS_P = ("motivo_cambio_cedula", "puesto_votacion", "consentimiento_fecha")
+FUERA_DE_ZONA = ("Esta persona no es de su zona: su tipo y su «Liderado por» los marcan el administrador, el "
+                 "coordinador o quien la tiene asignada")
 
 
 def _vacio(v: Any) -> bool:
@@ -846,6 +851,38 @@ def _detalle(k: str, antes: Any, despues: Any, ctx_sens: set) -> dict:
     return {"antes": antes, "despues": despues}
 
 
+def exigir_tipos_de_p(db: Database, quien: Quien, p: dict, datos: dict, completar: bool) -> None:
+    """Los tipos de persona que manda quien no administra, antes de escribir nada: necesita `personas.tipo` (403), solo
+    suma (fuera de Completar, un tipo en «no» es 403 siempre, lo tenga o no la persona) y solo marca en las personas de
+    su zona o que registró (403 `fuera_de_zona`). Ninguna respuesta depende del tipo que la persona ya tiene: diría si
+    es líder. En Completar un «no» se ignora, como siempre (Completar solo suma)."""
+    tipos = [t for t in modelo.TIPOS_PERSONA if t in datos]
+    if not tipos:
+        return
+    if not quien.puede("personas.tipo"):
+        raise _prohibido(f"Su rol no puede cambiar «{tipos[0]}»", campo=tipos[0])
+    if not completar:
+        for t in tipos:
+            if not datos[t]:
+                raise _prohibido("Su rol solo marca un tipo: quitarlo lo hace el administrador o el coordinador",
+                                 campo=t)
+    marcados = [t for t in tipos if datos[t]]
+    if marcados and not proyeccion.tipo_visible(db, quien, p):
+        raise _prohibido(FUERA_DE_ZONA, codigo="fuera_de_zona", campo=marcados[0])
+
+
+def reubicada(db: Database, quien: Quien, p: dict) -> dict:
+    """Lo que se suma al `$set` de una escritura en la que un planillero le cambia el barrio, la dirección o la
+    ubicación a una persona cuyo tipo no ve (no es de su zona ni la registró él): su uid queda en `reubicada_por` y,
+    para él, su zona ya no cuenta en esa persona (`proyeccion.tipo_visible`). Si no, la movería a su zona, leería su
+    tipo y su «Liderado por» (y los marcaría) y la devolvería. Va en la misma escritura que el cambio: la respuesta (y
+    cualquier lectura que llegue en medio) ya no trae el tipo. El cambio de barrio sigue permitido. A, K, C y quien ya
+    la veía: nada. `p`, la ficha de antes de escribir, con `proyeccion.CAMPOS_TIPO_VISIBLE`."""
+    if quien.administra or not _es_planillero(quien) or proyeccion.tipo_visible(db, quien, p):
+        return {}
+    return {"reubicada_por": {"$setUnion": [{"$ifNull": ["$reubicada_por", []]}, [quien.uid]]}}
+
+
 @r.patch("/personas/{pid}")
 def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, db: Database = Depends(obtener_db),
            quien: Quien = Depends(requiere("personas.editar"))):
@@ -857,14 +894,17 @@ def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, 
     p_rol = _es_planillero(quien)
     adm = quien.administra
     if base and not adm:
-        # Lo que el rol no ve no se compara: un 409 «cambiada» (o su ausencia) diría si alguien es líder
-        base = {k: v for k, v in base.items() if k not in VEDADOS_P}
+        # Lo que el rol no ve no se compara, y el tipo tampoco: P solo lo suma y sumar es idempotente, así que no hace
+        # falta comparar, y un 409 «cambiada» (o su ausencia) nunca dice si alguien es líder, votante o concejal
+        base = {k: v for k, v in base.items() if k not in VEDADOS_P and k not in modelo.TIPOS_PERSONA}
     ts = bd.ahora()
     avisos_op: list[str] = []
     if p_rol:
         for k in VEDADOS_P:
             if k in datos and not (k == "consentimiento_fecha" and datos.get("consentimiento")):
                 raise _prohibido(f"Su rol no puede cambiar «{k}»", campo=k)
+    if not adm:
+        exigir_tipos_de_p(db, quien, antes, datos, completar)
     condiciones = _condiciones_base(base)
     sets: dict = {}
     candidatos: list[dict] = []
@@ -877,8 +917,9 @@ def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, 
     def poner(k: str, v: Any) -> None:
         actual = antes.get(k)
         if k in modelo.TIPOS_PERSONA:
-            # Sí o no (sin el campo es «no»). Completar solo suma un tipo, nunca lo quita. Lo que marca una persona
-            # queda con su procedencia: la importación no lo vuelve a cambiar (importar.marcar_tipo)
+            # Sí o no (sin el campo es «no»). Completar solo suma un tipo, nunca lo quita; P tampoco (un «no» suyo ya
+            # tuvo su 403 en `exigir_tipos_de_p`). Lo que marca una persona queda con su procedencia: la importación no
+            # lo vuelve a cambiar (importar.marcar_tipo)
             actual = bool(actual)
             if actual == v or (completar and not v):
                 return
@@ -1113,6 +1154,9 @@ def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, 
     if evento and evento["estado"] == "si" and antes.get("consentimiento") != "si":
         claves_avance = list(dict.fromkeys([*claves_avance, "autorizacion"]))
     etapas: list[dict] = []
+    # El barrio o la dirección (de ella sale la ubicación) de una persona que P no veía: moverla no le da su tipo
+    if p_rol and ("lugar_id" in diff or "direccion" in diff):
+        sets.update(reubicada(db, quien, antes))
     if candidatos:
         sets["alternos"] = expr_alternos(candidatos)
     if procedencia:
@@ -1160,7 +1204,8 @@ class NuevaPersona(PersonaIn):
     forzar_suprimida: bool = False
     reunion_id: int | None = None
     autorizacion: AutorizacionIn | None = None
-    # Los líderes que la trajeron (ids de fichas marcadas como líder): solo A y K (app/api/lideres.py)
+    # Los líderes que la trajeron (ids de fichas marcadas como líder o concejal): A, K y P con `lideres.asignar`
+    # (app/api/lideres.py)
     lideres: list[int] | None = Field(None, max_length=10)
 
 
@@ -1298,6 +1343,11 @@ def crear(body: NuevaPersona, request: Request, db: Database = Depends(obtener_d
         for k in VEDADOS_P:
             if k in datos:
                 raise _prohibido(f"Su rol no puede cambiar «{k}»", campo=k)
+    # El tipo, con `personas.tipo`. Al registrar no hay zona que revisar (la persona es nueva y es suya) y un «no» no
+    # quita nada
+    tipos = [t for t in modelo.TIPOS_PERSONA if t in datos]
+    if tipos and not adm and not quien.puede("personas.tipo"):
+        raise _prohibido(f"Su rol no puede cambiar «{tipos[0]}»", campo=tipos[0])
     hoy = modelo.hoy_local()
     doc_datos: dict = {}
     for k in SIMPLES:
@@ -1322,12 +1372,8 @@ def crear(body: NuevaPersona, request: Request, db: Database = Depends(obtener_d
     if body.lugar_id and lg is None:
         raise HTTPException(422, "Lugar no existe")
     reunion = _reunion_permitida(db, body.reunion_id, quien)
-    lideres = []
-    if body.lideres:
-        from .lideres import exigir_lider  # aquí: lideres usa este módulo
-        if not adm:
-            raise _prohibido("Su rol no puede cambiar «lideres»", campo="lideres")
-        lideres = [exigir_lider(db, lid, None) for lid in dict.fromkeys(body.lideres)]
+    if body.lideres and not (adm or quien.puede("lideres.asignar")):
+        raise _prohibido("Su rol no puede cambiar «lideres»", campo="lideres")
     evento = validar_autorizacion(db, body.autorizacion, quien) if body.autorizacion else None
     if not body.forzar:
         encontradas = _parecidas(db, doc_datos["nombre"], nums, cedula)
@@ -1372,6 +1418,15 @@ def crear(body: NuevaPersona, request: Request, db: Database = Depends(obtener_d
                     raise _prohibido("Su rol no puede cambiar ese campo", campo=f"extra.{k}")
                 extra[k] = str(x)[:500] if not isinstance(x, (int, float, bool)) else x
         doc["extra"] = extra
+    # Los líderes se validan al final, después de todo lo que no depende de ellos (las parecidas, la votación, las
+    # etiquetas): si no, que el alta siga de largo hasta otro 409 o 422 en vez del 422 genérico diría sin costo si un id
+    # es un líder o concejal. Así, un id que pasa registra a la persona. Salen con su nombre en la respuesta: cuentan
+    # en el presupuesto diario de P (como en `lideres.candidatos`)
+    lideres = []
+    if body.lideres:
+        from .lideres import exigir_lider  # aquí: lideres usa este módulo
+        lideres = [exigir_lider(db, lid, None, quien) for lid in dict.fromkeys(body.lideres)]
+        acceso.registrar_lecturas(db, quien, [l["_id"] for l in lideres])
     if reunion:
         doc["asistencias"] = [{"reunion_id": reunion["_id"], "rol": None, "nota": None, "creado_en": ts}]
         doc["ultimo_contacto"] = reunion["fecha"]
@@ -1704,13 +1759,14 @@ class UbicacionIn(BaseModel):
 @r.put("/personas/{pid}/ubicacion")
 def ubicar(pid: int, body: UbicacionIn, db: Database = Depends(obtener_db),
            quien: Quien = Depends(requiere("personas.ubicar"))):
-    antes = proyeccion.persona_activa(db, pid, {"lat": 1, "lon": 1, "punto": 1, "consentimiento": 1})
+    antes = proyeccion.persona_activa(db, pid, {"lat": 1, "lon": 1, "punto": 1, "consentimiento": 1,
+                                                **proyeccion.CAMPOS_TIPO_VISIBLE})
     proyeccion.exigir_tratable(antes, quien, "ubicar")
     lat, lon = round(body.lat, 6), round(body.lon, 6)
     completados = [] if modelo.tiene_dato(antes, "ubicacion") else ["ubicacion"]
     escribir(db, pid, [{"$set": {"lat": lat, "lon": lon, "punto": _lit(modelo.punto(lat, lon)), "geo_precision": "manual",
                                  "geo_manual": "punto", "geo_fuente": _lit(body.fuente),
-                                 "precision_m": _lit(body.precision_m)}},
+                                 "precision_m": _lit(body.precision_m), **reubicada(db, quien, antes)}},
                        etapa_avance(completados, quien), etapa_actualizado(quien)])
     bd.recalcular_completitud(db, [pid])
     bd.auditar(db, quien, "ubicar", "persona", pid,
@@ -1722,9 +1778,10 @@ def ubicar(pid: int, body: UbicacionIn, db: Database = Depends(obtener_db),
 @r.delete("/personas/{pid}/ubicacion")
 def ubicacion_automatica(pid: int, db: Database = Depends(obtener_db),
                          quien: Quien = Depends(requiere("personas.ubicar"))):
-    p = proyeccion.persona_activa(db, pid, {"consentimiento": 1})
+    p = proyeccion.persona_activa(db, pid, {"consentimiento": 1, **proyeccion.CAMPOS_TIPO_VISIBLE})
     proyeccion.exigir_tratable(p, quien, "ubicar")
-    escribir(db, pid, [{"$set": {"geo_manual": False, "geo_fuente": None, "precision_m": None}}, etapa_actualizado(quien)])
+    escribir(db, pid, [{"$set": {"geo_manual": False, "geo_fuente": None, "precision_m": None,
+                                 **reubicada(db, quien, p)}}, etapa_actualizado(quien)])
     georreferenciar_y_punto(db, [pid])
     bd.recalcular_completitud(db, [pid])
     bd.auditar(db, quien, "ubicacion_automatica", "persona", pid, None, campos=["ubicacion"])

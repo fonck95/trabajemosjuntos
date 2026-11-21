@@ -62,6 +62,10 @@ ROLES_CAMPO = ("planillero", "consultor")  # con alcance, presupuesto diario y l
 # sesión, con estos mismos permisos, su alcance y su presupuesto diario.
 # `presentacion.ver` (la vista /presentacion: la propuesta 2028–2031, pública, dentro del panel, y la herramienta
 # `presentacion` del asistente) es de todos: no muestra nada de la base
+# El tipo de persona (líder, votante, concejal) y el «Liderado por» son datos políticos. P solo suma, en las personas
+# de su zona y en las que registra (`proyeccion.tipo_visible`): `personas.tipo` marca un tipo, nunca lo quita;
+# `lideres.asignar` busca líderes y concejales y asigna uno, nunca lo quita. Quitar un tipo o un líder, los filtros y
+# la lista de líderes con sus conteos siguen siendo de A y K (`requiere("admin")`); C no tiene ninguno de los dos
 PERMISOS: dict[str, frozenset[str]] = {
     "admin": frozenset({"*"}),
     "coordinador": frozenset({"*"}),  # «*» menos SOLO_ADMIN: lo resta `Quien.puede`
@@ -71,6 +75,7 @@ PERMISOS: dict[str, frozenset[str]] = {
         "personas.telefonos", "personas.autorizacion", "personas.duplicado", "personas.situacion",
         "personas.no_disponible", "acercamientos.registrar", "acercamientos.ver", "reuniones.ver", "reuniones.crear",
         "reuniones.asistentes", "puestos.ver", "plantillas", "solicitudes.crear", "agente.usar", "presentacion.ver",
+        "personas.tipo", "lideres.asignar",
     }),
     "consultor": frozenset({
         "cuenta", "catalogos.ver", "insignias", "trabajo.ver", "trabajo.cola", "personas.buscar", "personas.ver",

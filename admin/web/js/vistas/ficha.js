@@ -3,10 +3,11 @@
 // acercamientos, origen y cambios (A y K). El consultor ve una ficha reducida (`pintarConsultor`).
 // Arriba, los datos principales (los 17 de la base general: nombre, cédula, sexo, edad, teléfono, nacimiento, correo,
 // dirección, barrio o vereda, zona, tipo —concejal, líder, votante—, liderado por, perfil profesional, ocupación, estado
-// civil y jefe de hogar). A y K ven además el tipo de persona y quién la lidera («Liderado por», con la barra para buscar
-// al líder o concejal y el aviso si la capta más de uno), a cuántas lidera ella si es líder o concejal, y la traza de las
-// reuniones: en el historial, en qué reuniones se la intervino y si asistió; en Cambios, cada cambio con la reunión en
-// que se hizo (app/trazas.py).
+// civil y jefe de hogar). El tipo de persona y quién la lidera («Liderado por», con la barra para buscar al líder o
+// concejal y el aviso si la capta más de uno) los ven A y K en toda la base y P en las fichas que los traen (las de su
+// zona y las que registró): P marca un tipo y asigna un líder, pero no los quita. Solo A y K ven a cuántas lidera ella si
+// es líder o concejal, y la traza de las reuniones: en el historial, en qué reuniones se la intervino y si asistió; en
+// Cambios, cada cambio con la reunión en que se hizo (app/trazas.py).
 import { api, ErrorApi, nuevaClave, puede, registrarPendiente, sesion } from '../api.js';
 import { refrescarInsignias } from '../app.js';
 import { marcarLlamada } from '../llamadas.js';
@@ -23,9 +24,9 @@ import {
 } from '../ui.js';
 import { dialogoAcercamiento, mensajeNoContactable } from './acercamiento.js';
 import {
-  administra, buscadorLider, camposAutorizacion, camposVotacion, chipsFaltan, chipsTipo, cuerpoVotacion, dialogoCambiada,
-  dialogoCompletar, elegirPunto, elegirLider, enlazarAutorizacion, enlazarEdad, enlazarVotacion, faltanDe,
-  formularioNuevaPersona, leerAutorizacion, opcionesLugares, rangoHora, textoCedula, ubicarConGps,
+  administra, asignaLider, buscadorLider, camposAutorizacion, camposVotacion, chipsFaltan, chipsTipo, cuerpoVotacion,
+  dialogoCambiada, dialogoCompletar, elegirPunto, elegirLider, enlazarAutorizacion, enlazarEdad, enlazarVotacion, faltanDe,
+  formularioNuevaPersona, leerAutorizacion, marcaTipo, opcionesLugares, rangoHora, textoCedula, ubicarConGps,
 } from './comunes.js';
 
 const TIPOS_SOLICITUD = { consulta: 'Consultar sus datos', correccion: 'Corregir sus datos', supresion: 'Borrar sus datos', revocatoria: 'Revocar la autorización', otro: 'Otra' };
@@ -61,6 +62,11 @@ export async function vistaFicha(el, { params, ir }) {
   const adm = administra();
   const esC = rol === 'consultor';
   const esP = rol === 'planillero';
+  // El tipo de persona y el «Liderado por»: A y K siempre; los demás, cuando la ficha del servidor los trae (P: las de su
+  // zona y las que registró). Se miran en cada pintado: `p` cambia con cada respuesta
+  const traeTipo = () => adm || 'lider' in p;
+  const verTipo = () => marcaTipo() && traeTipo();
+  const verLiderado = () => asignaLider() && (adm || Array.isArray(p.lideres));
   let pestana = 'datos';
   let formInicial = null; // valores del formulario tal como se pintaron
   let sucio = false;
@@ -188,9 +194,10 @@ export async function vistaFicha(el, { params, ir }) {
                 <label class="campo" data-campo="lugar_id"><span>Barrio o vereda</span><select name="lugar_id" ${ed('lugar_id') ? '' : 'disabled'}>${opcionesLugares(cat, p.lugar_id)}</select></label>
                 <div class="campo"><span>Zona urbana o rural</span><b class="valor-fijo">${p.zona === 'urbana' ? 'Urbana (casco)' : p.zona === 'rural' ? 'Rural' : '—'}</b><small class="nota">Sale del barrio o vereda.</small></div>
                 <div class="fila-botones ancho"><button type="button" class="btn chico" data-gps>${icono('gps')} Estoy en su casa</button><button type="button" class="btn chico" data-ver-mapa>${icono('mapa')} Ver en el mapa</button></div>
-                ${adm ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Tipo de persona</span>
-                  <div class="opciones-radio">${Object.entries(TIPOS_PERSONA).map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="${k}" ${p[k] ? 'checked' : ''} ${ed(k) ? '' : 'disabled'}> ${t}${insigniaCampo(k)}</label>`)}</div></div>
-                  <div class="grupo-campo ancho liderado-por"><span class="titulo-campo">Liderado por</span>${lideradoPor()}</div>` : ''}
+                ${verTipo() ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Tipo de persona</span>
+                  <div class="opciones-radio">${Object.entries(TIPOS_PERSONA).map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="${k}" ${p[k] ? 'checked' : ''} ${ed(k) && (adm || p[k] !== true) ? '' : 'disabled'}> ${t}${insigniaCampo(k)}</label>`)}</div>
+                  ${adm ? '' : html`<small class="nota">Un tipo marcado solo lo quita el administrador o el coordinador.</small>`}</div>` : ''}
+                ${verLiderado() ? html`<div class="grupo-campo ancho liderado-por"><span class="titulo-campo">Liderado por</span>${lideradoPor()}</div>` : ''}
                 ${entrada('perfil_profesional', 'Perfil profesional', { largo: 160 })}
                 ${entrada('ocupacion', 'Ocupación', { largo: 120 })}
                 ${selector('estado_civil', 'Estado civil', lista(ESTADOS_CIVILES))}
@@ -263,7 +270,7 @@ export async function vistaFicha(el, { params, ir }) {
               <div><span>Reuniones</span><b>${num((p.reuniones || []).length)}</b></div>
             </div>
           </section>
-          ${adm ? tarjetaLideres() : ''}
+          ${adm ? tarjetaLideres() : asignaLider() && (p.lider || p.concejal) ? tarjetaLiderado() : ''}
           <section class="tarjeta">
             <header><h2>Ubicación</h2>${chipPrecision(p.geo_precision)}</header>
             ${p.lat != null && verMapa ? html`<div class="minimapa" id="minimapa"></div>`
@@ -281,7 +288,7 @@ export async function vistaFicha(el, { params, ir }) {
         </div>
       </div>`);
     vigilarBarra();
-    if (adm) montarBuscadorLider();
+    montarBuscadorLider(); // solo si se pintó «Liderado por»
     formInicial = leerForm();
     // Después de leer el formulario: la edad calculada no cuenta como un cambio, y al borrar la fecha vuelve la guardada
     if ($('#f-datos', el)) enlazarEdad($('#f-datos', el));
@@ -331,7 +338,9 @@ export async function vistaFicha(el, { params, ir }) {
       ${p.menor ? html`<span class="chip rojo">Menor de edad</span>` : ''}
       ${p.requiere_actualizacion ? html`<span class="chip ambar">Pendiente de actualizar</span>` : ''}
       ${sit ? html`<span class="chip rojo">${SITUACIONES[sit.estado] || sit.estado}${sit.confirmada ? '' : ' (sin confirmar)'}</span>` : ''}
-      ${adm ? html`${insigniasFuentes(p.fuentes, { conNombre: true })}${chipsTipo(p)}${(p.lideres || []).length > 1 ? html`<span class="chip ambar" title="Más de un líder la está captando">${num(p.lideres.length)} líderes</span>` : ''}${(p.listas || []).map((l) => html`<span class="chip azul">${l}</span>`)}` : ''}
+      ${adm ? insigniasFuentes(p.fuentes, { conNombre: true }) : ''}
+      ${traeTipo() ? html`${chipsTipo(p)}${(p.lideres || []).length > 1 ? html`<span class="chip ambar" title="Más de un líder la está captando">${num(p.lideres.length)} líderes</span>` : ''}` : ''}
+      ${adm ? html`${(p.listas || []).map((l) => html`<span class="chip azul">${l}</span>`)}` : ''}
     </div>`;
   }
 
@@ -503,14 +512,16 @@ export async function vistaFicha(el, { params, ir }) {
         : html`<p class="sec">No aparece en la base de trámites.</p>`}`;
   }
 
-  // ───────── Líderes (A y K): quién la lidera y a quiénes lidera ─────────
-  // «Liderado por» en los datos principales: los líderes o concejales que la trajeron y la barra para buscar otro
+  // ───────── Líderes: quién la lidera (A y K, y P en las de su zona) y a quiénes lidera (A y K) ─────────
+  // «Liderado por» en los datos principales: los líderes o concejales que la trajeron y la barra para buscar otro. Solo
+  // A y K quitan uno (✕) y abren su ficha: para P el nombre va como texto, porque el líder puede ser de otra zona; «por
+  // …» sale solo si llega quién lo asignó (a P no le llega)
   function lideradoPor() {
     const ls = p.lideres || [];
-    return html`${ls.length ? html`${ls.map((l) => html`<div class="lider-asignado"><div class="q"><a href="/personas/${l.id}" data-ruta>${l.nombre}</a>
+    return html`${ls.length ? html`${ls.map((l) => html`<div class="lider-asignado"><div class="q">${adm ? html`<a href="/personas/${l.id}" data-ruta>${l.nombre}</a>` : html`<b>${l.nombre}</b>`}
           ${l.tipo ? html`<span class="chip ${l.tipo === 'concejal' ? 'azul' : 'rojo'}">${TIPOS_PERSONA[l.tipo]}</span>` : ''}
-          <small class="sec">${[l.asignado_en ? 'desde ' + fecha(l.asignado_en) : null, l.asignado_por ? 'por ' + l.asignado_por : null, l.marcado ? null : 'ya no marcado como líder ni concejal'].filter(Boolean).join(' · ')}</small></div>
-        <button type="button" class="btn chico fantasma" data-quitar-lider="${l.id}" aria-label="Quitar a ${l.nombre} como líder">✕</button></div>`)}
+          <small class="sec">${[l.asignado_en ? 'desde ' + fecha(l.asignado_en) : null, l.asignado_por ? 'por ' + l.asignado_por : null, l.marcado === false ? 'ya no marcado como líder ni concejal' : null].filter(Boolean).join(' · ')}</small></div>
+        ${adm ? html`<button type="button" class="btn chico fantasma" data-quitar-lider="${l.id}" aria-label="Quitar a ${l.nombre} como líder">✕</button>` : ''}</div>`)}
       ${ls.length > 1 ? html`<p class="aviso-legal" style="margin:8px 0 0">Más de un líder la está captando.</p>` : ''}`
       : html`<p class="sec" style="margin:0 0 6px">Sin líder ni concejal asignado.</p>`}
       <div id="buscador-lider-ficha" style="margin-top:8px"></div>`;
@@ -527,7 +538,7 @@ export async function vistaFicha(el, { params, ir }) {
       },
     });
   }
-  // La tarjeta lateral: a cuántas personas lidera (solo si lidera a alguien o está marcada como líder o concejal)
+  // La tarjeta lateral (A y K): a cuántas personas lidera (solo si lidera a alguien o está marcada como líder o concejal)
   function tarjetaLideres() {
     const ls = p.lideres || [];
     const tr = p.traidas;
@@ -540,6 +551,14 @@ export async function vistaFicha(el, { params, ir }) {
         <div><span>También con otro líder</span><b>${tr?.compartidas ? html`<a href="/personas?lider_id=${p.id}&varios_lideres=1" data-ruta>${num(tr.compartidas)}</a>` : '0'}</b></div>
       </div>
       <div class="fila-botones" style="margin-top:10px"><button class="btn chico" data-nuevo-liderado>${icono('mas')} Registrar votante liderado</button></div>
+    </section>`;
+  }
+  // Para P, en la ficha de un líder o concejal: solo el atajo para registrar a alguien que trajo, sin conteos ni enlaces
+  // a los filtros por líder (son de A y K)
+  function tarjetaLiderado() {
+    return html`<section class="tarjeta atajo-liderado">
+      <header><h2>${p.concejal ? 'Concejal' : 'Líder'}</h2></header>
+      <div class="fila-botones"><button class="btn chico" data-nuevo-liderado>${icono('mas')} Registrar votante liderado</button></div>
     </section>`;
   }
 
@@ -792,6 +811,7 @@ export async function vistaFicha(el, { params, ir }) {
     }
     const ql = e.target.closest('[data-quitar-lider]');
     if (ql) {
+      if (!adm) return; // quitar un líder es de A y K (el servidor también lo niega)
       const l = (p.lideres || []).find((x) => String(x.id) === ql.dataset.quitarLider);
       if (!await confirmar(`¿Quitar a ${l?.nombre || 'este líder'} como líder de ${p.nombre}?`, { si: 'Quitar' })) return;
       try { p = await api.del(`/api/personas/${id}/lideres/${ql.dataset.quitarLider}`); pintar({ conservar: true }); aviso('Líder quitado'); } catch (err) { avisoError(err); }
@@ -931,6 +951,15 @@ export async function vistaFicha(el, { params, ir }) {
       if (f.mesa && f.mesa.value === '' && formInicial.mesa !== '') cuerpo.mesa = null;
     }
     if (tocado('votacion_verificada')) cuerpo.votacion_verificada = !!ahora.votacion_verificada;
+    // Quien no administra solo suma un tipo: nunca lo manda en false (el servidor respondería 403) ni con su `base`
+    // (sumar no depende del valor de antes y el servidor no lo compara)
+    if (!adm) {
+      for (const k of Object.keys(TIPOS_PERSONA)) {
+        if (!(k in cuerpo)) continue;
+        if (cuerpo[k] !== true) delete cuerpo[k];
+        delete base[k];
+      }
+    }
     if ('cedula' in cuerpo && cuerpo.cedula) {
       if (p.cedula) {
         const motivo = ahora.motivo_cambio_cedula?.trim();
