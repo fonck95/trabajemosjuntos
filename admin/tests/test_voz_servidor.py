@@ -1371,11 +1371,12 @@ def test_los_fallos_de_mnemo_con_la_voz_automatica(banco, monkeypatch):
     # Esa voz dejó de estar para las apps (`NO_VOICE`): no se recuerda una hora, se anota que no hay automática por
     # `AUTO_S` y después se pregunta otra vez cuál es
     b = banco(ajustes_voz=AUTO)
+    r0 = _plan(b.db, 0)
     assert b.hablar({"prueba": True}).status_code == 200 and len(voz.cache_de(b.app)) == 1
     b.cliente.fallo = _mnemo("NO_VOICE", {"reason": "not_shared"})
-    voz.cache_de(b.app).vaciar()
-    r = b.hablar({"prueba": True})
+    r = b.hablar({"rid": r0["id"], "n": 1, "frase": 0})   # (otra frase: la prueba saldría de la caché)
     assert r.status_code == 409 and _detalle(r)["codigo"] == "sin_voz"
+    # La caché de esa voz se vacía (también la prueba, que se dijo antes con ella)
     assert voz.puede(b.app, CONECTADA, av, None) is False and len(voz.cache_de(b.app)) == 0
     assert not voz._recordado(b.app, CONECTADA, voz.AUTOMATICA)
     b.cliente.fallo = None
@@ -1404,6 +1405,100 @@ def test_los_fallos_de_mnemo_con_la_voz_automatica(banco, monkeypatch):
     r = b.hablar({"prueba": True})
     assert eventos(r.text)[-1]["codigo"] == "mnemo_creditos" and voz.puede(b.app, CONECTADA, av, None) is True
     assert voz._auto(b.app, CONECTADA)[0] == VOZ_ID
+
+
+def _conocer(b: "Banco", av: dict = AUTO, conexion: dict = CONECTADA, plazo: float = voz.PLAZO_CONOCER_S):
+    asyncio.run(voz.conocer_automatica(b.app, conexion, politica.ajustes_voz({"agente_voz": av}), plazo))
+
+
+def test_el_estado_pregunta_cual_es_la_automatica_antes_de_ofrecerla(banco, monkeypatch):
+    monkeypatch.setattr(voz.mc, "cliente_de", lambda app: b.cliente)
+    av = politica.ajustes_voz({"agente_voz": AUTO})
+
+    def estado():
+        return voz.estado_de(b.app, None, QUIENES[0], {"agente_voz": av}, CONECTADA)
+    # Sin voces para las apps: el estado ya no la ofrece (antes de que se pida ninguna frase)
+    b = banco(ajustes_voz=AUTO)
+    b.cliente.voces = []
+    assert voz.hay_que_conocer(b.app, CONECTADA, av) is True
+    _conocer(b)
+    assert estado()["disponible"] is False and [n for n, *_ in b.cliente.llamadas] == ["mnemo_list_voices"]
+    assert voz.hay_que_conocer(b.app, CONECTADA, av) is False   # ya se sabe: no se vuelve a preguntar
+    _conocer(b)
+    assert len(b.cliente.llamadas) == 1
+    # Con una: se ofrece, con su nombre
+    b = banco(ajustes_voz=AUTO)
+    _conocer(b)
+    assert estado() == {"disponible": True, "nombre": "Ana (voz de prueba)", "respuestas": True, "automatica": True}
+    # Ni con una voz elegida, ni con la del navegador, ni sin `mnemo:voice` se le pregunta nada
+    for otra, conexion in ((VOZ, CONECTADA), ({**AUTO, "motor": "navegador"}, CONECTADA),
+                           (AUTO, {**CONECTADA, "voz": False})):
+        b = banco(ajustes_voz=AUTO)
+        _conocer(b, otra, conexion)
+        assert b.cliente.llamadas == [], otra
+    # Si Mnemo no responde, se ofrece sin saberlo (como antes) y no se le vuelve a esperar hasta `REINTENTO_S`
+    b = banco(ajustes_voz=AUTO)
+    b.cliente.fallo = ErrorHerramienta("red", mc.COD_RED)
+    _conocer(b)
+    assert estado()["disponible"] is True and voz.hay_que_conocer(b.app, CONECTADA, av) is False
+    _conocer(b)
+    assert len(b.cliente.llamadas) == 1
+    ahora = voz.time.monotonic()
+    monkeypatch.setattr(voz.time, "monotonic", lambda: ahora + voz.REINTENTO_S + 1)
+    assert voz.hay_que_conocer(b.app, CONECTADA, av) is True
+    monkeypatch.undo()
+    # Si dice que no puede (el plan), se recuerda: el estado no la ofrece
+    monkeypatch.setattr(voz.mc, "cliente_de", lambda app: b.cliente)
+    b = banco(ajustes_voz=AUTO)
+    b.cliente.fallo = _mnemo("PLAN_REQUIRED", {"feature": "voices"})
+    _conocer(b)
+    assert estado()["disponible"] is False
+
+
+def test_el_estado_no_espera_a_mnemo_mas_que_su_plazo(banco, monkeypatch):
+    b = banco(ajustes_voz=AUTO)
+    monkeypatch.setattr(voz.mc, "cliente_de", lambda app: b.cliente)
+
+    async def lenta(*a, **kw):
+        await asyncio.sleep(30)
+    b.cliente.llamar = lenta
+    t0 = voz.time.monotonic()
+    _conocer(b, plazo=0.05)
+    assert voz.time.monotonic() - t0 < 3
+    assert voz._intentada(b.app, CONECTADA) and voz.hay_que_conocer(
+        b.app, CONECTADA, politica.ajustes_voz({"agente_voz": AUTO})) is False
+
+
+def test_la_ruta_del_estado_pregunta_por_la_automatica(banco, monkeypatch):
+    # `api/agente._voz` corre en un hilo del servidor (la ruta no es asíncrona) y le pregunta a Mnemo por el bucle
+    b = banco(ajustes_voz=AUTO)
+    b.cliente.voces = []
+    monkeypatch.setattr(voz.mc, "cliente_de", lambda app: b.cliente)
+    monkeypatch.setattr(voz.mnemo_conexion, "huella_cuenta", lambda db: HUELLA)
+    ajustes = {"agente_voz": politica.ajustes_voz({"agente_voz": AUTO})}
+
+    async def en_un_hilo():
+        from fastapi.concurrency import run_in_threadpool
+        return await run_in_threadpool(agente_api._voz, b.app, None, QUIENES[0], ajustes, dict(CONECTADA))
+    assert asyncio.run(en_un_hilo()) == agente_api.SIN_VOZ
+    assert [n for n, *_ in b.cliente.llamadas] == ["mnemo_list_voices"]
+    # Un rol que no la hace sonar no hace preguntar nada
+    b = banco(ajustes_voz=AUTO)
+
+    async def otro():
+        from fastapi.concurrency import run_in_threadpool
+        return await run_in_threadpool(agente_api._voz, b.app, None, QUIENES[8], ajustes, dict(CONECTADA))
+    assert asyncio.run(otro()) == agente_api.SIN_VOZ and b.cliente.llamadas == []
+
+
+def test_con_la_automatica_los_topes_van_antes_de_preguntarle_a_mnemo(banco, monkeypatch):
+    b = banco(ajustes_voz=AUTO)
+    b.cliente.fallo = ErrorHerramienta("red", mc.COD_RED)   # la lista no responde: no se recuerda nada
+    monkeypatch.setattr(voz, "FRECUENCIA_MAX", 2)
+    codigos = [b.hablar({"prueba": True}).status_code for _ in range(5)]
+    assert codigos == [502, 502, 429, 429, 429]
+    assert [n for n, *_ in b.cliente.llamadas] == ["mnemo_list_voices", "mnemo_list_voices"]
+    assert not voz._en_curso and not voz._hablando
 
 
 def test_la_cache_es_de_la_voz_automatica_de_ahora(banco, monkeypatch):
@@ -1580,14 +1675,26 @@ def test_lo_guardado_a_mano_se_lee_con_las_reglas():
     assert politica.ajustes_voz(None)["roles"] == ["admin", "coordinador"]
 
 
-def test_el_estado_dice_si_la_voz_esta_disponible(sesion):
+def test_el_estado_dice_si_la_voz_esta_disponible(sesion, monkeypatch):
     from ayudas_agente import ALCANCES_PANEL, conectar_mnemo
     nada = {"disponible": False, "nombre": None, "respuestas": False, "automatica": False}
     assert sesion.get("/api/agente/estado").json()["voz"] == nada
-    conectar_mnemo(sesion.app, alcances=(*ALCANCES_PANEL, "mnemo:voice"))
-    # Sin tocar Ajustes: la voz automática (la que Mnemo ofrece a las apps), sin su nombre hasta preguntarle cuál es
-    assert sesion.get("/api/agente/estado").json()["voz"] == {"disponible": True, "nombre": None, "respuestas": True,
-                                                              "automatica": True}
+    falso = conectar_mnemo(sesion.app, alcances=(*ALCANCES_PANEL, "mnemo:voice"))
+    # Sin tocar Ajustes: la voz automática. El estado le pregunta a Mnemo cuál es antes de ofrecerla: este Mnemo falso
+    # todavía no tiene las herramientas de la voz, así que no la ofrece (y lo recuerda)
+    assert sesion.get("/api/agente/estado").json()["voz"] == nada
+    pedidas = [(p["json"] or {}).get("params", {}).get("name") for p in falso.mcp.peticiones
+               if (p["json"] or {}).get("method") == "tools/call"]
+    assert pedidas == ["mnemo_list_voices"], pedidas
+    # Mnemo se actualiza y, pasada la hora del «no», la ofrece con su nombre
+    habla = _mnemo_que_habla()
+    falso.mcp.herramientas += [h for h in habla.herramientas if h["name"] in ("mnemo_speak", "mnemo_list_voices")]
+    falso.mcp.manejadores.update({k: habla.manejadores[k] for k in ("mnemo_speak", "mnemo_list_voices")})
+    ahora = voz.time.monotonic()
+    monkeypatch.setattr(voz.time, "monotonic", lambda: ahora + voz.OLVIDO_S + 1)
+    assert sesion.get("/api/agente/estado").json()["voz"] == {"disponible": True, "nombre": "Ana (voz de prueba)",
+                                                              "respuestas": True, "automatica": True}
+    monkeypatch.undo()
     r = sesion.put("/api/ajustes", json={"agente_voz": {"motor": "mnemo", "voz": VOZ_ID, "nombre": "Ana",
                                                         "automatica": False}})
     assert r.status_code == 200

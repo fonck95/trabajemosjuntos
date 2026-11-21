@@ -25,13 +25,12 @@ Cómo corre un turno (docs/agente.md):
 * Nada lanza fuera del flujo una vez abierto: cualquier fallo sale como `error` + `fin`, y al registro va solo el tipo
   de la excepción (nunca datos de personas ni lo que escribió el modelo).
 * La respuesta hablada (docs/agente.md, «La voz clonada de Mnemo»): si el mensaje lo pide (`contexto.voz`, o `voz` en
-  una confirmación), la voz clonada está disponible para esa persona y lee respuestas (`voz.respuestas_para`) y la
-  conversación no trae datos de habitantes, el turno arma las frases a medida que llega el texto (`voz.Frases`) y
-  emite cada una con su firma (`frase`), las descarta con la ronda (`frases_descartar`, y al cerrar una ronda rehecha
-  dice dónde empieza la siguiente: `frases_ronda`) y las rehace contra el texto final (`texto_ronda`). Lo que repite
-  lo que escribió la persona no se firma (el eco: su mensaje y sus mensajes anteriores). Desde que el modelo recibe
-  datos de una persona (`_anotar`), deja de emitirlas. Nada de esto impide el turno: si algo falla, la respuesta sigue
-  sin voz.
+  una confirmación), la voz clonada está disponible para esa persona y lee respuestas (`voz.respuestas_para_turno`) y la
+  conversación no trae datos de habitantes, el turno arma las frases a medida que llega el texto (`voz.Frases`) y emite
+  cada una con su firma (`frase`), las descarta con la ronda (`frases_descartar`, y al cerrar una ronda rehecha dice
+  dónde empieza la siguiente: `frases_ronda`) y las rehace contra el texto final (`texto_ronda`). Lo que repite lo que
+  escribió la persona no se firma (el eco: su mensaje y sus mensajes anteriores). Desde que el modelo recibe datos de
+  una persona (`_anotar`), deja de emitirlas. Nada de esto impide el turno: si algo falla, la respuesta sigue sin voz.
 * La respuesta inmediata (docs/agente.md, «La respuesta inmediata»; `adelanto.py`): en un mensaje nuevo, con
   `agente_adelanto` encendido, otra petición corta al mismo proveedor adelanta en una a tres frases la idea general
   mientras el modelo principal prepara la respuesta completa (`adelanto`, `adelanto_frase` y `adelanto_fin`, entre los
@@ -1371,7 +1370,7 @@ async def _frases_para(app: Any, quien: Any, ajustes: dict, cid: int, conv: dict
     if not pedida or (conv or {}).get("personas"):
         return None
     try:
-        if not await run_in_threadpool(voz_clonada.respuestas_para, app, quien, ajustes):
+        if not await voz_clonada.respuestas_para_turno(app, quien, ajustes):
             return None
         return await _frases_nuevas(app, quien, cid, conv, texto)
     except Exception as e:  # noqa: BLE001 - el turno sigue, sin voz

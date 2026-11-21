@@ -1087,6 +1087,9 @@ def test_conectar_mnemo_desde_ajustes(panel_y_mnemo, cfg, tmp_path):
     assert all(not p["sesion"] and p["sitio"] == "cross-site" and p["modo"] == "navigate" for p in vueltas), vueltas
     volver = [p for p in registro.peticiones if p["ruta"] == "/panel/api/agente/mnemo/volver"]
     assert len(volver) == 3
+    # Cuatro autorizaciones pedidas: cancelar, permitir, permitir sin los modelos y el doble clic del botón de la voz
+    conectar = [p for p in registro.peticiones if p["ruta"] == "/panel/api/agente/mnemo/conectar"]
+    assert len(conectar) == 4 and all(p["metodo"] == "POST" for p in conectar), conectar
     assert all(p["metodo"] == "POST" and p["sesion"] and p["sitio"] == "same-origin" for p in volver), volver
     assert permisos.paginas == 3
     # El panel se registró una vez y reusó el cliente; canjeó cada código con PKCE; reconectar la misma cuenta no
@@ -1395,7 +1398,8 @@ async function conectar(page, caso, decision, { sinModelos = false, sinVoz = fal
     let pedido = null;
     const alAutorizar = (rt) => { pedido = new URL(rt.request().url()); return rt.fulfill({ contentType: 'text/html', body: '<p>Mnemo</p>' }); };
     await page.route(esAutorizar, alAutorizar);
-    await page.click('#voz-reconectar');
+    // (un doble clic: una sola autorización, la otra la reemplazaría y la vuelta de Mnemo ya no valdría)
+    await page.dblclick('#voz-reconectar');
     await page.waitForURL((u) => u.origin === origenMnemo, espera);
     await page.unroute(esAutorizar, alAutorizar);
     caso.datos.voz_reconectar = { scope: pedido?.searchParams.get('scope') ?? null };

@@ -390,13 +390,13 @@ def test_el_turno_emite_las_frases_firmadas_y_se_pueden_decir(sesion, reloj):
 
 
 def test_sin_elegir_una_voz_suena_la_que_mnemo_ofrece_a_las_apps(sesion, reloj):
-    # Lo de por defecto (sin tocar Ajustes): con una conexión con `mnemo:voice`, la voz automática. El turno emite las
-    # frases y la ruta le pregunta a Mnemo cuál es (una vez: se recuerda) antes de decirlas con ella
+    # Lo de por defecto (sin tocar Ajustes): con una conexión con `mnemo:voice`, la voz automática. El estado le
+    # pregunta a Mnemo cuál es (una vez: se recuerda) antes de ofrecerla; el turno emite las frases y se dicen con ella
     modelo = encender_mnemo(sesion.app, R(T(FRASES)), alcances=(*ALCANCES_PANEL, "mnemo:voice"))
     falso = _mnemo_que_habla()
     modelo.mcp.herramientas += [h for h in falso.herramientas if h["name"] in ("mnemo_speak", "mnemo_list_voices")]
     modelo.mcp.manejadores.update({k: falso.manejadores[k] for k in ("mnemo_speak", "mnemo_list_voices")})
-    assert sesion.get("/api/agente/estado").json()["voz"] == {"disponible": True, "nombre": None,
+    assert sesion.get("/api/agente/estado").json()["voz"] == {"disponible": True, "nombre": "Ana (voz de prueba)",
                                                               "respuestas": True, "automatica": True}
     _, ev = enviar(sesion, "¿Qué trae la propuesta?", contexto={"voz": True})
     cid = ev[0]["conversacion"]
@@ -410,8 +410,26 @@ def test_sin_elegir_una_voz_suena_la_que_mnemo_ofrece_a_las_apps(sesion, reloj):
     assert [n for n, _ in modelo.mcp.llamadas if n in ("mnemo_list_voices", "mnemo_speak")] == [
         "mnemo_list_voices", "mnemo_speak", "mnemo_speak"]
     assert all(a["voice_id"] == VOZ_ID for n, a in modelo.mcp.llamadas if n == "mnemo_speak")
-    # Y el estado ya dice su nombre
-    assert sesion.get("/api/agente/estado").json()["voz"]["nombre"] == "Ana (voz de prueba)"
+
+
+
+def test_sin_voces_para_las_apps_el_turno_no_emite_frases(sesion, reloj):
+    # La voz automática, pero la cuenta no marcó ninguna para las apps: el turno le pregunta a Mnemo antes de emitir
+    # frases (no se ofrece una voz que no existe: la respuesta empezaría a leerse y se cortaría con el 409)
+    modelo = encender_mnemo(sesion.app, R(T(FRASES)), alcances=(*ALCANCES_PANEL, "mnemo:voice"))
+    falso = _mnemo_que_habla()
+    modelo.mcp.herramientas += [h for h in falso.herramientas if h["name"] in ("mnemo_speak", "mnemo_list_voices")]
+    modelo.mcp.manejadores.update({k: falso.manejadores[k] for k in ("mnemo_speak", "mnemo_list_voices")})
+    from ayudas_mcp import correcto
+
+    async def ninguna(args):
+        return correcto({"voices": [], "default_voice_id": None})
+    modelo.mcp.manejadores["mnemo_list_voices"] = ninguna
+    _, ev = enviar(sesion, "¿Qué trae la propuesta?", contexto={"voz": True})
+    assert "frase" not in tipos(ev) and ev[-1]["motivo"] == "listo"
+    assert "Respuesta hablada" not in json.dumps(modelo.pedidos[-1], ensure_ascii=False)
+    assert [n for n, _ in modelo.mcp.llamadas if n in ("mnemo_list_voices", "mnemo_speak")] == ["mnemo_list_voices"]
+    assert sesion.get("/api/agente/estado").json()["voz"]["disponible"] is False
 
 
 def test_el_turno_no_firma_lo_que_repite_lo_que_escribio_la_persona(sesion, reloj):

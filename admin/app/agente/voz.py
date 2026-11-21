@@ -46,7 +46,10 @@ Por qué está hecho así:
   de por defecto), la automática: la que Mnemo ofrece a las apps (`default_voice_id` de `mnemo_list_voices`, la más
   reciente que su dueño marcó «Disponible para apps conectadas»). Su dueño la ofreció dos veces (la marcó para apps y
   dio `mnemo:voice` al conectar): el panel la usa sin que nadie tenga que elegirla. Se pregunta a Mnemo cuál es (no
-  gasta créditos) y se recuerda `AUTO_S` por conexión (`_voz_automatica`); que no haya ninguna también. Las
+  gasta créditos) y se recuerda `AUTO_S` por conexión (`_voz_automatica`); que no haya ninguna también. El estado y
+  el turno lo preguntan antes de ofrecerla (`conocer_automatica`, con `PLAZO_CONOCER_S`): así no se ofrece una voz
+  que no existe (la respuesta empezaría a leerse y se cortaría con el 409). Solo si Mnemo no responde se ofrece sin
+  saberlo, y no se le vuelve a esperar hasta `REINTENTO_S`. Las
   respuestas, además, solo con `agente_voz.respuestas` y en una conversación sin datos de habitantes
   (`conv_db.tiene_personas`: 409 `con_personas`, la misma guarda que lo proyectado); la presentación automática,
   solo con `agente_voz.automatica` (si no, 409 `voz_apagada`: esa frase va con la voz del navegador y las demás siguen
@@ -134,6 +137,8 @@ OLVIDO_S = 3600.0               # lo que se recuerda que esta conexión no puede
 REVALIDAR_S = 600.0             # sin que Mnemo acepte la voz en este tiempo, la caché se sirve tras preguntarle
 AUTO_S = 300.0                  # lo que vale, sin volver a preguntar a Mnemo, cuál es la voz automática (o que no hay)
 AUTOMATICA = "*"                # la voz automática al recordar un «no» de Mnemo (no es un id de voz: `politica.ID_VOZ`)
+PLAZO_CONOCER_S = 5.0           # lo que el estado o el turno esperan a Mnemo para saber cuál es la voz automática
+REINTENTO_S = 60.0              # sin respuesta al preguntar por la automática (red, plazo): no se espera otra vez
 CACHE_BYTES = 48 * 1024 * 1024  # lo que ocupa la caché de la narración (en base64: lo que se guarda y se manda)
 CACHE_S = 12 * 3600.0
 ESPERA_ARRANQUE_S = 30.0        # si la respuesta no empieza a leerse en este tiempo, el vuelo la suelta
@@ -786,8 +791,9 @@ def puede(app: Any, conexion: Any, ajustes_voz: dict, huella: str | None) -> boo
     """¿Esta instalación puede hablar ahora con la voz clonada? Motor «mnemo», una conexión «conectada» con
     `mnemo:voice` y: con una voz elegida, que sea de la cuenta conectada (`huella`) y que Mnemo no haya dicho hace
     poco, con esta conexión y esta voz, que no puede; con la automática, que Mnemo no haya dicho hace poco que no
-    puede ni que no tiene ninguna para las apps (si no se sabe cuál es, sí: la ruta le pregunta, y su «no» llega al
-    estado en la siguiente lectura). No mira el rol: eso es `estado_de`."""
+    puede ni que no tiene ninguna para las apps (si no se sabe cuál es, sí: antes se le pregunta con
+    `conocer_automatica`, y si no respondió, la ruta le pregunta y su «no» llega al estado en la siguiente lectura). No
+    mira el rol: eso es `estado_de`."""
     if not isinstance(conexion, dict) or conexion.get("estado") != "conectada" or conexion.get("voz") is not True:
         return False
     if ajustes_voz.get("motor") != "mnemo":
@@ -826,6 +832,57 @@ def respuestas_para(app: Any, quien: Any, ajustes: dict) -> bool:
     db = app.state.db
     e = estado_de(app, db, quien, ajustes, mnemo_conexion.vista(db))
     return e["disponible"] and e["respuestas"]
+
+
+async def respuestas_para_turno(app: Any, quien: Any, ajustes: dict) -> bool:
+    """`respuestas_para` para el turno del asistente: antes, si la voz es la automática y no se sabe cuál es, se le
+    pregunta a Mnemo (`conocer_automatica`), así el turno no emite frases para una voz que no existe."""
+    db = app.state.db
+    conexion = await run_in_threadpool(mnemo_conexion.vista, db)
+    av = ajustes.get("agente_voz") if isinstance(ajustes.get("agente_voz"), dict) else politica.ajustes_voz(ajustes)
+    if getattr(quien, "rol", None) in av["roles"]:
+        await conocer_automatica(app, conexion, av)
+    e = await run_in_threadpool(estado_de, app, db, quien, ajustes, conexion)
+    return e["disponible"] and e["respuestas"]
+
+
+def _intentada(app: Any, conexion: dict) -> bool:
+    """¿Hace menos de `REINTENTO_S` que se preguntó, con esta conexión, por la automática y Mnemo no respondió?"""
+    i = getattr(getattr(app, "state", None), "voz_auto_intento", None)
+    return (isinstance(i, tuple) and len(i) == 2 and i[0] == conexion.get("desde")
+            and time.monotonic() - i[1] < REINTENTO_S)
+
+
+def hay_que_conocer(app: Any, conexion: Any, av: dict) -> bool:
+    """¿Hay que preguntarle a Mnemo cuál es la voz automática antes de ofrecerla? La voz es la automática, la conexión
+    está «conectada» con `mnemo:voice`, no se sabe cuál es (`_auto`), Mnemo no dijo hace poco que no puede y no se le
+    preguntó hace menos de `REINTENTO_S` sin respuesta. No lee MongoDB ni llama a nada."""
+    return (isinstance(conexion, dict) and conexion.get("estado") == "conectada" and conexion.get("voz") is True
+            and automatica(av) and _auto(app, conexion) is None and not _recordado(app, conexion, AUTOMATICA)
+            and not _intentada(app, conexion))
+
+
+async def conocer_automatica(app: Any, conexion: dict, av: dict, plazo: float = PLAZO_CONOCER_S) -> None:
+    """Si hace falta (`hay_que_conocer`), le pregunta a Mnemo cuál es la voz automática y lo recuerda como
+    `_voz_automatica` (la voz, que no hay ninguna o el «no» de la cuenta). Lo usan el estado (`api/agente._voz`) y el
+    turno (`respuestas_para_turno`) antes de ofrecerla. Nunca lanza ni tarda más que `plazo`: si Mnemo no responde,
+    la voz se ofrece como antes, sin saberlo (la ruta le pregunta al decir la primera frase)."""
+    if not hay_que_conocer(app, conexion, av):
+        return
+    cliente = mc.cliente_de(app)
+    if cliente is None:
+        return
+    try:
+        await asyncio.wait_for(_voz_automatica(app, cliente, conexion, plazo), plazo + 1)
+    except ErrorVoz:
+        pass   # lo que dijo Mnemo ya quedó anotado; o no respondió (`_intentada`)
+    except Exception as e:  # noqa: BLE001 - el estado y el turno nunca fallan por esto
+        if isinstance(e, TimeoutError):
+            try:
+                app.state.voz_auto_intento = (conexion.get("desde"), time.monotonic())
+            except Exception:  # noqa: BLE001
+                pass
+        log.warning("Voz: no se supo cuál es la voz automática (%s)", type(e).__name__)
 
 
 # ───────────────────────────── Mnemo ─────────────────────────────
@@ -965,16 +1022,20 @@ def _ofrecidas(crudas: list) -> set[str]:
             and isinstance(v.get("voice_id"), str)}
 
 
-async def _voz_automatica(app: Any, cliente: Any, conexion: dict) -> tuple[str, str]:
+async def _voz_automatica(app: Any, cliente: Any, conexion: dict, plazo: float = PLAZO_VOCES_S) -> tuple[str, str]:
     """`(id, nombre)` de la voz automática: la que Mnemo ofrece a las apps (`_automatica_de`). Lo que Mnemo dijo hace
     menos de `AUTO_S` con esta conexión sale sin preguntarle (`mnemo_list_voices` no gasta créditos). Si no hay
     ninguna, 409 `sin_voz` (y se recuerda `AUTO_S`: el estado deja de ofrecerla); si Mnemo falla, su error
-    (`_fallo`)."""
+    (`_fallo`), y se anota el intento (`_intentada`: el estado no lo vuelve a esperar enseguida)."""
     auto = _auto(app, conexion)
     if auto is None:
         try:
-            res = await cliente.llamar(HERRAMIENTA_VOCES, {}, PLAZO_VOCES_S)
+            res = await cliente.llamar(HERRAMIENTA_VOCES, {}, plazo)
         except ErrorHerramienta as e:
+            try:
+                app.state.voz_auto_intento = (conexion.get("desde"), time.monotonic())
+            except Exception:  # noqa: BLE001 - es solo una pista
+                pass
             error = _fallo(app, conexion, AUTOMATICA, True, e)
             log.info("Voz: no se supo cuál es la voz automática (%s)", error.codigo)
             raise error from None
@@ -996,8 +1057,9 @@ async def _voz_automatica(app: Any, cliente: Any, conexion: dict) -> tuple[str, 
 async def _sigue_ofrecida(app: Any, cliente: Any, conexion: dict, voz: str, auto: bool = False) -> None:
     """Antes de servir de la caché una frase cuando Mnemo no aceptó esta voz en `REVALIDAR_S`: ¿la sigue ofreciendo?
     (`mnemo_list_voices`, que no gasta créditos). Si no (o dice que no puede, o la conexión venció), la retira
-    (`_retirar_voz`; la automática, sin recordar el «no»: la próxima vez se pregunta cuál es) y responde el error (409
-    `sin_voz`). Si Mnemo no responde o falla de otra forma, no dijo que no: se sirve la caché."""
+    (`_retirar_voz`, con lo que recuerda `_fallo`) y responde el error (409 `sin_voz`). Si la voz ya no está en la
+    lista, la automática no recuerda el «no»: la próxima vez se pregunta cuál es. Si Mnemo no responde o falla de otra
+    forma, no dijo que no: se sirve la caché."""
     try:
         res = await cliente.llamar(HERRAMIENTA_VOCES, {}, PLAZO_VOCES_S)
     except ErrorHerramienta as e:
@@ -1476,12 +1538,12 @@ async def hablar(request: Any, quien: Any, pedido: dict) -> StreamingResponse:
         raise ErrorVoz(409, SIN_VOZ, MENSAJE_SIN_PERMISO)
     if not sin_elegir and av["cuenta"] != huella:
         raise ErrorVoz(409, SIN_VOZ, MENSAJE_OTRA_CUENTA)
-    voz, nombre = await _voz_automatica(app, cliente, conexion) if sin_elegir else (av["voz"], av["nombre"])
     # Los topes de la persona: su lugar abarca todo el flujo; la frecuencia cuenta cada frase; el tope diario, solo lo
-    # que de verdad va a Mnemo
+    # que de verdad va a Mnemo. Van antes de preguntarle a Mnemo cuál es la voz automática
     ficha = tomar(db.name, quien.uid)
     try:
         frecuencia(db.name, quien.uid)
+        voz, nombre = await _voz_automatica(app, cliente, conexion) if sin_elegir else (av["voz"], av["nombre"])
         cache = cache_de(app)
         cache.de_voz(voz)
         guardar = not respuesta

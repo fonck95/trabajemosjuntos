@@ -27,6 +27,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import anyio.from_thread
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, field_validator, model_validator
@@ -146,9 +147,18 @@ def _dictado(app: Any, conexion: dict) -> bool:
 
 def _voz(app: Any, db: Database, quien: Quien, ajustes: dict, conexion: dict) -> dict:
     """¿Esta persona puede hacer sonar la voz clonada de Mnemo? (`voz.estado_de`). Sin eso el panel narra y lee con la
-    voz del navegador. El estado nunca falla por esto."""
+    voz del navegador. Con la voz automática que todavía no se sabe cuál es, antes se le pregunta a Mnemo
+    (`voz.conocer_automatica`, a lo sumo `voz.PLAZO_CONOCER_S`): así no se ofrece una voz que no existe. Corre en un
+    hilo del servidor (la ruta no es asíncrona): la pregunta va al bucle de eventos con `anyio.from_thread`. El estado
+    nunca falla por esto."""
     try:
         from ..agente import voz
+        av = ajustes.get("agente_voz") if isinstance(ajustes.get("agente_voz"), dict) else politica.ajustes_voz(ajustes)
+        if getattr(quien, "rol", None) in av["roles"] and voz.hay_que_conocer(app, conexion, av):
+            try:
+                anyio.from_thread.run(voz.conocer_automatica, app, conexion, av)
+            except Exception as e:  # noqa: BLE001 - sin saberlo, se ofrece como antes
+                log.warning("Asistente: no se pudo preguntar cuál es la voz automática (%s)", type(e).__name__)
         return voz.estado_de(app, db, quien, ajustes, conexion)
     except Exception as e:  # noqa: BLE001
         log.warning("Asistente: no se pudo saber si hay voz clonada (%s)", type(e).__name__)
@@ -305,8 +315,9 @@ async def voz_clonada(cuerpo: VozIn, request: Request, quien: Quien = Depends(re
     base64}` mientras Mnemo la genera y `{"tipo": "fin", "ms_primer_audio", "ms_mnemo", "bytes"}` o `{"tipo": "error",
     "codigo", "mensaje"}`. El texto sale del servidor (`VozIn`): el plan guardado de la persona, una frase firmada de
     una respuesta o la prueba. Con `presentacion.ver` y el rol en `agente_voz.roles` (403 `voz_rol`; la prueba, solo el
-    administrador). Lo que lo impide sale antes, `{codigo, mensaje}`: 409 `sin_voz` (sin voz elegida, sin
-    `mnemo:voice`, otra cuenta o Mnemo no puede: el navegador sigue con su voz), `voz_apagada` (la voz no lee
+    administrador). Lo que lo impide sale antes, `{codigo, mensaje}`: 409 `sin_voz` (la voz del navegador en Ajustes,
+    sin `mnemo:voice`, otra cuenta, Mnemo sin ninguna voz para las apps o Mnemo no puede: el navegador sigue con su
+    voz), `voz_apagada` (la voz no lee
     respuestas o no narra la presentación automática), `plan_vencido` o `con_personas`, 404 `no_existe`, 422 `texto`,
     402 `mnemo_creditos`, 429 `frecuencia` o `volumen`, 502 `mnemo` o `mnemo_red`. No guarda ni registra el texto ni el
     audio (`agente/voz.py`)."""

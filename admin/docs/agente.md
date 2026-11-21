@@ -602,8 +602,9 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
   se sostiene un momento (1,3 segundos; 2,7 si hay algo que mirar). El subtítulo dice el título del plan y en qué paso
   va (puntos, sin números).
 - **La voz.** La del navegador (Web Speech, `web/js/voz.js`), en español (es-CO primero; después es-419, es-MX, es-US,
-  es-ES), con las siglas y unidades dichas como se leen (NSR-10, m², «24 h»); o, si el administrador la eligió y el
-  rol de la persona la usa, la [voz clonada de Mnemo](#la-voz-clonada-de-mnemo) (`web/js/voz-clonada.js`): pide cada
+  es-ES), con las siglas y unidades dichas como se leen (NSR-10, m², «24 h»); o, si está disponible (la que eligió el
+  administrador o, sin una elegida, la que Mnemo ofrece a las apps) y el rol de la persona la usa, la
+  [voz clonada de Mnemo](#la-voz-clonada-de-mnemo) (`web/js/voz-clonada.js`): pide cada
   frase por su referencia en el plan guardado (`{rid, n, frase}`, y el resumen `{rid, cierre: true}`), precarga la que
   sigue (y la primera durante la espera de un plan nuevo) y, si una no suena en 4 segundos, la dice con la del
   navegador sin que el reproductor se entere. Un plan escrito por un agente externo por MCP se narra siempre con la del
@@ -922,8 +923,9 @@ nunca queda muda.
   hay automática y después le vuelve a preguntar a Mnemo cuál es (puede haber otra).
 - **`GET /api/agente/estado`** trae `voz: {disponible, nombre, respuestas, automatica}`: `disponible` si esta persona
   puede hacer sonar la voz clonada ahora (motor `mnemo`, voz elegida con la cuenta conectada o la automática,
-  conexión con `mnemo:voice`, su rol en `roles` y Mnemo no dijo hace poco que no; con la automática, mientras el
-  panel no sabe cuál es, se ofrece y `nombre` llega en null); `respuestas` y `automatica`, los ajustes, solo si está
+  conexión con `mnemo:voice`, su rol en `roles` y Mnemo no dijo hace poco que no; con la automática, si el panel no
+  sabe cuál es, antes le pregunta a Mnemo, hasta 5 segundos: solo si Mnemo no responde se ofrece sin saberlo, con
+  `nombre` en null, y no se le vuelve a esperar durante un minuto); `respuestas` y `automatica`, los ajustes, solo si está
   disponible. **`GET /api/agente/voces`** (solo el administrador) trae `{voces: [{id, nombre, idioma, motor}],
   elegida, automatica, conexion: {voz, ofrece_voz}}`: sin conexión o sin `mnemo:voice`, la lista vacía (sin
   preguntarle a Mnemo); sus errores son los mismos códigos.
@@ -1040,7 +1042,7 @@ desplegar.
 | Días que se guardan las conversaciones (`agente.retencion_dias`) | 30 | De 1 a 365, contados desde el último mensaje. Bajarlo acorta también las que ya existen |
 | Mensajes por día (`agente_mensajes_diarios`) | 300 administrador, 150 coordinador, 40 planillero, 40 consultor | Mensajes por persona y día, de 1 a 5000 (cada aprobación o rechazo de tarjetas cuenta como uno). Para que un rol no lo use se lo quita de «Quiénes lo usan» |
 | Respuesta inmediata (`agente_adelanto`) | Sí | Si cada pregunta recibe primero una respuesta corta, de una a tres frases, mientras se prepara la completa o la presentación (ver [La respuesta inmediata](#la-respuesta-inmediata)). Es una llamada corta más al modelo por pregunta: apagada, el asistente responde solo con la completa |
-| Voz del asistente (`agente_voz`) | La del navegador; la clonada, para administrador y coordinadores, con respuestas y presentación automática | La voz con que narra la presentación y lee las respuestas: la del navegador o una voz clonada de la cuenta de Mnemo conectada, quién la hace sonar y para qué (ver [La voz clonada de Mnemo](#la-voz-clonada-de-mnemo)). Es el bloque **Voz del asistente**, marcado **Voz sintética**: la lista de voces solo se le pide a Mnemo para el administrador y con una conexión que tenga `mnemo:voice` (si no la tiene, el bloque dice que hay que volver a conectar dejando marcado «Hablar con las voces que clonaste en Mnemo…», o que ese Mnemo todavía no ofrece sus voces); el coordinador ve la voz elegida en solo lectura. **Probar voz** dice una frase fija con la voz guardada y muestra cuánto tardó la primera palabra |
+| Voz del asistente (`agente_voz`) | La clonada de Mnemo, automática (la que Mnemo ofrece a las apps; sin `mnemo:voice` o sin una voz para las apps, la del navegador), para administrador y coordinadores, con respuestas y presentación automática | La voz con que narra la presentación y lee las respuestas: la del navegador o una voz clonada de la cuenta de Mnemo conectada (la automática u otra elegida), quién la hace sonar y para qué (ver [La voz clonada de Mnemo](#la-voz-clonada-de-mnemo)). Es el bloque **Voz del asistente**, marcado **Voz sintética**: la lista de voces solo se le pide a Mnemo para el administrador y con una conexión que tenga `mnemo:voice` (si no la tiene, el bloque dice que hay que volver a conectar dejando marcado «Hablar con las voces que clonaste en Mnemo…», con el botón **Volver a conectar para usar la voz**, o que ese Mnemo todavía no ofrece sus voces); el coordinador ve la voz elegida en solo lectura. **Probar voz** dice una frase fija con la voz guardada (o la automática) y muestra cuánto tardó la primera palabra |
 
 Un planillero o consultor habilitado usa el asistente con lo mismo que tiene en el panel: su alcance, su presupuesto
 diario de personas (lo que el asistente consulta cuenta) y su límite de búsquedas por minuto. El permiso que lo deja

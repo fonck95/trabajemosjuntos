@@ -259,6 +259,7 @@ export async function vistaAjustes(el, { q } = {}) {
   let filtros = {};
   let notaMnemo = null; // lo que pasó al volver de Mnemo o al desconectar: se muestra en el próximo repintado
   let vozPrueba = null; // la voz de la ventana para «Probar voz» (voz-panel.js): se suelta al salir de Ajustes
+  let conectando = false; // una autorización con Mnemo en camino (`conectarMnemo`): no se pide otra
 
   async function pintar() {
     const nota = notaMnemo;
@@ -460,22 +461,30 @@ export async function vistaAjustes(el, { q } = {}) {
     }
   }
 
-  /** «Conectar con Mnemo» / «Volver a conectar»: el panel prepara la autorización y el navegador va a Mnemo. */
+  /** «Conectar con Mnemo» / «Volver a conectar» (o «Volver a conectar para usar la voz», del bloque de la voz): el
+   * panel prepara la autorización y el navegador va a Mnemo. Una a la vez: el servidor guarda una sola autorización
+   * pendiente y otra la reemplazaría (la vuelta de la primera ya no valdría), así que mientras tanto los dos botones
+   * quedan deshabilitados y un segundo clic no hace nada. */
   async function conectarMnemo(f) {
-    const boton = $('#mnemo-conectar', f);
-    const etiqueta = boton.textContent;
+    if (conectando) return;
+    conectando = true;
+    const botones = [$('#mnemo-conectar', f), $('#voz-reconectar', el)].filter(Boolean).map((b) => [b, b.textContent]);
+    const soltar = () => {
+      conectando = false;
+      for (const [b, t] of botones) { b.disabled = false; b.textContent = t; }
+    };
     const dir = (f.elements.url?.value || '').trim();
-    boton.disabled = true;
+    for (const [b] of botones) b.disabled = true;
     try {
       const r = await api.post('/api/agente/mnemo/conectar', dir ? { url: dir } : {});
       const destino = direccionDeMnemo(r?.autorizar);
       if (!destino) throw new Error('El panel devolvió una dirección de Mnemo que no es segura: no se abrió.');
-      boton.textContent = 'Abriendo Mnemo…';
-      // Si se vuelve con «Atrás» y el navegador restaura esta página tal cual, el botón sirve otra vez
-      addEventListener('pageshow', () => { boton.disabled = false; boton.textContent = etiqueta; }, { once: true });
+      for (const [b] of botones) b.textContent = 'Abriendo Mnemo…';
+      // Si se vuelve con «Atrás» y el navegador restaura esta página tal cual, los botones sirven otra vez
+      addEventListener('pageshow', soltar, { once: true });
       location.assign(destino);
     } catch (err) {
-      boton.disabled = false;
+      soltar();
       anotarMnemo(fallo(err, 'No se pudo conectar con Mnemo.'));
       avisoError(err, 8000);
     }
