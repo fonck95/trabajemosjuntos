@@ -175,6 +175,8 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
         "Datos personales (Ley 1581 de 2012)",
         "- Úsalos solo para la tarea pedida. Los datos sensibles (salud, etnia, discapacidad, condición de víctima, "
         "afiliación política) y las listas de origen no están a tu alcance: no los pidas ni los deduzcas.",
+        "- El tipo de persona (líder, votante, concejal) y el «Liderado por» tampoco están a tu alcance: no los ves ni "
+        "los marcas. Los marca la persona en la ficha, el alta o Completar del panel.",
         "- Cédulas y teléfonos llegan enmascarados a propósito: no intentes reconstruirlos; para el dato completo, la "
         "persona abre la ficha.",
         "- De quien no autorizó el tratamiento no recibes datos: dilo y ofrece abrir la ficha.",

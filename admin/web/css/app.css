@@ -399,12 +399,13 @@ dialog .pie { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 
 .asistente .q { flex: 1; min-width: 0; }
 .asistente .q a { font-weight: 700; text-decoration: none; }
 @media (hover: hover) { .asistente .q a:hover { text-decoration: underline; } }
-/* Líderes que trajeron a la persona (ficha, A y K) */
+/* Líderes que trajeron a la persona (ficha: A y K con enlace a su ficha; P, el nombre como texto) */
 .lider-asignado { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
 .lider-asignado:last-of-type { border-bottom: 0; }
 .lider-asignado .q { flex: 1; min-width: 0; }
 .lider-asignado .q small { display: block; }
 .lider-asignado .q a { font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
+.lider-asignado .q b { overflow-wrap: anywhere; }
 .lider-asignado .q .chip { margin-left: 6px; vertical-align: 1px; }
 /* Ficha, datos principales: un dato que se ve pero se cambia en otro lugar (el teléfono, la zona del barrio) */
 .campo .valor-fijo { display: block; min-height: 40px; padding: 9px 0 0; font-weight: 650; overflow-wrap: anywhere; }
@@ -463,6 +464,8 @@ dialog { max-height: 100dvh; }
 label.chip.opcion { cursor: pointer; gap: 6px; padding: 4px 11px; }
 label.chip.opcion input { margin: 0; accent-color: var(--accent); }
 label.chip.opcion:has(input:checked) { background: var(--ink); color: var(--bg); }
+/* Una opción fija (un tipo de persona ya marcado, que P no quita): se ve marcada pero no invita a tocarla */
+label.chip.opcion:has(input:disabled) { cursor: default; opacity: .75; }
 .fila-botones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 /* Mi cuenta · Agentes por MCP (vistas/cuenta.js): la dirección del servidor y la clave, que se leen y se copian enteras */
 .datos-mcp { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 10px 0 14px; }

@@ -136,6 +136,8 @@ def indicadores(db: Database, uids: list[int], d: date, h: date, ts_desde: str, 
         return out
     sin = _no_autorizaron(db) if tratables else []
     edicion = list(modelo.ACCIONES_EDICION)
+    # Lo que cambió sin completarlo es una corrección; marcar un tipo de persona (P solo lo suma) no corrige nada
+    corregidos = {"$setDifference": ["$_campos", {"$setUnion": ["$_compl", list(modelo.TIPOS_PERSONA)]}]}
     es_crear = {"$eq": ["$accion", "crear"]}
     facetas = next(db.auditoria.aggregate(_base_auditoria(uids, ts_desde, ts_hasta, sin) + [{"$facet": {
         "personas": [
@@ -144,8 +146,7 @@ def indicadores(db: Database, uids: list[int], d: date, h: date, ts_desde: str, 
                         "por_planilla": _cuenta({"$and": [es_crear, {"$ne": [{"$ifNull": ["$capturado_por", None]}, None]}]}),
                         "edito": {"$max": {"$and": [{"$in": ["$accion", edicion]}, {"$gt": [{"$size": "$_campos"}, 0]}]}},
                         "nuevos": {"$max": {"$gt": [{"$size": "$_compl"}, 0]}},
-                        "correcciones": {"$sum": {"$cond": [{"$eq": ["$accion", "editar"]},
-                                                            {"$size": {"$setDifference": ["$_campos", "$_compl"]}}, 0]}},
+                        "correcciones": {"$sum": {"$cond": [{"$eq": ["$accion", "editar"]}, {"$size": corregidos}, 0]}},
                         "telefonos": _cuenta({"$eq": ["$accion", "telefono_agregar"]}),
                         "asistencias": _cuenta({"$eq": ["$accion", "asistencia"]}),
                         "ubico": {"$max": {"$eq": ["$accion", "ubicar"]}}}},

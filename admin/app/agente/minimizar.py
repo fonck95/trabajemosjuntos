@@ -5,10 +5,11 @@ Se aplica DESPUÉS de la proyección por rol de la API: solo quita y enmascara (
 ya mandó, nunca de la base), así que un planillero o un consultor nunca recibe más que en la interfaz. Reglas:
 
 * Lista blanca de campos. Fuera siempre: datos sensibles (`sensibles*`, `regimen_salud`, las etiquetas y los campos
-  propios marcados como sensibles), `listas`, `lider`, `origen`, `procedencia`, `historial`, `alternos`, `fuentes` y
-  `cedula_origen` (la fuente «cedulas» revela una base política), `coincidencias` (nombres de otras personas),
-  `punto`/`lat`/`lon`, `correo`, el número de ficha, la fecha de nacimiento exacta, los teléfonos completos y los
-  trámites. De quien registró o tomó algo (`uid`, `usuario`) no sale nada: no hace falta para la tarea.
+  propios marcados como sensibles), `listas`, el tipo de persona y el «Liderado por» (`lider`, `votante`, `concejal`,
+  `lideres`; tampoco como nombres en `editables` ni `faltan`), `origen`, `procedencia`, `historial`, `alternos`,
+  `fuentes` y `cedula_origen` (la fuente «cedulas» revela una base política), `coincidencias` (nombres de otras
+  personas), `punto`/`lat`/`lon`, `correo`, el número de ficha, la fecha de nacimiento exacta, los teléfonos completos
+  y los trámites. De quien registró o tomó algo (`uid`, `usuario`) no sale nada: no hace falta para la tarea.
 * La cédula sale enmascarada («···123») también para el administrador; los teléfonos, con su estado y su `indice` (el
   que pide `registrar_acercamiento`) y el número enmascarado («···2233»).
 * De quien no autorizó el tratamiento («No autorizó») solo sale quién es, que no autorizó y su barrio o vereda si es
@@ -28,7 +29,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Container, Iterable
 
-from .. import acceso
+from .. import acceso, modelo
 
 AVISO_NO_AUTORIZO = "No autorizó el tratamiento de sus datos: el asistente no los recibe. Ábrala en el panel."
 TEXTO_MAX, LUGAR_MAX = 300, 120
@@ -50,6 +51,8 @@ CAMPOS_FICHA = (
     "consentimiento_canales", "contacto_habilitado", "mayor_declarado", "reclamo_en_tramite", "faltan", "editables",
     "avisos", "completitud", "ultimo_contacto", "creado_en", "actualizado_en",
 )
+# El tipo de persona y el «Liderado por» (datos políticos): ni como valor ni como nombre en `editables` o `faltan`
+POLITICOS = frozenset({*modelo.TIPOS_PERSONA, "lideres"})
 # Textos libres de la ficha que pasan, recortados y enmascarados
 TEXTOS_FICHA = ("direccion", "lugar_texto", "observaciones")
 CLAVES_ABORDAJE = ("estado", "n", "efectivos", "intentos_sin_exito", "ultimo_fecha", "ultimo_canal", "ultimo_resultado",
@@ -241,6 +244,11 @@ def ficha(d: dict, sensibles: Sensibles | None = None, lugares: Container[str] |
     if d.get("consentimiento") == "no":
         return no_autorizo(d, lugares)
     out = {k: d[k] for k in CAMPOS_FICHA if k in d}
+    # Ni el tipo de persona ni el «Liderado por» en las listas que pasan tal cual: los `editables` de P traen solo los
+    # tipos que la persona todavía no tiene (P solo suma), así que cambian de una persona a otra y dirían su tipo
+    for k in ("editables", "faltan"):
+        if isinstance(out.get(k), list):
+            out[k] = [x for x in out[k] if x not in POLITICOS]
     if d.get("cedula"):
         out["cedula_ult3"] = acceso.enmascarar_cedula(d["cedula"])
     if "cedula" in d or "cedula_ult3" in d:

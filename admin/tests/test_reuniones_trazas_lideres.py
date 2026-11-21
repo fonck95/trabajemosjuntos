@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from app import acceso, modelo, trazas
-from ayudas_g3 import coordinador, persona, sin_vedados
+from ayudas_g3 import coordinador, persona, sin_vedados, sin_vedados_p
 
 
 # ───────────────────────────── Rango de tiempo (sin base) ─────────────────────────────
@@ -323,28 +323,41 @@ def test_varios_lideres_por_persona(sesion, como):
     assert sesion.post(f"/api/personas/{y}/lideres", json={"lider_id": l1}).status_code == 201  # ya lo tenía
 
 
-def test_lideres_solo_para_administrador_y_coordinador(sesion, como):
+def test_lideres_planillero_asigna_sin_quitar_y_consultor_nada(sesion, como):
     db = sesion.app.state.db
     l1 = _lider(db, "LIDER INVENTADO DEL EQUIPO")
+    l2 = _lider(db, "LIDER INVENTADA DEL EQUIPO DOS")
     x = persona(db, nombre="PERSONA INVENTADA DEL EQUIPO")
     k = coordinador(sesion.app, db)
     assert k.post(f"/api/personas/{x}/lideres", json={"lider_id": l1}).status_code == 201
     assert [l["id"] for l in k.get(f"/api/personas/{x}").json()["lideres"]] == [l1]
-    for rol in ("planillero", "consultor"):
-        c = como(rol)
-        assert c.post(f"/api/personas/{x}/lideres", json={"lider_id": l1}).status_code == 403
-        assert c.delete(f"/api/personas/{x}/lideres/{l1}").status_code == 403
-        assert c.get("/api/lideres").status_code == 403
-        for filtro in ({"lider_id": l1}, {"varios_lideres": 1}):
-            assert c.get("/api/personas", params=filtro).status_code == 403
+    # C: nada de líderes (ni la búsqueda de candidatos)
+    c = como("consultor")
+    assert c.post(f"/api/personas/{x}/lideres", json={"lider_id": l2}).status_code == 403
+    assert c.delete(f"/api/personas/{x}/lideres/{l1}").status_code == 403
+    assert c.get("/api/lideres").status_code == 403
+    assert c.get("/api/lideres/candidatos", params={"q": "LIDER INVENTADO"}).status_code == 403
+    # P asigna (sin asignación, toda la base es su zona), pero no quita ni ve la lista con los conteos
     p = como("planillero")
+    r = p.post(f"/api/personas/{x}/lideres", json={"lider_id": l2})
+    assert r.status_code == 201, r.text
+    assert [l["id"] for l in r.json()["lideres"]] == [l1, l2]
+    assert p.delete(f"/api/personas/{x}/lideres/{l1}").status_code == 403
+    assert p.get("/api/lideres").status_code == 403
+    assert [l["id"] for l in db.personas.find_one({"_id": x})["lideres"]] == [l1, l2]
+    for u in (p, c):
+        for filtro in ({"lider_id": l1}, {"varios_lideres": 1}):
+            assert u.get("/api/personas", params=filtro).status_code == 403
+    # Su ficha trae el «Liderado por» sin quién asignó cada líder, y nunca a quiénes lidera ni las intervenciones
     f = p.get(f"/api/personas/{x}").json()
-    sin_vedados(f, "ficha de P")
-    assert not {"lideres", "traidas", "intervenciones"} & set(f)
+    sin_vedados_p(f, "ficha de P")
+    assert [l["id"] for l in f["lideres"]] == [l1, l2] and all("asignado_por" not in l for l in f["lideres"])
+    assert not {"traidas", "intervenciones", "lideres_quitados"} & set(f)
     sin_vedados(p.get("/api/personas").json(), "filas de P")
-    # P no los manda al registrar a alguien; A y K sí
-    r = p.post("/api/personas", json={"nombre": "PERSONA INVENTADA NUEVA DE P", "lideres": [l1]})
-    assert r.status_code == 403
+    # Al registrar a alguien, P también los manda (como A y K)
+    r = p.post("/api/personas", json={"nombre": "PERSONA INVENTADA NUEVA DE P", "lideres": [l1], "forzar": True})
+    assert r.status_code == 201, r.text
+    assert [l["id"] for l in r.json()["lideres"]] == [l1]
     r = sesion.post("/api/personas", json={"nombre": "PERSONA INVENTADA NUEVA DE A", "lideres": [l1], "forzar": True})
     assert r.status_code == 201, r.text
     assert [l["id"] for l in r.json()["lideres"]] == [l1]

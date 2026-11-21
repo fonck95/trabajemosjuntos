@@ -6,10 +6,15 @@ from fastapi.testclient import TestClient
 
 from conftest import CLAVE_USUARIO, crear_usuario, insertar_personas
 
-# Claves y valores que P y C nunca reciben (3.8, 9.5)
+# Claves y valores que P y C nunca reciben (3.8, 9.5), salvo `TIPO_Y_LIDERES` en la ficha de P
 VEDADAS = {"sensibles", "listas", "lider", "votante", "concejal", "historial", "origen", "procedencia",
            "cedulas_anteriores", "partido", "mesa_testigo", "cedula_en_traspaso", "lideres", "lideres_n", "traidas",
-           "intervenciones", "lideres_quitados"}
+           "intervenciones", "lideres_quitados", "reubicada_por"}
+# Lo único de VEDADAS que P sí recibe: el tipo de persona y el «Liderado por», en la raíz de la ficha de una persona de
+# su zona o que registró (`proyeccion.tipo_visible`). Nunca en filas, búsquedas, parecidas ni reuniones, nunca para C
+TIPO_Y_LIDERES = frozenset({"lider", "votante", "concejal", "lideres"})
+# Cada líder del «Liderado por» en la ficha de P: sin quién lo asignó (el usuario de otro miembro del equipo)
+CLAVES_LIDER_P = {"id", "nombre", "tipo", "marcado", "asignado_en"}
 
 
 def persona(db, **campos) -> int:
@@ -58,13 +63,24 @@ def recorrer(x, ruta=""):
             yield from recorrer(v, f"{ruta}[{i}]")
 
 
-def sin_vedados(x, contexto=""):
-    """Ninguna clave vedada y los valores «cedulas» y «general» (bases políticas) en ninguna `fuente` o `fuentes`."""
+def sin_vedados(x, contexto="", permitidas=frozenset()):
+    """Ninguna clave vedada y los valores «cedulas» y «general» (bases políticas) en ninguna `fuente` o `fuentes`.
+    `permitidas`: claves vedadas que sí pueden ir en la raíz de `x` (nunca más adentro)."""
     for ruta, k, v in recorrer(x):
-        assert k not in VEDADAS, (contexto, ruta, k)
+        assert k not in VEDADAS or (ruta == "" and k in permitidas), (contexto, ruta, k)
         if k in ("fuente", "fuentes", "cedula_origen"):
             vals = v if isinstance(v, list) else [v]
             assert "cedulas" not in vals and "general" not in vals, (contexto, ruta, k, v)
+
+
+def sin_vedados_p(x, contexto=""):
+    """Una respuesta para P: lo de `sin_vedados`, salvo el tipo y el «Liderado por» en la raíz (la ficha de una persona
+    de su zona o que registró), con sus líderes sin `asignado_por`. Sirve también para filas y listas: en ellas el tipo
+    nunca va en la raíz."""
+    sin_vedados(x, contexto, permitidas=TIPO_Y_LIDERES)
+    if isinstance(x, dict):
+        for l in x.get("lideres") or []:
+            assert set(l) <= CLAVES_LIDER_P, (contexto, l)
 
 
 def puesto(db, _id: int, nombre: str, codigo: str, mesas: int | None = 5, **extra) -> dict:

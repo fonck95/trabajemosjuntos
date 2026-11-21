@@ -1,8 +1,9 @@
 """Proyección por rol (3.6, 3.8): P y C reciben solo los campos de su lista, en toda respuesta con fichas o filas
 (Habitantes, búsqueda, ficha, PATCH, notas, teléfonos, parecidas, acercamientos, reuniones y colas); para ellos la
 fuente «cedulas» se muestra como «otra_base». Nadie recibe `sensibles` ni `cedula_en_traspaso`; A y K reciben lo
-político y la cédula completa. Solo datos inventados."""
-from ayudas_g3 import autorizada, coordinador, persona, sin_vedados, tomar
+político y la cédula completa; P, de lo político, solo el tipo y el «Liderado por» en la ficha de las personas de su
+zona o que registró (tests/test_tipo_planillero.py). Solo datos inventados."""
+from ayudas_g3 import autorizada, coordinador, persona, sin_vedados, sin_vedados_p, tomar
 
 
 def _rica(db, **extra) -> int:
@@ -44,10 +45,13 @@ def test_planillero_y_consultor_no_reciben_lo_vedado(sesion, como):
         p.post(f"/api/personas/{pid}/acercamientos", json={"canal": "visita", "resultado": "contesto"}),
         p.get(f"/api/personas/{pid}/acercamientos"), p.get(f"/api/reuniones/{reu}"), p.get(f"/api/personas/{otra}"),
     ]
+    # Lo único político que P recibe es el tipo y el «Liderado por» en la raíz de una ficha (sin asignación, toda la
+    # base es su zona): nunca en filas, búsquedas, parecidas ni reuniones
     for x in respuestas:
         assert x.status_code in (200, 201, 409), (x.request.url, x.status_code, x.text[:300])
-        sin_vedados(x.json(), str(x.request.url))
+        sin_vedados_p(x.json(), str(x.request.url))
     f = p.get(f"/api/personas/{pid}").json()
+    assert (f["lider"], f["votante"], f["concejal"], f["lideres"]) == (True, False, False, [])
     assert f["cedula"] == "91000777" and f["cedula_origen"] == "otra_base"
     assert f["telefonos"][0]["fuentes"] == ["otra_base", "tramites"] and f["alternos"][0]["fuente"] == "otra_base"
     assert f["votacion"]["fuente"] == "otra_base" and "fuentes" not in f

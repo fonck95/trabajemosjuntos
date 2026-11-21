@@ -846,7 +846,9 @@ def test_proyeccion_por_lista_de_campos():
         assert not proyeccion.CAMPOS_FILA[rol] & {"sensibles", "cedula_en_traspaso"}
         assert "id" in proyeccion.CAMPOS_FICHA[rol] and "id" in proyeccion.CAMPOS_FILA[rol]
     for rol in ("planillero", "consultor"):
-        assert not proyeccion.CAMPOS_FICHA[rol] & vedados and not proyeccion.CAMPOS_FILA[rol] & vedados
+        # La ficha de P trae el tipo de las personas de su zona (`proyeccion.tipo_visible`); su fila, nunca
+        ficha = vedados - {"lider"} if rol == "planillero" else vedados
+        assert not proyeccion.CAMPOS_FICHA[rol] & ficha and not proyeccion.CAMPOS_FILA[rol] & vedados
     assert not {"cedula", "telefono", "notas", "tramites", "alternos"} & proyeccion.CAMPOS_FICHA["consultor"]
     assert not {"cedula", "telefono", "lider", "fuentes"} & proyeccion.CAMPOS_FILA["planillero"]
     assert proyeccion.CAMPOS_FILA["consultor"] == {"id", "nombre", "lugar", "abordaje_estado", "contactable"}

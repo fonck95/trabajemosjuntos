@@ -59,7 +59,8 @@ SENSIBLES = {
 NOMBRES_ROL = {"admin": "Administrador", "coordinador": "Coordinador", "planillero": "Planillero", "consultor": "Consultor"}
 # Tipo de persona en la campaña (no son usuarios del panel): cada uno es un sí/no de la ficha y una persona puede ser
 # varios (un concejal que también es líder). Líderes y concejales traen votantes: ellos son el «Liderado por» de una
-# ficha (`lideres`). Son datos políticos, como `lider`: solo A y K los ven y los cambian
+# ficha (`lideres`). Son datos políticos: A y K los ven y los cambian; P los ve y solo los suma (marca un tipo, asigna
+# un líder; nunca quita) en las personas de su zona y en las que registra (`proyeccion.tipo_visible`); C nunca
 TIPOS_PERSONA = {"concejal": "Concejal", "lider": "Líder", "votante": "Votante"}
 # Los que pueden liderar a otros (el «Liderado por» de una ficha solo admite fichas con alguno de estos)
 TIPOS_LIDERAN = ("concejal", "lider")

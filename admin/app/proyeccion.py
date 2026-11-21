@@ -7,6 +7,9 @@ y quitando campos.
   para C, sin teléfonos para P si es menor, acercamientos sin `nota` para P, trámites con `fecha`, `tipo` y `ficha`
   para P, `situacion.estado` para C, `en_curso` propio, `abordaje` con solo `estado` en `CAMPOS_NO_AUTORIZO`.
 * Para P y C las fuentes «cedulas» y «general» se muestran como «otra_base» (`neutralizar_fuente`).
+* El tipo de persona y el «Liderado por» (`TIPO_Y_LIDERES`, datos políticos): A y K en toda ficha; P solo en la ficha
+  de las personas de su zona y de las que registró (`tipo_visible`), sin quién asignó cada líder; C nunca. Las filas
+  de P no los traen: también salen en `/api/buscar` y en las parecidas, que recorren toda la base.
 * `exigir_tratable` va en toda escritura sobre una persona: a quien no autorizó, P y C no lo tratan.
 """
 from __future__ import annotations
@@ -50,7 +53,10 @@ CAMPOS_FICHA: dict[str, frozenset[str]] = {
         {"id", "nombre", "tipo_documento", "cedula", "cedula_verificada", "cedula_origen"} | _DEMOGRAFIA | _UBICACION
         | _VOTACION | _AUTORIZACION | _SEGUIMIENTO
         | {"sensibles_registrados", "telefonos", "telefono", "telefono2", "abordaje", "acercamientos", "ultimo_contacto",
-           "notas", "etiquetas", "extra", "observaciones", "tramites", "alternos", "reuniones", "completitud"}),
+           "notas", "etiquetas", "extra", "observaciones", "tramites", "alternos", "reuniones", "completitud",
+           # El tipo y el «Liderado por», solo de su zona y de las que registró (`tipo_visible`); nunca `traidas`,
+           # `intervenciones`, `listas`, `procedencia` ni `historial`
+           "lider", "votante", "concejal", "lideres"}),
     "consultor": frozenset(
         {"id", "nombre", "cedula_ult3", "rango_edad", "sexo", "telefonos", "lugar_nombre", "zona", "puesto_nombre",
          "consentimiento", "consentimiento_canales", "contacto_habilitado", "abordaje", "acercamientos",
@@ -90,6 +96,8 @@ CAMPOS_COLA = frozenset({"id", "nombre", "lugar", "zona", "rango_edad", "telefon
 CAMPOS_NO_AUTORIZO = frozenset({"id", "nombre", "cedula_ult3", "lugar", "consentimiento", "abordaje"})
 # Nadie los recibe
 NUNCA = frozenset({"sensibles", "cedula_en_traspaso"})
+# El tipo de persona y el «Liderado por»: en la ficha de P solo si `tipo_visible`
+TIPO_Y_LIDERES = frozenset({*modelo.TIPOS_PERSONA, "lideres"})
 
 
 # Bases importadas que revelan listas de origen, partido o liderazgo: P y C las ven como «otra_base»
@@ -121,6 +129,37 @@ def exigir_tratable(p: dict, quien: Any, accion: str) -> None:
         raise HTTPException(409, dict(NO_AUTORIZO))
 
 
+# Lo que `tipo_visible` lee de la ficha: una escritura que la carga con proyección la pide entera
+CAMPOS_TIPO_VISIBLE = {"creado_por": 1, "reubicada_por": 1}
+
+
+def tipo_visible(db: Database, quien: Any, p: dict | int) -> bool:
+    """¿`quien` ve y marca el tipo de persona y el «Liderado por» de `p`? A y K, siempre. Un planillero con
+    `personas.tipo`, en las personas de su zona (`filtros.alcance_de`; sin asignación es toda la base, como en
+    Habitantes) y en las que registró él: quien da de alta a alguien sin barrio debe poder ver lo que marcó. Nadie más.
+    Su zona no cuenta en una persona a la que él mismo le cambió el barrio o la ubicación cuando no la veía
+    (`reubicada_por`, `api.personas.reubicada`): si no, la movería a su zona, leería su tipo y la devolvería.
+    `p` es el documento de la persona (al menos `_id` y `CAMPOS_TIPO_VISIBLE`) o solo su id. La respuesta depende de la
+    zona y de quién la registró o la movió, nunca del tipo que la persona tiene."""
+    if administra(quien):
+        return True
+    puede = getattr(quien, "puede", None)
+    if getattr(quien, "rol", None) != "planillero" or not (callable(puede) and puede("personas.tipo")):
+        return False
+    from .api import filtros  # aquí: api/filtros importa este módulo
+    alcance = filtros.alcance_de(db, quien)
+    if alcance is None:
+        return True
+    pid = p.get("_id", p.get("id")) if isinstance(p, dict) else p
+    doc = p if isinstance(p, dict) and "creado_por" in p else \
+        (db.personas.find_one({"_id": pid}, CAMPOS_TIPO_VISIBLE) or {})
+    uid = getattr(quien, "uid", None)
+    creado = doc.get("creado_por")
+    if uid is not None and isinstance(creado, dict) and creado.get("uid") == uid:
+        return True
+    if uid is not None and uid in (doc.get("reubicada_por") or []):
+        return False
+    return db.personas.count_documents({"$and": [{"_id": pid}, alcance]}, limit=1) > 0
 
 
 # ───────────────────────────── Quién y contexto ─────────────────────────────
@@ -387,12 +426,16 @@ EDITABLES_P = ("nombre", "cedula", "tipo_documento", "cedula_verificada", "sexo"
 EDITABLES_A = EDITABLES_P + (*modelo.TIPOS_PERSONA, "consentimiento_fecha", "puesto_votacion", "motivo_cambio_cedula")
 
 
-def editables(p: dict, quien: Any) -> list[str]:
+def editables(p: dict, quien: Any, con_tipos: bool = False) -> list[str]:
+    """Los campos que `quien` puede escribir en la ficha `p`. `con_tipos` (P con `tipo_visible`): suma los tipos que la
+    persona todavía no tiene. P solo suma un tipo, así que los ya marcados salen fijos en la interfaz. La lista cambia
+    de una persona a otra y diría su tipo: el asistente no la recibe con tipos (`agente.minimizar.ficha`)."""
     if administra(quien):
         return list(EDITABLES_A)
     if rol_de(quien) == "planillero":
         fuera = {"cedula", "tipo_documento"} if p.get("cedula") else set()
-        return [k for k in EDITABLES_P if k not in fuera]
+        tipos = [t for t in modelo.TIPOS_PERSONA if p.get(t) is not True] if con_tipos else []
+        return [*(k for k in EDITABLES_P if k not in fuera), *tipos]
     faltan = modelo.faltan(p)
     return [k for k, f in (("cedula", "cedula"), ("puesto_id", "puesto"), ("mesa", "mesa")) if f in faltan]
 
@@ -552,6 +595,11 @@ def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> 
                              "lugar": lg.get("nombre") or p.get("lugar_texto"), "consentimiento": "no",
                              "abordaje": _abordaje(p)})
     permitidos = CAMPOS_FICHA[rol]
+    # El tipo y el «Liderado por» de P: solo de las personas de su zona y de las que registró. Fuera de ella las claves
+    # no salen (la interfaz decide por su presencia) y sus `editables` no traen tipos
+    con_tipos = adm or (bool(permitidos & TIPO_Y_LIDERES) and tipo_visible(db, quien, p))
+    if not con_tipos:
+        permitidos = permitidos - TIPO_Y_LIDERES
     hoy = ctx.hoy
     menor = modelo.es_menor(p, hoy)
     edad = modelo.edad_efectiva(p, hoy)
@@ -611,7 +659,8 @@ def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> 
                              for a in p.get("alternos") or []],
         "avance": lambda: dict(p.get("avance") or {}),
         "historial": lambda: _historial(db, pid),
-        "lideres": lambda: _lideres().lideres_de(db, p),
+        # Para P, sin `asignado_por` (el usuario de otro miembro del equipo) ni los líderes que no autorizaron
+        "lideres": lambda: _lideres().lideres_de(db, p, administra=adm),
         "traidas": lambda: _lideres().traidas_de(db, pid) if modelo.lidera(p) or db.personas.count_documents(
             {"lideres.id": pid, **ACTIVA}, limit=1) else None,
         "intervenciones": lambda: trazas.intervenciones_persona(db, pid, p.get("asistencias")),
@@ -623,7 +672,7 @@ def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> 
         "no_disponible": lambda: dict(p.get("no_disponible") or {}),
         "faltan": lambda: [f for f in modelo.faltan(p, hoy, ctx.dias_dato)
                            if adm or rol != "consultor" or f in ("cedula", "puesto", "mesa")],
-        "editables": lambda: editables(p, quien), "avisos": lambda: avisos(p, hoy, adm),
+        "editables": lambda: editables(p, quien, con_tipos), "avisos": lambda: avisos(p, hoy, adm),
     }
     return {k: (valores[k]() if k in valores else p.get(k)) for k in sorted(permitidos)}
 

@@ -1,6 +1,6 @@
 // Piezas compartidas entre vistas: alta de personas con búsqueda en vivo (7.6), «Completar» (7.3), autorización,
 // puesto y mesa, «Estoy en su casa» (GPS), el 409 `cambiada` y el selector de ubicación en el mapa.
-import { api, ErrorApi, nuevaClave, registrarPendiente, sesion } from '../api.js';
+import { api, ErrorApi, nuevaClave, puede, registrarPendiente, sesion } from '../api.js';
 import { BASES, CASCO, baseSegunTema, cargarMapLibre, dentroDeYondo } from '../mapa3d.js';
 import {
   CAMPOS_FALTAN, CAMPOS_NO_DISPONIBLE, CANALES_AUTORIZACION, ESTADOS_CIVILES, ETIQUETAS_CAMPOS, MAS_DATOS,
@@ -10,6 +10,13 @@ import { $, $$, aviso, avisoError, datosForm, debounce, dialogo, fecha, hoy, htm
 
 /** ¿Administrador o coordinador? Lo que la especificación reserva a «A» en el manejo de datos (adenda 1). */
 export const administra = () => sesion.rol === 'admin' || sesion.rol === 'coordinador';
+// El tipo de persona y el «Liderado por»: A y K los ven, los marcan y los quitan; P (con estos permisos) los marca y
+// asigna en las personas de su zona y en las que registra, pero solo suma: quitar un tipo o un líder sigue siendo de A
+// y K. `administra()` va primero: la sesión de A trae el permiso «*», pero hay pruebas que solo fijan el rol
+/** ¿Puede marcar a una persona como líder, votante o concejal? (P solo suma: nunca quita un tipo.) */
+export const marcaTipo = () => administra() || puede('personas.tipo');
+/** ¿Puede buscar y asignar el líder o concejal que trajo a una persona? (P no quita líderes.) */
+export const asignaLider = () => administra() || puede('lideres.asignar');
 
 // ───────── Reuniones: su rango de tiempo ─────────
 
@@ -29,16 +36,34 @@ export function errorRangoHora(datos) {
   return null;
 }
 
-// ───────── Tipo de persona y líderes (solo A y K): concejal, líder, votante y quién trajo a quién ─────────
+// ───────── Tipo de persona y líderes: concejal, líder, votante y quién trajo a quién ─────────
+// A y K los ven en toda la base y los cambian; P los ve en las fichas de su zona (y en las que registró), marca un tipo y
+// asigna un líder sin quitar nada; C no los ve
 
-/** Chips del tipo de persona de una ficha o una fila (concejal, líder, votante; solo A y K los reciben). */
+/** Chips del tipo de persona de una ficha o una fila (concejal, líder, votante): solo salen si la ficha los trae. */
 export const chipsTipo = (p) => html`${Object.entries(TIPOS_PERSONA).filter(([k]) => p?.[k] === true)
   .map(([k, t]) => html`<span class="chip ${k === 'votante' ? 'verde' : k === 'concejal' ? 'azul' : 'rojo'}">${t}</span>`)}`;
 
-/** Los líderes y concejales con cuántas personas trajo cada uno (GET /api/lideres): {lideres: [...], personas_con_varios}. */
+/** Los líderes y concejales con cuántas personas trajo cada uno (GET /api/lideres, solo A y K): {lideres: [...],
+ * personas_con_varios}. */
 export const cargarLideres = () => api.get('/api/lideres');
 
+/** Candidatos a líder para quien no administra: el servidor busca en toda la campaña por el nombre o por la cédula
+ * completa y responde unos pocos, sin conteos ni la cédula entera (GET /api/lideres/candidatos): {lideres: [...]}. */
+const buscarCandidatos = (q) => api.get('/api/lideres/candidatos', { q });
+
 const normaTexto = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+// Lo que P puede buscar en el servidor: con letras, 3 o más (si además hay dígitos, se busca por las letras); solo con
+// dígitos (sin espacios, puntos ni guiones), la cédula completa, de 5 a 11. Nunca el comienzo de un número: P no
+// recorre la base por partes de una cédula
+function buscable(q) {
+  const s = String(q || '').trim();
+  const letras = normaTexto(s).replace(/[^a-z]/g, '');
+  if (letras) return letras.length >= 3;
+  return /^\d{5,11}$/.test(s.replace(/[\s.-]/g, ''));
+}
+const AYUDA_CANDIDATOS = 'Escriba el nombre (3 letras o más) o la cédula completa del líder o concejal.';
 
 /** Quienes pueden liderar (fichas marcadas como líder o concejal) que casan con `q` por nombre o por cédula (3 dígitos o
  * más), sin los ids de `fuera`. Con `q` vacío, todos (la API ya los manda por cuántas personas trajo). */
@@ -49,36 +74,70 @@ export function filtrarLideres(lista, q = '', fuera = new Set()) {
     && (!t || normaTexto(l.nombre).includes(t) || (d.length >= 3 && String(l.cedula || '').includes(d))));
 }
 
-const detalleLider = (l) => [TIPOS_PERSONA[l.tipo], l.cedula ? `CC ${l.cedula}` : null, l.lugar ? titulo(l.lugar) : null,
-  `lidera ${l.traidas}`, l.compartidas ? `${l.compartidas} con otro líder` : null].filter(Boolean).join(' · ');
+// Lo que se sabe de cada candidato: a A y K les llegan la cédula y cuántas lidera; a P, los 3 últimos dígitos y nada más
+// (`cedula_ult3` llega ya enmascarada del servidor, «···123», como `telefono_mascara`)
+const detalleLider = (l) => [TIPOS_PERSONA[l.tipo], l.cedula ? `CC ${l.cedula}` : l.cedula_ult3 ? `cédula ${l.cedula_ult3}` : null,
+  l.lugar ? titulo(l.lugar) : null, l.traidas != null ? `lidera ${l.traidas}` : null,
+  l.compartidas ? `${l.compartidas} con otro líder` : null].filter(Boolean).join(' · ');
 
 /**
  * Barra de búsqueda de líderes y concejales dentro de un formulario (no en un diálogo): se escribe el nombre o la
  * cédula y se elige con un toque (o con Enter, el primero). `excluir()` da los ids que no se ofrecen (la persona misma y
- * los que ya tiene); `alElegir({id, nombre, tipo, …})` recibe el elegido.
+ * los que ya tiene); `alElegir({id, nombre, tipo, …})` recibe el elegido. A y K bajan una vez la lista completa (con
+ * cuántas lidera cada uno) y filtran aquí; los demás le preguntan al servidor por lo escrito, con una espera corta, y
+ * nunca reciben la lista de la campaña.
  */
 export function buscadorLider(caja, { excluir = () => [], alElegir, persona = '' } = {}) {
-  let lista = null, cargando = null;
+  const completa = administra();
+  let lista = null, cargando = null, turno = 0, mostrados = [];
   montar(caja, html`<label class="buscador"><span class="sr">Buscar líder o concejal${persona ? ` de ${persona}` : ''}</span>${icono('buscar')}<input class="entrada" type="search" data-buscar-lider placeholder="Buscar líder o concejal por nombre o cédula…" autocomplete="off"></label>
     <div class="resultados resultados-lider" data-res-lider aria-live="polite"></div>`);
   const entrada = $('[data-buscar-lider]', caja), res = $('[data-res-lider]', caja);
-  const pintar = async () => {
+  const fuera = () => new Set(excluir().map(Number));
+  const nota = (texto) => { mostrados = []; montar(res, html`<div class="sec">${texto}</div>`); };
+  // Sin resultados: A y K (y quien marca tipos, en las fichas de su zona) pueden marcar al líder en su ficha; si no, se
+  // le pide al coordinador
+  const ninguno = (q) => (completa ? `${q ? `Ningún líder ni concejal con «${q}».` : 'No hay líderes ni concejales marcados.'} Para agregar uno, márquelo como Líder o Concejal en su ficha.`
+    : marcaTipo() ? `Ningún líder ni concejal con «${q}». Si es de su zona, márquelo como Líder o Concejal en su ficha; si no, pídale al coordinador que lo marque.`
+      : `Ningún líder ni concejal con «${q}». Si es uno nuevo, pídale al coordinador que lo marque como Líder o Concejal.`);
+  const resultados = (ls, cabeza = '') => {
+    mostrados = ls;
+    montar(res, html`${cabeza ? html`<div class="sec">${cabeza}</div>` : ''}${ls.map((l) => html`<div class="resultado"><div class="q"><b>${l.nombre}</b><small>${detalleLider(l)}</small></div>
+      <button type="button" class="btn chico primario" data-lider="${l.id}">Elegir</button></div>`)}`);
+  };
+  // A y K: la lista completa, una sola vez
+  const pintarLista = async () => {
     if (!lista) {
       cargando ||= cargarLideres().then((r) => { lista = r.lideres || []; }).catch((e) => { cargando = null; avisoError(e); });
       await cargando;
       if (!lista || !caja.isConnected) return;
     }
     const q = entrada.value.trim();
-    const ls = filtrarLideres(lista, q, new Set(excluir().map(Number))).slice(0, 8);
-    if (!ls.length) {
-      montar(res, html`<div class="sec">${q ? `Ningún líder ni concejal con «${q}».` : 'No hay líderes ni concejales marcados.'} Para agregar uno, márquelo como Líder o Concejal en su ficha.</div>`);
-      return;
-    }
-    montar(res, html`${q ? '' : html`<div class="sec">Los que más personas lideran:</div>`}${ls.map((l) => html`<div class="resultado"><div class="q"><b>${l.nombre}</b><small>${detalleLider(l)}</small></div>
-      <button type="button" class="btn chico primario" data-lider="${l.id}">Elegir</button></div>`)}`);
+    const ls = filtrarLideres(lista, q, fuera()).slice(0, 8);
+    if (!ls.length) { nota(ninguno(q)); return; }
+    resultados(ls, q ? '' : 'Los que más personas lideran:');
   };
-  const buscar = debounce(pintar, 150);
-  entrada.addEventListener('input', buscar);
+  // Los demás: una consulta por lo escrito. Cada una lleva su turno: la respuesta de una consulta vieja que llega tarde
+  // se descarta (lo que se ve y lo que elige Enter es siempre la última respuesta)
+  const pintarConsulta = async () => {
+    const q = entrada.value.trim();
+    const mio = ++turno;
+    if (!buscable(q)) { nota(AYUDA_CANDIDATOS); return; }
+    let r;
+    try { r = await buscarCandidatos(q); } catch (e) { if (mio === turno && caja.isConnected) avisoError(e); return; }
+    if (mio !== turno || !caja.isConnected) return;
+    const f = fuera();
+    const ls = (r?.lideres || []).filter((l) => l.marcado !== false && !f.has(Number(l.id)));
+    if (!ls.length) { nota(ninguno(q)); return; }
+    resultados(ls);
+  };
+  const pintar = completa ? pintarLista : pintarConsulta;
+  const buscar = debounce(pintar, completa ? 150 : 300);
+  entrada.addEventListener('input', () => {
+    // Lo que todavía no se puede buscar muestra la ayuda en el momento (y deja sin efecto la consulta en camino)
+    if (!completa && !buscable(entrada.value)) { buscar.cancel(); ++turno; nota(AYUDA_CANDIDATOS); return; }
+    buscar();
+  });
   entrada.addEventListener('focus', () => { if (!res.childElementCount) pintar(); });
   entrada.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
@@ -88,18 +147,21 @@ export function buscadorLider(caja, { excluir = () => [], alElegir, persona = ''
   res.addEventListener('click', (e) => {
     const b = e.target.closest('[data-lider]');
     if (!b) return;
-    const l = (lista || []).find((x) => String(x.id) === b.dataset.lider);
+    const l = mostrados.find((x) => String(x.id) === b.dataset.lider);
     if (!l) return;
+    buscar.cancel();
+    ++turno;
     entrada.value = '';
+    mostrados = [];
     res.replaceChildren();
     alElegir?.(l);
   });
-  return { enfocar: () => entrada.focus(), cancelar: () => buscar.cancel() };
+  return { enfocar: () => entrada.focus(), cancelar: () => { buscar.cancel(); ++turno; } };
 }
 
 /**
  * Elegir un líder o concejal en un diálogo con búsqueda (por nombre o cédula): devuelve {id, nombre, tipo} o null.
- * `excluir`: ids que no se ofrecen (la persona misma y los que ya tiene).
+ * `excluir`: ids que no se ofrecen (la persona misma y los que ya tiene). Solo A y K: carga la lista completa.
  */
 export async function elegirLider({ excluir = [], persona = '' } = {}) {
   let lista;
@@ -338,8 +400,9 @@ async function marcarNoDisponibles(pid, form) {
 /**
  * «Completar» desde Habitantes, la ficha o una reunión: primero los datos principales de la ficha, en su orden (los
  * 17: nombre, cédula, sexo, edad, teléfono, fecha de nacimiento, correo, dirección, barrio o vereda, zona, tipo de
- * persona y «Liderado por» —A y K—, perfil profesional, ocupación, estado civil y jefe de hogar): lo que ya tiene se ve
- * fijo y lo que falta se puede escribir (cédula, teléfono, sexo y edad con «No lo tiene / No sabe»). Después la
+ * persona y «Liderado por» —A y K, y P cuando la ficha los trae—, perfil profesional, ocupación, estado civil y jefe de
+ * hogar): lo que ya tiene se ve fijo y lo que falta se puede escribir (cédula, teléfono, sexo y edad con «No lo tiene / No
+ * sabe»). Un tipo ya marcado queda fijo y los líderes que ya tiene no se quitan: completar solo suma. Después la
  * autorización y, plegados, el puesto y la mesa y «Más datos». Guarda con `PATCH ?modo=completar` e Idempotency-Key
  * (solo lo que se escribió: lo que ya tenía no se toca) y luego los líderes elegidos. Resuelve con {ficha, siguiente}
  * («Guardar y siguiente») o null.
@@ -349,6 +412,10 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
   const hay = (c) => faltan.includes(c);
   const v = p.votacion || {};
   const adm = administra();
+  // El tipo y el «Liderado por»: A y K siempre; P, si su ficha los trae (la del servidor los manda solo si la persona
+  // es de su zona o la registró él: sin la clave no se sabe qué tiene y no se muestra nada)
+  const conTipo = marcaTipo() && (adm || 'lider' in p);
+  const conLiderado = asignaLider() && (adm || Array.isArray(p.lideres));
   const vacio = (k) => p[k] == null || p[k] === '';
   // Los principales que faltan: los de «Faltan» según el servidor (respeta «No lo tiene / No sabe»); el resto, por su valor
   const falta = {
@@ -358,7 +425,8 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
     jefe_hogar: p.jefe_hogar == null,
   };
   const tipos = Object.keys(TIPOS_PERSONA);
-  const faltaPrincipal = Object.values(falta).some(Boolean) || (adm && (!tipos.some((k) => p[k] === true) || !(p.lideres || []).length));
+  const faltaPrincipal = Object.values(falta).some(Boolean) || (conTipo && !tipos.some((k) => p[k] === true))
+    || (conLiderado && !(p.lideres || []).length);
   const zonaDe = (z) => (z === 'urbana' ? 'Urbana (casco)' : z === 'rural' ? 'Rural' : '—');
   // Un dato que ya tiene: fijo, con su título
   const fijo = (t, valor) => html`<div class="campo ancho dato-fijo"><span>${t}</span><b class="valor-fijo">${valor == null || valor === '' ? '—' : valor}</b></div>`;
@@ -392,10 +460,10 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
       ${falta.lugar ? html`<label class="campo ancho"><span>Barrio o vereda</span><select name="lugar_id">${opcionesLugares(cat)}</select></label>`
         : fijo('Barrio o vereda', p.lugar_nombre ? titulo(p.lugar_nombre) : p.lugar ? titulo(p.lugar) : null)}
       <div class="campo ancho dato-fijo"><span>Zona urbana o rural</span><b class="valor-fijo" id="zona-completar" aria-live="polite">${zonaDe(p.zona)}</b></div>
-      ${adm ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Líder · Votante · Concejal</span>
+      ${conTipo ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Líder · Votante · Concejal</span>
         <div class="opciones-radio">${['lider', 'votante', 'concejal'].map((k) => html`<label class="chip opcion"><input type="checkbox" name="tipo_${k}" ${p[k] === true ? 'checked disabled' : ''}> ${TIPOS_PERSONA[k]}</label>`)}</div>
-        <small class="nota">Completar solo suma: un tipo marcado se quita en la ficha.</small></div>
-      <div class="grupo-campo ancho"><span class="titulo-campo">Liderado por</span>
+        <small class="nota">${adm ? 'Completar solo suma: un tipo marcado se quita en la ficha.' : 'Completar solo suma: un tipo marcado lo quita el administrador o el coordinador.'}</small></div>` : ''}
+      ${conLiderado ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Liderado por</span>
         <div class="chips" id="lideres-completar">${(p.lideres || []).map((l) => html`<span class="chip">${l.nombre}${l.tipo ? ` · ${TIPOS_PERSONA[l.tipo]}` : ''}</span>`)}</div>
         <div id="buscador-lider-completar"></div></div>` : ''}
       ${falta.perfil_profesional ? html`<label class="campo ancho"><span>Perfil profesional</span><input name="perfil_profesional" maxlength="160" placeholder="Docente, enfermera, técnico agropecuario…"></label>`
@@ -430,10 +498,11 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
     const lg = (cat?.lugares || []).find((l) => String(l.id) === String(form.lugar_id.value));
     $('#zona-completar', el).textContent = zonaDe(lg?.zona || p.zona);
   });
-  // «Liderado por» (A y K): los líderes elegidos se asignan después de guardar lo demás
+  // «Liderado por»: los líderes elegidos se asignan después de guardar lo demás. Los que ya tiene se ven fijos (solo
+  // A y K los quitan, en la ficha); el ✕ quita solo un elegido que todavía no se guardó
   const nuevosLideres = [];
-  const pintarNuevos = () => montar($('#lideres-completar', el), html`${(p.lideres || []).map((l) => html`<span class="chip">${l.nombre}${l.tipo ? ` · ${TIPOS_PERSONA[l.tipo]}` : ''}</span>`)}${nuevosLideres.map((l) => html`<button type="button" class="chip azul" data-quitar-nuevo="${l.id}" aria-label="Quitar a ${l.nombre}">${l.nombre}${l.tipo ? ` · ${TIPOS_PERSONA[l.tipo]}` : ''} ✕</button>`)}`);
-  const buscador = adm && $('#buscador-lider-completar', el) ? buscadorLider($('#buscador-lider-completar', el), {
+  const pintarNuevos = () => $('#lideres-completar', el) && montar($('#lideres-completar', el), html`${(p.lideres || []).map((l) => html`<span class="chip">${l.nombre}${l.tipo ? ` · ${TIPOS_PERSONA[l.tipo]}` : ''}</span>`)}${nuevosLideres.map((l) => html`<button type="button" class="chip azul" data-quitar-nuevo="${l.id}" aria-label="Quitar a ${l.nombre}">${l.nombre}${l.tipo ? ` · ${TIPOS_PERSONA[l.tipo]}` : ''} ✕</button>`)}`);
+  const buscador = conLiderado && $('#buscador-lider-completar', el) ? buscadorLider($('#buscador-lider-completar', el), {
     persona: p.nombre || '',
     excluir: () => [p.id, ...(p.lideres || []).map((l) => l.id), ...nuevosLideres.map((l) => l.id)],
     alElegir: (l) => { nuevosLideres.push({ id: l.id, nombre: l.nombre, tipo: l.tipo }); tocado = true; pintarNuevos(); },
@@ -465,8 +534,8 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
       if (d[k] != null && d[k] !== '' && d[k] !== false) c[k] = d[k];
     }
     if (d.jefe_hogar) c.jefe_hogar = d.jefe_hogar === 'si';
-    // Los tipos que se marcaron ahora (A y K): completar solo suma
-    if (adm) for (const k of Object.keys(TIPOS_PERSONA)) { const x = form[`tipo_${k}`]; if (x && x.checked && !x.disabled) c[k] = true; }
+    // Los tipos que se marcaron ahora, siempre en true: completar solo suma (los que ya tenía van fijos y no se mandan)
+    if (conTipo) for (const k of Object.keys(TIPOS_PERSONA)) { const x = form[`tipo_${k}`]; if (x && x.checked && !x.disabled) c[k] = true; }
     if (!c.cedula) { delete c.tipo_documento; delete c.cedula_verificada; }
     if (c.fecha_nacimiento) delete c.edad;
     const sexo = form.querySelector('[name="sexo"]:checked')?.value;
@@ -499,17 +568,28 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
       ficha = (await marcarNoDisponibles(p.id, form)) || ficha;
       if (aut) ficha = await api.post(`/api/personas/${p.id}/autorizacion`, aut, { clave: nuevaClave() });
       const avisos = [...(ficha?.avisos || [])];
+      // Un líder que no se puede asignar (P: se lo quitó el administrador o el coordinador) se salta con su aviso y
+      // siguen los demás: lo otro ya quedó guardado
+      const omitidos = [];
       while (nuevosLideres.length) {
-        ficha = await api.post(`/api/personas/${p.id}/lideres`, { lider_id: nuevosLideres[0].id });
+        try {
+          ficha = await api.post(`/api/personas/${p.id}/lideres`, { lider_id: nuevosLideres[0].id });
+          for (const a of ficha?.avisos || []) if (!avisos.includes(a)) avisos.push(a);
+        } catch (e) {
+          if (!(e instanceof ErrorApi && LIDER_NO_ASIGNABLE.includes(e.codigo))) throw e;
+          omitidos.push(`Se guardaron los datos, pero no se asignó a ${titulo(nuevosLideres[0].nombre || 'ese líder')}: ${enFrase(e.message)}.`);
+        }
         nuevosLideres.shift();
         pintarNuevos();
-        for (const a of ficha?.avisos || []) if (!avisos.includes(a)) avisos.push(a);
       }
       for (const a of avisos) aviso(typeof a === 'string' ? a : a.mensaje || '', 'ok', 7000);
-      resultado = { ficha: ficha || p, siguiente: seguir };
+      // Un líder que no se asignó corta «Guardar y siguiente»: su aviso va a la página (este diálogo se cierra) y el de
+      // la persona siguiente, modal, lo dejaría tapado por su fondo
+      resultado = { ficha: ficha || p, siguiente: seguir && !omitidos.length };
       tocado = false;
       cerrar(resultado);
       aviso(`${titulo(p.nombre || '')}: datos guardados`);
+      for (const m of omitidos) aviso(m, 'error', 9000);
     } catch (e) {
       if (e instanceof ErrorApi && e.estado >= 400 && e.estado < 500 && e.codigo !== 'en_proceso') clave = nuevaClave();
       if (e instanceof ErrorApi && e.codigo === 'cedula_ocupada') aviso(`${e.message}${e.detalle?.nombre ? ` (${e.detalle.nombre})` : ''}`, 'error', 8000);
@@ -526,6 +606,12 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
   return r || resultado;
 }
 
+// Las respuestas de la API que dicen que un líder no se le puede asignar a P en esa ficha: 409 `lider_quitado` (el
+// administrador o el coordinador se lo quitó) y 403 `fuera_de_zona` (la persona no es de su zona)
+const LIDER_NO_ASIGNABLE = ['lider_quitado', 'fuera_de_zona'];
+// «Esta persona no es de su zona: …» → «esta persona no es de su zona: …», para seguir una frase
+const enFrase = (m) => { const t = String(m || '').trim().replace(/\.$/, ''); return t.charAt(0).toLowerCase() + t.slice(1); };
+
 function valorMas(p, k) {
   const v = p?.[k];
   if (v == null || v === '') return null;
@@ -537,13 +623,16 @@ function valorMas(p, k) {
 
 /**
  * Alta de una persona con búsqueda en vivo de parecidas. `prellenado` trae lo buscado ({nombre|cedula|telefono}) y,
- * para A y K, el tipo de persona ({tipo: 'votante'}: abre la barra «Liderado por»); `hogar` copia dirección, lugar,
- * ficha y ubicación («Nueva persona en este hogar»). `reunionId` la registra además como asistente. `alCrear(p)` recibe
- * la ficha nueva o {id, existente: true} si era una que ya estaba.
+ * para quien marca el tipo (A y K, y P), el tipo de persona ({tipo: 'votante'}: abre la barra «Liderado por»); `lideres`
+ * llegan ya elegidos en «Liderado por» (para quien asigna líderes); `hogar` copia dirección, lugar, ficha y ubicación
+ * («Nueva persona en este hogar»). `reunionId` la registra además como asistente. `alCrear(p)` recibe la ficha nueva o
+ * {id, existente: true} si era una que ya estaba.
  */
 export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = '', prellenado = {}, hogar = null, lideres = [], alCrear }) {
   const necesidades = (cat.etiquetas || []).filter((e) => e.grupo === 'necesidad');
   const ini = { nombre: nombreInicial, ...prellenado };
+  // Una persona nueva no tiene nada que quitar: quien marca tipos o asigna líderes (A, K y P) los pone al registrarla
+  const conTipo = marcaTipo(), conLiderado = asignaLider();
   let clave = nuevaClave();
   const { el, cerrar, listo } = dialogo({
     titulo: reunionId ? 'Registrar asistente nuevo' : hogar ? 'Nueva persona en este hogar' : ini.tipo && TIPOS_PERSONA[ini.tipo] ? `Nuevo ${TIPOS_PERSONA[ini.tipo].toLowerCase()}` : 'Nueva persona',
@@ -564,9 +653,9 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
       <label class="campo ancho"><span>Dirección</span><input name="direccion" maxlength="240" placeholder="CL 49 # 45-12" value="${hogar?.direccion || ''}"></label>
       <label class="campo ancho"><span>Barrio o vereda</span><select name="lugar_id">${opcionesLugares(cat, hogar?.lugar_id)}</select></label>
       <div class="campo ancho"><span>Zona urbana o rural</span><b class="valor-fijo" id="zona-alta" aria-live="polite">—</b><small class="nota">Sale del barrio o vereda.</small></div>
-      ${administra() ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Líder · Votante · Concejal</span>
-        <div class="opciones-radio">${['lider', 'votante', 'concejal'].map((k) => html`<label class="chip opcion"><input type="checkbox" name="tipo_${k}" ${ini.tipo === k ? 'checked' : ''}> ${TIPOS_PERSONA[k]}</label>`)}</div></div>
-      <div class="grupo-campo ancho" id="bloque-liderado"><span class="titulo-campo">Liderado por</span>
+      ${conTipo ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Líder · Votante · Concejal</span>
+        <div class="opciones-radio">${['lider', 'votante', 'concejal'].map((k) => html`<label class="chip opcion"><input type="checkbox" name="tipo_${k}" ${ini.tipo === k ? 'checked' : ''}> ${TIPOS_PERSONA[k]}</label>`)}</div></div>` : ''}
+      ${conLiderado ? html`<div class="grupo-campo ancho" id="bloque-liderado"><span class="titulo-campo">Liderado por</span>
         <div class="chips" id="lideres-elegidos"></div>
         <div id="buscador-lider"></div>
         <small class="nota">El líder o concejal que la trajo: búsquelo por nombre o cédula. Puede elegir más de uno.</small></div>` : ''}
@@ -593,10 +682,11 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   let terminado = false;
   const quitarPendiente = registrarPendiente(() => tocado && !terminado);
   form.addEventListener('click', (e) => { const c = e.target.closest('[data-et]'); if (c) { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') !== 'true'); tocado = true; } });
-  // Tipo de persona y «Liderado por» (A y K): la barra para buscar al líder o concejal que la trajo está siempre a la
-  // vista (es un dato principal) y, al marcarla como votante o líder, se enfoca si todavía no se eligió ninguno. Los
-  // elegidos van con el alta (o, si es una ficha que ya existe, se le asignan al completarla)
-  const lideresElegidos = administra() ? lideres.filter((l) => l?.id != null).map((l) => ({ id: l.id, nombre: l.nombre, tipo: l.tipo })) : [];
+  // Tipo de persona y «Liderado por» (A y K, y P): la barra para buscar al líder o concejal que la trajo está siempre a
+  // la vista (es un dato principal) y, al marcarla como votante o líder, se enfoca si todavía no se eligió ninguno. Los
+  // elegidos van con el alta (o, si es una ficha que ya existe, se le asignan al completarla); el ✕ de un elegido solo
+  // lo saca de este formulario
+  const lideresElegidos = conLiderado ? lideres.filter((l) => l?.id != null).map((l) => ({ id: l.id, nombre: l.nombre, tipo: l.tipo })) : [];
   const bloqueLiderado = $('#bloque-liderado', el);
   const pintarLideres = () => {
     const caja = $('#lideres-elegidos', el);
@@ -688,6 +778,9 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   // (`enCurso`, el `ocupado` del diálogo): mientras el PATCH va al servidor, Escape y el fondo no preguntan
   // «¿Descartar lo escrito?» (sería falso: se guarda igual y la página se va a esa ficha), y no se cruza con un «Guardar»
   // ni con otro «Es esta». Al terminar, `cerrar` cierra sin preguntar
+  // Para P, esa ficha puede no ser de su zona (403 `fuera_de_zona` al marcar un tipo): se completa igual sin los tipos y
+  // sin asignarle líderes; un líder que no se le puede asignar se salta y siguen los demás. Lo que no se marcó se dice al
+  // final con el mensaje del servidor: lo demás escrito nunca se pierde
   async function esEsta(id, origen, { yaTieneCedula = false } = {}) {
     if (enCurso) return;
     const { c } = cuerpo();
@@ -700,11 +793,37 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     enCurso = true;
     boton.disabled = true;
     if (origen) origen.disabled = true;
+    const sinMarcar = [];
     try {
-      if (Object.keys(c).length) await api.patch(`/api/personas/${id}?modo=completar`, c, { clave: nuevaClave() });
-      for (const lid of lideres) await api.post(`/api/personas/${id}/lideres`, { lider_id: lid });
+      let deSuZona = true;
+      if (Object.keys(c).length) {
+        try {
+          await api.patch(`/api/personas/${id}?modo=completar`, c, { clave: nuevaClave() });
+        } catch (e) {
+          if (!(e instanceof ErrorApi && e.codigo === 'fuera_de_zona')) throw e;
+          deSuZona = false;
+          sinMarcar.push(e.message);
+          for (const k of Object.keys(TIPOS_PERSONA)) delete c[k];
+          if (Object.keys(c).length) await api.patch(`/api/personas/${id}?modo=completar`, c, { clave: nuevaClave() });
+        }
+      }
+      if (deSuZona) {
+        for (const lid of lideres) {
+          try {
+            await api.post(`/api/personas/${id}/lideres`, { lider_id: lid });
+          } catch (e) {
+            if (!(e instanceof ErrorApi && LIDER_NO_ASIGNABLE.includes(e.codigo))) throw e;
+            // Fuera de su zona no se le asigna ninguno: un solo aviso y no se intentan los demás. Un líder quitado se
+            // dice con su nombre (a ese hay que pedírselo al coordinador) y siguen los demás
+            if (e.codigo === 'fuera_de_zona') { sinMarcar.push(e.message); break; }
+            const l = lideresElegidos.find((x) => Number(x.id) === Number(lid));
+            sinMarcar.push(`no se asignó a ${titulo(l?.nombre || 'ese líder')}: ${enFrase(e.message)}`);
+          }
+        }
+      }
       tocado = false;
       cerrar();
+      if (sinMarcar.length) aviso(`Se completó la ficha, pero ${sinMarcar.map(enFrase).join('; ')}.`, 'error', 9000);
       alCrear?.({ id, existente: true });
     } catch (e) { avisoError(e); } finally {
       enCurso = false;

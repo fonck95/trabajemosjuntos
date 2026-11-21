@@ -18,7 +18,7 @@ from app.api import personas as api_personas
 from app.pipeline import lectores
 from app.pipeline import importar as imp
 from app.pipeline.fuentes import GENERAL, Registro
-from ayudas_g3 import coordinador, persona, sin_vedados
+from ayudas_g3 import autorizada, coordinador, persona, sin_vedados, sin_vedados_p, tomar
 from conftest import COLUMNAS_PLANILLA, excel_cedulas, excel_planilla
 
 # Los encabezados de la base general tal como llegan (con la errata «COMPLETPO» y tres columnas «CONTACTO»)
@@ -162,12 +162,14 @@ def test_modelo_y_lo_que_ve_cada_rol():
     assert not modelo.lidera({"votante": True}) and not modelo.lidera({}) and not modelo.lidera(None)
     assert modelo.tipos_de({"votante": True, "lider": True, "concejal": False}) == ["lider", "votante"]
     assert "perfil_profesional" in modelo.CAMPOS_PROCEDENCIA
-    # El tipo de persona es un dato político: solo A y K
+    # El tipo de persona es un dato político: A y K en toda ficha y fila; P solo en la ficha (de las personas de su zona
+    # o que registró: `proyeccion.tipo_visible`), nunca en la fila; C nunca. P lo marca (solo suma, con
+    # `personas.tipo`): ya no es un campo vedado, pero no está en sus editables fijos (los suma `editables` por persona)
     for t in modelo.TIPOS_PERSONA:
         assert t in proyeccion.CAMPOS_FICHA["admin"] and t in proyeccion.CAMPOS_FILA["admin"]
-        for rol in ("planillero", "consultor"):
-            assert t not in proyeccion.CAMPOS_FICHA[rol] and t not in proyeccion.CAMPOS_FILA[rol]
-        assert t in api_personas.VEDADOS_P and t in proyeccion.EDITABLES_A and t not in proyeccion.EDITABLES_P
+        assert t in proyeccion.CAMPOS_FICHA["planillero"] and t not in proyeccion.CAMPOS_FILA["planillero"]
+        assert t not in proyeccion.CAMPOS_FICHA["consultor"] and t not in proyeccion.CAMPOS_FILA["consultor"]
+        assert t not in api_personas.VEDADOS_P and t in proyeccion.EDITABLES_A and t not in proyeccion.EDITABLES_P
     assert "perfil_profesional" in proyeccion.CAMPOS_FICHA["planillero"]
     assert "perfil_profesional" in proyeccion.EDITABLES_P
     # La base general, como la base con cédula, se ve como «otra base» para P y C
@@ -252,7 +254,8 @@ def test_tipo_de_persona_y_liderado_por_en_la_api(sesion, como):
     db = sesion.app.state.db
     concejal = persona(db, nombre="CONCEJAL INVENTADA DE PRUEBA")
     votante = persona(db, nombre="VOTANTE INVENTADO DE PRUEBA")
-    # Marcar el tipo: solo A y K, y queda con su procedencia (la importación no lo vuelve a cambiar)
+    # Marcar el tipo (A y K; P solo suma: tests/test_tipo_planillero.py) queda con su procedencia (la importación no lo
+    # vuelve a cambiar)
     r = sesion.patch(f"/api/personas/{concejal}", json={"concejal": True, "perfil_profesional": "Abogada",
                                                          "base": {"concejal": False}})
     assert r.status_code == 200, r.text
@@ -304,20 +307,33 @@ def test_alta_de_un_votante_con_su_lider(sesion, como):
     assert r.status_code == 200 and (r.json()["votante"], r.json()["lider"]) == (True, True)
 
 
-def test_planillero_y_consultor_no_ven_ni_cambian_el_tipo(sesion, como):
+def test_planillero_no_quita_el_tipo_y_el_consultor_no_lo_ve(sesion, como):
     db = sesion.app.state.db
     x = persona(db, nombre="PERSONA INVENTADA CON TIPO", votante=True, concejal=True, lider=True,
-                perfil_profesional="Ingeniero", fuentes=["general"])
+                perfil_profesional="Ingeniero", fuentes=["general"], telefono="3001110099")
     p = como("planillero")
+    # P ve el tipo en la ficha (sin asignación, toda la base es su zona) y lo suma, pero no lo quita
     for campo in modelo.TIPOS_PERSONA:
-        assert p.patch(f"/api/personas/{x}", json={campo: False}).status_code == 403
-        assert p.post("/api/personas", json={"nombre": "OTRA PERSONA INVENTADA", campo: True}).status_code == 403
+        r = p.patch(f"/api/personas/{x}", json={campo: False})
+        assert r.status_code == 403 and r.json()["detail"]["campo"] == campo, r.text
+    d = db.personas.find_one({"_id": x})
+    assert (d["votante"], d["concejal"], d["lider"]) == (True, True, True)
     f = p.get(f"/api/personas/{x}").json()
-    sin_vedados(f, "ficha de P")
-    assert f["perfil_profesional"] == "Ingeniero"
+    sin_vedados_p(f, "ficha de P")
+    assert (f["votante"], f["concejal"], f["lider"], f["perfil_profesional"]) == (True, True, True, "Ingeniero")
     sin_vedados(p.get("/api/personas").json(), "filas de P")
     for filtro in ({"tipo": "votante"}, {"fuente": "general"}):
         assert p.get("/api/personas", params=filtro).status_code == 403
+    # C: ni lo ve en la ficha ni lo marca
+    autorizada(db, x)
+    c = como("consultor")
+    tomar(c, x)
+    f = c.get(f"/api/personas/{x}").json()
+    sin_vedados(f, "ficha de C")
+    for campo in modelo.TIPOS_PERSONA:
+        assert c.patch(f"/api/personas/{x}", json={campo: True}).status_code == 403
+        assert c.post("/api/personas", json={"nombre": "OTRA PERSONA INVENTADA", campo: True,
+                                             "forzar": True}).status_code == 403
     k = coordinador(sesion.app, db)
     assert k.get(f"/api/personas/{x}").json()["votante"] is True
     assert k.patch(f"/api/personas/{x}", json={"votante": False}).status_code == 200

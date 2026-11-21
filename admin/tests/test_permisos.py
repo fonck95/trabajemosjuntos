@@ -108,6 +108,11 @@ NUEVAS = [
     # ella, quien ve la presentación (su rol lo decide `agente_voz.roles`, agente/voz.py)
     ("GET", "/api/agente/voces", {"agente.conectar"}, "agente"),
     ("POST", "/api/agente/voz", {"presentacion.ver"}, "agente"),
+    # Los líderes que traen a cada persona (app/api/lideres.py): P busca candidatos y asigna uno; quitar y la lista con
+    # sus conteos, solo A y K
+    ("POST", "/api/personas/{}/lideres", {"lideres.asignar"}, "lideres"),
+    ("GET", "/api/lideres/candidatos", {"lideres.asignar"}, "lideres"),
+    ("DELETE", "/api/personas/{}/lideres/{}", A, "lideres"), ("GET", "/api/lideres", A, "lideres"),
 ]
 TABLA = ACTUALES + NUEVAS
 # Rutas que ya existían antes de la ampliación: las de otros grupos se comparan cuando su grupo llega
