@@ -785,7 +785,7 @@ def test_la_entrada_de_la_op_automatica():
     assert len(hi.D_PRESENTACION) < 1500 and len(mcp.D_MCP) < 1500
     t = sistema.texto(QUIEN, list(hi.HERRAMIENTAS))
     for parte in ("op `automatica` con `accion` iniciar", "recorre sola toda la presentación, muy resumida",
-                  "se apaga con `accion` detener", "una pregunta la interrumpe", "un plan CORTO (de 3 a 5 `pasos`",
+                  "se apaga con `accion` detener", "una pregunta la interrumpe", "un plan CORTO (`plan` con `largo` corto, o un `recorrido` de 3 a 5 `pasos`",
                   "sigue sola donde iba"):
         assert parte in t, parte
     assert "automatica" not in sistema.texto(QUIEN, [h for h in hi.HERRAMIENTAS if h.nombre != "presentacion"])
@@ -816,7 +816,7 @@ def test_el_contexto_del_asistente_con_la_automatica_encendida():
     assert "\n" not in t and "Plan «" not in t
     assert t.startswith("Presentación automática encendida: la pantalla en off recorre sola toda la presentación, muy "
                         "resumida; va en Salud (salud), paso 3 de 10; voz: activa. ")
-    assert "respóndele con un plan CORTO (recorrido de 3 a 5 pasos): la interrumpe y, cuando termina, sigue sola" in t
+    assert "respóndele con un plan CORTO (plan con largo corto, o recorrido de 3 a 5 pasos): la interrumpe y, cuando termina, sigue sola" in t
     assert "No la detengas ni la reinicies si no te lo piden (op automatica)" in t
     bloque = sistema.contexto_del_panel({}, datetime.now(timezone.utc), recorrido=t)
     assert t in bloque and bloque.endswith("</contexto_del_panel>")

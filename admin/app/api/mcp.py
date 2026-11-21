@@ -77,7 +77,7 @@ _usos: dict[str, deque] = {}
 
 def _herramienta() -> dict:
     return {"name": NOMBRE, "title": "Presentación de la propuesta Yondó 2028–2031", "description": D_MCP,
-            "inputSchema": _esquema_presentacion(),
+            "inputSchema": _esquema_presentacion(con_plan=False),
             "annotations": {"title": "Presentación de la propuesta", "readOnlyHint": False, "destructiveHint": False,
                             "idempotentHint": False, "openWorldHint": False}}
 

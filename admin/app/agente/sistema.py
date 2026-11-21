@@ -121,12 +121,16 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
             "- Presentar la propuesta (presentación técnica: lo que se construye, sin costos). PLAN PRIMERO: cuando te "
             "pidan mostrar o explicar algo («explícanos la torre», «muéstranos el agua»), no lo cuentes en el chat ni "
             "muevas la pantalla orden por orden: arma un plan y deja que la pantalla lo ejecute paso a paso, mostrando "
-            "MIENTRAS explica. 1) Si no tienes los datos de ese capítulo, pide `presentacion` op `guion` (sus pasos, sus "
-            "fichas, las piezas de la maqueta y los modelos del atlas). 2) UNA llamada `recorrido` con el plan: `titulo`, "
-            "de 6 a 10 `pasos` (hasta 12) y un `cierre`. 3) En el chat, ANTES de esa llamada, una sola línea que anuncia "
-            "el plan («Les muestro la torre en ocho pasos: dónde va, cómo está hoy, qué se construye y cómo resiste un "
-            "sismo»); DESPUÉS, solo una pregunta corta. La explicación ES la narración del plan: no la repitas ni la "
-            "resumas en el chat.",
+            "MIENTRAS explica. LO MÁS RÁPIDO, y lo primero: `presentacion` op `plan` con el `capitulo` y un `encargo` "
+            "(qué mostrar y contar, en una a tres frases y con lo que pidió la persona; `largo` corto para una pregunta "
+            "puntual): el panel escribe el plan con el guion del capítulo y la sala lo empieza a ver y a oír con su "
+            "primer paso, sin esperar a que esté entero. No pidas `guion` antes: no lo necesitas. En el chat, ANTES de "
+            "esa llamada, una sola línea que anuncia el plan («Les muestro la torre: dónde va, cómo está hoy, qué se "
+            "construye y cómo resiste un sismo»); después no escribas nada: el turno termina con el plan y la tarjeta "
+            "trae las sugerencias. Solo si el plan recorre varios capítulos (o si `plan` falla): 1) pide `guion` de "
+            "cada capítulo; 2) UNA llamada `recorrido` con el plan: `titulo`, de 6 a 10 `pasos` (hasta 12) y un "
+            "`cierre`; 3) la línea que lo anuncia antes y, DESPUÉS, solo una pregunta corta. La explicación ES la "
+            "narración del plan: no la repitas ni la resumas en el chat.",
             "- Cada paso del plan es UNA frase hablada (`dice`: corta, en presente, sin listas ni paréntesis: «Aquí "
             "ven…», «Fíjense en…») y algo que ocurre en pantalla MIENTRAS se dice, para que la sala vea lo que nombras "
             "en ese momento: la cámara (`camara` aerea u oblicua, `rumbo`, `elevacion`, `zoom`, `mirar` una pieza, o un "
@@ -155,7 +159,8 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
             "automático»), `presentacion` op `automatica` con `accion` iniciar (y `capitulo`, si quieren empezar en "
             "uno): la pantalla en off recorre sola toda la presentación, muy resumida, sin que escribas la narración; "
             "se apaga con `accion` detener. Con ella encendida (lo dice el contexto), una pregunta la interrumpe: "
-            "respóndela con un plan CORTO (de 3 a 5 `pasos` y su `cierre`) que muestre lo que preguntan; cuando "
+            "respóndela con un plan CORTO (`plan` con `largo` corto, o un `recorrido` de 3 a 5 `pasos` y su `cierre`) "
+            "que muestre lo que preguntan; cuando "
             "termina, la automática sigue sola donde iba. No la detengas ni la reinicies por una pregunta.",
         ]
     lineas.append("- Enlaza a las personas y reuniones que nombres: [Nombre](/personas/123), [Reunión](/reuniones/45). "

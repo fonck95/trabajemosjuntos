@@ -68,12 +68,16 @@ class Resultado:
     * `personas`: ids de las personas cuyos datos se le sirvieron al modelo. La conversación los guarda para borrarla
       si alguna se suprime (derecho de supresión).
     * `imagenes`: bloques `image` para el modelo (solo Mnemo: `mnemo_view_image`).
+    * `termina_turno`: lo que pidió la persona ya quedó hecho y a la vista (el plan en flujo de la presentación, que la
+      sala ya oyó): si todo lo de la ronda salió bien, el turno termina sin otra ronda del modelo (`bucle.Turno`). El
+      resultado queda en el historial y el modelo lo lee en el mensaje siguiente.
     """
     contenido: Any
     resumen: str = ""
     acciones: list[dict] = field(default_factory=list)
     personas: set[int] = field(default_factory=set)
     imagenes: list[dict] = field(default_factory=list)
+    termina_turno: bool = False
 
     def texto_para_modelo(self) -> str:
         t = self.contenido if isinstance(self.contenido, str) else json.dumps(self.contenido, ensure_ascii=False,
@@ -110,6 +114,11 @@ class Contexto:
     conversacion_id: int
     tool_use_id: str = ""
     mnemo: Any = None  # mnemo.ClienteMnemo | None
+    # El modelo de la conversación (`proveedores.Proveedor`): el plan en flujo le pide su redacción (`redactor.py`)
+    proveedor: Any = None
+    # Emite un evento del turno mientras la herramienta corre (`{"tipo": "accion", "accion": …}`): el plan en flujo
+    # publica cada paso en cuanto está escrito. None fuera de un turno (por MCP)
+    emitir: Callable[[dict], None] | None = None
     # Cuándo empezó la herramienta: el bucle arma el contexto justo antes de correrla
     inicio: float = field(default_factory=time.monotonic)
 
@@ -139,6 +148,8 @@ class Herramienta:
     esquema: dict | None = None
     # Solo Mnemo: el nombre con que el servidor MCP la conoce
     nombre_remoto: str | None = None
+    # Su plazo en el bucle, si no es el de siempre (`PLAZO_HERRAMIENTA_S`): la presentación escribe un plan en flujo
+    plazo: float | None = None
 
     def __post_init__(self) -> None:
         if self.tipo == "escritura" and self.confirmar is None:
