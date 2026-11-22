@@ -268,7 +268,8 @@ def registrar(pid: int, body: AcercamientoIn, request: Request, db: Database = D
     if body.resultado == "no_contactar" and body.alcance == "numero" and not numero:
         raise HTTPException(422, "Elija el número")
     # 4. Autorización (reglas de 1.6)
-    evento = per.validar_autorizacion(db, body.autorizacion, quien) if body.autorizacion else None
+    evento = (per.validar_autorizacion(db, body.autorizacion, quien, p.get("consentimiento"))
+              if body.autorizacion else None)
     # 5. Datos dictados por C (solo si faltan)
     dictada = None
     v_dictada: dict = {}

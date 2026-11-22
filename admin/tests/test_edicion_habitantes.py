@@ -13,15 +13,15 @@ from ayudas_g3 import persona
 
 def test_vi_el_documento_en_una_ficha_vieja_no_da_cambiada(sesion, como):
     db = sesion.app.state.db
-    for quien in (sesion, como("planillero")):
-        pid = persona(db, nombre="ROSALBA INVENTADA VIEJA", cedula="92000333", tipo_documento="CC")
+    for i, quien in enumerate((sesion, como("planillero"))):
+        pid = persona(db, nombre="ROSALBA INVENTADA VIEJA", cedula=f"9200{i}333", tipo_documento="CC")
         db.personas.update_one({"_id": pid}, {"$unset": {"cedula_verificada": ""}})
         r = quien.patch(f"/api/personas/{pid}", json={"cedula_verificada": True, "ocupacion": "Modista",
                                                       "base": {"cedula_verificada": False, "ocupacion": None}})
         assert r.status_code == 200, r.text
         assert r.json()["cedula_verificada"] is True and r.json()["ocupacion"] == "Modista"
         # Con null pasa lo mismo
-        pid = persona(db, nombre="ROSALBA INVENTADA NULA", cedula="92000334", tipo_documento="CC")
+        pid = persona(db, nombre="ROSALBA INVENTADA NULA", cedula=f"9200{i}334", tipo_documento="CC")
         db.personas.update_one({"_id": pid}, {"$set": {"cedula_verificada": None}})
         r = quien.patch(f"/api/personas/{pid}", json={"cedula_verificada": True, "base": {"cedula_verificada": False}})
         assert r.status_code == 200, r.text
@@ -46,11 +46,14 @@ def test_el_planillero_registra_el_si_sin_pasos_de_mas(sesion, como):
     assert db.autorizaciones.find_one({"persona_id": pid})["medio"] == "verbal_presencial"
     pid = persona(db, nombre="TEODORA INVENTADA OTRO MEDIO", tipo_documento="CC")
     assert p.post(f"/api/personas/{pid}/autorizacion", json={"estado": "si", "medio": "verbal_telefono"}).status_code == 422
-    # Quien no autorizó sigue igual: el planillero no edita su ficha, solo registra su «sí»
+    # Quien no autorizó sigue igual: el planillero no edita su ficha, y su «sí» sigue pidiendo todos los pasos
     pid = persona(db, nombre="TEODORA INVENTADA NO", tipo_documento="CC", consentimiento="no")
     r = p.patch(f"/api/personas/{pid}", json={"ocupacion": "Modista"})
     assert r.status_code == 409 and r.json()["detail"]["codigo"] == "no_contactable"
-    assert p.post(f"/api/personas/{pid}/autorizacion", json={"estado": "si"}).status_code == 200
+    assert p.post(f"/api/personas/{pid}/autorizacion", json={"estado": "si"}).status_code == 422
+    r = p.post(f"/api/personas/{pid}/autorizacion", json={"estado": "si", "medio": "escrito", "canales": ["llamada"],
+                                                           "evidencia": "Planilla 3, folio 2", "mayor_declarado": True})
+    assert r.status_code == 200, r.text
 
 
 def test_el_alta_del_planillero_sin_autorizacion_queda_pendiente(sesion, como):

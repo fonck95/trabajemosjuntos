@@ -656,8 +656,10 @@ class AutorizacionIn(BaseModel):
         return fecha_iso(v) or None
 
 
-def validar_autorizacion(db: Database, a: AutorizacionIn, quien: Quien) -> dict:
-    """Reglas por rol (1.6). Devuelve los campos del evento."""
+def validar_autorizacion(db: Database, a: AutorizacionIn, quien: Quien, previo: str | None = None) -> dict:
+    """Reglas por rol (1.6). Devuelve los campos del evento. `previo`: el `consentimiento` que tiene la persona (None
+    en un alta). El «sí» del planillero va sin más pasos, salvo para quien dijo «no»: devolverle el «sí» sigue pidiendo
+    medio, evidencia, canales y «mayor de 18»."""
     canales = list(dict.fromkeys(a.canales or []))
     if set(canales) - set(modelo.CANALES_AUTORIZACION):
         raise HTTPException(422, "Canal de autorización desconocido")
@@ -677,13 +679,14 @@ def validar_autorizacion(db: Database, a: AutorizacionIn, quien: Quien) -> dict:
             raise _prohibido("Solo el administrador corrige una autorización a «pendiente»")
         if medio in ("panel", "migrado", "declarado_planilla", "fusion"):
             raise HTTPException(422, "Ese medio no se puede usar desde aquí")
+        # El planillero registra el «sí» sin más pasos (medio, evidencia, canales y «mayor de 18» quedan opcionales)
+        # para actualizar y guardar rápido en campo, salvo si la persona dijo «no». El consultor sigue con 1.6
+        relajado = quien.rol == "planillero" and previo != "no"
         if a.estado == "si":
             permitidos = modelo.MEDIOS_POR_ROL.get(quien.rol, [])
-            if medio is not None and medio not in permitidos:
+            if (medio is None and not relajado) or (medio is not None and medio not in permitidos):
                 raise HTTPException(422, f"Use uno de estos medios: {', '.join(modelo.MEDIOS_AUTORIZACION[m] for m in permitidos)}")
-        # El planillero registra el «sí» sin más pasos (evidencia, canales y «mayor de 18» quedan opcionales) para
-        # actualizar y guardar rápido en campo. El consultor sigue con las reglas de 1.6
-        if a.estado == "si" and quien.rol != "planillero":
+        if a.estado == "si" and not relajado:
             if not evidencia:
                 raise HTTPException(422, "Escriba la evidencia de la autorización (por ejemplo, planilla y folio)")
             if not canales:
@@ -776,7 +779,7 @@ def autorizar(pid: int, body: AutorizacionIn, request: Request, db: Database = D
     proyeccion.exigir_tratable(p, quien, "autorizacion")
     if not quien.administra and p.get("consentimiento") == "no" and body.estado != "si":
         raise HTTPException(409, dict(proyeccion.NO_AUTORIZO))
-    evento = validar_autorizacion(db, body, quien)
+    evento = validar_autorizacion(db, body, quien, p.get("consentimiento"))
     registrar_autorizacion(db, pid, quien, evento)
     escribir(db, pid, [etapa_actualizado(quien)])
     bd.recalcular_completitud(db, [pid])
@@ -1141,7 +1144,8 @@ def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, 
             evento = validar_autorizacion(db, AutorizacionIn(
                 estado=estado, medio=datos.get("consentimiento_medio"), canales=datos.get("consentimiento_canales") or [],
                 evidencia=datos.get("evidencia"), mayor_declarado=bool(datos.get("mayor_declarado")),
-                fecha_declarada=datos.get("consentimiento_fecha") if not adm else None), quien)
+                fecha_declarada=datos.get("consentimiento_fecha") if not adm else None), quien,
+                antes.get("consentimiento"))
     claves_avance = modelo.completados(antes, despues)
     if evento and evento["estado"] == "si" and antes.get("consentimiento") != "si":
         claves_avance = list(dict.fromkeys([*claves_avance, "autorizacion"]))

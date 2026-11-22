@@ -659,7 +659,16 @@ def test_autorizacion_reglas_por_rol(sesion, como):
     p, c = como("planillero"), como("consultor")
     ctx = aa.contexto(app, p)
     n = db.autorizaciones.count_documents({})
-    e = _error_confirmar(sesion, ctx, "registrar_autorizacion", {"persona_id": pid, "estado": "si",
+    # El «sí» del planillero va sin más pasos: sin evidencia ni «mayor de 18» la tarjeta se arma
+    tarjeta = _confirmar(sesion, ctx, "registrar_autorizacion", {"persona_id": pid, "estado": "si",
+                                                                 "medio": "escrito", "canales": ["llamada"]})
+    assert ("Medio", modelo.MEDIOS_AUTORIZACION["escrito"]) in tarjeta.detalle
+    # Sin medio, el presencial (el que registra la API)
+    tarjeta = _confirmar(sesion, ctx, "registrar_autorizacion", {"persona_id": pid, "estado": "si"})
+    assert ("Medio", modelo.MEDIOS_AUTORIZACION["verbal_presencial"]) in tarjeta.detalle
+    # A quien dijo «no», su «sí» sigue pidiendo todo
+    nid = persona(db, nombre="TEODOSIA INVENTADA NO", telefono="3156667700", consentimiento="no")
+    e = _error_confirmar(sesion, ctx, "registrar_autorizacion", {"persona_id": nid, "estado": "si",
                                                                  "medio": "escrito", "canales": ["llamada"]})
     assert e.codigo == "invalido" and "evidencia" in e.mensaje and "mayor" in e.mensaje
     assert _error_confirmar(sesion, ctx, "registrar_autorizacion", {"persona_id": pid,

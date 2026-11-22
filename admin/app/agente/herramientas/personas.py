@@ -1545,7 +1545,7 @@ class AutorizacionEntrada(_Entrada):
         return self
 
 
-def _exigir_autorizacion(ctx: Contexto, a: AutorizacionEntrada) -> None:
+def _exigir_autorizacion(ctx: Contexto, a: AutorizacionEntrada, previo: str | None = None) -> None:
     """Las reglas de `validar_autorizacion` para P y C que dependen solo de la entrada: si falta algo, el modelo lo
     pregunta en vez de proponer algo que la API rechazaría ya aprobado. A y K también dicen el medio y los canales de
     un «sí»: sin ellos la API lo registraría como «del panel» con llamada, WhatsApp y SMS implícitos, canales que nadie
@@ -1569,8 +1569,9 @@ def _exigir_autorizacion(ctx: Contexto, a: AutorizacionEntrada) -> None:
         faltan = []
         if a.medio is not None and a.medio not in permitidos:
             faltan.append("el medio (" + ", ".join(permitidos) + ")")
-        # El planillero registra el «sí» sin evidencia, canales ni «mayor de 18» obligatorios (como en el panel)
-        if q.rol != "planillero":
+        # El planillero registra el «sí» sin medio, evidencia, canales ni «mayor de 18» obligatorios (como en el
+        # panel), salvo para quien dijo «no» (`previo`)
+        if q.rol != "planillero" or previo == "no":
             if a.medio is None:
                 faltan.append("el medio (" + ", ".join(permitidos) + ")")
             if not a.evidencia:
@@ -1587,6 +1588,8 @@ def _exigir_autorizacion(ctx: Contexto, a: AutorizacionEntrada) -> None:
 async def _confirmar_autorizacion(ctx: Contexto, a: AutorizacionEntrada) -> Confirmacion:
     _exigir_autorizacion(ctx, a)
     d = await _ficha(ctx, a.persona_id)
+    if d.get("consentimiento") == "no":  # devolverle el «sí» a quien dijo «no» sigue con todos los pasos
+        _exigir_autorizacion(ctx, a, "no")
     if not ctx.quien.administra and d.get("consentimiento") == "no" and a.estado != "si":
         raise ErrorHerramienta("Esta persona ya figura como que no autorizó: su rol solo puede registrar un «sí».",
                                "no_contactable", estado=409)
@@ -1598,6 +1601,8 @@ async def _confirmar_autorizacion(ctx: Contexto, a: AutorizacionEntrada) -> Conf
                                 f"{modelo.ESTADOS_AUTORIZACION[a.estado]}")]
     if a.medio:
         detalle.append(("Medio", modelo.MEDIOS_AUTORIZACION[a.medio]))
+    elif a.estado == "si" and ctx.quien.rol == "planillero" and not ctx.quien.administra:
+        detalle.append(("Medio", modelo.MEDIOS_AUTORIZACION["verbal_presencial"]))  # el que registra la API
     if a.canales:
         detalle.append(("Canales", ", ".join(modelo.CANALES_AUTORIZACION[c] for c in a.canales)))
     if a.evidencia:
@@ -1631,10 +1636,13 @@ AUTORIZACION = Herramienta(
         "Propone registrar la autorización de tratamiento de datos del titular (Ley 1581): «si», «no», «revocada» o "
         "«pendiente» (esta, solo administrador y coordinador). Registra SOLO lo que la persona del equipo te dicte "
         "que el titular declaró: nunca inventes ni supongas el medio, la evidencia, los canales ni que es mayor de "
-        "edad. Todo «si» exige el `medio` y al menos un canal en `canales`; el del planillero o del consultor, además, "
-        "el medio de su rol (planillero: escrito, verbal_presencial o formulario; consultor: verbal_telefono o "
-        "mensaje), `evidencia` y `mayor_declarado: true` solo si lo declaró; si falta algo, pregúntalo antes. Es lo "
-        "único que se puede registrar de quien no autorizó (su «sí»). Se registra solo si la persona del equipo lo "
+        "edad. El «si» del administrador, del coordinador y del consultor exige el `medio` y al menos un canal en "
+        "`canales`; el del consultor, además, el medio de su rol (verbal_telefono o mensaje), `evidencia` y "
+        "`mayor_declarado: true` solo si lo declaró; si falta algo, pregúntalo antes. El «si» del planillero va sin "
+        "más pasos: el medio de su rol (escrito, verbal_presencial o formulario; si no lo dice, verbal_presencial), "
+        "los canales, la evidencia y `mayor_declarado` son opcionales; no los preguntes, pero pon los que te dicte. "
+        "Es lo único que se puede registrar de quien no autorizó (su «sí»), y ese «sí» sigue exigiendo medio, "
+        "canales, evidencia y `mayor_declarado` también al planillero. Se registra solo si la persona del equipo lo "
         "aprueba."),
     entrada=AutorizacionEntrada, tipo="escritura", permisos=("personas.autorizacion",),
     etiqueta="Registrando la autorización", ejecutar=_autorizacion, confirmar=_confirmar_autorizacion,
