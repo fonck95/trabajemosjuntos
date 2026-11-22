@@ -1396,7 +1396,8 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
             ci, pi = destino
         c = g.capitulos[ci]
         paso = _paso_para_modelo(g, ci, pi)
-        siglas = lenguaje.siglas_en(paso["guion"])
+        # las del paso y las de lo que se puede pedir en él (las piezas de la maqueta, los controles)
+        siglas = lenguaje.siglas_en([paso[k] for k in paso if k not in ("capitulo", "paso")])
         contenido = {**paso, **({"siglas": siglas} if siglas else {}), "nota": (
             "Es lo que muestra la presentación en ese paso: explíquelo en el chat con esos datos (no invente otros), "
             f"{lenguaje.EN_CORTO} (las siglas del paso, con su nombre completo, en «siglas»). En pantalla, si hace "
@@ -2479,7 +2480,7 @@ async def _recorrido(db: Any, uid: int, g: guion_presentacion.Guion, a: Presenta
     destino = "pantalla_off" if abierta or por == "mcp" else "vista"
     previo = pantalla_off.recorrido_de(doc, g)
     auto = pantalla_off.auto_de(doc, g)
-    await run_in_threadpool(pantalla_off.guardar_recorrido, db, uid, r, destino, por)
+    await run_in_threadpool(pantalla_off.guardar_recorrido, db, uid, r, destino, por, False, g)
     avisos = [*descartado, *_avisos(g, r, suaves)]
     minutos, segundos = divmod(round(ms / 1000), 60)
     dura = f"{minutos} min {segundos} s" if minutos else f"{segundos} s"

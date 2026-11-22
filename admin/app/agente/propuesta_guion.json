@@ -1165,7 +1165,17 @@
    "maqueta": [
     {
      "id": "nuevas",
-     "nombre": "Vivienda nueva: bloques del Lote 1 y casas del Lote 2",
+     "nombre": "Barrio nuevo: los 25 bloques de tres pisos, el parque, las vías y las zonas verdes",
+     "partes": []
+    },
+    {
+     "id": "bloque",
+     "nombre": "Bloque cortado en el tercer piso: el apartamento tipo por dentro",
+     "partes": []
+    },
+    {
+     "id": "parque",
+     "nombre": "Rótulos del parque del barrio: juegos, cancha, kiosco, gimnasio, letrero y parqueaderos",
      "partes": []
     },
     {
@@ -1175,7 +1185,7 @@
     },
     {
      "id": "rural",
-     "nombre": "Casas rurales de muestra (prototipo VIVA)",
+     "nombre": "Casas rurales de muestra: el prototipo de la Empresa de Vivienda de Antioquia",
      "partes": []
     }
    ],
@@ -1611,11 +1621,11 @@
       },
       {
        "id": "graderias",
-       "nombre": "Graderías, dugouts y baños"
+       "nombre": "Graderías, casetas de los jugadores y baños"
       },
       {
        "id": "luces",
-       "nombre": "Torres de luz LED"
+       "nombre": "Torres de luz de bajo consumo"
       },
       {
        "id": "arboles",
@@ -1666,23 +1676,19 @@
      "partes": [
       {
        "id": "proteccion",
-       "nombre": "Zona A: protección de la orilla"
+       "nombre": "Protección de la orilla (zona A)"
       },
       {
        "id": "plaza",
-       "nombre": "Zona B: plaza"
+       "nombre": "Plaza (zona B)"
       },
       {
        "id": "letras",
-       "nombre": "Letras YONDÓ"
+       "nombre": "Letras de Yondó"
       },
       {
        "id": "deck",
-       "nombre": "Deck y mirador elevado"
-      },
-      {
-       "id": "muelle",
-       "nombre": "Muelle flotante"
+       "nombre": "Paseo curvo de madera y mirador en alto sobre el río"
       }
      ]
     }
@@ -2231,7 +2237,7 @@
     },
     {
      "id": "agua",
-     "nombre": "PTAR industrial",
+     "nombre": "Planta de tratamiento del agua del parque",
      "partes": []
     }
    ],
@@ -2566,12 +2572,12 @@
     },
     {
      "id": "telesalud",
-     "nombre": "Red de telesalud",
+     "nombre": "Red de telemedicina: la antena de la torre, el centro de control de la alcaldía y los enlaces",
      "partes": []
     },
     {
-     "id": "puestos",
-     "nombre": "Puestos de salud rurales",
+     "id": "territorios",
+     "nombre": "Microterritorios de los equipos de salud: veredas y hogares del casco urbano",
      "partes": []
     }
    ],
@@ -3091,12 +3097,12 @@
    "maqueta": [
     {
      "id": "sistema",
-     "nombre": "Pozos, PTAP, tanque y conducción",
+     "nombre": "Pozos, planta potabilizadora, tanque y conducción",
      "partes": []
     },
     {
      "id": "red",
-     "nombre": "Red de distribución del casco",
+     "nombre": "Red de distribución del casco urbano",
      "partes": []
     },
     {
@@ -3111,7 +3117,7 @@
     },
     {
      "id": "ptap",
-     "nombre": "Módulo de ampliación de la PTAP",
+     "nombre": "Ampliación de la planta potabilizadora",
      "partes": []
     }
    ],
@@ -3448,12 +3454,12 @@
     },
     {
      "id": "interceptores",
-     "nombre": "Interceptores, impulsión y estación de llegada",
+     "nombre": "Interceptores, tubería de bombeo y estación de llegada",
      "partes": []
     },
     {
      "id": "ptar",
-     "nombre": "PTAR central, laguna y descarga",
+     "nombre": "Planta de tratamiento de aguas residuales, laguna y descarga",
      "partes": [
       {
        "id": "arboles",
@@ -3463,7 +3469,7 @@
     },
     {
      "id": "sitios_ptar",
-     "nombre": "Sitios evaluados para la PTAR",
+     "nombre": "Sitios evaluados para la planta de tratamiento",
      "partes": []
     },
     {
@@ -3476,7 +3482,7 @@
       },
       {
        "id": "obras",
-       "nombre": "ECA, compostaje, lagunas y portería"
+       "nombre": "Aprovechamiento del reciclaje, compostaje, lagunas y portería"
       }
      ]
     },
@@ -3932,7 +3938,7 @@
     },
     {
      "id": "telemetria",
-     "nombre": "Telemetría de las EBAR y la PTAR",
+     "nombre": "Telemetría de las estaciones de bombeo y la planta de tratamiento",
      "partes": []
     },
     {
@@ -3951,7 +3957,7 @@
      "id": "portadilla",
      "tipo": "portadilla",
      "titulo": "Poco internet y energía pública a tarifa plena",
-     "texto": "Yondó tiene 3,56 accesos fijos a internet por cada 100 habitantes (cuarto trimestre de 2025), frente a 26,1 en Antioquia, y va en retroceso (7,64 en 2021); en el registro del Ministerio de Tecnologías de la Información y las Comunicaciones (corte 2023) no figura ninguna Zona Digital urbana. Las sedes públicas, el alumbrado y el acueducto pagan la energía a tarifa plena de Empresas Públicas de Medellín (oficial, 991 pesos por kilovatio hora; acueducto, 1.090; octubre de 2026), no generan energía propia y consumirán ≈1,59 gigavatios hora al año en 2031 (estimado).",
+     "texto": "Yondó tiene 3,56 accesos fijos a internet por cada 100 habitantes (cuarto trimestre de 2025), frente a 26,1 en Antioquia, y va en retroceso (7,64 en 2021); en el registro del Ministerio de Tecnologías de la Información y las Comunicaciones (corte 2023) no figura ninguna Zona Digital urbana. Las sedes públicas, el alumbrado y el acueducto pagan la energía a tarifa plena de Empresas Públicas de Medellín, no generan energía propia y consumirán ≈1,59 gigavatios hora al año en 2031 (estimado).",
      "cifras": [
       {
        "v": "3,56",
@@ -4070,7 +4076,7 @@
       }
      ],
      "antes": "Paneles en cada sede · Los 469 kilovatios pico del modelo anterior producirían ≈0,63 gigavatios hora al año: el 48 % del consumo oficial de 1,31 que se estimaba entonces. Se calcularon con 1.346 kilovatios hora por kilovatio pico, un rendimiento prudente para techos, y exigirían inspección y refuerzo de cubiertas.",
-     "despues": "Una granja centralizada · 1,2 megavatios pico en suelo, con 1.450 kilovatios hora por kilovatio pico (rango 1.346–1.500), producen 1,62–1,80 gigavatios hora al año: el 100 % del consumo oficial estimado a 2031 (1,59). Un solo predio y una conexión de 40 m; si se cumple el caso 1, cada kilovatio hora repartido vale ≈877 pesos, lo mismo que habrían valido los excedentes de cada sede.",
+     "despues": "Una granja centralizada · 1,2 megavatios pico en suelo, con 1.450 kilovatios hora por kilovatio pico (rango 1.346–1.500), producen 1,62–1,80 gigavatios hora al año: el 100 % del consumo oficial estimado a 2031 (1,59).",
      "nota": "Lo que se pierde: la granja no mantiene encendidas las sedes si Empresas Públicas de Medellín corta el servicio, como sí lo harían las islas con baterías del modelo anterior. El respaldo queda en el respaldo eléctrico ininterrumpido de la sala del centro de control y en la torre del hospital (planta eléctrica, respaldo ininterrumpido y baterías, módulo de Salud); el respaldo del bombeo del acueducto no está costeado en este módulo ni en el de Aguas y queda pendiente.",
      "leyenda": [
       "Sedes que llevaban paneles en el modelo descartado"
@@ -4124,18 +4130,6 @@
      "tipo": "texto",
      "titulo": "Cómo funciona la comunidad energética",
      "texto": "La granja es una frontera de inyección y cada cuenta oficial recibe un porcentaje fijo de lo que produce: es autogeneración colectiva (Resolución 101 072 de 2025 de la Comisión de Regulación de Energía y Gas) de una comunidad energética pública (Decreto 2236 de 2023).",
-     "cifras": [
-      {
-       "v": "877",
-       "l": "pesos vale cada kilovatio hora repartido si se cumplen las condiciones del caso 1",
-       "fuente": "Comisión de Regulación de Energía y Gas, Resolución 101 072 de 2025 (modificada por la 101 087), artículo 20; tarifas de Empresas Públicas de Medellín (octubre de 2026)"
-      },
-      {
-       "v": "404",
-       "l": "pesos si una cuenta recibe el 10 % o más o pasa de 100 kilovatios (caso 2)",
-       "fuente": "Comisión de Regulación de Energía y Gas, Resolución 101 072 de 2025 (modificada por la 101 087), artículo 20"
-      }
-     ],
      "lista": [
       "Dueños: la alcaldía, la Empresa Social del Estado Hospital Héctor Abad Gómez y Aguas y Aseo, unidas por un convenio asociativo e inscritas en el registro de comunidades energéticas del Ministerio de Minas y Energía.",
       "Quién recibe la energía: 11 a 20 cuentas oficiales (sedes, alumbrado, pozos, impulsión, estaciones de bombeo y planta de tratamiento), cada una con un porcentaje fijo; las cargas grandes se parten en varias fronteras.",
@@ -4194,12 +4188,12 @@
     },
     {
      "id": "saneamiento",
-     "nombre": "Saneamiento",
+     "nombre": "Aseo y saneamiento",
      "partes": []
     },
     {
      "id": "tic",
-     "nombre": "TIC y energía",
+     "nombre": "Conectividad y energía",
      "partes": []
     }
    ],
@@ -4338,7 +4332,7 @@
     "id": "luces",
     "nombre": "Luces de la maqueta",
     "tipo": "si_no",
-    "ayuda": "Sí: enciende las luminarias de vivienda y urbanismo (torres LED del estadio, postes, bolardos) con su luz en el piso (se nota al atardecer y de noche); no: las apaga.",
+    "ayuda": "Sí: enciende las luminarias con su luz en el piso (se nota de noche): en vivienda, los postes del barrio nuevo (pasos nuevas, apartamento y barrio); en urbanismo, torres LED, postes y bolardos. No: las apaga.",
     "capitulos": [
      "vivienda",
      "urbanismo"

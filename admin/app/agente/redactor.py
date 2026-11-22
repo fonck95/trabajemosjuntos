@@ -380,12 +380,12 @@ async def escribir(ctx: Any, a: Any, g: guion_presentacion.Guion) -> Resultado:
         nonlocal publicado
         r = plan.r
         if publicado == 0:
-            await run_in_threadpool(pantalla_off.guardar_recorrido, db, uid, r, destino, "asistente", abierto)
+            await run_in_threadpool(pantalla_off.guardar_recorrido, db, uid, r, destino, "asistente", abierto, g)
             if destino == "pantalla_off" and previo and not previo["cerrado"] and previo["destino"] == "vista":
                 ctx.emitir({"tipo": "accion", "accion": {"tipo": "presentacion", "op": "control_recorrido",
                                                          "rid": previo["id"], "accion": "detener",
                                                          "motivo": "otra_orden"}})
-        elif await run_in_threadpool(pantalla_off.crecer_recorrido, db, uid, r, abierto) is None:
+        elif await run_in_threadpool(pantalla_off.crecer_recorrido, db, uid, r, abierto, g) is None:
             raise _Detenido()
         if destino == "vista":
             ctx.emitir({"tipo": "accion", "accion": {"tipo": "presentacion", "op": "recorrido", "recorrido": r,

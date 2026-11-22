@@ -448,3 +448,108 @@ def test_la_maqueta_se_simula_desde_el_panel(tmp_path, marco_presentacion):
     assert e["tipo"] == "estado" and e["aviso"] is None and e["simulacion"]["partido"] is True, e
     assert e["simulacion"]["hora"] == "atardecer" and r["hora_escena"] == "atardecer"
     assert not r["errores"], r["errores"]
+
+
+# ───────────────────────────── Las piezas nuevas de la maqueta (vivienda de 300 apartamentos, salud, mirador) ─────────────────────────────
+
+NODE_PIEZAS = r"""// Lo que el agente pide sobre las piezas nuevas del catálogo, en la presentación de verdad. Uso: node <guion> <url del marco>
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+(async () => {
+const [url] = process.argv.slice(2);
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const page = await browser.newPage({ viewport: { width: 1280, height: 760 }, deviceScaleFactor: 1 });
+const errores = [];
+page.on('pageerror', (e) => errores.push(String(e)));
+await page.goto(url);
+await page.waitForFunction(() => window.__msgs.some((m) => m.tipo === 'listo'), null, { timeout: 120000 });
+const orden = (o, plazo = 30000) => page.evaluate(([o, plazo]) => window.__orden(o, plazo), [o, plazo]);
+const pres = () => page.frames().find((f) => /\/propuesta\.html/.test(f.url()));
+const espera = (ms) => page.waitForTimeout(ms);
+const corto = (x) => ({ tipo: x.tipo, error: x.error ?? null, aviso: x.aviso ?? null, descartadas: x.descartadas ?? null });
+// Lo que se ve: las capas del capítulo encendidas, cuántos bloques del barrio están sacados (escala 0: el del corte),
+// la cámara y el chip «Sin …» del HUD
+const ver = (pre) => pres().evaluate((pre) => {
+  const sc = window.__qaPropuesta.st.scene, out = { capas: {} };
+  sc.traverse((g) => { if (g.isGroup && g.name.startsWith(pre) && /^[a-z]+\.[a-z_0-9]+$/.test(g.name)) out.capas[g.name] = g.visible; });
+  let est = null;
+  sc.traverse((o) => { if (o.isInstancedMesh && o.name === 'estuco' && o.parent?.parent?.name === 'viv.nueva') est = o; });
+  if (est) {
+    const m = new est.matrixWorld.constructor(); let z = 0;
+    for (let i = 0; i < est.count; i++) { est.getMatrixAt(i, m); if (Math.abs(m.determinant()) < 1e-9) z++; }
+    out.sacados = z;
+  }
+  const c = window.__qaPropuesta.st.camera.position; out.camara = [c.x, c.y, c.z];
+  const sin = document.querySelector('.chip-sin'); out.chip_sin = sin && !sin.hidden ? sin.querySelector('b').textContent : null;
+  return out;
+}, pre);
+// (un capítulo se arma la primera vez que se llega: se espera a que exista su capa)
+const armado = (capa) => pres().waitForFunction((capa) => { let si = false; window.__qaPropuesta.st.scene.traverse((g) => { if (g.name === capa) si = true; }); return si; }, capa, { timeout: 90000 });
+const r = {};
+// 1. El paso del apartamento tipo: aislar el barrio no deja el hueco del bloque cortado, y el bloque cortado se aísla
+await orden({ orden: 'ir', capitulo: 'vivienda', paso: 4 }); await armado('viv.bloque'); await espera(1500);
+r.apartamento = await ver('viv.');
+r.aislar_barrio = corto(await orden({ orden: 'visual', aislar: 'nuevas' })); await espera(800);
+r.aislar_barrio_ve = await ver('viv.');
+r.aislar_bloque = corto(await orden({ orden: 'visual', aislar: 'bloque' })); await espera(800);
+r.aislar_bloque_ve = await ver('viv.');
+// 2. En el paso del barrio entero: el bloque cortado a la vista y la animación de los bloques no lo tapan
+await orden({ orden: 'ir', capitulo: 'vivienda', paso: 3 }); await espera(3500);
+r.nuevas = await ver('viv.');
+r.mostrar_bloque = corto(await orden({ orden: 'visual', mostrar: ['bloque'], animar: true })); await espera(800);
+r.animando = await ver('viv.');
+await espera(3500);
+r.animado = await ver('viv.');
+r.sin_bloque = corto(await orden({ orden: 'visual', mostrar: [] })); await espera(800);
+r.sin_bloque_ve = await ver('viv.');
+// 3. Salud: los microterritorios de los equipos de salud se aíslan; los puestos de salud ya no existen
+await orden({ orden: 'ir', capitulo: 'salud', paso: 10 }); await armado('salud.territorios'); await espera(1500);
+r.territorios = corto(await orden({ orden: 'visual', aislar: 'territorios' })); await espera(800);
+r.territorios_ve = await ver('salud.');
+r.puestos = corto(await orden({ orden: 'visual', aislar: 'puestos' }));
+// 4. mirar a una pieza que solo tiene rótulos (el hospital de hoy) mueve la cámara
+await orden({ orden: 'ir', capitulo: 'salud', paso: 3 }); await espera(3000);
+r.antes_de_mirar = (await ver('salud.')).camara;
+r.mirar = corto(await orden({ orden: 'visual', mirar: 'hospital_hoy' })); await espera(3000);
+r.despues_de_mirar = (await ver('salud.')).camara;
+// 5. El mirador ya no tiene muelle; las partes que sí tiene se nombran bien en el HUD
+await orden({ orden: 'ir', capitulo: 'urbanismo', paso: 7 }); await armado('urb.mirador'); await espera(1500);
+r.muelle = corto(await orden({ orden: 'visual', sin: ['mirador.muelle'] }));
+r.letras = corto(await orden({ orden: 'visual', sin: ['mirador.letras'] })); await espera(500);
+r.letras_chip = (await ver('urb.')).chip_sin;
+r.errores = errores;
+console.log(JSON.stringify(r));
+await browser.close();
+})().catch((e) => { console.error(e); process.exit(1); });
+"""
+
+
+@requiere_navegador
+@pytest.mark.skipif(not (RAIZ / "web" / "data" / "propuesta.json").is_file(), reason="Sin los datos del sitio")
+def test_las_piezas_nuevas_de_la_maqueta_se_manejan_desde_el_panel(tmp_path, marco_presentacion):
+    """El catálogo al día con la vivienda de 300 apartamentos, la salud que llega a la casa y el mirador sin muelle: el
+    bloque cortado (pieza «bloque», efecto «corte») se aísla, se muestra con el barrio sin quedar dos bloques
+    superpuestos aunque los bloques vuelvan a crecer, y aislar el barrio en su paso no deja un hueco; los microterritorios
+    se aíslan; lo que salió (los puestos de salud, el muelle) es un error con candidatos, no un «listo» que no cambia
+    nada; mirar a una pieza de solo rótulos mueve la cámara."""
+    r = _correr_node(tmp_path, NODE_PIEZAS, marco_presentacion, timeout=600)
+    assert r["apartamento"]["capas"]["viv.bloque"] is True and r["apartamento"]["sacados"] == 1, r["apartamento"]
+    assert r["aislar_barrio"]["tipo"] == "estado" and r["aislar_barrio"]["aviso"] is None, r["aislar_barrio"]
+    v = r["aislar_barrio_ve"]
+    assert v["capas"]["viv.nueva"] is True and v["capas"]["viv.bloque"] is False and v["sacados"] == 0, v
+    assert r["aislar_bloque"]["tipo"] == "estado", r["aislar_bloque"]
+    v = r["aislar_bloque_ve"]
+    assert v["capas"]["viv.bloque"] is True and v["capas"]["viv.nueva"] is False, v
+    assert r["nuevas"]["capas"]["viv.bloque"] is False and r["nuevas"]["sacados"] == 0, r["nuevas"]
+    assert r["mostrar_bloque"]["tipo"] == "estado" and r["mostrar_bloque"]["aviso"] is None, r["mostrar_bloque"]
+    for k in ("animando", "animado"):
+        assert r[k]["capas"]["viv.bloque"] is True and r[k]["sacados"] == 1, (k, r[k])
+    assert r["sin_bloque_ve"]["capas"]["viv.bloque"] is False and r["sin_bloque_ve"]["sacados"] == 0, r["sin_bloque_ve"]
+    assert r["territorios"]["tipo"] == "estado", r["territorios"]
+    capas = r["territorios_ve"]["capas"]
+    assert capas["salud.territorios"] is True and not any(v for k, v in capas.items() if k != "salud.territorios"), capas
+    assert r["puestos"]["tipo"] == "error" and "puestos" in r["puestos"]["error"], r["puestos"]
+    assert r["mirar"]["tipo"] == "estado", r["mirar"]
+    assert max(abs(a - b) for a, b in zip(r["antes_de_mirar"], r["despues_de_mirar"])) > 5, r
+    assert r["muelle"]["tipo"] == "error" and "muelle" in r["muelle"]["error"], r["muelle"]
+    assert r["letras"]["tipo"] == "estado" and r["letras_chip"] == "letras de Yondó", (r["letras"], r["letras_chip"])
+    assert not r["errores"], r["errores"]

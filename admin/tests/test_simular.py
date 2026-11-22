@@ -90,11 +90,20 @@ def test_lo_que_lee_el_modelo_dice_que_controles_hay():
     assert [c["id"] for c in inm["torre_sismo"]["controles"]] == [c["id"] for c in G.controles("torre_sismo")]
     assert "controles" not in inm["torre_laboratorio"] and "controles" not in inm["torre"]   # no son pasos de Salud
     assert all("controles" not in i for i in G.capitulo_para_leer(G.por_id("vivienda"))["inmersiones"])
-    assert "recortado" not in leer
-    # muy justo, primero las fichas y después la ayuda de los controles
+    # Salud no cabe entero: lo primero que se va es la ayuda de los controles del atlas (llega entera al ir al paso),
+    # después los referentes de las fichas; lo que explica cada obra y la ayuda de los de la maqueta se quedan
+    assert leer["recortado"].startswith("Los controles de los modelos del atlas van sin su ayuda")
+    assert "ayuda" not in inm["torre_sismo"]["controles"][0]
+    assert all(c.get("ayuda") for c in leer["controles_maqueta"])
+    assert all(x.get("descripcion") for x in leer["componentes"])
+    assert not any(x.get("proyectos_tipo") for x in leer["componentes"])
+    # muy justo, también sin la descripción de las fichas
     chico = G.capitulo_para_leer(G.por_id("salud"), tope=20000)
     assert "ayuda" not in chico["inmersiones"][[i["id"] for i in chico["inmersiones"]].index("torre_sismo")]["controles"][0]
-    assert "controles" in chico["recortado"]
+    assert "controles" in chico["recortado"] and "descripción" in chico["recortado"]
+    assert not any(x.get("descripcion") for x in chico["componentes"])
+    # con lugar de sobra, nada se recorta
+    assert "recortado" not in G.capitulo_para_leer(G.por_id("salud"), tope=10 ** 9)
     # ir a un paso de inmersión devuelve los controles de su modelo
     r = _hacer(_Base(), UID, {"op": "ir", "capitulo": "salud", "paso": "torre_sismo"}, por="asistente")
     assert [c["id"] for c in r.contenido["controles"]] == [c["id"] for c in G.controles("torre_sismo")]
@@ -109,7 +118,8 @@ def test_lo_que_lee_el_modelo_dice_que_controles_hay():
                                              por="asistente").contenido
     assert {c["id"]: c.get("controles_maqueta") for c in G.indice()["capitulos"]}["urbanismo"][-1] == "partido"
     assert all(c.get("ayuda") for c in leer["controles_maqueta"])
-    assert all("ayuda" not in c for c in chico["controles_maqueta"])
+    # los de la maqueta son pocos y `ir` los trae sin ayuda: en el guion van siempre con la suya
+    assert all(c.get("ayuda") for c in chico["controles_maqueta"])
 
 
 def test_problemas_revisa_los_controles():
