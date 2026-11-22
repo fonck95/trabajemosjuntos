@@ -170,7 +170,8 @@ def requiere(*permisos: str, limitar: bool = False) -> Callable[..., Quien]:
             enviado = request.headers.get("x-csrf-token", "")
             esperado = str(s.get("csrf") or "")
             if not esperado or not hmac.compare_digest(enviado.encode(), esperado.encode()):
-                raise HTTPException(403, "Token CSRF inválido; recargue la página")
+                # Con código: la interfaz toma el CSRF de la sesión vigente y reintenta una vez (otra pestaña ingresó)
+                raise HTTPException(403, {"mensaje": "Token CSRF inválido; recargue la página", "codigo": "csrf"})
         quien = _quien_de(db, request, s)
         quien.reunion = reunion_de(request)
         if not quien.es_admin:

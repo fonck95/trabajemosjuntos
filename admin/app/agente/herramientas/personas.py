@@ -1567,14 +1567,18 @@ def _exigir_autorizacion(ctx: Contexto, a: AutorizacionEntrada) -> None:
     if a.estado == "si":
         permitidos = modelo.MEDIOS_POR_ROL.get(q.rol, [])
         faltan = []
-        if a.medio not in permitidos:
+        if a.medio is not None and a.medio not in permitidos:
             faltan.append("el medio (" + ", ".join(permitidos) + ")")
-        if not a.evidencia:
-            faltan.append("la evidencia (por ejemplo, planilla y folio)")
-        if not a.canales:
-            faltan.append("al menos un canal autorizado")
-        if not a.mayor_declarado:
-            faltan.append("que declaró ser mayor de 18 años (mayor_declarado)")
+        # El planillero registra el «sí» sin evidencia, canales ni «mayor de 18» obligatorios (como en el panel)
+        if q.rol != "planillero":
+            if a.medio is None:
+                faltan.append("el medio (" + ", ".join(permitidos) + ")")
+            if not a.evidencia:
+                faltan.append("la evidencia (por ejemplo, planilla y folio)")
+            if not a.canales:
+                faltan.append("al menos un canal autorizado")
+            if not a.mayor_declarado:
+                faltan.append("que declaró ser mayor de 18 años (mayor_declarado)")
         if faltan:
             raise ErrorHerramienta("Para registrar el «sí» falta " + "; ".join(faltan) + ". Pregúntelo; no lo "
                                    "suponga.", "invalido", estado=422)

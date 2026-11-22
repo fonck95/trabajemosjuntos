@@ -10,6 +10,8 @@ import { $, $$, aviso, avisoError, datosForm, debounce, dialogo, fecha, fechaMal
 
 /** ¿Administrador o coordinador? Lo que la especificación reserva a «A» en el manejo de datos (adenda 1). */
 export const administra = () => sesion.rol === 'admin' || sesion.rol === 'coordinador';
+/** El planillero: registra y actualiza en campo sin que la autorización frene el guardado. */
+export const esPlanillero = () => sesion.rol === 'planillero';
 // El tipo de persona y el «Liderado por»: A y K los ven, los marcan y los quitan; P (con estos permisos) los marca y
 // asigna en las personas de su zona y en las que registra, pero solo suma: quitar un tipo o un líder sigue siendo de A
 // y K. `administra()` va primero: la sesión de A trae el permiso «*», pero hay pruebas que solo fijan el rol
@@ -308,7 +310,8 @@ export function leerAutorizacion(form) {
     aut.canales = $$('[name="aut_canal"]:checked', form).map((x) => x.value);
     aut.evidencia = campo('aut_evidencia')?.value.trim() || null;
     aut.mayor_declarado = !!campo('aut_mayor')?.checked;
-    if (!administra()) {
+    // El planillero registra el «sí» sin más pasos: evidencia, canales y «mayor de 18» son opcionales para él
+    if (!administra() && sesion.rol !== 'planillero') {
       if (!aut.canales.length) return { aut, error: 'Marque al menos un canal autorizado' };
       if (!aut.evidencia) return { aut, error: 'Escriba la evidencia de la autorización' };
       if (!aut.mayor_declarado) return { aut, error: 'La autorización exige que declare ser mayor de 18 años' };
@@ -665,7 +668,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
       <label class="campo ancho"><span>Jefe de hogar</span><select name="jefe_hogar"><option value="">—</option><option value="si">Sí</option><option value="no">No</option></select></label>
       <details class="bloque ancho secundario" id="alta-votacion"><summary>Puesto y mesa de votación (opcional)</summary><div class="form">${camposVotacion(cat, {})}</div></details>
       ${necesidades.length ? html`<details class="bloque ancho secundario"><summary>Necesidades (opcional)</summary><div class="chips">${necesidades.map((e) => html`<button type="button" class="chip" data-et="${e.id}" aria-pressed="false">${e.nombre}</button>`)}</div></details>` : ''}
-      ${camposAutorizacion(cat)}
+      ${camposAutorizacion(cat, { obligatoria: !esPlanillero() })}
       <div class="ancho" id="conflicto" aria-live="polite"></div>
     </form>`,
     pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="guardar">Guardar</button>`,
@@ -869,7 +872,8 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     if (enCurso || !form.reportValidity()) return;
     const { c, d } = cuerpo();
     const { aut, error } = leerAutorizacion(form);
-    if (!aut) { aviso('Indique si la persona autoriza el tratamiento de sus datos', 'error'); return; }
+    // El planillero guarda sin responder la autorización: la persona queda «Todavía no responde» (pendiente)
+    if (!aut && !esPlanillero()) { aviso('Indique si la persona autoriza el tratamiento de sus datos', 'error'); return; }
     if (error) { aviso(error, 'error'); return; }
     enCurso = true;
     boton.disabled = true;

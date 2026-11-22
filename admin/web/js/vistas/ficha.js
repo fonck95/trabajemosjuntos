@@ -152,6 +152,10 @@ export async function vistaFicha(el, { params, ir }) {
     const v = p.votacion || (p.puesto_votacion || p.mesa ? { puesto_texto: p.puesto_votacion, mesa: p.mesa } : {});
     const eventos = eventosHistorial();
     const nTab = (n) => (n ? ` (${n})` : '');
+    // En el celular los bloques van plegados, pero el que la persona abrió sigue abierto al volver a pintar la ficha
+    // (registrar una visita, asignar un líder, «No la dio»…): si se cerrara, el campo que estaba editando desaparecería
+    const abiertos = new Set($$('#f-datos details[data-bloque]', el).filter((d) => d.open).map((d) => d.dataset.bloque));
+    const abierto = (k) => !esMovil() || abiertos.has(k);
 
     montar(el, html`
       <div class="miga"><a href="/personas" data-ruta>Habitantes</a> › Ficha ${p.id}</div>
@@ -203,13 +207,13 @@ export async function vistaFicha(el, { params, ir }) {
                 ${selector('estado_civil', 'Estado civil', lista(ESTADOS_CIVILES))}
                 ${selector('jefe_hogar', 'Jefe de hogar', [['', '—'], ['si', 'Sí'], ['no', 'No']], { valor: p.jefe_hogar == null ? '' : p.jefe_hogar ? 'si' : 'no' })}
               </div></details>
-              <details class="bloque" ${esMovil() ? '' : 'open'}><summary>Votación ${v.estado ? html`<span class="chip ${v.estado === 'verificado' ? 'verde' : v.estado === 'por_confirmar' ? 'ambar' : 'borde'}">${ESTADOS_VOTACION[v.estado] || v.estado}</span>` : ''}${adm && (v.puesto_id || v.puesto_texto || v.mesa || v.donde) ? insigniaFuente(v.fuente || p.procedencia?.votacion?.fuente) : ''}</summary><div class="form">
+              <details class="bloque" data-bloque="votacion" ${abierto('votacion') ? 'open' : ''}><summary>Votación ${v.estado ? html`<span class="chip ${v.estado === 'verificado' ? 'verde' : v.estado === 'por_confirmar' ? 'ambar' : 'borde'}">${ESTADOS_VOTACION[v.estado] || v.estado}</span>` : ''}${adm && (v.puesto_id || v.puesto_texto || v.mesa || v.donde) ? insigniaFuente(v.fuente || p.procedencia?.votacion?.fuente) : ''}</summary><div class="form">
                 ${camposVotacion(cat, v)}
                 ${noDisponible('puesto', 'No sabe')}
                 ${cat.enlace_consulta_puesto ? html`<a class="btn chico" href="${cat.enlace_consulta_puesto}" target="_blank" rel="noopener noreferrer">Consultar en la Registraduría ↗</a>` : ''}
                 <label class="casilla ancho"><input type="checkbox" name="votacion_verificada" ${v.estado === 'verificado' && v.fuente === 'titular' ? 'checked' : ''} ${ed('votacion_verificada') ? '' : 'disabled'}> Verificado en la Registraduría con el titular</label>
               </div></details>
-              <details class="bloque" ${esMovil() ? '' : 'open'}><summary>Más datos</summary><div class="form">
+              <details class="bloque" data-bloque="mas" ${abierto('mas') ? 'open' : ''}><summary>Más datos</summary><div class="form">
                 ${selector('nivel_educativo', 'Nivel educativo', lista(NIVELES))}
                 ${selector('situacion_laboral', 'Situación laboral', lista(SITUACIONES_LABORALES))}
                 ${entrada('personas_hogar', 'Personas en el hogar', { tipo: 'number', min: 0, max: 40, modo: 'numeric' })}
@@ -217,7 +221,7 @@ export async function vistaFicha(el, { params, ir }) {
                 ${selector('estrato', 'Estrato', [['', '—'], ...['0', '1', '2', '3', '4', '5', '6'].map((x) => [x, x])])}
                 ${selector('regimen_salud', 'Régimen de salud', lista(REGIMENES_SALUD))}
               </div></details>
-              <details class="bloque" ${esMovil() ? '' : 'open'} id="bloque-autorizacion"><summary>Autorización ${chipAutorizacion(p, { conCanales: false })}</summary>
+              <details class="bloque" data-bloque="autorizacion" ${abierto('autorizacion') ? 'open' : ''} id="bloque-autorizacion"><summary>Autorización ${chipAutorizacion(p, { conCanales: false })}</summary>
                 <div class="datos">
                   <div><span>Estado</span><b>${ESTADOS_AUTORIZACION[aut.estado] || aut.estado}</b></div>
                   <div><span>Medio</span><b>${MEDIOS_AUTORIZACION[aut.medio] || aut.medio || '—'}</b></div>
@@ -231,7 +235,7 @@ export async function vistaFicha(el, { params, ir }) {
                   <button type="button" class="btn oscuro" data-registrar-autorizacion>Registrar autorización</button></div>
               </details>
               ${cat.sensibles_activos ? bloqueSensibles() : ''}
-              <details class="bloque" ${esMovil() ? '' : 'open'}><summary>Necesidades, intereses y roles</summary>
+              <details class="bloque" data-bloque="necesidades" ${abierto('necesidades') ? 'open' : ''}><summary>Necesidades, intereses y roles</summary>
                 ${Object.entries(grupos).map(([g, t]) => {
                   const ets = (cat.etiquetas || []).filter((e) => e.grupo === g);
                   return ets.length ? html`<div class="campo" style="margin-top:12px"><span>${t}</span><div class="chips">
@@ -290,8 +294,6 @@ export async function vistaFicha(el, { params, ir }) {
     vigilarBarra();
     montarBuscadorLider(); // solo si se pintó «Liderado por»
     formInicial = leerForm();
-    // Después de leer el formulario: la edad calculada no cuenta como un cambio, y al borrar la fecha vuelve la guardada
-    if ($('#f-datos', el)) enlazarEdad($('#f-datos', el));
     sucio = false;
     // Un dato guardado que su campo no puede mostrar (una fecha que no existe, como 1985-02-30, o una opción que ya no
     // está en la lista) se ve vacío: se dice cuál es. Al guardar otros cambios no se borra, porque solo se envía lo cambiado
@@ -303,16 +305,27 @@ export async function vistaFicha(el, { params, ir }) {
     for (const s of $$('#f-datos select[data-guardado]', el)) {
       if (s.dataset.guardado) notaGuardado(s, s.dataset.guardado, 'que no está en la lista');
     }
-    if (!formInicial) return;
+    if (!formInicial) { pintarMini(); return; }
+    const f = $('#f-datos', el);
     if (pendientes.length) {
-      const f = $('#f-datos', el);
       for (const [k, val] of pendientes) {
         if (k.startsWith('et:')) { $(`[data-et="${k.slice(3)}"]`, f)?.setAttribute('aria-pressed', val); continue; }
         const x = f.elements.namedItem(k);
-        if (x && !x.length) x[x.type === 'checkbox' ? 'checked' : 'value'] = val;
+        // Una <select> también tiene `length` (sus opciones): solo se salta un grupo de radios. Antes se saltaban las
+        // listas y lo cambiado en Sexo, Barrio, Estado civil, Puesto… se perdía al volver a pintar la ficha
+        if (!x || x instanceof RadioNodeList) continue;
+        x[x.type === 'checkbox' ? 'checked' : 'value'] = val;
       }
+      // Lo que se muestra según otro campo, con los valores devueltos: el puesto (¿cuál?, municipio, mesa) y el motivo
+      // del cambio de cédula
+      if (pendientes.some(([k]) => k === 'puesto') && f.puesto) f.puesto.dispatchEvent(new Event('change', { bubbles: true }));
+      const mot = $('[data-motivo-cedula]', f);
+      if (mot) mot.hidden = (f.cedula?.value.trim() ?? '') === String(p.cedula ?? '');
       marcarSucio();
     }
+    // Después de leer el formulario (la edad calculada no cuenta como un cambio) y de devolverle lo no guardado (la edad
+    // sale de la fecha que se ve, no de la guardada): al borrar la fecha vuelve la edad declarada
+    enlazarEdad(f);
     pintarMini();
   }
 
