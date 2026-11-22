@@ -20,7 +20,7 @@ import {
 } from '../modelo.js';
 import {
   $, $$, aviso, avisoError, chipAbordaje, chipAutorizacion, chipPrecision, confirmar, dialogo, esMovil, fecha, fuentesVisibles,
-  hayEscrito, html, icono, iniciales, insigniaFuente, insigniasFuentes, leyendaFuentes, montar, nombreFuente, num, titulo,
+  fechaSiEs, hayEscrito, html, icono, iniciales, insigniaFuente, insigniasFuentes, leyendaFuentes, montar, nombreFuente, num, titulo,
 } from '../ui.js';
 import { dialogoAcercamiento, mensajeNoContactable } from './acercamiento.js';
 import {
@@ -116,7 +116,7 @@ export async function vistaFicha(el, { params, ir }) {
   const alternosDe = (k) => {
     const lista = (p.alternos || []).filter((a) => a.campo === k && a.valor != null && String(a.valor) !== String(p[k] ?? '')).slice(-2);
     if (!lista.length || !ed(k)) return '';
-    return html`${lista.map((a) => html`<small class="alterno">Otra fuente dice: <b>${String(a.valor)}</b>${insigniaFuente(a.fuente, { conNombre: true })}
+    return html`${lista.map((a) => html`<small class="alterno">Otra fuente dice: <b>${fechaSiEs(String(a.valor))}</b>${insigniaFuente(a.fuente, { conNombre: true })}
       <button type="button" class="btn fantasma chico" data-usar-alterno="${k}" data-valor="${String(a.valor)}">Usar este</button></small>`)}`;
   };
   // La fuente del dato junto a su etiqueta: solo A y K reciben `procedencia`; un campo vacío no lleva insignia
@@ -129,10 +129,10 @@ export async function vistaFicha(el, { params, ir }) {
   const entrada = (k, t, { tipo = 'text', min = null, max = null, modo = null, ancho = false, valor = p[k], ayuda = '', largo = null } = {}) => html`<label class="campo${ancho ? ' ancho' : ''}" data-campo="${k}"><span>${t}${insigniaCampo(k)}</span>
     <input name="${k}" type="${tipo}" value="${valor ?? ''}" ${min != null ? html`min="${min}"` : ''} ${max != null ? html`max="${max}"` : ''} ${modo ? html`inputmode="${modo}"` : ''} ${largo ? html`maxlength="${largo}"` : ''} ${ed(k) ? '' : 'disabled'}>
     ${ayuda ? html`<small class="nota">${ayuda}</small>` : ''}${alternosDe(k)}</label>`;
-  const selector = (k, t, opciones, { valor = p[k], nombre = k, editable = ed(k) } = {}) => {
+  const selector = (k, t, opciones, { valor = p[k], nombre = k, editable = ed(k), corto = false } = {}) => {
     const v = valor == null ? '' : String(valor);
     const conocido = v === '' || opciones.some(([o]) => String(o) === v);
-    return html`<label class="campo" data-campo="${k}"><span>${t}${insigniaCampo(k)}</span><select name="${nombre}" data-guardado="${conocido ? '' : v}" ${editable ? '' : 'disabled'}>
+    return html`<label class="campo" data-campo="${k}"><span>${t}${insigniaCampo(k)}</span><select name="${nombre}" data-guardado="${conocido ? '' : v}" ${editable ? '' : 'disabled'} ${corto ? html`data-chip-corto` : ''}>
       ${opciones.map(([o, tx]) => html`<option value="${o}" ${String(o) === v ? 'selected' : ''}>${tx}</option>`)}</select>${alternosDe(k)}</label>`;
   };
   const lista = (arr) => [['', '—'], ...arr.map((x) => [x, x])];
@@ -179,7 +179,7 @@ export async function vistaFicha(el, { params, ir }) {
             <form id="f-datos" novalidate>
               <details class="bloque" open><summary>Datos principales</summary><div class="form">
                 ${entrada('nombre', 'Nombre completo', { ancho: true, largo: 160 })}
-                ${selector('tipo_documento', 'Tipo de documento', [['', '—'], ...Object.entries(TIPOS_DOCUMENTO)])}
+                ${selector('tipo_documento', 'Tipo de documento', [['', '—'], ...Object.entries(TIPOS_DOCUMENTO)], { corto: true })}
                 ${entrada('cedula', 'Cédula (número de documento)', { modo: 'numeric', largo: 15 })}
                 ${adm && p.cedula ? html`<label class="campo" data-motivo-cedula hidden><span>Motivo del cambio de cédula *</span><input name="motivo_cambio_cedula" maxlength="200"></label>` : ''}
                 <label class="casilla"><input type="checkbox" name="cedula_verificada" ${p.cedula_verificada ? 'checked' : ''} ${ed('cedula_verificada') ? '' : 'disabled'}> Vi el documento</label>
@@ -502,10 +502,10 @@ export async function vistaFicha(el, { params, ir }) {
     const proc = Object.entries(p.procedencia || {});
     return html`${leyendaFuentes(fuentesVisibles(true))}
       ${alt.length ? html`<h3 class="sub-origen">Otros valores (${alt.length})</h3><div class="envoltura-tabla"><table class="tabla"><thead><tr><th>Dato</th><th>Valor</th><th>Fuente</th><th>Fecha</th></tr></thead>
-        <tbody>${alt.slice().reverse().map((a) => html`<tr style="cursor:default"><td>${ETIQUETAS_CAMPOS[a.campo] || a.campo}</td><td>${typeof a.valor === 'object' ? JSON.stringify(a.valor) : String(a.valor)}</td><td>${insigniaFuente(a.fuente, { conNombre: true }) || '—'}</td><td>${fecha(a.ts)}</td></tr>`)}</tbody></table></div>` : ''}
+        <tbody>${alt.slice().reverse().map((a) => html`<tr style="cursor:default"><td>${ETIQUETAS_CAMPOS[a.campo] || a.campo}</td><td>${typeof a.valor === 'object' ? JSON.stringify(a.valor) : fechaSiEs(String(a.valor))}</td><td>${insigniaFuente(a.fuente, { conNombre: true }) || '—'}</td><td>${fecha(a.ts)}</td></tr>`)}</tbody></table></div>` : ''}
       ${proc.length ? html`<h3 class="sub-origen">Procedencia de cada dato</h3><div class="datos">${proc.map(([k, x]) => html`<div><span>${ETIQUETAS_CAMPOS[k] || k.replace(/_/g, ' ')}</span><b>${insigniaFuente(x?.fuente, { conNombre: true }) || '—'}<small class="fecha-fuente">${fecha(x?.ts)}</small></b></div>`)}</div>` : ''}
       ${(p.origen || []).map((o) => html`<h3 class="sub-origen">${insigniaFuente(o.fuente)}${nombreFuente(o.fuente) || 'Sin fuente'}</h3><div class="datos">
-        ${Object.entries(o.datos || {}).filter(([k]) => k !== 'extra').map(([k, val]) => html`<div><span>${k.replace(/_/g, ' ')}</span><b>${Array.isArray(val) ? val.join(', ') : String(val ?? '')}</b></div>`)}</div>`)}
+        ${Object.entries(o.datos || {}).filter(([k]) => k !== 'extra').map(([k, val]) => html`<div><span>${k.replace(/_/g, ' ')}</span><b>${Array.isArray(val) ? val.join(', ') : fechaSiEs(String(val ?? ''))}</b></div>`)}</div>`)}
       <h3 class="sub-origen">Trámites (${(p.tramites || []).length})</h3>
       ${(p.tramites || []).length ? html`<div class="envoltura-tabla"><table class="tabla"><thead><tr><th>Fecha</th><th>Trámite</th><th>Ficha</th><th>Dirección</th><th>Teléfono</th></tr></thead>
         <tbody>${p.tramites.map((t) => html`<tr style="cursor:default"><td>${fecha(t.fecha)}</td><td>${titulo(t.tipo || '')}</td><td class="sec">${t.ficha}</td><td>${t.direccion}</td><td>${(t.telefono || '').replace(/;/g, ', ')}</td></tr>`)}</tbody></table></div>`

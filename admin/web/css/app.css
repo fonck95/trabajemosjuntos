@@ -809,3 +809,63 @@ dialog .cab .cerrar-dialogo svg { width: 20px; height: 20px; }
   .aviso, .barra-deshacer, .esqueleto { animation: none; }
   .giro { animation-duration: 2.4s; }
 }
+
+/* ═════════ Fechas y horas escritas, y listas cortas como chips (js/campos.js) ═════════ */
+
+/* Fecha (dd/mm/aaaa) y hora (hh:mm) que se escriben con el teclado numérico en cualquier sistema. El campo del
+   navegador queda encima del ícono, transparente: tocar el ícono abre su calendario o su reloj */
+.campo-escrito { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 44px; align-items: stretch; min-width: 0; }
+.campo-escrito > input:first-child { grid-area: 1 / 1 / 2 / 3; width: 100%; min-width: 0; padding-right: 44px;
+  font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.campo-escrito.campo-fecha > input:first-child { min-width: 10.5ch; }
+.campo-escrito-icono { grid-area: 1 / 2; place-self: center; display: flex; color: var(--muted); pointer-events: none; z-index: 1; }
+.campo-escrito-icono svg { width: 18px; height: 18px; }
+.campo-escrito > input.campo-escrito-sistema { grid-area: 1 / 2; z-index: 2; width: 100%; min-width: 0; height: 100%; min-height: 0;
+  margin: 0; padding: 0; border: 0; border-radius: 0 9px 9px 0; background: transparent; box-shadow: none; opacity: 0; cursor: pointer;
+  color: transparent; font-size: 16px; }
+.campo-escrito > input.campo-escrito-sistema:disabled { cursor: default; }
+/* El botón del calendario del navegador cubre todo el ícono: el toque o el clic caen en él aunque showPicker() no valga */
+.campo-escrito > input.campo-escrito-sistema::-webkit-calendar-picker-indicator { position: absolute; top: 0; left: 0; width: 100%;
+  height: 100%; margin: 0; padding: 0; cursor: pointer; }
+.campo-escrito:has(> input:first-child:disabled) .campo-escrito-icono { opacity: .45; }
+.campo-escrito > input:first-child:focus ~ .campo-escrito-icono { color: var(--ink); }
+/* Con el foco en el calendario transparente (tras tocar el ícono), el anillo se ve en el campo */
+.campo-escrito:has(> .campo-escrito-sistema:focus-visible) > input:first-child { border-color: var(--ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 10%, transparent); }
+/* Lo que va debajo del campo (el error, la nota de un valor guardado) ocupa todo el ancho */
+.campo-escrito > :not(input):not(.campo-escrito-icono):not(.sr) { grid-column: 1 / -1; }
+.campo-escrito.invalido > input:first-child { border-color: var(--crit); }
+.campo-escrito.invalido > input:first-child:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--crit) 18%, transparent); }
+.campo-escrito-error { margin-top: 4px; color: var(--crit); font-size: 12.5px; font-weight: 600; }
+.filtros .campo-escrito, .fila-botones .campo-escrito { min-width: 150px; }
+
+/* Listas de 2 a 15 opciones: en el celular y en pantallas táctiles (html.modo-chips) se ven como chips para tocar; la
+   lista sigue en el formulario, escondida, y manda */
+.opciones-lista { display: none; }
+.modo-chips select.con-chips { display: none; }
+.modo-chips .opciones-lista:not([hidden]) { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.opciones-titulo { font-size: 12.5px; font-weight: 650; color: var(--muted); }
+.opciones-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+button.chip.opcion-lista { min-height: 40px; padding: 6px 13px; gap: 6px; font-size: 14.5px; font-weight: 600; white-space: normal;
+  text-align: left; line-height: 1.25; background: var(--surface); color: var(--ink-2); border-color: var(--line); }
+button.chip.opcion-lista[aria-checked="true"], button.chip.opcion-lista[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+button.chip.opcion-lista[aria-checked="true"]::before, button.chip.opcion-lista[aria-pressed="true"]::before { content: ''; width: 9px; height: 5px; margin: -3px 1px 0 0; flex: none;
+  border: solid currentColor; border-width: 0 0 2px 2px; rotate: -45deg; }
+button.chip.opcion-lista:disabled { opacity: .55; cursor: default; }
+button.chip.opcion-lista, .campo-escrito > input.campo-escrito-sistema { -webkit-tap-highlight-color: transparent; }
+button.chip.opcion-lista:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.invalido .opciones-chips button.chip.opcion-lista:not([aria-checked="true"]) { border-color: var(--crit); }
+@media (hover: hover) { button.chip.opcion-lista:not(:disabled):not([aria-checked="true"]):not([aria-pressed="true"]):hover { border-color: var(--axis); background: var(--raised); } }
+/* En las barras de filtros, cada filtro en una sola fila que se desliza de lado (con un degradado que avisa que hay más):
+   veinte filtros en chips que bajan de línea alejarían los resultados varias pantallas */
+.filtros .opciones-chips { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+  padding-right: 24px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
+.filtros .opciones-chips::-webkit-scrollbar { display: none; }
+.filtros .opciones-chips button.chip.opcion-lista { flex: none; white-space: nowrap; }
+/* En las barras de filtros y en las filas de campos, cada grupo de chips toma su propia línea */
+.filtros .opciones-lista, .filtros-secundarios-cuerpo .opciones-lista, .fila-botones .opciones-lista { flex: 1 1 100%; }
+/* Con los chips en su propia línea, el campo que los acompaña (la cédula) toma la fila entera */
+.modo-chips .fila-campos:has(> select.con-chips) > :not(.opciones-lista, select) { grid-column: 1 / -1; }
+.fila-campos .opciones-lista, .mas-filtros > .opciones-lista, .filtros-secundarios-cuerpo > .opciones-lista { grid-column: 1 / -1; }
+@media (pointer: coarse) { button.chip.opcion-lista { min-height: 44px; } }

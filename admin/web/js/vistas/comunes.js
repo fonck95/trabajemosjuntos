@@ -6,7 +6,7 @@ import {
   CAMPOS_FALTAN, CAMPOS_NO_DISPONIBLE, CANALES_AUTORIZACION, ESTADOS_CIVILES, ETIQUETAS_CAMPOS, MAS_DATOS,
   MEDIOS_AUTORIZACION, MEDIOS_POR_ROL, MOTIVOS_NO_DISPONIBLE, SEXOS, TIPOS_DOCUMENTO, TIPOS_PERSONA, edadDesde,
 } from '../modelo.js';
-import { $, $$, aviso, avisoError, datosForm, debounce, dialogo, fecha, hoy, html, icono, montar, titulo } from '../ui.js';
+import { $, $$, aviso, avisoError, datosForm, debounce, dialogo, fecha, fechaMalEscrita, fechaSiEs, hoy, html, icono, montar, titulo } from '../ui.js';
 
 /** ¿Administrador o coordinador? Lo que la especificación reserva a «A» en el manejo de datos (adenda 1). */
 export const administra = () => sesion.rol === 'admin' || sesion.rol === 'coordinador';
@@ -439,7 +439,7 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
       <p class="titulo-campo ancho completar-seccion">Datos principales</p>
       ${fijo('Nombre', p.nombre)}
       ${falta.cedula ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Cédula</span>
-        <div class="fila-campos"><select name="tipo_documento" aria-label="Tipo de documento">${Object.entries(TIPOS_DOCUMENTO).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select>
+        <div class="fila-campos"><select name="tipo_documento" aria-label="Tipo de documento" data-chip-corto>${Object.entries(TIPOS_DOCUMENTO).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select>
         <input name="cedula" inputmode="numeric" autocomplete="off" placeholder="Número" aria-label="Número de documento" maxlength="15"></div>
         <label class="casilla"><input type="checkbox" name="cedula_verificada"> Vi el documento</label>${noSabe('cedula')}</div>`
         : fijo('Cédula', textoCedula(p) || (p.no_disponible?.cedula ? 'No la tiene o no la dio' : null))}
@@ -555,7 +555,7 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
   }
 
   async function guardar(seguir) {
-    if (enCurso) return;
+    if (enCurso || fechaMalEscrita(form)) return;
     const { c, d } = cuerpo();
     const { aut, error } = form.querySelector('[name="aut_estado"]') ? leerAutorizacion(form) : { aut: null };
     if (error) { aviso(error, 'error'); return; }
@@ -640,7 +640,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
       ${hogar ? html`<p class="aviso-legal ancho">Se copian la dirección, el barrio${hogar.ficha ? ', la ficha del hogar' : ''}${hogar.lat != null ? ' y la ubicación' : ''} de ${titulo(hogar.nombre || 'la otra persona')}.</p>` : ''}
       <label class="campo ancho"><span>Nombre completo *</span><input name="nombre" required minlength="3" maxlength="160" autocomplete="off" value="${ini.nombre || ''}"></label>
       <div class="grupo-campo ancho"><span class="titulo-campo">Cédula</span>
-        <div class="fila-campos"><select name="tipo_documento" aria-label="Tipo de documento">${Object.entries(TIPOS_DOCUMENTO).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select>
+        <div class="fila-campos"><select name="tipo_documento" aria-label="Tipo de documento" data-chip-corto>${Object.entries(TIPOS_DOCUMENTO).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select>
         <input name="cedula" inputmode="numeric" autocomplete="off" placeholder="Número" aria-label="Número de documento" maxlength="15" value="${ini.cedula || ''}"></div>
         <label class="casilla"><input type="checkbox" name="cedula_verificada"> Vi el documento</label></div>
       <div class="grupo-campo ancho"><span class="titulo-campo">Sexo</span><div class="opciones-radio">${Object.entries(SEXOS).map(([k, t]) => html`<label class="chip opcion"><input type="radio" name="sexo" value="${k}"> ${t}</label>`)}</div></div>
@@ -782,7 +782,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   // sin asignarle líderes; un líder que no se le puede asignar se salta y siguen los demás. Lo que no se marcó se dice al
   // final con el mensaje del servidor: lo demás escrito nunca se pierde
   async function esEsta(id, origen, { yaTieneCedula = false } = {}) {
-    if (enCurso) return;
+    if (enCurso || fechaMalEscrita(form)) return;
     const { c } = cuerpo();
     const lideres = c.lideres || [];
     delete c.nombre; delete c.etiquetas; delete c.ficha; delete c.lideres;
@@ -929,7 +929,7 @@ export function dialogoCambiada(err, cuerpo) {
   const det = err.detalle || {};
   const actuales = det.valores_actuales || {};
   const campos = det.campos || Object.keys(actuales);
-  const muestra = (v) => (v == null || v === '' ? '(vacío)' : typeof v === 'object' ? JSON.stringify(v) : String(v));
+  const muestra = (v) => (v == null || v === '' ? '(vacío)' : typeof v === 'object' ? JSON.stringify(v) : fechaSiEs(String(v)));
   const { el, cerrar, listo } = dialogo({
     titulo: 'Alguien más cambió esta ficha',
     cuerpo: html`<p>Mientras usted editaba, otra persona guardó estos datos:</p>
