@@ -104,26 +104,12 @@ def georreferenciar_y_punto(db: Database, ids: list[int]) -> None:
 
 # ───────────────────────────── Habitantes y búsqueda ─────────────────────────────
 
-def exigir_listas_del_dia(db: Database, quien: Quien) -> None:
-    """Después del primer 429 por volumen del día, P y C ya no reciben listas (Habitantes y colas) hasta mañana, ni
-    siquiera de personas ya vistas: las listas son la vía de extracción masiva. La ficha ya vista se puede reabrir."""
-    if quien.administra or quien.uid in (None, 0):
-        return
-    u = db.usuarios.find_one({"_id": quien.uid}, {"volumen": 1}) or {}
-    v = u.get("volumen") if isinstance(u.get("volumen"), dict) else {}
-    if v.get("dia") == modelo.hoy_local().isoformat() and (v.get("rechazos") or 0) >= 1:
-        tope = acceso.presupuesto(db, quien.rol)
-        raise HTTPException(429, {"mensaje": f"Llegó al tope de {tope} personas consultadas hoy. Podrá seguir mañana.",
-                                  "codigo": "volumen"})
-
-
 @r.get("/personas")
 def listar(f: Filtros = Depends(filtros_query), orden: str = "nombre", pagina: int = 1, por_pagina: int = 50,
            estricta: int = 0, db: Database = Depends(obtener_db),
            quien: Quien = Depends(requiere("personas.listar", limitar=True))):
     f._estricta = bool(estricta)  # el asistente: `q` solo por el nombre o por un número entero (`filtros.q_estricta`)
     q = consulta(db, quien, f, con_alcance=True)  # vedados (403) y alcance obligatorio para P
-    exigir_listas_del_dia(db, quien)
     por_pagina = max(10, min(por_pagina, 200))
     pagina = max(1, min(pagina, 10_000))
     total = db.personas.count_documents(q)

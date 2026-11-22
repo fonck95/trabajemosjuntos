@@ -522,7 +522,6 @@ def _mis_hoy(db: Database, quien: Quien, hoy: date) -> list[int]:
 @r.get("/trabajo/cola")
 def cola(lista: str = "por_llamar", pagina: int = Query(1, ge=1, le=PAGINAS_COLA), tratables: int = 0,
          db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("trabajo.cola", limitar=True))):
-    per.exigir_listas_del_dia(db, quien)
     hoy, aj = modelo.hoy_local(), modelo.leer_ajustes(db)
     ctx = proyeccion.contexto(db)
     salto = (pagina - 1) * POR_PAGINA_COLA

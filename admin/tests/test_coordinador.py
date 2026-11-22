@@ -300,7 +300,7 @@ def test_coordinador_sin_presupuesto_diario_ni_limite_de_frecuencia(sesion, coor
     assert mk.get("/leer", params={"n": 50}).status_code == 200
     assert db.lecturas.count_documents({"uid": k.uid}) == 50  # queda registrado, sin tope
     mp = TestClient(mini, cookies=dict(como("planillero").cookies))
-    assert mp.get("/leer", params={"n": 4}).json()["detail"]["codigo"] == "volumen"
+    assert mp.get("/leer", params={"n": 4}).status_code == 200  # sin tope diario para nadie
     for _ in range(acceso.FRECUENCIA_MAX + 5):
         r = mk.get("/limitada")
         assert r.status_code == 200

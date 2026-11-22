@@ -29,9 +29,7 @@ Toda respuesta con una ficha o con filas se arma con la lista de campos permitid
   (`numero`, `tipo`, `whatsapp`, `estado` e `indice`), el abordaje y lo que le falta (cédula, puesto y mesa).
 - Quien dijo «no» sale para P y C como `{id, nombre, cedula_ult3, lugar, consentimiento, abordaje: {estado}}`, y
   toda escritura suya sobre esa persona da 409 `no_contactable` (salvo registrar su «sí» con evidencia).
-- Cada ficha y cada fila servida queda en `lecturas` y cuenta en el presupuesto diario de P y C. Después del primer
-  429 por volumen del día, P y C ya no reciben listas (Habitantes y colas) hasta el día siguiente; una ficha ya vista
-  se puede volver a abrir.
+- Cada ficha y cada fila servida queda en `lecturas`. No hay tope diario de personas consultadas.
 
 ## Registrar un acercamiento
 
