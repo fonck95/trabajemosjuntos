@@ -248,6 +248,130 @@ footer.pie nav a.ingreso { font-family: var(--f-body); text-transform: none; let
 /* en el celular las dos puertas grandes quedan a la vista: la cabecera lleva solo la marca */
 @media (max-width: 560px) { .atajos { display: none; } }
 @media (max-width: 380px) { .rejilla { gap: 10px; } .area span.frase { display: none; } }
+
+/* ---------- SORTEO EN VIVO: la ruleta del 1 al 1.200. El rango va en data-desde / data-hasta de <section id="sorteo"> y,
+   sin tocar el archivo, con ?desde=…&hasta=… en la dirección. Todo el sorteo está en este bloque, en la <section
+   id="sorteo"> y en el último <script>: para quitarlo basta borrar los tres (y los dos enlaces «Sorteo»). La sección es
+   siempre oscura, como un escenario, con el tema claro o con el oscuro. */
+.atajos a.ir-sorteo { background: var(--accent-fill); color: var(--accent-ink); }
+.atajos a.ir-sorteo:hover { color: var(--accent-ink); filter: brightness(1.1); }
+.sorteo { --d: min(580px, calc(100vw - 2 * var(--gutter) - 8px)); --s-ink: #f6f6f2; --s-muted: #c4c4bd; --s-rojo: #ff4545;
+  position: relative; overflow: hidden; color: var(--s-ink); color-scheme: dark; scroll-margin-top: 0;
+  background: radial-gradient(110% 85% at 74% 52%, #4a070a 0%, #1c0405 36%, #0a0a0a 68%) #0a0a0a;
+  padding-block: 84px 92px; border-block: 4px solid var(--accent-fill); }
+html:not(.js) .sorteo { display: none; }
+.sorteo [hidden] { display: none !important; }
+.sorteo-in { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "cab escena" "mando escena"; gap: 22px 56px; align-items: center; }
+.sorteo-cab { grid-area: cab; align-self: end; max-width: 560px; }
+.sorteo-mando { grid-area: mando; align-self: start; max-width: 560px; display: grid; gap: 18px; justify-items: start; }
+.sorteo-escena { grid-area: escena; position: relative; isolation: isolate; padding-top: calc(var(--d) * 0.06); }
+.sorteo .ceja { display: inline-flex; align-items: center; gap: 9px; color: #ff8a8a; }
+.sorteo .ceja .vivo { width: 10px; height: 10px; border-radius: 50%; background: var(--s-rojo); }
+.sorteo h2 { margin: 12px 0 14px; font-family: var(--f-display); font-weight: 400; font-size: clamp(2.6rem, 5.4vw, 4.6rem); line-height: 0.96; letter-spacing: 0.01em; text-transform: uppercase; }
+.sorteo h2 em { font-style: normal; color: var(--s-rojo); }
+.sorteo-cab p.d { margin: 0; color: var(--s-muted); font-size: 1.08rem; max-width: 44ch; }
+.sorteo-cab p.d b { color: var(--s-ink); }
+
+/* botones: los del Home (.boton) hechos <button> */
+.sorteo .boton { border: 0; font: inherit; cursor: pointer; text-align: left; }
+.sorteo .boton:not(.primario) { --b: #f6f6f2; --t: #111111; }
+.sorteo .boton:disabled { cursor: default; opacity: 0.72; transform: none; }
+.sorteo-girar { min-height: 80px; padding-right: 26px; }
+.sorteo-girar b { font-size: 1.85rem; }
+.sorteo-opciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.sorteo-opciones button, .sorteo-opciones label { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.06); color: var(--s-ink); font-family: var(--f-mono); font-size: 0.76rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+.sorteo-opciones button:hover, .sorteo-opciones label:hover { border-color: var(--s-rojo); }
+.sorteo-opciones input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent-fill); }
+.sorteo-opciones svg.i { width: 18px; height: 18px; }
+.sorteo-opciones [aria-pressed="false"] { color: var(--s-muted); }
+.sorteo-estado { margin: 0; font-family: var(--f-mono); font-size: 0.8rem; color: var(--s-muted); letter-spacing: 0.04em; }
+.sorteo-estado b { color: var(--s-ink); font-weight: 600; }
+.sorteo-hist { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 2px; list-style: none; max-height: 9.8rem; overflow: auto; }
+.sorteo-hist li { font-family: var(--f-display); font-size: 1.3rem; line-height: 1; padding: 8px 12px 7px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.14); }
+.sorteo-hist li small { font-family: var(--f-mono); font-size: 0.62rem; color: var(--s-muted); margin-right: 6px; vertical-align: 2px; }
+.sorteo-hist li:first-child { background: var(--accent-fill); border-color: var(--accent-fill); color: #fff; }
+.sorteo-hist li:first-child small { color: rgba(255, 255, 255, 0.82); }
+
+/* la ruleta: bisel con bombillos, la rueda (un canvas que gira con transform), el brillo fijo encima, el centro que también
+   la hace girar y, arriba, la lupa en forma de globo de diálogo cuya cola es el puntero */
+.sorteo .rayos { position: absolute; z-index: -1; left: 50%; top: calc(var(--d) * 0.56); width: calc(var(--d) * 1.9); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; opacity: 0.7; transition: opacity 0.6s ease; background: repeating-conic-gradient(from 0deg, rgba(255, 69, 69, 0.2) 0deg 5deg, transparent 5deg 15deg); -webkit-mask-image: radial-gradient(circle, #000 18%, transparent 68%); mask-image: radial-gradient(circle, #000 18%, transparent 68%); pointer-events: none; }
+.sorteo.girando .rayos, .sorteo.gano .rayos { opacity: 1; }
+.ruleta { position: relative; width: var(--d); height: var(--d); }
+.ruleta::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, #1d1d1d 0 62%, #0b0b0b 70.5%); box-shadow: 0 0 0 calc(var(--d) * 0.012) var(--accent-fill), 0 0 calc(var(--d) * 0.12) calc(var(--d) * -0.01) rgba(227, 20, 27, 0.55), 0 30px 60px -20px #000; }
+.ruleta .rueda, .ruleta .brillo { position: absolute; left: 5.5%; top: 5.5%; width: 89%; height: 89%; border-radius: 50%; }
+.ruleta .rueda { will-change: transform; }
+.ruleta .brillo { pointer-events: none; background: radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 42%), radial-gradient(circle, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.32) 100%); box-shadow: inset 0 0 0 calc(var(--d) * 0.006) rgba(255, 255, 255, 0.5), inset 0 calc(var(--d) * -0.03) calc(var(--d) * 0.06) rgba(0, 0, 0, 0.35); }
+.ruleta .luces { position: absolute; inset: 0; pointer-events: none; }
+.ruleta .luces i { position: absolute; left: 50%; top: 50%; width: calc(var(--d) * 0.024); height: calc(var(--d) * 0.024); margin: calc(var(--d) * -0.012) 0 0 calc(var(--d) * -0.012); border-radius: 50%; background: #fff3d6; box-shadow: 0 0 calc(var(--d) * 0.014) calc(var(--d) * 0.004) rgba(255, 214, 150, 0.85); transform: rotate(calc(var(--i) * 360deg / var(--n))) translateY(calc(var(--d) * -0.4725)); opacity: 0.8; }
+.ruleta .centro { position: absolute; z-index: 2; left: 50%; top: 50%; width: 34%; height: 34%; translate: -50% -50%; display: grid; place-content: center; justify-items: center; padding: 0; border-radius: 50%; border: calc(var(--d) * 0.014) solid var(--accent-fill); background: radial-gradient(circle at 40% 30%, #ffffff, #e6e6e1 72%); color: #111; font: inherit; cursor: pointer; box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.75), inset 0 -6px 14px rgba(0, 0, 0, 0.12); transition: scale 0.2s ease; }
+.ruleta .centro:hover:not(:disabled) { scale: 1.04; }
+.ruleta .centro:disabled { cursor: default; }
+.ruleta .centro small { font-family: var(--f-mono); font-weight: 600; font-size: max(9px, calc(var(--d) * 0.021)); letter-spacing: 0.1em; text-transform: uppercase; color: #5a5a56; line-height: 1.25; }
+.ruleta .centro .num { font-family: var(--f-display); font-weight: 400; font-size: calc(var(--d) * 0.118); line-height: 1.02; letter-spacing: 0.01em; color: #111; }
+.sorteo.gano .ruleta .centro .num { color: var(--accent-fill); }
+.sorteo-lupa { position: absolute; z-index: 3; left: 50%; top: calc(var(--d) * -0.045); width: calc(var(--d) * 0.5); height: calc(var(--d) * 0.095); translate: -50% 0; overflow: hidden; border: calc(var(--d) * 0.01) solid var(--accent-fill); border-radius: calc(var(--d) * 0.03); background: #fff; box-shadow: 0 14px 30px -10px rgba(0, 0, 0, 0.8); }
+.sorteo-lupa::before { content: ""; position: absolute; z-index: 1; inset: 0; pointer-events: none; background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0) 70%, #fff 100%); }
+.sorteo-lupa .pista { position: absolute; top: 0; bottom: 0; left: -40%; width: 180%; display: flex; will-change: transform; }
+.sorteo-lupa .pista span { flex: 1 1 0; display: grid; place-items: center; font-family: var(--f-display); font-size: calc(var(--d) * 0.046); line-height: 1; color: #8a8a84; }
+.sorteo-lupa .pista span:nth-child(5) { color: #111; }
+.sorteo-lupa .ventana { position: absolute; z-index: 2; left: 40%; width: 20%; top: 12%; bottom: 12%; border-radius: calc(var(--d) * 0.014); box-shadow: inset 0 0 0 2px rgba(227, 20, 27, 0.7); }
+.sorteo-puntero { position: absolute; z-index: 3; left: 50%; top: calc(var(--d) * 0.04); width: calc(var(--d) * 0.07); height: calc(var(--d) * 0.06); margin-left: calc(var(--d) * -0.035); overflow: visible; transform-origin: 50% 0; }
+.sorteo-puntero .relleno { fill: #fff; }
+.sorteo-puntero .borde { fill: none; stroke: var(--accent-fill); stroke-width: 8; stroke-linejoin: miter; }
+
+/* el número ganador: el globo «¡Trabajemos juntos!» con el número, rayos y confeti */
+.sorteo-ganador { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 24px var(--gutter); overflow: hidden; text-align: center; background: rgba(6, 6, 6, 0.86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.sorteo-ganador .estallido { position: absolute; left: 50%; top: 50%; width: max(170vw, 170vh); aspect-ratio: 1; translate: -50% -50%; pointer-events: none; background: radial-gradient(circle, rgba(227, 20, 27, 0.6) 0%, rgba(227, 20, 27, 0) 42%), repeating-conic-gradient(rgba(255, 255, 255, 0.075) 0deg 7deg, transparent 7deg 20deg); }
+.sorteo-ganador .caja { position: relative; display: grid; justify-items: center; gap: 4px; max-width: 100%; }
+.sorteo-ganador .ceja { font-size: clamp(0.92rem, 1.9vw, 1.35rem); color: #fff; background: var(--accent-fill); padding: 7px 14px; border-radius: 9px; }
+.sorteo-ganador .globo { --stroke: clamp(6px, 0.9vw, 11px); --cola: clamp(30px, 3.6vw, 52px); margin: 22px 0 calc(var(--cola) * 0.71 + 30px); max-width: 100%; padding: 0.11em 0.2em 0.03em; border-radius: clamp(24px, 3.6vw, 48px); background: #fff; font-size: clamp(5.5rem, min(30vw, 38vh), 22rem); line-height: 0.9; box-shadow: 0 0 0 calc(var(--stroke) * 2.2) rgba(227, 20, 27, 0.22), 0 40px 90px -24px rgba(0, 0, 0, 0.85); }
+.sorteo-ganador .globo .h { left: 0; font-size: 1em; line-height: inherit; color: #111; background: none; padding: 0; }
+/* la cola: un cuadrado blanco girado 45° con borde rojo abajo y a la derecha; su mitad de arriba tapa el borde del globo */
+.sorteo-ganador .globo .cola { display: none; }
+.sorteo-ganador .globo::after { content: ""; position: absolute; left: 20%; bottom: calc(-0.5 * var(--stroke) - 0.5 * var(--cola)); width: var(--cola); height: var(--cola); background: #fff; border-right: var(--stroke) solid var(--accent-fill); border-bottom: var(--stroke) solid var(--accent-fill); transform: rotate(45deg); }
+.sorteo-ganador p.detalle { margin: 0 0 14px; font-family: var(--f-mono); font-size: 0.9rem; letter-spacing: 0.05em; color: #d4d4ce; }
+.sorteo-ganador .acciones { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.sorteo-ganador .boton { min-height: 60px; padding-inline: 22px; }
+.sorteo-confeti { position: fixed; z-index: 90; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sorteo .ceja .vivo { animation: vivo 1.6s ease-out infinite; }
+  @keyframes vivo { from { box-shadow: 0 0 0 0 rgba(255, 69, 69, 0.75); } to { box-shadow: 0 0 0 12px rgba(255, 69, 69, 0); } }
+  .sorteo-girar:not(:disabled) { animation: llamar 2.4s ease-in-out infinite; }
+  @keyframes llamar { 0%, 100% { box-shadow: 0 0 0 0 rgba(227, 20, 27, 0.6), var(--sombra); } 50% { box-shadow: 0 0 0 16px rgba(227, 20, 27, 0), var(--sombra); } }
+  .sorteo .rayos { animation: rayos 70s linear infinite; }
+  @keyframes rayos { to { transform: rotate(360deg); } }
+  .ruleta .luces i { animation: foco 1.4s ease-in-out infinite; }
+  .ruleta .luces i:nth-child(odd) { animation-delay: -0.7s; }
+  @keyframes foco { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+  .sorteo.girando .ruleta .luces i { animation: carrera 0.7s linear infinite; animation-delay: calc(var(--i) * -2.8s / var(--n)); }
+  @keyframes carrera { 0%, 60%, 100% { opacity: 0.22; } 8% { opacity: 1; background: #fff; } }
+  .sorteo.gano .ruleta .luces i { animation: destello 0.3s steps(1) infinite; }
+  .sorteo.gano .ruleta .luces i:nth-child(odd) { animation-delay: -0.15s; }
+  @keyframes destello { 0% { opacity: 1; background: #fff; } 50% { opacity: 0.15; } }
+  .sorteo.gano .ruleta .centro { animation: latido 0.5s ease-in-out 3; }
+  @keyframes latido { 50% { scale: 1.1; } }
+  .sorteo-ganador .estallido { animation: rayos 40s linear infinite; }
+  .sorteo-ganador .caja > * { animation: salta 0.7s cubic-bezier(0.2, 1.45, 0.35, 1) both; animation-delay: calc(var(--k, 0) * 0.12s); }
+  @keyframes salta { from { opacity: 0; transform: scale(0.3) rotate(-6deg); } }
+}
+
+/* pantalla completa (para el proyector o una pantalla en el evento): la ruleta crece; Espacio, Enter, Av Pág o la flecha
+   derecha (el control del presentador) la hacen girar */
+.sorteo:fullscreen { --d: min(80vh, 50vw); display: grid; align-content: center; overflow: auto; padding-block: 4vh; border: 0; }
+.sorteo:-webkit-full-screen { --d: min(80vh, 50vw); display: grid; align-content: center; overflow: auto; padding-block: 4vh; border: 0; }
+.sorteo:fullscreen .sorteo-in { max-width: 1760px; }
+.sorteo:-webkit-full-screen .sorteo-in { max-width: 1760px; }
+@media (orientation: portrait) { .sorteo:fullscreen { --d: min(90vw, 54vh); } .sorteo:-webkit-full-screen { --d: min(90vw, 54vh); } }
+
+@media (max-width: 960px) {
+  .sorteo { padding-block: 60px 64px; }
+  .sorteo-in { grid-template-columns: minmax(0, 1fr); grid-template-areas: "cab" "escena" "mando"; justify-items: center; text-align: center; gap: 28px; }
+  .sorteo-cab, .sorteo-mando { justify-items: center; }
+  .sorteo-cab p.d { margin-inline: auto; }
+  .sorteo-opciones, .sorteo-hist { justify-content: center; }
+}
+@media (max-width: 720px) { .sorteo-girar { min-height: 66px; } .sorteo-girar b { font-size: 1.5rem; } }
 </style>
 </head>
 <body>
@@ -258,6 +382,7 @@ footer.pie nav a.ingreso { font-family: var(--f-body); text-transform: none; let
       <span><b>Trabajemos juntos</b><small>Yondó 2028–2031</small></span>
     </a>
     <nav class="atajos" aria-label="Secciones">
+      <a class="ir-sorteo" href="#sorteo">Sorteo</a>
       <a href="propuesta.html">Propuesta</a>
       <a href="atlas.html">Atlas</a>
     </nav>
@@ -292,6 +417,56 @@ footer.pie nav a.ingreso { font-family: var(--f-body); text-transform: none; let
       </div>
     </div>
     <a class="bajar" href="#areas"><span>Las siete áreas</span><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
+  </section>
+
+  <!-- SORTEO EN VIVO: el rango va en data-desde / data-hasta (o ?desde=…&hasta=… en la dirección) -->
+  <section class="sorteo" id="sorteo" data-desde="1" data-hasta="1200" aria-labelledby="t-sorteo">
+    <div class="sorteo-in wrap">
+      <div class="sorteo-cab revela">
+        <p class="ceja"><span class="vivo" aria-hidden="true"></span>Sorteo en vivo</p>
+        <h2 id="t-sorteo">La ruleta de <em>¡Trabajemos juntos!</em></h2>
+        <p class="d">Un número <b data-sorteo-rango>del 1 al 1.200</b>, elegido al azar en el momento del giro. ¡Que gire la suerte para Yondó!</p>
+      </div>
+      <div class="sorteo-escena revela" style="--k:1">
+        <div class="rayos" aria-hidden="true"></div>
+        <div class="ruleta">
+          <div class="luces" aria-hidden="true"></div>
+          <canvas class="rueda" width="600" height="600" aria-hidden="true"></canvas>
+          <div class="brillo" aria-hidden="true"></div>
+          <button class="centro" type="button" aria-label="Girar la ruleta"><small>Número</small><b class="num">?</b><small data-sorteo-corto>1–1200</small></button>
+          <div class="sorteo-lupa" aria-hidden="true"><div class="pista"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="ventana"></div></div>
+          <svg class="sorteo-puntero" viewBox="0 0 60 50" aria-hidden="true"><path class="relleno" d="M3 -3 H57 L30 47 Z"/><path class="borde" d="M5 0 L30 46 L55 0"/></svg>
+        </div>
+      </div>
+      <div class="sorteo-mando revela" style="--k:2">
+        <button class="boton primario sorteo-girar" type="button">
+          <span class="ico"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg></span>
+          <span><b>¡Girar la ruleta!</b><small>O toque el centro de la ruleta</small></span>
+        </button>
+        <div class="sorteo-opciones">
+          <label><input type="checkbox" id="sorteo-unico" checked> Sin repetir números</label>
+          <button type="button" data-sorteo="sonido" aria-pressed="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span>Sonido: sí</span></button>
+          <button type="button" data-sorteo="pantalla"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Pantalla completa</span></button>
+          <button type="button" data-sorteo="reiniciar" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.34-5.66M4 4v5h5"/></svg><span>Reiniciar</span></button>
+        </div>
+        <p class="sorteo-estado"></p>
+        <ol class="sorteo-hist" aria-label="Números que ya salieron, del último al primero"></ol>
+        <p class="oculto" id="sorteo-anuncio" aria-live="assertive"></p>
+      </div>
+    </div>
+    <div class="sorteo-ganador" hidden role="dialog" aria-modal="true" aria-labelledby="sorteo-gan-t" aria-describedby="sorteo-gan-n">
+      <div class="estallido" aria-hidden="true"></div>
+      <div class="caja">
+        <p class="ceja" id="sorteo-gan-t">¡Tenemos número ganador!</p>
+        <div class="globo" style="--k:1"><span class="h" id="sorteo-gan-n">?</span><svg class="cola" viewBox="0 0 60 40" aria-hidden="true"><rect class="hueco" x="3" y="-9" width="50" height="11"/><path class="borde" d="M4 0 L15 37 L52 0"/></svg></div>
+        <p class="detalle" style="--k:2"></p>
+        <div class="acciones" style="--k:3">
+          <button class="boton primario" type="button" data-sorteo="otra"><span><b>Girar otra vez</b></span></button>
+          <button class="boton" type="button" data-sorteo="cerrar"><span><b>Volver a la ruleta</b></span></button>
+        </div>
+      </div>
+    </div>
+    <canvas class="sorteo-confeti" hidden aria-hidden="true"></canvas>
   </section>
 
   <section class="areas wrap" id="areas" aria-labelledby="t-areas">
@@ -362,7 +537,7 @@ footer.pie nav a.ingreso { font-family: var(--f-body); text-transform: none; let
   <div class="wrap">
     <div class="globo"><span class="h">¡Trabajemos juntos!</span><svg class="cola" viewBox="0 0 60 40" aria-hidden="true"><rect class="hueco" x="3" y="-9" width="50" height="11"/><path class="borde" d="M4 0 L15 37 L52 0"/></svg></div>
     <p>Datos abiertos: cada cifra trae su fuente y se puede verificar o corregir.</p>
-    <nav aria-label="Pie"><a href="propuesta.html">Propuesta 2028–2031</a><a href="atlas.html">Atlas Yondó</a><!-- ingreso-equipo --></nav>
+    <nav aria-label="Pie"><a href="#sorteo">Sorteo</a><a href="propuesta.html">Propuesta 2028–2031</a><a href="atlas.html">Atlas Yondó</a><!-- ingreso-equipo --></nav>
   </div>
 </footer>
 
@@ -373,6 +548,383 @@ footer.pie nav a.ingreso { font-family: var(--f-body); text-transform: none; let
   if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) { els.forEach(function (e) { e.classList.add('visible'); }); return; }
   var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
   els.forEach(function (e) { io.observe(e); });
+})();
+</script>
+<script>
+// SORTEO EN VIVO. El número sale ANTES de girar, de crypto.getRandomValues con rechazo (uniforme, sin sesgo de módulo);
+// la ruleta solo lo muestra: se calcula el ángulo final para que el puntero caiga dentro de su casilla, lejos del borde.
+// Lo que ya salió queda en este navegador (localStorage), para que una recarga en pleno evento no lo borre, y con
+// «Sin repetir» sale de los giros siguientes. Rango: data-desde / data-hasta de la sección, o ?desde=…&hasta=….
+(function () {
+  'use strict';
+  var sec = document.getElementById('sorteo');
+  if (!sec) return;
+  var TAU = Math.PI * 2;
+  var reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function $(s) { return sec.querySelector(s); }
+  function entero(v) { v = v == null ? '' : String(v).trim(); return /^\d{1,6}$/.test(v) ? parseInt(v, 10) : NaN; }
+  function rango(d, h) { return d >= 0 && h > d && h - d < 100000 ? [d, h] : null; }
+  function miles(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+  var q = new URLSearchParams(location.search);
+  var r = rango(entero(q.get('desde') || sec.dataset.desde), entero(q.get('hasta') || sec.dataset.hasta))
+    || rango(entero(sec.dataset.desde), entero(sec.dataset.hasta)) || [1, 1200];
+  var DESDE = r[0], HASTA = r[1], N = HASTA - DESDE + 1, TH = TAU / N;
+  // sectores de color: el tamaño «redondo» más chico que deja 30 o menos; marcas con número cada S/5
+  var S = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000].find(function (s) { return N / s <= 30; });
+  var NS = Math.ceil(N / S), L = S >= 10 ? S / 5 : 0;
+  var COL = ['#e3141b', '#e0612a', '#c98a00', '#14a06c', '#0d8f96', '#2a78d6', '#6250d6', '#262626'];
+  function colorDe(s) { var c = s % COL.length; if (NS > 1 && s === NS - 1 && c === 0) c = 3; return COL[c]; }
+
+  var rueda = $('.rueda'), luces = $('.luces'), centro = $('.centro'), numCentro = $('.centro .num'), pista = $('.sorteo-lupa .pista'),
+    celdas = pista.children, puntero = $('.sorteo-puntero'), btn = $('.sorteo-girar'), btnTxt = $('.sorteo-girar b'),
+    chkUnico = $('#sorteo-unico'), btnSonido = $('[data-sorteo="sonido"]'), btnPantalla = $('[data-sorteo="pantalla"]'),
+    btnReiniciar = $('[data-sorteo="reiniciar"]'), lista = $('.sorteo-hist'), estado = $('.sorteo-estado'),
+    anuncio = $('#sorteo-anuncio'), capa = $('.sorteo-ganador'), capaNum = $('.sorteo-ganador .h'),
+    capaDet = $('.sorteo-ganador .detalle'), btnOtra = $('[data-sorteo="otra"]'), btnCerrar = $('[data-sorteo="cerrar"]'),
+    confCv = $('.sorteo-confeti');
+
+  sec.querySelectorAll('[data-sorteo-rango]').forEach(function (e) { e.textContent = 'del ' + miles(DESDE) + ' al ' + miles(HASTA); });
+  sec.querySelectorAll('[data-sorteo-corto]').forEach(function (e) { e.textContent = DESDE + '–' + HASTA; });
+
+  // ---- lo que ya salió (en este navegador)
+  var CLAVE = 'sorteo-' + DESDE + '-' + HASTA;
+  function leer(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function guardar(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } }
+  function borrar(k) { try { localStorage.removeItem(k); } catch (e) { /* sin almacenamiento */ } }
+  var salidos = [];
+  try {
+    var g = JSON.parse(leer(CLAVE) || '[]');
+    if (Array.isArray(g)) salidos = g.filter(function (n) { return Number.isInteger(n) && n >= DESDE && n <= HASTA; }).slice(-5000);
+  } catch (e) { salidos = []; }
+  if (leer('sorteo-unico') === 'no') chkUnico.checked = false;
+  var sonido = leer('sorteo-sonido') !== 'no';
+
+  // ---- azar: entero uniforme en [0, n)
+  function azar(n) {
+    var c = window.crypto;
+    if (c && c.getRandomValues) {
+      var b = new Uint32Array(1), lim = 4294967296 - (4294967296 % n);
+      do { c.getRandomValues(b); } while (b[0] >= lim);
+      return b[0] % n;
+    }
+    return Math.floor(Math.random() * n);
+  }
+  function disponibles() {  // null: todos los números pueden salir
+    if (!chkUnico.checked) return null;
+    var fuera = {}, p = [];
+    salidos.forEach(function (n) { fuera[n] = 1; });
+    for (var n = DESDE; n <= HASTA; n++) if (!fuera[n]) p.push(n);
+    return p;
+  }
+  function elegir() { var p = disponibles(); if (!p) return DESDE + azar(N); return p.length ? p[azar(p.length)] : null; }
+
+  // ---- la rueda. Casilla i (número DESDE + i) = [i·TH, (i+1)·TH) contra reloj desde arriba: al girar la rueda en el
+  // sentido del reloj un ángulo «a», bajo el puntero queda la casilla floor(a / TH) y los números van subiendo.
+  function tono(hex, k) {  // k > 0 aclara hacia blanco, k < 0 oscurece hacia negro
+    var n = parseInt(hex.slice(1), 16), m = k < 0 ? 0 : 255, t = Math.abs(k), c = [n >> 16, (n >> 8) & 255, n & 255];
+    return 'rgb(' + c.map(function (v) { return Math.round(v + (m - v) * t); }).join(',') + ')';
+  }
+  function dibujar() {
+    var lado = rueda.offsetWidth;
+    if (!lado) return;
+    var px = Math.min(2400, Math.round(lado * Math.min(window.devicePixelRatio || 1, 2.5)));
+    if (rueda.width !== px) { rueda.width = px; rueda.height = px; }
+    var c = rueda.getContext('2d'), R = px / 2, Rcss = lado / 2;
+    c.setTransform(1, 0, 0, 1, R, R);
+    c.clearRect(-R, -R, px, px);
+    function A(a) { return -Math.PI / 2 - a; }
+    var rIn = 0.37 * R, rOut = 0.99 * R, rBanda = 0.905 * R, s, i, a, a0, a1;
+    for (s = 0; s < NS; s++) {
+      a0 = s * S * TH; a1 = Math.min(N, (s + 1) * S) * TH;
+      var col = colorDe(s), gr = c.createRadialGradient(0, 0, rIn, 0, 0, rOut);
+      gr.addColorStop(0, tono(col, -0.5)); gr.addColorStop(0.55, col); gr.addColorStop(0.9, tono(col, 0.14)); gr.addColorStop(1, tono(col, -0.22));
+      c.beginPath(); c.arc(0, 0, rOut, A(a0), A(a1), true); c.arc(0, 0, rIn * 0.98, A(a1), A(a0), false); c.closePath();
+      c.fillStyle = gr; c.fill();
+    }
+    // banda de las marcas, con las casillas que ya salieron en negro
+    c.beginPath(); c.arc(0, 0, rOut, 0, TAU); c.arc(0, 0, rBanda, 0, TAU, true); c.fillStyle = 'rgba(0,0,0,0.3)'; c.fill();
+    c.fillStyle = 'rgba(8,8,8,0.82)';
+    salidos.forEach(function (n) {
+      var k = n - DESDE; c.beginPath(); c.arc(0, 0, rOut, A(k * TH), A((k + 1) * TH), true); c.arc(0, 0, rBanda, A((k + 1) * TH), A(k * TH), false); c.fill();
+    });
+    var fino = Math.max(1, R * 0.0016);
+    if (N <= 3000) {
+      c.beginPath();
+      for (i = 0; i < N; i++) if (i % S && (!L || i % L)) { a = A(i * TH); c.moveTo(Math.cos(a) * 0.955 * R, Math.sin(a) * 0.955 * R); c.lineTo(Math.cos(a) * rOut, Math.sin(a) * rOut); }
+      c.strokeStyle = 'rgba(255,255,255,0.5)'; c.lineWidth = fino; c.stroke();
+    }
+    if (L) {
+      c.beginPath();
+      for (i = 0; i < N; i += L) if (i % S) { a = A(i * TH); c.moveTo(Math.cos(a) * 0.922 * R, Math.sin(a) * 0.922 * R); c.lineTo(Math.cos(a) * rOut, Math.sin(a) * rOut); }
+      c.strokeStyle = 'rgba(255,255,255,0.9)'; c.lineWidth = fino * 1.8; c.stroke();
+    }
+    c.beginPath();
+    for (s = 0; s < NS; s++) { a = A(s * S * TH); c.moveTo(Math.cos(a) * rIn, Math.sin(a) * rIn); c.lineTo(Math.cos(a) * rOut, Math.sin(a) * rOut); }
+    c.strokeStyle = '#fff'; c.lineWidth = R * 0.007; c.stroke();
+    c.beginPath(); c.arc(0, 0, rOut, 0, TAU); c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = R * 0.008; c.stroke();
+    c.beginPath(); c.arc(0, 0, rIn, 0, TAU); c.strokeStyle = '#fff'; c.lineWidth = R * 0.014; c.stroke();
+    // números chicos cada L (solo si la rueda es grande) y el rango de cada sector, de adentro hacia afuera
+    c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#fff';
+    if (L && Rcss >= 200 && N / L <= 160) {
+      c.font = '600 ' + (R * 0.03).toFixed(1) + 'px "IBM Plex Mono", ui-monospace, monospace';
+      c.globalAlpha = 0.9;
+      for (i = 0; i < N; i++) if ((DESDE + i) % L === 0) { c.save(); c.rotate(A((i + 0.5) * TH)); c.fillText(String(DESDE + i), 0.857 * R, 0); c.restore(); }
+      c.globalAlpha = 1;
+    }
+    c.shadowColor = 'rgba(0,0,0,0.5)'; c.shadowBlur = R * 0.012;
+    for (s = 0; s < NS; s++) {
+      a0 = s * S; a1 = Math.min(N, (s + 1) * S);
+      var txt = S === 1 ? String(DESDE + s) : (DESDE + a0) + '–' + (DESDE + a1 - 1), fs = R * 0.075;
+      if ((a1 - a0) * TH * 0.45 * R < fs * 0.8) continue;
+      c.font = '400 ' + fs.toFixed(1) + 'px Anton, Impact, "Arial Narrow Bold", sans-serif';
+      var w = c.measureText(txt).width;
+      if (w > 0.34 * R) { fs *= 0.34 * R / w; c.font = '400 ' + fs.toFixed(1) + 'px Anton, Impact, "Arial Narrow Bold", sans-serif'; }
+      c.save(); c.rotate(A((a0 + a1) / 2 * TH)); c.fillText(txt, 0.6 * R, 0); c.restore();
+    }
+    c.shadowColor = 'transparent'; c.shadowBlur = 0;
+  }
+  for (var k = 0, NL = 36; k < NL; k++) { var b = document.createElement('i'); b.style.setProperty('--i', k); luces.appendChild(b); }
+  luces.style.setProperty('--n', 36);
+
+  // ---- el giro
+  var rot = 0, ultimo = -1, pAng = 0, girando = false, tGano = 0;
+  function pintar(a, vel) {  // vel: casillas por segundo (null: sin ruido ni puntero)
+    rueda.style.transform = 'rotate(' + a.toFixed(6) + 'rad)';
+    var x = (((a % TAU) + TAU) % TAU) / TH, i = Math.min(N - 1, Math.floor(x)), f = x - i;
+    if (i !== ultimo) {
+      ultimo = i;
+      if (girando) numCentro.textContent = DESDE + i;
+      for (var m = 0; m < 9; m++) celdas[m].textContent = DESDE + (((i + 4 - m) % N) + N) % N;
+      if (vel != null) { pAng = Math.min(12, pAng + 3 + Math.min(9, vel * 0.02)); clic(); }
+    }
+    pista.style.transform = 'translateX(' + ((f - 0.5) * 100 / 9).toFixed(3) + '%)';
+    puntero.style.transform = pAng > 0.05 ? 'rotate(' + (-pAng).toFixed(2) + 'deg)' : '';
+  }
+  function asentar() {  // el puntero vuelve a su sitio después del último clic
+    if (girando) return;
+    pAng *= 0.8;
+    if (pAng < 0.05) pAng = 0;
+    puntero.style.transform = pAng ? 'rotate(' + (-pAng).toFixed(2) + 'deg)' : '';
+    if (pAng) requestAnimationFrame(asentar);
+  }
+  function girar() {
+    if (girando) return;
+    var n = elegir();
+    if (n == null) { actualizar(); return; }
+    cerrarCapa(false);
+    if (sonido) ctxAudio();
+    girando = true;
+    clearTimeout(tGano);
+    sec.classList.remove('gano'); sec.classList.add('girando');
+    actualizar();
+    var i = n - DESDE, j = (azar(1001) / 1000 - 0.5) * 0.56;  // dentro de la casilla, a más de un 22 % de cada borde
+    var actual = ((rot % TAU) + TAU) % TAU, delta = (i + 0.5 + j) * TH - actual;
+    if (delta <= 0) delta += TAU;
+    var vueltas = reducido ? 1 : 5 + azar(3), a0 = rot, total = delta + vueltas * TAU;
+    var atras = reducido ? 0 : 0.1, tA = reducido ? 0 : 420, tB = reducido ? 1800 : 8000 + azar(1500);
+    var t0 = performance.now(), prev = a0, tPrev = t0;
+    requestAnimationFrame(function paso(ahora) {
+      var t = Math.max(0, ahora - t0), a, u;
+      if (t < tA) { u = t / tA; a = a0 - atras * (u < 0.5 ? 2 * u * u : 1 - Math.pow(2 - 2 * u, 2) / 2); }  // toma impulso
+      else { u = Math.min(1, (t - tA) / tB); a = a0 - atras + (total + atras) * (1 - Math.pow(1 - u, 4)); }
+      var dt = Math.max(1, ahora - tPrev), vel = Math.abs(a - prev) / TH * 1000 / dt;
+      pAng *= Math.pow(0.82, dt / 16.7);
+      prev = a; tPrev = ahora;
+      if (t < tA + tB) { pintar(a, vel); requestAnimationFrame(paso); return; }
+      rot = a0 + total;
+      pintar(rot, 0);
+      rot = ((rot % TAU) + TAU) % TAU;
+      terminar(n);
+    });
+  }
+  function terminar(n) {
+    girando = false;
+    sec.classList.remove('girando'); sec.classList.add('gano');
+    salidos.push(n);
+    guardar(CLAVE, JSON.stringify(salidos));
+    numCentro.textContent = n;
+    anuncio.textContent = 'Salió el número ' + n + '.';
+    fanfarria();
+    dibujar();
+    actualizar();
+    asentar();
+    tGano = setTimeout(function () { sec.classList.remove('gano'); }, 3400);
+    setTimeout(function () { if (!girando && salidos[salidos.length - 1] === n) abrirCapa(n); }, reducido ? 150 : 700);
+  }
+
+  // ---- estado, historial y botones
+  function actualizar() {
+    var p = disponibles(), agotado = !!p && !p.length;
+    btn.disabled = centro.disabled = girando || agotado;
+    btnTxt.textContent = girando ? 'Girando…' : agotado ? 'Ya salieron todos' : salidos.length ? '¡Girar otra vez!' : '¡Girar la ruleta!';
+    estado.textContent = '';
+    if (salidos.length) {
+      var b1 = document.createElement('b'); b1.textContent = miles(salidos.length);
+      estado.append(salidos.length === 1 ? 'Ha salido ' : 'Han salido ', b1, salidos.length === 1 ? ' número' : ' números');
+      if (p) { var b2 = document.createElement('b'); b2.textContent = miles(p.length); estado.append(' · quedan ', b2, ' de ' + miles(N)); }
+      else estado.append(' · cualquiera puede volver a salir');
+    } else estado.append('Todavía no ha salido ningún número.');
+    lista.textContent = '';
+    for (var k = salidos.length - 1; k >= 0; k--) {
+      var li = document.createElement('li'), sm = document.createElement('small');
+      sm.textContent = '#' + (k + 1); li.append(sm, String(salidos[k])); lista.appendChild(li);
+    }
+    lista.hidden = !salidos.length;
+    btnReiniciar.hidden = !salidos.length || girando;
+  }
+  function pintarSonido() { btnSonido.setAttribute('aria-pressed', String(sonido)); btnSonido.querySelector('span').textContent = sonido ? 'Sonido: sí' : 'Sonido: no'; }
+  btn.addEventListener('click', girar);
+  centro.addEventListener('click', girar);
+  chkUnico.addEventListener('change', function () { guardar('sorteo-unico', chkUnico.checked ? 'si' : 'no'); actualizar(); });
+  btnSonido.addEventListener('click', function () { sonido = !sonido; guardar('sorteo-sonido', sonido ? 'si' : 'no'); if (sonido) ctxAudio(); pintarSonido(); });
+  btnReiniciar.addEventListener('click', function () {
+    if (girando || !salidos.length) return;
+    if (!window.confirm('¿Borrar los ' + miles(salidos.length) + ' números que ya salieron y empezar el sorteo de nuevo?')) return;
+    salidos = []; borrar(CLAVE); numCentro.textContent = '?'; anuncio.textContent = 'Sorteo reiniciado.';
+    dibujar(); actualizar(); btn.focus();
+  });
+
+  // ---- el número ganador en grande
+  function abrirCapa(n) {
+    capaNum.textContent = n;
+    capaDet.textContent = 'Giro n.º ' + salidos.length + ' · ' + 'del ' + miles(DESDE) + ' al ' + miles(HASTA);
+    capa.hidden = false;
+    btnOtra.disabled = !!disponibles() && !disponibles().length;
+    (btnOtra.disabled ? btnCerrar : btnOtra).focus({ preventScroll: true });
+    confeti();
+  }
+  function cerrarCapa(foco) {
+    if (capa.hidden) return;
+    capa.hidden = true;
+    if (foco) btn.focus({ preventScroll: true });
+  }
+  btnOtra.addEventListener('click', girar);
+  btnCerrar.addEventListener('click', function () { cerrarCapa(true); });
+  capa.addEventListener('click', function (e) { if (e.target === capa || e.target.classList.contains('estallido')) cerrarCapa(true); });
+  function enPantalla() { return (document.fullscreenElement || document.webkitFullscreenElement) === sec; }
+  document.addEventListener('keydown', function (e) {
+    var clicker = e.key === 'PageDown' || e.key === 'ArrowRight';
+    if (!capa.hidden) {
+      if (e.key === 'Escape') { e.preventDefault(); cerrarCapa(true); }
+      else if (e.key === 'Tab') { e.preventDefault(); (document.activeElement === btnOtra || btnOtra.disabled ? btnCerrar : btnOtra).focus(); }
+      else if (clicker) { e.preventDefault(); girar(); }
+      return;
+    }
+    if (!enPantalla() || e.altKey || e.ctrlKey || e.metaKey) return;
+    var t = e.target, enControl = t && t.closest && t.closest('button, input, label, a');
+    if (clicker || ((e.key === ' ' || e.key === 'Enter') && !enControl)) { e.preventDefault(); girar(); }
+  });
+
+  // ---- pantalla completa
+  if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) btnPantalla.hidden = true;
+  btnPantalla.addEventListener('click', function () {
+    if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+    var pedir = sec.requestFullscreen || sec.webkitRequestFullscreen, pr = pedir && pedir.call(sec);
+    if (pr && pr.catch) pr.catch(function () { /* el navegador no la dio */ });
+  });
+  function alCambiarPantalla() { btnPantalla.querySelector('span').textContent = enPantalla() ? 'Salir de pantalla completa' : 'Pantalla completa'; }
+  document.addEventListener('fullscreenchange', alCambiarPantalla);
+  document.addEventListener('webkitfullscreenchange', alCambiarPantalla);
+
+  // ---- sonido: un clic de trinquete por cada número que pasa (como mucho uno cada 38 ms) y una fanfarria al final.
+  // Suena solo después de que alguien toca «Girar» (los navegadores no dejan sonar antes)
+  var audio = null, ruido = null, salida = null, ultClic = 0;
+  function ctxAudio() {
+    if (!audio) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { audio = new AC(); } catch (e) { return null; }
+      salida = audio.createDynamicsCompressor(); salida.connect(audio.destination);
+      var largo = Math.round(audio.sampleRate * 0.025), d;
+      ruido = audio.createBuffer(1, largo, audio.sampleRate); d = ruido.getChannelData(0);
+      for (var k = 0; k < largo; k++) d[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / largo, 5);
+    }
+    if (audio.state === 'suspended') audio.resume();
+    return audio;
+  }
+  function clic() {
+    if (!sonido || !audio) return;
+    var ahora = performance.now();
+    if (ahora - ultClic < 38) return;
+    ultClic = ahora;
+    var s = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
+    s.buffer = ruido; s.playbackRate.value = 0.9 + Math.random() * 0.25;
+    f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = 1.2; g.gain.value = 0.9;
+    s.connect(f); f.connect(g); g.connect(salida); s.start();
+  }
+  function nota(fr, t, dur, tipo, vol) {
+    var o = audio.createOscillator(), g = audio.createGain();
+    o.type = tipo; o.frequency.value = fr;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(salida); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function fanfarria() {
+    if (!sonido || !audio) return;
+    var t = audio.currentTime + 0.03;
+    [523.25, 659.25, 783.99, 1046.5].forEach(function (fr, k) { nota(fr, t + k * 0.12, k === 3 ? 1.1 : 0.18, 'triangle', 0.22); });
+    [523.25, 659.25, 783.99, 1046.5].forEach(function (fr) { nota(fr, t + 0.36, 1.3, 'sawtooth', 0.035); });
+  }
+
+  // ---- confeti con los colores de las siete áreas, y algunos globitos de «¡Trabajemos juntos!»
+  var PAL = ['#e3141b', '#ff4545', '#ffffff', '#e0612a', '#c98a00', '#14a06c', '#2a78d6', '#6250d6', '#0d8f96', '#ffd23f'];
+  var piezas = [], confRaf = 0, confCtx = null, confT0 = 0, confPrev = 0;
+  function globito(c, s) {
+    var w = s, h = s * 0.62;
+    c.beginPath();
+    if (c.roundRect) c.roundRect(-w / 2, -h / 2, w, h, h * 0.35); else c.rect(-w / 2, -h / 2, w, h);
+    c.moveTo(-w * 0.18, h / 2); c.lineTo(-w * 0.3, h); c.lineTo(w * 0.06, h / 2);
+    c.fillStyle = '#fff'; c.fill(); c.lineWidth = Math.max(1.5, s * 0.1); c.strokeStyle = '#e3141b'; c.stroke();
+  }
+  function confeti() {
+    if (reducido) return;
+    var W = innerWidth, H = innerHeight, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    confCv.width = Math.round(W * dpr); confCv.height = Math.round(H * dpr);
+    confCtx = confCv.getContext('2d'); confCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    confCv.hidden = false;
+    var cuantos = W < 640 ? 150 : 280, esc = Math.min(1.4, Math.max(0.75, H / 800));
+    for (var k = 0; k < cuantos; k++) {
+      var lado = k % 3, x, y, ang, vel;
+      if (lado === 2) { x = W / 2; y = H * 0.42; ang = Math.random() * TAU; vel = (3 + Math.random() * 10) * esc; }
+      else { x = lado ? W + 10 : -10; y = H * 0.95; ang = (lado ? -100 - Math.random() * 35 : -80 + Math.random() * 35) * Math.PI / 180; vel = (14 + Math.random() * 11) * esc; }
+      piezas.push({ x: x, y: y, vx: Math.cos(ang) * vel, vy: Math.sin(ang) * vel, g: 0.24 + Math.random() * 0.12, r: Math.random() * TAU,
+        vr: (Math.random() - 0.5) * 0.3, w: 6 + Math.random() * 7, h: 9 + Math.random() * 10, c: PAL[k % PAL.length],
+        tipo: k % 13 === 0 ? 2 : k % 4 === 0 ? 1 : 0, f: Math.random() * TAU });
+    }
+    confT0 = confPrev = performance.now();
+    if (!confRaf) confRaf = requestAnimationFrame(caer);
+  }
+  function caer(ahora) {
+    var c = confCtx, W = innerWidth, H = innerHeight, dt = Math.min(3, Math.max(0.2, (ahora - confPrev) / 16.7));
+    confPrev = ahora;
+    c.clearRect(0, 0, W, H);
+    piezas = piezas.filter(function (p) {
+      p.vx *= Math.pow(0.986, dt); p.vy = Math.min(5.5, p.vy * Math.pow(0.986, dt) + p.g * dt);
+      p.x += (p.vx + Math.sin(p.f) * 0.8) * dt; p.y += p.vy * dt; p.r += p.vr * dt; p.f += 0.12 * dt;
+      if (p.y > H + 40 || p.x < -80 || p.x > W + 80) return false;
+      c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.scale(1, Math.cos(p.f));
+      if (p.tipo === 2) globito(c, p.w * 1.8);
+      else { c.fillStyle = p.c; if (p.tipo === 1) { c.beginPath(); c.arc(0, 0, p.w * 0.5, 0, TAU); c.fill(); } else c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); }
+      c.restore();
+      return true;
+    });
+    if (piezas.length && ahora - confT0 < 10000) { confRaf = requestAnimationFrame(caer); return; }
+    confRaf = 0; piezas = []; c.clearRect(0, 0, W, H); confCv.hidden = true;
+  }
+
+  // ---- arranque: la rueda queda en el último número que salió (o en el primero)
+  rot = ((salidos.length ? salidos[salidos.length - 1] - DESDE : 0) + 0.5) * TH;
+  if (salidos.length) numCentro.textContent = salidos[salidos.length - 1];
+  pintar(rot, null);
+  pintarSonido();
+  actualizar();
+  dibujar();
+  if ('ResizeObserver' in window) {
+    var pend = 0;
+    new ResizeObserver(function () { if (!pend) pend = requestAnimationFrame(function () { pend = 0; dibujar(); }); }).observe(rueda);
+  } else addEventListener('resize', dibujar);
+  if (document.fonts && document.fonts.load) {
+    Promise.all([document.fonts.load('400 40px Anton'), document.fonts.load('600 20px "IBM Plex Mono"')]).then(dibujar, function () { /* sin fuentes: Impact o la del sistema */ });
+  }
 })();
 </script>
 </body>
