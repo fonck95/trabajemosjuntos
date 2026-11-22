@@ -42,6 +42,10 @@
 //   siguiente o el resumen) y en la espera de un plan nuevo, la primera: cuando le toque, suena sin esperar a Mnemo.
 //   `preparar` sale después de `decir` (la frase en curso no se suelta para hacerle lugar a la siguiente). Una voz
 //   sin `preparar` (la del navegador sola, las de las pruebas) funciona igual.
+// * El plan en flujo (app/agente/redactor.py): el panel lo escribe mientras suena. Llega `abierto` con sus primeros pasos
+//   y crece con `actualizar` (los pasos nuevos se agregan detrás; los que ya tenía no se tocan). Si la narración llega al
+//   último paso conocido antes que el siguiente, la imagen se queda y lo espera (ESPERA_MAS_MS como mucho, una pausa no
+//   cuenta); cuando llega entero (sin `abierto`), cierra como siempre. «Siguiente» en el último paso también espera.
 // Lógica pura: `orden`, `voz`, `reloj` y `avisar` llegan por parámetro (admin/tests lo prueba con Node y un reloj falso).
 
 // Los tiempos (los mismos de app/recorrido.py, que estima con ellos la duración: una prueba los compara)
@@ -59,6 +63,7 @@ export const ESPERA_ESCENA_MS = 25000;
 export const MAX_FALLAS = 2;
 export const TICK_MS = 250;
 export const DETENER_ESPERA_MS = 1000;
+export const ESPERA_MAS_MS = 45000;   // lo que un plan en flujo espera, como mucho, al paso que se está escribiendo
 export const FASES = ['preparando', 'narrando', 'sosteniendo', 'cierre', 'pausa', 'fin', 'detenido', 'error'];
 export const TERMINALES = ['fin', 'detenido', 'error'];
 export const CONTROLES = ['pausar', 'continuar', 'siguiente', 'anterior', 'repetir', 'detener'];
@@ -101,6 +106,7 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
   let enPrevia = false;    // la espera antes de la primera escena (`previa`): «siguiente» la corta y empieza
   let cede = 0;            // la generación cuya espera previa le cede el turno a la respuesta inmediata (0: ninguna)
   let alPrimera = null;    // resuelve la promesa de `iniciar` cuando la primera escena está a la vista (o falló)
+  let abierto = false;     // el plan en flujo se sigue escribiendo: al llegar a su último paso, espera el siguiente
   const despiertos = new Set();   // las esperas en curso: se despiertan al seguir o saltar
   const despertar = () => { for (const f of [...despiertos]) f(); };
   const oyentes = new Set();
@@ -175,6 +181,19 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       if (!await esperar(t, g)) return false;
       falta -= t;
     }
+    return vigente(g);
+  }
+
+  // El plan en flujo llegó a su último paso conocido: espera a que llegue el `k` o a que esté entero (sin `abierto`),
+  // ESPERA_MAS_MS de reloj corrido como mucho (una pausa no cuenta). Al vencer lo da por entero: cierra con lo que hay.
+  // false si la generación cambió
+  async function esperarMas(g, k) {
+    let falta = ESPERA_MAS_MS;
+    while (vigente(g) && abierto && de() < k && falta > 0) {
+      if (!await esperar(TICK_MS, g)) return false;
+      if (!pausado) falta -= TICK_MS;
+    }
+    if (falta <= 0) abierto = false;
     return vigente(g);
   }
 
@@ -310,7 +329,10 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       if (vigente(g)) enPrevia = false;   // si no, la cortó un salto, un detener u otro recorrido: lo suyo manda
       if (!paso) return;
     }
-    for (n = desde; n <= de(); n++) {
+    for (n = desde; ; n++) {
+      // el plan en flujo todavía se escribe: el paso siguiente se espera con la imagen quieta en el último
+      if (n > de() && abierto && !await esperarMas(g, n)) return;
+      if (n > de()) break;
       if (!await hastaSeguir(g)) return;
       const esc = r.escenas[n - 1];
       const res = await aplicarEscena(g, n);
@@ -388,8 +410,8 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
     enPrevia = false;
     despertar();
     const g = gen;
-    if (k > de()) cerrar(g).catch(() => {});
-    else jugar(g, Math.max(1, k), previa).catch(() => {});
+    if (k > de() && !abierto) cerrar(g).catch(() => {});
+    else jugar(g, Math.max(1, Math.min(k, de() + 1)), previa).catch(() => {});
   }
 
   const activo = () => !!r && !!fase && !TERMINALES.includes(fase);
@@ -398,7 +420,7 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
     /** Arranca `rec` (ya validado) desde la escena `desde`; un recorrido que suena se reemplaza. Con `previa` (ms)
      * espera eso antes de la primera escena, en «preparando» (un plan nuevo: el chat lo muestra entero antes de
      * empezar). Resuelve cuando la primera escena está a la vista (true) o no se pudo (false). */
-    iniciar(rec, { desde = 1, previa = 0 } = {}) {
+    iniciar(rec, { desde = 1, previa = 0, abierto: enFlujo = false } = {}) {
       if (activo()) {
         // lo que sonaba se corta aquí (no en el salto): así sus continuaciones ya no pueden emitir con el recorrido nuevo
         gen++;
@@ -413,6 +435,7 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       alPrimera?.(false);
       const primera = new Promise((ok) => { alPrimera = ok; });
       r = rec;
+      abierto = enFlujo === true;
       n = 0;
       fase = 'preparando';
       t0 = reloj.ahora();
@@ -424,6 +447,20 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
       saltar(Math.min(Math.max(1, desde | 0), de()), { previa: Number.isFinite(previa) && previa > 0 ? Math.min(previa, 30000) : 0 });
       return primera;
     },
+    /** El plan en flujo `rec` creció (el mismo id, ya validado): se agregan sus pasos nuevos y su cierre, sin cortar lo
+     * que suena; sin `abierto`, ya está entero. Si esperaba el paso siguiente, sigue con él. false si no es el que suena
+     * (otro lo reemplazó, terminó o se detuvo): entonces no hace nada. */
+    actualizar(rec, { abierto: enFlujo = false } = {}) {
+      if (!activo() || !rec || rec.id !== r.id || !Array.isArray(rec.escenas)) return false;
+      if (rec.escenas.length > r.escenas.length) r.escenas.push(...rec.escenas.slice(r.escenas.length));
+      r.cierre = rec.cierre ?? null;
+      abierto = enFlujo === true;
+      emitir();
+      despertar();
+      return true;
+    },
+    /** ¿Se sigue escribiendo (plan en flujo)? */
+    abierto: () => abierto && activo(),
     /** `suave`: entra al terminar la frase en curso (la persona escribe en el chat). */
     pausar(motivo = 'boton', { suave: s = false } = {}) {
       if (!activo() || pausado) return false;
@@ -447,7 +484,8 @@ export function crearReproductor({ orden, voz = sinVoz, reloj = relojDelNavegado
     alternar(motivo = 'boton') { return pausado || suave ? this.continuar() : this.pausar(motivo); },
     siguiente() {
       if (!activo()) return false;
-      if (n > de()) { terminar(gen, 'fin'); return true; }
+      if (n > de() && !abierto) { terminar(gen, 'fin'); return true; }
+      if (n > de()) return true;   // ya espera el paso que se está escribiendo
       saltar(enPrevia ? n : n + 1);   // en la espera de antes de empezar, «siguiente» es «empiece ya»
       return true;
     },

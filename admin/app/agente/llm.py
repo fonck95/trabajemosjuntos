@@ -76,6 +76,10 @@ CAPACIDADES = {
 # está en CAPACIDADES (puede pensar por defecto): con el esfuerzo `low` lo que razona antes de una frase corta es poco,
 # pero cuenta en `max_tokens`. Lo que se muestra no crece por esto: el tope de `adelanto.ADELANTO_MAX` corta antes
 MARGEN_PENSAR_RAPIDO = 700
+# Un `system` de una petición `rapido` desde este largo se marca para la caché: es el del plan en flujo
+# (`redactor.sistema_de`: las instrucciones y el guion de un capítulo, el mismo cada vez que se presenta). El de la
+# respuesta inmediata es corto (y sus mensajes cambian en cada turno): va sin caché
+SISTEMA_CACHEABLE = 8_000
 
 
 def capacidades(modelo: str) -> Capacidades:
@@ -270,7 +274,9 @@ class ProveedorAnthropic:
     async def generar(self, sistema: str, mensajes: list[dict], herramientas: list[dict], *, max_tokens: int,
                       esfuerzo: str, al_evento: Callable[[Evento], None], rapido: bool = False) -> Respuesta:
         if rapido:  # la respuesta inmediata: sin herramientas ni caché (sus mensajes cambian en cada turno)
-            kw: dict[str, Any] = {"system": sistema, "messages": para_peticion(mensajes),
+            # (salvo un `system` largo, que se repite: el del plan en flujo, con el guion de un capítulo)
+            kw: dict[str, Any] = {"system": sistema_para_peticion(sistema) if len(sistema) >= SISTEMA_CACHEABLE
+                                  else sistema, "messages": para_peticion(mensajes),
                                   **parametros_rapido(self.cfg, max_tokens=max_tokens)}
         else:
             kw = {"system": sistema_para_peticion(sistema), "messages": para_peticion(mensajes),

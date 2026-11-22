@@ -124,7 +124,8 @@ const MOVER = {
 const MS_MAX = 120000;
 const MAX_SIMULAR = 4;
 const ACCIONES_VISUAL = ['mover', 'animar', 'simular', 'ms'];
-const DEL_RECORRIDO = ['recorrido', 'desde', 'rid', 'accion', 'suave', 'motivo'];
+// (`sigue` y `abierto`: el plan en flujo que el panel todavía escribe, app/agente/redactor.py)
+const DEL_RECORRIDO = ['recorrido', 'desde', 'rid', 'accion', 'suave', 'motivo', 'sigue', 'abierto'];
 const CLAVES = new Set(['tipo', 'op', 'capitulo', 'paso', 'explicacion', 'panel', 'indice', 'fichas', 'activar', ...PARTES_VISUAL,
   ...ACCIONES_VISUAL, ...DEL_RECORRIDO]);
 const ID_VENTANA = /^[a-z0-9]{8,40}$/;
@@ -281,16 +282,21 @@ export function progresoValido(p) {
     ...(p.motivo != null ? { motivo: p.motivo } : {}), ...(p.aviso != null ? { aviso: p.aviso } : {}), t_ms: p.t_ms ?? 0 };
 }
 
-/** Las acciones del recorrido: `recorrido` (el recorrido entero y, si se reanuda, `desde`), `control_recorrido` (rid,
+/** Las acciones del recorrido: `recorrido` (el recorrido entero y, si se reanuda, `desde`; el plan en flujo llega
+ * `abierto` mientras el panel lo escribe y, cada vez que crece, otra vez con `sigue`: se agrega al que suena con ese id,
+ * sin empezarlo de nuevo, y si no suena aquí no se hace nada), `control_recorrido` (rid,
  * accion de CONTROLES, `suave` solo con pausar y `motivo` 'otra_orden' solo con detener: el servidor lo cerró porque el
  * asistente mostró otra cosa) y `preparando` (activar: la píldora mientras el asistente arma). */
 function accionRecorrido(a) {
   const solo = (claves) => Object.keys(a).every((k) => k === 'tipo' || k === 'op' || claves.includes(k));
   if (a.op === 'recorrido') {
-    if (!solo(['recorrido', 'desde'])) return null;
+    if (!solo(['recorrido', 'desde', 'sigue', 'abierto'])) return null;
+    if ((a.sigue !== undefined && a.sigue !== true) || (a.abierto !== undefined && a.abierto !== true)) return null;
+    if (a.sigue && a.desde !== undefined) return null;
     const r = recorridoValido(a.recorrido);
     if (!r || (a.desde !== undefined && !entero(a.desde, 1, r.escenas.length))) return null;
-    return { tipo: 'presentacion', op: 'recorrido', recorrido: r, ...(a.desde !== undefined ? { desde: a.desde } : {}) };
+    return { tipo: 'presentacion', op: 'recorrido', recorrido: r, ...(a.desde !== undefined ? { desde: a.desde } : {}),
+      ...(a.sigue ? { sigue: true } : {}), ...(a.abierto ? { abierto: true } : {}) };
   }
   if (a.op === 'control_recorrido') {
     if (!solo(['rid', 'accion', 'suave', 'motivo']) || typeof a.rid !== 'string' || !RID.test(a.rid) || !CONTROLES.includes(a.accion)) return null;
@@ -463,8 +469,9 @@ export function estadoDePantalla(e) {
   const x = e.recorrido;
   if (x && typeof x === 'object' && entero(x.edad_s, 0, 1e9)) {
     const r = recorridoValido({ id: x.id, titulo: x.titulo, escenas: x.escenas, cierre: x.cierre });
-    // (`auto`: el plan de la presentación automática; la clave solo viaja cuando lo es, y solo vale `true`)
-    if (r) recorrido = { ...r, edad_s: x.edad_s, ...(x.auto === true ? { auto: true } : {}) };
+    // (`auto`: el plan de la presentación automática; la clave solo viaja cuando lo es, y solo vale `true`. `abierto`, lo
+    // mismo: el plan en flujo que el panel todavía escribe)
+    if (r) recorrido = { ...r, edad_s: x.edad_s, ...(x.auto === true ? { auto: true } : {}), ...(x.abierto === true ? { abierto: true } : {}) };
   }
   const c = e.control_recorrido;
   if (recorrido && c && typeof c === 'object' && c.rid === recorrido.id && (CONTROLES.includes(c.accion) || c.accion === 'reproducir')

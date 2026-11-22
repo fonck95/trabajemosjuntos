@@ -516,8 +516,13 @@ def test_definicion_y_esquema():
     assert s["properties"]["zoom"] == {**s["properties"]["zoom"], "type": "number", "minimum": 0.3, "maximum": 3}
     assert s["properties"]["sin"]["maxItems"] == 8 and s["properties"]["sin"]["items"]["type"] == "string"
     assert "PLAN" in d["description"] and "pasos" in d["description"] and "dice" in d["description"]
-    # el esquema va en cada pedido al modelo (14000 hasta que los pasos del plan llevaron el gesto del presentador)
-    assert len(texto) < 14200
+    # el esquema va en cada pedido al modelo (14000 hasta que los pasos del plan llevaron el gesto del presentador; 14200
+    # hasta el plan en flujo, `plan`, que le ahorra al modelo leer el guion y escribir el plan entero en cada explicación)
+    assert len(texto) < 14600
+    # el plan en flujo: capitulo y encargo (sin la rama «null»); por MCP no va
+    assert s["properties"]["encargo"]["maxLength"] == 600 and s["properties"]["largo"]["enum"] == ["corto", "normal"]
+    assert "plan" in s["properties"]["op"]["enum"] and "LO MÁS RÁPIDO: plan" in d["description"]
+    assert "plan" not in hi._esquema_presentacion(con_plan=False)["properties"]["op"]["enum"]
     assert "gestos" in s["properties"]["pasos"]["items"]["properties"]["gesto"]["description"]
     # Al final de las de interfaz: el orden fijo de `fijas()` (las conversaciones congelan la lista)
     assert [h.nombre for h in herramientas.fijas()][-1] == "presentacion"
@@ -790,6 +795,10 @@ def test_sistema_explica_cuando_usarla():
     assert "UNA frase hablada (`dice`" in t and "MIENTRAS se dice" in t and "MIENTRAS explica" in t
     assert "ANTES de esa llamada, una sola línea que anuncia el plan" in t and "DESPUÉS, solo una pregunta corta" in t
     assert "La explicación ES la narración del plan: no la repitas ni la resumas en el chat" in t
+    # lo más rápido y lo primero: el plan en flujo (el panel lo escribe y la sala lo oye desde su primer paso), sin
+    # pedir el guion; el modelo no escribe nada después (el turno termina con el plan)
+    assert "LO MÁS RÁPIDO, y lo primero: `presentacion` op `plan`" in t and "No pidas `guion` antes" in t
+    assert "después no escribas nada: el turno termina con el plan" in t
     for campo in ("`mover`", "`aislar`", "`mostrar`", "`ocultar`", "`sin`", "`mirar`", "`elevacion`", "`zoom`", "`animar`",
                   "`detalle`", "`comparar`", "`inmersion`", "`resaltar`"):
         assert campo in t, campo

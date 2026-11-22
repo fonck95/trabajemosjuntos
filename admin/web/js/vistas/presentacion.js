@@ -568,7 +568,11 @@ export async function vistaPresentacion(el, { q } = {}) {
   // entra cuando la escena ya está a la vista (antes, el cambio de imagen la taparía con «preparando»). `previa`: un
   // plan nuevo desde el primer paso espera PREVIA_MS antes de empezar (el chat lo muestra entero)
   async function aplicarRecorrido(p, { enPausa = false, previa = false } = {}) {
-    const primera = rep.iniciar(p.recorrido, { desde: p.desde || 1, ...(previa ? { previa: PREVIA_MS } : {}) });
+    // el plan en flujo que crece (`sigue`): se agrega al que suena con ese id, sin empezarlo de nuevo; si no suena aquí
+    // (terminó, se detuvo, lo reemplazó otro), no se hace nada
+    if (p.sigue) return { op: p.op, ok: rep.actualizar(p.recorrido, { abierto: p.abierto === true }) };
+    const primera = rep.iniciar(p.recorrido, { desde: p.desde || 1, ...(previa ? { previa: PREVIA_MS } : {}),
+      ...(p.abierto ? { abierto: true } : {}) });
     if (enPausa) primera.then((ok) => { if (ok && rep.recorrido() === p.recorrido) rep.pausar('boton'); });
     await Promise.race([primera, dormir(PRIMERA_ESCENA_MS)]);
     return { op: p.op, ok: true };
@@ -591,8 +595,8 @@ export async function vistaPresentacion(el, { q } = {}) {
       if (!p) { res.push({ op: typeof a?.op === 'string' ? a.op.slice(0, 30) : null, ok: false, error: 'Acción no válida' }); continue; }
       if (p.op === 'recorrido') {
         // un plan nuevo llega sin `desde`; el que se traspasa de otra ventana lo trae siempre, y el que se reanuda o se
-        // vuelve a reproducir ya pasó por aquí
-        const nuevo = esNuevo(p.recorrido);
+        // vuelve a reproducir ya pasó por aquí. El plan en flujo que crece (`sigue`) no es nuevo
+        const nuevo = !p.sigue && esNuevo(p.recorrido);
         res.push(await aplicarRecorrido(p, { previa: nuevo && p.desde === undefined }));
         continue;
       }
@@ -810,8 +814,14 @@ export async function vistaPresentacion(el, { q } = {}) {
         // el que esta pantalla retoma (ya tuvo avance) o ya reprodujo no espera; el que le llega nuevo, sí (el de la
         // automática, nunca: nadie lo está leyendo en el chat)
         const nuevo = esNuevo(r);
-        await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde }, { enPausa: pr?.fase === 'pausa', previa: nuevo && !pr && !esAuto });
+        await aplicarRecorrido({ op: 'recorrido', recorrido: r, desde, ...(x.abierto === true ? { abierto: true } : {}) },
+          { enPausa: pr?.fase === 'pausa', previa: nuevo && !pr && !esAuto });
       }
+    } else if (x && x.id === ridOff && rep.activo() && rep.recorrido()?.id === x.id &&
+        (x.escenas.length > rep.recorrido().escenas.length || (rep.abierto() && !x.abierto))) {
+      // el plan en flujo creció (o ya está entero): se agrega al que suena, sin empezarlo de nuevo
+      const { edad_s: _edad, ...r } = x;
+      rep.actualizar(r, { abierto: x.abierto === true });
     } else if (!x && rep.activo()) {
       // el asistente pidió otra cosa o lo detuvo: el servidor lo cerró
       await rep.detener('otra_orden');

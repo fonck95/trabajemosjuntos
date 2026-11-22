@@ -83,11 +83,13 @@ const VOZ_ALLA = {
 
 const cadena = (v, max) => typeof v === 'string' && v.trim() && [...v].length <= max && !/[\u0000-\u001f\u007f]/.test(v);
 
-/** La acción `recorrido` con la forma exacta, copiada, o null. */
+/** La acción `recorrido` con la forma exacta, copiada, o null. `abierto` (solo `true`): el plan en flujo que el panel
+ * todavía escribe; la misma acción vuelve, con el mismo id, cada vez que crece (`crecer` de la tarjeta). */
 export function tarjetaValida(a) {
   if (!a || typeof a !== 'object' || Array.isArray(a) || a.tipo !== 'recorrido') return null;
-  const claves = ['tipo', 'id', 'titulo', 'destino', 'duracion_ms', 'cierre', 'sugerencias', 'escenas'];
+  const claves = ['tipo', 'id', 'titulo', 'destino', 'duracion_ms', 'cierre', 'sugerencias', 'escenas', 'abierto'];
   if (Object.keys(a).some((k) => !claves.includes(k))) return null;
+  if (a.abierto !== undefined && a.abierto !== true) return null;
   if (typeof a.id !== 'string' || !RID.test(a.id) || !cadena(a.titulo, MAX_TITULO)) return null;
   if (a.destino !== 'vista' && a.destino !== 'pantalla_off') return null;
   if (!Number.isInteger(a.duracion_ms) || a.duracion_ms < 0 || a.duracion_ms > 600000) return null;
@@ -108,7 +110,14 @@ export function tarjetaValida(a) {
     if (!Array.isArray(e.hace) || e.hace.length > maxHace || !e.hace.every((h) => Object.prototype.hasOwnProperty.call(HACE, h))) return null;
     escenas.push({ narracion: e.narracion, donde: e.donde, hace: [...new Set(e.hace)] });
   }
-  return { id: a.id, titulo: a.titulo, destino: a.destino, duracion_ms: a.duracion_ms, cierre, sugerencias: [...sug], escenas };
+  return { id: a.id, titulo: a.titulo, destino: a.destino, duracion_ms: a.duracion_ms, cierre, sugerencias: [...sug], escenas,
+    abierto: a.abierto === true };
+}
+
+/** La tarjeta viva del plan `rid` en este chat (la del plan en flujo, que crece), o null. */
+export function tarjetaDe(rid) {
+  for (const t of tarjetasVivas) if (t.el.isConnected && t.id() === rid) return t;
+  return null;
 }
 
 export function duracion(ms) {
@@ -400,7 +409,7 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   const lista = el('ol', 'rec-escenas');
   lista.tabIndex = 0;   // se desplaza: con el teclado también
   lista.setAttribute('aria-label', 'Pasos del plan');
-  const items = a.escenas.map((e, i) => {
+  const nuevoItem = (e, i) => {
     const li = el('li', 'rec-escena');
     const hecho = el('span', 'sr');   // «Hecho»: la marca, para quien no la ve
     const texto = el('p', 'rec-narracion');
@@ -414,19 +423,22 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
       chips.append(c);
     }
     li.append(marcaDe(), hecho, el('b', 'rec-donde', e.donde), texto, chips);
-    lista.append(li);
+    // (detrás del último paso, antes del cierre si ya está: el plan en flujo crece)
+    if (liCierre) lista.insertBefore(li, liCierre); else lista.append(li);
     return { li, hecho, frases: spans, avisos: new Set(), aviso: null };
-  });
+  };
   let liCierre = null;
   let hechoCierre = null;
-  if (a.cierre) {
+  const items = a.escenas.map(nuevoItem);
+  const ponerCierre = () => {
     liCierre = el('li', 'rec-escena rec-cierre');
     hechoCierre = el('span', 'sr');
     const pts = el('ul', 'rec-puntos');
     for (const x of a.cierre) pts.append(el('li', null, x));
     liCierre.append(marcaDe(), hechoCierre, el('b', 'rec-donde', 'En resumen'), pts);
     lista.append(liCierre);
-  }
+  };
+  if (a.cierre) ponerCierre();
   const notaEl = el('p', 'rec-nota');
   notaEl.hidden = true;
 
@@ -455,18 +467,23 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
   bReanudar.hidden = true;
   final.append(bOtra, bReanudar);
   const sugerencias = el('div', 'rec-sugerencias');
-  for (const s of a.sugerencias) {
-    const b = el('button', 'btn chico rec-sugerencia', s);
-    b.type = 'button';
-    b.addEventListener('click', () => alSugerencia?.(s));
-    sugerencias.append(b);
-  }
+  const ponerSugerencias = () => {
+    sugerencias.replaceChildren();
+    for (const s of a.sugerencias) {
+      const b = el('button', 'btn chico rec-sugerencia', s);
+      b.type = 'button';
+      b.addEventListener('click', () => alSugerencia?.(s));
+      sugerencias.append(b);
+    }
+  };
+  ponerSugerencias();
   sugerencias.hidden = true;
   art.append(cab, avance, fila, lista, notaEl, controles, final, sugerencias);
   art.dataset.etapa = 'listo';
 
   function pintarMeta() {
-    const partes = [`${a.escenas.length} ${a.escenas.length === 1 ? 'paso' : 'pasos'}`, `≈ ${duracion(a.duracion_ms)}`, DONDE[donde]];
+    const partes = [`${a.escenas.length} ${a.escenas.length === 1 ? 'paso' : 'pasos'}${a.abierto ? ' por ahora: el panel sigue escribiéndolo' : ''}`,
+      `≈ ${duracion(a.duracion_ms)}`, DONDE[donde]];
     meta.textContent = partes.join(' · ');
   }
   pintarMeta();
@@ -875,6 +892,23 @@ export function crearTarjetaRecorrido(a, { el, ico, alSugerencia, reproducir, gu
     pausado: () => (ordenPropia && Date.now() - ordenPropia.en < ORDEN_PROPIA_MS ? ordenPropia.pausa : ultimo?.fase === 'pausa'),
     avance: () => ultimo,
     controlar,
+    /** El plan en flujo creció (`v`, ya validada, con este id): se agregan sus pasos nuevos, el cierre, las sugerencias y
+     * la duración; sin `abierto`, ya está entero. Los pasos que ya tenía no se tocan. */
+    crecer(v) {
+      if (!v || v.id !== a.id) return false;
+      try { propias = frases?.(a.id) ?? propias; } catch { /* las de antes */ }
+      for (let i = a.escenas.length; i < v.escenas.length; i++) {
+        a.escenas.push(v.escenas[i]);
+        items.push(nuevoItem(v.escenas[i], i));
+      }
+      if (v.cierre && !a.cierre) { a.cierre = v.cierre; ponerCierre(); }
+      if (v.sugerencias.length) { a.sugerencias = v.sugerencias; ponerSugerencias(); }
+      a.duracion_ms = v.duracion_ms;
+      a.abierto = v.abierto;
+      pintarMeta();
+      if (ultimo) pintar(ultimo);
+      return true;
+    },
   };
   tarjetasVivas.add(t);
   escuchar();

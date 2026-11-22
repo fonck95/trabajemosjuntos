@@ -371,7 +371,7 @@ def test_el_plan_automatico_llega_al_reproductor_con_auto_y_no_espera_preguntas(
     vista = VISTA_JS.read_text(encoding="utf-8")
     rec = vista[vista.index("async function recorridoDeLaPantalla(e)"):vista.index("const enSuEscena")]
     i = rec.index("const { edad_s: _edad, ...r } = x;")
-    assert rec.index("recorrido: r, desde }", i) > i and "auto: _auto" not in vista
+    assert rec.index("recorrido: r, desde, ", i) > i and "auto: _auto" not in vista
     assert "rep.iniciar(p.recorrido, {" in vista
 
 

@@ -347,7 +347,7 @@ def _plazo(h: Herramienta) -> float:
     if h.nombre_remoto:
         from . import mnemo_cliente as mc
         return (mc.PLAZO_ESCRITURA_S if h.tipo == "escritura" else mc.PLAZO_LECTURA_S) + mc.PLAZO_CATALOGO_S + 5
-    return PLAZO_HERRAMIENTA_S
+    return h.plazo or PLAZO_HERRAMIENTA_S
 
 
 def _entrada_pendiente(h: Herramienta, args: Any, crudo: Any) -> Any:
@@ -451,6 +451,9 @@ class Turno:
         self.quien, self.ajustes, self.agente, self.api = quien, ajustes, agente, api
         self.conv, self.cid, self.titulo, self.turno, self.limite = conv, cid, titulo, turno, limite
         self.proveedor = proveedor  # el de la conversación (congelado) o, si es nueva, el que rige ahora
+        # Una herramienta de la ronda dejó hecho y a la vista lo que se pidió (`Resultado.termina_turno`: el plan en
+        # flujo de la presentación): si toda la ronda salió bien, el turno termina sin otra ronda del modelo
+        self.termina_turno = False
         self.cola: asyncio.Queue = asyncio.Queue()
         self.arrancado = asyncio.Event()
         self.tarea: asyncio.Task | None = None
@@ -737,7 +740,8 @@ class Turno:
 
     def _contexto(self, tid: str) -> Contexto:
         return Contexto(quien=self.quien, db=self.db, cfg=self.cfg, app=self.app, api=self.api, ajustes=self.ajustes,
-                        conversacion_id=self.cid, tool_use_id=tid, mnemo=self.mnemo)
+                        conversacion_id=self.cid, tool_use_id=tid, mnemo=self.mnemo, proveedor=self.proveedor,
+                        emitir=self.emitir)
 
     async def _guardar(self, rol: str, contenido: Any = None, replay: bool = True, tokens: int | None = None,
                        **campos: Any) -> None:
@@ -1036,6 +1040,7 @@ class Turno:
             if r.fin in CORTES:
                 await self._avisar(AVISO_INCOMPLETA if r.fin == "other" else AVISO_CORTADA, "info")
             return "listo"
+        self.termina_turno = False
         if r.fin == "tool_use":
             bloques, ui, llamadas, fatal = await self._ejecutar(usos)
         else:  # entrada cortada: el analizador tolerante da un objeto parcial «válido», que no se ejecuta
@@ -1058,6 +1063,11 @@ class Turno:
         historial.append({"role": "user", "content": resultados})
         if fatal is not None:
             raise FinDelTurno(fatal.mensaje, fatal.codigo)
+        if self.termina_turno and ui and all(x.get("estado") == "ok" for x in ui):
+            # El plan en flujo ya sonó en la sala y la tarjeta trae sus sugerencias: otra ronda solo agregaría una
+            # pregunta, y costaría reenviar la conversación entera y unos segundos más con el turno ocupado. El
+            # resultado queda en el historial (el modelo lo lee con el mensaje siguiente: los dos `user` se juntan)
+            return "listo"
         return None
 
     # ── Las herramientas ──
@@ -1207,6 +1217,8 @@ class Turno:
         if personas:
             await self._anotar(personas, desde, _personas_de_entrada(args) if h.tipo == "escritura" else frozenset())
         resumen = _corto(res.resumen) or "Listo"
+        if res.termina_turno:
+            self.termina_turno = True
         self._herramienta(tid, h.nombre, h.etiqueta, "ok", resumen)
         for a in _acciones(res.acciones):
             self.emitir({"tipo": "accion", "accion": a})

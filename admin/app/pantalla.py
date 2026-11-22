@@ -210,7 +210,7 @@ def para_pantalla(e: dict, doc: dict | None = None, guion: Any = None, ahora: da
         creado = _aware(r.get("creado")) or ahora
         out["recorrido"] = {**{k: r[k] for k in ("id", "titulo", "escenas", "cierre")},
                             "edad_s": max(0, int((ahora - creado).total_seconds())),
-                            **({"auto": True} if r["auto"] else {})}
+                            **({"auto": True} if r["auto"] else {}), **({"abierto": True} if r["abierto"] else {})}
         c = (doc or {}).get("control_recorrido")
         if isinstance(c, dict) and c.get("rid") == r["id"] and c.get("accion") in rec.CONTROLES and \
                 isinstance(c.get("n"), int):
@@ -238,7 +238,8 @@ def recorrido_de(doc: dict | None, guion: Any) -> dict | None:
     if rec.validar(absoluto, guion):
         return None
     return {**absoluto, "destino": r["destino"], "cerrado": r["cerrado"], "creado": r.get("creado"),
-            "auto": r.get("auto") is True, "externo": r.get("externo") is True}
+            "auto": r.get("auto") is True, "externo": r.get("externo") is True,
+            "en_flujo": r.get("en_flujo") is True, "abierto": r.get("abierto") is True}
 
 
 def progreso_de(doc: dict | None, r: dict | None) -> dict | None:
@@ -271,25 +272,29 @@ def a_la_vista(doc: dict | None, guion: Any, r: dict | None = None) -> dict | No
     return {**doc, **base_en_curso(doc, r)}
 
 
-def _poner_recorrido(absoluto: dict, destino: str, por: str) -> dict:
+def _poner_recorrido(absoluto: dict, destino: str, por: str, abierto: bool = False) -> dict:
     """Lo que se escribe al guardar un recorrido nuevo: sin control ni avance, con la base en su última escena y sin
     explicación. `externo`: lo escribió un agente por MCP, o es la copia de uno así (`controlar` «reproducir» la pasa
-    con `externo`): la marca no se pierde aunque otro lo vuelva a reproducir."""
+    con `externo`): la marca no se pierde aunque otro lo vuelva a reproducir. `abierto`: el plan en flujo que el panel
+    todavía está escribiendo (`agente/redactor.py`): crece con `crecer_recorrido` y queda con `en_flujo` para siempre
+    (su avance puede contar menos pasos de los guardados: el navegador recibe los nuevos un momento después)."""
+    flujo = {"en_flujo": True, "abierto": True} if abierto else {}
     return {**rec.estado_de_escena(absoluto["escenas"][-1]),
-            "recorrido": {**absoluto, "destino": destino, "creado": _ahora(), "cerrado": False, "auto": por == "auto",
-                          "externo": por == "mcp" or absoluto.get("externo") is True},
+            "recorrido": {**{k: absoluto[k] for k in ("id", "titulo", "escenas", "cierre")}, "destino": destino,
+                          "creado": _ahora(), "cerrado": False, "auto": por == "auto",
+                          "externo": por == "mcp" or absoluto.get("externo") is True, **flujo},
             "control_recorrido": None, "progreso": None, "actualizada": _ahora(), "por": por}
 
 
-def guardar_recorrido(db: Database, uid: int, absoluto: dict, destino: str, por: str) -> dict:
+def guardar_recorrido(db: Database, uid: int, absoluto: dict, destino: str, por: str, abierto: bool = False) -> dict:
     """Guarda un recorrido nuevo de un agente o del panel (reemplaza al anterior), sin control ni avance, con la base
     en su última escena y sin explicación. Sube la versión. Si sonaba el plan de la presentación automática, lo suelta
     (`auto.rid` en None): la posición se queda y, cuando este termine, sigue desde ahí. (El plan automático lo guarda
-    `siguiente_auto`.)"""
+    `siguiente_auto`.) `abierto`: un plan en flujo que se sigue escribiendo (`crecer_recorrido`)."""
     if destino not in rec.DESTINOS or por not in ORIGENES or por == "auto":
         raise ValueError("pantalla.guardar_recorrido")
     doc = db.pantallas.find_one_and_update(
-        {"_id": uid}, {"$set": _poner_recorrido(absoluto, destino, por), "$inc": {"v": 1}},
+        {"_id": uid}, {"$set": _poner_recorrido(absoluto, destino, por, abierto), "$inc": {"v": 1}},
         upsert=True, return_document=ReturnDocument.AFTER)
     # (desde la escritura de arriba el plan automático ya no es el vigente, y `auto_de` no lo da por suyo: esto solo
     # deja `auto.rid` como es. Aparte y con filtro: una pantalla que nunca la encendió no gana un `auto` a medias)
@@ -297,6 +302,21 @@ def guardar_recorrido(db: Database, uid: int, absoluto: dict, destino: str, por:
         doc = db.pantallas.find_one_and_update({"_id": uid, "auto.rid": doc["auto"]["rid"]}, {"$set": {"auto.rid": None}},
                                                return_document=ReturnDocument.AFTER) or doc
     return doc
+
+
+def crecer_recorrido(db: Database, uid: int, absoluto: dict, abierto: bool) -> dict | None:
+    """El plan en flujo `absoluto` (el mismo id, con los pasos que ya tenía y los nuevos, y su cierre) mientras el panel
+    lo escribe (`agente/redactor.py`): solo sobre ese recorrido, todavía sin cerrar y en flujo. Sube la versión (la
+    pantalla en off ve los pasos nuevos en su próxima pregunta) y deja la base en su última escena, como al guardarlo.
+    Con `abierto` en False ya está entero. Devuelve el documento nuevo, o None si ya no es el vigente (la persona lo
+    detuvo, otra orden lo cerró, llegó otro): entonces el panel deja de escribirlo."""
+    return db.pantallas.find_one_and_update(
+        {"_id": uid, "recorrido.id": absoluto["id"], "recorrido.cerrado": False, "recorrido.en_flujo": True},
+        {"$set": {**rec.estado_de_escena(absoluto["escenas"][-1]), "recorrido.titulo": absoluto["titulo"],
+                  "recorrido.escenas": absoluto["escenas"], "recorrido.cierre": absoluto["cierre"],
+                  "recorrido.abierto": bool(abierto), "actualizada": _ahora()},
+         "$inc": {"v": 1}},
+        return_document=ReturnDocument.AFTER)
 
 
 def colapsar(db: Database, uid: int, guion: Any, por: str = "asistente", rid: str | None = None) -> dict | None:
@@ -328,8 +348,10 @@ def guardar_progreso(db: Database, uid: int, p: dict, guion: Any = None) -> bool
     la presentación automática, además lleva su posición (`_auto_tras_avance`; con `guion`, ya en un paso que existe)."""
     doc = db.pantallas.find_one({"_id": uid}, {"recorrido": 1, "progreso": 1, "auto": 1})
     r = (doc or {}).get("recorrido")
-    if not isinstance(r, dict) or r.get("id") != p["rid"] or r.get("cerrado") is not False or \
-            p["n"] > len(r.get("escenas") or []) or p["de"] != len(r.get("escenas") or []):
+    # (un plan en flujo crece en el servidor antes que en el navegador: su avance puede contar menos pasos)
+    total = len(r.get("escenas") or []) if isinstance(r, dict) else 0
+    if not isinstance(r, dict) or r.get("id") != p["rid"] or r.get("cerrado") is not False or p["n"] > total or \
+            (p["de"] > total if r.get("en_flujo") is True else p["de"] != total):
         return False
     previos = [a for a in ((doc.get("progreso") or {}).get("avisos") or []) if (doc.get("progreso") or {}).get("rid") == p["rid"]]
     if p.get("aviso"):
@@ -666,7 +688,7 @@ def describir_auto(doc: dict | None, guion: Any, ahora: datetime | None = None) 
         if a["rid"] and x.get("id") == a["rid"]:
             t += (", en pausa" if x["fase"] == "pausa" else "") + \
                 (f"; voz: {x['voz'].replace('_', ' ')}" if x.get("voz") else "")
-    return (f"{t}. Si la persona pregunta algo, respóndele con un plan CORTO (recorrido de 3 a 5 pasos): la interrumpe "
+    return (f"{t}. Si la persona pregunta algo, respóndele con un plan CORTO (plan con largo corto, o recorrido de 3 a 5 pasos): la interrumpe "
             "y, cuando termina, sigue sola desde ese paso. No la detengas ni la reinicies si no te lo piden (op "
             "automatica)")
 

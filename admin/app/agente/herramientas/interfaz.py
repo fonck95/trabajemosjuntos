@@ -688,7 +688,11 @@ async def _abrir_vista(ctx: Contexto, a: AbrirVistaEntrada) -> Resultado:
 # ───────────────────────────── presentacion ─────────────────────────────
 
 OPS_PRESENTACION = ("indice", "guion", "ir", "siguiente", "anterior", "explicar", "quitar_explicacion", "vista",
-                    "visual", "recorrido", "control_recorrido", "automatica", "pantalla_completa", "estado")
+                    "visual", "recorrido", "plan", "control_recorrido", "automatica", "pantalla_completa", "estado")
+# `plan`: el plan en flujo (`agente/redactor.py`), solo del asistente del panel: con el capítulo y un encargo, el panel
+# escribe el plan y la pantalla lo narra mientras se escribe. Por MCP no se ofrece (no hay modelo del panel que lo escriba)
+PARTES_PLAN = ("encargo", "largo")
+OP_PLAN = "plan: el panel escribe el plan (capitulo, encargo) y la sala lo oye mientras se escribe; "
 # Lo que se le pide a la presentación automática (`automatica`): encenderla (desde un capítulo, si se dice) o apagarla
 ACCIONES_AUTO = ("iniciar", "detener")
 # Lo que arma un plan guiado (`recorrido`: hacia el modelo y la persona, un «plan» con «pasos»; por dentro, un recorrido
@@ -962,8 +966,9 @@ class CierreEntrada(_Entrada):
 
 class PresentacionEntrada(_Entrada):
     op: Literal[OPS_PRESENTACION] = Field(..., description=(
-        "indice: los capítulos y los títulos de sus pasos; guion: todo lo de un capítulo para armar un plan; recorrido: "
-        "el plan (titulo, pasos, cierre) que la pantalla ejecuta sola; control_recorrido: lo pausa, salta o detiene; "
+        "indice: los capítulos y los títulos de sus pasos; " + OP_PLAN + "guion: todo lo de un capítulo para armar "
+        "un plan; recorrido: el plan (titulo, pasos, cierre) que la pantalla ejecuta sola; control_recorrido: lo "
+        "pausa, salta o detiene; "
         "ir: a un capítulo y paso (devuelve lo que muestra ese paso); siguiente o anterior: un paso (con capitulo y "
         "paso de partida, los del contexto del panel, devuelve el paso de destino); explicar: muestra una o dos frases "
         "cortas en pantalla; quitar_explicacion: la quita; vista: lo que se ve sin cambiar de paso (panel, indice, "
@@ -1028,6 +1033,9 @@ class PresentacionEntrada(_Entrada):
         "recorrido: dos o tres ideas que quedan en la sala"))
     sugerencias: Annotated[list[Sugerencia], BeforeValidator(_sugerencias_a_su_manera)] | None = Field(
         None, max_length=rec.MAX_SUGERENCIAS, description="recorrido: hasta 3 próximos pasos, solo para el chat (no se proyectan)")
+    encargo: str | None = Field(None, min_length=8, max_length=600, description=(
+        "plan: qué mostrar y contar, con lo que pidió la persona (de una a tres frases)"))
+    largo: Literal["corto", "normal"] | None = Field(None, description="plan: corto (3 a 5 pasos) o normal (6 a 10)")
     accion: Literal[(*rec.CONTROLES, "iniciar")] | None = Field(None, description=(
         "control_recorrido: pausar, continuar, siguiente, anterior, repetir, reproducir (otra vez, desde el comienzo) o "
         "detener. automatica: iniciar o detener"))
@@ -1052,14 +1060,15 @@ class PresentacionEntrada(_Entrada):
     @model_validator(mode="after")
     def _segun_op(self):
         vista, completa, visual = PARTES_VISTA, ("activar",), PARTES_VISUAL
-        propias = {"recorrido": PARTES_RECORRIDO, "control_recorrido": ("accion",),
+        propias = {"recorrido": PARTES_RECORRIDO, "plan": PARTES_PLAN, "control_recorrido": ("accion",),
                    "automatica": ("accion",)}.get(self.op, ())
-        ajenas = [k for k in (*PARTES_RECORRIDO, "accion") if k not in propias and getattr(self, k) is not None]
+        ajenas = [k for k in (*PARTES_RECORRIDO, *PARTES_PLAN, "accion") if k not in propias and getattr(self, k) is not None]
         if ajenas:
             raise ValueError(f"La operación {self.op} no usa: {', '.join(ajenas)}")
         sobran = {"indice": ("capitulo", "paso", "explicacion", *vista, *completa),
                   "guion": ("explicacion", *vista, *completa),
                   "recorrido": ("capitulo", "paso", "explicacion", *vista, *completa),
+                  "plan": ("paso", "explicacion", *vista, *completa),
                   "control_recorrido": ("capitulo", "paso", "explicacion", *vista, *completa),
                   "automatica": ("paso", "explicacion", *vista, *completa),
                   "quitar_explicacion": ("capitulo", "paso", "explicacion", *vista, *completa),
@@ -1101,6 +1110,9 @@ class PresentacionEntrada(_Entrada):
             raise ValueError("Para guion, indique el capítulo (id o nombre, del índice)")
         if self.op == "recorrido" and self.pasos is not None and self.escenas is not None:
             raise ValueError("pasos y escenas son lo mismo: mande solo pasos")
+        if self.op == "plan" and (self.capitulo is None or self.encargo is None):
+            raise ValueError("Para plan, indique el capitulo (id o nombre, del índice) y el encargo: qué mostrar y "
+                             "contar, en una a tres frases")
         if self.op == "recorrido" and not self.plan():
             raise ValueError("Para recorrido, escriba el titulo y los pasos del plan (de 6 a 10, una frase cada uno)")
         if self.op == "control_recorrido" and self.accion not in rec.CONTROLES:
@@ -1112,12 +1124,25 @@ class PresentacionEntrada(_Entrada):
         return self
 
 
-def _esquema_presentacion() -> dict:
+def _esquema_presentacion(con_plan: bool = True) -> dict:
     """El esquema de la entrada para el modelo: sin la rama «null» del paso (número o id; el modelo simplemente omite la
     clave), sin los nombres de antes (`escenas`, `narracion`: se siguen aceptando, pero el plan se pide con `pasos` y
     `dice`; repetirlos doblaría el esquema), con `dice` como lo único obligatorio de un paso del plan y con cada control
-    de `simular` como un objeto."""
+    de `simular` como un objeto. Sin `con_plan` (el servidor MCP), sin la op `plan` ni sus partes."""
     s = esquema(PresentacionEntrada)
+    if con_plan:   # (sin la rama «null», como el paso: el modelo omite la clave)
+        for k in PARTES_PLAN:
+            x = s["properties"][k]
+            x.update(next((r for r in x.pop("anyOf", []) if r != {"type": "null"}), {}))
+            x.pop("default", None)
+    else:
+        for k in PARTES_PLAN:
+            s["properties"].pop(k, None)
+        op = s["properties"]["op"]
+        if isinstance(op.get("enum"), list):
+            op["enum"] = [x for x in op["enum"] if x != "plan"]
+        if isinstance(op.get("description"), str):
+            op["description"] = op["description"].replace(OP_PLAN, "")
     s["properties"].pop("escenas", None)
     del_plan = s["properties"]["pasos"].get("items") or {}
     (del_plan.get("properties") or {}).pop("narracion", None)
@@ -1277,6 +1302,9 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
     escena), y una orden que cambia lo que se ve lo cierra recién cuando ya no puede fallar: un capítulo que no existe o
     un componente mal escrito vuelve con su error y la narración sigue."""
     g = await cargar_guion()
+    if a.op == "plan":   # (el asistente la corre en `_presentacion`, con su modelo: por aquí llega solo de MCP)
+        raise ErrorHerramienta("El plan en flujo lo escribe el asistente del panel: por MCP, arme el plan con guion y "
+                               "recorrido.", "sin_redactor", estado=409)
     if a.op == "indice":
         return Resultado({**g.indice(), "nota": (
             "Para mostrar un paso, op ir con su capitulo (id) y paso (número desde 1). Lo que se ve en cada paso le "
@@ -2587,7 +2615,7 @@ async def _automatica(db: Any, uid: int, g: guion_presentacion.Guion, a: Present
 
 
 # Las ops que proyectan texto escrito por el modelo: en una conversación que ya trae datos de habitantes no van
-PROYECTAN_TEXTO = ("recorrido", "explicar")
+PROYECTAN_TEXTO = ("recorrido", "plan", "explicar")
 
 
 async def _presentacion(ctx: Contexto, a: PresentacionEntrada) -> Resultado:
@@ -2599,6 +2627,9 @@ async def _presentacion(ctx: Contexto, a: PresentacionEntrada) -> Resultado:
                 "Esta conversación ya trae datos de habitantes: lo que se proyecta ante la sala no puede llevar texto "
                 "escrito aquí. Para presentar con narración, abra una conversación nueva; ir y visual sí funcionan.",
                 "con_personas", estado=409)
+    if a.op == "plan":
+        from .. import redactor   # aquí: el redactor usa lo de este módulo
+        return await redactor.escribir(ctx, a, await cargar_guion())
     return await presentacion_en_pantalla(ctx.db, ctx.quien.uid, a, "asistente")
 
 
@@ -2639,14 +2670,32 @@ D_PRESENTACION = (
     "visual (lo de un paso, simular y tema). La sala lo ve: nunca datos de habitantes, costos, «@» ni números de 7 o más "
     "dígitos.")
 
+# El asistente del panel tiene además el plan en flujo (`plan`): lo primero para explicar. El servidor MCP usa
+# D_PRESENTACION tal cual (sin esa op)
+D_PRESENTACION_ASISTENTE = (
+    "Presenta la propuesta Yondó 2028–2031 en su versión técnica (lo que se construye, sin costos, en la maqueta 3D "
+    "y los modelos del atlas) en el panel de la persona o en su pantalla en off. PARA EXPLICAR, UN PLAN; LO MÁS RÁPIDO: plan, "
+    "con capitulo y encargo (qué mostrar y contar; largo corto para una pregunta): el panel escribe el plan con el guion "
+    "y la sala lo ve y lo oye desde su primer paso, sin pedir guion. Para un plan de varios capítulos: guion y luego "
+    "recorrido, en UNA llamada: titulo, pasos (de 6 a 10, hasta 12) y cierre {puntos}; cada paso: dice (UNA frase de "
+    "hasta 220 caracteres) y lo que ocurre MIENTRAS se dice: capitulo, paso, la cámara (camara, rumbo, elevacion, zoom, "
+    "mirar, mover {giro, zoom, elevacion}), las piezas (aislar, mostrar, ocultar, sin «pieza.parte»), enfoque, detalle, "
+    "comparar, inmersion y simular [{control, valor}] (el sismo o la hora de la maqueta), animar, resaltar, gesto; lo "
+    "demás sigue y lo que no exista se descarta con aviso. control_recorrido lo pausa, salta o detiene. automatica "
+    "(accion iniciar o detener): la pantalla en off recorre sola toda la presentación, muy resumida; un plan corto la "
+    "interrumpe y luego sigue. Pedidos puntuales: indice, estado, pantalla_completa y, deteniendo el plan, ir; "
+    "siguiente/anterior; explicar y quitar_explicacion; vista (panel, indice, fichas); visual (lo de un paso, simular y "
+    "tema). La sala lo ve: nunca datos de habitantes, costos, «@» ni números de 7 o más dígitos.")
+
 HERRAMIENTAS: list[Herramienta] = [
     Herramienta("mapa", D_MAPA, MapaEntrada, "interfaz", ("mapa.ver",), "Moviendo el mapa", _mapa,
                 esquema=esquema(MapaEntrada)),
     Herramienta("abrir_vista", D_ABRIR_VISTA, AbrirVistaEntrada, "interfaz", ("cuenta",), "Abriendo la vista",
                 _abrir_vista, esquema=esquema(AbrirVistaEntrada)),
     # Sin el guion (un despliegue que no lo trae) no se ofrece: no habría qué explicar
-    Herramienta("presentacion", D_PRESENTACION, PresentacionEntrada, "interfaz", ("presentacion.ver",),
+    # (su plazo alcanza para escribir un plan en flujo: `redactor.PLAZO_S`, y lo demás de la op)
+    Herramienta("presentacion", D_PRESENTACION_ASISTENTE, PresentacionEntrada, "interfaz", ("presentacion.ver",),
                 "Presentando la propuesta", _presentacion,
                 disponible=lambda quien, ajustes, cfg: guion_presentacion.hay_guion(),
-                esquema=_esquema_presentacion()),
+                esquema=_esquema_presentacion(), plazo=170.0),
 ]

@@ -27,7 +27,7 @@ import { accionesPresentacion, accionPresentacion, estadoPresentacion, presentac
 // existe rompería la carga del módulo entero
 import * as puente from './agente-presentacion.js';
 import { automaticaValida, crearFranjaAutomatica, crearTarjetaRecorrido, montarBarraRecorrido, pausaPorMensaje,
-  pausaPorVoz, recorridoDelChat, tarjetaValida } from './agente-recorrido.js';
+  pausaPorVoz, recorridoDelChat, tarjetaDe, tarjetaValida } from './agente-recorrido.js';
 import { sinBase, url } from './base.js';
 import { crearDictado, soporteDeDictado, textoDeEstado } from './dictado.js';
 import { crearLocutor } from './locutor.js';
@@ -1502,6 +1502,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       nota('El asistente armó un plan que no se puede mostrar aquí.', 'alerta');
       return;
     }
+    // el plan en flujo vuelve con el mismo id cada vez que crece: la tarjeta que ya está en el chat suma sus pasos
+    if (tarjetaDe(v.id)?.crecer(v)) return;
     const t = crearTarjetaRecorrido(v, {
       el, ico,
       // las frases de cada paso, ya partidas (la tarjeta resalta la que suena): las del recorrido de esta pestaña
@@ -1637,6 +1639,12 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       return;
     }
     if (p.op === 'recorrido') { guardarRecorrido(p.recorrido); pildora = false; }
+    // la píldora «El asistente prepara la explicación…» que pide el servidor (el plan en flujo, antes de su primer paso)
+    if (p.op === 'preparando') {
+      if (!p.activar) { apagarPildora(); return; }
+      if (!(presentacionLista() || proyectorVivo()) || recorridoEnCurso() || recorridoDelChat()) return;
+      pildora = true;
+    }
     // Detener un recorrido que no suena en este navegador (el servidor lo cerró porque el asistente pidió otra cosa, y
     // sonaba en otro lado o ya había terminado): no hay nada que hacer, y no se abre la presentación para eso
     if (p.op === 'control_recorrido' && p.accion === 'detener' && recorridoEnCurso()?.rid !== p.rid) return;

@@ -426,7 +426,7 @@ def test_protocolo_mcp():
     assert _rpc(db, "ping")["result"] == {}
     herramientas = _rpc(db, "tools/list")["result"]["tools"]
     assert [h["name"] for h in herramientas] == ["presentacion"]
-    assert herramientas[0]["inputSchema"]["properties"]["op"]["enum"] == list(hi.OPS_PRESENTACION)
+    assert herramientas[0]["inputSchema"]["properties"]["op"]["enum"] == [o for o in hi.OPS_PRESENTACION if o != "plan"]  # (el plan en flujo es solo del asistente)
     assert "pantalla en off de la persona" in herramientas[0]["description"]
     r = _rpc(db, "tools/call", {"name": "presentacion", "arguments": {"op": "ir", "capitulo": "vivienda", "paso": 2}})
     res = r["result"]
