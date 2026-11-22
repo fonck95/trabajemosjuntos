@@ -270,19 +270,20 @@ def test_planillero_lista_su_zona_y_busca_en_toda_la_base(sesion, como):
         assert e.codigo == "permiso" and e.estado == 403 and not e.fatal
 
 
-def test_presupuesto_del_planillero_termina_el_turno(sesion, como):
+def test_el_planillero_busca_sin_tope_diario(sesion, como):
+    """Sin tope de personas consultadas por día: un `presupuesto_diario` guardado de antes ya no frena al planillero,
+    y cada persona mostrada sigue quedando registrada en `lecturas`."""
     app, db = sesion.app, sesion.app.state.db
     db.meta.update_one({"_id": "ajustes"}, {"$set": {"presupuesto_diario": {"planillero": 3, "consultor": 300}}},
                        upsert=True)
     insertar_personas(db, [{"nombre": f"PRESUPUESTO INVENTADO {i}", "consentimiento": "pendiente"} for i in range(6)])
     p = como("planillero")
     ctx = aa.contexto(app, p)
-    e = _error_ejecutar(sesion, ctx, "buscar_personas", {"q": "presupuesto", "orden": "nombre"})
-    assert e.codigo == "volumen" and e.estado == 429 and e.fatal is True
-    assert db.lecturas.count_documents({"uid": p.uid}) == 0  # las personas de esa respuesta no se sirvieron
-    # Tras el primer rechazo del día ya no recibe listas, aunque pida menos
-    e = _error_ejecutar(sesion, ctx, "buscar_personas", {"filtros": {"tratables": True}})
-    assert e.codigo == "volumen" and e.fatal
+    r = _ejecutar(sesion, ctx, "buscar_personas", {"q": "presupuesto", "orden": "nombre"})
+    assert len(r.personas) == 6
+    assert db.lecturas.count_documents({"uid": p.uid}) == 6
+    # Y sigue recibiendo listas
+    assert _ejecutar(sesion, ctx, "buscar_personas", {"filtros": {"tratables": True}}).personas
 
 
 def test_consultor_busca_por_nombre_o_numero_y_ve_solo_su_trabajo(sesion, como):
@@ -658,7 +659,16 @@ def test_autorizacion_reglas_por_rol(sesion, como):
     p, c = como("planillero"), como("consultor")
     ctx = aa.contexto(app, p)
     n = db.autorizaciones.count_documents({})
-    e = _error_confirmar(sesion, ctx, "registrar_autorizacion", {"persona_id": pid, "estado": "si",
+    # El «sí» del planillero va sin más pasos: sin evidencia ni «mayor de 18» la tarjeta se arma
+    tarjeta = _confirmar(sesion, ctx, "registrar_autorizacion", {"persona_id": pid, "estado": "si",
+                                                                 "medio": "escrito", "canales": ["llamada"]})
+    assert ("Medio", modelo.MEDIOS_AUTORIZACION["escrito"]) in tarjeta.detalle
+    # Sin medio, el presencial (el que registra la API)
+    tarjeta = _confirmar(sesion, ctx, "registrar_autorizacion", {"persona_id": pid, "estado": "si"})
+    assert ("Medio", modelo.MEDIOS_AUTORIZACION["verbal_presencial"]) in tarjeta.detalle
+    # A quien dijo «no», su «sí» sigue pidiendo todo
+    nid = persona(db, nombre="TEODOSIA INVENTADA NO", telefono="3156667700", consentimiento="no")
+    e = _error_confirmar(sesion, ctx, "registrar_autorizacion", {"persona_id": nid, "estado": "si",
                                                                  "medio": "escrito", "canales": ["llamada"]})
     assert e.codigo == "invalido" and "evidencia" in e.mensaje and "mayor" in e.mensaje
     assert _error_confirmar(sesion, ctx, "registrar_autorizacion", {"persona_id": pid,

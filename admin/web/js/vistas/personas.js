@@ -84,7 +84,6 @@ const etiquetaOculto = (k, v, f) => (OCULTOS[k] ? OCULTOS[k](v, f)
   : k.startsWith('sin_') ? `Sin ${(ETIQUETAS_CAMPOS[k.slice(4)] || k.slice(4)).toLowerCase()}` : `${k.replace(/_/g, ' ')}: ${v}`);
 
 const POR_PAGINA = 50;
-const TOPE_PLANILLERO = 1000;
 
 export async function vistaPersonas(el, { q, ir }) {
   const f = Object.fromEntries(FILTROS.filter((k) => q.get(k)).map((k) => [k, q.get(k)]));
@@ -259,7 +258,8 @@ export async function vistaPersonas(el, { q, ir }) {
         ${buscado && puede('personas.crear') ? html`<div style="margin-top:12px"><button class="btn primario" data-nueva-buscado>${icono('mas')} Nueva persona con lo buscado</button></div>` : ''}</div></td></tr>`);
     }
     const porPagina = d.por_pagina || POR_PAGINA;
-    const tope = d.tope ?? (esP ? TOPE_PLANILLERO : null);
+    // Sin tope diario de personas consultadas: el planillero recorre todas las páginas (solo un tope del servidor corta)
+    const tope = d.tope ?? null;
     const totalVisible = tope ? Math.min(d.total, tope) : d.total;
     const paginas = Math.max(1, Math.ceil(totalVisible / porPagina));
     const enTope = tope && d.total > tope && pagina >= paginas;

@@ -104,26 +104,12 @@ def georreferenciar_y_punto(db: Database, ids: list[int]) -> None:
 
 # ───────────────────────────── Habitantes y búsqueda ─────────────────────────────
 
-def exigir_listas_del_dia(db: Database, quien: Quien) -> None:
-    """Después del primer 429 por volumen del día, P y C ya no reciben listas (Habitantes y colas) hasta mañana, ni
-    siquiera de personas ya vistas: las listas son la vía de extracción masiva. La ficha ya vista se puede reabrir."""
-    if quien.administra or quien.uid in (None, 0):
-        return
-    u = db.usuarios.find_one({"_id": quien.uid}, {"volumen": 1}) or {}
-    v = u.get("volumen") if isinstance(u.get("volumen"), dict) else {}
-    if v.get("dia") == modelo.hoy_local().isoformat() and (v.get("rechazos") or 0) >= 1:
-        tope = acceso.presupuesto(db, quien.rol)
-        raise HTTPException(429, {"mensaje": f"Llegó al tope de {tope} personas consultadas hoy. Podrá seguir mañana.",
-                                  "codigo": "volumen"})
-
-
 @r.get("/personas")
 def listar(f: Filtros = Depends(filtros_query), orden: str = "nombre", pagina: int = 1, por_pagina: int = 50,
            estricta: int = 0, db: Database = Depends(obtener_db),
            quien: Quien = Depends(requiere("personas.listar", limitar=True))):
     f._estricta = bool(estricta)  # el asistente: `q` solo por el nombre o por un número entero (`filtros.q_estricta`)
     q = consulta(db, quien, f, con_alcance=True)  # vedados (403) y alcance obligatorio para P
-    exigir_listas_del_dia(db, quien)
     por_pagina = max(10, min(por_pagina, 200))
     pagina = max(1, min(pagina, 10_000))
     total = db.personas.count_documents(q)
@@ -670,8 +656,10 @@ class AutorizacionIn(BaseModel):
         return fecha_iso(v) or None
 
 
-def validar_autorizacion(db: Database, a: AutorizacionIn, quien: Quien) -> dict:
-    """Reglas por rol (1.6). Devuelve los campos del evento."""
+def validar_autorizacion(db: Database, a: AutorizacionIn, quien: Quien, previo: str | None = None) -> dict:
+    """Reglas por rol (1.6). Devuelve los campos del evento. `previo`: el `consentimiento` que tiene la persona (None
+    en un alta). El «sí» del planillero va sin más pasos, salvo para quien dijo «no»: devolverle el «sí» sigue pidiendo
+    medio, evidencia, canales y «mayor de 18»."""
     canales = list(dict.fromkeys(a.canales or []))
     if set(canales) - set(modelo.CANALES_AUTORIZACION):
         raise HTTPException(422, "Canal de autorización desconocido")
@@ -691,13 +679,14 @@ def validar_autorizacion(db: Database, a: AutorizacionIn, quien: Quien) -> dict:
             raise _prohibido("Solo el administrador corrige una autorización a «pendiente»")
         if medio in ("panel", "migrado", "declarado_planilla", "fusion"):
             raise HTTPException(422, "Ese medio no se puede usar desde aquí")
+        # El planillero registra el «sí» sin más pasos (medio, evidencia, canales y «mayor de 18» quedan opcionales)
+        # para actualizar y guardar rápido en campo, salvo si la persona dijo «no». El consultor sigue con 1.6
+        relajado = quien.rol == "planillero" and previo != "no"
         if a.estado == "si":
             permitidos = modelo.MEDIOS_POR_ROL.get(quien.rol, [])
-            if medio is not None and medio not in permitidos:
+            if (medio is None and not relajado) or (medio is not None and medio not in permitidos):
                 raise HTTPException(422, f"Use uno de estos medios: {', '.join(modelo.MEDIOS_AUTORIZACION[m] for m in permitidos)}")
-        # El planillero registra el «sí» sin más pasos (evidencia, canales y «mayor de 18» quedan opcionales) para
-        # actualizar y guardar rápido en campo. El consultor sigue con las reglas de 1.6
-        if a.estado == "si" and quien.rol != "planillero":
+        if a.estado == "si" and not relajado:
             if not evidencia:
                 raise HTTPException(422, "Escriba la evidencia de la autorización (por ejemplo, planilla y folio)")
             if not canales:
@@ -790,7 +779,7 @@ def autorizar(pid: int, body: AutorizacionIn, request: Request, db: Database = D
     proyeccion.exigir_tratable(p, quien, "autorizacion")
     if not quien.administra and p.get("consentimiento") == "no" and body.estado != "si":
         raise HTTPException(409, dict(proyeccion.NO_AUTORIZO))
-    evento = validar_autorizacion(db, body, quien)
+    evento = validar_autorizacion(db, body, quien, p.get("consentimiento"))
     registrar_autorizacion(db, pid, quien, evento)
     escribir(db, pid, [etapa_actualizado(quien)])
     bd.recalcular_completitud(db, [pid])
@@ -1155,7 +1144,8 @@ def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, 
             evento = validar_autorizacion(db, AutorizacionIn(
                 estado=estado, medio=datos.get("consentimiento_medio"), canales=datos.get("consentimiento_canales") or [],
                 evidencia=datos.get("evidencia"), mayor_declarado=bool(datos.get("mayor_declarado")),
-                fecha_declarada=datos.get("consentimiento_fecha") if not adm else None), quien)
+                fecha_declarada=datos.get("consentimiento_fecha") if not adm else None), quien,
+                antes.get("consentimiento"))
     claves_avance = modelo.completados(antes, despues)
     if evento and evento["estado"] == "si" and antes.get("consentimiento") != "si":
         claves_avance = list(dict.fromkeys([*claves_avance, "autorizacion"]))

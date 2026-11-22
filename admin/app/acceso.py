@@ -12,8 +12,8 @@ frecuencia e idempotencia.
   `{codigo: "permiso"}` si el rol no tiene todos los permisos pedidos. Deja `dep.permisos` para que una prueba recorra
   las rutas y compare con la tabla de permisos. Con `limitar=True`, P y C tienen además un límite de frecuencia.
 * Las claves de los usuarios van con scrypt (n=2^15, r=8, p=1: 32 MiB), como mucho dos a la vez.
-* `registrar_lecturas` anota en `lecturas` las personas servidas a cada usuario (también al administrador) y aplica
-  el presupuesto diario de P y C. Con 20 rechazos por volumen en el día se cierran sus sesiones.
+* `registrar_lecturas` anota en `lecturas` las personas servidas a cada usuario (también al administrador). Ya no hay
+  tope de personas consultadas por día para ningún rol: la anotación queda para saber quién consultó a quién.
 * `idempotencia_previa` e `idempotencia_guardar`: con `Idempotency-Key`, un POST repetido devuelve la respuesta
   guardada sin repetir efectos. Si la ruta falla o no guarda, la clave se libera al terminar la petición.
 """
@@ -413,24 +413,16 @@ def _frecuencia(db: Database, uid: int) -> None:
 
 # ───────────────────────────── Lecturas ─────────────────────────────
 
-RECHAZOS_CIERRE = 20  # respuestas 429 por volumen en un día que cierran las sesiones del usuario
-
-
 def presupuesto(db: Database, rol: str, ajustes: dict | None = None) -> int | None:
-    """Personas distintas por día que puede consultar el rol (None: sin tope, como A y K)."""
-    if rol not in ROLES_CAMPO:
-        return None
-    aj = ajustes or modelo.leer_ajustes(db)
-    try:
-        return int(aj["presupuesto_diario"].get(rol))
-    except (TypeError, ValueError, KeyError):
-        return int(modelo.AJUSTES_POR_DEFECTO["presupuesto_diario"][rol])
+    """Personas distintas por día que puede consultar el rol: None, sin tope, para todos. El tope diario de
+    planilleros y consultores se quitó para que consulten y actualicen sin frenarse; el ajuste `presupuesto_diario`
+    que haya guardado ya no se aplica."""
+    return None
 
 
 def registrar_lecturas(db: Database, quien: Quien, pids: Iterable[int], ficha: bool = False) -> None:
-    """Anota en `lecturas` las personas servidas a `quien` (una por persona y día, también para A y K) y, para P y
-    C, responde 429 `{codigo: "volumen"}` si con ellas pasa el presupuesto diario de personas distintas. Una
-    ficha cuenta igual venga de un GET, un PATCH sin cambios o `?resumen=1`."""
+    """Anota en `lecturas` las personas servidas a `quien` (una por persona y día, también para A y K), sin tope
+    diario. Una ficha cuenta igual venga de un GET, un PATCH sin cambios o `?resumen=1`."""
     if quien is None or quien.uid is None:
         return
     ids = list(dict.fromkeys(p for p in pids or [] if isinstance(p, int) and not isinstance(p, bool)))
@@ -446,33 +438,7 @@ def registrar_lecturas(db: Database, quien: Quien, pids: Iterable[int], ficha: b
         else:
             cambio = {"$set": {"ts": ahora}, "$setOnInsert": {**nuevo, "ficha": False}}
         ops.append(UpdateOne({"_id": f"{quien.uid}|{pid}|{dia}"}, cambio, upsert=True))
-    res = db.lecturas.bulk_write(ops, ordered=False)
-    tope = None if quien.administra else presupuesto(db, quien.rol)
-    if tope is None or db.lecturas.count_documents({"uid": quien.uid, "dia": dia}) <= tope:
-        return
-    # Se pasó: las personas nuevas de esta respuesta no se sirven ni cuentan
-    nuevas = list(res.upserted_ids.values())
-    if nuevas:
-        db.lecturas.delete_many({"_id": {"$in": nuevas}})
-    _rechazo_por_volumen(db, quien, dia, tope)
-    raise HTTPException(429, {"mensaje": f"Llegó al tope de {tope} personas consultadas hoy. Podrá seguir mañana.",
-                              "codigo": "volumen"})
-
-
-def _rechazo_por_volumen(db: Database, quien: Quien, dia: str, tope: int) -> None:
-    """Cuenta el rechazo del día en el usuario: el primero se audita como `alerta_volumen` (A la ve en Usuarios) y desde
-    el vigésimo cada rechazo cierra sus sesiones."""
-    u = db.usuarios.find_one_and_update({"_id": quien.uid}, [{"$set": {"volumen": {"$cond": [
-        {"$eq": [{"$ifNull": ["$volumen.dia", None]}, {"$literal": dia}]},
-        {"dia": {"$literal": dia}, "rechazos": {"$add": [{"$ifNull": ["$volumen.rechazos", 0]}, 1]}},
-        {"dia": {"$literal": dia}, "rechazos": 1}]}}}], projection={"volumen": 1}, return_document=ReturnDocument.AFTER)
-    n = ((u or {}).get("volumen") or {}).get("rechazos", 0)
-    if n == 1:
-        bd.auditar(db, quien, "alerta_volumen", "usuario", quien.uid, {"tope": tope})
-    if n >= RECHAZOS_CIERRE:
-        cerradas = cerrar_sesiones(db, quien.uid)
-        if n == RECHAZOS_CIERRE:
-            bd.auditar(db, "sistema", "cerrar_sesiones", "usuario", quien.uid, {"motivo": "volumen", "cerradas": cerradas})
+    db.lecturas.bulk_write(ops, ordered=False)
 
 
 # ───────────────────────────── Idempotencia ─────────────────────────────

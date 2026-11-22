@@ -1,6 +1,6 @@
-"""Lecturas, presupuesto diario y frecuencia (3.6): P y C reciben 429 `volumen` al pasar el tope de personas
-distintas por día (con 20 rechazos se cierran sus sesiones) y 429 `frecuencia` con más de 120 consultas por minuto; A
-queda registrado y exento.
+"""Lecturas y frecuencia (3.6): ya no hay tope de personas consultadas por día (un `presupuesto_diario` guardado de
+antes no se aplica): P y C consultan sin 429 `volumen` y cada persona queda registrada en `lecturas`. Sigue el 429
+`frecuencia` con más de 120 consultas por minuto; A queda registrado y exento.
 
 El mecanismo se prueba sobre una aplicación mínima con `requiere` y `registrar_lecturas`; el recorrido de Habitantes,
 el PATCH vacío y `?resumen=1` se prueban cuando existen las rutas del grupo 3."""
@@ -41,9 +41,10 @@ def _tope(db, n=TOPE):
 
 
 @pytest.mark.parametrize("rol", ["planillero", "consultor"])
-def test_presupuesto_diario_de_personas_distintas(sesion, como, rol):
+def test_sin_tope_diario_de_personas_distintas(sesion, como, rol):
     db = sesion.app.state.db
-    _tope(db)
+    _tope(db)  # un presupuesto guardado de antes: ya no se aplica
+    assert acceso.presupuesto(db, rol) is None
     c = como(rol)
     m = _cliente(sesion.app, c)
     dia = modelo.hoy_local().isoformat()
@@ -51,24 +52,15 @@ def test_presupuesto_diario_de_personas_distintas(sesion, como, rol):
     assert m.get("/leer", params={"desde": 1, "n": 25, "ficha": True}).status_code == 200  # las mismas no suman
     assert db.lecturas.count_documents({"uid": c.uid, "dia": dia}) == 25
     assert db.lecturas.count_documents({"uid": c.uid, "dia": dia, "ficha": True}) == 25
-    r = m.get("/leer", params={"desde": 100, "n": 10})
-    assert r.status_code == 429 and r.json()["detail"]["codigo"] == "volumen"
-    assert db.lecturas.count_documents({"uid": c.uid, "dia": dia}) == 25  # las que no se sirvieron no cuentan
-    assert m.get("/leer", params={"desde": 100, "n": 5}).status_code == 200  # hasta el tope, sí
-    for desde, n in ((1, 25), (100, 5)):  # lo ya visto hoy se puede volver a ver
-        assert m.get("/leer", params={"desde": desde, "n": n}).status_code == 200
-    assert db.lecturas.count_documents({"uid": c.uid, "dia": dia}) == TOPE
-    assert m.get("/leer", params={"desde": 200, "n": 1}).json()["detail"]["codigo"] == "volumen"
-    assert db.auditoria.count_documents({"accion": "alerta_volumen", "uid": c.uid}) == 1
+    # Mucho más allá del tope de antes: todo se sirve y todo queda registrado
+    for desde in range(100, 400, 50):
+        assert m.get("/leer", params={"desde": desde, "n": 50}).status_code == 200
+    assert db.lecturas.count_documents({"uid": c.uid, "dia": dia}) == 25 + 300 > TOPE
+    assert db.auditoria.count_documents({"accion": "alerta_volumen", "uid": c.uid}) == 0
     fila = next(u for u in sesion.get("/api/usuarios").json() if u["id"] == c.uid)
-    assert "volumen" in fila["alertas"]
-    # Con 20 respuestas así en el día, se cierran sus sesiones
-    for _ in range(18):
-        assert m.get("/leer", params={"desde": 300, "n": 1}).status_code == 429
-    assert m.get("/leer", params={"desde": 1, "n": 1}).status_code == 401
-    assert c.get("/api/yo").status_code == 401
-    assert db.auditoria.find_one({"accion": "cerrar_sesiones", "entidad_id": c.uid})
-    assert db.auditoria.count_documents({"accion": "alerta_volumen", "uid": c.uid}) == 1
+    assert "volumen" not in fila["alertas"]
+    # Sus sesiones siguen abiertas
+    assert c.get("/api/yo").status_code == 200
 
 
 def test_el_administrador_queda_registrado_sin_tope(sesion):
@@ -102,7 +94,7 @@ def _hay(app, metodo, ruta):
 
 
 def test_habitantes_ficha_y_resumen_cuentan(sesion, como):
-    """P recorre Habitantes por barrio hasta el 429; un PATCH sin cambios y ?resumen=1 también cuentan."""
+    """P recorre Habitantes por barrio sin tope diario; un PATCH sin cambios y ?resumen=1 también quedan registrados."""
     if not _hay(sesion.app, "GET", "/api/trabajo"):
         pytest.skip("requiere el grupo 3 (lecturas en Habitantes y la ficha)")
     from conftest import insertar_personas, personas_inventadas
@@ -116,12 +108,13 @@ def test_habitantes_ficha_y_resumen_cuentan(sesion, como):
     ids = insertar_personas(db, datos)
     p = como("planillero")
     estados = [p.get("/api/personas", params={"lugar_id": l}).status_code for l in lugares]
-    assert 429 in estados
-    assert p.get("/api/personas", params={"lugar_id": lugares[0]}).json()["detail"]["codigo"] == "volumen"
+    assert estados == [200, 200, 200]  # con un presupuesto de 20 guardado de antes: ya no se aplica
+    assert p.get("/api/personas", params={"lugar_id": lugares[0]}).status_code == 200
+    assert db.lecturas.count_documents({"uid": p.uid}) > 20  # todo lo servido queda registrado
     q = como("planillero")
-    for pid in ids[:20]:
+    for pid in ids[:25]:
         assert q.patch(f"/api/personas/{pid}", json={}).status_code == 200
-    assert q.patch(f"/api/personas/{ids[20]}", json={}).status_code == 429
+    assert db.lecturas.count_documents({"uid": q.uid, "ficha": True}) == 25
     a = sesion.get(f"/api/personas/{ids[21]}", params={"resumen": 1})
     assert a.status_code == 200  # A: sin tope
     assert db.lecturas.find_one({"uid": 0, "pid": ids[21]})

@@ -88,7 +88,11 @@ let renovando = null;
 function renovarCsrf() {
   renovando ||= (async () => {
     try {
-      const r = await fetch(url('/api/yo'), { credentials: 'same-origin', cache: 'no-store' });
+      // Con tiempo límite, como toda lectura: con mala señal el guardado no queda colgado (vuelve el 403 de antes)
+      const control = new AbortController();
+      const reloj = setTimeout(() => control.abort(), ESPERA_LECTURA);
+      const r = await fetch(url('/api/yo'), { credentials: 'same-origin', cache: 'no-store', signal: control.signal })
+        .finally(() => clearTimeout(reloj));
       if (!r.ok) return false;
       const d = await r.json();
       // La cookie es de otra cuenta: lo de esta pestaña no se guarda con ella

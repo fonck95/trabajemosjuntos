@@ -100,10 +100,10 @@ En el código, lo que el administrador hace con los datos se comprueba con `quie
 
 Cada ficha o fila que el panel sirve, y cada líder que responde la barra del «Liderado por», queda en `lecturas`
 (también las del administrador y los coordinadores).
-Planilleros y consultores tienen un **presupuesto diario** de personas distintas (1000 y 300, en **Ajustes**): al
-pasarlo reciben «Llegó al tope de personas consultadas hoy», en Usuarios aparece la alerta **Volumen** y, con 20
-rechazos en el día, se cierran sus sesiones. Las búsquedas y listas tienen además un límite de 120 consultas por minuto. El administrador y los
-coordinadores no tienen presupuesto ni límite de frecuencia.
+No hay tope de personas consultadas por día para ningún rol: planilleros y consultores consultan y actualizan sin
+frenarse (el ajuste «presupuesto diario» que se haya guardado antes ya no se aplica), y cada consulta queda en
+`lecturas`. Las búsquedas y listas de planilleros y consultores tienen un límite de 120 consultas por minuto. El
+administrador y los coordinadores no tienen límite de frecuencia.
 
 ## Indicadores
 

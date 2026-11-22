@@ -268,7 +268,8 @@ def registrar(pid: int, body: AcercamientoIn, request: Request, db: Database = D
     if body.resultado == "no_contactar" and body.alcance == "numero" and not numero:
         raise HTTPException(422, "Elija el número")
     # 4. Autorización (reglas de 1.6)
-    evento = per.validar_autorizacion(db, body.autorizacion, quien) if body.autorizacion else None
+    evento = (per.validar_autorizacion(db, body.autorizacion, quien, p.get("consentimiento"))
+              if body.autorizacion else None)
     # 5. Datos dictados por C (solo si faltan)
     dictada = None
     v_dictada: dict = {}
@@ -522,7 +523,6 @@ def _mis_hoy(db: Database, quien: Quien, hoy: date) -> list[int]:
 @r.get("/trabajo/cola")
 def cola(lista: str = "por_llamar", pagina: int = Query(1, ge=1, le=PAGINAS_COLA), tratables: int = 0,
          db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("trabajo.cola", limitar=True))):
-    per.exigir_listas_del_dia(db, quien)
     hoy, aj = modelo.hoy_local(), modelo.leer_ajustes(db)
     ctx = proyeccion.contexto(db)
     salto = (pagina - 1) * POR_PAGINA_COLA
