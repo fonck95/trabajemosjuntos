@@ -99,3 +99,6 @@
 .estado-conexion { width: min(420px, 100%); display: flex; flex-direction: column; gap: 14px; }
 .estado-conexion h2 { font: 30px/1.05 var(--f-display); text-transform: uppercase; }
 .estado-conexion .btn { min-height: 44px; align-self: flex-start; }
+
+/* A 360 px o menos, una fecha dd/mm/aaaa con su ícono no cabe en media fila: «Desde» y «Hasta», cada una en la suya */
+@media (max-width: 360px) { .periodo .campo { width: 100%; } }

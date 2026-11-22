@@ -4,6 +4,8 @@ import { $, aviso, esMovil, html, icono, montar } from './ui.js';
 import { dialogoIngreso, vistaLogin } from './vistas/login.js';
 import { sinBase, url } from './base.js';
 import { olvidarLlamada, revisarLlamadasPendientes } from './llamadas.js';
+// Fechas y horas que se escriben (dd/mm/aaaa, hh:mm) y listas cortas como chips en el celular: se aplica solo a lo que se pinta
+import './campos.js';
 
 // Cada ruta lleva el permiso que pide (la interfaz solo oculta: el servidor decide)
 const RUTAS = [
@@ -389,7 +391,8 @@ function sinConexion() {
       </div>`);
     $('#reintentar', raiz).addEventListener('click', () => preguntarSesion());
   }
-  const hora = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const ahora = new Date();
+  const hora = [ahora.getHours(), ahora.getMinutes(), ahora.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':');
   $('#intento', raiz).textContent = `Último intento: ${hora}`;
   reloj = setTimeout(preguntarSesion, REINTENTO_MS);
 }

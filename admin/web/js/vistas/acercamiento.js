@@ -7,7 +7,7 @@ import {
   RESULTADOS, RESULTADOS_DE_NUMERO, RESULTADOS_RAPIDOS, TIPOS_TELEFONO, autorizacionDe, canalesPermitidos, enlaceWhatsapp,
   esCelular, etiquetaResultado, fueraDeHorario, hoyColombia, telefonosUsables,
 } from '../modelo.js';
-import { $, $$, aviso, avisoError, dialogo, hayEscrito, html, icono, titulo } from '../ui.js';
+import { $, $$, aviso, avisoError, dialogo, fechaMalEscrita, hayEscrito, html, icono, titulo } from '../ui.js';
 
 const ICONO_CANAL = { llamada: 'telefono', whatsapp: 'whatsapp', sms: 'acercamiento', visita: 'hogar', correo: 'acercamiento', otro: 'puntos' };
 const TELEFONICOS = ['llamada', 'whatsapp', 'sms'];
@@ -218,7 +218,7 @@ export async function dialogoAcercamiento(p, { canal = null, indice = null, resu
     }
     if (e.target.closest('[data-respondio]')) {
       const d = new Date();
-      const hora = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      const hora = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
       const bloque = e.target.closest('.bloque-autorizacion');
       $('[data-v="si"]', bloque)?.click();
       const ev = $('[name="aut_evidencia"]', bloque);
@@ -286,7 +286,7 @@ export async function dialogoAcercamiento(p, { canal = null, indice = null, resu
   }
 
   async function guardar() {
-    if (enCurso || !resultado) return;
+    if (enCurso || !resultado || fechaMalEscrita(form)) return;
     const c = cuerpo();
     const error = validar(c);
     if (error) { aviso(error, 'error', 5000); return; }

@@ -166,7 +166,7 @@ export async function vistaPersonas(el, { q, ir }) {
             <select class="entrada" data-f="abordaje_estado" aria-label="Abordaje">${opciones([['', 'Abordaje'], ...Object.entries(ESTADOS_ABORDAJE)], f.abordaje_estado)}</select>
             <select class="entrada" data-f="consentimiento" aria-label="Autorización">${opciones([['', 'Autorización'], ['si', 'Autorizó'], ['pendiente', 'Pendiente'], ['no', 'No autorizó']], f.consentimiento)}</select>
             <select class="entrada" data-f="requiere_actualizacion" aria-label="Actualización">${opciones([['', 'Actualización'], ['1', 'Pendientes de actualizar']], f.requiere_actualizacion)}</select>
-            <select class="entrada" data-f="situacion" aria-label="Situación">${opciones([['', 'Vigentes'], ['todas', 'Todas las situaciones'], ...Object.entries(SITUACIONES).filter(([k]) => k !== 'activa')], f.situacion)}</select>
+            <select class="entrada" data-f="situacion" aria-label="Situación" data-vacio="Vigentes">${opciones([['', 'Vigentes'], ['todas', 'Todas las situaciones'], ...Object.entries(SITUACIONES).filter(([k]) => k !== 'activa')], f.situacion)}</select>
             ${(cat.etiquetas || []).length ? html`<select class="entrada" data-f="etiqueta" aria-label="Necesidad o etiqueta">${opciones([['', 'Necesidad / etiqueta'], ...cat.etiquetas.map((e) => [e.id, e.nombre])], f.etiqueta)}</select>` : ''}
             ${adm ? html`
               <select class="entrada" data-f="fuente" aria-label="Fuente">${opciones([['', 'Fuente'], ['tramites', 'Base de trámites'], ['cedulas', 'Base con cédula'], ['ambas', 'En las dos'], ['general', 'Base general'], ['planilla', 'Planilla de campo'], ['reunion', 'Registradas en reunión'], ['manual', 'Registro manual']], f.fuente)}</select>

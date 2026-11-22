@@ -39,6 +39,32 @@ export function fecha(iso, conHora = false) {
   if (conHora) s += ` · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   return s;
 }
+/** ¿Es una fecha aaaa-mm-dd que existe? (1985-02-30 no: `Date` la correría al 2 de marzo) */
+const fechaQueExiste = (v) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v ?? ''));
+  return !!m && +m[2] >= 1 && +m[2] <= 12 && +m[3] >= 1 && +m[3] <= new Date(Date.UTC(+m[1], +m[2], 0)).getUTCDate();
+};
+/** Un valor que puede ser una fecha aaaa-mm-dd (en tablas de «otros valores», cambios y conflictos): «7 mar 1985» si lo
+ * es; cualquier otro valor, tal cual. */
+export const fechaSiEs = (v) => (fechaQueExiste(v) ? fecha(v) : v);
+/** La clave de un periodo como la agrupa el servidor: «2026-11-05» → «5 nov 2026», «2026-11» → «nov 2026» y la semana
+ * ISO «2026-S46» → «9–15 nov 2026» (del lunes al domingo). Lo que no reconoce, tal cual. */
+export function periodo(clave) {
+  const s = String(clave ?? '');
+  if (fechaQueExiste(s)) return fecha(s);
+  let m = /^(\d{4})-(\d{2})$/.exec(s);
+  if (m && +m[2] >= 1 && +m[2] <= 12) return `${MESES[+m[2] - 1]} ${m[1]}`;
+  m = /^(\d{4})-S(\d{1,2})$/.exec(s);
+  if (!m) return s;
+  // El lunes de la semana 1 es el de la semana del 4 de enero
+  const enero4 = Date.UTC(+m[1], 0, 4);
+  const lunes = new Date(enero4 - ((new Date(enero4).getUTCDay() + 6) % 7) * 864e5 + (+m[2] - 1) * 7 * 864e5);
+  const domingo = new Date(lunes.getTime() + 6 * 864e5);
+  const [d1, m1, a1] = [lunes.getUTCDate(), MESES[lunes.getUTCMonth()], lunes.getUTCFullYear()];
+  const [d2, m2, a2] = [domingo.getUTCDate(), MESES[domingo.getUTCMonth()], domingo.getUTCFullYear()];
+  if (a1 !== a2) return `${d1} ${m1} ${a1} – ${d2} ${m2} ${a2}`;
+  return m1 === m2 ? `${d1}–${d2} ${m2} ${a2}` : `${d1} ${m1} – ${d2} ${m2} ${a2}`;
+}
 export const mesCorto = (ym) => { const [a, m] = ym.split('-'); return `${MESES[+m - 1]} ${a.slice(2)}`; };
 export const titulo = (s) => (s || '').toLowerCase().replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase())
   .replace(/\b(De|Del|La|Las|Los|Y|El|En)\b/g, (m, w, i) => (i ? m.toLowerCase() : m));
@@ -163,6 +189,21 @@ export function hayEscrito(raiz) {
     }
     return x.value !== x.defaultValue;
   });
+}
+
+/**
+ * ¿Hay en `raiz` una fecha u hora escrita que no es válida (31/02, «07/03/198»)? js/campos.js deja vacío el campo de
+ * siempre mientras tanto: guardar así la perdería en silencio. Muestra el error, enfoca el primero y devuelve true
+ * para que la vista no guarde. Los formularios que se envían con submit ya lo hacen solos (campos.js).
+ */
+export function fechaMalEscrita(raiz) {
+  const malo = [...raiz.querySelectorAll('.campo-escrito > input:first-child')]
+    .find((x) => !x.disabled && x.value.trim() && x.validity.customError);
+  if (!malo) return false;
+  malo.dispatchEvent(new Event('blur'));
+  malo.closest('details')?.setAttribute('open', '');
+  malo.focus();
+  return true;
 }
 
 export function datosForm(form) {

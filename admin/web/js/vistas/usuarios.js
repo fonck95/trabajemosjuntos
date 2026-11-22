@@ -5,7 +5,7 @@
 import { api, ErrorApi, nombreRol, puede } from '../api.js';
 import { url } from '../base.js';
 import { CANALES, ETIQUETAS_CAMPOS, RESULTADOS } from '../modelo.js';
-import { $, aviso, avisoError, confirmar, dialogo, fecha, hayEscrito, html, montar, num, titulo } from '../ui.js';
+import { $, aviso, avisoError, confirmar, dialogo, fecha, hayEscrito, html, montar, num, periodo, titulo } from '../ui.js';
 
 const ROLES = { coordinador: 'Coordinador', planillero: 'Planillero', consultor: 'Consultor' };
 const DE_CAMPO = ['planillero', 'consultor'];
@@ -49,7 +49,14 @@ function periodoHtml(desde, hasta) {
 function enlazarPeriodo(el, alCambiar) {
   const f = $('#f-periodo', el);
   if (!f) return;
-  f.addEventListener('change', () => alCambiar(f.desde.value, f.hasta.value));
+  f.addEventListener('change', () => {
+    const [d, h] = [f.desde.value, f.hasta.value];
+    // Una fecha borrada o mal escrita deja su campo vacío, con el error a la vista: no se recarga con el periodo por
+    // defecto (borraría lo escrito) ni se pide un periodo al revés, que el servidor rechaza
+    if (!d || !h) return;
+    if (d > h) { aviso('«Desde» no puede ser después de «Hasta».', 'error'); return; }
+    alCambiar(d, h);
+  });
   f.addEventListener('click', (e) => {
     const b = e.target.closest('[data-dias]');
     if (!b) return;
@@ -124,7 +131,7 @@ export function pintarIndicadores(c, ind, { rol = ind.rol } = {}) {
     <section class="tarjeta serie">
       <header><h2>Por ${ind.agrupar === 'semana' ? 'semana' : ind.agrupar === 'mes' ? 'mes' : 'día'}</h2><span class="nota" title="Cada periodo cuenta personas distintas: una persona actualizada dos días cuenta en los dos">No suma al total</span></header>
       ${serie.length ? html`<div class="envoltura-tabla"><table class="tabla"><thead><tr><th>Fecha</th><th class="num">Creadas</th><th class="num">Actualizadas</th><th class="num">Acercamientos</th></tr></thead>
-        <tbody>${serie.map((s) => html`<tr style="cursor:default"><td>${/^\d{4}-\d{2}-\d{2}$/.test(s.fecha) ? fecha(s.fecha) : s.fecha}</td><td class="num">${num(s.creadas)}</td><td class="num">${num(s.actualizadas)}</td><td class="num">${num(s.acercamientos)}</td></tr>`)}</tbody></table></div>`
+        <tbody>${serie.map((s) => html`<tr style="cursor:default"><td>${periodo(s.fecha)}</td><td class="num">${num(s.creadas)}</td><td class="num">${num(s.actualizadas)}</td><td class="num">${num(s.acercamientos)}</td></tr>`)}</tbody></table></div>`
         : html`<p class="sec">Sin actividad en el periodo.</p>`}
     </section>`);
 }

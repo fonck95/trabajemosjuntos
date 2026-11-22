@@ -8,7 +8,7 @@ import { temaOscuro } from '../app.js';
 import { BASES, BBOX_YONDO, CASCO, MAX_IDS, RANGO_YONDO, anilloMayor, baseSegunTema, cajaDe, cargarMapLibre, decorar, dentroDeYondo, dispersar, hexagonos, rampa } from '../mapa3d.js';
 import { apilada, barras, piramide } from '../graficos.js';
 import { ESTADOS_ABORDAJE, ESTADOS_AUTORIZACION, ETIQUETAS_CAMPOS, SEXOS } from '../modelo.js';
-import { $, $$, aviso, avisoError, confirmar, dialogo, hayEscrito, html, icono, montar, num, pct, titulo } from '../ui.js';
+import { $, $$, aviso, avisoError, confirmar, dialogo, fecha, hayEscrito, html, icono, montar, num, pct, titulo } from '../ui.js';
 import { url } from '../base.js';
 import { registrarMapa } from '../agente-mapa.js';
 import { MAX_VERTICES, PALETA, cargarEstilos, codificar, crearHerramientaZona, decodificar, dentro, formatoArea, formatoLargo, seCruza, simplificar } from '../zona.js';
@@ -106,19 +106,19 @@ export async function vistaMapa(el, { q, ir }) {
       <div id="filtros-asistente" hidden></div>
       <div class="cuerpo-izq" id="cuerpo-izq">
       ${gestiona ? html`<h3>Zonas guardadas</h3>
-        <select class="entrada zonas-guardadas" id="zonas-guardadas" aria-label="Zonas guardadas"><option value="">Elegir una zona…</option></select>` : ''}
+        <select class="entrada zonas-guardadas" id="zonas-guardadas" aria-label="Zonas guardadas" data-lista><option value="">Elegir una zona…</option></select>` : ''}
       <h3>Capas</h3>
       ${capasLista.map(([k, t]) => html`<label class="interruptor"><span>${t}</span><input type="checkbox" data-capa="${k}" ${estado.capas[k] ? 'checked' : ''}></label>`)}
       <h3>Tamaño del hexágono</h3>
       <div class="segmentado" id="radios">${Object.keys(RADIOS).map((k) => html`<button data-radio="${k}" aria-pressed="${k === 'auto'}">${k === 'auto' ? 'Auto' : k >= 1000 ? k / 1000 + ' km' : k + ' m'}</button>`)}</div>
       <h3>Filtros</h3>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <select class="entrada" data-f="zona"><option value="">Todas las zonas</option><option value="urbana">Casco urbano</option><option value="rural">Rural</option></select>
-        <select class="entrada" data-f="fuente"><option value="">Todas las fuentes</option><option value="tramites">Base de trámites</option><option value="cedulas">Base con cédula</option><option value="ambas">En las dos bases</option><option value="reunion">Registradas en reuniones</option></select>
-        <select class="entrada" data-f="precision"><option value="">Toda precisión</option><option value="exacta">Solo dirección exacta</option><option value="aproximada">Solo aproximadas</option></select>
-        <select class="entrada" data-f="asistio"><option value="">Con o sin reuniones</option><option value="1">Asistieron a reuniones</option><option value="0">Aún sin reunión</option></select>
-        <select class="entrada" data-f="etiqueta" id="f-etiqueta"><option value="">Cualquier necesidad</option></select>
-        <select class="entrada" data-f="lista" id="f-lista"><option value="">Cualquier lista</option></select>
+        <select class="entrada" data-f="zona" aria-label="Zona"><option value="">Todas las zonas</option><option value="urbana">Casco urbano</option><option value="rural">Rural</option></select>
+        <select class="entrada" data-f="fuente" aria-label="Fuente"><option value="">Todas las fuentes</option><option value="tramites">Base de trámites</option><option value="cedulas">Base con cédula</option><option value="ambas">En las dos bases</option><option value="reunion">Registradas en reuniones</option></select>
+        <select class="entrada" data-f="precision" aria-label="Precisión de la ubicación"><option value="">Toda precisión</option><option value="exacta">Solo dirección exacta</option><option value="aproximada">Solo aproximadas</option></select>
+        <select class="entrada" data-f="asistio" aria-label="Reuniones"><option value="">Con o sin reuniones</option><option value="1">Asistieron a reuniones</option><option value="0">Aún sin reunión</option></select>
+        <select class="entrada" data-f="etiqueta" id="f-etiqueta" aria-label="Necesidad"><option value="">Cualquier necesidad</option></select>
+        <select class="entrada" data-f="lista" id="f-lista" aria-label="Lista"><option value="">Cualquier lista</option></select>
       </div>
       <h3>Mapa base</h3>
       <div class="segmentado" id="bases">${[['auto', 'Tema'], ['oscuro', 'Oscuro'], ['claro', 'Claro'], ['satelite', 'Satélite']].map(([k, t]) => html`<button data-base="${k}" aria-pressed="${k === 'auto'}">${t}</button>`)}</div>
@@ -739,7 +739,7 @@ export async function vistaMapa(el, { q, ir }) {
         <div class="zona-vivo" id="zona-vivo">${vivoHtml(c)}</div>
         <details class="zona-atajos"><summary>Atajos</summary><div class="fila">
           <button class="btn chico" type="button" data-z="hex" ${estado.hexSel ? '' : 'disabled'} title="${estado.hexSel ? '' : 'Primero toque un hexágono del mapa'}">Usar este hexágono</button>
-          <select class="entrada" data-z-vereda aria-label="Usar vereda"><option value="">Usar vereda…</option>${veredas.map((f) => html`<option value="${f.properties.id}">${titulo(f.properties.nombre)}</option>`)}</select>
+          <select class="entrada" data-z-vereda aria-label="Usar vereda" data-lista><option value="">Usar vereda…</option>${veredas.map((f) => html`<option value="${f.properties.id}">${titulo(f.properties.nombre)}</option>`)}</select>
           <button class="btn chico" type="button" data-z="vista">Usar lo que se ve</button>
         </div></details>
       </section>`);
@@ -1084,7 +1084,7 @@ export async function vistaMapa(el, { q, ir }) {
   map.on('click', 'reuniones', (e) => {
     if (estado.dibujo) return;
     const r = e.features[0].properties;
-    popup.setLngLat(e.lngLat).setDOMContent(globo(html`<b>${r.titulo}</b><br><span class="sec">${r.fecha} · ${r.n} asistentes</span><br><a href="/reuniones/${r.id}" data-ruta>Abrir →</a>`)).addTo(map);
+    popup.setLngLat(e.lngLat).setDOMContent(globo(html`<b>${r.titulo}</b><br><span class="sec">${fecha(r.fecha)} · ${r.n} asistentes</span><br><a href="/reuniones/${r.id}" data-ruta>Abrir →</a>`)).addTo(map);
   });
   for (const l of ['hex-3d', 'puntos', 'reuniones', 'agente-puntos']) {
     map.on('mouseenter', l, () => { if (!estado.dibujo) map.getCanvas().style.cursor = 'pointer'; });

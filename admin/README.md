@@ -46,6 +46,22 @@ todos los roles y, para A y K, las que empiezan por lo escrito (5 dígitos o má
 número. Si P elige **Es esta** y esa ficha no es de su zona, lo demás se completa igual y un aviso dice que el tipo y
 el líder no se marcaron.
 
+**Fechas, horas y listas en cualquier dispositivo** (`web/js/campos.js`). Las fechas se escriben como **dd/mm/aaaa** y
+las horas como **hh:mm** (24 horas) con el teclado numérico, igual en Android, iPhone, Windows o Mac y sin importar el
+idioma del teléfono: las barras y los dos puntos se ponen solos, se acepta «7/3/85», «07031985» o una fecha pegada
+como 1985-03-07, y una hora como «930», «15:30» o «3:30 pm». El ícono de al lado abre el calendario o el reloj del
+sistema para quien prefiera tocar. Lo que no es una fecha (31/02, un mes 13, una fecha futura de nacimiento) se dice
+al salir del campo y el formulario no se envía con eso. Al servidor sigue llegando AAAA-MM-DD y HH:MM. En el celular y
+en pantallas táctiles, las listas de **2 a 15 opciones** se ven como chips que se eligen con un toque (tocar otra vez
+la elegida la quita, si el campo puede quedar vacío; en las barras de filtros cada filtro ocupa una sola fila que se
+desliza de lado); las más largas (barrios y veredas, líderes) siguen como lista, y en el computador con ratón todo se ve
+como lista. Un formulario no se guarda con una fecha mal escrita: el campo dice qué falla (las vistas que guardan con
+un clic, sin enviar el formulario, preguntan a `fechaMalEscrita` de `ui.js`). Para dejar un campo como estaba: `data-nativo` en una fecha u hora y
+`data-lista` en una lista; `data-vacio="…"` muestra la opción vacía como un chip (p. ej. «Vigentes») y
+`data-chip-corto` pone la sigla en el chip (CC, TI, CE…). Las fechas que antes se mostraban crudas (aaaa-mm-dd en el
+mapa, en «Otros valores» y en los conflictos, y las semanas «2026-S46» de los indicadores) se leen como «7 mar 1985» o
+«9–15 nov 2026».
+
 ## Cómo se cruzan y se ubican los datos
 
 - **Agrupar trámites por persona.** Nombre normalizado (mayúsculas, sin tildes, sin signos). Dos escrituras parecidas

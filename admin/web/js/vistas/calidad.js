@@ -1026,7 +1026,7 @@ export async function vistaCalidad(el, { q }) {
       ${x.cedula && x.cedula !== r.cedula ? html`<dt>En conflicto</dt><dd>${x.cedula}</dd>` : ''}
       ${r.cedula_digitada || r.cedula_repetida ? html`<dt>Escrita</dt><dd>${r.cedula_digitada || '—'} · repetida ${r.cedula_repetida || '—'}</dd>` : ''}
       <dt>Teléfonos</dt><dd>${(r.telefonos || []).join(', ') || '—'}</dd><dt>Dirección</dt><dd>${r.direccion || '—'}</dd>
-      ${r.edad || r.fecha_nacimiento ? html`<dt>Edad</dt><dd>${r.fecha_nacimiento || r.edad} · ${r.sexo || ''}</dd>` : ''}</dl></div>`;
+      ${r.edad || r.fecha_nacimiento ? html`<dt>${r.fecha_nacimiento ? 'Nacimiento' : 'Edad'}</dt><dd>${r.fecha_nacimiento ? fechaTexto(r.fecha_nacimiento) : edadTexto(r.edad)}${r.sexo ? ` · ${r.sexo}` : ''}</dd>` : ''}</dl></div>`;
     const botones = (x) => {
       const aplicar = html`<button class="btn chico primario" data-r="aplicar">Aplicar</button>`;
       const descartar = html`<button class="btn chico" data-r="descartar">Descartar</button>`;
