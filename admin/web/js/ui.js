@@ -197,10 +197,14 @@ export function hayEscrito(raiz) {
  * para que la vista no guarde. Los formularios que se envían con submit ya lo hacen solos (campos.js).
  */
 export function fechaMalEscrita(raiz) {
+  // Una fecha escondida (el «¿Cuándo?» de «Volver a llamar» tras elegir otro resultado) no frena el guardado: no se ve
+  // ni se envía
   const malo = [...raiz.querySelectorAll('.campo-escrito > input:first-child')]
-    .find((x) => !x.disabled && x.value.trim() && x.validity.customError);
+    .find((x) => !x.disabled && !x.closest('[hidden]') && x.value.trim() && x.validity.customError);
   if (!malo) return false;
   malo.dispatchEvent(new Event('blur'));
+  // Al salir se leyó bien («07/03/85» → 1985-03-07): esta no frena; se miran las demás
+  if (!malo.validity.customError) return fechaMalEscrita(raiz);
   malo.closest('details')?.setAttribute('open', '');
   malo.focus();
   return true;

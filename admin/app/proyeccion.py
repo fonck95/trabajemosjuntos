@@ -52,7 +52,8 @@ CAMPOS_FICHA: dict[str, frozenset[str]] = {
     "planillero": frozenset(
         {"id", "nombre", "tipo_documento", "cedula", "cedula_verificada", "cedula_origen"} | _DEMOGRAFIA | _UBICACION
         | _VOTACION | _AUTORIZACION | _SEGUIMIENTO
-        | {"sensibles_registrados", "telefonos", "telefono", "telefono2", "abordaje", "acercamientos", "ultimo_contacto",
+        | {"sensibles_registrados", "sensibles_autorizados", "telefonos", "telefono", "telefono2", "abordaje",
+           "acercamientos", "ultimo_contacto",
            "notas", "etiquetas", "extra", "observaciones", "tramites", "alternos", "reuniones", "completitud",
            # El tipo y el «Liderado por», solo de su zona y de las que registró (`tipo_visible`); nunca `traidas`,
            # `intervenciones`, `listas`, `procedencia` ni `historial`

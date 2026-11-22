@@ -784,7 +784,7 @@ def test_requiere_con_la_sesion_del_administrador(sesion):
     assert (yo["uid"], yo["usuario"], yo["rol"]) == (0, "admin", "admin")
     assert c.get("/solo-admin").status_code == 200
     r = c.post("/editar")
-    assert r.status_code == 403 and "CSRF" in r.json()["detail"]
+    assert r.status_code == 403 and "CSRF" in r.json()["detail"]["mensaje"] and r.json()["detail"]["codigo"] == "csrf"
     assert c.post("/editar", headers={"X-CSRF-Token": sesion.headers["X-CSRF-Token"]}).json() == {"ok": True}
     assert TestClient(_mini(sesion.app)).get("/ver").status_code == 401
 

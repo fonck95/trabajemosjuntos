@@ -693,8 +693,11 @@ def validar_autorizacion(db: Database, a: AutorizacionIn, quien: Quien) -> dict:
             raise HTTPException(422, "Ese medio no se puede usar desde aquí")
         if a.estado == "si":
             permitidos = modelo.MEDIOS_POR_ROL.get(quien.rol, [])
-            if medio not in permitidos:
+            if medio is not None and medio not in permitidos:
                 raise HTTPException(422, f"Use uno de estos medios: {', '.join(modelo.MEDIOS_AUTORIZACION[m] for m in permitidos)}")
+        # El planillero registra el «sí» sin más pasos (evidencia, canales y «mayor de 18» quedan opcionales) para
+        # actualizar y guardar rápido en campo. El consultor sigue con las reglas de 1.6
+        if a.estado == "si" and quien.rol != "planillero":
             if not evidencia:
                 raise HTTPException(422, "Escriba la evidencia de la autorización (por ejemplo, planilla y folio)")
             if not canales:
@@ -801,6 +804,9 @@ BASE_A_CAMPO = {"puesto_id": "votacion.puesto_id", "puesto_texto": "votacion.pue
 BASE_PERMITIDOS = frozenset(SIMPLES) | {"cedula", "tipo_documento", "telefono", "telefono2", "lugar_id", "mesa",
                                        "puesto_votacion", "consentimiento", "consentimiento_fecha",
                                        *BASE_A_CAMPO.values()}
+# Sí o no: la ficha los entrega como bool y una ficha vieja puede no tener el campo (o tenerlo en null), que cuenta como
+# «no». Sin esto, marcar «Vi el documento» en una ficha vieja daba un 409 «cambiada» falso y no se guardaba nada
+BASE_SI_NO = frozenset({*modelo.TIPOS_PERSONA, "cedula_verificada"})
 
 
 def _condiciones_base(base: dict | None) -> list[dict]:
@@ -812,7 +818,7 @@ def _condiciones_base(base: dict | None) -> list[dict]:
             continue
         if not (v is None or isinstance(v, (str, int, float, bool))):
             raise HTTPException(422, f"Valor de base no válido para {k}")
-        if campo in modelo.TIPOS_PERSONA:  # una ficha vieja no tiene el campo: cuenta como «no»
+        if campo in BASE_SI_NO:  # una ficha vieja no tiene el campo: cuenta como «no»
             out.append({campo: True} if v else {campo: {"$ne": True}})
             continue
         out.append({campo: {"$in": [None, ""]}} if _vacio(v) else {campo: v})
@@ -830,7 +836,7 @@ def _cambiada(db: Database, pid: int, base: dict, quien: Quien) -> HTTPException
         actual = p
         for parte in campo.split("."):
             actual = actual.get(parte) if isinstance(actual, dict) else None
-        if campo in modelo.TIPOS_PERSONA:
+        if campo in BASE_SI_NO:
             actual, v = bool(actual), bool(v)
         if (None if _vacio(actual) else actual) != (None if _vacio(v) else v):
             campos.append(k)

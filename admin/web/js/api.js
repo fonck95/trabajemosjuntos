@@ -81,6 +81,26 @@ function reingresar() {
   return reingreso;
 }
 
+// El CSRF de la sesión vigente: si otra pestaña ingresó de nuevo (la sesión venció, salió y volvió a entrar, cambió la
+// clave), la cookie es de una sesión nueva y esta pestaña seguía con el CSRF de la vieja: todo guardado daba 403. Uno
+// solo aunque fallen varias escrituras a la vez
+let renovando = null;
+function renovarCsrf() {
+  renovando ||= (async () => {
+    try {
+      const r = await fetch(url('/api/yo'), { credentials: 'same-origin', cache: 'no-store' });
+      if (!r.ok) return false;
+      const d = await r.json();
+      // La cookie es de otra cuenta: lo de esta pestaña no se guarda con ella
+      if ((d.uid ?? 0) !== (sesion.uid ?? 0) || !d.csrf) return false;
+      configurar({ token: d.csrf, usuario: d.usuario, uid: d.uid, rol: d.rol, permisos: d.permisos, excepto: d.excepto,
+        nombre: d.nombre, debe_cambiar_clave: d.debe_cambiar_clave, compromiso_pendiente: d.compromiso_pendiente });
+      return true;
+    } catch { return false; }
+  })().finally(() => { renovando = null; });
+  return renovando;
+}
+
 const NO_CAMBIO = Symbol('304');
 
 // Opciones de cada petición: `clave` va como Idempotency-Key y `timeout` (ms) corta la espera con «Sin conexión» sin
@@ -161,6 +181,12 @@ async function pedir(metodo, ruta, cuerpo, op = {}, reintento = false) {
   }
   if (!r.ok) {
     const e = new ErrorApi(r.status, datos?.detail ?? datos);
+    // El servidor rechazó el CSRF antes de la ruta (sin efectos ni clave de idempotencia tomada): con el de la sesión
+    // vigente se reintenta una vez
+    if (r.status === 403 && e.codigo === 'csrf' && !reintento && metodo !== 'GET' && await renovarCsrf()) {
+      if (cancelada()) throw new ErrorApi(0, CANCELADA);
+      return pedir(metodo, ruta, cuerpo, op, true);
+    }
     if (r.status === 403 && (e.codigo === 'cambiar_clave' || e.codigo === 'compromiso')) alPendiente(e.codigo);
     throw e;
   }

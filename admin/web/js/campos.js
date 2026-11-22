@@ -263,6 +263,9 @@ export function mejorarFecha(original) {
 
   let propio = false; // los eventos que manda este campo no lo vuelven a pintar
   let confirmado = VALOR.get.call(original);
+  // El valor con que se pintó el campo: un dato guardado de antes que hoy no pasaría la revisión (1899-12-30, la fecha
+  // cero de Excel; un año 0198 mal escrito; fuera de min/max) no se borra ni frena el formulario solo por tocarlo
+  let traido = confirmado;
   const avisar = (tipoEvento) => {
     propio = true;
     try { original.dispatchEvent(new Event(tipoEvento, { bubbles: true })); } finally { propio = false; }
@@ -291,6 +294,12 @@ export function mejorarFecha(original) {
       fijar('', salir);
       return;
     }
+    if (traido && t.trim() === tipo.mostrar(traido)) {
+      texto.setCustomValidity('');
+      mostrarError('');
+      fijar(traido, salir);
+      return;
+    }
     const r = salir || (alFinal && tipo.completa(t)) ? tipo.leer(t, { min: original.min || '', max: original.max || '' }) : null;
     if (r?.valor != null) {
       texto.setCustomValidity('');
@@ -309,6 +318,7 @@ export function mejorarFecha(original) {
   const pintar = () => {
     const v = VALOR.get.call(original);
     confirmado = v;
+    traido = v;
     texto.value = tipo.mostrar(v);
     texto.setCustomValidity('');
     mostrarError('');
