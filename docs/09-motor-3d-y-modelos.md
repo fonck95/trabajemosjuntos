@@ -382,8 +382,10 @@ traer imágenes de otro origen y el Artifact no lleva archivos aparte):
   escala se apagan y los árboles del contexto se ralean (un tercio en el pueblo y un octavo en el campo); en calidad baja,
   el relieve y la mitad o un cuarto de los árboles.
 - **Sin panel** («Solo 3D»), el velo que aclara la izquierda de la escena para leer el panel se quita y abajo queda uno suave.
-- Las tarjetas de urbanismo y vivienda del Home (`web/img/home/area-urbanismo.webp` y `area-vivienda.webp`) son renders de
-  esta maqueta (720 × 480, dibujados al doble y reducidos), como las demás.
+- Las tarjetas de urbanismo, vivienda y salud del Home (`web/img/home/area-urbanismo.webp`, `area-vivienda.webp` y
+  `area-salud.webp`) son renders de esta maqueta (720 × 480, dibujados al doble y reducidos), como las demás. Vivienda
+  muestra el barrio nuevo de 25 bloques desde el occidente, con el casco al fondo; salud, la torre sin paneles propios
+  junto al hospital.
 
 Presupuesto medido en Chromium (calidad alta, 1280 × 720): la vista de la cancha de sóftbol, ≈ 280 llamadas y 0,7 M de
 triángulos; la de toda la maqueta, ≈ 720 llamadas y 3,3 M (con el mapa de sombras). Con `?qa` en la URL,

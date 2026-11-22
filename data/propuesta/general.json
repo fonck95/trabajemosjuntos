@@ -10,11 +10,11 @@
     "titulo": "Yondó 2028–2031: siete áreas para cerrar brechas",
     "lema": "Cada pieza con sitio real, costo, proyecto tipo o referente y fuente de financiación",
     "cifras": [
-      { "v": "22.429", "l": "habitantes en 2026; 47 % vive en el campo", "fuente": "DANE, proyecciones 2018–2042", "url": "https://www.dane.gov.co/files/censo2018/proyecciones-de-poblacion/Municipal/PPED-AreaMun-2018-2042_VP.xlsx" },
-      { "v": "46,3 %", "l": "de pobreza multidimensional: más del doble que Antioquia (21,6 %)", "fuente": "DANE, IPM censal 2018", "url": "https://www.dane.gov.co/index.php/estadisticas-por-tema/pobreza-y-condiciones-de-vida/pobreza-multidimensional", "tono": "alerta" },
-      { "v": "139", "l": "iniciativas PDET; 25 respaldan los módulos de esta propuesta", "fuente": "ART, iniciativas PDET (sep-2026)", "url": "https://www.datos.gov.co/d/gmvf-t63e" },
-      { "v": "10.599", "l": "barriles diarios de petróleo en 2025; eran 23.120 en 2012", "fuente": "ANH, producción fiscalizada", "url": "https://www.datos.gov.co/d/fdvb-hsrf", "tono": "alerta" },
-      { "v": "42,2 GWh", "l": "al año produce la granja solar La Iguana en Yondó, pero va a la refinería", "fuente": "Forbes Colombia (dic-2025)", "url": "https://forbes.co/2025/12/04/economia-y-finanzas/ecopetrol-inauguro-granja-solar-la-iguana-y-suma-26-mwp-a-su-plan-de-autogeneracion-limpia/" },
+      { "v": "22.429", "l": "habitantes en 2026; 47 % vive en el campo", "fuente": "Departamento Administrativo Nacional de Estadística, proyecciones 2018–2042", "url": "https://www.dane.gov.co/files/censo2018/proyecciones-de-poblacion/Municipal/PPED-AreaMun-2018-2042_VP.xlsx" },
+      { "v": "46,3 %", "l": "de pobreza multidimensional: más del doble que Antioquia (21,6 %)", "fuente": "Departamento Administrativo Nacional de Estadística, censo 2018", "url": "https://www.dane.gov.co/index.php/estadisticas-por-tema/pobreza-y-condiciones-de-vida/pobreza-multidimensional", "tono": "alerta" },
+      { "v": "139", "l": "iniciativas de los Programas de Desarrollo con Enfoque Territorial; 25 respaldan esta propuesta", "fuente": "Agencia de Renovación del Territorio (sep-2026)", "url": "https://www.datos.gov.co/d/gmvf-t63e" },
+      { "v": "10.599", "l": "barriles diarios de petróleo en 2025; eran 23.120 en 2012", "fuente": "Agencia Nacional de Hidrocarburos, producción fiscalizada", "url": "https://www.datos.gov.co/d/fdvb-hsrf", "tono": "alerta" },
+      { "v": "42,2", "l": "gigavatios hora al año produce la granja solar La Iguana en Yondó, pero esa energía va a la refinería", "fuente": "Forbes Colombia (dic-2025)", "url": "https://forbes.co/2025/12/04/economia-y-finanzas/ecopetrol-inauguro-granja-solar-la-iguana-y-suma-26-mwp-a-su-plan-de-autogeneracion-limpia/" },
       { "v": "917 m", "l": "de puente, única vía a Barrancabermeja, cerrado del 16 al 20-mar-2026 por socavación", "fuente": "Vanguardia (jun-2026)", "url": "https://www.vanguardia.com/santander/barrancabermeja/2026/06/04/por-que-sigue-en-riesgo-el-puente-que-conecta-a-barrancabermeja-con-yondo-ruta-del-cacao-explico-las-causas/", "tono": "alerta" }
     ],
     "pasos": [
@@ -32,13 +32,13 @@
         "texto": "Yondó queda frente a Barrancabermeja, al otro lado del Magdalena. Las siete áreas se reparten entre el casco urbano y sus alrededores, el acueducto, 2,3 km al occidente, el relleno nuevo de Kilómetro Cinco, a unos 5,5 km al suroccidente, y la salida del puente, a unos 8 km al norte.",
         "lista": [
           "<b>22.429 habitantes</b> en 1.895 km²: casi la mitad vive en 60 veredas y en el corregimiento de San Miguel del Tigre.",
-          "Pobreza multidimensional de <b>46,3 %</b> y NBI de 26,0 %, frente a 21,6 % y 10,7 % en Antioquia (censo 2018).",
+          "Pobreza multidimensional de <b>46,3 %</b> y necesidades básicas insatisfechas de 26,0 %, frente a 21,6 % y 10,7 % en Antioquia (censo 2018).",
           "El petróleo cayó de 23.120 a <b>10.599 barriles diarios</b> entre 2012 y 2025: las regalías propias van a la baja.",
-          "Es <b>PDET y ZOMAC</b>: puede ir al OCAD Paz y a las obras por impuestos, con 139 iniciativas PDET de respaldo.",
+          "Es <b>municipio de los Programas de Desarrollo con Enfoque Territorial</b> y de las zonas más afectadas por el conflicto armado: puede ir al Órgano Colegiado de Administración y Decisión Paz y a las obras por impuestos, con 139 iniciativas de respaldo.",
           "Depende de <b>un puente de 917 m</b> sobre el Magdalena que la socavación cerró del 16 al 20 de marzo de 2026 y que en junio seguía sin solución definitiva.",
-          "El EOT 2022–2035 reconoce un déficit de <b>2.070 viviendas</b> y reserva suelo para una PTAR y un relleno sanitario nuevo que todavía no existen."
+          "El Esquema de Ordenamiento Territorial 2022–2035 reconoce un déficit de <b>2.070 viviendas</b> y reserva suelo para una planta de tratamiento de aguas residuales y un relleno sanitario nuevo que todavía no existen."
         ],
-        "nota": "Fuentes: DANE, ANH, ART, EOT de Yondó (Acuerdo 013 de 2022) y prensa regional."
+        "nota": "Fuentes: Departamento Administrativo Nacional de Estadística, Agencia Nacional de Hidrocarburos, Agencia de Renovación del Territorio, Esquema de Ordenamiento Territorial de Yondó (Acuerdo 013 de 2022) y prensa regional."
       }
     ]
   },
@@ -47,12 +47,12 @@
       {
         "id": "sgr",
         "nombre": "Sistema General de Regalías",
-        "corto": "SGR",
+        "corto": "Regalías",
         "color": "#2a78d6",
-        "entidad": "Alcaldía, OCAD Paz (DNP), MinEnergía y Gobernación de Antioquia",
+        "entidad": "Alcaldía, Órgano Colegiado de Administración y Decisión Paz, Ministerio de Minas y Energía y Gobernación de Antioquia",
         "tipo": "No reembolsable",
-        "que_financia": "Asignaciones directas e inversión local (las aprueba la alcaldía), Asignación para la Paz (OCAD Paz), Incentivo a la Producción (convocatoria de MinEnergía para transición energética, que aprueba el OCAD Paz) e inversión regional (Gobernación y OCAD Eje Cafetero).",
-        "requisito": "Proyecto completo en MGA y SUIFP-SGR con los requisitos del sector; en 2027 solo se podrá aprobar hasta el 60 % de los ingresos del bienio.",
+        "que_financia": "Asignaciones directas e inversión local (las aprueba la alcaldía), Asignación para la Paz (la aprueba el Órgano Colegiado de Administración y Decisión Paz), Incentivo a la Producción (convocatoria del Ministerio de Minas y Energía para la transición energética, que aprueba ese mismo órgano) e inversión regional (Gobernación y órgano de regalías de la región Eje Cafetero).",
+        "requisito": "Proyecto completo en la Metodología General Ajustada y en el sistema de proyectos de inversión de las regalías, con los requisitos del sector; en 2027 solo se podrá aprobar hasta el 60 % de los ingresos del bienio.",
         "url": "https://www.datos.gov.co/d/g4qj-2p2e"
       },
       {
@@ -60,21 +60,21 @@
         "nombre": "Presupuesto General de la Nación",
         "corto": "Nación",
         "color": "#eb6834",
-        "entidad": "MinVivienda, MinSalud, MinDeporte, MinTIC, MinCultura, MinAgricultura y ADR",
+        "entidad": "Ministerios de Vivienda, de Salud, del Deporte, de Tecnologías de la Información y las Comunicaciones, de Cultura y de Agricultura, y Agencia de Desarrollo Rural",
         "tipo": "No reembolsable (cofinanciación)",
-        "que_financia": "Vivienda (Fonvivienda), agua y saneamiento con viabilidad de MinVivienda, infraestructura en salud con concepto de viabilidad de MinSalud (el proyecto debe estar en el PMIDS del departamento), equipos básicos de salud, escenarios deportivos, telemedicina, cultura y desarrollo rural (ADR).",
-        "requisito": "Viabilidad del ministerio, contrapartida y diseños; el PGN 2027 obliga a recortar 3 % en todas las entidades.",
+        "que_financia": "Vivienda (Fonvivienda), agua y saneamiento con viabilidad del Ministerio de Vivienda, infraestructura en salud con concepto de viabilidad del Ministerio de Salud (el proyecto debe estar en el Plan Maestro de Inversiones en Infraestructura y Dotación en Salud del departamento), equipos básicos de salud, escenarios deportivos, telemedicina, cultura y desarrollo rural (Agencia de Desarrollo Rural).",
+        "requisito": "Viabilidad del ministerio, contrapartida y diseños; el Presupuesto General de la Nación de 2027 obliga a recortar 3 % en todas las entidades.",
         "url": "https://www.larepublica.co/economia/congreso-de-la-republica-dio-luz-verde-al-presupuesto-de-2027-por-634-9-billones-4506678"
       },
       {
         "id": "oxi",
         "nombre": "Obras por impuestos",
-        "corto": "OxI",
+        "corto": "Obras por impuestos",
         "color": "#1baf7a",
-        "entidad": "ART, DNP y empresas contribuyentes (Ecopetrol, Parex y otras)",
+        "entidad": "Agencia de Renovación del Territorio, Departamento Nacional de Planeación y empresas contribuyentes (Ecopetrol, Parex y otras)",
         "tipo": "Impuesto de renta pagado en obras",
-        "que_financia": "Agua, energía, salud, educación, deporte, TIC, vías e infraestructura productiva en municipios ZOMAC y PDET. Desde septiembre de 2026, la modalidad de reconstrucción del D.L. 1389, para daños del terremoto, compite por el mismo cupo.",
-        "requisito": "Proyecto viable en el banco de la ART y una empresa que lo escoja; cortes anuales (cupo nacional de $1,14 billones en 2026).",
+        "que_financia": "Agua, energía, salud, educación, deporte, conectividad, vías e infraestructura productiva en las zonas más afectadas por el conflicto armado y en los municipios de los Programas de Desarrollo con Enfoque Territorial. Desde septiembre de 2026, la modalidad de reconstrucción del decreto ley 1389, para daños del terremoto, compite por el mismo cupo.",
+        "requisito": "Proyecto viable en el banco de la Agencia de Renovación del Territorio y una empresa que lo escoja; cortes anuales (cupo nacional de $1,14 billones en 2026).",
         "url": "https://www.portafolio.co/economia/el-cupo-anual-de-obras-por-impuestos-paso-de-250-000-millones-a-1-1-billones-entre-2018-y-2026-con-619-proyectos-499435"
       },
       {
@@ -82,9 +82,9 @@
         "nombre": "Gobernación de Antioquia",
         "corto": "Gobernación",
         "color": "#eda100",
-        "entidad": "Gobernación, VIVA, Indeportes, Secretarías de Salud y de Agricultura, Plan Departamental de Aguas e IDEA",
+        "entidad": "Gobernación, Empresa de Vivienda de Antioquia, Indeportes, Secretarías de Salud y de Agricultura, Plan Departamental de Agua e Instituto para el Desarrollo de Antioquia",
         "tipo": "Cofinanciación",
-        "que_financia": "Vivienda (VIVA), adecuación de escenarios existentes (Indeportes: 70 % en categorías 5 y 6), salud (con registro en el PMIDS), agua y saneamiento (PDA) y maquinaria 50/50 (hasta hoy, maquinaria amarilla). Además aprueba el 60 % de la inversión regional del SGR, que aquí se cuenta como regalías.",
+        "que_financia": "Vivienda (Empresa de Vivienda de Antioquia), adecuación de escenarios existentes (Indeportes: 70 % en categorías 5 y 6), salud (con registro en el Plan Maestro de Inversiones en Infraestructura y Dotación en Salud), agua y saneamiento (Plan Departamental de Agua) y maquinaria 50/50 (hasta hoy, maquinaria amarilla). Además aprueba el 60 % de la inversión regional del Sistema General de Regalías, que aquí se cuenta con las regalías.",
         "requisito": "Estar en el plan de desarrollo departamental 2028–2031 y en la priorización de la Gobernación.",
         "url": "https://indeportesantioquia.gov.co/wp-content/uploads/2025/02/Circular_2025000013_25_de_Febrero_Convocatoria_Mejoramientos2025.pdf"
       },
@@ -93,9 +93,9 @@
         "nombre": "Findeter",
         "corto": "Findeter",
         "color": "#6250d6",
-        "entidad": "Findeter, con MinEnergía y MinSalud en las líneas de tasa compensada",
+        "entidad": "Findeter, con los Ministerios de Minas y Energía y de Salud en las líneas de tasa compensada",
         "tipo": "Crédito con tasa compensada",
-        "que_financia": "Reactiva Colombia (IBR + 0 %), Reactiva Agua (IBR + 0,30 %), Territorios Energéticos para granjas solares (IBR + 0,7 %) y salud con tasa compensada; para el parque agroindustrial la línea está por confirmar.",
+        "que_financia": "Reactiva Colombia (indicador bancario de referencia más 0 %), Reactiva Agua (más 0,30 %), Territorios Energéticos para granjas solares (más 0,7 %) y salud con tasa compensada; para el parque agroindustrial la línea está por confirmar.",
         "requisito": "Capacidad de endeudamiento (la prudente de Yondó está entre $5.141 M y $10.281 M), viabilidad del sector y autorización del Concejo.",
         "url": "https://www.findeter.gov.co/productos-y-servicios/lineas-de-credito-de-redescuento/programa_reactiva_colombia_findeter"
       },
@@ -105,8 +105,8 @@
         "corto": "Municipio",
         "color": "#9a6a3a",
         "entidad": "Alcaldía de Yondó",
-        "tipo": "Propios, SGP y tarifas",
-        "que_financia": "Predios, diseños, contrapartidas, SGP de agua potable y de salud, y tarifas de los servicios públicos.",
+        "tipo": "Propios, Sistema General de Participaciones y tarifas",
+        "que_financia": "Predios, diseños, contrapartidas, Sistema General de Participaciones de agua potable y de salud, y tarifas de los servicios públicos.",
         "requisito": "Plan de inversiones y marco fiscal de mediano plazo; Yondó ya paga $1.718,5 M de deuda en 2026.",
         "url": "https://www.yondo-antioquia.gov.co/plan-de-desarrollo-2024--2027/plan-de-desarrollo-territorial-yondo-avanza-20242027"
       },
@@ -115,9 +115,9 @@
         "nombre": "Fondos y agencias nacionales",
         "corto": "Fondos",
         "color": "#e87ba4",
-        "entidad": "FONTUR, Cormagdalena, UNGRD, FENOGE y Fondo Único de TIC",
+        "entidad": "Fondo Nacional de Turismo, Cormagdalena, Unidad Nacional para la Gestión del Riesgo de Desastres, Fondo de Energías No Convencionales y Gestión Eficiente de la Energía y Fondo Único de Tecnologías de la Información y las Comunicaciones",
         "tipo": "No reembolsable (por convocatoria o ficha)",
-        "que_financia": "Turismo (FONTUR), río y orillas (Cormagdalena, 0,5 % del SGR para municipios ribereños), gestión del riesgo (UNGRD), energía y eficiencia (FENOGE y Colombia Solar) y conectividad (Fondo Único de TIC, de MinTIC).",
+        "que_financia": "Turismo (Fondo Nacional de Turismo), río y orillas (Cormagdalena, 0,5 % de las regalías para municipios ribereños), gestión del riesgo (Unidad Nacional para la Gestión del Riesgo de Desastres), energía y eficiencia (Fondo de Energías No Convencionales y Gestión Eficiente de la Energía, y Colombia Solar) y conectividad (Fondo Único de Tecnologías de la Información y las Comunicaciones, del ministerio del ramo).",
         "requisito": "Ficha y manual de cada fondo; estudios de mercado, hidráulicos o de conexión según el caso.",
         "url": "https://fontur.com.co/sites/default/files/2026-04/M-DMI-001Manual-Programas-y-Proyectos-04dic-2025.pdf"
       },
@@ -139,8 +139,8 @@
         "color": "#0d8f96",
         "entidad": "Cooperación internacional y responsabilidad social de Ecopetrol y los operadores del campo Casabe",
         "tipo": "No reembolsable",
-        "que_financia": "Estudios, dotación, telesalud, agua y proyectos productivos con enfoque de paz.",
-        "requisito": "Contrapartida, operador con capacidad y alineación con el PDET.",
+        "que_financia": "Estudios, dotación, salud preventiva, telemedicina, agua y proyectos productivos con enfoque de paz.",
+        "requisito": "Contrapartida, operador con capacidad y alineación con los Programas de Desarrollo con Enfoque Territorial.",
         "url": null
       },
       {
@@ -148,9 +148,9 @@
         "nombre": "Privados y comunidad",
         "corto": "Privados",
         "color": "#7a8590",
-        "entidad": "Hogares, cajas de compensación, productores, socios de la empresa mixta y banca (Finagro, Banco Agrario)",
+        "entidad": "Hogares, cajas de compensación familiar, Fondo Nacional del Ahorro, productores, socios de la empresa mixta y banca (Finagro, Banco Agrario)",
         "tipo": "Aportes, ahorro y crédito",
-        "que_financia": "Ahorro y crédito de los hogares VIS y subsidio de las cajas, capital de los socios de la empresa mixta (concentrados y trilladora) y crédito Finagro para el capital de trabajo del parque agroindustrial.",
+        "que_financia": "Ahorro y crédito hipotecario de los hogares del barrio nuevo de vivienda de interés social, con el Fondo Nacional del Ahorro o la banca, y subsidio de las cajas de compensación familiar; capital de los socios de la empresa mixta (concentrados y trilladora) y crédito Finagro para el capital de trabajo del parque agroindustrial.",
         "requisito": "Cierre financiero de cada hogar y empresa mixta con gobierno corporativo y paridad.",
         "url": null
       }
@@ -162,15 +162,15 @@
         "titulo": "Cómo se financia la propuesta",
         "texto": "Ninguna fuente sola alcanza. La mezcla reparte el riesgo entre regalías, Nación, Gobernación, obras por impuestos, crédito barato y aportes privados, y pone a cada proyecto en la ventanilla que le corresponde.",
         "cifras": [
-          { "v": "$48.128 M", "l": "de regalías propias aprobó Yondó en 2025–2026 (de $71.418 M)", "fuente": "MinHacienda, ejecución de regalías", "url": "https://www.datos.gov.co/d/g4qj-2p2e" },
-          { "v": "$36.228 M", "l": "le aprobó el OCAD Paz en 7 proyectos (2025–2026)", "fuente": "MinHacienda, ejecución de regalías", "url": "https://www.datos.gov.co/d/g4qj-2p2e" },
-          { "v": "$13.694 M", "l": "del Incentivo a la Producción sin aprobar (oct-2026); se piden $4.546 M", "fuente": "Cálculo propio con datos de MinHacienda", "url": "https://www.datos.gov.co/d/g4qj-2p2e", "tono": "alerta" },
-          { "v": "−11 %", "l": "baja el presupuesto del SGR en 2027–2028 ($27,54 billones)", "fuente": "Portafolio (oct-2026)", "url": "https://www.portafolio.co/economia/gobierno/presupuesto-de-regalias-2027-2028-seria-de-27-54-billones-11-menos-503793", "tono": "alerta" }
+          { "v": "$48.128 M", "l": "de regalías propias aprobó Yondó en 2025–2026 (de $71.418 M)", "fuente": "Ministerio de Hacienda, ejecución de regalías", "url": "https://www.datos.gov.co/d/g4qj-2p2e" },
+          { "v": "$36.228 M", "l": "le aprobó el Órgano Colegiado de Administración y Decisión Paz en 7 proyectos (2025–2026)", "fuente": "Ministerio de Hacienda, ejecución de regalías", "url": "https://www.datos.gov.co/d/g4qj-2p2e" },
+          { "v": "$13.694 M", "l": "del Incentivo a la Producción sin aprobar (oct-2026); se piden $4.546 M", "fuente": "Cálculo propio con datos del Ministerio de Hacienda", "url": "https://www.datos.gov.co/d/g4qj-2p2e", "tono": "alerta" },
+          { "v": "−11 %", "l": "baja el presupuesto de las regalías en 2027–2028 ($27,54 billones)", "fuente": "Portafolio (oct-2026)", "url": "https://www.portafolio.co/economia/gobierno/presupuesto-de-regalias-2027-2028-seria-de-27-54-billones-11-menos-503793", "tono": "alerta" }
         ],
         "nota": "Las columnas sobre el mapa muestran la inversión de cada módulo partida por fuente. El crédito de Findeter ($9.445 M) cabe en la capacidad prudente del municipio ($5.141 M a $10.281 M), cerca de su techo, y va sobre todo a proyectos que generan ahorro o ingreso: las dos granjas solares y el parque agroindustrial.",
         "leyenda": [
           { "texto": "Una columna por módulo: el alto es la inversión y cada franja, una fuente", "color": "var(--muted)", "forma": "area" },
-          { "texto": "Regalías (SGR)", "color": "#2a78d6", "forma": "area" },
+          { "texto": "Regalías", "color": "#2a78d6", "forma": "area" },
           { "texto": "Nación", "color": "#eb6834", "forma": "area" },
           { "texto": "Gobernación de Antioquia", "color": "#eda100", "forma": "area" }
         ]
@@ -182,7 +182,7 @@
         "texto": "Qué financia cada una y el requisito que más pesa a la hora de radicar.",
         "leyenda": [
           { "texto": "Una columna por módulo: el alto es la inversión y cada franja, una fuente", "color": "var(--muted)", "forma": "area" },
-          { "texto": "Regalías (SGR)", "color": "#2a78d6", "forma": "area" },
+          { "texto": "Regalías", "color": "#2a78d6", "forma": "area" },
           { "texto": "Nación", "color": "#eb6834", "forma": "area" },
           { "texto": "Gobernación de Antioquia", "color": "#eda100", "forma": "area" }
         ]
@@ -191,18 +191,18 @@
         "id": "reglas",
         "tipo": "texto",
         "titulo": "Cinco reglas para que la plata se vuelva obra",
-        "texto": "De los 124 estudios y consultorías que contrató la alcaldía desde 2008, solo el 22 % tiene una obra posterior identificable en SECOP. Estas reglas cierran esa brecha.",
+        "texto": "De los 124 estudios y consultorías que contrató la alcaldía desde 2008, solo el 22 % tiene una obra posterior identificable en el Sistema Electrónico de Contratación Pública. Estas reglas cierran esa brecha.",
         "lista": [
           "<b>Nada se radica sin diseños fase III</b> y presupuesto con análisis de precios unitarios.",
           "<b>Etapas que funcionan solas</b>: cada contrato entrega algo que sirve aunque la etapa siguiente se demore.",
           "<b>Sin anticipos altos</b>: fiducia o patrimonio autónomo e interventoría externa en todas las obras.",
           "<b>Pliegos tipo y competencia</b>: desde 2020, el 83 % del valor contratado por la alcaldía se adjudicó sin competencia.",
-          "<b>Cuentas abiertas</b>: tablero público de avance físico y financiero por proyecto, con datos de SECOP y GESPROY."
+          "<b>Cuentas abiertas</b>: tablero público de avance físico y financiero por proyecto, con datos del portal de contratación pública y del sistema de seguimiento a los proyectos de regalías."
         ],
-        "nota": "Fuente: Atlas Yondó 2028, análisis de 10.279 contratos publicados en SECOP entre 2007 y octubre de 2026.",
+        "nota": "Fuente: Atlas Yondó 2028, análisis de 10.279 contratos publicados en el portal de contratación pública entre 2007 y octubre de 2026.",
         "leyenda": [
           { "texto": "Una columna por módulo: el alto es la inversión y cada franja, una fuente", "color": "var(--muted)", "forma": "area" },
-          { "texto": "Regalías (SGR)", "color": "#2a78d6", "forma": "area" },
+          { "texto": "Regalías", "color": "#2a78d6", "forma": "area" },
           { "texto": "Nación", "color": "#eb6834", "forma": "area" },
           { "texto": "Gobernación de Antioquia", "color": "#eda100", "forma": "area" }
         ]
@@ -211,7 +211,7 @@
   },
   "ruta": {
     "fases": [
-      { "nombre": "Gestión ante el PND y preinversión", "desde": 2026.8, "hasta": 2028.0, "color": "#7a8590" },
+      { "nombre": "Gestión ante el Plan Nacional de Desarrollo y preinversión", "desde": 2026.8, "hasta": 2028.0, "color": "#7a8590" },
       { "nombre": "Estudios y diseños fase III", "desde": 2027.2, "hasta": 2028.7, "color": "#6250d6" },
       { "nombre": "Radicación y aprobación", "desde": 2028.0, "hasta": 2029.3, "color": "#2a78d6" },
       { "nombre": "Obras, primera ola", "desde": 2028.6, "hasta": 2030.4, "color": "#14a06c" },
@@ -219,40 +219,40 @@
       { "nombre": "Operación y rendición de cuentas", "desde": 2030.0, "hasta": 2032.0, "color": "#d9363e" }
     ],
     "hitos": [
-      { "fecha": "15-nov-2026", "texto": "Bases del PND 2026–2030 al Consejo Nacional de Planeación: pedir que las siete áreas entren al pacto regional" },
-      { "fecha": "5-dic-2026", "texto": "Plazo del Congreso para el presupuesto del SGR 2027–2028" },
+      { "fecha": "15-nov-2026", "texto": "Bases del Plan Nacional de Desarrollo 2026–2030 al Consejo Nacional de Planeación: pedir que las siete áreas entren al pacto regional" },
+      { "fecha": "5-dic-2026", "texto": "Plazo del Congreso para el presupuesto de las regalías 2027–2028" },
       { "fecha": "31-dic-2026", "texto": "Vence la línea Reactiva Agua de Findeter (renovación por confirmar)" },
-      { "fecha": "7-feb-2027", "texto": "Radicación del PND en el Congreso" },
-      { "fecha": "5-may-2027", "texto": "Plazo para aprobar el PND: los proyectos deben quedar en su plan plurianual" },
-      { "fecha": "31-oct-2027", "texto": "Elecciones locales: empalme con fichas, MGA y diseños listos" },
+      { "fecha": "7-feb-2027", "texto": "Radicación del Plan Nacional de Desarrollo en el Congreso" },
+      { "fecha": "5-may-2027", "texto": "Plazo para aprobar el Plan Nacional de Desarrollo: los proyectos deben quedar en su plan plurianual de inversiones" },
+      { "fecha": "31-oct-2027", "texto": "Elecciones locales: empalme con fichas, proyectos formulados en la Metodología General Ajustada y diseños listos" },
       { "fecha": "ene-2028", "texto": "Nuevos gobiernos municipal y departamental: planes de desarrollo 2028–2031" },
-      { "fecha": "2028–2029", "texto": "Convocatorias del OCAD Paz y cortes de obras por impuestos con proyectos completos" }
+      { "fecha": "2028–2029", "texto": "Convocatorias del Órgano Colegiado de Administración y Decisión Paz y cortes de obras por impuestos con proyectos completos" }
     ],
     "pasos": [
       {
         "id": "ruta",
         "tipo": "ruta",
         "titulo": "De la idea a la obra en cinco años",
-        "texto": "La gestión empieza ahora, con el PND en construcción; las obras se ejecutan en dos olas entre 2028 y 2031.",
+        "texto": "La gestión empieza ahora, con el Plan Nacional de Desarrollo en construcción; las obras se ejecutan en dos olas entre 2028 y 2031.",
         "lista": [
-          "<b>Primera ola</b>: sectorización y medición del acueducto, Cancha de Sóftbol Casabe y alameda, torre del hospital, fibra y granja solar, rescate de las viviendas inconclusas, banco de maquinaria y acopios del parque agroindustrial, la fase 1 del relleno nuevo con su vía y la cobertura de las celdas viejas de Las Américas.",
-          "<b>Segunda ola</b>: interceptores y PTAR, parque lineal del caño, mirador del Magdalena, plantas del parque agroindustrial, urbanizaciones nuevas y el cierre de Las Américas con su parque y la primera parte de su granja solar."
+          "<b>Primera ola</b>: sectorización y medición del acueducto, Cancha de Sóftbol Casabe y alameda, torre del hospital, salud preventiva, equipos básicos de salud y telemedicina, fibra y granja solar, rescate de las viviendas inconclusas, banco de maquinaria y acopios del parque agroindustrial, la fase 1 del relleno nuevo con su vía y la cobertura de las celdas viejas de Las Américas.",
+          "<b>Segunda ola</b>: interceptores y planta de tratamiento de aguas residuales, parque lineal del caño, mirador del Magdalena, plantas del parque agroindustrial, el barrio nuevo de vivienda de interés social (300 apartamentos en 25 bloques) y el cierre de Las Américas con su parque y la primera parte de su granja solar."
         ]
       }
     ]
   },
   "pedidos": {
     "entidades": [
-      { "entidad": "DNP · OCAD Paz y regalías", "pedido": "Priorizar en las convocatorias 2027–2028 las iniciativas PDET de la propuesta: vivienda rural nueva y mejoramiento rural (1305893152262 y 1305893152246), parque agroindustrial (1305893153585 y 1305893153592), interceptores de saneamiento, torre y puestos de salud y parque lineal del caño; y las dos granjas solares en la convocatoria del Incentivo a la Producción de MinEnergía: la municipal ($2.799 M) en la de 2027–2028 y la de Las Américas ($1.747 M) en la de 2029–2030, cuando la cobertura de sus celdas viejas haya asentado. El monto es todo el SGR de la mezcla, con las regalías directas (entre ellas, los estudios y la interventoría del relleno nuevo de Kilómetro Cinco) y la inversión regional.", "modulos": ["vivienda", "agroindustria", "salud", "saneamiento", "urbanismo", "aguas", "tic"], "monto": 116294 },
-      { "entidad": "MinVivienda · Fonvivienda y Viceministerio de Agua", "pedido": "Vivienda ($31.900 M): cupos de mejoramiento urbano y rural (800 casas), vivienda rural en especie (200), apoyo a la titulación y que Casa Milagro cofinancie las 200 VIP del Lote 1. Agua y saneamiento ($19.298 M): viabilidad y apoyo financiero (Res. 0467 de 2026) para la PTAR, el Plan Maestro, la ECA (Programa Basura Cero) y la celda de la fase 1 del relleno nuevo, y para la sectorización y las pérdidas del acueducto.", "modulos": ["vivienda", "saneamiento", "aguas"], "monto": 51198 },
-      { "entidad": "Gobernación de Antioquia", "pedido": "VIVA para vivienda; Plan Departamental de Aguas para la PTAR, los interceptores, el compostaje, la clausura de Las Américas y las obras complementarias del relleno nuevo, y para la línea base y las pérdidas del acueducto; la mitad del banco de maquinaria y de la maquinaria del relleno nuevo (línea 50/50); Indeportes para renovar el estadio existente, y la Secretaría Seccional de Salud para la torre y los puestos, con registro en el PMIDS de 2028. Además, revisar si Yondó entra en el Plan de Racionalización de plantas de beneficio, por si el matadero es de autoconsumo.", "modulos": ["vivienda", "saneamiento", "agroindustria", "urbanismo", "salud", "aguas"], "monto": 39874 },
-      { "entidad": "ART y empresas contribuyentes", "pedido": "Inscribir en el banco de obras por impuestos las plantas del parque agroindustrial, una etapa de los interceptores de saneamiento y la vía al relleno nuevo (vía terciaria de la iniciativa PDET 1305893152122), la dotación de la torre y de los puestos de salud, más dos ambulancias, la protección de la orilla del mirador y el parque lineal del caño, y la macro y micromedición del acueducto; y buscar empresa con Ecopetrol, Parex y los demás contribuyentes del campo Casabe.", "modulos": ["agroindustria", "saneamiento", "salud", "urbanismo", "aguas"], "monto": 25520 },
-      { "entidad": "MinSalud", "pedido": "Concepto técnico de viabilidad de la torre (Res. 485 de 2025) con $12.000 M para su obra y equipamiento fijo, y $4.800 M para sostener los equipos básicos de salud rurales entre 2028 y 2031.", "modulos": ["salud"], "monto": 16800 },
-      { "entidad": "FONTUR, Cormagdalena, UNGRD, FENOGE y Fondo Único de TIC", "pedido": "Mirador Puerta del Magdalena (FONTUR, Cormagdalena y UNGRD: turismo, orilla y riesgo) y la laguna y la descarga de la PTAR (Cormagdalena); energía de las dos granjas solares y de la torre (FENOGE y Colombia Solar), y conectividad de las Zonas Digitales, la salud rural y la telemetría del acueducto (Fondo Único de TIC).", "modulos": ["urbanismo", "saneamiento", "tic", "salud", "aguas"], "monto": 13776 },
+      { "entidad": "Departamento Nacional de Planeación · Órgano Colegiado de Administración y Decisión Paz y regalías", "pedido": "Priorizar en las convocatorias 2027–2028 las iniciativas de los Programas de Desarrollo con Enfoque Territorial que tiene la propuesta: vivienda rural nueva y mejoramiento rural (1305893152262 y 1305893152246), parque agroindustrial (1305893153585 y 1305893153592), interceptores de saneamiento, torre de salud y parque lineal del caño; y las dos granjas solares en la convocatoria del Incentivo a la Producción del Ministerio de Minas y Energía: la municipal ($2.799 M) en la de 2027–2028 y la de Las Américas ($1.747 M) en la de 2029–2030, cuando la cobertura de sus celdas viejas haya asentado. El monto es todo lo que la mezcla pide a las regalías, con las asignaciones directas (entre ellas, el urbanismo y las redes del barrio nuevo de vivienda y los estudios y la interventoría del relleno nuevo de Kilómetro Cinco) y la inversión regional.", "modulos": ["vivienda", "agroindustria", "salud", "saneamiento", "urbanismo", "aguas", "tic"], "monto": 113494 },
+      { "entidad": "Ministerio de Vivienda · Fonvivienda y Viceministerio de Agua", "pedido": "Vivienda ($31.900 M): subsidios de Casa Milagro para los 300 hogares del barrio nuevo de vivienda de interés social, cupos de mejoramiento urbano y rural (800 casas), vivienda rural en especie (200) y apoyo a la titulación. Agua y saneamiento ($19.298 M): viabilidad y apoyo financiero (Resolución 0467 de 2026) para la planta de tratamiento de aguas residuales, el Plan Maestro, la estación de reciclaje (Programa Basura Cero) y la celda de la fase 1 del relleno nuevo, y para la sectorización y las pérdidas del acueducto.", "modulos": ["vivienda", "saneamiento", "aguas"], "monto": 51198 },
+      { "entidad": "Gobernación de Antioquia", "pedido": "La Empresa de Vivienda de Antioquia para vivienda (subsidio del 10 % de la vivienda de interés social para los hogares del barrio nuevo, prototipos rurales y convenios de mejoramiento); el Plan Departamental de Agua para la planta de tratamiento de aguas residuales, los interceptores, el compostaje, la clausura de Las Américas y las obras complementarias del relleno nuevo, y para la línea base y las pérdidas del acueducto; la mitad del banco de maquinaria y de la maquinaria del relleno nuevo (línea 50/50); Indeportes para renovar el estadio existente, y la Secretaría Seccional de Salud para la torre, con registro en el Plan Maestro de Inversiones en Infraestructura y Dotación en Salud de 2028, y para la salud preventiva. Además, revisar si Yondó entra en el Plan de Racionalización de plantas de beneficio, por si el matadero es de autoconsumo.", "modulos": ["vivienda", "saneamiento", "agroindustria", "urbanismo", "salud", "aguas"], "monto": 39762 },
+      { "entidad": "Agencia de Renovación del Territorio y empresas contribuyentes", "pedido": "Inscribir en el banco de obras por impuestos las plantas del parque agroindustrial, una etapa de los interceptores de saneamiento y la vía al relleno nuevo (vía terciaria de la iniciativa 1305893152122 de los Programas de Desarrollo con Enfoque Territorial), la dotación de la torre de salud y dos ambulancias, la protección de la orilla del mirador y el parque lineal del caño, y la macro y micromedición del acueducto; y buscar empresa con Ecopetrol, Parex y los demás contribuyentes del campo Casabe.", "modulos": ["agroindustria", "saneamiento", "salud", "urbanismo", "aguas"], "monto": 25220 },
+      { "entidad": "Ministerio de Salud", "pedido": "Concepto técnico de viabilidad de la torre (Resolución 485 de 2025) con $12.000 M para su obra y equipamiento fijo, y $4.800 M para sostener entre 2028 y 2031 los equipos básicos de salud que visitan los hogares.", "modulos": ["salud"], "monto": 16800 },
+      { "entidad": "Fondos y agencias nacionales", "pedido": "Fondo Nacional de Turismo, Cormagdalena y Unidad Nacional para la Gestión del Riesgo de Desastres: el Mirador Puerta del Magdalena (la plaza, el sendero y el mirador; la orilla y el riesgo). Cormagdalena: la laguna y la descarga de la planta de tratamiento de aguas residuales. Fondo de Energías No Convencionales y Gestión Eficiente de la Energía y Colombia Solar: las dos granjas solares y la energía de respaldo de la torre. Fondo Único de Tecnologías de la Información y las Comunicaciones: las Zonas Digitales, la telemedicina rural y la telemetría del acueducto.", "modulos": ["urbanismo", "saneamiento", "tic", "salud", "aguas"], "monto": 13191 },
       { "entidad": "Findeter", "pedido": "Crédito para las dos granjas solares con la tasa compensada de Territorios Energéticos ($1.000 M la municipal y $945 M la de Las Américas), para cerrar la obra de la torre con la tasa compensada de salud o Reactiva Colombia ($1.500 M) y para el matadero y las redes del parque agroindustrial ($6.000 M, línea por confirmar). Suma $9.445 M, cerca del techo de la capacidad prudente del municipio ($5.141 M a $10.281 M).", "modulos": ["agroindustria", "salud", "tic", "saneamiento"], "monto": 9445 },
-      { "entidad": "MinDeporte, MinTIC y MinCultura", "pedido": "MinDeporte, por convenio de cofinanciación de infraestructura deportiva: Cancha de Sóftbol Casabe y canchas cubiertas junto al CIC ($4.700 M). MinTIC: telemedicina y conectividad de la torre ($400 M). Entre deporte, TIC y cultura, $1.324 M para el parque ecotecnológico de Las Américas.", "modulos": ["urbanismo", "saneamiento", "salud"], "monto": 6424 },
-      { "entidad": "MinAgricultura y ADR", "pedido": "Cofinanciar con PIDAR (de $1.000 M a $4.000 M por proyecto regional) el acopio de leche y la trilladora del parque agroindustrial.", "modulos": ["agroindustria"], "monto": 5500 },
-      { "entidad": "ANI y concesión Ruta del Cacao", "pedido": "Diseñar la solución definitiva del estribo de Yondó junto con la protección de la orilla del mirador y el muelle de carga.", "modulos": ["urbanismo", "agroindustria"] }
+      { "entidad": "Ministerios del Deporte, de Tecnologías de la Información y las Comunicaciones y de Cultura", "pedido": "Ministerio del Deporte, por convenio de cofinanciación de infraestructura deportiva: Cancha de Sóftbol Casabe y canchas cubiertas junto al Centro de Integración Ciudadana ($4.700 M). Ministerio de Tecnologías de la Información y las Comunicaciones: telemedicina y conectividad de la torre ($400 M). Entre deporte, tecnología y cultura, $1.324 M para el parque ecotecnológico de Las Américas.", "modulos": ["urbanismo", "saneamiento", "salud"], "monto": 6424 },
+      { "entidad": "Ministerio de Agricultura y Agencia de Desarrollo Rural", "pedido": "Cofinanciar con los Proyectos Integrales de Desarrollo Agropecuario y Rural (de $1.000 M a $4.000 M por proyecto regional) el acopio de leche y la trilladora del parque agroindustrial.", "modulos": ["agroindustria"], "monto": 5500 },
+      { "entidad": "Agencia Nacional de Infraestructura y concesión Ruta del Cacao", "pedido": "Diseñar la solución definitiva del estribo de Yondó junto con la protección de la orilla del mirador y el muelle de carga del parque agroindustrial.", "modulos": ["urbanismo", "agroindustria"] }
     ],
     "pasos": [
       {
@@ -260,12 +260,12 @@
         "tipo": "pedidos",
         "titulo": "Lo que pedimos, entidad por entidad",
         "texto": "Un pedido por ventanilla, con su monto y los módulos que mueve. Los montos son la parte de cada fuente en la mezcla propuesta.",
-        "nota": "La ANI y la concesión no ponen plata en esta propuesta: se les pide coordinar el estribo con la protección de la orilla. Los ministerios forman la fuente «Nación» ($79.922 M); el Fondo Único de TIC va con los fondos. No se listan los aportes del municipio ($25.468 M), de hogares y socios privados ($25.771 M), de Corantioquia ($7.500 M) ni de la cooperación ($3.800 M)."
+        "nota": "La Agencia Nacional de Infraestructura y la concesión no ponen plata en esta propuesta: se les pide coordinar el estribo con la protección de la orilla. Los ministerios forman la fuente «Nación» ($79.922 M); el Fondo Único de Tecnologías de la Información y las Comunicaciones va con los fondos. No se listan los aportes del municipio ($26.238 M), de hogares y socios privados ($49.408 M), de Corantioquia ($7.500 M) ni de la cooperación ($4.000 M)."
       }
     ]
   },
   "tecnica": {
-    "nota": "La presentación técnica (web/propuesta.html?modo=tecnica) es la que muestran el asistente del panel y los agentes por MCP: lo que se construye, cómo funciona y cómo se mide, sin costos ni financiación (esos están en la propuesta para la gestión). Sus pasos son los de cada módulo sin el de financiación, más las inmersiones en los modelos del atlas y un paso de metas.",
+    "nota": "La presentación técnica (web/propuesta.html?modo=tecnica) es la que muestran el asistente del panel y los agentes conectados: lo que se construye, cómo funciona y cómo se mide, sin costos ni financiación (esos están en la propuesta para la gestión). Sus pasos son los de cada módulo sin el de financiación, más las inmersiones en los modelos del atlas y un paso de metas.",
     "portada": {
       "titulo": "Yondó 2028–2031: lo que se construye, pieza por pieza",
       "lema": "Siete áreas sobre la maqueta 3D del territorio real: el sitio, las especificaciones, el referente técnico y las metas de cada obra",
@@ -278,7 +278,7 @@
     },
     "cronograma": {
       "titulo": "Cronograma de obra 2027–2032",
-      "texto": "Cada barra es un componente, del primer estudio a la entrada en operación, según el plazo de su ficha técnica. Las obras que dependen de otras van después: el parque lineal espera a la PTAR y la PTAP a que bajen las pérdidas.",
+      "texto": "Cada barra es un componente, del primer estudio a la entrada en operación, según el plazo de su ficha técnica. Las obras que dependen de otras van después: el parque lineal espera a la planta de tratamiento de aguas residuales, y la ampliación de la potabilizadora, a que bajen las pérdidas.",
       "nota": "Plazos de prefactibilidad: se ajustan con los diseños de cada obra."
     },
     "inmersiones": [
@@ -287,7 +287,7 @@
         "vista": "torre",
         "modo": "torre",
         "nombre": "La torre en su sitio",
-        "texto": "El modelo de la torre de cuatro pisos junto al hospital actual, sobre el sitio del antiguo Centro Vida."
+        "texto": "La torre de cuatro pisos junto al hospital actual, en el sitio del antiguo Centro Vida."
       },
       {
         "id": "torre_hoy",
@@ -301,7 +301,7 @@
         "vista": "torre",
         "modo": "pisos",
         "nombre": "Pisos por servicio",
-        "texto": "Los cuatro pisos de la planta real separados, cada recinto con el color de su grupo de la Res. 1633 de 2025."
+        "texto": "Los cuatro pisos de la planta real separados, cada recinto con el color de su grupo de servicios según la Resolución 1633 de 2025."
       },
       {
         "id": "torre_recorrido",
@@ -322,21 +322,21 @@
         "vista": "torre",
         "modo": "sismo",
         "nombre": "Simulador sísmico",
-        "texto": "La estructura prediseñada con la NSR-10 sometida a un sismo, con la deriva de cada piso."
+        "texto": "La estructura prediseñada con la norma sismorresistente, sometida a un sismo, con la deriva de cada piso."
       },
       {
         "id": "torre_bim",
         "vista": "torre",
         "modo": "bim",
-        "nombre": "Modelo BIM federado",
-        "texto": "El modelo IFC4 de la torre por disciplinas: arquitectura, estructura, refuerzo, cimentación y dotación, con sus interferencias resueltas."
+        "nombre": "Modelo digital de la obra",
+        "texto": "El modelo digital de la torre por disciplinas: arquitectura, estructura, refuerzo, cimentación y dotación, con sus interferencias resueltas."
       },
       {
         "id": "relleno_hoy",
         "vista": "parque",
         "modo": "hoy",
         "nombre": "El relleno Las Américas hoy",
-        "texto": "Las celdas, el frente activo y las lagunas de lixiviados del relleno que opera con la licencia vencida desde 2023."
+        "texto": "Las celdas, el frente activo y las lagunas de lixiviados del relleno, con la licencia vencida desde 2023."
       },
       {
         "id": "relleno_parque",
@@ -354,10 +354,10 @@
           "tipo": "inmersion",
           "inmersion": "torre_pisos",
           "titulo": "Cuatro pisos, cada servicio en su color",
-          "texto": "La planta real de la torre, piso por piso: 3.369,6 m² en cuatro pisos, cada recinto con el color de su grupo de servicios de la Res. 1633 de 2025.",
+          "texto": "La planta real de la torre, piso por piso: 3.369,6 m² en cuatro pisos, cada recinto con el color de su grupo de servicios de la Resolución 1633 de 2025.",
           "lista": [
-            "<b>15 camas</b>: 13 generales y 2 habitaciones de parto TPR, más 6 camillas de observación y una sala de expansión de 8 camillas para emergencias.",
-            "<b>15 consultorios</b> y 3 unidades odontológicas; hoy (REPS 2022) hay 9 camas, 4 camillas y 13 consultorios.",
+            "<b>15 camas</b>: 13 generales y 2 habitaciones de trabajo de parto, parto y recuperación, más 6 camillas de observación y una sala de expansión de 8 camillas para emergencias.",
+            "<b>15 consultorios</b> y 3 unidades odontológicas; hoy (registro de prestadores de 2022) hay 9 camas, 4 camillas y 13 consultorios.",
             "Rayos X digital, ecografía, vacunación, farmacia, terapias y un <b>laboratorio de 24 horas</b> con 55 pruebas en sitio.",
             "Urgencias en rojo, internación en azul, apoyo diagnóstico en amarillo, consulta en naranja, esterilización en verde y administración en violeta."
           ]
@@ -371,7 +371,7 @@
           "texto": "Un recorrido en primera persona por los cuatro pisos con la dotación en su lugar: cada equipo tiene su ficha, su exigencia de la norma y su anclaje sísmico.",
           "lista": [
             "<b>1.702 unidades</b> ubicadas una por una en <b>270 recintos</b>: 946 de dotación, 611 de infraestructura, 17 de equipamiento fijo y 12 analizadores de laboratorio.",
-            "Cada unidad con su exigencia de la Res. 3100 de 2019, su clase de riesgo y su registro sanitario (Decreto 4725).",
+            "Cada unidad con su exigencia de la Resolución 3100 de 2019, su clase de riesgo y su registro sanitario (Decreto 4725).",
             "Con el cierre de brechas, 11 de los 12 servicios que se habilitan quedan sin faltantes exigibles en dotación e infraestructura.",
             "El laboratorio del piso 2 hace unas 5.365 pruebas al mes: urgencias en 60 minutos o menos y tamizaje en 24 a 72 horas."
           ]
@@ -382,10 +382,10 @@
           "tipo": "inmersion",
           "inmersion": "torre_sismo",
           "titulo": "Una estructura que sigue en servicio después del sismo",
-          "texto": "La torre es una edificación indispensable (grupo de uso IV de la NSR-10): debe seguir atendiendo después de un terremoto. El simulador mueve la estructura prediseñada con sismos reales e hipotéticos.",
+          "texto": "La torre es una edificación indispensable (grupo de uso IV de la norma sismorresistente): debe seguir atendiendo después de un terremoto. El simulador mueve la estructura prediseñada con sismos reales e hipotéticos.",
           "lista": [
-            "Sistema dual de concreto (pórticos y muros) con capacidad moderada de disipación (DMO), para la amenaza sísmica intermedia de Yondó.",
-            "Columnas de 0,80 a 0,90 m, muros de 0,35 m y <b>146 pilotes de 15 m</b>; período fundamental de 0,455 s.",
+            "Sistema dual de concreto (pórticos y muros) con capacidad moderada de disipación de energía, para la amenaza sísmica intermedia de Yondó.",
+            "Columnas de 0,80 a 0,90 m, muros de 0,35 m y <b>146 pilotes de 15 m</b>; período fundamental de 0,455 segundos.",
             "Deriva máxima de <b>0,939 %</b> de la altura del piso, frente al límite de 1 % de la norma.",
             "Con el sismo del nido de Bucaramanga se mueve 0,056 % de la altura de cada piso y con un sismo local hipotético bajo Yondó, 0,416 %: queda en ocupación inmediata."
           ]
@@ -395,13 +395,13 @@
           "despues_de": "torre_sismo",
           "tipo": "inmersion",
           "inmersion": "torre_bim",
-          "titulo": "Un modelo BIM federado y sin choques",
-          "texto": "La torre existe ya como modelo de información: arquitectura, estructura, refuerzo, cimentación y dotación en un modelo federado IFC4 que se coordinó hasta no dejar interferencias duras.",
+          "titulo": "Un modelo digital de la obra, sin choques",
+          "texto": "La torre ya existe como modelo digital: arquitectura, estructura, refuerzo, cimentación y dotación en un solo modelo de formato abierto, que se coordinó hasta no dejar interferencias duras.",
           "lista": [
-            "<b>4.583 elementos</b> con su clase IFC4, su nivel, su material y sus cantidades, más 64.849 barras de refuerzo (292.289 kg) con su forma real.",
+            "<b>4.583 elementos</b> con su clase del formato abierto, su nivel, su material y sus cantidades, más 64.849 barras de refuerzo (292.289 kilogramos) con su forma real.",
             "La primera coordinación encontró <b>280 interferencias duras</b>; corregidas sus causas en la estructura, la planta y el modelo, quedan <b>0</b>.",
-            "Esquema IFC4 validado sin errores y con identificadores estables: regenerar el modelo no cambia lo que no cambió.",
-            "Nivel de información (LOIN) objetivo: arquitectura ≈ 300, estructura ≈ 350, refuerzo ≈ 400 y dotación ≈ 200 a 300."
+            "Esquema del formato abierto validado sin errores y con identificadores estables: regenerar el modelo no cambia lo que no cambió.",
+            "Nivel de información del modelo que se busca: arquitectura ≈ 300, estructura ≈ 350, refuerzo ≈ 400 y dotación ≈ 200 a 300."
           ]
         }
       ],
@@ -414,8 +414,8 @@
           "titulo": "El parque ecotecnológico sobre el relleno clausurado",
           "texto": "El relleno Las Américas se clausura por partes desde 2028 con cobertura final, manejo de lixiviados y gases y una posclausura de 20 años. Encima de las celdas va una granja solar; lo que tiene gente queda fuera de ellas.",
           "lista": [
-            "Granja solar de <b>997 kWp</b> (1.812 módulos de 550 Wp) que produce unos <b>1,34 GWh al año</b>, montada por partes a medida que la cobertura asienta.",
-            "Unos 530 kWp en 2031 sobre las celdas cubiertas desde 2028 y el resto hacia 2033–2034.",
+            "Granja solar de <b>997 kilovatios pico</b> (1.812 módulos de 550 vatios pico) que produce unos <b>1,34 gigavatios hora al año</b>, montada por partes a medida que la cobertura asienta.",
+            "Unos 530 kilovatios pico en 2031 sobre las celdas cubiertas desde 2028 y el resto hacia 2033–2034.",
             "Coworking rural de 312 m² con 40 puestos, cafetería, taller de bicicletas, granja con invernadero, huerta y apiario, mirador, circuito y humedal.",
             "Todo lo que tiene gente va a 30 m o más de las celdas y las lagunas."
           ]
@@ -429,18 +429,20 @@
         {"id": "territorio", "nombre": "Nombres del territorio: río, puente, Barrancabermeja y Kilómetro Cinco", "capas": ["portada.geo"]}
       ],
       "vivienda": [
-        {"id": "nuevas", "nombre": "Vivienda nueva: bloques del Lote 1 y casas del Lote 2", "capas": ["viv.nueva"]},
+        {"id": "nuevas", "nombre": "Barrio nuevo: 25 bloques, vías, parqueaderos y parque central", "capas": ["viv.nueva"]},
+        {"id": "apartamento", "nombre": "Bloque cortado en el piso 3: los cuatro apartamentos tipo", "capas": ["viv.bloque"], "efecto": "corte"},
+        {"id": "zonas_comunes", "nombre": "Rótulos del parque, la cancha, el kiosco, el gimnasio, los parqueaderos y el letrero", "capas": ["viv.parque"]},
         {"id": "mejoramientos", "nombre": "Techos de las casas a mejorar (muestra)", "capas": ["viv.mejoramiento"], "efecto": "gris"},
-        {"id": "rural", "nombre": "Casas rurales de muestra (prototipo VIVA)", "capas": ["viv.rural"]}
+        {"id": "rural", "nombre": "Casas rurales de muestra (prototipo de la Empresa de Vivienda de Antioquia)", "capas": ["viv.rural"]}
       ],
       "urbanismo": [
         {"id": "hoy", "nombre": "El estadio y el caño como están hoy", "capas": ["urb.hoy"]},
         {"id": "ciudadela", "nombre": "Contorno de la ciudadela y las sedes que integra", "capas": ["urb.ciudadela"]},
-        {"id": "softbol", "nombre": "Cancha de Sóftbol Casabe", "capas": ["urb.softbol"], "partes": [{"id": "cubierta", "nombre": "Cubiertas de las graderías", "grupos": ["cubierta"]}, {"id": "graderias", "nombre": "Graderías, dugouts y baños", "grupos": ["obras"]}, {"id": "luces", "nombre": "Torres de luz LED", "grupos": ["luces"]}, {"id": "arboles", "nombre": "Árboles", "grupos": ["verde"]}]},
+        {"id": "softbol", "nombre": "Cancha de Sóftbol Casabe", "capas": ["urb.softbol"], "partes": [{"id": "cubierta", "nombre": "Cubiertas de las graderías", "grupos": ["cubierta"]}, {"id": "graderias", "nombre": "Graderías, dugouts y baños", "grupos": ["obras"]}, {"id": "luces", "nombre": "Torres de luz", "grupos": ["luces"]}, {"id": "arboles", "nombre": "Árboles", "grupos": ["verde"]}]},
         {"id": "parque_lineal", "nombre": "Parque lineal del caño", "capas": ["urb.cano", "urb.puentes"], "partes": [{"id": "cauce", "nombre": "Cauce renaturalizado", "grupos": ["cauce", "orillas"]}, {"id": "sendas", "nombre": "Sendero y ciclorruta", "grupos": ["sendas"]}, {"id": "puentes", "nombre": "Puentes peatonales", "grupos": ["puentes"]}, {"id": "arboles", "nombre": "Bosque y jardines de lluvia", "grupos": ["verde", "suds"]}]},
         {"id": "alameda", "nombre": "Alameda de la ciudadela", "capas": ["urb.alameda"]},
         {"id": "instalaciones", "nombre": "Canchas cubiertas y skatepark", "capas": ["urb.instalaciones"], "partes": [{"id": "cubierta", "nombre": "Cubierta de las canchas", "grupos": ["cubierta", "obras"]}]},
-        {"id": "mirador", "nombre": "Mirador Puerta del Magdalena", "capas": ["urb.mirador"], "partes": [{"id": "proteccion", "nombre": "Zona A: protección de la orilla", "grupos": ["zonaA"]}, {"id": "plaza", "nombre": "Zona B: plaza", "grupos": ["plaza"]}, {"id": "letras", "nombre": "Letras YONDÓ", "grupos": ["letras"]}, {"id": "deck", "nombre": "Deck y mirador elevado", "grupos": ["deck"]}, {"id": "muelle", "nombre": "Muelle flotante", "grupos": ["muelle"]}]}
+        {"id": "mirador", "nombre": "Mirador Puerta del Magdalena", "capas": ["urb.mirador"], "partes": [{"id": "proteccion", "nombre": "Zona A: protección de la orilla", "grupos": ["zonaA"]}, {"id": "plaza", "nombre": "Zona B: plaza", "grupos": ["plaza"]}, {"id": "letras", "nombre": "Letras YONDÓ", "grupos": ["letras"]}, {"id": "deck", "nombre": "Deck y mirador elevado", "grupos": ["deck"]}]}
       ],
       "agroindustria": [
         {"id": "lote_hoy", "nombre": "El lote como está hoy y el estribo socavado", "capas": ["agro.sitio"]},
@@ -454,28 +456,28 @@
         {"id": "leche", "nombre": "Acopio de leche", "capas": ["agro.parque"], "grupos": ["leche"]},
         {"id": "maquinaria", "nombre": "Banco de maquinaria", "capas": ["agro.parque"], "grupos": ["maquinaria"]},
         {"id": "biodigestor", "nombre": "Biodigestor y compostaje", "capas": ["agro.parque"], "grupos": ["biodigestor"]},
-        {"id": "agua", "nombre": "PTAR industrial", "capas": ["agro.parque"], "grupos": ["ptar"]}
+        {"id": "agua", "nombre": "Planta de tratamiento de agua del parque", "capas": ["agro.parque"], "grupos": ["ptar"]}
       ],
       "salud": [
         {"id": "hospital_hoy", "nombre": "El hospital de hoy", "capas": ["salud.hoy"]},
         {"id": "torre", "nombre": "Torre nueva de cuatro pisos", "capas": ["salud.torre"], "replica": {"id": "torre_hospital", "sin": ["solar", "conexion"]}, "partes": [{"id": "cubierta", "nombre": "Cubierta y parasoles (deja ver las losas)", "nodos": ["obra_nueva_cubierta", "obra_nueva_parasoles"]}, {"id": "equipos", "nombre": "Equipos en la cubierta", "nodos": ["equipos"]}, {"id": "jardines", "nombre": "Árboles y jardines", "nodos": ["obra_nueva_arboles", "obra_nueva_arbustos"]}]},
-        {"id": "telesalud", "nombre": "Red de telesalud", "capas": ["salud.red"]},
-        {"id": "puestos", "nombre": "Puestos de salud rurales", "capas": ["salud.puestos"]}
+        {"id": "telesalud", "nombre": "Red de telemedicina", "capas": ["salud.red"]},
+        {"id": "territorios", "nombre": "Microterritorios de los equipos básicos de salud", "capas": ["salud.territorios"]}
       ],
       "aguas": [
-        {"id": "sistema", "nombre": "Pozos, PTAP, tanque y conducción", "capas": ["aguas.sistema"]},
+        {"id": "sistema", "nombre": "Pozos, potabilizadora, tanque y conducción", "capas": ["aguas.sistema"]},
         {"id": "red", "nombre": "Red de distribución del casco", "capas": ["aguas.red"]},
         {"id": "red_intermitente", "nombre": "La red como está hoy: con agua 9 de cada 24 horas", "capas": ["aguas.red"], "efecto": "intermitente"},
         {"id": "sectorizacion", "nombre": "Sectores hidráulicos, válvulas y macromedidores", "capas": ["aguas.sectores"]},
-        {"id": "ptap", "nombre": "Módulo de ampliación de la PTAP", "capas": ["aguas.ampliacion"]}
+        {"id": "ptap", "nombre": "Módulo de ampliación de la potabilizadora", "capas": ["aguas.ampliacion"]}
       ],
       "saneamiento": [
         {"id": "vertimientos", "nombre": "Vertimientos de hoy sin tratar", "capas": ["san.hoy"]},
         {"id": "ebar", "nombre": "Estaciones de bombeo existentes", "capas": ["san.ebar"]},
         {"id": "interceptores", "nombre": "Interceptores, impulsión y estación de llegada", "capas": ["san.colectores"]},
-        {"id": "ptar", "nombre": "PTAR central, laguna y descarga", "capas": ["san.ptar"], "partes": [{"id": "arboles", "nombre": "Barrera de árboles", "grupos": ["verde"]}]},
-        {"id": "sitios_ptar", "nombre": "Sitios evaluados para la PTAR", "capas": ["san.sitios"]},
-        {"id": "relleno_nuevo", "nombre": "Relleno nuevo de Kilómetro Cinco", "capas": ["san.relleno_nuevo"], "partes": [{"id": "celdas", "nombre": "Celdas", "grupos": ["celdas"]}, {"id": "obras", "nombre": "ECA, compostaje, lagunas y portería", "grupos": ["obras"]}]},
+        {"id": "ptar", "nombre": "Planta de tratamiento, laguna y descarga", "capas": ["san.ptar"], "partes": [{"id": "arboles", "nombre": "Barrera de árboles", "grupos": ["verde"]}]},
+        {"id": "sitios_ptar", "nombre": "Sitios evaluados para la planta de tratamiento", "capas": ["san.sitios"]},
+        {"id": "relleno_nuevo", "nombre": "Relleno nuevo de Kilómetro Cinco", "capas": ["san.relleno_nuevo"], "partes": [{"id": "celdas", "nombre": "Celdas", "grupos": ["celdas"]}, {"id": "obras", "nombre": "Estación de reciclaje, compostaje, lagunas y portería", "grupos": ["obras"]}]},
         {"id": "sitios_relleno", "nombre": "Sitios evaluados para el relleno y radio del aeropuerto", "capas": ["san.relleno_sitios"]},
         {"id": "via_relleno", "nombre": "Vía al relleno", "capas": ["san.relleno_via"]},
         {"id": "relleno", "nombre": "Relleno Las Américas convertido en parque", "capas": ["san.relleno"], "replica": {"id": "relleno_parque", "sin": ["conexion"]}, "partes": [{"id": "granja", "nombre": "Granja solar sobre las celdas", "nodos": ["solar"]}, {"id": "parque", "nombre": "Parque: coworking, granja y circuito", "nodos": ["obra_nueva"]}, {"id": "baterias", "nombre": "Almacenamiento", "nodos": ["almacenamiento"]}]}
@@ -484,7 +486,7 @@
         {"id": "sedes_hoy", "nombre": "Sedes públicas hoy", "capas": ["tic.hoy"]},
         {"id": "fibra", "nombre": "Anillo de fibra y centro de control", "capas": ["tic.fibra"]},
         {"id": "zonas", "nombre": "Zonas Digitales", "capas": ["tic.zonas", "tic.zonas2"]},
-        {"id": "telemetria", "nombre": "Telemetría de las EBAR y la PTAR", "capas": ["tic.telemetria"]},
+        {"id": "telemetria", "nombre": "Telemetría de las estaciones de bombeo y la planta de tratamiento", "capas": ["tic.telemetria"]},
         {"id": "granja", "nombre": "Granja solar municipal", "capas": ["tic.granja", "tic.granja_det"], "replica": {"id": "relleno_parque", "sin": ["conexion"]}},
         {"id": "paneles_por_sede", "nombre": "Modelo descartado: paneles en cada sede", "capas": ["tic.descartado"], "efecto": "paneles_por_sede"}
       ],
@@ -495,7 +497,7 @@
         {"id": "salud", "nombre": "Salud", "capas": ["salud.torre"]},
         {"id": "aguas", "nombre": "Aguas", "capas": ["aguas.sistema"]},
         {"id": "saneamiento", "nombre": "Saneamiento", "capas": ["san.ebar", "san.colectores", "san.ptar", "san.relleno_nuevo"]},
-        {"id": "tic", "nombre": "TIC y energía", "capas": ["tic.fibra", "tic.granja"]}
+        {"id": "tic", "nombre": "Conectividad y energía", "capas": ["tic.fibra", "tic.granja"]}
       ]
     }
   }

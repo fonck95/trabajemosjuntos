@@ -6,13 +6,13 @@
   {
    "id": "torre",
    "nombre": "La torre en su sitio",
-   "muestra": "El modelo de la torre de cuatro pisos junto al hospital actual, sobre el sitio del antiguo Centro Vida.",
+   "muestra": "La torre de cuatro pisos junto al hospital actual, en el sitio del antiguo Centro Vida.",
    "controles": [
     {
      "id": "proyecto_tipo",
      "nombre": "Área del puesto de salud tipo",
      "tipo": "si_no",
-     "ayuda": "Muestra junto a la torre, a la misma escala, el área del puesto de salud tipo del DNP (un piso de 320,6 m²)."
+     "ayuda": "Muestra junto a la torre, a la misma escala, el área del puesto de salud tipo del Departamento Nacional de Planeación (un piso de 320,6 m²)."
     }
    ]
   },
@@ -25,7 +25,7 @@
   {
    "id": "torre_pisos",
    "nombre": "Pisos por servicio",
-   "muestra": "Los cuatro pisos de la planta real separados, cada recinto con el color de su grupo de la Res. 1633 de 2025.",
+   "muestra": "Los cuatro pisos de la planta real separados, cada recinto con el color de su grupo de servicios según la Resolución 1633 de 2025.",
    "controles": [
     {
      "id": "piso",
@@ -144,7 +144,7 @@
      "id": "contraste",
      "nombre": "Comparar con el proyecto tipo",
      "tipo": "si_no",
-     "ayuda": "Colorea el piso de cada recinto según el contraste con el proyecto tipo del DNP."
+     "ayuda": "Colorea el piso de cada recinto según el contraste con el proyecto tipo del Departamento Nacional de Planeación."
     },
     {
      "id": "infraestructura",
@@ -241,7 +241,7 @@
      "id": "contraste",
      "nombre": "Comparar con el proyecto tipo",
      "tipo": "si_no",
-     "ayuda": "Colorea el piso de cada recinto según el contraste con el proyecto tipo del DNP."
+     "ayuda": "Colorea el piso de cada recinto según el contraste con el proyecto tipo del Departamento Nacional de Planeación."
     },
     {
      "id": "infraestructura",
@@ -254,7 +254,7 @@
   {
    "id": "torre_sismo",
    "nombre": "Simulador sísmico",
-   "muestra": "La estructura prediseñada con la NSR-10 sometida a un sismo, con la deriva de cada piso.",
+   "muestra": "La estructura prediseñada con la norma sismorresistente, sometida a un sismo, con la deriva de cada piso.",
    "controles": [
     {
      "id": "calcular",
@@ -381,7 +381,7 @@
        "nombre": "Nivel de diseño NSR-10"
       }
      ],
-     "ayuda": "Físico: el sismo tal como sale de la fuente; NSR-10: el registro se multiplica hasta el espectro de diseño de Yondó (escenario hipotético)."
+     "ayuda": "Físico: el sismo tal como sale de la fuente; nivel de diseño: el registro se multiplica hasta el espectro de diseño de la norma sismorresistente en Yondó (escenario hipotético)."
     },
     {
      "id": "instante",
@@ -596,8 +596,8 @@
   },
   {
    "id": "torre_bim",
-   "nombre": "Modelo BIM federado",
-   "muestra": "El modelo IFC4 de la torre por disciplinas: arquitectura, estructura, refuerzo, cimentación y dotación, con sus interferencias resueltas.",
+   "nombre": "Modelo digital de la obra",
+   "muestra": "El modelo digital de la torre por disciplinas: arquitectura, estructura, refuerzo, cimentación y dotación, con sus interferencias resueltas.",
    "controles": [
     {
      "id": "herramienta",
@@ -637,7 +637,7 @@
        "nombre": "Descarga del IFC"
       }
      ],
-     "ayuda": "Abre esa pestaña del panel del modelo BIM; la de 4D muestra la barra del cronograma."
+     "ayuda": "Abre esa pestaña del panel del modelo digital de la obra; la de 4D muestra la barra del cronograma."
     },
     {
      "id": "vista",
@@ -902,7 +902,7 @@
   {
    "id": "relleno_hoy",
    "nombre": "El relleno Las Américas hoy",
-   "muestra": "Las celdas, el frente activo y las lagunas de lixiviados del relleno que opera con la licencia vencida desde 2023.",
+   "muestra": "Las celdas, el frente activo y las lagunas de lixiviados del relleno, con la licencia vencida desde 2023.",
    "controles": []
   },
   {
@@ -940,26 +940,26 @@
       {
        "v": "22.429",
        "l": "habitantes en 2026; 47 % vive en el campo",
-       "fuente": "DANE, proyecciones 2018–2042"
+       "fuente": "Departamento Administrativo Nacional de Estadística, proyecciones 2018–2042"
       },
       {
        "v": "46,3 %",
        "l": "de pobreza multidimensional: más del doble que Antioquia (21,6 %)",
-       "fuente": "DANE, IPM censal 2018"
+       "fuente": "Departamento Administrativo Nacional de Estadística, censo 2018"
       },
       {
        "v": "139",
-       "l": "iniciativas PDET; 25 respaldan los módulos de esta propuesta",
-       "fuente": "ART, iniciativas PDET (sep-2026)"
+       "l": "iniciativas de los Programas de Desarrollo con Enfoque Territorial; 25 respaldan esta propuesta",
+       "fuente": "Agencia de Renovación del Territorio (sep-2026)"
       },
       {
        "v": "10.599",
        "l": "barriles diarios de petróleo en 2025; eran 23.120 en 2012",
-       "fuente": "ANH, producción fiscalizada"
+       "fuente": "Agencia Nacional de Hidrocarburos, producción fiscalizada"
       },
       {
-       "v": "42,2 GWh",
-       "l": "al año produce la granja solar La Iguana en Yondó, pero va a la refinería",
+       "v": "42,2",
+       "l": "gigavatios hora al año produce la granja solar La Iguana en Yondó, pero esa energía va a la refinería",
        "fuente": "Forbes Colombia (dic-2025)"
       },
       {
@@ -1021,13 +1021,13 @@
      "texto": "Yondó queda frente a Barrancabermeja, al otro lado del Magdalena. Las siete áreas se reparten entre el casco urbano y sus alrededores, el acueducto, 2,3 km al occidente, el relleno nuevo de Kilómetro Cinco, a unos 5,5 km al suroccidente, y la salida del puente, a unos 8 km al norte.",
      "lista": [
       "22.429 habitantes en 1.895 km²: casi la mitad vive en 60 veredas y en el corregimiento de San Miguel del Tigre.",
-      "Pobreza multidimensional de 46,3 % y NBI de 26,0 %, frente a 21,6 % y 10,7 % en Antioquia (censo 2018).",
+      "Pobreza multidimensional de 46,3 % y necesidades básicas insatisfechas de 26,0 %, frente a 21,6 % y 10,7 % en Antioquia (censo 2018).",
       "El petróleo cayó de 23.120 a 10.599 barriles diarios entre 2012 y 2025: las regalías propias van a la baja.",
-      "Es PDET y ZOMAC: puede ir al OCAD Paz y a las obras por impuestos, con 139 iniciativas PDET de respaldo.",
+      "Es municipio de los Programas de Desarrollo con Enfoque Territorial y de las zonas más afectadas por el conflicto armado: puede ir al Órgano Colegiado de Administración y Decisión Paz y a las obras por impuestos, con 139 iniciativas de respaldo.",
       "Depende de un puente de 917 m sobre el Magdalena que la socavación cerró del 16 al 20 de marzo de 2026 y que en junio seguía sin solución definitiva.",
-      "El EOT 2022–2035 reconoce un déficit de 2.070 viviendas y reserva suelo para una PTAR y un relleno sanitario nuevo que todavía no existen."
+      "El Esquema de Ordenamiento Territorial 2022–2035 reconoce un déficit de 2.070 viviendas y reserva suelo para una planta de tratamiento de aguas residuales y un relleno sanitario nuevo que todavía no existen."
      ],
-     "nota": "Fuentes: DANE, ANH, ART, EOT de Yondó (Acuerdo 013 de 2022) y prensa regional."
+     "nota": "Fuentes: Departamento Administrativo Nacional de Estadística, Agencia Nacional de Hidrocarburos, Agencia de Renovación del Territorio, Esquema de Ordenamiento Territorial de Yondó (Acuerdo 013 de 2022) y prensa regional."
     }
    ]
   },
@@ -1072,7 +1072,7 @@
       "Lote: Unas 5 ha (50.000 m² estimados) · ubicación por definir",
       "Uso del lote: Bloques 12 % · vías 22 % · parqueaderos 16 % · zonas verdes 24 % · andenes y zonas sociales 16 % · franjas libres 10 %",
       "Densidad: 60 viviendas por hectárea · 40 m² de zona verde por vivienda",
-      "Nombre del barrio: Por decidir entre seis alternativas"
+      "Nombre del barrio: Por decidir entre Bosques de Yondó, Nuevo Magdalena, Alma del Magdalena, Ciénagas de Yondó, Nuevo Casabe y Horizontes del Magdalena"
      ],
      "proyectos_tipo": [
       "Documento del proyecto: Proyecto de Vivienda de Interés Social de Yondó (equipo del proyecto, 2026)",
@@ -1163,7 +1163,17 @@
    "maqueta": [
     {
      "id": "nuevas",
-     "nombre": "Vivienda nueva: bloques del Lote 1 y casas del Lote 2",
+     "nombre": "Barrio nuevo: 25 bloques, vías, parqueaderos y parque central",
+     "partes": []
+    },
+    {
+     "id": "apartamento",
+     "nombre": "Bloque cortado en el piso 3: los cuatro apartamentos tipo",
+     "partes": []
+    },
+    {
+     "id": "zonas_comunes",
+     "nombre": "Rótulos del parque, la cancha, el kiosco, el gimnasio, los parqueaderos y el letrero",
      "partes": []
     },
     {
@@ -1173,7 +1183,7 @@
     },
     {
      "id": "rural",
-     "nombre": "Casas rurales de muestra (prototipo VIVA)",
+     "nombre": "Casas rurales de muestra (prototipo de la Empresa de Vivienda de Antioquia)",
      "partes": []
     }
    ],
@@ -1182,7 +1192,7 @@
      "id": "portadilla",
      "tipo": "portadilla",
      "titulo": "Seis de cada diez hogares con déficit (censo 2018)",
-     "texto": "En el censo de 2018, el 61,9 % de los hogares de Yondó (3.383) tenía déficit de vivienda y el 37,8 % (2.066) vivía en casas que hay que reponer, sobre todo de madera o tabla; en Antioquia esa última cifra era 6,6 %. El equipo del proyecto de vivienda estima que hoy faltan unas 1.100 viviendas en el municipio (la fuente primaria está por confirmar), y el Plan de Desarrollo 2024–2027 registra 800 hogares que necesitan titulación o legalización. Además, hay tres obras de vivienda pagadas y sin terminar: las 100 casas rurales llevan 88 % pagado y 9 % de obra.",
+     "texto": "En el censo de 2018, el 61,9 % de los hogares de Yondó (3.383) tenía déficit de vivienda y el 37,8 % (2.066) vivía en casas que hay que reponer, sobre todo de madera o tabla; en Antioquia esa última cifra era 6,6 %. El equipo del proyecto de vivienda estima que hoy faltan unas 1.100 viviendas en el municipio (la fuente primaria está por confirmar); el Esquema de Ordenamiento Territorial 2022–2035 reconoce 2.070. El Plan de Desarrollo 2024–2027 registra 800 hogares que necesitan titulación o legalización. Además, hay tres obras de vivienda pagadas y sin terminar: las 100 casas rurales llevan 88 % pagado y 9 % de obra.",
      "cifras": [
       {
        "v": "61,9 %",
@@ -1281,7 +1291,7 @@
        "Lote: Unas 5 ha (50.000 m² estimados) · ubicación por definir",
        "Uso del lote: Bloques 12 % · vías 22 % · parqueaderos 16 % · zonas verdes 24 % · andenes y zonas sociales 16 % · franjas libres 10 %",
        "Densidad: 60 viviendas por hectárea · 40 m² de zona verde por vivienda",
-       "Nombre del barrio: Por decidir entre seis alternativas"
+       "Nombre del barrio: Por decidir entre Bosques de Yondó, Nuevo Magdalena, Alma del Magdalena, Ciénagas de Yondó, Nuevo Casabe y Horizontes del Magdalena"
       ],
       "proyectos_tipo": [
        "Documento del proyecto: Proyecto de Vivienda de Interés Social de Yondó (equipo del proyecto, 2026)",
@@ -1355,7 +1365,7 @@
       "Andenes, zonas sociales y servicios: 8.000 m² (16 %)",
       "Franjas libres y ajustes de diseño: 5.000 m² (10 %)"
      ],
-     "nota": "Distribución estimada del documento del proyecto. En la maqueta, el trazado del barrio es indicativo: el diseño final depende del lote que se escoja.",
+     "nota": "Distribución estimada del documento del proyecto. En la maqueta, el trazado del barrio es indicativo: el diseño final depende del lote que se escoja. El nombre se escoge entre Bosques de Yondó, Nuevo Magdalena, Alma del Magdalena, Ciénagas de Yondó, Nuevo Casabe y Horizontes del Magdalena; el letrero lleva «Alma del Magdalena» solo como ilustración.",
      "leyenda": [
       "Parque infantil, kiosco y gimnasio al aire libre",
       "Cancha múltiple",
@@ -1444,7 +1454,7 @@
      "metas": [
       "Obras de vivienda inconclusas: 3 obras pagadas sin terminar (2026) → 0: todas entregadas y escrituradas (2029)",
       "Viviendas nuevas entregadas: 160 de interés social construidas (línea base del Plan 2024–2027) → +500: 300 urbanas en el barrio nuevo y 200 rurales (2031)",
-      "Déficit de vivienda atendido por el barrio nuevo: unas 1.100 viviendas de déficit (equipo del proyecto, por confirmar) → 27 %: 300 familias con apartamento propio (2031)",
+      "Déficit de vivienda atendido por el barrio nuevo: unas 1.100 viviendas de déficit (equipo del proyecto, por confirmar) o 2.070 (Esquema de Ordenamiento Territorial) → 27 % de las 1.100 o ≈14 % de las 2.070 (cálculo propio): 300 familias con apartamento propio (2031)",
       "Viviendas mejoradas: 12 mejoradas (línea base del Plan 2024–2027) → +800: 400 urbanas y 400 rurales (2031)",
       "Predios titulados: 800 hogares sin título (Plan 2024–2027) → 800 títulos registrados (2030)"
      ]
@@ -1605,7 +1615,7 @@
       },
       {
        "id": "luces",
-       "nombre": "Torres de luz LED"
+       "nombre": "Torres de luz"
       },
       {
        "id": "arboles",
@@ -1669,10 +1679,6 @@
       {
        "id": "deck",
        "nombre": "Deck y mirador elevado"
-      },
-      {
-       "id": "muelle",
-       "nombre": "Muelle flotante"
       }
      ]
     }
@@ -2213,7 +2219,7 @@
     },
     {
      "id": "agua",
-     "nombre": "PTAR industrial",
+     "nombre": "Planta de tratamiento de agua del parque",
      "partes": []
     }
    ],
@@ -2466,7 +2472,7 @@
       "Perfiles: Medicina, enfermería, auxiliares, psicología, nutrición, salud oral y gestores comunitarios",
       "Visitas: Cada hogar al menos una vez al año, y más seguido las gestantes, los recién nacidos y los pacientes crónicos (meta de la propuesta)",
       "Dotación básica: Un maletín por equipo: tensiómetro, fonendoscopio, glucómetro, oxímetro, termómetro, báscula, tallímetro, cinta métrica, termo de vacunas y botiquín",
-      "Población rural: 10.755 habitantes proyectados a 2028",
+      "Población rural: 10.755 habitantes proyectados a 2028 (proyecciones del Departamento Administrativo Nacional de Estadística)",
       "Norma: Lineamiento de los equipos básicos de salud del Ministerio de Salud (versión 3, 2024) y Resolución 2206 de 2022"
      ],
      "proyectos_tipo": [
@@ -2488,7 +2494,7 @@
       "Seguimiento en casa: Unos 150 pacientes crónicos y gestantes de alto riesgo con equipos conectados",
       "Conexión: Satelital portátil en las veredas sin señal, por 4 años; la red de fibra municipal en la cabecera",
       "Especialistas: Ginecología, pediatría y medicina interna por convenio con la Gobernación y la Universidad de Antioquia o con la red de Barrancabermeja",
-      "Norma: El hospital como prestador que remite por telemedicina (Resolución 1644 de 2026, que reemplazó a la 2654 de 2019)"
+      "Norma: El hospital como nodo remisor de telemedicina (Resolución 1644 de 2026, que reemplazó a la 2654 de 2019)"
      ],
      "proyectos_tipo": [
       "Sin proyecto tipo: telemedicina como proyecto propio con concepto del Ministerio de Salud (Resolución 485 de 2025)",
@@ -2543,12 +2549,12 @@
     },
     {
      "id": "telesalud",
-     "nombre": "Red de telesalud",
+     "nombre": "Red de telemedicina",
      "partes": []
     },
     {
-     "id": "puestos",
-     "nombre": "Puestos de salud rurales",
+     "id": "territorios",
+     "nombre": "Microterritorios de los equipos básicos de salud",
      "partes": []
     }
    ],
@@ -2609,7 +2615,7 @@
       }
      ],
      "leyenda": [
-      "Microterritorios de los equipos básicos (OpenStreetMap); los lejanos, en su dirección",
+      "Microterritorios de los equipos básicos; los lejanos, en su dirección",
       "Telemedicina desde la torre hacia cada microterritorio"
      ]
     },
@@ -2673,15 +2679,15 @@
      "id": "torre_pisos",
      "tipo": "inmersion",
      "titulo": "Cuatro pisos, cada servicio en su color",
-     "texto": "La planta real de la torre, piso por piso: 3.369,6 m² en cuatro pisos, cada recinto con el color de su grupo de servicios de la Res. 1633 de 2025.",
+     "texto": "La planta real de la torre, piso por piso: 3.369,6 m² en cuatro pisos, cada recinto con el color de su grupo de servicios de la Resolución 1633 de 2025.",
      "inmersion": {
       "id": "torre_pisos",
       "nombre": "Pisos por servicio",
-      "muestra": "Los cuatro pisos de la planta real separados, cada recinto con el color de su grupo de la Res. 1633 de 2025."
+      "muestra": "Los cuatro pisos de la planta real separados, cada recinto con el color de su grupo de servicios según la Resolución 1633 de 2025."
      },
      "lista": [
-      "15 camas: 13 generales y 2 habitaciones de parto TPR, más 6 camillas de observación y una sala de expansión de 8 camillas para emergencias.",
-      "15 consultorios y 3 unidades odontológicas; hoy (REPS 2022) hay 9 camas, 4 camillas y 13 consultorios.",
+      "15 camas: 13 generales y 2 habitaciones de trabajo de parto, parto y recuperación, más 6 camillas de observación y una sala de expansión de 8 camillas para emergencias.",
+      "15 consultorios y 3 unidades odontológicas; hoy (registro de prestadores de 2022) hay 9 camas, 4 camillas y 13 consultorios.",
       "Rayos X digital, ecografía, vacunación, farmacia, terapias y un laboratorio de 24 horas con 55 pruebas en sitio.",
       "Urgencias en rojo, internación en azul, apoyo diagnóstico en amarillo, consulta en naranja, esterilización en verde y administración en violeta."
      ]
@@ -2698,7 +2704,7 @@
      },
      "lista": [
       "1.702 unidades ubicadas una por una en 270 recintos: 946 de dotación, 611 de infraestructura, 17 de equipamiento fijo y 12 analizadores de laboratorio.",
-      "Cada unidad con su exigencia de la Res. 3100 de 2019, su clase de riesgo y su registro sanitario (Decreto 4725).",
+      "Cada unidad con su exigencia de la Resolución 3100 de 2019, su clase de riesgo y su registro sanitario (Decreto 4725).",
       "Con el cierre de brechas, 11 de los 12 servicios que se habilitan quedan sin faltantes exigibles en dotación e infraestructura.",
       "El laboratorio del piso 2 hace unas 5.365 pruebas al mes: urgencias en 60 minutos o menos y tamizaje en 24 a 72 horas."
      ]
@@ -2707,15 +2713,15 @@
      "id": "torre_sismo",
      "tipo": "inmersion",
      "titulo": "Una estructura que sigue en servicio después del sismo",
-     "texto": "La torre es una edificación indispensable (grupo de uso IV de la NSR-10): debe seguir atendiendo después de un terremoto. El simulador mueve la estructura prediseñada con sismos reales e hipotéticos.",
+     "texto": "La torre es una edificación indispensable (grupo de uso IV de la norma sismorresistente): debe seguir atendiendo después de un terremoto. El simulador mueve la estructura prediseñada con sismos reales e hipotéticos.",
      "inmersion": {
       "id": "torre_sismo",
       "nombre": "Simulador sísmico",
-      "muestra": "La estructura prediseñada con la NSR-10 sometida a un sismo, con la deriva de cada piso."
+      "muestra": "La estructura prediseñada con la norma sismorresistente, sometida a un sismo, con la deriva de cada piso."
      },
      "lista": [
-      "Sistema dual de concreto (pórticos y muros) con capacidad moderada de disipación (DMO), para la amenaza sísmica intermedia de Yondó.",
-      "Columnas de 0,80 a 0,90 m, muros de 0,35 m y 146 pilotes de 15 m; período fundamental de 0,455 s.",
+      "Sistema dual de concreto (pórticos y muros) con capacidad moderada de disipación de energía, para la amenaza sísmica intermedia de Yondó.",
+      "Columnas de 0,80 a 0,90 m, muros de 0,35 m y 146 pilotes de 15 m; período fundamental de 0,455 segundos.",
       "Deriva máxima de 0,939 % de la altura del piso, frente al límite de 1 % de la norma.",
       "Con el sismo del nido de Bucaramanga se mueve 0,056 % de la altura de cada piso y con un sismo local hipotético bajo Yondó, 0,416 %: queda en ocupación inmediata."
      ]
@@ -2723,18 +2729,18 @@
     {
      "id": "torre_bim",
      "tipo": "inmersion",
-     "titulo": "Un modelo BIM federado y sin choques",
-     "texto": "La torre existe ya como modelo de información: arquitectura, estructura, refuerzo, cimentación y dotación en un modelo federado IFC4 que se coordinó hasta no dejar interferencias duras.",
+     "titulo": "Un modelo digital de la obra, sin choques",
+     "texto": "La torre ya existe como modelo digital: arquitectura, estructura, refuerzo, cimentación y dotación en un solo modelo de formato abierto, que se coordinó hasta no dejar interferencias duras.",
      "inmersion": {
       "id": "torre_bim",
-      "nombre": "Modelo BIM federado",
-      "muestra": "El modelo IFC4 de la torre por disciplinas: arquitectura, estructura, refuerzo, cimentación y dotación, con sus interferencias resueltas."
+      "nombre": "Modelo digital de la obra",
+      "muestra": "El modelo digital de la torre por disciplinas: arquitectura, estructura, refuerzo, cimentación y dotación, con sus interferencias resueltas."
      },
      "lista": [
-      "4.583 elementos con su clase IFC4, su nivel, su material y sus cantidades, más 64.849 barras de refuerzo (292.289 kg) con su forma real.",
+      "4.583 elementos con su clase del formato abierto, su nivel, su material y sus cantidades, más 64.849 barras de refuerzo (292.289 kilogramos) con su forma real.",
       "La primera coordinación encontró 280 interferencias duras; corregidas sus causas en la estructura, la planta y el modelo, quedan 0.",
-      "Esquema IFC4 validado sin errores y con identificadores estables: regenerar el modelo no cambia lo que no cambió.",
-      "Nivel de información (LOIN) objetivo: arquitectura ≈ 300, estructura ≈ 350, refuerzo ≈ 400 y dotación ≈ 200 a 300."
+      "Esquema del formato abierto validado sin errores y con identificadores estables: regenerar el modelo no cambia lo que no cambió.",
+      "Nivel de información del modelo que se busca: arquitectura ≈ 300, estructura ≈ 350, refuerzo ≈ 400 y dotación ≈ 200 a 300."
      ]
     },
     {
@@ -2821,7 +2827,7 @@
        "Seguimiento en casa: Unos 150 pacientes crónicos y gestantes de alto riesgo con equipos conectados",
        "Conexión: Satelital portátil en las veredas sin señal, por 4 años; la red de fibra municipal en la cabecera",
        "Especialistas: Ginecología, pediatría y medicina interna por convenio con la Gobernación y la Universidad de Antioquia o con la red de Barrancabermeja",
-       "Norma: El hospital como prestador que remite por telemedicina (Resolución 1644 de 2026, que reemplazó a la 2654 de 2019)"
+       "Norma: El hospital como nodo remisor de telemedicina (Resolución 1644 de 2026, que reemplazó a la 2654 de 2019)"
       ],
       "proyectos_tipo": [
        "Sin proyecto tipo: telemedicina como proyecto propio con concepto del Ministerio de Salud (Resolución 485 de 2025)",
@@ -2842,7 +2848,7 @@
      "id": "equipos",
      "tipo": "componente",
      "titulo": "Siete equipos que conocen cada casa",
-     "texto": "Cinco equipos básicos de salud recorren San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta, y dos atienden la cabecera. Salen del hospital con tensiómetro, glucómetro, oxímetro, báscula y termo de vacunas; La Punta no aparece en OpenStreetMap y no se ubicó en la maqueta.",
+     "texto": "Cinco equipos básicos de salud recorren San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta, y dos atienden la cabecera. Salen del hospital con tensiómetro, glucómetro, oxímetro, báscula y termo de vacunas. La Punta todavía no tiene su punto en la maqueta.",
      "cifras": [
       {
        "v": "47 %",
@@ -2861,7 +2867,7 @@
        "Perfiles: Medicina, enfermería, auxiliares, psicología, nutrición, salud oral y gestores comunitarios",
        "Visitas: Cada hogar al menos una vez al año, y más seguido las gestantes, los recién nacidos y los pacientes crónicos (meta de la propuesta)",
        "Dotación básica: Un maletín por equipo: tensiómetro, fonendoscopio, glucómetro, oxímetro, termómetro, báscula, tallímetro, cinta métrica, termo de vacunas y botiquín",
-       "Población rural: 10.755 habitantes proyectados a 2028",
+       "Población rural: 10.755 habitantes proyectados a 2028 (proyecciones del Departamento Administrativo Nacional de Estadística)",
        "Norma: Lineamiento de los equipos básicos de salud del Ministerio de Salud (versión 3, 2024) y Resolución 2206 de 2022"
       ],
       "proyectos_tipo": [
@@ -2872,7 +2878,7 @@
       "enfoque": true
      },
      "leyenda": [
-      "Microterritorios en su centro poblado (OpenStreetMap); los lejanos, en su dirección",
+      "Microterritorios en su centro poblado; los lejanos, en su dirección",
       "Telemedicina desde la torre hacia cada microterritorio"
      ]
     },
@@ -2945,7 +2951,7 @@
      "id": "macromedicion",
      "nombre": "Macromedición de producción y entrega",
      "resumen": "4 macromedidores con telemetría: 2 pozos, impulsión de 12 pulgadas y entrega del tanque a la red",
-     "descripcion": "Instala o repone 4 macromedidores grandes con telemetría para saber cuánta agua se produce y cuánta se entrega: salida de cada uno de los 2 pozos, impulsión de 12 pulgadas de polietileno de alta densidad hacia el tanque de compensación y salida de ese tanque hacia la red. En mayo de 2020, según la Superservicios, estaban fuera de servicio todos los macromedidores del prestador: el de la captación (entonces la Laguna del Miedo), los de salida de las plantas de tratamiento y los de los tanques. Con estos datos se hace el balance hídrico mensual y se reporta al Sistema Único de Información de la Superservicios.",
+     "descripcion": "Instala o repone 4 macromedidores grandes con telemetría para saber cuánta agua se produce y cuánta se entrega: salida de cada uno de los 2 pozos, impulsión de 12 pulgadas de polietileno de alta densidad hacia el tanque de compensación y salida de ese tanque hacia la red. En mayo de 2020, según la Superintendencia de Servicios Públicos Domiciliarios, estaban fuera de servicio todos los macromedidores del prestador: el de la captación (entonces la Laguna del Miedo), los de salida de las plantas de tratamiento y los de los tanques. Con estos datos se hace el balance hídrico mensual y se reporta al Sistema Único de Información de la Superintendencia.",
      "especificaciones": [
       "Cantidad: 4 macromedidores",
       "Puntos: 2 pozos, impulsión de 12 pulgadas de polietileno de alta densidad y salida del tanque de compensación (2.135 m³)",
@@ -3016,14 +3022,14 @@
      "id": "scada",
      "nombre": "Telemetría y control a distancia del acueducto",
      "resumen": "6 estaciones remotas en pozos, potabilizadora, impulsión y tanques, con alarmas y tablero público",
-     "descripcion": "Estaciones remotas de telemetría en los pozos, la potabilizadora, la impulsión y los tanques, más los 6 registradores de las entradas de sector, con alarmas de nivel y presión y datos cada 15 minutos: es el sistema de supervisión y control a distancia del acueducto. Aguas y Aseo de Yondó lo opera desde su centro de control, y los datos se replican en el centro de control de la alcaldía (módulo de conectividad y energía), que publica la continuidad y la presión en línea; la telemetría de las estaciones de bombeo de aguas residuales y de la planta de tratamiento de aguas residuales va en ese módulo. Permite reportar de forma automática al Sistema Único de Información de la Superservicios.",
+     "descripcion": "Estaciones remotas de telemetría en los pozos, la potabilizadora, la impulsión y los tanques, más los 6 registradores de las entradas de sector, con alarmas de nivel y presión y datos cada 15 minutos: es el sistema de supervisión y control a distancia del acueducto. Aguas y Aseo de Yondó lo opera desde su centro de control, y los datos se replican en el centro de control de la alcaldía (módulo de conectividad y energía), que publica la continuidad y la presión en línea; la telemetría de las estaciones de bombeo de aguas residuales y de la planta de tratamiento de aguas residuales va en ese módulo. Permite reportar de forma automática al Sistema Único de Información de la Superintendencia de Servicios Públicos Domiciliarios.",
      "especificaciones": [
       "Estaciones remotas: 6 unidades remotas de telemetría en pozos, potabilizadora, impulsión y tanques",
       "Sectores: Integra los 6 registradores de entrada de sector",
       "Datos: Cada 15 minutos; alarmas de nivel y presión",
       "Centro de control: Aguas y Aseo de Yondó, con réplica en el centro de control de la alcaldía (módulo de conectividad y energía)",
       "Tablero público: Continuidad y presión en línea",
-      "Alcance: Solo acueducto; las aguas residuales y su planta de tratamiento van en el módulo de conectividad y energía"
+      "Alcance: Solo acueducto; la telemetría de las estaciones de bombeo de aguas residuales y de su planta de tratamiento va en el módulo de conectividad y energía"
      ],
      "proyectos_tipo": [
       "Lineamiento del Ministerio de Tecnologías de la Información y las Comunicaciones para territorios inteligentes (tipología 6, con la Metodología General Ajustada)"
@@ -3057,7 +3063,7 @@
    "maqueta": [
     {
      "id": "sistema",
-     "nombre": "Pozos, PTAP, tanque y conducción",
+     "nombre": "Pozos, potabilizadora, tanque y conducción",
      "partes": []
     },
     {
@@ -3077,7 +3083,7 @@
     },
     {
      "id": "ptap",
-     "nombre": "Módulo de ampliación de la PTAP",
+     "nombre": "Módulo de ampliación de la potabilizadora",
      "partes": []
     }
    ],
@@ -3100,8 +3106,8 @@
       },
       {
        "v": "35 %",
-       "l": "de agua no contabilizada según el prestador (Superservicios, 2020)",
-       "fuente": "Superservicios, Evaluación integral (2020)"
+       "l": "de agua no contabilizada según el prestador (Superintendencia de Servicios Públicos, 2020)",
+       "fuente": "Superintendencia de Servicios Públicos, Evaluación integral (2020)"
       }
      ],
      "propuesta": "Hacer la Fase 2 de la optimización, «agua 24 horas»: dividir la red del casco en 6 sectores con entrada medida y presión controlada, medir la producción y a cada suscriptor (3.700 medidores), bajar las pérdidas a 25 % y operar con telemetría, para pasar de 9 a 24 horas en 2030 con el agua que ya se produce. Después, entre 2030 y 2032 y según la demanda medida, ampliar la potabilizadora de 40 a 60 litros por segundo en su predio de la vereda Las Américas.",
@@ -3137,17 +3143,17 @@
       {
        "v": "88,2 %",
        "l": "de suscriptores con medidor funcionando (dic-2019)",
-       "fuente": "Superservicios, Evaluación integral (2020)"
+       "fuente": "Superintendencia de Servicios Públicos, Evaluación integral (2020)"
       },
       {
        "v": "25 %",
        "l": "tope de agua no contabilizada en 2030 (más de 30 % en 2019–2020)",
-       "fuente": "Meta de la propuesta; base: Superservicios (2020)"
+       "fuente": "Meta de la propuesta; base: Superintendencia de Servicios Públicos (2020)"
       }
      ],
      "antes": "Hoy: 9 horas, toda la red a la vez · La red entera se abre de 4:00 a 13:00 y queda vacía el resto del día. No hay medición por zonas: no se sabe dónde se pierde el agua ni dónde falta presión.",
      "despues": "Propuesta: 24 horas por sectores · 6 sectores con macromedidor, válvula reguladora de presión y registrador en la entrada, unas 40 válvulas de cierre y 3.700 medidores domiciliarios. Se pasa a 24 horas sector por sector, con presión entre 15 y 50 metros de columna de agua: piloto en 2029 y todo el casco en 2030.",
-     "nota": "El horario de 4:00 a 13:00 sale del diagnóstico técnico; el plan de desarrollo municipal de 2024 habla de 18 horas intermitentes y la Superservicios encontró 7 a 8 horas en 2019. Por eso lo primero es medir.",
+     "nota": "El horario de 4:00 a 13:00 sale del diagnóstico técnico; el plan de desarrollo municipal de 2024 habla de 18 horas intermitentes y la Superintendencia de Servicios Públicos Domiciliarios encontró 7 a 8 horas en 2019. Por eso lo primero es medir.",
      "leyenda": [
       "Sectores hidráulicos (indicativos)",
       "Válvula y macromedidor en la entrada de sector",
@@ -3168,7 +3174,7 @@
       {
        "v": "40",
        "l": "litros por segundo: capacidad de la potabilizadora actual, construida en 2003",
-       "fuente": "Superservicios, Evaluación integral (2020)"
+       "fuente": "Superintendencia de Servicios Públicos, Evaluación integral (2020)"
       }
      ],
      "componente": {
@@ -3205,7 +3211,7 @@
      "metas": [
       "Horas de servicio al día en la red urbana: 9 horas, de 4:00 a 13:00 (diagnóstico técnico, 2025–2026) → 24 horas en el sector piloto (2029) y en todo el casco (2030)",
       "Presión en la red de distribución: Sin presión 15 horas al día y sin medición por sectores (2026) → Entre 15 y 50 metros de columna de agua las 24 horas en cada sector (2030)",
-      "Agua no contabilizada: Más de 30 % en 10 de 14 meses (Superservicios, 2019–2020) → 25 % (2030) y 20 % (2031)",
+      "Agua no contabilizada: Más de 30 % en 10 de 14 meses (Superintendencia de Servicios Públicos, 2019–2020) → 25 % (2030) y 20 % (2031)",
       "Suscriptores con medidor funcionando: 88,2 % (dic-2019) → 100 % (2030)",
       "Capacidad de tratamiento de la potabilizadora: 40 litros por segundo (planta de 2003) → 60 litros por segundo con concesión vigente (diseño 2029; obra 2030–2032)"
      ]
@@ -3222,7 +3228,7 @@
      "id": "plan_maestro",
      "nombre": "Plan Maestro de Alcantarillado y nuevo Plan de Saneamiento y Manejo de Vertimientos",
      "resumen": "Terminar los estudios (56 %), aforar, diseñar y renovar el Plan de Saneamiento y Manejo de Vertimientos vencido",
-     "descripcion": "Reactivar los estudios del Plan Maestro (proyecto 2024058930006, 56 % de avance, inactivos) y cerrarlos con aforos, catastro de redes, diseños de detalle de interceptores, planta de tratamiento y descarga al caño, y la compra del predio de la planta. Incluye el Plan de Saneamiento y Manejo de Vertimientos nuevo ante Corantioquia, porque el de 2014 ya venció. Es el requisito para pedir el apoyo de la Nación con la Resolución 0467 de 2026.",
+     "descripcion": "Reactivar los estudios del Plan Maestro y cerrarlos con aforos, catastro de redes, diseños de detalle y la compra del predio de la planta de tratamiento. Incluye el Plan de Saneamiento y Manejo de Vertimientos nuevo ante Corantioquia, porque el de 2014 ya venció. Es el requisito para pedir el apoyo de la Nación con la Resolución 0467 de 2026.",
      "especificaciones": [
       "Aforos: 24 horas en época seca y de lluvias en las 4 estaciones de bombeo de aguas residuales: caudal, demanda bioquímica de oxígeno y sólidos suspendidos totales",
       "Plan de vertimientos: Nuevo Plan de Saneamiento y Manejo de Vertimientos ante Corantioquia (el de 2014 venció en 2024–2025)",
@@ -3241,14 +3247,14 @@
      "id": "interceptores",
      "nombre": "Interceptores y estación de bombeo de llegada",
      "resumen": "≈3,8 km de interceptores por los corredores de los caños: cero vertimientos en tiempo seco",
-     "descripcion": "Las 4 estaciones de bombeo existentes dejan de verter a los caños y bombean a dos interceptores: el occidental recoge El Prado y El Paraíso, y el oriental, La Victoria y El Progreso. Siguen los corredores de los dos caños (la Carrera 57 y el canal oriental) hasta su unión, al norte del casco, donde una estación de bombeo de llegada sube el agua a la planta de tratamiento. Así, en tiempo seco, el Caño Colector Shell queda libre de aguas negras para el parque lineal del módulo de Urbanismo.",
+     "descripcion": "Las 4 estaciones de bombeo existentes dejan de verter a los caños y bombean a dos interceptores: el occidental recoge El Prado y El Paraíso, y el oriental, La Victoria y El Progreso. Siguen los caños hasta su unión, al norte del casco, donde una estación de llegada sube el agua a la planta de tratamiento. En tiempo seco, el Caño Colector Shell queda libre de aguas negras para el parque lineal.",
      "especificaciones": [
       "Interceptor occidental: ≈1,6 km por la Carrera 57, junto al Caño Colector Shell (El Prado y El Paraíso; trazado indicativo)",
       "Interceptor oriental: ≈2,1 km por el corredor del canal oriental (La Victoria y El Progreso; trazado indicativo)",
       "Ramales: 44 m a la estación de bombeo El Paraíso; El Progreso y La Victoria quedan sobre el interceptor oriental (Tabla 31 del Esquema de Ordenamiento Territorial)",
       "Diámetros: Tubería de 250 a 315 milímetros (estimado)",
       "Estación de llegada: En el predio de la planta de tratamiento: rejas, aliviadero y planta eléctrica",
-      "Impulsión a la planta: ≈50 m dentro del predio (el sitio B, hacia el río, exigía 911 m)",
+      "Impulsión a la planta: ≈50 m dentro del predio",
       "Estaciones existentes: 4, rehabilitadas como estaciones de rebombeo"
      ],
      "proyectos_tipo": [
@@ -3263,7 +3269,7 @@
      "id": "ptar",
      "nombre": "Planta de tratamiento de aguas residuales del casco (50 litros por segundo)",
      "resumen": "Reactor anaerobio de flujo ascendente y filtro percolador de 50 litros por segundo, aguas abajo de la unión de los caños, al norte del casco",
-     "descripcion": "Pretratamiento, 2 reactores anaerobios de flujo ascendente, filtros percoladores de alta tasa, sedimentadores y lechos de secado de lodos, con quema del biogás. Trata 50 litros por segundo en caudal medio, suficiente para unos 20.000 habitantes en 2056, y gasta poca energía, así que la puede operar un prestador pequeño. Será la primera planta de tratamiento de aguas residuales del casco urbano.",
+     "descripcion": "Pretratamiento, 2 reactores anaerobios de flujo ascendente, filtros percoladores de alta tasa, sedimentadores y lechos de secado de lodos, con quema del biogás. Gasta poca energía, así que la puede operar un prestador pequeño.",
      "especificaciones": [
       "Tecnología: Reactor anaerobio de flujo ascendente y filtro percolador de alta tasa",
       "Capacidad: 50 litros por segundo en caudal medio (2 módulos de 25); ≈100 litros por segundo máximo",
@@ -3272,13 +3278,13 @@
       "Distancias: ≈700 m a la edificación mapeada más cercana (norma: 200 m) y ≈60 m del caño, fuera de su ronda de 30 m; las casas de finca se revisan en campo",
       "Lodos y biogás: Lechos de secado solar y quemador",
       "Calidad: ≥80 % de remoción de la demanda bioquímica de oxígeno y de los sólidos suspendidos totales (meta del proyecto) y vertimiento dentro de los límites de la Resolución 0631 de 2015",
-      "Permisos: Autorización previa de la Aerocivil por peligro aviario: queda a ≈11,6 km del aeropuerto Yariguíes, dentro del radio de 13 km (reglamento aeronáutico de Colombia, parte 14, numeral 14.3.4.2.7.2); vertimiento con el Plan de Saneamiento y Manejo de Vertimientos ante Corantioquia"
+      "Permisos: Autorización previa de la Aeronáutica Civil por peligro aviario: queda a ≈11,6 km del aeropuerto Yariguíes, dentro del radio de 13 km (reglamento aeronáutico de Colombia, parte 14); vertimiento con el Plan de Saneamiento y Manejo de Vertimientos ante Corantioquia"
      ],
      "proyectos_tipo": [
       "Referente: planta de tratamiento de aguas residuales de Tenjo, 40 litros por segundo para 12.000 habitantes",
       "Referente: planta distrital de tratamiento de aguas residuales de Turbo, Antioquia"
      ],
-     "ubicacion": "Al norte del casco, aguas abajo de la unión del Caño Colector Shell con el canal oriental, en el costado oriental del caño y de la Carrera 57 (≈7,0213 N, 73,9121 O). Le llegan los dos interceptores, que siguen la pendiente natural de los caños, y el agua tratada vuelve al mismo caño, más abajo. Se prefiere al sitio B, hacia el río, que exigía bombear 911 m y un emisario de 825 m al Magdalena, y a la reserva del Esquema de Ordenamiento Territorial pegada al casco, aguas arriba de la unión. Por estar junto a los caños va sobre una plataforma por encima de la creciente de 100 años; el Esquema deja que Corantioquia apruebe el sitio definitivo con el Plan de Saneamiento y Manejo de Vertimientos.",
+     "ubicacion": "Al norte del casco, aguas abajo de la unión del Caño Colector Shell con el canal oriental, en el costado oriental del caño y de la Carrera 57 (≈7,0213 N, 73,9121 O). Se prefiere al sitio B, hacia el río, que exigía bombear 911 m y un emisario de 825 m al Magdalena, y a la reserva del Esquema de Ordenamiento Territorial pegada al casco, aguas arriba de la unión. Por estar junto a los caños va sobre una plataforma por encima de la creciente de 100 años; el Esquema deja que Corantioquia apruebe el sitio definitivo con el Plan de Saneamiento y Manejo de Vertimientos.",
      "plazo": "2029–2031 (licitación en 2029, operación en 2031)",
      "enfoque": true
     },
@@ -3286,13 +3292,13 @@
      "id": "emisario",
      "nombre": "Laguna de pulimento y descarga al Caño Colector Shell",
      "resumen": "El agua tratada pasa por una laguna de pulimento y vuelve al caño ≈120 m más abajo",
-     "descripcion": "El agua tratada pasa por una laguna de pulimento de ≈0,4 ha y por una cámara de descarga con escalones de aireación, medidor de caudal y punto de muestreo para el Plan de Saneamiento y Manejo de Vertimientos, y vuelve al Caño Colector Shell aguas abajo de la planta de tratamiento, después de la unión de los caños. El pulimento hace falta porque el caño lleva poco caudal para diluir; el tramo del parque lineal, dentro del casco, queda aguas arriba y no recibe el agua de la planta.",
+     "descripcion": "El agua tratada pasa por una laguna de pulimento y por una cámara de descarga con escalones de aireación, medidor de caudal y punto de muestreo, y vuelve al Caño Colector Shell aguas abajo de la planta. El pulimento hace falta porque el caño lleva poco caudal para diluir; el tramo del parque lineal queda aguas arriba y no recibe el agua de la planta.",
      "especificaciones": [
       "Longitud: ≈120 m de la planta de tratamiento al caño",
       "Pulimento: Laguna de ≈0,4 ha dentro del predio",
       "Descarga: Cámara con escalones de aireación sobre la orilla del caño",
       "Control: Medidor de caudal y punto de muestreo",
-      "Permisos: Vertimiento y ocupación de cauce (Corantioquia, con el Plan de Saneamiento y Manejo de Vertimientos) y autorización previa de la Aerocivil para la laguna, un cuerpo de agua artificial a ≈11,6 km del aeropuerto (reglamento aeronáutico de Colombia, parte 14, numeral 14.3.4.2.7.2)"
+      "Permisos: Vertimiento y ocupación de cauce (Corantioquia, con el Plan de Saneamiento y Manejo de Vertimientos) y autorización previa de la Aeronáutica Civil para la laguna, un cuerpo de agua artificial a ≈11,6 km del aeropuerto (reglamento aeronáutico de Colombia, parte 14)"
      ],
      "ubicacion": "Dentro del predio de la planta de tratamiento (la laguna, al norte de la planta) y su borde occidental: la descarga cae al Caño Colector Shell ≈120 m aguas abajo de la planta (≈7,0224 N, 73,9132 O).",
      "plazo": "2030–2031",
@@ -3302,11 +3308,11 @@
      "id": "relleno_nuevo",
      "nombre": "Relleno sanitario nuevo en la vereda Kilómetro Cinco",
      "resumen": "Relleno municipal en el sitio que ya reserva el Esquema de Ordenamiento Territorial, con celdas para 25 años o más; abre en 2030 y entonces Las Américas deja de recibir basura",
-     "descripcion": "Un relleno sanitario mecanizado de categoría I (menos de 50 toneladas al día) en la vereda Kilómetro Cinco, en el polígono que el Esquema de Ordenamiento Territorial ya reserva para el relleno nuevo (Acuerdo 013 de 2022, artículo 17.4 y Tabla 35). Se compra la reserva, de ≈16 ha, y se usa un predio de ≈8,8 ha, a 44 m o más del eje de la vía: ≈3 ha de celdas por fases, dos lagunas de lixiviados, chimeneas con quema del biogás, canales de aguas lluvias, piezómetros, portería con báscula, cerramiento y una franja de árboles de 15 m. La estación de clasificación y aprovechamiento de reciclables y la planta de compostaje van en el mismo predio. Abre en 2030, y solo entonces Las Américas deja de recibir basura. Se escogió frente a otros tres sitios y frente a llevar la basura a Barrancabermeja, que depende de un solo puente, de otra autoridad ambiental y de un operador privado. Antes de comprar hay que cruzarlo con las zonas de recarga de acuíferos del Esquema.",
+     "descripcion": "Un relleno sanitario mecanizado de categoría I en la vereda Kilómetro Cinco, en el polígono que el Esquema de Ordenamiento Territorial ya reserva para el relleno nuevo (Acuerdo 013 de 2022, artículo 17.4 y Tabla 35). Lleva celdas por fases, dos lagunas de lixiviados, quema del biogás, portería con báscula, cerramiento y una franja de árboles de 15 m; la estación de reciclaje y el compostaje van en el mismo predio. Se escogió frente a otros tres sitios y frente a llevar la basura a Barrancabermeja, que depende de un solo puente, de otra autoridad ambiental y de un operador privado.",
      "especificaciones": [
-      "Categoría: I: menos de 50 toneladas al día; Yondó dispuso 3.763 toneladas en 2024, unas 10,3 al día (Superservicios)",
+      "Categoría: I: menos de 50 toneladas al día; Yondó dispuso 3.763 toneladas en 2024, unas 10,3 al día (Superintendencia de Servicios Públicos)",
       "Sitio: Reserva del Esquema de Ordenamiento Territorial en Kilómetro Cinco (≈16 ha); predio útil de ≈8,8 ha, a 44 m o más del eje de la vía a Puerto Berrío, la lectura más exigente del retiro en el Esquema",
-      "Norma: El Esquema de Ordenamiento Territorial ya delimita esta área para el relleno nuevo y la nombra área de contingencia (artículo 17.4 y Tabla 35), como pide la Nación para cofinanciar (Decreto 1077 de 2015, artículos 2.3.2.3.7 y 2.3.2.3.9). Cumple los descartes de la Resolución 938 de 2019 (artículo 1) que se pudieron revisar: a 4,2 km del suelo urbano y de expansión, a 2,0 km del centro poblado más cercano, fuera de la reserva forestal de Ley 2.ª y fuera del radio de 13 km y del cono de aproximación del aeropuerto",
+      "Norma: El Esquema de Ordenamiento Territorial ya delimita esta área para el relleno nuevo y la nombra área de contingencia (artículo 17.4 y Tabla 35), como pide la Nación para cofinanciar (Decreto 1077 de 2015). Cumple los descartes de la Resolución 938 de 2019 que se pudieron revisar: a 4,2 km del suelo urbano y de expansión, a 2,0 km del centro poblado más cercano, fuera de la reserva forestal de Ley 2.ª, del radio de 13 km y del cono de aproximación del aeropuerto",
       "Celdas: ≈3 ha en cinco celdas: ≈266.000–287.000 m³ con 12–15 m de altura. Dan 25 años o más aun sin aprovechar nada (la norma pide 25) y 30 con la estación de reciclaje y el compostaje; sin las dos celdas en bosque (≈200.000–213.000 m³), los 25 años dependen de aprovechar el 15–20 %",
       "Fase 1: ≈0,6 ha y hasta ≈36.000 m³ con taludes de 3 de base por 1 de altura: de 5 a 7 años desde 2030 sin aprovechar y de 6 a 8 con el 15 %",
       "Fondo: Suelo con permeabilidad de 10⁻⁷ centímetros por segundo, arcilla compactada de 0,45 m y geomembrana de polietileno de alta densidad",
@@ -3324,7 +3330,7 @@
       "Referente: celda de 55 × 100 m de Olaya Herrera, Nariño",
       "Proyecto tipo del Departamento Nacional de Planeación: Recuperación de cobertura vegetal en áreas disturbadas (franja de aislamiento)"
      ],
-     "ubicacion": "Vereda Kilómetro Cinco, en la reserva del Esquema de Ordenamiento Territorial para el relleno nuevo (Tabla 35), junto a la vía a Puerto Berrío: 7,6 km por vía desde el parque principal, unos 9 minutos (portería en ≈6,9706 N, 73,9438 O). Son lomas de 83 a 113 m que drenan directo al Magdalena, a 4,3 km de los pozos y la potabilizadora, a 3,6 km del Caño Colector Shell y a 6,4 km de la planta de tratamiento de aguas residuales del casco. El borde sur del predio queda apenas 4 a 6 m sobre la lámina del río en el modelo de elevación: las celdas y las lagunas van por encima de la creciente de 100 años. Al occidente está la planta de tratamiento y disposición de lodos del Esquema (Tabla 34).",
+     "ubicacion": "Vereda Kilómetro Cinco, en la reserva del Esquema de Ordenamiento Territorial para el relleno nuevo (Tabla 35), junto a la vía a Puerto Berrío: 7,6 km por vía desde el parque principal, unos 9 minutos (portería en ≈6,9706 N, 73,9438 O). Son lomas de 83 a 113 m que drenan directo al Magdalena, a 4,3 km de los pozos del acueducto. El borde sur del predio queda apenas 4 a 6 m sobre la lámina del río en el modelo de elevación: las celdas y las lagunas van por encima de la creciente de 100 años.",
      "plazo": "2027–2030: cruce con las zonas de recarga antes de comprar, predio y estudios en 2027–2028, licencia en 2028–2029, obra de la fase 1 en 2029 y operación desde 2030",
      "enfoque": true
     },
@@ -3332,10 +3338,10 @@
      "id": "eca",
      "nombre": "Estación de clasificación y aprovechamiento de reciclables de 10 toneladas al día",
      "resumen": "Clasificación de reciclables con recicladores formalizados; proyecto tipo del Departamento Nacional de Planeación",
-     "descripcion": "Nave de recepción, clasificación, empaque y bodega de reciclables, operada por recicladores de oficio formalizados y alimentada por rutas de recolección selectiva. Va en el predio del relleno nuevo, sobre la vía interna, entre la portería y las celdas, y comparte con él la vía, la báscula y el cerramiento. Yondó dispone unas 10 toneladas al día de residuos y la estación solo recibe la fracción reciclable separada en la fuente, así que 10 toneladas al día cubren el casco con margen. Lo que se recupera no ocupa celda y alarga la vida del relleno.",
+     "descripcion": "Nave de recepción, clasificación, empaque y bodega de reciclables, operada por recicladores de oficio formalizados y alimentada por rutas de recolección selectiva. Comparte con el relleno nuevo la vía, la báscula y el cerramiento. Yondó dispone unas 10,3 toneladas de residuos al día y la estación solo recibe la fracción reciclable separada en la fuente, así que 10 toneladas al día cubren el casco con margen. Lo que se recupera no ocupa celda y alarga la vida del relleno.",
      "especificaciones": [
       "Capacidad: 10 toneladas al día",
-      "Residuos del municipio: ≈10,3 toneladas al día (3.763 en 2024, Superservicios)",
+      "Residuos del municipio: ≈10,3 toneladas al día (3.763 en 2024, Superintendencia de Servicios Públicos)",
       "Modelo: Proyecto tipo de estación de clasificación y aprovechamiento del Departamento Nacional de Planeación (versión 1.0, 2021)",
       "Operación: Organizaciones de recicladores de oficio, que tienen la exclusividad del aprovechamiento por 15 años (Decreto 1381 de 2024)",
       "Lote: 36 × 52 m en el predio del relleno nuevo, fuera de las celdas",
@@ -3354,7 +3360,7 @@
      "id": "compostaje",
      "nombre": "Planta de compostaje de residuos orgánicos",
      "resumen": "Compost con los orgánicos de plazas, poda y grandes generadores (4–5 toneladas al día)",
-     "descripcion": "Pilas con volteo bajo cubierta, maduración y cribado para la fracción orgánica que se separa en la fuente: plazas de mercado, poda y grandes generadores. Va en el predio del relleno nuevo, al norte de la celda de la fase 1: el Esquema de Ordenamiento Territorial pide que el relleno tenga sitios para estabilizar los residuos biodegradables separados en la fuente. El compost puede ir a los viveros y huertas del módulo agroindustrial. Es distinta del compostaje didáctico del parque ecotecnológico, que no recibe basura del pueblo.",
+     "descripcion": "Pilas con volteo bajo cubierta, maduración y cribado para los orgánicos que se separan en la fuente. Va en el predio del relleno nuevo, como pide el Esquema de Ordenamiento Territorial. El compost puede ir a los viveros y huertas del módulo agroindustrial. Es distinta del compostaje didáctico del parque ecotecnológico, que no recibe basura del pueblo.",
      "especificaciones": [
       "Capacidad: ≈4–5 toneladas al día de orgánicos",
       "Área: ≈2.000 m² (50 × 40 m) en el predio del relleno nuevo",
@@ -3374,8 +3380,8 @@
     {
      "id": "relleno",
      "nombre": "Clausura del relleno Las Américas y parque ecotecnológico",
-     "resumen": "Cierre por partes desde 2028 y total cuando abra el relleno nuevo, granja solar de 997 kilovatios pico y parque con coworking (docs/12)",
-     "descripcion": "El relleno opera con la licencia vencida desde el 12 de noviembre de 2023 y ya no tiene vida útil. Recibe basura solo hasta que abra el relleno nuevo de Kilómetro Cinco, en 2030, y solo en el frente activo: desde 2028, el plan de cierre acordado con Corantioquia pone la cobertura final en las celdas viejas, empezando por la norte, y en 2030–2031 se cierra el frente activo. La clausura lleva manejo de lixiviados y gases y 20 años de posclausura, e incluye el botadero de los años noventa que, según una nota de prensa de 2020, estaba donde hoy están los pozos del acueducto (sin delimitar; se confirma con apiques y georradar). La granja solar de 997 kilovatios pico, para 2.236 hogares de estratos 1 y 2, se monta cuando la cobertura haya asentado: ≈530 kilovatios pico en 2031 sobre las celdas cubiertas desde 2028 y el resto hacia 2033–2034. Alrededor va un parque con coworking rural, granja y circuito de 0,9 km.",
+     "resumen": "Cierre por partes desde 2028 y total cuando abra el relleno nuevo, granja solar de 997 kilovatios pico y parque con coworking",
+     "descripcion": "El relleno opera con la licencia vencida desde el 12 de noviembre de 2023 y ya no tiene vida útil. Recibe basura solo hasta que abra el relleno nuevo de Kilómetro Cinco, en 2030, y solo en el frente activo: desde 2028, el plan de cierre acordado con Corantioquia cubre las celdas viejas, empezando por la norte, y en 2030–2031 se cierra el frente activo. La clausura incluye el botadero de los años noventa, que estaría bajo los pozos del acueducto (se confirma con apiques y georradar). Sobre las celdas va una granja solar para 2.236 hogares de estratos 1 y 2, montada por partes cuando la cobertura asienta, y alrededor, un parque con coworking rural, granja y circuito.",
      "especificaciones": [
       "Residuos acumulados: ≈78.000 toneladas a 2026 (estimación) y ≈12.000–17.000 más entre 2027 y 2030 (cálculo propio)",
       "Transición: Recibe basura solo hasta 2030 y solo en el frente activo, con un plan de cierre acordado con Corantioquia; ya no se pueden abrir celdas transitorias (Resoluciones 1529 de 2010 y 1890 de 2011)",
@@ -3414,7 +3420,7 @@
     },
     {
      "id": "ptar",
-     "nombre": "PTAR central, laguna y descarga",
+     "nombre": "Planta de tratamiento, laguna y descarga",
      "partes": [
       {
        "id": "arboles",
@@ -3424,7 +3430,7 @@
     },
     {
      "id": "sitios_ptar",
-     "nombre": "Sitios evaluados para la PTAR",
+     "nombre": "Sitios evaluados para la planta de tratamiento",
      "partes": []
     },
     {
@@ -3437,7 +3443,7 @@
       },
       {
        "id": "obras",
-       "nombre": "ECA, compostaje, lagunas y portería"
+       "nombre": "Estación de reciclaje, compostaje, lagunas y portería"
       }
      ]
     },
@@ -3480,12 +3486,12 @@
       {
        "v": "0 %",
        "l": "de las aguas residuales del casco urbano recibe tratamiento",
-       "fuente": "Superservicios, evaluación integral 2020 (datos de 2019)"
+       "fuente": "Superintendencia de Servicios Públicos, evaluación integral 2020 (datos de 2019)"
       },
       {
        "v": "55,34",
        "l": "litros por segundo de aguas residuales vertidos sin tratar a dos caños (2019)",
-       "fuente": "Superservicios, evaluación integral 2020"
+       "fuente": "Superintendencia de Servicios Públicos, evaluación integral 2020"
       },
       {
        "v": "78.000",
@@ -3498,7 +3504,7 @@
        "fuente": "Cálculo propio con la Resolución 0330 de 2017"
       }
      ],
-     "propuesta": "Terminar el Plan Maestro con un Plan de Saneamiento y Manejo de Vertimientos nuevo, recoger lo que hoy se vierte con dos interceptores (≈3,8 km) que siguen los dos caños hasta su unión, al norte del casco, y construir allí, aguas abajo de la unión, la primera planta de tratamiento de aguas residuales del casco (reactor anaerobio de flujo ascendente y filtro percolador, 50 litros por segundo); el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo. En aseo, construir un relleno sanitario nuevo en la vereda Kilómetro Cinco, en el sitio que ya reserva el Esquema de Ordenamiento Territorial, con la estación de clasificación y aprovechamiento de reciclables de 10 toneladas al día y la planta de compostaje en el mismo predio; cerrar Las Américas por partes desde 2028 y del todo entre 2030 y 2031, y volverlo parque ecotecnológico con granja solar. El relleno viejo deja de recibir basura en 2030, cuando abre el nuevo.",
+     "propuesta": "Terminar el Plan Maestro con un Plan de Saneamiento y Manejo de Vertimientos nuevo, recoger lo que hoy se vierte con dos interceptores (≈3,8 km) que siguen los caños hasta su unión, al norte del casco, y construir allí la primera planta de tratamiento de aguas residuales del casco (50 litros por segundo); el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo. En aseo, construir un relleno sanitario nuevo en la vereda Kilómetro Cinco, en el sitio que ya reserva el Esquema de Ordenamiento Territorial, con la estación de reciclaje y la planta de compostaje en el mismo predio, y cerrar Las Américas por partes desde 2028 y del todo entre 2030 y 2031, cuando abre el nuevo, para volverlo parque ecotecnológico con granja solar.",
      "leyenda": [
       "Vertimiento sin tratar de cada estación (2019)",
       "Estaciones de bombeo de aguas residuales que vierten hoy"
@@ -3525,14 +3531,14 @@
       "id": "interceptores",
       "nombre": "Interceptores y estación de bombeo de llegada",
       "resumen": "≈3,8 km de interceptores por los corredores de los caños: cero vertimientos en tiempo seco",
-      "descripcion": "Las 4 estaciones de bombeo existentes dejan de verter a los caños y bombean a dos interceptores: el occidental recoge El Prado y El Paraíso, y el oriental, La Victoria y El Progreso. Siguen los corredores de los dos caños (la Carrera 57 y el canal oriental) hasta su unión, al norte del casco, donde una estación de bombeo de llegada sube el agua a la planta de tratamiento. Así, en tiempo seco, el Caño Colector Shell queda libre de aguas negras para el parque lineal del módulo de Urbanismo.",
+      "descripcion": "Las 4 estaciones de bombeo existentes dejan de verter a los caños y bombean a dos interceptores: el occidental recoge El Prado y El Paraíso, y el oriental, La Victoria y El Progreso. Siguen los caños hasta su unión, al norte del casco, donde una estación de llegada sube el agua a la planta de tratamiento. En tiempo seco, el Caño Colector Shell queda libre de aguas negras para el parque lineal.",
       "especificaciones": [
        "Interceptor occidental: ≈1,6 km por la Carrera 57, junto al Caño Colector Shell (El Prado y El Paraíso; trazado indicativo)",
        "Interceptor oriental: ≈2,1 km por el corredor del canal oriental (La Victoria y El Progreso; trazado indicativo)",
        "Ramales: 44 m a la estación de bombeo El Paraíso; El Progreso y La Victoria quedan sobre el interceptor oriental (Tabla 31 del Esquema de Ordenamiento Territorial)",
        "Diámetros: Tubería de 250 a 315 milímetros (estimado)",
        "Estación de llegada: En el predio de la planta de tratamiento: rejas, aliviadero y planta eléctrica",
-       "Impulsión a la planta: ≈50 m dentro del predio (el sitio B, hacia el río, exigía 911 m)",
+       "Impulsión a la planta: ≈50 m dentro del predio",
        "Estaciones existentes: 4, rehabilitadas como estaciones de rebombeo"
       ],
       "proyectos_tipo": [
@@ -3570,7 +3576,7 @@
       "id": "ptar",
       "nombre": "Planta de tratamiento de aguas residuales del casco (50 litros por segundo)",
       "resumen": "Reactor anaerobio de flujo ascendente y filtro percolador de 50 litros por segundo, aguas abajo de la unión de los caños, al norte del casco",
-      "descripcion": "Pretratamiento, 2 reactores anaerobios de flujo ascendente, filtros percoladores de alta tasa, sedimentadores y lechos de secado de lodos, con quema del biogás. Trata 50 litros por segundo en caudal medio, suficiente para unos 20.000 habitantes en 2056, y gasta poca energía, así que la puede operar un prestador pequeño. Será la primera planta de tratamiento de aguas residuales del casco urbano.",
+      "descripcion": "Pretratamiento, 2 reactores anaerobios de flujo ascendente, filtros percoladores de alta tasa, sedimentadores y lechos de secado de lodos, con quema del biogás. Gasta poca energía, así que la puede operar un prestador pequeño.",
       "especificaciones": [
        "Tecnología: Reactor anaerobio de flujo ascendente y filtro percolador de alta tasa",
        "Capacidad: 50 litros por segundo en caudal medio (2 módulos de 25); ≈100 litros por segundo máximo",
@@ -3579,13 +3585,13 @@
        "Distancias: ≈700 m a la edificación mapeada más cercana (norma: 200 m) y ≈60 m del caño, fuera de su ronda de 30 m; las casas de finca se revisan en campo",
        "Lodos y biogás: Lechos de secado solar y quemador",
        "Calidad: ≥80 % de remoción de la demanda bioquímica de oxígeno y de los sólidos suspendidos totales (meta del proyecto) y vertimiento dentro de los límites de la Resolución 0631 de 2015",
-       "Permisos: Autorización previa de la Aerocivil por peligro aviario: queda a ≈11,6 km del aeropuerto Yariguíes, dentro del radio de 13 km (reglamento aeronáutico de Colombia, parte 14, numeral 14.3.4.2.7.2); vertimiento con el Plan de Saneamiento y Manejo de Vertimientos ante Corantioquia"
+       "Permisos: Autorización previa de la Aeronáutica Civil por peligro aviario: queda a ≈11,6 km del aeropuerto Yariguíes, dentro del radio de 13 km (reglamento aeronáutico de Colombia, parte 14); vertimiento con el Plan de Saneamiento y Manejo de Vertimientos ante Corantioquia"
       ],
       "proyectos_tipo": [
        "Referente: planta de tratamiento de aguas residuales de Tenjo, 40 litros por segundo para 12.000 habitantes",
        "Referente: planta distrital de tratamiento de aguas residuales de Turbo, Antioquia"
       ],
-      "ubicacion": "Al norte del casco, aguas abajo de la unión del Caño Colector Shell con el canal oriental, en el costado oriental del caño y de la Carrera 57 (≈7,0213 N, 73,9121 O). Le llegan los dos interceptores, que siguen la pendiente natural de los caños, y el agua tratada vuelve al mismo caño, más abajo. Se prefiere al sitio B, hacia el río, que exigía bombear 911 m y un emisario de 825 m al Magdalena, y a la reserva del Esquema de Ordenamiento Territorial pegada al casco, aguas arriba de la unión. Por estar junto a los caños va sobre una plataforma por encima de la creciente de 100 años; el Esquema deja que Corantioquia apruebe el sitio definitivo con el Plan de Saneamiento y Manejo de Vertimientos.",
+      "ubicacion": "Al norte del casco, aguas abajo de la unión del Caño Colector Shell con el canal oriental, en el costado oriental del caño y de la Carrera 57 (≈7,0213 N, 73,9121 O). Se prefiere al sitio B, hacia el río, que exigía bombear 911 m y un emisario de 825 m al Magdalena, y a la reserva del Esquema de Ordenamiento Territorial pegada al casco, aguas arriba de la unión. Por estar junto a los caños va sobre una plataforma por encima de la creciente de 100 años; el Esquema deja que Corantioquia apruebe el sitio definitivo con el Plan de Saneamiento y Manejo de Vertimientos.",
       "plazo": "2029–2031 (licitación en 2029, operación en 2031)",
       "enfoque": true
      },
@@ -3608,19 +3614,19 @@
       },
       {
        "v": "16,2 km",
-       "l": "del aeropuerto Yariguíes: fuera del radio de 13 km en que la Aerocivil debe autorizar un relleno",
-       "fuente": "Cálculo propio; reglamento aeronáutico de Colombia, parte 14 (Resolución 04072 de 2010 de la Aerocivil)"
+       "l": "del aeropuerto Yariguíes: fuera del radio de 13 km en que la Aeronáutica Civil debe autorizar un relleno",
+       "fuente": "Cálculo propio; reglamento aeronáutico de Colombia, parte 14 (Resolución 04072 de 2010 de la Aeronáutica Civil)"
       }
      ],
      "componente": {
       "id": "relleno_nuevo",
       "nombre": "Relleno sanitario nuevo en la vereda Kilómetro Cinco",
       "resumen": "Relleno municipal en el sitio que ya reserva el Esquema de Ordenamiento Territorial, con celdas para 25 años o más; abre en 2030 y entonces Las Américas deja de recibir basura",
-      "descripcion": "Un relleno sanitario mecanizado de categoría I (menos de 50 toneladas al día) en la vereda Kilómetro Cinco, en el polígono que el Esquema de Ordenamiento Territorial ya reserva para el relleno nuevo (Acuerdo 013 de 2022, artículo 17.4 y Tabla 35). Se compra la reserva, de ≈16 ha, y se usa un predio de ≈8,8 ha, a 44 m o más del eje de la vía: ≈3 ha de celdas por fases, dos lagunas de lixiviados, chimeneas con quema del biogás, canales de aguas lluvias, piezómetros, portería con báscula, cerramiento y una franja de árboles de 15 m. La estación de clasificación y aprovechamiento de reciclables y la planta de compostaje van en el mismo predio. Abre en 2030, y solo entonces Las Américas deja de recibir basura. Se escogió frente a otros tres sitios y frente a llevar la basura a Barrancabermeja, que depende de un solo puente, de otra autoridad ambiental y de un operador privado. Antes de comprar hay que cruzarlo con las zonas de recarga de acuíferos del Esquema.",
+      "descripcion": "Un relleno sanitario mecanizado de categoría I en la vereda Kilómetro Cinco, en el polígono que el Esquema de Ordenamiento Territorial ya reserva para el relleno nuevo (Acuerdo 013 de 2022, artículo 17.4 y Tabla 35). Lleva celdas por fases, dos lagunas de lixiviados, quema del biogás, portería con báscula, cerramiento y una franja de árboles de 15 m; la estación de reciclaje y el compostaje van en el mismo predio. Se escogió frente a otros tres sitios y frente a llevar la basura a Barrancabermeja, que depende de un solo puente, de otra autoridad ambiental y de un operador privado.",
       "especificaciones": [
-       "Categoría: I: menos de 50 toneladas al día; Yondó dispuso 3.763 toneladas en 2024, unas 10,3 al día (Superservicios)",
+       "Categoría: I: menos de 50 toneladas al día; Yondó dispuso 3.763 toneladas en 2024, unas 10,3 al día (Superintendencia de Servicios Públicos)",
        "Sitio: Reserva del Esquema de Ordenamiento Territorial en Kilómetro Cinco (≈16 ha); predio útil de ≈8,8 ha, a 44 m o más del eje de la vía a Puerto Berrío, la lectura más exigente del retiro en el Esquema",
-       "Norma: El Esquema de Ordenamiento Territorial ya delimita esta área para el relleno nuevo y la nombra área de contingencia (artículo 17.4 y Tabla 35), como pide la Nación para cofinanciar (Decreto 1077 de 2015, artículos 2.3.2.3.7 y 2.3.2.3.9). Cumple los descartes de la Resolución 938 de 2019 (artículo 1) que se pudieron revisar: a 4,2 km del suelo urbano y de expansión, a 2,0 km del centro poblado más cercano, fuera de la reserva forestal de Ley 2.ª y fuera del radio de 13 km y del cono de aproximación del aeropuerto",
+       "Norma: El Esquema de Ordenamiento Territorial ya delimita esta área para el relleno nuevo y la nombra área de contingencia (artículo 17.4 y Tabla 35), como pide la Nación para cofinanciar (Decreto 1077 de 2015). Cumple los descartes de la Resolución 938 de 2019 que se pudieron revisar: a 4,2 km del suelo urbano y de expansión, a 2,0 km del centro poblado más cercano, fuera de la reserva forestal de Ley 2.ª, del radio de 13 km y del cono de aproximación del aeropuerto",
        "Celdas: ≈3 ha en cinco celdas: ≈266.000–287.000 m³ con 12–15 m de altura. Dan 25 años o más aun sin aprovechar nada (la norma pide 25) y 30 con la estación de reciclaje y el compostaje; sin las dos celdas en bosque (≈200.000–213.000 m³), los 25 años dependen de aprovechar el 15–20 %",
        "Fase 1: ≈0,6 ha y hasta ≈36.000 m³ con taludes de 3 de base por 1 de altura: de 5 a 7 años desde 2030 sin aprovechar y de 6 a 8 con el 15 %",
        "Fondo: Suelo con permeabilidad de 10⁻⁷ centímetros por segundo, arcilla compactada de 0,45 m y geomembrana de polietileno de alta densidad",
@@ -3638,7 +3644,7 @@
        "Referente: celda de 55 × 100 m de Olaya Herrera, Nariño",
        "Proyecto tipo del Departamento Nacional de Planeación: Recuperación de cobertura vegetal en áreas disturbadas (franja de aislamiento)"
       ],
-      "ubicacion": "Vereda Kilómetro Cinco, en la reserva del Esquema de Ordenamiento Territorial para el relleno nuevo (Tabla 35), junto a la vía a Puerto Berrío: 7,6 km por vía desde el parque principal, unos 9 minutos (portería en ≈6,9706 N, 73,9438 O). Son lomas de 83 a 113 m que drenan directo al Magdalena, a 4,3 km de los pozos y la potabilizadora, a 3,6 km del Caño Colector Shell y a 6,4 km de la planta de tratamiento de aguas residuales del casco. El borde sur del predio queda apenas 4 a 6 m sobre la lámina del río en el modelo de elevación: las celdas y las lagunas van por encima de la creciente de 100 años. Al occidente está la planta de tratamiento y disposición de lodos del Esquema (Tabla 34).",
+      "ubicacion": "Vereda Kilómetro Cinco, en la reserva del Esquema de Ordenamiento Territorial para el relleno nuevo (Tabla 35), junto a la vía a Puerto Berrío: 7,6 km por vía desde el parque principal, unos 9 minutos (portería en ≈6,9706 N, 73,9438 O). Son lomas de 83 a 113 m que drenan directo al Magdalena, a 4,3 km de los pozos del acueducto. El borde sur del predio queda apenas 4 a 6 m sobre la lámina del río en el modelo de elevación: las celdas y las lagunas van por encima de la creciente de 100 años.",
       "plazo": "2027–2030: cruce con las zonas de recarga antes de comprar, predio y estudios en 2027–2028, licencia en 2028–2029, obra de la fase 1 en 2029 y operación desde 2030",
       "enfoque": true
      },
@@ -3647,7 +3653,7 @@
       "Alternativas: occidente cercano y lomas de Casabe",
       "Descartado: ampliar junto a Las Américas",
       "Vía de acceso desde el borde del casco (≈6,5 km)",
-      "Borde del radio de 13 km del aeropuerto Yariguíes (Aerocivil)"
+      "Borde del radio de 13 km del aeropuerto Yariguíes"
      ]
     },
     {
@@ -3659,7 +3665,7 @@
       {
        "v": "3.763",
        "l": "toneladas de residuos dispuestos en 2024, unas 10,3 al día",
-       "fuente": "Superservicios, Informe Nacional de Disposición Final 2024 (dic-2025)"
+       "fuente": "Superintendencia de Servicios Públicos, Informe Nacional de Disposición Final 2024 (dic-2025)"
       },
       {
        "v": "15–20 %",
@@ -3671,10 +3677,10 @@
       "id": "eca",
       "nombre": "Estación de clasificación y aprovechamiento de reciclables de 10 toneladas al día",
       "resumen": "Clasificación de reciclables con recicladores formalizados; proyecto tipo del Departamento Nacional de Planeación",
-      "descripcion": "Nave de recepción, clasificación, empaque y bodega de reciclables, operada por recicladores de oficio formalizados y alimentada por rutas de recolección selectiva. Va en el predio del relleno nuevo, sobre la vía interna, entre la portería y las celdas, y comparte con él la vía, la báscula y el cerramiento. Yondó dispone unas 10 toneladas al día de residuos y la estación solo recibe la fracción reciclable separada en la fuente, así que 10 toneladas al día cubren el casco con margen. Lo que se recupera no ocupa celda y alarga la vida del relleno.",
+      "descripcion": "Nave de recepción, clasificación, empaque y bodega de reciclables, operada por recicladores de oficio formalizados y alimentada por rutas de recolección selectiva. Comparte con el relleno nuevo la vía, la báscula y el cerramiento. Yondó dispone unas 10,3 toneladas de residuos al día y la estación solo recibe la fracción reciclable separada en la fuente, así que 10 toneladas al día cubren el casco con margen. Lo que se recupera no ocupa celda y alarga la vida del relleno.",
       "especificaciones": [
        "Capacidad: 10 toneladas al día",
-       "Residuos del municipio: ≈10,3 toneladas al día (3.763 en 2024, Superservicios)",
+       "Residuos del municipio: ≈10,3 toneladas al día (3.763 en 2024, Superintendencia de Servicios Públicos)",
        "Modelo: Proyecto tipo de estación de clasificación y aprovechamiento del Departamento Nacional de Planeación (versión 1.0, 2021)",
        "Operación: Organizaciones de recicladores de oficio, que tienen la exclusividad del aprovechamiento por 15 años (Decreto 1381 de 2024)",
        "Lote: 36 × 52 m en el predio del relleno nuevo, fuera de las celdas",
@@ -3718,8 +3724,8 @@
      "componente": {
       "id": "relleno",
       "nombre": "Clausura del relleno Las Américas y parque ecotecnológico",
-      "resumen": "Cierre por partes desde 2028 y total cuando abra el relleno nuevo, granja solar de 997 kilovatios pico y parque con coworking (docs/12)",
-      "descripcion": "El relleno opera con la licencia vencida desde el 12 de noviembre de 2023 y ya no tiene vida útil. Recibe basura solo hasta que abra el relleno nuevo de Kilómetro Cinco, en 2030, y solo en el frente activo: desde 2028, el plan de cierre acordado con Corantioquia pone la cobertura final en las celdas viejas, empezando por la norte, y en 2030–2031 se cierra el frente activo. La clausura lleva manejo de lixiviados y gases y 20 años de posclausura, e incluye el botadero de los años noventa que, según una nota de prensa de 2020, estaba donde hoy están los pozos del acueducto (sin delimitar; se confirma con apiques y georradar). La granja solar de 997 kilovatios pico, para 2.236 hogares de estratos 1 y 2, se monta cuando la cobertura haya asentado: ≈530 kilovatios pico en 2031 sobre las celdas cubiertas desde 2028 y el resto hacia 2033–2034. Alrededor va un parque con coworking rural, granja y circuito de 0,9 km.",
+      "resumen": "Cierre por partes desde 2028 y total cuando abra el relleno nuevo, granja solar de 997 kilovatios pico y parque con coworking",
+      "descripcion": "El relleno opera con la licencia vencida desde el 12 de noviembre de 2023 y ya no tiene vida útil. Recibe basura solo hasta que abra el relleno nuevo de Kilómetro Cinco, en 2030, y solo en el frente activo: desde 2028, el plan de cierre acordado con Corantioquia cubre las celdas viejas, empezando por la norte, y en 2030–2031 se cierra el frente activo. La clausura incluye el botadero de los años noventa, que estaría bajo los pozos del acueducto (se confirma con apiques y georradar). Sobre las celdas va una granja solar para 2.236 hogares de estratos 1 y 2, montada por partes cuando la cobertura asienta, y alrededor, un parque con coworking rural, granja y circuito.",
       "especificaciones": [
        "Residuos acumulados: ≈78.000 toneladas a 2026 (estimación) y ≈12.000–17.000 más entre 2027 y 2030 (cálculo propio)",
        "Transición: Recibe basura solo hasta 2030 y solo en el frente activo, con un plan de cierre acordado con Corantioquia; ya no se pueden abrir celdas transitorias (Resoluciones 1529 de 2010 y 1890 de 2011)",
@@ -3755,8 +3761,8 @@
       "muestra": "La granja solar sobre las celdas clausuradas y, fuera de ellas, el coworking rural, la granja, el circuito y el humedal."
      },
      "lista": [
-      "Granja solar de 997 kWp (1.812 módulos de 550 Wp) que produce unos 1,34 GWh al año, montada por partes a medida que la cobertura asienta.",
-      "Unos 530 kWp en 2031 sobre las celdas cubiertas desde 2028 y el resto hacia 2033–2034.",
+      "Granja solar de 997 kilovatios pico (1.812 módulos de 550 vatios pico) que produce unos 1,34 gigavatios hora al año, montada por partes a medida que la cobertura asienta.",
+      "Unos 530 kilovatios pico en 2031 sobre las celdas cubiertas desde 2028 y el resto hacia 2033–2034.",
       "Coworking rural de 312 m² con 40 puestos, cafetería, taller de bicicletas, granja con invernadero, huerta y apiario, mirador, circuito y humedal.",
       "Todo lo que tiene gente va a 30 m o más de las celdas y las lagunas."
      ]
@@ -3771,7 +3777,7 @@
       "Vertimientos sin tratar a los caños: 4 puntos, 55,34 litros por segundo (2019) → 0 en tiempo seco; con lluvia, solo alivios por aliviadero (2031)",
       "Plan de Saneamiento y Manejo de Vertimientos vigente, aprobado por Corantioquia: Vencido; aprobado en 2014 (2026) → Plan nuevo aprobado (2028)",
       "Residuos dispuestos en un sitio con licencia vigente: 0 %: licencia del relleno vencida en 2023 (2026) → 100 %, en el relleno nuevo de Kilómetro Cinco (2030)",
-      "Vida útil del sitio de disposición final: Vencida: −1 año a diciembre de 2024 (Superservicios) → 25 años o más en el relleno nuevo (2030)",
+      "Vida útil del sitio de disposición final: Vencida: −1 año a diciembre de 2024 (Superintendencia de Servicios Públicos) → 25 años o más en el relleno nuevo (2030)",
       "Relleno Las Américas: Recibe basura con la licencia vencida (2026) → Celdas viejas cubiertas (2028), sin recibir basura desde 2030 y clausurado, en posclausura (2031)",
       "Residuos aprovechados en la estación de reciclaje y el compostaje: Sin medición (2026) → 15–20 % (2031)"
      ]
@@ -3808,7 +3814,7 @@
      "id": "zonas",
      "nombre": "Zonas Digitales",
      "resumen": "5 zonas de wifi gratuito en parques y canchas, con el proyecto tipo nacional de Zonas Digitales",
-     "descripcion": "Wifi público gratuito al aire libre con el proyecto tipo del Departamento Nacional de Planeación y el Ministerio de Tecnologías de la Información y las Comunicaciones, en 5 sitios de la primera fase: Parque Principal, ciudadela deportiva (coliseo y Parque Educativo), Cancha de Sóftbol Casabe y parque lineal, plaza del Concejo, y Centro de Integración Ciudadana y Megacolegio. Cada zona tiene 2 o más puntos de acceso, 2.500 m² o más de cobertura y 200 usuarios a la vez, con el canal del anillo municipal. Villa María, la cancha de la alcaldía y la futura urbanización José Domingo Oliveros quedan para una segunda fase.",
+     "descripcion": "Wifi público gratuito al aire libre con el proyecto tipo del Departamento Nacional de Planeación y el Ministerio de Tecnologías de la Información y las Comunicaciones, en 5 sitios de la primera fase: Parque Principal, ciudadela deportiva (coliseo y Parque Educativo), Cancha de Sóftbol Casabe y parque lineal, plaza del Concejo, y Centro de Integración Ciudadana y Megacolegio. Cada zona tiene 2 o más puntos de acceso, 2.500 m² o más de cobertura y 200 usuarios a la vez, con el canal del anillo municipal. Villa María, la cancha de la alcaldía y el barrio nuevo de vivienda de interés social, cuando se defina su lote, quedan para una segunda fase.",
      "especificaciones": [
       "Zonas: 5 en la primera fase; 3 candidatas para la segunda",
       "Cobertura: 2.500 m² o más y 2 o más puntos de acceso por zona",
@@ -3885,7 +3891,7 @@
     },
     {
      "id": "telemetria",
-     "nombre": "Telemetría de las EBAR y la PTAR",
+     "nombre": "Telemetría de las estaciones de bombeo y la planta de tratamiento",
      "partes": []
     },
     {
@@ -3914,7 +3920,7 @@
       {
        "v": "0",
        "l": "Zonas Digitales urbanas de wifi gratuito (registro nacional, 2023)",
-       "fuente": "Ministerio de Tecnologías de la Información y las Comunicaciones, datos abiertos wg2u-d8ji"
+       "fuente": "Ministerio de Tecnologías de la Información y las Comunicaciones, registro de Zonas Digitales en datos abiertos"
       },
       {
        "v": "100 %",
@@ -3936,7 +3942,7 @@
       {
        "v": "34",
        "l": "accesos de fibra hasta el hogar en todo Yondó, de 1.062 fijos (tercer trimestre de 2023)",
-       "fuente": "Ministerio de Tecnologías de la Información y las Comunicaciones, datos abiertos n48w-gutb"
+       "fuente": "Ministerio de Tecnologías de la Información y las Comunicaciones, accesos fijos a internet por tecnología en datos abiertos"
       },
       {
        "v": "7,64",
@@ -3968,7 +3974,7 @@
       "Anillo de fibra (4,6 km) y ramal a La Victoria",
       "Centro de control en la alcaldía",
       "Zonas Digitales (5 en la primera fase)",
-      "Zonas Digitales candidatas a la segunda fase (3)"
+      "Zonas Digitales candidatas a la segunda fase (3; la del barrio nuevo, al occidente del casco)"
      ]
     },
     {
@@ -4145,7 +4151,7 @@
     },
     {
      "id": "tic",
-     "nombre": "TIC y energía",
+     "nombre": "Conectividad y energía",
      "partes": []
     }
    ],
@@ -4154,7 +4160,7 @@
      "id": "cronograma",
      "tipo": "cronograma",
      "titulo": "Cronograma de obra 2027–2032",
-     "texto": "Cada barra es un componente, del primer estudio a la entrada en operación, según el plazo de su ficha técnica. Las obras que dependen de otras van después: el parque lineal espera a la PTAR y la PTAP a que bajen las pérdidas.",
+     "texto": "Cada barra es un componente, del primer estudio a la entrada en operación, según el plazo de su ficha técnica. Las obras que dependen de otras van después: el parque lineal espera a la planta de tratamiento de aguas residuales, y la ampliación de la potabilizadora, a que bajen las pérdidas.",
      "obras": [
       {
        "modulo": "Vivienda",
@@ -4283,7 +4289,7 @@
     "id": "luces",
     "nombre": "Luces de la maqueta",
     "tipo": "si_no",
-    "ayuda": "Sí: enciende las luminarias de vivienda y urbanismo (torres LED del estadio, postes, bolardos) con su luz en el piso (se nota al atardecer y de noche); no: las apaga.",
+    "ayuda": "Sí: enciende las luminarias de vivienda y urbanismo (torres de luz del estadio, postes, bolardos) con su luz en el piso (se nota al atardecer y de noche); no: las apaga.",
     "capitulos": [
      "vivienda",
      "urbanismo"

@@ -51,7 +51,7 @@ export function crearEscena(el, datos) {
     st.fogCfg.near = Math.max(1500, d * 1.6); st.fogCfg.far = Math.max(7000, d * 5.5);
     // de muy lejos (todo el municipio), la bruma cierra antes: el horizonte queda en el cielo y no en el borde del suelo
     if (d > 8000) { st.fogCfg.near = d * 1.15; st.fogCfg.far = d * 2.6; }
-    // en el celular, las vistas de todo el municipio (puestos rurales a 11,5 km) alejan la cámara más de 40 km: el plano
+    // en el celular, las vistas de todo el municipio (microterritorios rurales a 7–33 km) alejan la cámara más de 40 km: el plano
     // lejano crece con ella para que la maqueta no quede recortada
     const lejos = Math.max(40000, d * 2.5);
     if (Math.abs(st.camera.far - lejos) > lejos * 0.1) { st.camera.far = lejos; st.camera.updateProjectionMatrix(); }

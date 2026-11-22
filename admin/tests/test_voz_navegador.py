@@ -497,13 +497,13 @@ const mirar = () => {
 """
 
 
-SALA = "Claro: son trescientas viviendas nuevas en dos lotes del casco urbano. Enseguida se lo muestro en la presentación."
+SALA = "Claro: son trescientas viviendas nuevas en un barrio de veinticinco bloques. Enseguida se lo muestro en la presentación."
 CIERRE = ["Con gusto le cuento.", "Enseguida se lo muestro."]       # la sala la oye entera aunque se cierre el chat
 # Un plan para la pantalla en off de otro equipo la calla (la primera, larga: el plan llega mientras suena)
 REMOTA = ["Claro, con gusto le cuento lo esencial de la obra.", "Ya se lo muestro allá."]
 PLAN = {"op": "recorrido", "titulo": "Las viviendas nuevas", "pasos": [
-    {"capitulo": "vivienda", "paso": 3, "dice": "Estas son las viviendas nuevas del casco urbano."},
-    {"paso": 4, "dice": "Y así se reparten en los dos lotes."}]}
+    {"capitulo": "vivienda", "paso": 3, "dice": "Estas son las viviendas nuevas del barrio."},
+    {"paso": 4, "dice": "Y así es el apartamento tipo de cada bloque."}]}
 
 
 @requiere_navegador

@@ -22,7 +22,9 @@ const ZONAS_DIGITALES = [
 export const MASTIL_CCED = { off: [29, -11], alto: 30 };
 // de cerca (cámara a menos de CERCA m de lo que mira) la fibra va en postes con cable aéreo; de lejos, la línea animada
 const CERCA = 900;
-// los nombres que vienen de geo.json y de las sedes del atlas se muestran sin siglas: cada una, con su nombre completo
+// los nombres de las sedes del atlas (web/js/data.js, que los trae con siglas) se muestran sin ellas, cada una con su
+// nombre completo: en los puntos de las sedes y en la telemetría de respaldo (sin sitios en geo.json). Los de geo.json
+// ya vienen escritos completos y van tal cual
 const SIGLAS = [[/\s*\+\s*CCED\b/g, ' y centro de control'], [/\bCCED\b/g, 'centro de control'], [/\s*\(PTAP\)/g, ' potable'], [/\s*\((CIC|CPSAM)\)/g, ''], [/\bEBAR\b/g, 'estación de bombeo'], [/\bPTAR\b/g, 'planta de tratamiento'],
   [/\bPTAP\b/g, 'planta de agua potable'], [/\bCIC\b/g, 'Centro de Integración Ciudadana'], [/\bI\.\s?E\.\s/g, 'Institución educativa '], [/\bL\. E\. Díaz\b/g, 'Luis Eduardo Díaz'], [/\s*S\.A\. E\.S\.P\./g, '']];
 const sinSiglas = (s) => { const o = String(s ?? ''), t = SIGLAS.reduce((a, [re, n]) => a.replace(re, n), o); return /^[A-ZÁÉÍÓÚ]/.test(o) ? t.charAt(0).toUpperCase() + t.slice(1) : t; };
@@ -95,8 +97,8 @@ export function crear(esc, datos) {
   // Zonas Digitales: pines de wifi con ondas
   const zd = sitios(datos, 'tic', 'zona_digital'), lista = zd.length ? zd.map((s) => ({ nombre: s.nombre, p: [s.x, s.y] })) : ZONAS_DIGITALES;
   const ondas = [];
-  sitios(datos, 'tic', 'zona_digital_f2').forEach((s) => esc.etiqueta('', { pos: [s.x, s.y, 3], padre: cZd2, color: 'var(--muted)', cls: 'lbl-dot', titulo: `${sinSiglas(s.nombre)}: Zona Digital de la segunda fase` }));
-  const corto = (n) => sinSiglas(n.split(' (')[0].replace(/ y parque lineal.*$/, ''));
+  sitios(datos, 'tic', 'zona_digital_f2').forEach((s) => esc.etiqueta('', { pos: [s.x, s.y, 3], padre: cZd2, color: 'var(--muted)', cls: 'lbl-dot', titulo: `${s.nombre}: Zona Digital de la segunda fase` }));
+  const corto = (n) => n.split(' (')[0].replace(/ y parque lineal.*$/, '');
   // en cada Zona Digital: poste de 6 m con el punto de acceso y sus antenas, sombrilla de lona con una banca debajo y
   // gente conectada (dos sentados y uno de pie)
   const Az = acopio(), sentados = [], dePie = [], bz = [];
@@ -112,7 +114,7 @@ export function crear(esc, datos) {
   Az.volcar(cZd, { acero: mat(new THREE.Color('#a9b0b6'), { roughness: 0.35, metalness: 0.7 }), blanco: mat(new THREE.Color('#f4f4f0'), { roughness: 0.4 }), lona: matT('membrana', { color: '#cfc7f2', side: THREE.DoubleSide }) });
   if (bz.length) { cZd.add(bancas(bz)); cZd.add(gente(sentados, { sentado: true, semilla: 41 })); cZd.add(gente(dePie, { semilla: 42 })); }
   lista.forEach(({ nombre, p }) => {
-    esc.etiqueta(`<b>${corto(nombre)}</b><small>Zona Digital</small>`, { pos: [p[0], p[1], 14], padre: cZd, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1], titulo: `Zona Digital: ${sinSiglas(nombre)}` });
+    esc.etiqueta(`<b>${corto(nombre)}</b><small>Zona Digital</small>`, { pos: [p[0], p[1], 14], padre: cZd, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1], titulo: `Zona Digital: ${nombre}` });
     for (let k = 0; k < 2; k++) { const o = new THREE.Mesh(new THREE.RingGeometry(10, 11.2, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x6250d6, transparent: true, opacity: 0.6, depthWrite: false })); o.position.set(p[0], 1 + k * 0.1, -p[1]); o.userData.fase = k / 2; cZd.add(o); ondas.push(o); esc.tenir(o.material, color); }
   });
   esc.st.onFrame((dt, t) => { if (!cZd.visible) return false; ondas.forEach((o) => { const u = ((t * 0.45) + o.userData.fase) % 1; o.scale.setScalar(0.4 + u * 2.4); o.material.opacity = 0.65 * (1 - u); }); return true; });
@@ -187,7 +189,9 @@ export function crear(esc, datos) {
 
   const inv = () => esc.st.invalidate();
   const vistaCasco = () => esc.encuadrar([[-650, -420], [700, -420], [700, 760], [-650, 760]], { rumbo: 196, elev: 52, margen: 0.94 });
-  const vistaRed = () => esc.encuadrar([[-650, -420], [700, -420], [700, 760], pA, ...puntos.map((x) => x.p)], { rumbo: 196, elev: 52, margen: 0.94 });
+  // (con un punto 160 m al norte de la planta de tratamiento: su rótulo va encima de ella y, sin ese margen, quedaba bajo
+  // la barra y se ocultaba)
+  const vistaRed = () => esc.encuadrar([[-650, -420], [700, -420], [700, 760], pA, ...puntos.map((x) => x.p), ...(ptarS ? [[ptarS.x, ptarS.y + 160]] : [])], { rumbo: 196, elev: 52, margen: 0.94 });
   const vistaGranjaLejos = () => esc.encuadrar([...poly, ...(res?.poligono || []), ...(rel ? [[rel.e.x, rel.e.y]] : []), [0, 0]], { rumbo: 200, elev: 46, margen: 0.9 });
   const vistaGranja = () => esc.encuadrar(caja([...poly, ...(res?.poligono || []), ...(se ? [[se.x, se.y]] : [])], 45), { rumbo: 200, elev: 36, margen: 0.86, alto: 6 });
   const vistaTodo = () => esc.encuadrar([[-650, -420], [700, -420], [700, 760], [-650, 760], ...poly, ...(se ? [[se.x, se.y]] : [])], { rumbo: 196, elev: 52, margen: 0.94 });

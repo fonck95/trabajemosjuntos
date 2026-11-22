@@ -475,8 +475,9 @@ o una opción habla de costos, presupuesto o valor, y en el atlas enmarcado el B
   accionar cada control) y lo copia a cada inmersión de `tecnica.inmersiones` como `controles`; `--estricto` lo lleva al
   guion del asistente (`app/agente/guion.py`: `Guion.controles` y `Guion.control`, por id o por nombre). El modelo los
   ve en `indice` (los ids), en `guion` (enteros, los de las inmersiones que muestran los pasos del capítulo; si el
-  capítulo pesa demasiado, primero sin las descripciones de las fichas y después sin la ayuda), al ir a un paso de
-  inmersión y al abrir un modelo con `visual`.
+  capítulo pesa más de 34.000 bytes, primero sin las descripciones ni los referentes de las fichas y después sin la
+  ayuda, que llega igual al ir al paso de la inmersión: hoy le pasa a Salud), al ir a un paso de inmersión y al abrir
+  un modelo con `visual`.
 - **`simular`**: de 1 a 4 `{control, valor}` en orden (sin `valor` para una acción; en un número, uno de su rango; en
   una opción, su id o su nombre; en sí o no, `true` o `false`, y sin valor es sí). Va en un **paso del plan** (junto a
   `mover`, `animar` y `resaltar`) y en la op **`visual`** suelta. Es una acción, no estado: se aplica cuando llega,
@@ -530,7 +531,8 @@ ni en las canchas cubiertas junto al CIC, que encuadran otra cosa).
   lo revisa (también que `web/js/propuesta/simulacion.js` sepa accionar cada control y que las horas sean las de
   `ambiente.js`) y lo copia a `tecnica.simulaciones_maqueta`; el guion lo lleva aparte de las inmersiones (`maqueta`,
   «La maqueta 3D»: `Guion.controles("maqueta", capítulo)`). El modelo lo ve en `indice` y `guion` por capítulo
-  (`controles_maqueta`) y al ir a un paso sin modelo del atlas.
+  (`controles_maqueta`) y al ir a un paso sin modelo del atlas. Su ayuda solo va en `guion` (al ir a un paso llegan sin
+  ella), así que es lo último que `guion` quita si el capítulo no cabe.
 - **Dónde acciona** (`recorrido.simulable_en`): en el modelo del atlas que queda abierto o, sin él, en la maqueta (un
   paso que se sabe, la maqueta pedida o un capítulo sin modelos del atlas). Si todo lo que se pide es de un modelo del
   atlas (`calcular`, `reproducir`), el aviso de siempre («ahí no hay uno») con lo que tiene la maqueta; el partido
@@ -585,7 +587,7 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
   control de la simulación que no existe, un resaltado imposible, el capítulo o el paso de un paso que no es el primero, un valor sin la forma o una clave que no existe)
   **se descarta**, y un número fuera de su rango **se recorta**; cada cosa deja un aviso legible con el número del
   paso y los candidatos («Paso 3: la pieza «tore» no está en Salud (aislar); piezas: hospital_hoy, torre, telesalud,
-  puestos») y el plan corre con lo demás. La presentación hace lo mismo con lo que le llega (el aviso `parcial`:
+  territorios») y el plan corre con lo demás. La presentación hace lo mismo con lo que le llega (el aviso `parcial`:
   «parte de lo pedido no se pudo mostrar»). Solo es un error, y entonces no se guarda nada: que el primer paso no
   tenga un capítulo que resuelva, que un texto no se pueda proyectar (con el número del paso), más de 12 pasos o un
   plan que pasa de la duración máxima.

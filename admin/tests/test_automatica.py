@@ -117,24 +117,28 @@ def test_la_narracion_real_es_la_primera_frase_cortada_donde_termina_una_idea():
     assert dice("aguas", "sistema") == ("El agua sale de los pozos, se potabiliza, sube por impulsión al tanque de "
                                         "compensación y baja por gravedad al casco.")
     # una sigla con puntos o una abreviatura no la parte («Res. 1633 de 2025»)
-    assert dice("salud", "torre_pisos").endswith("de la Res. 1633 de 2025.")
+    assert dice("salud", "torre_pisos").endswith("de la Resolución 1633 de 2025.")
+    assert automatica.resumir("Cada recinto con el color de su grupo de la Res. 1633 de 2025. Otra.") == \
+        "Cada recinto con el color de su grupo de la Res. 1633 de 2025."
     # muy larga: hasta el último punto y coma o dos puntos que quepa, con su punto final
     assert dice("vivienda", "portadilla").endswith("sobre todo de madera o tabla.")
     assert dice("urbanismo", "componentes") == ("Las seis piezas se presentan al nivel central como un solo proyecto por "
                                                 "etapas que funcionan solas.")
     # sin dónde cortarla (lo que cabe antes del punto y coma pasa de 180), y el título es solo un rótulo: la primera
     # idea corta del texto (la parte que sigue al punto y coma), con mayúscula y punto
-    assert dice("salud", "portadilla") == "Los 5 puestos rurales están abandonados o en mal estado, sin habilitar."
+    assert dice("salud", "portadilla") == "En la zona rural, donde vive el 47 % de la población, no hay ninguna sede habilitada."
     # la frase que habla de la plata no se narra, y el título es un rótulo: la otra idea de la misma frase
     assert "costo" in SALUD["pasos"][1]["texto"]
-    assert dice("salud", "componentes") == ("La telesalud, los EBS, los puestos y las ambulancias llevan la atención a "
-                                            "la zona rural, donde vive el 47 % de la población.")
+    assert dice("salud", "componentes") == ("La salud preventiva, los equipos básicos de salud, la telemedicina y las "
+                                            "ambulancias llevan la atención a las casas y a la zona rural, donde vive el "
+                                            "47 % de la población.")
     # un título que ya es una frase se dice tal cual (no se busca otra)
-    assert dice("saneamiento", "residuos") == "Menos basura a la celda: ECA y compostaje en el mismo predio."
+    assert dice("saneamiento", "residuos") == "Menos basura a la celda: reciclaje y compostaje en el mismo predio."
     # el paso de metas nombra la primera meta de su módulo, resumida (su texto es el mismo en los siete)
-    assert dice("salud", "metas") == "La primera meta: sedes rurales de salud habilitadas en el REPS, de 0 a 5 en 2031."
-    assert dice("aguas", "metas") == ("La primera meta: horas de servicio al día en la red urbana, de 9 h a 24 h en el "
-                                      "sector piloto en 2029 y en todo el casco en 2030.")
+    assert dice("salud", "metas") == ("La primera meta: menores de 1 año vacunados con la pentavalente, frente a la meta "
+                                      "del Programa Ampliado de Inmunizaciones, de 93,9 % a 95 % o más en 2031.")
+    assert dice("aguas", "metas") == ("La primera meta: horas de servicio al día en la red urbana, de 9 horas a 24 horas "
+                                      "en el sector piloto en 2029 y en todo el casco en 2030.")
     metas = [dice(c["id"], "metas") for c in G.capitulos if any(p["id"] == "metas" for p in c["pasos"])]
     assert len(metas) == 7 and len(set(metas)) == 7 and all(m.startswith("La primera meta") for m in metas)
     assert not any("Cada meta parte" in m or "→" in m or "(" in m for m in metas)
@@ -388,7 +392,7 @@ def test_un_plan_del_asistente_la_interrumpe_y_despues_sigue_donde_iba():
     assert d["recorrido"]["titulo"] == "La torre del hospital" and d["recorrido"]["auto"] is False and d["por"] == "asistente"
     assert d["auto"] == {"activa": True, "capitulo": "salud", "paso": 4, "rid": None, "vueltas": 0, "fallas": 0}
     assert [a["tipo"] for a in x.acciones] == ["recorrido"] and x.acciones[0]["destino"] == "pantalla_off"
-    assert "sigue sola en Salud, paso 4 de 10" in x.contenido["automatica"]
+    assert "sigue sola en Salud, paso 4 de 11" in x.contenido["automatica"]
     # el avance tardío del automático ya no es de nadie, y mientras suena el plan del asistente no se arma otro
     assert pantalla.guardar_progreso(db, UID, {"rid": automatico, "n": 5, "de": len(SALUD["pasos"]), "fase": "narrando",
                                                "frase": 0, "voz": "activa"}, G) is False
@@ -509,7 +513,7 @@ def test_detener_su_plan_con_la_automatica_encendida_le_dice_al_modelo_que_sigue
     x = _hacer(db, {"op": "control_recorrido", "accion": "detener"})
     assert x.contenido["plan"]["fase"] == "detenido" and _auto(db)["activa"] is True
     assert x.contenido["automatica"] == ("La presentación automática sigue encendida: en unos segundos retoma sola en "
-                                         "Salud, paso 3 de 10. Si la persona quiere silencio, apáguela con op "
+                                         "Salud, paso 3 de 11. Si la persona quiere silencio, apáguela con op "
                                          "automatica (accion detener).")
     # «pausar» no lo dice, ni «detener» con la automática apagada
     _hacer(db, TORRE)
@@ -815,24 +819,24 @@ def test_el_contexto_del_asistente_con_la_automatica_encendida():
     t = sistema.recorrido_del_contexto(db, UID)
     assert "\n" not in t and "Plan «" not in t
     assert t.startswith("Presentación automática encendida: la pantalla en off recorre sola toda la presentación, muy "
-                        "resumida; va en Salud (salud), paso 3 de 10; voz: activa. ")
+                        "resumida; va en Salud (salud), paso 3 de 11; voz: activa. ")
     assert "respóndele con un plan CORTO (recorrido de 3 a 5 pasos): la interrumpe y, cuando termina, sigue sola" in t
     assert "No la detengas ni la reinicies si no te lo piden (op automatica)" in t
     bloque = sistema.contexto_del_panel({}, datetime.now(timezone.utc), recorrido=t)
     assert t in bloque and bloque.endswith("</contexto_del_panel>")
     assert _avance(db, "pausa", 3, motivo="boton")
-    assert "paso 3 de 10, en pausa; voz: activa" in sistema.recorrido_del_contexto(db, UID)
+    assert "paso 3 de 11, en pausa; voz: activa" in sistema.recorrido_del_contexto(db, UID)
     # Un plan del asistente la interrumpe: el plan en un renglón y la automática, en espera, en otro
     _hacer(db, TORRE)
     assert _avance(db, "narrando", 2)
     plan, auto = sistema.recorrido_del_contexto(db, UID).split("\n")
     assert plan.startswith("Plan «La torre del hospital» en la pantalla en off: paso 2 de 3 del plan, narrando")
     assert auto.startswith("Presentación automática encendida, en espera mientras termina ese plan: después sigue sola en "
-                           "Salud (salud), paso 3 de 10. ")
+                           "Salud (salud), paso 3 de 11. ")
     # Terminó ese plan: se nombra un rato como terminado, y la automática dice dónde sigue
     assert _avance(db, "fin", 3)
     plan, auto = sistema.recorrido_del_contexto(db, UID).split("\n")
-    assert "terminado" in plan and "va en Salud (salud), paso 3 de 10" in auto
+    assert "terminado" in plan and "va en Salud (salud), paso 3 de 11" in auto
     # Entre un capítulo y el siguiente el plan automático que terminó no se nombra como un plan
     assert pantalla.siguiente_auto(db, UID, G) is not None
     r = _doc(db)["recorrido"]

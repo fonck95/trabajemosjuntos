@@ -33,7 +33,7 @@ hospital de `docs/11`.
 | I | Índice de capítulos |
 | H | Ocultar el panel (solo 3D) |
 | F | Pantalla completa |
-| Fichas | Vista para imprimir o guardar en PDF, una ficha por módulo |
+| Fichas | Vista para imprimir o guardar, una ficha por módulo |
 
 La dirección guarda el paso (`propuesta.html#urbanismo/4`), así se puede enviar un enlace directo a un punto de la
 presentación.
@@ -42,14 +42,14 @@ presentación.
 
 | Área | Inversión central | Rango | Madurez | Fuentes principales |
 |---|---:|---:|---|---|
-| Vivienda | 106.271 | 75.252 – 137.693 | Perfil | SGR 37.200, Nación 31.900, Gobernación 15.900 |
-| Urbanismo | 26.200 | 17.250 – 39.600 | Perfil | SGR 8.200, Fondos 6.600, Nación 4.700 |
-| Agroindustria | 77.000 | 60.000 – 106.000 | Perfil | SGR 27.400, Privados 13.000, OxI 12.000 |
-| Salud | 48.679 | 34.635 – 65.640 | Prefactibilidad | SGR 18.337, Nación 17.200, OxI 3.750 |
-| Aguas | 11.950 | 8.316 – 17.741 | Perfil | SGR 4.850, Municipio 2.643, Nación 2.500 |
-| Aseo y saneamiento | 70.537 | 48.412 – 105.295 | Perfil | Nación 18.122, SGR 16.500, Gobernación 12.955 |
-| Infraestructura TIC | 6.733 | 5.511 – 9.066 | Perfil | SGR 3.807, Fondos 1.726, Findeter 1.000 |
-| **Total** | **347.370** | | | |
+| Vivienda | 129.907,7 | 101.026,4 – 162.511,5 | Perfil | Regalías 37.200, Privados 36.407,7, Nación 31.900 |
+| Urbanismo | 25.500 | 16.720 – 38.700 | Perfil | Regalías 8.200, Fondos 5.900, Nación 4.700 |
+| Agroindustria | 77.000 | 60.000 – 106.000 | Perfil | Regalías 27.400, Privados 13.000, Obras por impuestos 12.000 |
+| Salud | 46.552 | 33.235 – 62.590 | Prefactibilidad | Nación 17.200, Regalías 15.537, Municipio 4.050 |
+| Aguas | 11.950 | 8.316 – 17.741 | Perfil | Regalías 4.850, Municipio 2.643, Nación 2.500 |
+| Aseo y saneamiento | 70.537 | 48.412 – 105.295 | Perfil | Nación 18.122, Regalías 16.500, Gobernación 12.955 |
+| Conectividad y energía | 6.733 | 5.511 – 9.066 | Perfil | Regalías 3.807, Fondos 1.726, Findeter 1.000 |
+| **Total** | **368.179,7** | | | |
 
 Cada módulo trae sus componentes con costo mínimo, central y máximo y la base del cálculo. También trae el proyecto
 tipo del DNP o un referente con su enlace, los pasos de gestión, las metas, los riesgos y las fuentes citadas. Todo está
@@ -81,14 +81,13 @@ medir y no se publica. Están en `data/propuesta/geo.json`, en metros del modelo
     Los árboles de la maqueta se ponen solo donde no hay construcciones.
   - *Canchas cubiertas y skatepark.* Van en la explanada al sur del CIC (≈75 × 54 m), a un puente del estadio. No hay
     lote libre para una pista atlética a menos de 400 m.
-- **Mirador Puerta del Magdalena.** Está junto al estribo de Yondó del puente Guillermo Gaviria Correa, aguas abajo,
-  sobre el embarcadero informal que ya existe.
+- **Mirador Puerta del Magdalena.** Está junto al estribo de Yondó del puente Guillermo Gaviria Correa, aguas abajo.
   - *Zona A.* Protege 283 m de orilla en una franja de 36 m: los 30 m de ronda más el pie de enrocado. No lleva
     pavimento.
   - *Zona B.* Es una plaza de 0,46 ha detrás de la ronda, con las letras «YONDÓ» de cara a la plaza y el puente a la
     derecha.
-  - Un deck curvo de 82 m lleva a un mirador de 10 × 10 m sobre pilotes, y hay un muelle flotante de 30 × 5 m donde hoy
-    atracan las lanchas.
+  - Un deck curvo de 82 m lleva a un mirador de 10 × 10 m sobre pilotes. La propuesta no lleva muelle flotante ni
+    formaliza el embarcadero de las lanchas: la zona B es plaza y mirador.
   - Lo que más pesa ante el nivel central es que la zona A se diseñe con la solución definitiva del estribo, que la ANI y
     la concesión Ruta del Cacao tienen pendiente tras el cierre de marzo de 2026.
 - **Parque agroindustrial.** Ocupa un lote de 8,31 ha al suroriente de la vía del puente, de 200 a 700 m del estribo y a
@@ -172,18 +171,59 @@ medir y no se publica. Están en `data/propuesta/geo.json`, en metros del modelo
     las determinantes de Corantioquia, y confirmar en campo las tres casas a 165–178 m del lindero, la planta de
     tratamiento y disposición de lodos del EOT al occidente (con una nave a ≈90 m del lindero), unos estanques al otro
     lado de la vía y la captación del acueducto veredal.
-- **Vivienda.** Son dos lotes reales:
-  - *Lote 1, predio José Domingo Oliveros:* 1,71 ha con el terraplén ya construido (BPIN 2023058930018). Allí van 200 VIP
-    en 10 bloques de 5 pisos.
-  - *Lote 2, lote occidental:* 2,54 ha en una loma seca. Caben 128 casas en serie de 6 × 12 m; la primera etapa hace 100,
-    y hay dos manzanas de cesión.
+- **Vivienda: el barrio nuevo de vivienda de interés social.** Sigue el documento del proyecto de vivienda (equipo del
+  proyecto, 2026): 300 apartamentos para cerca de 300 familias en 25 bloques de 3 pisos, con 4 apartamentos por piso y 12
+  por bloque, alrededor de un parque central con juegos infantiles, cancha múltiple, kiosco, gimnasio al aire libre y
+  senderos. Lleva vías internas y externas, parqueaderos, alumbrado, servicios públicos y la entrada con su letrero.
+  - *Apartamento tipo.* 54,04 m² construidos: sala-comedor de 12,80 m², cocina de 6,30, alcoba principal de 9,88, alcoba
+    2 de 7,56, baño de 3,12, zona de ropas de 2,08 y balcón de 2,40. Son 16.212 m² construidos en apartamentos (300 ×
+    54,04 m²). El documento advierte diferencias entre el plano y la tabla de áreas, por confirmar con el diseño.
+  - *Lote.* Unas 5 ha (50.000 m² estimados), con la ubicación por definir. En la maqueta va un lote indicativo de 216 ×
+    234 m (50.544 m²) al occidente del casco, junto al barrio del oeste, con la vía de acceso desde la calle de ese
+    barrio. No tiene edificaciones adentro y no lo cruzan caños, ciénagas ni vías; el caño del sur queda a 55 m. Los
+    candidatos son el lote occidental (2,54 ha, con predios vecinos) y el suelo de expansión del Esquema de Ordenamiento
+    Territorial. El terraplén del predio José Domingo Oliveros (1,71 ha) no alcanza para el barrio y hay que decidir su
+    destino.
+  - *Distribución estimada del lote.* Bloques 6.000 m² (12 %), vías internas 11.000 (22 %), parqueaderos 8.000 (16 %),
+    zonas verdes y parques 12.000 (24 %), andenes, zonas sociales y servicios 8.000 (16 %) y franjas libres 5.000 (10 %).
+    Da 60 viviendas por hectárea y 40 m² de zona verde por vivienda.
+  - *Costo.* $70.911 M (entre $60.274 M y $81.548 M): la cifra corresponde a 135 salarios mínimos de 2026 por vivienda
+    ($236,4 M), el tope de la vivienda de interés social. El nombre del barrio se escoge entre seis alternativas; el
+    letrero de la maqueta muestra «Alma del Magdalena» solo como ejemplo.
+  - Se conservan el rescate de las obras inconclusas, los 400 mejoramientos urbanos y los 400 rurales, las 200 casas
+    rurales en el lote de cada familia y la titulación.
+- **Salud: torre, salud preventiva, equipos básicos y telemedicina.** La propuesta ya no lleva puestos de salud rurales:
+  la atención llega a la vereda y a la casa con los equipos básicos de salud y la telemedicina, con la torre como base.
+  - *Torre del hospital.* Va en el lote del antiguo Centro Vida (2.460 m²), a 5,3 m del Hospital Héctor Abad Gómez y
+    unida a él por una galería cubierta. Son 3.369,6 m² en 4 pisos: en el 1, urgencias las 24 horas con bahía de
+    ambulancias, rayos X digital, toma de muestras y admisiones; en el 2, consultorios, laboratorio, vacunación,
+    farmacia, ecografía y toma de citologías; en el 3, 13 camas de hospitalización, 2 habitaciones de parto y
+    esterilización, y en el 4, terapias, odontología, psicología, nutrición, telemedicina y una sala de expansión para
+    emergencias. Tiene 15 camas, 6 camillas y 15 consultorios, y un laboratorio de 24 horas con 55 pruebas en sitio
+    (unas 5.365 al mes). La estructura es un sistema dual de concreto sobre 146 pilotes de 15 m, diseñada para seguir en
+    servicio después de un sismo, con planta diésel para 72 horas y 40 m³ de agua de reserva (`docs/11`, `docs/14`,
+    `docs/15`).
+  - *Salud preventiva.* Se hace en el piso 2 de la torre y casa a casa: cadena de frío para vacunar en la casa y en la
+    vereda, control prenatal desde el primer trimestre contra el bajo peso al nacer (9,52 % de los nacidos vivos en
+    2024), prueba del virus del papiloma humano procesada en el laboratorio de la torre, tamizaje de hipertensión,
+    diabetes y riesgo cardiovascular, y jornadas de salud oral y mental. Complementa la ruta de promoción y
+    mantenimiento de la salud que pagan las aseguradoras (Resolución 3280 de 2018).
+  - *Equipos básicos de salud.* Siete equipos salen del hospital con un maletín de dotación básica: cinco recorren los
+    microterritorios rurales de San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta, y dos, la
+    cabecera. En la maqueta, cada microterritorio rural es un marcador en su centro poblado, sin edificio (La Punta
+    todavía no tiene su punto), y en la cabecera se ve una muestra ilustrativa de casas visitadas.
+  - *Telemedicina.* El nodo es el centro de telemedicina del piso 4 de la torre. El enlace pasa por el centro de control
+    de la alcaldía y sale hacia los microterritorios, donde los equipos atienden con un maletín conectado y el
+    especialista en línea; unos 150 pacientes crónicos y gestantes de alto riesgo se siguen desde su casa. El hospital
+    se habilita como nodo remisor de telemedicina (Resolución 1644 de 2026, que reemplazó a la 2654 de 2019).
 - **Granja solar centralizada.** Reemplaza el modelo de paneles en cada sede. Tiene 1,2 MWp (1,0 MW CA) en el bloque A
   de 1,70 ha, frente a la subestación Yondó de EPM, conectada con 40 m de línea de 13,2 kV; el bloque B (0,49 ha) queda
   de reserva. El tope de 1 MW CA de la autogeneración colectiva (Res. CREG 101 072 de 2025) limita la granja a ese
   tamaño. Con la granja de 997 kWp del relleno Las Américas (`docs/12`), el municipio tendría ~2,2 MWp centralizados.
 - **Fibra y Zonas Digitales.** Un anillo de 4,6 km por calles y un ramal de ≈280 m a la EBAR La Victoria unen la
   alcaldía, donde va el centro de control (CCED), con las sedes, las EBAR y la PTAR. La primera fase tiene 5 Zonas
-  Digitales y la segunda, 3.
+  Digitales y la segunda, 3: dos en el casco y una en el parque central del barrio nuevo de vivienda de interés social,
+  cuando se defina su lote.
 - **Sectores del acueducto (indicativos).** Son seis grupos de edificaciones del casco, sacados de las huellas por
   k-medias, cada uno con su entrada medida. El diseño de la sectorización los define de verdad.
 
@@ -191,16 +231,20 @@ medir y no se publica. Están en `data/propuesta/geo.json`, en metros del modelo
 
 | Fuente | Monto | % |
 |---|---:|---:|
-| Sistema General de Regalías | 116.294 | 33,5 % |
-| Presupuesto General de la Nación | 79.922 | 23,0 % |
-| Gobernación de Antioquia | 39.874 | 11,5 % |
-| Privados y comunidad | 25.771 | 7,4 % |
-| Obras por impuestos | 25.520 | 7,3 % |
-| Recursos del municipio | 25.468 | 7,3 % |
-| Fondos y agencias nacionales | 13.776 | 4,0 % |
-| Findeter | 9.445 | 2,7 % |
-| Corantioquia | 7.500 | 2,2 % |
-| Cooperación y responsabilidad social | 3.800 | 1,1 % |
+| Sistema General de Regalías | 113.494 | 30,8 % |
+| Presupuesto General de la Nación | 79.922 | 21,7 % |
+| Privados y comunidad | 49.407,7 | 13,4 % |
+| Gobernación de Antioquia | 39.762 | 10,8 % |
+| Recursos del municipio | 26.238 | 7,1 % |
+| Obras por impuestos | 25.220 | 6,8 % |
+| Fondos y agencias nacionales | 13.191 | 3,6 % |
+| Findeter | 9.445 | 2,6 % |
+| Corantioquia | 7.500 | 2,0 % |
+| Cooperación y responsabilidad social | 4.000 | 1,1 % |
+| **Total** | **368.179,7** | **100 %** |
+
+Los privados suben porque los hogares del barrio nuevo ponen su ahorro y su crédito hipotecario, con el Fondo Nacional
+del Ahorro o la banca, y el subsidio de las cajas de compensación familiar ($36.407,7 M en vivienda).
 
 El contexto aprieta, por eso los proyectos grandes van al OCAD Paz, a la inversión regional y a las obras por impuestos.
 
@@ -231,11 +275,12 @@ La gestión empieza ya, mientras se arma el PND 2026–2030 «Colombia, la Patri
 
 Las obras van en dos olas:
 
-- **2028–2030:** acueducto, sóftbol y alameda, torre, fibra y granja, rescate de las viviendas inconclusas, banco de
-  maquinaria y acopios del parque agroindustrial, la fase 1 del relleno nuevo con su vía y la cobertura de las celdas
-  viejas de Las Américas.
-- **2029–2031:** interceptores y PTAR, parque lineal, mirador, plantas del parque agroindustrial, urbanizaciones y el
-  cierre de Las Américas con su parque y la primera parte de su granja solar.
+- **2028–2030:** acueducto, sóftbol y alameda, torre, salud preventiva, equipos básicos de salud y telemedicina, fibra y
+  granja, rescate de las viviendas inconclusas, banco de maquinaria y acopios del parque agroindustrial, la fase 1 del
+  relleno nuevo con su vía y la cobertura de las celdas viejas de Las Américas.
+- **2029–2031:** interceptores y PTAR, parque lineal, mirador, plantas del parque agroindustrial, el barrio nuevo de
+  vivienda de interés social (300 apartamentos en 25 bloques) y el cierre de Las Américas con su parque y la primera
+  parte de su granja solar.
 
 ## Presentación técnica
 
@@ -285,9 +330,14 @@ persona crea en su cuenta.
 
 - **Mirador Puerta del Magdalena.** Se mantuvo lo esencial del render: zona A de protección hidráulica, zona B de plaza
   turística junto al puente, letras «YONDÓ» de colores, deck curvo con barandas hasta un mirador elevado sobre el agua,
-  muelle flotante con la chalupa de toldo azul y lanchas, jardineras, árboles, bancas y luminarias. La plaza se corrió
-  detrás de la ronda de 30 m (Decreto-Ley 2811 de 1974), así que el deck la cruza. También se agregaron el parqueadero
-  y el acceso desde la vía del puente.
+  jardineras, árboles, bancas y luminarias. La plaza se corrió detrás de la ronda de 30 m (Decreto-Ley 2811 de 1974),
+  así que el deck la cruza. También se agregaron el parqueadero y el acceso desde la vía del puente. El muelle flotante
+  del render, con su pasarela, la chalupa y las lanchas atracadas, salió de la propuesta; en el río solo queda una
+  chalupa que cruza, como paisaje.
+- **Barrio nuevo de vivienda de interés social.** La maqueta sigue la imagen conceptual del documento del proyecto:
+  hileras de bloques de 3 pisos alrededor del parque central con juegos, cancha y kiosco, parqueaderos en bahía,
+  árboles y la entrada con el letrero de bienvenida. El nombre del letrero es ilustrativo: se escoge entre Bosques de
+  Yondó, Nuevo Magdalena, Alma del Magdalena, Ciénagas de Yondó, Nuevo Casabe y Horizontes del Magdalena.
 - **Cancha de Sóftbol Casabe.** El modelo 3D sigue el plano de medidas principales y el render del portal, el letrero,
   las torres LED, la gradería cubierta y los dugouts. Lo único que cambió es el fondo del lote: 102,9 m en vez de 110 m,
   para que quepa en la manzana real. Por eso la cancha múltiple quedó de 22 × 12 m fuera de la cerca del jardín
@@ -310,12 +360,16 @@ cifras (`docs/09`, sección 7, explica cómo):
   palmas, parque infantil con torres, toboganes, red y velaria, máquinas biosaludables, cancha múltiple con aros y malla
   de 4 m, parqueadero con 13 carros, flechas, cebra y reductor, los jugadores en sus posiciones y gente en los paseos.
   Siguen los grupos `piso`, `campo`, `obras`, `cubierta`, `luces` y `verde` del catálogo (se suma `gente`).
-- **Vivienda** (`modulos/vivienda.js` y `geo3d.casas`): los bloques VIP de 22 × 10 m llevan punto fijo al frente con
-  fachada de bloque calado y tanques, culatas y zócalo de ladrillo a la vista, balcones con antepecho terracota y ventanas
-  con marco; las casas en serie, cubierta de teja continua, puerta con alero, ventana con reja, balcón con baranda y
-  antejardín con muro bajo; las vías, andenes, árboles, alumbrado y carros; las cesiones, cancha múltiple, juegos con
-  velaria y un salón comunal con corredor; la casa rural VIVA, corredor de madera, zinc, zócalo de color, tanque elevado,
-  panel solar y huerta. Al atardecer se encienden las ventanas.
+- **Vivienda** (`modulos/vivienda.js`): los 25 bloques de 21 × 12 m y 3 pisos (2,9 m por piso) siguen la fachada del
+  documento del proyecto: escalera central acristalada que sale al frente, con puerta, marquesina y gradas; franjas
+  arena junto a la escalera y terracota en las esquinas sobre fachada clara; ventanas con marco y parteluz, balcones con
+  baranda oscura y cubierta plana con pretil y tanque. El barrio lleva la vía interna en anillo con esquinas
+  redondeadas, parqueaderos en bahía con un árbol cada cinco cupos, andenes y caminos a cada puerta; el parque central
+  con juegos infantiles, cancha múltiple con tableros y malla, kiosco, gimnasio al aire libre y senderos; árboles y
+  palmas, alumbrado, carros, gente y el letrero de la entrada. En el paso del apartamento tipo, un bloque junto al
+  parque se ve cortado en el piso 3, con los cuatro apartamentos, sus muros, muebles y la escalera (capa `viv.bloque`,
+  efecto `corte`). La casa rural de la Empresa de Vivienda de Antioquia lleva corredor de madera, zinc, zócalo de color,
+  tanque elevado, panel solar y huerta. Al atardecer se encienden las ventanas.
 - **El pueblo y el territorio** (`contexto.js`, `escena.js`): las 2.312 casas de las huellas llevan cubierta a dos aguas
   de zinc o teja (o losa con pretil y tanque) y fachada con puerta, ventanas y zócalo hacia la calle; unos 11.800 árboles
   en patios, rondas de caños, orillas del río y potreros (nunca dentro de un sitio del proyecto); calles de asfalto con
@@ -325,6 +379,11 @@ cifras (`docs/09`, sección 7, explica cómo):
 
 ## Método, fuentes y límites
 
+- El texto que se ve en la presentación, en el Home y en los rótulos del 3D no usa siglas: cada entidad, programa, norma
+  o unidad va con su nombre completo (Sistema General de Regalías, planta de tratamiento de aguas residuales, litros por
+  segundo, Empresa Social del Estado). Quedan las unidades métricas comunes (m, m², ha, km, %), el formato «$1.234 M» y
+  los nombres propios que se leen como palabra (Findeter, Corantioquia, Sisbén, Casa Milagro). Los ids, las claves, las
+  capas y los grupos no cambian. Este documento, que es técnico, conserva las siglas que ya traía.
 - Cada cifra del panel lleva su fuente, y las que no la tienen están marcadas como estimación o cálculo propio. Los
   costos son de perfil o prefactibilidad. El parque agroindustrial usa los $77.000 M del documento base; la
   investigación lo contrasta en ≈$82.000 M y el documento advierte variaciones de 30 % a 50 %.

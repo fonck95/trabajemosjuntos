@@ -2184,7 +2184,7 @@
    },
    {
     "id": "tramo_t2",
-    "nombre": "Parque lineal, tramo T2 Vía Barranca – CIC",
+    "nombre": "Parque lineal, tramo T2 Vía Barranca – Centro de Integración Ciudadana",
     "tipo": "tramo",
     "puntos": [
      [
@@ -2639,7 +2639,7 @@
    },
    {
     "id": "pescado",
-    "nombre": "Planta de pescado y frío (2 t/día)",
+    "nombre": "Planta de pescado y frío (2 toneladas al día)",
     "rol": "componente",
     "x": 1295.2,
     "y": 7398.1,
@@ -2667,7 +2667,7 @@
    },
    {
     "id": "concentrados",
-    "nombre": "Fábrica de concentrados (1.000 t/mes)",
+    "nombre": "Fábrica de concentrados (1.000 toneladas al mes)",
     "rol": "componente",
     "x": 1333.9,
     "y": 7468.9,
@@ -2695,7 +2695,7 @@
    },
    {
     "id": "trilladora",
-    "nombre": "Trilladora con secadora y silos (2–3 t/h de paddy)",
+    "nombre": "Trilladora con secadora y silos (2–3 toneladas por hora de arroz paddy)",
     "rol": "componente",
     "x": 1289.0,
     "y": 7502.3,
@@ -2723,7 +2723,7 @@
    },
    {
     "id": "leche",
-    "nombre": "Acopio de leche refrigerada (5.000 L/día)",
+    "nombre": "Acopio de leche refrigerada (5.000 litros al día)",
     "rol": "componente",
     "x": 1299.0,
     "y": 7541.0,
@@ -2779,7 +2779,7 @@
    },
    {
     "id": "ptar",
-    "nombre": "PTAR industrial (servicio común)",
+    "nombre": "Planta de tratamiento de agua del parque (servicio común)",
     "rol": "componente",
     "x": 1237.7,
     "y": 7300.0,
@@ -2863,7 +2863,7 @@
    },
    {
     "id": "admin",
-    "nombre": "Administración, laboratorio y aulas SENA (servicio común)",
+    "nombre": "Administración, laboratorio y aulas del Servicio Nacional de Aprendizaje (servicio común)",
     "rol": "componente",
     "x": 1369.2,
     "y": 7632.1,
@@ -3703,33 +3703,33 @@
   "sitios": [
    {
     "id": "ebar_prado",
-    "nombre": "EBAR El Prado",
+    "nombre": "Estación de bombeo El Prado",
     "rol": "ebar",
     "x": -375,
     "y": 105
    },
    {
     "id": "ebar_paraiso",
-    "nombre": "EBAR El Paraíso",
+    "nombre": "Estación de bombeo El Paraíso",
     "rol": "ebar",
     "x": -218,
     "y": 600
    },
    {
     "id": "ebar_progreso",
-    "nombre": "EBAR El Progreso",
+    "nombre": "Estación de bombeo El Progreso",
     "rol": "ebar",
     "x": 499,
     "y": 642,
-    "nota": "Posición de la Tabla 31 del EOT (MAGNA-SIRGAS Bogotá convertida al marco del modelo)."
+    "nota": "Posición de la Tabla 31 del Esquema de Ordenamiento Territorial (coordenadas MAGNA-SIRGAS Bogotá convertidas al marco del modelo)."
    },
    {
     "id": "ebar_victoria",
-    "nombre": "EBAR La Victoria",
+    "nombre": "Estación de bombeo La Victoria",
     "rol": "ebar",
     "x": 504,
     "y": -203,
-    "nota": "Posición de la Tabla 31 del EOT (MAGNA-SIRGAS Bogotá convertida al marco del modelo)."
+    "nota": "Posición de la Tabla 31 del Esquema de Ordenamiento Territorial (coordenadas MAGNA-SIRGAS Bogotá convertidas al marco del modelo)."
    },
    {
     "id": "ebar_central",
@@ -3740,7 +3740,7 @@
    },
    {
     "id": "ptar",
-    "nombre": "PTAR central · aguas abajo de la unión de los caños (recomendado)",
+    "nombre": "Planta de tratamiento central · aguas abajo de la unión de los caños (recomendado)",
     "rol": "ptar",
     "x": -70,
     "y": 1652,
@@ -3847,7 +3847,7 @@
    },
    {
     "id": "descarga",
-    "nombre": "Descarga al Caño Colector Shell, aguas abajo de la PTAR",
+    "nombre": "Descarga al Caño Colector Shell, aguas abajo de la planta de tratamiento",
     "rol": "descarga",
     "x": -183,
     "y": 1768
@@ -3951,14 +3951,14 @@
      ]
     ],
     "area_m2": 88354,
-    "rotulo": "en la reserva del EOT · 7,6 km por vía",
+    "rotulo": "en la reserva del Esquema de Ordenamiento Territorial · 7,6 km por vía",
     "celdas_m2": 30045,
     "vida_util_anios": "25 o más",
-    "nota": "Predio útil de ≈8,8 ha dentro de la reserva del EOT para el relleno nuevo (Acuerdo 013 de 2022, art. 17.4 y Tabla 35, ≈16,4 ha): queda a 44 m o más del eje de la vía (la lectura más exigente del EOT: 30 m de faja de primer orden más 14 m de franja de aislamiento del corredor suburbano), a 45 m o más de los drenajes del modelo de elevación y a ≈165 m o más de toda vivienda mapeada; la planta de tratamiento y disposición de lodos del EOT (Tabla 34), al occidente, tiene edificaciones a ≈90–120 m del lindero y a ≈105 m de la zona de celdas. Fuera del radio de 13 km del aeropuerto Yariguíes (16,2 km del ARP), a 4,2 km del perímetro urbano, a 4,3 km de los pozos del acueducto y a 3,6 km del Caño Colector Shell; drena al Magdalena, lejos del sistema de abastecimiento. Su borde sur queda a 4–6 m sobre la lámina del río en el modelo de elevación. Portería en ≈6,9706 N, 73,9438 O. Análisis de sitios propio (29-oct-2026); faltan el cruce con las zonas de recarga de acuíferos del EOT, topografía 1:1.000, apiques, hidrogeología y estudio de creciente."
+    "nota": "Predio útil de ≈8,8 ha dentro de la reserva del Esquema de Ordenamiento Territorial para el relleno nuevo (Acuerdo 013 de 2022, artículo 17.4 y Tabla 35, ≈16,4 ha): queda a 44 m o más del eje de la vía (la lectura más exigente del Esquema: 30 m de faja de primer orden más 14 m de franja de aislamiento del corredor suburbano), a 45 m o más de los drenajes del modelo de elevación y a ≈165 m o más de toda vivienda mapeada; la planta de tratamiento y disposición de lodos del Esquema (Tabla 34), al occidente, tiene edificaciones a ≈90–120 m del lindero y a ≈105 m de la zona de celdas. Fuera del radio de 13 km del aeropuerto Yariguíes (16,2 km del punto de referencia del aeropuerto), a 4,2 km del perímetro urbano, a 4,3 km de los pozos del acueducto y a 3,6 km del Caño Colector Shell; drena al Magdalena, lejos del sistema de abastecimiento. Su borde sur queda a 4–6 m sobre la lámina del río en el modelo de elevación. Portería en ≈6,9706 N, 73,9438 O. Análisis de sitios propio (29-oct-2026); faltan el cruce con las zonas de recarga de acuíferos del Esquema, topografía 1:1.000, apiques, hidrogeología y estudio de creciente."
    },
    {
     "id": "relleno_reserva_eot",
-    "nombre": "Reserva del EOT para el relleno nuevo (Tabla 35)",
+    "nombre": "Reserva del Esquema de Ordenamiento Territorial para el relleno nuevo (Tabla 35)",
     "rol": "relleno_reserva_eot",
     "x": -3754.7,
     "y": -3949.3,
@@ -4025,11 +4025,11 @@
      ]
     ],
     "area_m2": 163611,
-    "nota": "Polígono de la Tabla 35 del EOT (Acuerdo 013 de 2022, pág. 93), convertido desde MAGNA-SIRGAS Bogotá (EPSG:3116, supuesto; confianza media). Se compra completo: lo que queda fuera del predio útil, casi todo bosque, sirve de aislamiento y de retiro de la vía."
+    "nota": "Polígono de la Tabla 35 del Esquema de Ordenamiento Territorial (Acuerdo 013 de 2022, pág. 93), convertido desde MAGNA-SIRGAS Bogotá (EPSG:3116, supuesto; confianza media). Se compra completo: lo que queda fuera del predio útil, casi todo bosque, sirve de aislamiento y de retiro de la vía."
    },
    {
     "id": "relleno_vecino_lodos",
-    "nombre": "Planta de tratamiento y disposición de lodos del EOT (Tabla 34), vecina",
+    "nombre": "Planta de tratamiento y disposición de lodos del Esquema de Ordenamiento Territorial (Tabla 34), vecina",
     "rol": "relleno_vecino",
     "x": -4117.6,
     "y": -4084.8,
@@ -4117,7 +4117,7 @@
     ],
     "area_m2": 244697,
     "rotulo": "nave a ≈90 m del lindero",
-    "nota": "Polígono de la Tabla 34 del EOT (Acuerdo 013 de 2022, págs. 92–93), convertido desde MAGNA-SIRGAS Bogotá (EPSG:3116, supuesto; confianza media); comparte los vértices 1 y 2 con la reserva del relleno (Tabla 35). Adentro hay una nave grande y otras edificaciones (inventario visual y huellas de Microsoft y Google) a ≈90–170 m del lindero del relleno. Hay que confirmar en campo quién la opera y para qué."
+    "nota": "Polígono de la Tabla 34 del Esquema de Ordenamiento Territorial (Acuerdo 013 de 2022, págs. 92–93), convertido desde MAGNA-SIRGAS Bogotá (EPSG:3116, supuesto; confianza media); comparte los vértices 1 y 2 con la reserva del relleno (Tabla 35). Adentro hay una nave grande y otras edificaciones (inventario visual y huellas de Microsoft y Google) a ≈90–170 m del lindero del relleno. Hay que confirmar en campo quién la opera y para qué."
    },
    {
     "id": "relleno_celda_f1",
@@ -4144,7 +4144,7 @@
      ]
     ],
     "area_m2": 6001,
-    "nota": "Polígono convexo de ≈0,6 ha (96 × 69 m) en la esquina nororiental de la zona de celdas, junto a la vía interna y la ECA, sin zonas bajas; el lixiviado baja a las lagunas, al sur. Con 2 m de excavación y taludes 3H:1V da hasta ≈36.000 m³: de 5 a 7 años sin aprovechamiento y de 6 a 8 con el 15 % (desde 2030). Costo según la investigación de costos (≈6.000 m² de fondo y ≈6.600 m² impermeabilizados). La pieza 3D la dibuja como un cerro de tres terrazas de 3 m que se retiran 9 m."
+    "nota": "Polígono convexo de ≈0,6 ha (96 × 69 m) en la esquina nororiental de la zona de celdas, junto a la vía interna y la estación de reciclaje, sin zonas bajas; el lixiviado baja a las lagunas, al sur. Con 2 m de excavación y taludes de 3 de base por 1 de altura da hasta ≈36.000 m³: de 5 a 7 años sin aprovechamiento y de 6 a 8 con el 15 % (desde 2030). Costo según la investigación de costos (≈6.000 m² de fondo y ≈6.600 m² impermeabilizados). La pieza 3D la dibuja como un cerro de tres terrazas de 3 m que se retiran 9 m."
    },
    {
     "id": "relleno_celdas_futuras_1",
@@ -4179,7 +4179,7 @@
      ]
     ],
     "area_m2": 9772,
-    "nota": "La mitad del polígono es bosque (ESA WorldCover 2021): usar esa parte exige permiso de aprovechamiento forestal y revisar el bosque protector del EOT."
+    "nota": "La mitad del polígono es bosque (mapa WorldCover 2021 de la Agencia Espacial Europea): usar esa parte exige permiso de aprovechamiento forestal y revisar el bosque protector del Esquema de Ordenamiento Territorial."
    },
    {
     "id": "relleno_celdas_futuras_2",
@@ -4232,7 +4232,7 @@
      ]
     ],
     "area_m2": 3982,
-    "nota": "Hoy es bosque (ESA WorldCover 2021): usarla exige permiso de aprovechamiento forestal y revisar el bosque protector del EOT (Tabla 30). Es la parte más baja de la zona de celdas."
+    "nota": "Hoy es bosque (mapa WorldCover 2021 de la Agencia Espacial Europea): usarla exige permiso de aprovechamiento forestal y revisar el bosque protector del Esquema de Ordenamiento Territorial (Tabla 30). Es la parte más baja de la zona de celdas."
    },
    {
     "id": "relleno_celdas_futuras_4",
@@ -4263,7 +4263,7 @@
      ]
     ],
     "area_m2": 3532,
-    "nota": "Hoy es bosque (ESA WorldCover 2021): usarla exige permiso de aprovechamiento forestal y revisar el bosque protector del EOT (Tabla 30)."
+    "nota": "Hoy es bosque (mapa WorldCover 2021 de la Agencia Espacial Europea): usarla exige permiso de aprovechamiento forestal y revisar el bosque protector del Esquema de Ordenamiento Territorial (Tabla 30)."
    },
    {
     "id": "relleno_celdas_total",
@@ -4322,7 +4322,7 @@
      ]
     ],
     "area_m2": 30045,
-    "nota": "Envolvente de la celda de la fase 1 y las cuatro futuras (≈3,0 ha): con 12 a 15 m de altura, taludes 3H:1V y 2 m de excavación da ≈266.000–287.000 m³. Desde la apertura, en 2030, Yondó dispondría ≈144.000–218.000 m³ en 25 años y ≈178.000–277.000 m³ en 30 años sin aprovechar nada: los 25 años caben con holgura y los 30, en el escenario alto, solo con la ECA y el compostaje. Sin las celdas futuras 3 y 4, que son bosque, quedan ≈200.000–213.000 m³. No se dibuja aparte."
+    "nota": "Envolvente de la celda de la fase 1 y las cuatro futuras (≈3,0 ha): con 12 a 15 m de altura, taludes de 3 de base por 1 de altura y 2 m de excavación da ≈266.000–287.000 m³. Desde la apertura, en 2030, Yondó dispondría ≈144.000–218.000 m³ en 25 años y ≈178.000–277.000 m³ en 30 años sin aprovechar nada: los 25 años caben con holgura y los 30, en el escenario alto, solo con la estación de reciclaje y el compostaje. Sin las celdas futuras 3 y 4, que son bosque, quedan ≈200.000–213.000 m³. No se dibuja aparte."
    },
    {
     "id": "relleno_lixiviados_1",
@@ -4378,7 +4378,7 @@
    },
    {
     "id": "relleno_eca",
-    "nombre": "ECA de 10 t/día (nave de clasificación y bodega)",
+    "nombre": "Estación de reciclaje de 10 toneladas al día (nave de clasificación y bodega)",
     "rol": "relleno_eca",
     "x": -3701,
     "y": -3950,
@@ -4405,7 +4405,7 @@
    },
    {
     "id": "relleno_compostaje",
-    "nombre": "Planta de compostaje de orgánicos (4–5 t/día)",
+    "nombre": "Planta de compostaje de orgánicos (4–5 toneladas al día)",
     "rol": "relleno_compostaje",
     "x": -3815,
     "y": -3848,
@@ -4491,9 +4491,9 @@
      ]
     ],
     "area_m2": 62473,
-    "rotulo": "drena hacia los pozos del acueducto · fuera del EOT",
+    "rotulo": "drena hacia los pozos del acueducto · fuera del Esquema de Ordenamiento Territorial",
     "distancia_por_via_km": 4.46,
-    "nota": "Candidato B del análisis de sitios: loma sobre la vía terciaria al occidente del casco, a 4,5 km por vía desde el parque. Pasa los tamices, pero todo el predio drena por el valle que pasa a 418 m de los pozos del acueducto y a 477 m de la PTAP; no está en el EOT (habría que incorporarlo antes de pedir cofinanciación a la Nación); un pozo petrolero a 410 m y 13 edificaciones a menos de 500 m."
+    "nota": "Candidato B del análisis de sitios: loma sobre la vía terciaria al occidente del casco, a 4,5 km por vía desde el parque. Pasa los tamices, pero todo el predio drena por el valle que pasa a 418 m de los pozos del acueducto y a 477 m de la potabilizadora; no está en el Esquema de Ordenamiento Territorial (habría que incorporarlo antes de pedir cofinanciación a la Nación); un pozo petrolero a 410 m y 13 edificaciones a menos de 500 m."
    },
    {
     "id": "relleno_alt_b",
@@ -4520,9 +4520,9 @@
      ]
     ],
     "area_m2": 74990,
-    "rotulo": "7 pozos petroleros a menos de 500 m · fuera del EOT",
+    "rotulo": "7 pozos petroleros a menos de 500 m · fuera del Esquema de Ordenamiento Territorial",
     "distancia_por_via_km": 6.49,
-    "nota": "Candidato C del análisis de sitios: lomas sobre la vía veredal al occidente, a 6,5 km por vía. Pocas casas (5 a menos de 500 m) y fuera de la cuenca de los pozos del casco, pero en pleno campo Casabe (el pozo más cercano a 281 m), fuera del EOT y su drenaje pasa a 906 m de la captación de la Laguna del Miedo."
+    "nota": "Candidato C del análisis de sitios: lomas sobre la vía veredal al occidente, a 6,5 km por vía. Pocas casas (5 a menos de 500 m) y fuera de la cuenca de los pozos del casco, pero en pleno campo Casabe (el pozo más cercano a 281 m), fuera del Esquema de Ordenamiento Territorial y su drenaje pasa a 906 m de la captación de la Laguna del Miedo."
    },
    {
     "id": "relleno_alt_c",
@@ -4551,7 +4551,7 @@
     "area_m2": 69312,
     "rotulo": "vega inundable, pozo petrolero y caserío",
     "distancia_por_via_km": 3.81,
-    "nota": "Ampliar en un lote nuevo junto a Las Américas es lo que la norma prioriza (áreas ya impactadas, Res. 938 de 2019), pero el 89 % del lote está a menos de 5 m sobre el drenaje, tiene un pozo petrolero y dos edificaciones adentro y 27 a menos de 500 m, queda a 507 m del tanque del acueducto y choca con la clausura y el parque ecotecnológico."
+    "nota": "Ampliar en un lote nuevo junto a Las Américas es lo que la norma prioriza (áreas ya impactadas, Resolución 938 de 2019), pero el 89 % del lote está a menos de 5 m sobre el drenaje, tiene un pozo petrolero y dos edificaciones adentro y 27 a menos de 500 m, queda a 507 m del tanque del acueducto y choca con la clausura y el parque ecotecnológico."
    }
   ],
   "trazados": [
@@ -4672,7 +4672,7 @@
    },
    {
     "id": "impulsion",
-    "nombre": "Impulsión de la estación de llegada a la PTAR",
+    "nombre": "Impulsión de la estación de llegada a la planta de tratamiento",
     "tipo": "impulsion",
     "puntos": [
      [
@@ -4714,7 +4714,7 @@
    },
    {
     "id": "vert_ebar_prado",
-    "nombre": "Vertimiento actual de la EBAR El Prado",
+    "nombre": "Vertimiento actual de la estación de bombeo El Prado",
     "tipo": "vertimiento",
     "puntos": [
      [
@@ -4761,7 +4761,7 @@
    },
    {
     "id": "vert_ebar_paraiso",
-    "nombre": "Vertimiento actual de la EBAR El Paraíso",
+    "nombre": "Vertimiento actual de la estación de bombeo El Paraíso",
     "tipo": "vertimiento",
     "puntos": [
      [
@@ -4796,7 +4796,7 @@
    },
    {
     "id": "vert_ebar_progreso",
-    "nombre": "Vertimiento actual de la EBAR El Progreso",
+    "nombre": "Vertimiento actual de la estación de bombeo El Progreso",
     "tipo": "vertimiento",
     "puntos": [
      [
@@ -4843,7 +4843,7 @@
    },
    {
     "id": "vert_ebar_victoria",
-    "nombre": "Vertimiento actual de la EBAR La Victoria",
+    "nombre": "Vertimiento actual de la estación de bombeo La Victoria",
     "tipo": "vertimiento",
     "puntos": [
      [
@@ -5265,11 +5265,11 @@
     "longitud_m": 6463,
     "ancho_m": 6,
     "por_mejorar_m": 2738,
-    "nota": "Ruta de OSRM sobre OpenStreetMap: Calle 46, vía secundaria sin nombre y vía a Puerto Berrío (way 499367195), más una entrada nueva de ≈63 m hasta la portería (OSRM midió 6.464 m hasta la entrada anterior, 25 m más corta). Los primeros ≈2,7 km se ven en afirmado (por mejorar) y el resto con superficie gris uniforme, probable placa huella (imagen de referencia; confianza baja a media)."
+    "nota": "Ruta calculada sobre OpenStreetMap: Calle 46, vía secundaria sin nombre y vía a Puerto Berrío (way 499367195), más una entrada nueva de ≈63 m hasta la portería (el cálculo dio 6.464 m hasta la entrada anterior, 25 m más corta). Los primeros ≈2,7 km se ven en afirmado (por mejorar) y el resto con superficie gris uniforme, probable placa huella (imagen de referencia; confianza baja a media)."
    },
    {
     "id": "relleno_via_interna",
-    "nombre": "Vía interna en afirmado: portería, ECA, celdas y compostaje",
+    "nombre": "Vía interna en afirmado: portería, estación de reciclaje, celdas y compostaje",
     "tipo": "via_interna",
     "puntos": [
      [
@@ -5397,7 +5397,7 @@
    },
    {
     "id": "radio_aerocivil_13km",
-    "nombre": "Borde occidental del radio de 13 km del aeropuerto Yariguíes (RAC 14 de la Aerocivil)",
+    "nombre": "Borde occidental del radio de 13 km del aeropuerto Yariguíes (reglamento aeronáutico de la Aeronáutica Civil, parte 14)",
     "tipo": "radio_aerocivil",
     "puntos": [
      [
@@ -5501,7 +5501,7 @@
       -9407
      ]
     ],
-    "nota": "Círculo de 13 km alrededor del ARP del AIP (7,02380 N; 73,80720 O; x = 11.524, y = 1.926 en el modelo). Adentro, un relleno, una planta de compostaje, una planta de tratamiento, una laguna o un matadero necesitan autorización previa de la Aerocivil (Res. 04072 de 2010, num. 14.3.4.2.7.2). El casco, la PTAR y su laguna (≈11,6 km) y el parque agroindustrial (≈11,6 km) quedan adentro; Las Américas (14,1 km) y Kilómetro Cinco (16,2 km), afuera."
+    "nota": "Círculo de 13 km alrededor del punto de referencia del aeropuerto (7,02380 N; 73,80720 O; x = 11.524, y = 1.926 en el modelo). Adentro, un relleno, una planta de compostaje, una planta de tratamiento, una laguna o un matadero necesitan autorización previa de la Aeronáutica Civil (Resolución 04072 de 2010, numeral 14.3.4.2.7.2). El casco, la planta de tratamiento y su laguna (≈11,6 km) y el parque agroindustrial (≈11,6 km) quedan adentro; Las Américas (14,1 km) y Kilómetro Cinco (16,2 km), afuera."
    }
   ]
  },
@@ -5591,7 +5591,7 @@
    },
    {
     "id": "subestacion",
-    "nombre": "Subestación Yondó de EPM (34,5/13,2 kV)",
+    "nombre": "Subestación Yondó de Empresas Públicas de Medellín (34,5/13,2 kilovoltios)",
     "rol": "subestacion",
     "x": -1226.4,
     "y": -367.4
@@ -5626,7 +5626,7 @@
    },
    {
     "id": "zd_5",
-    "nombre": "CIC y Megacolegio",
+    "nombre": "Centro de Integración Ciudadana y Megacolegio",
     "rol": "zona_digital",
     "x": -258,
     "y": 175
@@ -5647,35 +5647,35 @@
    },
    {
     "id": "zd_8",
-    "nombre": "Urbanización José Domingo Oliveros (futura)",
+    "nombre": "Barrio nuevo de vivienda de interés social (cuando se defina su lote)",
     "rol": "zona_digital_f2",
-    "x": -575,
-    "y": -320
+    "x": -1140.0,
+    "y": 5.0
    },
    {
     "id": "tel_ebar_prado",
-    "nombre": "EBAR El Prado",
+    "nombre": "Estación de bombeo El Prado",
     "rol": "telemetria",
     "x": -375,
     "y": 105
    },
    {
     "id": "tel_ebar_paraiso",
-    "nombre": "EBAR El Paraíso",
+    "nombre": "Estación de bombeo El Paraíso",
     "rol": "telemetria",
     "x": -218,
     "y": 600
    },
    {
     "id": "tel_ebar_progreso",
-    "nombre": "EBAR El Progreso",
+    "nombre": "Estación de bombeo El Progreso",
     "rol": "telemetria",
     "x": 499,
     "y": 642
    },
    {
     "id": "tel_ebar_victoria",
-    "nombre": "EBAR La Victoria",
+    "nombre": "Estación de bombeo La Victoria",
     "rol": "telemetria",
     "x": 504,
     "y": -203
@@ -5689,7 +5689,7 @@
    },
    {
     "id": "tel_ptar",
-    "nombre": "PTAR central",
+    "nombre": "Planta de tratamiento central",
     "rol": "telemetria",
     "x": -70,
     "y": 1652
@@ -6006,7 +6006,7 @@
    },
    {
     "id": "fibra_ramal_victoria",
-    "nombre": "Ramal de fibra a la EBAR La Victoria",
+    "nombre": "Ramal de fibra a la estación de bombeo La Victoria",
     "tipo": "fibra",
     "puntos": [
      [
@@ -6046,7 +6046,7 @@
    },
    {
     "id": "conexion_granja",
-    "nombre": "Conexión a la subestación (13,2 kV)",
+    "nombre": "Conexión a la subestación (13,2 kilovoltios)",
     "tipo": "media_tension",
     "puntos": [
      [

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Yondó 2028–2031 · Propuesta integral</title>
-<meta name="description" content="Presentación 3D de la propuesta integral de inversión para Yondó (Antioquia) 2028–2031: vivienda, urbanismo, agroindustria, salud, agua, saneamiento y TIC, con rangos de costo aproximados, proyectos tipo y fuentes de financiación del nivel central.">
+<meta name="description" content="Presentación 3D de la propuesta integral de inversión para Yondó (Antioquia) 2028–2031: vivienda, urbanismo, agroindustria, salud, agua, saneamiento, conectividad y energía, con rangos de costo aproximados, proyectos tipo y fuentes de financiación del nivel central.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
@@ -387,11 +387,12 @@ dl.hoja dt.foco { outline: none; background: none; animation: none; color: var(-
 .plazo-barra .anios { display: grid; grid-template-columns: repeat(6, 1fr); font: 0.62rem var(--f-mono); color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 3px; }
 .plazo-barra i { position: absolute; top: 20px; height: 9px; border-radius: 5px; background: var(--mc); }
 .metas { display: grid; gap: 8px; margin-top: 10px; }
-.meta { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 12px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
-.meta b { grid-column: 1 / -1; font-size: 0.9rem; }
-.meta span { font-size: 0.8rem; line-height: 1.35; color: var(--muted); }
-.meta span small { display: block; font: 700 0.6rem var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 2px; }
-.meta span.a { color: var(--ink); } .meta span.a small { color: var(--mc); }
+/* acotado a la lista de metas: la tarjeta de cifra con tono «meta» (.cifra.meta) no debe tomar esta rejilla */
+.metas .meta { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 12px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.metas .meta b { grid-column: 1 / -1; font-size: 0.9rem; }
+.metas .meta span { font-size: 0.8rem; line-height: 1.35; color: var(--muted); }
+.metas .meta span small { display: block; font: 700 0.6rem var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 2px; }
+.metas .meta span.a { color: var(--ink); } .metas .meta span.a small { color: var(--mc); }
 .cronograma { display: grid; gap: 2px; margin: 8px 0 10px; font-size: 0.74rem; }
 .cronograma .grupo { padding-top: 6px; }
 .cronograma .g-mod { margin: 4px 0 2px; font: 700 0.66rem var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--mc); }
@@ -635,7 +636,7 @@ dl.hoja dt.foco { outline: none; background: none; animation: none; color: var(-
     </a>
     <nav class="herr" aria-label="Herramientas">
       <button type="button" data-accion="indice" title="Índice de capítulos (I)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h7v6H4zM13 5h7v6h-7zM4 13h7v6H4zM13 13h7v6h-7z" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="txt">Índice</span></button>
-      <button type="button" data-accion="fichas" class="opc" title="Fichas de los proyectos para imprimir o guardar en PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="txt">Fichas</span></button>
+      <button type="button" data-accion="fichas" class="opc" title="Fichas de los proyectos para imprimir o guardar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="txt">Fichas</span></button>
       <button type="button" data-accion="panel" aria-pressed="false" title="Ocultar el panel para mostrar solo el 3D (H)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3zM9 5v14" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="txt">Solo 3D</span></button>
       <button type="button" data-accion="tema" title="Tema claro u oscuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
       <button type="button" data-accion="pantalla" class="opc" title="Pantalla completa (F)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>

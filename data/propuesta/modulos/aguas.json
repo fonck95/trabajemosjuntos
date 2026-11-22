@@ -3,7 +3,7 @@
   "nombre": "Aguas",
   "corto": "Aguas",
   "lema": "De 9 a 24 horas de agua en el casco",
-  "problema": "Los pozos y la planta de tratamiento de agua potable producen 40 litros por segundo las 24 horas, pero la red del casco urbano solo recibe agua 9 horas al día, de 4:00 a 13:00; el resto del tiempo el tanque de compensación de 2.135 m³ se llena como un depósito. En esas 9 horas pasan en promedio unos 106,7 litros por segundo, 28,5 % más que el caudal máximo horario de diseño (83,04), lo que aumenta fugas y roturas. Las pérdidas pasaban del 30 % y todos los macromedidores estaban fuera de servicio (Superservicios, 2020).",
+  "problema": "Los pozos y la planta de tratamiento de agua potable producen 40 litros por segundo las 24 horas, pero la red del casco urbano solo recibe agua 9 horas al día, de 4:00 a 13:00; el resto del tiempo el tanque de compensación de 2.135 m³ se llena como un depósito. En esas 9 horas pasan en promedio unos 106,7 litros por segundo, 28,5 % más que el caudal máximo horario de diseño (83,04), lo que aumenta fugas y roturas. Las pérdidas pasaban del 30 % y todos los macromedidores estaban fuera de servicio (Superintendencia de Servicios Públicos Domiciliarios, 2020).",
   "propuesta": "Hacer la Fase 2 de la optimización, «agua 24 horas»: dividir la red del casco en 6 sectores con entrada medida y presión controlada, medir la producción y a cada suscriptor (3.700 medidores), bajar las pérdidas a 25 % y operar con telemetría, para pasar de 9 a 24 horas en 2030 con el agua que ya se produce. Después, entre 2030 y 2032 y según la demanda medida, ampliar la potabilizadora de 40 a 60 litros por segundo en su predio de la vereda Las Américas.",
   "cifras": [
     {
@@ -20,8 +20,8 @@
     },
     {
       "v": "35 %",
-      "l": "de agua no contabilizada según el prestador (Superservicios, 2020)",
-      "fuente": "Superservicios, Evaluación integral (2020)",
+      "l": "de agua no contabilizada según el prestador (Superintendencia de Servicios Públicos, 2020)",
+      "fuente": "Superintendencia de Servicios Públicos, Evaluación integral (2020)",
       "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
       "tono": "alerta"
     },
@@ -84,7 +84,7 @@
       "id": "macromedicion",
       "nombre": "Macromedición de producción y entrega",
       "resumen": "4 macromedidores con telemetría: 2 pozos, impulsión de 12 pulgadas y entrega del tanque a la red",
-      "descripcion": "Instala o repone 4 macromedidores grandes con telemetría para saber cuánta agua se produce y cuánta se entrega: salida de cada uno de los 2 pozos, impulsión de 12 pulgadas de polietileno de alta densidad hacia el tanque de compensación y salida de ese tanque hacia la red. En mayo de 2020, según la Superservicios, estaban fuera de servicio todos los macromedidores del prestador: el de la captación (entonces la Laguna del Miedo), los de salida de las plantas de tratamiento y los de los tanques. Con estos datos se hace el balance hídrico mensual y se reporta al Sistema Único de Información de la Superservicios.",
+      "descripcion": "Instala o repone 4 macromedidores grandes con telemetría para saber cuánta agua se produce y cuánta se entrega: salida de cada uno de los 2 pozos, impulsión de 12 pulgadas de polietileno de alta densidad hacia el tanque de compensación y salida de ese tanque hacia la red. En mayo de 2020, según la Superintendencia de Servicios Públicos Domiciliarios, estaban fuera de servicio todos los macromedidores del prestador: el de la captación (entonces la Laguna del Miedo), los de salida de las plantas de tratamiento y los de los tanques. Con estos datos se hace el balance hídrico mensual y se reporta al Sistema Único de Información de la Superintendencia.",
       "especificaciones": [
         ["Cantidad", "4 macromedidores"],
         ["Puntos", "2 pozos, impulsión de 12 pulgadas de polietileno de alta densidad y salida del tanque de compensación (2.135 m³)"],
@@ -167,14 +167,14 @@
       "id": "scada",
       "nombre": "Telemetría y control a distancia del acueducto",
       "resumen": "6 estaciones remotas en pozos, potabilizadora, impulsión y tanques, con alarmas y tablero público",
-      "descripcion": "Estaciones remotas de telemetría en los pozos, la potabilizadora, la impulsión y los tanques, más los 6 registradores de las entradas de sector, con alarmas de nivel y presión y datos cada 15 minutos: es el sistema de supervisión y control a distancia del acueducto. Aguas y Aseo de Yondó lo opera desde su centro de control, y los datos se replican en el centro de control de la alcaldía (módulo de conectividad y energía), que publica la continuidad y la presión en línea; la telemetría de las estaciones de bombeo de aguas residuales y de la planta de tratamiento de aguas residuales va en ese módulo. Permite reportar de forma automática al Sistema Único de Información de la Superservicios.",
+      "descripcion": "Estaciones remotas de telemetría en los pozos, la potabilizadora, la impulsión y los tanques, más los 6 registradores de las entradas de sector, con alarmas de nivel y presión y datos cada 15 minutos: es el sistema de supervisión y control a distancia del acueducto. Aguas y Aseo de Yondó lo opera desde su centro de control, y los datos se replican en el centro de control de la alcaldía (módulo de conectividad y energía), que publica la continuidad y la presión en línea; la telemetría de las estaciones de bombeo de aguas residuales y de la planta de tratamiento de aguas residuales va en ese módulo. Permite reportar de forma automática al Sistema Único de Información de la Superintendencia de Servicios Públicos Domiciliarios.",
       "especificaciones": [
         ["Estaciones remotas", "6 unidades remotas de telemetría en pozos, potabilizadora, impulsión y tanques"],
         ["Sectores", "Integra los 6 registradores de entrada de sector"],
         ["Datos", "Cada 15 minutos; alarmas de nivel y presión"],
         ["Centro de control", "Aguas y Aseo de Yondó, con réplica en el centro de control de la alcaldía (módulo de conectividad y energía)"],
         ["Tablero público", "Continuidad y presión en línea"],
-        ["Alcance", "Solo acueducto; las aguas residuales y su planta de tratamiento van en el módulo de conectividad y energía"]
+        ["Alcance", "Solo acueducto; la telemetría de las estaciones de bombeo de aguas residuales y de su planta de tratamiento va en el módulo de conectividad y energía"]
       ],
       "costo": { "min": 220, "central": 350, "max": 510 },
       "base_costo": "6 unidades remotas de telemetría de $20/25/35 M más programa, comunicaciones e integración al centro de control de $100/200/300 M (estimado); referencia de equipos: registrador con transmisión celular de $12,0 M y sensor de presión de $6,9 M en Dosquebradas (2023).",
@@ -242,12 +242,12 @@
   "metas": [
     { "indicador": "Horas de servicio al día en la red urbana", "base": "9 horas, de 4:00 a 13:00 (diagnóstico técnico, 2025–2026)", "meta": "24 horas en el sector piloto (2029) y en todo el casco (2030)" },
     { "indicador": "Presión en la red de distribución", "base": "Sin presión 15 horas al día y sin medición por sectores (2026)", "meta": "Entre 15 y 50 metros de columna de agua las 24 horas en cada sector (2030)" },
-    { "indicador": "Agua no contabilizada", "base": "Más de 30 % en 10 de 14 meses (Superservicios, 2019–2020)", "meta": "25 % (2030) y 20 % (2031)" },
+    { "indicador": "Agua no contabilizada", "base": "Más de 30 % en 10 de 14 meses (Superintendencia de Servicios Públicos, 2019–2020)", "meta": "25 % (2030) y 20 % (2031)" },
     { "indicador": "Suscriptores con medidor funcionando", "base": "88,2 % (dic-2019)", "meta": "100 % (2030)" },
     { "indicador": "Capacidad de tratamiento de la potabilizadora", "base": "40 litros por segundo (planta de 2003)", "meta": "60 litros por segundo con concesión vigente (diseño 2029; obra 2030–2032)" }
   ],
   "riesgos": [
-    { "riesgo": "Línea base contradictoria (9 horas según el diagnóstico, 18 según el plan de desarrollo municipal de 2024 y 7 a 8 según la Superservicios en 2019) y diseños de 2019 desactualizados: el proyecto no pasa la viabilidad", "mitigacion": "Medir 3 meses con registradores, terminar el Plan Maestro y ajustar el diseño a la Resolución 0330 de 2017 antes de radicar" },
+    { "riesgo": "Línea base contradictoria (9 horas según el diagnóstico, 18 según el plan de desarrollo municipal de 2024 y 7 a 8 según la Superintendencia de Servicios Públicos Domiciliarios en 2019) y diseños de 2019 desactualizados: el proyecto no pasa la viabilidad", "mitigacion": "Medir 3 meses con registradores, terminar el Plan Maestro y ajustar el diseño a la Resolución 0330 de 2017 antes de radicar" },
     { "riesgo": "Al pasar a 24 horas bajan las presiones en los barrios lejanos y aparecen roturas y golpes de ariete en una red que lleva años vaciándose cada día", "mitigacion": "Ir sector por sector desde un piloto, con estudio de transitorios, válvulas reguladoras de presión, ventosas, llenado lento y reparación previa de las fugas visibles" },
     { "riesgo": "Concesión de aguas subterráneas sin confirmar para los pozos urbanos y sin cupo para 60 litros por segundo; además, según una nota de Noticias Caracol de 2020, los pozos están donde funcionó el botadero de los años noventa, que no está delimitado", "mitigacion": "Tramitar con Corantioquia la concesión de los pozos actuales en 2027 y su ampliación a 60 litros por segundo en 2029–2030, con prueba de bombeo y monitoreo de niveles; antes de ampliar, medir la calidad del agua subterránea en los pozos y en la prueba de bombeo, con la delimitación del botadero (apiques y georradar) que hace la clausura de Las Américas en el módulo de Saneamiento, y renovar la concesión de la Laguna del Miedo como reserva" },
     { "riesgo": "Menos regalías (presupuesto 2027–2028 del Sistema General de Regalías con −11 %) y reglas en transición (Resolución 0467 de 2026, Plan Nacional de Desarrollo 2026–2030 en preparación)", "mitigacion": "Tener el proyecto en la Metodología General Ajustada y la viabilidad listos en 2028 para presentarlos a varias fuentes; la ampliación de la potabilizadora puede esperar si bajan las pérdidas" }
@@ -300,19 +300,19 @@
         {
           "v": "88,2 %",
           "l": "de suscriptores con medidor funcionando (dic-2019)",
-          "fuente": "Superservicios, Evaluación integral (2020)",
+          "fuente": "Superintendencia de Servicios Públicos, Evaluación integral (2020)",
           "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
           "tono": "alerta"
         },
         {
           "v": "25 %",
           "l": "tope de agua no contabilizada en 2030 (más de 30 % en 2019–2020)",
-          "fuente": "Meta de la propuesta; base: Superservicios (2020)",
+          "fuente": "Meta de la propuesta; base: Superintendencia de Servicios Públicos (2020)",
           "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
           "tono": "meta"
         }
       ],
-      "nota": "El horario de 4:00 a 13:00 sale del diagnóstico técnico; el plan de desarrollo municipal de 2024 habla de 18 horas intermitentes y la Superservicios encontró 7 a 8 horas en 2019. Por eso lo primero es medir.",
+      "nota": "El horario de 4:00 a 13:00 sale del diagnóstico técnico; el plan de desarrollo municipal de 2024 habla de 18 horas intermitentes y la Superintendencia de Servicios Públicos Domiciliarios encontró 7 a 8 horas en 2019. Por eso lo primero es medir.",
       "leyenda": [
         { "texto": "Sectores hidráulicos (indicativos)", "color": "#2a78d6", "forma": "area" },
         { "texto": "Válvula y macromedidor en la entrada de sector", "color": "#1f5fb8", "forma": "pt" },
@@ -334,7 +334,7 @@
         {
           "v": "40",
           "l": "litros por segundo: capacidad de la potabilizadora actual, construida en 2003",
-          "fuente": "Superservicios, Evaluación integral (2020)",
+          "fuente": "Superintendencia de Servicios Públicos, Evaluación integral (2020)",
           "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf"
         }
       ],
@@ -356,7 +356,7 @@
     }
   ],
   "fuentes_citadas": [
-    { "titulo": "Superservicios, Evaluación integral de Aguas y Aseo de Yondó (2020, vigencia 2019)", "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf" },
+    { "titulo": "Superintendencia de Servicios Públicos Domiciliarios, Evaluación integral de Aguas y Aseo de Yondó (2020, vigencia 2019)", "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf" },
     { "titulo": "Departamento Nacional de Planeación, datos abiertos de proyectos de regalías: optimización del acueducto fase 1 (proyecto 2019058930084) y Plan Maestro (proyecto 2024058930006)", "url": "https://www.datos.gov.co/d/cf9k-55fw" },
     { "titulo": "Contraloría General de la República, reporte presupuestal de Yondó: Sistema General de Participaciones para agua potable y saneamiento básico (2025–2026)", "url": "https://www.datos.gov.co/d/22ah-ddsj" },
     { "titulo": "Ministerio de Vivienda, Resolución 0467 de 2026: viabilidad y apoyo financiero de la Nación en agua y saneamiento", "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0467_2026.htm" },

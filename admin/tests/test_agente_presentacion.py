@@ -255,7 +255,7 @@ def test_el_guion_trae_enteros_los_textos_de_la_pantalla():
     assert "Laboratorio: 24 horas y 55 pruebas en sitio · hoy terceriza la mayor parte" in torre["especificaciones"]
     assert not any(e.startswith(("Proyectos:", "Dotación: $")) for e in torre["especificaciones"])
     r = paso("saneamiento", "relleno_nuevo")
-    assert len(r["texto"]) == 482 and len(r["componente"]["ubicacion"]) == 611
+    assert len(r["texto"]) == 514 and len(r["componente"]["ubicacion"]) == 495
     # Las inmersiones: el paso dice qué modelo del atlas muestra
     assert paso("salud", "torre_sismo")["inmersion"]["id"] == "torre_sismo"
     assert any("0,939 %" in t for t in paso("salud", "torre_sismo")["lista"])
@@ -318,7 +318,7 @@ def test_el_guion_trae_la_maqueta_de_cada_capitulo():
     texto = json.dumps([c.get("maqueta") for c in G.capitulos], ensure_ascii=False)
     assert '"capas"' not in texto and '"grupos"' not in texto and '"nodos"' not in texto and '"replica"' not in texto
     sa, ur, ag = G.por_id("salud"), G.por_id("urbanismo"), G.por_id("aguas")
-    assert [x["id"] for x in G.piezas(sa)] == ["hospital_hoy", "torre", "telesalud", "puestos"]
+    assert [x["id"] for x in G.piezas(sa)] == ["hospital_hoy", "torre", "telesalud", "territorios"]
     assert [p["id"] for p in G.pieza(sa, "torre")["partes"]] == ["cubierta", "equipos", "jardines"]
     # Por id, por nombre sin tildes ni mayúsculas, o por las palabras con que empieza (si es una sola pieza)
     assert G.pieza(sa, "Torre nueva de cuatro pisos")["id"] == "torre" and G.pieza(sa, "TORRE NUEVA")["id"] == "torre"
@@ -339,14 +339,32 @@ def test_el_guion_trae_la_maqueta_de_cada_capitulo():
     assert leer["maqueta"][1] == {"id": "torre", "nombre": "Torre nueva de cuatro pisos", "partes": [
         {"id": "cubierta", "nombre": "Cubierta y parasoles (deja ver las losas)"},
         {"id": "equipos", "nombre": "Equipos en la cubierta"}, {"id": "jardines", "nombre": "Árboles y jardines"}]}
-    assert list(leer) == ["capitulo", "pasos", "componentes", "maqueta", "controles_maqueta", "inmersiones"]
+    claves = ["capitulo", "pasos", "componentes", "maqueta", "controles_maqueta", "inmersiones"]
+    completo = G.capitulo_para_leer(sa, tope=10**9)
+    assert list(completo) == claves
+    # Salud es el capítulo que más pesa (las fichas de la torre, la salud preventiva, los equipos básicos y la
+    # telemedicina, con los controles del simulador sísmico y del modelo digital): pasa del tope, sus fichas van sin
+    # descripción ni referentes (con sus especificaciones) y los controles de las simulaciones, sin su ayuda (con su id,
+    # su nombre y sus valores; la ayuda llega al ir al paso de la inmersión). Los de la maqueta 3D van con la suya (`ir`
+    # no la trae) y lo demás llega igual; los otros capítulos, enteros
+    assert list(leer) == [*claves, "recortado"]
+    assert leer["recortado"] == ("Las fichas van sin descripción ni referentes para caber: pídalas con visual detalle. "
+                                 "Los controles de las simulaciones van sin su ayuda.")
+    assert all(x["especificaciones"] and "descripcion" not in x and "proyectos_tipo" not in x for x in leer["componentes"])
+    assert [{k: v for k, v in x.items() if k not in ("descripcion", "proyectos_tipo")} for x in completo["componentes"]] == \
+        leer["componentes"]
+    sin_ayuda = lambda cs: [{k: v for k, v in x.items() if k != "ayuda"} for x in cs]   # noqa: E731
+    assert leer["inmersiones"] == [{k: sin_ayuda(v) if k == "controles" else v for k, v in i.items()}
+                                   for i in completo["inmersiones"]]
+    assert all(leer[k] == completo[k] for k in ("capitulo", "pasos", "maqueta", "controles_maqueta"))
+    assert [c["id"] for c in G.capitulos if "recortado" in G.capitulo_para_leer(G.por_id(c["id"]))] == ["salud"]
     # y los controles de la maqueta 3D en el capítulo (lo que acciona simular sin un modelo del atlas): sin las luces,
     # que son de vivienda y urbanismo (donde hay luminarias), ni el partido, que es de urbanismo
     assert [c["id"] for c in leer["controles_maqueta"]] == ["hora", "reproducir_dia"]
     for c in G.capitulos:
         assert len(json.dumps(G.capitulo_para_leer(G.por_id(c["id"])), ensure_ascii=False).encode("utf-8")) < 36000, c["id"]
     indice = {c["id"]: c for c in G.indice()["capitulos"]}
-    assert indice["salud"]["maqueta"] == ["hospital_hoy", "torre", "telesalud", "puestos"]
+    assert indice["salud"]["maqueta"] == ["hospital_hoy", "torre", "telesalud", "territorios"]
     # Defensivo: sin catálogo, o con uno que no tiene la forma, el guion sale sin maqueta (o sin esa pieza) y vale
     for maqueta in (None, [], "x", {"salud": "torre"}, {"salud": [None, 3, {"nombre": "Sin id"}, {"id": 5}]}):
         d = guion.derivar({**datos, "tecnica": {**datos["tecnica"], "maqueta": maqueta}})
@@ -692,7 +710,7 @@ def test_ir_devuelve_el_paso_y_una_accion_exacta(sesion, ctx):
     assert r.contenido["posicion"] == f"Paso 3 de {len(vi['pasos'])} del capítulo Vivienda"
     assert r.resumen == f"Mostré Vivienda · paso 3 de {len(vi['pasos'])}" and r.personas == set()
     # Por nombre y por id del paso, con la explicación (normalizada) para la pantalla
-    r = _ej(sesion, ctx, {"op": "ir", "capitulo": "Infraestructura TIC", "paso": "fibra",
+    r = _ej(sesion, ctx, {"op": "ir", "capitulo": "Conectividad y energía", "paso": "fibra",
                           "explicacion": "La  fibra, tramo por tramo."})
     assert r.acciones == [{"tipo": "presentacion", "op": "ir", "capitulo": "tic", "paso": 2,
                            "explicacion": "La fibra, tramo por tramo."}]
@@ -819,7 +837,7 @@ def test_contexto_de_la_presentacion_se_valida_contra_el_guion():
 
 
 def test_turno_completo_la_presentacion_llega_al_navegador_y_el_paso_al_modelo(sesion):
-    explicacion = "Las 300 viviendas nuevas van en dos lotes del casco urbano."
+    explicacion = "Las 300 viviendas nuevas van en un barrio de 25 bloques alrededor de un parque."
     falsa = aa.encender(sesion.app,
                         aa.sse(aa.TU("toolu_pres1", "presentacion", {"op": "ir", "capitulo": "vivienda", "paso": 3,
                                                                      "explicacion": explicacion}), stop="tool_use"),
@@ -841,8 +859,8 @@ def test_turno_completo_la_presentacion_llega_al_navegador_y_el_paso_al_modelo(s
     assert "presentacion" in {t["name"] for t in primera["tools"]}
     # Al modelo le vuelve lo que muestra el paso de destino
     resultado = json.dumps(segunda["messages"][-1], ensure_ascii=False)
-    assert "toolu_pres1" in resultado and "300 viviendas en dos lotes reales" in resultado
-    assert "Paso 3 de" in resultado and "Lote 1" in resultado
+    assert "toolu_pres1" in resultado and "300 apartamentos en 25 bloques" in resultado
+    assert "Paso 3 de" in resultado and "sitio indicativo" in resultado
 
 
 # ───────────────────────────── CSP y despliegue ─────────────────────────────
@@ -2055,8 +2073,8 @@ def panel_con_sitio(cfg, tmp_path, monkeypatch):
             m.drop_database(cfg.mongodb_db)
 
 
-EXPLICACION = "Las <b>300 viviendas</b> nuevas van en dos lotes del casco urbano."
-EXPLICACION_2 = "La torre del hospital y los puestos de salud rurales."
+EXPLICACION = "Las <b>300 viviendas</b> nuevas van en un barrio de 25 bloques."
+EXPLICACION_2 = "La torre del hospital, la salud preventiva y la telemedicina."
 
 GUION_NAVEGADOR = r"""// El asistente presenta la propuesta en Chromium. Uso: node <guion> <base del panel> <usuario> <clave> <datos> <capturas>
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
@@ -2218,8 +2236,8 @@ def test_el_asistente_maneja_la_presentacion_en_chromium(panel_con_sitio, cfg, t
 
 
 # La explicación más larga que acepta la herramienta (220 caracteres): tiene que verse entera en cualquier pantalla
-LARGA = ("Las trescientas viviendas van en dos lotes del casco urbano: doscientas de interés prioritario en diez bloques "
-         "junto al colegio y cien casas de dos pisos en el borde occidental (Lote 2), con su parque y su salón comunal.")
+LARGA = ("Las trescientas viviendas van en un barrio nuevo de veinticinco bloques de tres pisos, con doce apartamentos por "
+         "bloque, alrededor de un parque central con juegos infantiles, cancha múltiple, un kiosco y senderos verdes.")
 CORTA = "Una frase corta para la sala."
 
 GUION_PANTALLAS = r"""// La explicación entera en cada pantalla, el asistente entre 901 y 1199 px y los cambios sin guardar. Uso: node <guion>

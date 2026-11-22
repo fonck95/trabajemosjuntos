@@ -53,7 +53,7 @@
         ["Fase 2", "de la Calle 55 a los potreros del norte (≈390 m más): estrechamiento con desvío por la Carrera 57 y humedal norte de 3.120 m²"]
       ],
       "costo": { "min": 4800, "central": 7000, "max": 9500 },
-      "base_costo": "≈11.500 m² a $0,30–0,55 M/m² (parque La Primavera del Ministerio de Vivienda ≈$0,42 M/m², 2024; unidad recreodeportiva de Moñitos ≈$0,76 M/m², 2025), más tres puentes peatonales y obras de drenaje sostenible (estimación). Queda por debajo de los parques lineales de Yopal (≈$16.000–23.000 M por km) porque el cauce ya está canalizado.",
+      "base_costo": "≈11.500 m² a $0,30–0,55 M por metro cuadrado (parque La Primavera del Ministerio de Vivienda ≈$0,42 M por metro cuadrado, 2024; unidad recreodeportiva de Moñitos ≈$0,76 M por metro cuadrado, 2025), más tres puentes peatonales y obras de drenaje sostenible (estimación). Queda por debajo de los parques lineales de Yopal (≈$16.000–23.000 M por km) porque el cauce ya está canalizado.",
       "proyecto_tipo": [
         { "nombre": "Proyecto tipo del Departamento Nacional de Planeación: parque recreodeportivo (módulos biosaludables)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/parque/mgaparque.pdf" },
         { "nombre": "Referente: parque recreodeportivo La Primavera (Ministerio de Vivienda, 2024)", "url": "https://minvivienda.gov.co/sala-de-prensa/519-familias-de-el-molino-la-guajira-ya-disfrutan-del-parque-recreodeportivo-la-primavera" }
@@ -76,7 +76,7 @@
         ["Empalmes", "parque lineal (puente peatonal 2) y vía peatonal de la Calle 49 construida con regalías"]
       ],
       "costo": { "min": 1300, "central": 2100, "max": 3000 },
-      "base_costo": "3.300 a 4.500 m² de espacio público a $0,35–0,65 M/m² con iluminación y redes, más administración, imprevistos, utilidad e interventoría (estimación). Referencia local: la vía peatonal de la Calle 49 y el parqueadero del coliseo costaron $642 M con regalías (2014–2019).",
+      "base_costo": "3.300 a 4.500 m² de espacio público a $0,35–0,65 M por metro cuadrado con iluminación y redes, más administración, imprevistos, utilidad e interventoría (estimación). Referencia local: la vía peatonal de la Calle 49 y el parqueadero del coliseo costaron $642 M con regalías (2014–2019).",
       "proyecto_tipo": [],
       "fuentes": ["sgr", "municipio", "oxi"],
       "plazo": "Diseño en 2028; obra en 2029, junto con la cancha de sóftbol",
@@ -96,7 +96,7 @@
         ["Condición", "verificar propiedad del lote y la estructura sin terminar al occidente del Centro de Integración Ciudadana"]
       ],
       "costo": { "min": 3000, "central": 4500, "max": 7000 },
-      "base_costo": "Cancha sintética de Segovia aprobada por el órgano colegiado de las regalías de Antioquia por $3.044,9 M (2019) y unidad recreodeportiva de Moñitos a ≈$0,76 M/m² (2025); el resto es estimación propia. Falta contrastarlo con los costos de referencia de los proyectos tipo del Departamento Nacional de Planeación.",
+      "base_costo": "Cancha sintética de Segovia aprobada por el órgano colegiado de las regalías de Antioquia por $3.044,9 M (2019) y unidad recreodeportiva de Moñitos a ≈$0,76 M por metro cuadrado (2025); el resto es estimación propia. Falta contrastarlo con los costos de referencia de los proyectos tipo del Departamento Nacional de Planeación.",
       "proyecto_tipo": [
         { "nombre": "Proyecto tipo del Departamento Nacional de Planeación: placa polideportiva cubierta", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=134" },
         { "nombre": "Proyecto tipo del Departamento Nacional de Planeación: cancha en grama sintética", "url": "https://proyectostipo.dnp.gov.co/" },
@@ -120,7 +120,7 @@
         ["Coordinación", "Agencia Nacional de Infraestructura y Ruta del Cacao (estribo), Cormagdalena y Corantioquia"]
       ],
       "costo": { "min": 1150, "central": 2100, "max": 4600 },
-      "base_costo": "Estimación propia para 150 a 300 m de orilla, porque la longitud por proteger la fija el estudio hidráulico: $6–14 M por metro lineal de enrocado en río grande más $250–400 M de estudios (con los 283 m completos, el piso sube a ≈$1.950 M). No se encontró un contrato con precio por metro; como techo de referencia, el tramo I de Barrancabermeja saldría a ≈$22,8 M/m (2023, con tablestacas) si es el mismo tramo de ≈780 m de los estudios de 2020.",
+      "base_costo": "Estimación propia para 150 a 300 m de orilla, porque la longitud por proteger la fija el estudio hidráulico: $6–14 M por metro lineal de enrocado en río grande más $250–400 M de estudios (con los 283 m completos, el piso sube a ≈$1.950 M). No se encontró un contrato con precio por metro; como techo de referencia, el tramo I de Barrancabermeja saldría a ≈$22,8 M por metro lineal (2023, con tablestacas) si es el mismo tramo de ≈780 m de los estudios de 2020.",
       "proyecto_tipo": [
         { "nombre": "Referente: protección de orilla y espacio público de Puerto Nare", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.3110333" },
         { "nombre": "Referente: protección de orilla en la terminal Yuma (Cormagdalena)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4979689" }
@@ -143,7 +143,7 @@
         ["Acceso", "vía y parqueadero desde la vía del puente (empalme con la concesión)"]
       ],
       "costo": { "min": 2970, "central": 4800, "max": 7600 },
-      "base_costo": "Partidas de plaza ($0,6–1,0 M/m²) y de deck y mirador sobre pilotes ($4–7 M/m²), contrastadas con el Fondo Nacional de Turismo: mirador de Arboletes $2.788,6 M (2024). Pavimentar los 4.588 m² al precio del malecón de Puerto Triunfo (≈$2,31 M/m² de 2026, proyecto de regalías 2021055910045) costaría del orden de $10.600 M (cálculo propio).",
+      "base_costo": "Partidas de plaza ($0,6–1,0 M por metro cuadrado) y de deck y mirador sobre pilotes ($4–7 M por metro cuadrado), contrastadas con el Fondo Nacional de Turismo: mirador de Arboletes $2.788,6 M (2024). Pavimentar los 4.588 m² al precio del malecón de Puerto Triunfo (≈$2,31 M por metro cuadrado de 2026, proyecto de regalías 2021055910045) costaría del orden de $10.600 M (cálculo propio).",
       "proyecto_tipo": [
         { "nombre": "Manual de programas y proyectos del Fondo Nacional de Turismo", "url": "https://fontur.com.co/sites/default/files/2026-04/M-DMI-001Manual-Programas-y-Proyectos-04dic-2025.pdf" },
         { "nombre": "Referente: mirador turístico de Arboletes (Fondo Nacional de Turismo, 2024)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.5250330" },

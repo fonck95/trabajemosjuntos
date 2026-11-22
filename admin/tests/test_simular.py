@@ -90,14 +90,25 @@ def test_lo_que_lee_el_modelo_dice_que_controles_hay():
     assert [c["id"] for c in inm["torre_sismo"]["controles"]] == [c["id"] for c in G.controles("torre_sismo")]
     assert "controles" not in inm["torre_laboratorio"] and "controles" not in inm["torre"]   # no son pasos de Salud
     assert all("controles" not in i for i in G.capitulo_para_leer(G.por_id("vivienda"))["inmersiones"])
-    assert "recortado" not in leer
+    # Salud pasa del tope (sus fichas de la torre, la salud preventiva, los equipos básicos y la telemedicina): los
+    # controles van enteros salvo la ayuda, que llega al ir al paso de la inmersión (abajo)
+    completo = {i["id"]: i for i in G.capitulo_para_leer(G.por_id("salud"), tope=10**9)["inmersiones"]}
+    assert leer["recortado"].endswith("Los controles de las simulaciones van sin su ayuda.")
+    assert inm["torre_sismo"]["controles"] == [{k: v for k, v in c.items() if k != "ayuda"}
+                                               for c in completo["torre_sismo"]["controles"]]
+    assert completo["torre_sismo"]["controles"] == G.controles("torre_sismo")
     # muy justo, primero las fichas y después la ayuda de los controles
     chico = G.capitulo_para_leer(G.por_id("salud"), tope=20000)
     assert "ayuda" not in chico["inmersiones"][[i["id"] for i in chico["inmersiones"]].index("torre_sismo")]["controles"][0]
     assert "controles" in chico["recortado"]
+    # un capítulo sin simulaciones del atlas no dice que les quitó la ayuda: pasa directo a la de la maqueta 3D
+    viv = G.capitulo_para_leer(G.por_id("vivienda"), tope=5000)
+    assert "simulaciones" not in viv["recortado"] and viv["recortado"].endswith("Los controles de la maqueta 3D van sin su ayuda.")
+    assert viv["controles_maqueta"] and all("ayuda" not in c for c in viv["controles_maqueta"])
     # ir a un paso de inmersión devuelve los controles de su modelo
     r = _hacer(_Base(), UID, {"op": "ir", "capitulo": "salud", "paso": "torre_sismo"}, por="asistente")
     assert [c["id"] for c in r.contenido["controles"]] == [c["id"] for c in G.controles("torre_sismo")]
+    assert r.contenido["controles"] == G.controles("torre_sismo") and all("ayuda" in c for c in r.contenido["controles"])
     r = _hacer(_Base(), UID, {"op": "ir", "capitulo": "salud", "paso": 1}, por="asistente")
     assert "controles" not in r.contenido
     # sin un modelo del atlas, los de la maqueta 3D (sin su ayuda: está en guion), y en el índice y en guion por capítulo

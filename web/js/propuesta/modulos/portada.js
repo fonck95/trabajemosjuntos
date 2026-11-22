@@ -15,7 +15,7 @@ const telefono = matchMedia('(max-width: 640px), (max-height: 500px)');
 // Las obras que se contornean en la vista global, por módulo (polígonos de geo.json): a 2–24 km una obra es una mancha
 // que se confunde con el potrero, y un borde de 3 px en el color de su área se lee a cualquier distancia
 const OBRAS = {
-  urbanismo: ['softbol_lote'], vivienda: ['lote_jdo', 'lote_oeste'], saneamiento: ['ptar', 'relleno_nuevo'],
+  urbanismo: ['softbol_lote'], vivienda: ['lote_barrio'], saneamiento: ['ptar', 'relleno_nuevo'],
   tic: ['granja_solar'], agroindustria: ['lote'],
 };
 // desde dónde mira la portada (grados desde el norte): el pin de una obra se corre a su borde del fondo de la pantalla
@@ -44,17 +44,17 @@ export function crear(esc, datos) {
     obras.push({ m, poly });
     esc.linea([...poly, poly[0]].map(([x, y]) => [x, y, 1.4]), { color: `--m-${m}`, ancho: 3, opacidad: 0.95, padre: capa });
   }));
-  // el pin que cae dentro de una obra (el estadio, el lote 1, la PTAR, la granja solar, el parque agroindustrial) ya no
+  // el pin que cae dentro de una obra (el estadio, el barrio nuevo, la PTAR, la granja solar, el parque agroindustrial) ya no
   // va encima de ella con un tallo de 34 m que la atravesaba: se apoya en su borde del fondo, sin tallo, y su punta lo
   // señala; el contorno dice cuál es la obra. Los demás (la torre del hospital, la PTAP) conservan el tallo
   const az = (RUMBO + 180) * (Math.PI / 180), dir = [Math.sin(az), Math.cos(az)];
-  const lejos = [];   // los pines fuera de la caja del inicio (granja solar, PTAR, acueducto, parque agroindustrial)
+  const lejos = [];   // los pines fuera de la caja del inicio (PTAR, acueducto, parque agroindustrial)
   pines.forEach(({ m, x, y }) => {
     const obra = obras.find((o) => o.m === m.id && dentro([x, y], o.poly)), t = obra && borde([x, y], dir, obra.poly);
     const [px, py, h] = t != null ? [x + dir[0] * (t + 3), y + dir[1] * (t + 3), 2] : [x, y, 34];
     if (h > 2) esc.linea([[x, y, 0], [x, y, h]], { color: `--m-${m.id}`, ancho: 2.5, padre: capa });
     const l = esc.etiqueta(`<span>${m.corto || m.nombre}</span>`, { cls: 'lbl-pin', pos: [px, py, h], padre: capa, color: `var(--m-${m.id})`, titulo: m.nombre, alClic: () => { location.hash = m.id; }, ancla: [0.5, 1.2] });
-    if (px < -700 || px > 340 || py < -440 || py > 240) lejos.push(l);
+    if (px < -1320 || px > 340 || py < -440 || py > 240) lejos.push(l);
   });
   // territorio: los nombres que cita el texto (río, puente, Barrancabermeja y el relleno nuevo), solo en el segundo paso
   const geo = esc.capa('portada.geo'), tb = datos.territorio?.puente?.tablero;
@@ -68,16 +68,17 @@ export function crear(esc, datos) {
     lBarranca = esc.etiqueta('Barrancabermeja →', { cls: 'lbl-geo', pos: [f[0] + 90, f[1], 4], padre: geo, ancla: [0, 0.5] });
   }
   esc.sincronizarEtiquetas();
-  // el inicio, sobre las obras del casco (del lote 1 de vivienda a la cancha de fútbol de la ciudadela) y no sobre la caja
-  // que sumaba la granja solar (1,3 km al suroccidente) y la PTAR (1,5 km al norte): con ellas la cámara quedaba a 4 km y
-  // el estadio medía 44 × 29 px; así, unos 80 × 55 px a 1280 × 720 con el panel. Sus pines vuelven en el territorio
-  const casco = [[-660, -400], [300, -400], [300, 200], [-660, 200]];
+  // el inicio, sobre las obras del casco y su borde occidental (del barrio nuevo de vivienda y el borde norte de la granja
+  // solar, 1,1–1,3 km al occidente, a la cancha de fútbol de la ciudadela) y no sobre la caja que sumaba la PTAR (1,5 km al
+  // norte) y el acueducto: con ellos la cámara quedaba a 4 km y el estadio se volvía una mancha. Sus pines vuelven en el
+  // territorio
+  const casco = [[-1480, -420], [300, -420], [300, 200], [-1480, 200]];
   // en el inicio esos pines quedan fuera del cuadro (o asomaban bajo el panel): se ocultan, y vuelven en el territorio y
   // en las otras vistas de conjunto (alCompleto corre en todas, antes que el `antes` del paso)
   const verLejos = (v) => { lejos.forEach((l) => { l.userData.ver = v; }); esc.sincronizarEtiquetas(); };
   const todo = pines.map(({ x, y }) => [x, y]).concat([[-2400, 300], [1700, 8300], [2700, 6800]], tb?.length ? [[tb[tb.length - 1][0] + 260, tb[tb.length - 1][1]]] : []);
   // los rótulos esquivan las obras del casco (ningún recuadro tapa el punto de otro pin) y sus guías no se cruzan
-  const sobreObras = obras.flatMap((o) => o.poly).filter(([x, y]) => x > -700 && x < 340 && y > -440 && y < 240);
+  const sobreObras = obras.flatMap((o) => o.poly).filter(([x, y]) => x > -1320 && x < 340 && y > -440 && y < 240);
   const vistaCasco = (duracion) => esc.encuadrar(casco, { rumbo: RUMBO, elev: 54, margen: 0.96, duracion, obra: sobreObras, apartar: true, sinCruces: true });
   const territorio = () => {
     const tel = telefono.matches;

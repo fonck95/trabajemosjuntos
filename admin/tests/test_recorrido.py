@@ -62,7 +62,7 @@ PLAN = {"op": "recorrido", "titulo": "La torre, pieza por pieza", "pasos": [
     {"comparar": "hoy", "dice": "Así está hoy el predio: las alas del antiguo Centro Vida."},
     {"comparar": "proyecto", "aislar": "torre", "animar": True, "dice": "Con el proyecto, la torre crece piso a piso."},
     {"sin": ["torre.cubierta"], "elevacion": 60, "zoom": 1.5, "dice": "Sin la cubierta se ven las losas de cada piso."},
-    {"aislar": "nada", "sin": [], "mirar": "hospital_hoy", "ocultar": ["telesalud", "puestos"],
+    {"aislar": "nada", "sin": [], "mirar": "hospital_hoy", "ocultar": ["telesalud", "territorios"],
      "dice": "Al lado sigue funcionando el hospital de hoy."},
     {"dice": "La torre agrupa urgencias, cirugía y hospitalización."},
     {"detalle": "torre", "resaltar": {"especificacion": "Estructura"},
@@ -165,7 +165,7 @@ def test_el_plan_usa_la_camara_las_piezas_y_las_partes():
     assert (v[2]["aislar"], e[2]["animar"], v[2]["comparar"]) == ("torre", True, "proyecto")
     assert (v[3]["aislar"], v[3]["sin"], v[3]["elevacion"], v[3]["zoom"]) == ("torre", ["torre.cubierta"], 60, 1.5)
     # «nada» quita el aislamiento, [] devuelve las partes; la elevación y el acercamiento siguen del paso anterior
-    assert (v[4]["aislar"], v[4]["sin"], v[4]["mirar"], v[4]["ocultar"]) == (None, [], "hospital_hoy", ["telesalud", "puestos"])
+    assert (v[4]["aislar"], v[4]["sin"], v[4]["mirar"], v[4]["ocultar"]) == (None, [], "hospital_hoy", ["telesalud", "territorios"])
     assert (v[4]["elevacion"], v[4]["zoom"], v[4]["camara"]) == (60, 1.5, "oblicua")
     assert v[6]["detalle"] == "torre" and e[6]["resaltar"] == {"tipo": "especificacion", "n": 4, "en": "ficha"}
     # al cambiar de paso del capítulo, lo visual vuelve a lo del paso; el viaje de la cámara es de esa escena
@@ -185,7 +185,7 @@ def test_el_plan_usa_la_camara_las_piezas_y_las_partes():
     m = [x["muestra"] for x in r.contenido["pasos"]]
     assert "la cámara gira 40°" in m[0] and "solo torre" in m[2] and "anima la obra" in m[2]
     assert "sin torre.cubierta" in m[3] and "a 60° sobre el horizonte" in m[3] and "zoom 1.5" in m[3]
-    assert "la cámara apunta a hospital_hoy" in m[4] and "oculta telesalud, puestos" in m[4]
+    assert "la cámara apunta a hospital_hoy" in m[4] and "oculta telesalud, territorios" in m[4]
     assert "la cámara se mueve un poco sola" in m[5]
     # La base guardada (lo que queda al terminar) es la última escena, sin su movimiento: `mover` y `animar` no son estado
     d = db.pantallas.find_one({"_id": 7})
@@ -223,7 +223,7 @@ def test_lo_opcional_que_no_resuelve_se_descarta_con_un_aviso_y_el_plan_sigue():
     assert "paso, aerea, oblicua, rasante, cerca, lejos" in de(1)[0]
     # 2. La pieza que no existe se descarta con los candidatos; la que sí, se muestra
     assert (v[1]["aislar"], v[1]["mostrar"]) == (None, ["torre"]) and len(de(2)) == 2
-    assert "Paso 2: la pieza «tore» no está en Salud (aislar); piezas: hospital_hoy, torre, telesalud, puestos" in avisos
+    assert "Paso 2: la pieza «tore» no está en Salud (aislar); piezas: hospital_hoy, torre, telesalud, territorios" in avisos
     assert any("«la luna»" in a and "(mostrar)" in a for a in de(2))
     # 3. La parte que no existe se descarta y la que llegó sin su pieza se resuelve con la aislada; lo demás se recorta
     assert (v[2]["aislar"], v[2]["sin"], v[2]["elevacion"], v[2]["zoom"]) == ("torre", ["torre.cubierta"], 85, 3)
@@ -281,14 +281,15 @@ def test_la_op_guion_trae_la_maqueta_y_los_ejemplos_son_planes_que_corren():
     r = _hacer(db, 7, {"op": "guion", "capitulo": "Salud"}, por="asistente")
     assert r.acciones == [] and db.pantallas.find_one({"_id": 7}) is None   # leer no mueve ni guarda nada
     # (y los gestos del presentador que cada paso puede pedir, con lo que expresa cada uno)
-    assert list(r.contenido) == ["capitulo", "pasos", "componentes", "maqueta", "controles_maqueta", "inmersiones", "gestos",
-                                 "nota"]
-    assert [x["id"] for x in r.contenido["maqueta"]] == ["hospital_hoy", "torre", "telesalud", "puestos"]
+    # (Salud, el capítulo que más pesa, pasa del tope de las fichas: van sin descripción ni referentes y lo dice)
+    assert list(r.contenido) == ["capitulo", "pasos", "componentes", "maqueta", "controles_maqueta", "inmersiones", "recortado",
+                                 "gestos", "nota"]
+    assert [x["id"] for x in r.contenido["maqueta"]] == ["hospital_hoy", "torre", "telesalud", "territorios"]
     assert [p["id"] for p in r.contenido["maqueta"][1]["partes"]] == ["cubierta", "equipos", "jardines"]
     # (con los controles de las simulaciones de sus modelos del atlas: el simulador sísmico, el BIM… por debajo del tope
     # de lo que recibe el modelo, MAX_CONTENIDO)
     assert r.contenido["nota"] == hi.NOTA_GUION and len(r.texto_para_modelo()) < 36000
-    assert r.resumen == "Guion de Salud · 10 pasos, 5 componentes"
+    assert r.resumen == "Guion de Salud · 11 pasos, 5 componentes"
     nota = hi.NOTA_GUION
     for palabra in ("UN plan", "De 6 a 10 pasos (hasta 12)", "UNA frase hablada (dice)", "MIENTRAS se dice", "mover {giro, zoom, "
                     "elevacion}", "aislar", "sin «pieza.parte»", "se descarta con un aviso", "sin costos"):
@@ -360,8 +361,8 @@ def test_doce_pasos_y_los_nombres_de_antes():
     # Doce escenas llenas (lo visual con sus listas completas y dos frases largas) caben en el tope de bytes
     llena = {**absoluto["escenas"][0], "frases": ["x" * 109, "y" * 110], "mover": {"giro": -360, "zoom": 2.55, "elevacion": 85},
              "resaltar": {"tipo": "especificacion", "n": 4, "en": "ficha"},
-             "visual": {**absoluto["escenas"][0]["visual"], "mostrar": ["hospital_hoy", "telesalud", "puestos", "torre"],
-                        "ocultar": ["hospital_hoy", "telesalud", "puestos", "torre"], "aislar": "torre", "mirar": "torre",
+             "visual": {**absoluto["escenas"][0]["visual"], "mostrar": ["hospital_hoy", "telesalud", "territorios", "torre"],
+                        "ocultar": ["hospital_hoy", "telesalud", "territorios", "torre"], "aislar": "torre", "mirar": "torre",
                         "enfoque": "torre", "detalle": "torre", "inmersion": "torre_hoy", "rumbo": 359, "elevacion": 85,
                         "zoom": 2.55, "sin": ["torre.cubierta", "torre.equipos", "torre.jardines"]}}
     assert rec.validar({**absoluto, "escenas": [llena] * 12}, G) == []
@@ -386,11 +387,11 @@ def test_doce_pasos_y_los_nombres_de_antes():
     # Lo que el modelo escribe a su manera y se entiende sin aviso: una frase como `texto`, una pieza suelta, el cierre
     # como lista, el título que falta (queda el nombre del capítulo)
     _, c = _armar(entrada={"op": "recorrido", "pasos": [{"capitulo": "salud", "paso": 3, "narracion": "Una.",
-                                                         "ocultar": "telesalud, puestos", "zoom": "1,5"}],
+                                                         "ocultar": "telesalud, territorios", "zoom": "1,5"}],
                            "cierre": ["Una idea", "Otra idea"]})
     x = c.acciones[0]["recorrido"]
     assert x["titulo"] == "Salud" and x["cierre"] == {"puntos": ["Una idea", "Otra idea"]} and "avisos" not in c.contenido
-    assert (x["escenas"][0]["visual"]["ocultar"], x["escenas"][0]["visual"]["zoom"]) == (["telesalud", "puestos"], 1.5)
+    assert (x["escenas"][0]["visual"]["ocultar"], x["escenas"][0]["visual"]["zoom"]) == (["telesalud", "territorios"], 1.5)
     _, c = _armar(entrada={"op": "recorrido", "titulo": "Otro", "pasos": [{"capitulo": "salud", "texto": "Una."}]})
     assert c.acciones[0]["recorrido"]["escenas"][0]["frases"] == ["Una."] and "«texto» se tomó como dice" in c.contenido["avisos"][0]
 
@@ -581,7 +582,7 @@ def test_una_orden_que_falla_no_corta_el_recorrido():
     v = db.pantallas.find_one({"_id": 7})["v"]
     for malo in ({"op": "visual", "enfoque": "no_existe_esto"}, {"op": "visual", "capitulo": "aguas", "camara": "aerea"},
                  {"op": "ir", "capitulo": "no existe"}, {"op": "ir", "capitulo": "salud", "paso": 40},
-                 {"op": "visual", "inmersion": "otra_cosa"}, {"op": "siguiente", "capitulo": "salud", "paso": 11}):
+                 {"op": "visual", "inmersion": "otra_cosa"}, {"op": "siguiente", "capitulo": "salud", "paso": 12}):
         for por in ("asistente", "mcp"):
             with pytest.raises(ErrorHerramienta):
                 _hacer(db, 7, malo, por=por)
@@ -718,7 +719,7 @@ def test_lo_que_dejo_la_verificacion_del_plan_guiado():
     assert v["aislar"] is None and v["ocultar"] == ["torre"]
     # Los nombres parecidos: sin palabras vacías, y una palabra corta tiene que estar entera
     lista = [{"id": "torre", "nombre": "Torre nueva de cuatro pisos"}, {"id": "reduccion", "nombre": "Reducción de pérdidas"},
-             {"id": "red", "nombre": "Red de telesalud"}]
+             {"id": "red", "nombre": "Red de telemedicina"}]
     assert guion_presentacion.parecido(lista, "la torre")["id"] == "torre"
     assert guion_presentacion.parecido(lista, "red")["id"] == "red"
     assert guion_presentacion.parecido(lista[:2], "red") is None and guion_presentacion.parecido(lista, "de la") is None

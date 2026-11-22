@@ -90,8 +90,9 @@ IDIOMA = "es"
 # Nombres propios y siglas de la propuesta, para que el modelo que transcribe los escriba bien (la pista de
 # `mnemo_transcribe`, hasta 500 caracteres). No lleva datos de personas
 VOCABULARIO = ("Yondó, Antioquia, Trabajemos juntos, Casabe, Barrancabermeja, Kilómetro Cinco, San Miguel del Tigre, "
-               "PTAR, PTAP, EBAR, ECA, telesalud, sóftbol, relleno sanitario, agroindustria, Sisbén, hospital Héctor Abad "
-               "Gómez, parque lineal, alameda, matadero, trilladora")
+               "PTAR, PTAP, EBAR, ECA, telesalud, telemedicina, microterritorios, equipos básicos de salud, potabilizadora, "
+               "sóftbol, relleno sanitario, agroindustria, Sisbén, hospital Héctor Abad Gómez, parque lineal, alameda, "
+               "matadero, trilladora, barrio nuevo, vivienda de interés social, Esquema de Ordenamiento Territorial")
 PLAZO_S = 60.0                 # un minuto de audio se transcribe en segundos
 # Lo que puede tardar en llegar la grabación: en total (un minuto de voz pesa unos 200 kB: llega en 30 s aun por una
 # red de 60 kbps) y sin que llegue nada (la subida se estancó)

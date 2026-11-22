@@ -3,7 +3,7 @@
   "nombre": "Vivienda",
   "corto": "Vivienda",
   "lema": "Terminar lo pagado y dar vivienda digna a 1.300 hogares",
-  "problema": "En el censo de 2018, el 61,9 % de los hogares de Yondó (3.383) tenía déficit de vivienda y el 37,8 % (2.066) vivía en casas que hay que reponer, sobre todo de madera o tabla; en Antioquia esa última cifra era 6,6 %. El equipo del proyecto de vivienda estima que hoy faltan unas 1.100 viviendas en el municipio (la fuente primaria está por confirmar), y el Plan de Desarrollo 2024–2027 registra 800 hogares que necesitan titulación o legalización. Además, hay tres obras de vivienda pagadas y sin terminar: las 100 casas rurales llevan 88 % pagado y 9 % de obra.",
+  "problema": "En el censo de 2018, el 61,9 % de los hogares de Yondó (3.383) tenía déficit de vivienda y el 37,8 % (2.066) vivía en casas que hay que reponer, sobre todo de madera o tabla; en Antioquia esa última cifra era 6,6 %. El equipo del proyecto de vivienda estima que hoy faltan unas 1.100 viviendas en el municipio (la fuente primaria está por confirmar); el Esquema de Ordenamiento Territorial 2022–2035 reconoce 2.070. El Plan de Desarrollo 2024–2027 registra 800 hogares que necesitan titulación o legalización. Además, hay tres obras de vivienda pagadas y sin terminar: las 100 casas rurales llevan 88 % pagado y 9 % de obra.",
   "propuesta": "Primero, terminar las tres obras inconclusas y titular 800 predios. Luego, un barrio nuevo de vivienda de interés social para cerca de 300 familias: 300 apartamentos en 25 bloques de 3 pisos, con parque central, cancha múltiple, zonas verdes y parqueaderos, en un lote de unas 5 hectáreas que falta definir. Además, 200 casas rurales en el lote de cada familia y 800 mejoramientos, 400 urbanos y 400 rurales.",
   "cifras": [
     { "v": "61,9 %", "l": "de los hogares tenía déficit de vivienda en 2018 (3.383)", "fuente": "Departamento Administrativo Nacional de Estadística, déficit habitacional del censo de 2018", "url": "https://www.dane.gov.co/files/investigaciones/deficit-habitacional/deficit-hab-2020-anexo-nueva-metodologia.xlsx", "tono": "alerta" },
@@ -51,7 +51,7 @@
         ["Lote", "Unas 5 ha (50.000 m² estimados) · ubicación por definir"],
         ["Uso del lote", "Bloques 12 % · vías 22 % · parqueaderos 16 % · zonas verdes 24 % · andenes y zonas sociales 16 % · franjas libres 10 %"],
         ["Densidad", "60 viviendas por hectárea · 40 m² de zona verde por vivienda"],
-        ["Nombre del barrio", "Por decidir entre seis alternativas"],
+        ["Nombre del barrio", "Por decidir entre Bosques de Yondó, Nuevo Magdalena, Alma del Magdalena, Ciénagas de Yondó, Nuevo Casabe y Horizontes del Magdalena"],
         ["Tope de precio en 2026", "135 salarios mínimos = $236,4 M por vivienda"]
       ],
       "costo": { "min": 60274.0, "central": 70911.0, "max": 81548.0 },
@@ -199,7 +199,7 @@
   "metas": [
     { "indicador": "Obras de vivienda inconclusas", "base": "3 obras pagadas sin terminar (2026)", "meta": "0: todas entregadas y escrituradas (2029)" },
     { "indicador": "Viviendas nuevas entregadas", "base": "160 de interés social construidas (línea base del Plan 2024–2027)", "meta": "+500: 300 urbanas en el barrio nuevo y 200 rurales (2031)" },
-    { "indicador": "Déficit de vivienda atendido por el barrio nuevo", "base": "unas 1.100 viviendas de déficit (equipo del proyecto, por confirmar)", "meta": "27 %: 300 familias con apartamento propio (2031)" },
+    { "indicador": "Déficit de vivienda atendido por el barrio nuevo", "base": "unas 1.100 viviendas de déficit (equipo del proyecto, por confirmar) o 2.070 (Esquema de Ordenamiento Territorial)", "meta": "27 % de las 1.100 o ≈14 % de las 2.070 (cálculo propio): 300 familias con apartamento propio (2031)" },
     { "indicador": "Viviendas mejoradas", "base": "12 mejoradas (línea base del Plan 2024–2027)", "meta": "+800: 400 urbanas y 400 rurales (2031)" },
     { "indicador": "Predios titulados", "base": "800 hogares sin título (Plan 2024–2027)", "meta": "800 títulos registrados (2030)" }
   ],
@@ -267,7 +267,7 @@
         { "v": "60", "l": "viviendas por hectárea", "fuente": "Cálculo sobre 300 viviendas en 5 ha" },
         { "v": "40 m²", "l": "de zona verde por vivienda", "fuente": "Cálculo sobre 12.000 m² de zonas verdes" }
       ],
-      "nota": "Distribución estimada del documento del proyecto. En la maqueta, el trazado del barrio es indicativo: el diseño final depende del lote que se escoja.",
+      "nota": "Distribución estimada del documento del proyecto. En la maqueta, el trazado del barrio es indicativo: el diseño final depende del lote que se escoja. El nombre se escoge entre Bosques de Yondó, Nuevo Magdalena, Alma del Magdalena, Ciénagas de Yondó, Nuevo Casabe y Horizontes del Magdalena; el letrero lleva «Alma del Magdalena» solo como ilustración.",
       "leyenda": [
         { "texto": "Parque infantil, kiosco y gimnasio al aire libre", "color": "#1f9e8f", "forma": "area" },
         { "texto": "Cancha múltiple", "color": "#2f6fb8", "forma": "area" },

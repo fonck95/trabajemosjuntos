@@ -27,7 +27,7 @@ if (TECNICA) {
   pres.classList.add('tecnica');
   const marca = $('.marca span');
   if (marca) marca.innerHTML = '<b>Yondó 2028–2031</b><br>Presentación técnica · lo que se construye';
-  $('[data-accion="fichas"]')?.setAttribute('title', 'Fichas técnicas de los componentes para imprimir o guardar en PDF');
+  $('[data-accion="fichas"]')?.setAttribute('title', 'Fichas técnicas de los componentes para imprimir o guardar');
 }
 const ICONOS = {
   portada: '<path d="M4 20V9l8-5 8 5v11M9 20v-6h6v6" />',
@@ -151,7 +151,7 @@ function chipsFuentes(ids = []) {
 }
 function chipsTipo(lista = []) {
   if (!lista.length) return '';
-  return `<div class="chips">${lista.map((t) => (t.url ? `<a class="chip tipo" href="${esc(t.url)}" target="_blank" rel="noopener" title="Proyecto tipo del DNP">${esc(t.nombre)}</a>` : `<span class="chip tipo">${esc(t.nombre)}</span>`)).join('')}</div>`;
+  return `<div class="chips">${lista.map((t) => (t.url ? `<a class="chip tipo" href="${esc(t.url)}" target="_blank" rel="noopener" title="Ver el proyecto tipo o el referente">${esc(t.nombre)}</a>` : `<span class="chip tipo">${esc(t.nombre)}</span>`)).join('')}</div>`;
 }
 // paso que desarrolla un componente: el que lo nombra o, para «mirador_proteccion», el de otro «mirador_…» (−1 si no hay)
 function pasoDeComp(c, id) {
@@ -240,7 +240,7 @@ const RENDER = {
     return {
       cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Cómo se financia')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
       cuerpo: `${c.financiacion?.length ? `<h3>Mezcla de fuentes propuesta</h3>${pilaFinanciacion(c.financiacion, c.inversion)}` : ''}
-        ${c.proyectos_tipo?.length ? `<h3>Proyectos tipo del DNP que sirven</h3>${chipsTipo(c.proyectos_tipo)}` : ''}
+        ${c.proyectos_tipo?.length ? `<h3>Proyectos tipo y referentes que sirven</h3>${chipsTipo(c.proyectos_tipo)}` : ''}
         ${g.madurez ? `<h3>Madurez hoy</h3><div class="madurez">${madurezPasos.map((m, i) => `<span class="${i <= k ? 'si' : ''} ${i === k ? 'aqui' : ''}" title="${m}">${madurezRotulos[m] || m}</span>`).join('')}</div>${g.madurez_nota ? `<p class="nota">${g.madurez_nota}</p>` : ''}` : ''}
         ${g.pedido ? `<div class="pedido"><b>Lo que pedimos al nivel central</b>${g.pedido}</div>` : ''}
         ${g.a_quien?.length ? `<h3>A quién tocar</h3><ul class="limpia">${g.a_quien.map((a) => `<li>· ${a}</li>`).join('')}</ul>` : ''}
@@ -416,10 +416,10 @@ function relojAgua(p) {
   return `<svg class="reloj" viewBox="0 0 300 128" role="img" aria-label="Horas de servicio de agua: hoy de ${h0} a ${h1}, meta 24 horas">
     <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="var(--line)" stroke-width="14"/>
     <path class="arco-hoy" d="${arco(h0, h1, R)}" fill="none" stroke="var(--m-aguas)" stroke-width="14" stroke-linecap="round"/>
-    <text x="${C}" y="${C - 2}" text-anchor="middle" style="font:400 26px var(--f-display);fill:var(--ink)">${h1 - h0} h</text>
+    <text x="${C}" y="${C - 2}" text-anchor="middle" style="font:400 26px var(--f-display);fill:var(--ink)">${h1 - h0}<tspan style="font-size:14px"> horas</tspan></text>
     <text x="${C}" y="${C + 16}" text-anchor="middle" style="font:10px var(--f-mono);fill:var(--muted)">hoy</text>
     <circle cx="${C + 150}" cy="${C}" r="${R}" fill="none" stroke="var(--m-aguas)" stroke-width="14" class="arco-meta"/>
-    <text x="${C + 150}" y="${C - 2}" text-anchor="middle" style="font:400 26px var(--f-display);fill:var(--ink)">24 h</text>
+    <text x="${C + 150}" y="${C - 2}" text-anchor="middle" style="font:400 26px var(--f-display);fill:var(--ink)">24<tspan style="font-size:14px"> horas</tspan></text>
     <text x="${C + 150}" y="${C + 16}" text-anchor="middle" style="font:10px var(--f-mono);fill:var(--muted)">meta 2030</text>
   </svg>`;
 }
@@ -621,7 +621,7 @@ function abrirFichas(v = fichas.hidden) {
   if (!v || fichas.dataset.listo) return;
   fichas.dataset.listo = '1';
   if (TECNICA) { fichas.innerHTML = fichasTecnicas(); return; }
-  fichas.innerHTML = `<div class="cab"><h2>Fichas de la propuesta 2028–2031</h2><div class="herr"><button type="button" data-accion="imprimir">Imprimir o guardar en PDF</button><button type="button" data-accion="fichas">Cerrar</button></div></div>
+  fichas.innerHTML = `<div class="cab"><h2>Fichas de la propuesta 2028–2031</h2><div class="herr"><button type="button" data-accion="imprimir">Imprimir o guardar</button><button type="button" data-accion="fichas">Cerrar</button></div></div>
     <p class="nota">${esc(datos.meta?.moneda || 'Millones de pesos constantes de 2026')} · corte ${esc(datos.meta?.fecha_corte || '')} · inversión total aproximada ${rgTotal()} (rangos de perfil, no costos fijos)</p>
     ${datos.modulos.map((m, i) => `<article style="--mc:${colorDe(m.id)}"><p class="ceja">${esc(m.nombre)}</p><h3>${esc(m.lema || '')}</h3>
       <div class="cols"><div><p>${m.problema || ''}</p><p><b>Propuesta.</b> ${m.propuesta || ''}</p>
@@ -631,7 +631,7 @@ function abrirFichas(v = fichas.hidden) {
 // las fichas técnicas para imprimir: por módulo, lo que propone y cada componente con sus especificaciones, su referente,
 // su sitio y su plazo, y las metas (sin costos ni financiación)
 function fichasTecnicas() {
-  return `<div class="cab"><h2>Fichas técnicas 2028–2031</h2><div class="herr"><button type="button" data-accion="imprimir">Imprimir o guardar en PDF</button><button type="button" data-accion="fichas">Cerrar</button></div></div>
+  return `<div class="cab"><h2>Fichas técnicas 2028–2031</h2><div class="herr"><button type="button" data-accion="imprimir">Imprimir o guardar</button><button type="button" data-accion="fichas">Cerrar</button></div></div>
     <p class="nota">Presentación técnica · corte ${esc(datos.meta?.fecha_corte || '')} · especificaciones de prefactibilidad: se ajustan con los diseños de cada obra</p>
     ${datos.modulos.map((m) => `<article style="--mc:${colorDe(m.id)}"><p class="ceja">${esc(m.nombre)}</p><h3>${esc(m.lema || '')}</h3>
       <p>${sinPlata(m.propuesta)}</p>

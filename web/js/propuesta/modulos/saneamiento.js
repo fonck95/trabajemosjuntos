@@ -29,9 +29,6 @@ const chico = matchMedia('(max-width: 1080px)');
 export const RTU = { ebar: [5.2, -3.0], central: [9, 6] };
 // de lejos (más de LEJOS m entre la cámara y lo que mira) los interceptores van también como línea de ancho fijo
 const LEJOS = 700;
-// los nombres y rótulos que vienen de geo.json se muestran sin siglas: cada sigla, con su nombre completo
-const SIGLAS = [[/\bEBAR\b/g, 'estación de bombeo'], [/\bPTAR\b/g, 'planta de tratamiento'], [/\bECA\b/g, 'estación de reciclaje'], [/\bEOT\b/g, 'Esquema de Ordenamiento Territorial']];
-const sinSiglas = (s) => { const o = String(s ?? ''), t = SIGLAS.reduce((a, [re, n]) => a.replace(re, n), o); return /^[A-ZÁÉÍÓÚ]/.test(o) ? t.charAt(0).toUpperCase() + t.slice(1) : t; };
 
 // ---------------------------------------------------------------- piezas propias (geometría unida por material)
 const po = (k) => ({ polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -k });
@@ -153,7 +150,7 @@ export function crear(esc, datos) {
     esc.linea(v.map(([x, y]) => [x, y, 1.2]), { color: '#8a5a2b', ancho: 3, opacidad: 0.85, padre: cHoy });
     esc.flujo(v.map(([x, y]) => [x, y, 1.5]), { color: '#8a5a2b', potencia: Math.min(1, (e.ls || 12) / 16), max: 26, tam: 2.4, tubo: 0.5, padre: cHoy });
     vertimiento(Av, v, r);
-    esc.etiqueta(`<b>${sinSiglas(e.nombre)}</b><small>${e.ls ? `${String(e.ls).replace('.', ',')} litros por segundo sin tratar` : 'sin tratamiento'}</small>`, { pos: [e.x, e.y, 14], padre: cHoy, color: 'var(--bad)', cls: 'lbl-p mini alerta' });
+    esc.etiqueta(`<b>${e.nombre}</b><small>${e.ls ? `${String(e.ls).replace('.', ',')} litros por segundo sin tratar` : 'sin tratamiento'}</small>`, { pos: [e.x, e.y, 14], padre: cHoy, color: 'var(--bad)', cls: 'lbl-p mini alerta' });
   });
   Av.volcar(cHoy, M, { sombra: false });
   // las estaciones: la misma plantilla instanciada en las cuatro (una llamada de dibujo por material)
@@ -299,7 +296,7 @@ export function crear(esc, datos) {
     if (lodos?.poligono) {
       esc.linea([...lodos.poligono, lodos.poligono[0]].map(([x, y]) => [x, y, 1.2]), { color: '#8a8f94', ancho: 2.5, punteada: true, guion: 8, padre: cRN });
       const [lx, ly] = centro(lodos.poligono);
-      esc.etiqueta(`<b>Planta de lodos vecina</b><small>${sinSiglas(lodos.rotulo || 'por el occidente')}</small>`, { pos: [lx, ly, 6], padre: cRN, color: '#8a8f94', cls: 'lbl-p mini' });
+      esc.etiqueta(`<b>Planta de lodos vecina</b><small>${lodos.rotulo || 'por el occidente'}</small>`, { pos: [lx, ly, 6], padre: cRN, color: '#8a8f94', cls: 'lbl-p mini' });
     }
     // el contorno y el nombre del predio van con los sitios evaluados: se ven también en la vista de conjunto. El contorno
     // va a 4 m, por encima de la losa del predio aun con la cámara a 30 km; el rótulo, a la derecha del predio
@@ -315,7 +312,7 @@ export function crear(esc, datos) {
   [['relleno_alternativa', '#8a8f94', 'izq'], ['relleno_descartado', '#d9363e', 'lejos']].forEach(([rol, col, lado]) => sitios(datos, 'saneamiento', rol).forEach((s) => {
     if (!s.poligono) return;
     esc.linea([...s.poligono, s.poligono[0]].map(([x, y]) => [x, y, 1.4]), { color: col, ancho: 3, punteada: true, guion: 10, padre: cSit });
-    esc.etiqueta(`<b>${sinSiglas(s.nombre)}</b>${s.rotulo ? `<small>${sinSiglas(s.rotulo).replace(/ · /g, '<br>')}</small>` : ''}`, { pos: [...masAlla(centro(s.poligono), s.poligono, R_SITIOS, lado, 40), 0], padre: cSit, color: col, cls: 'lbl-p mini', ancla: lado === 'izq' ? [1, 0.5] : [0.5, 1] });
+    esc.etiqueta(`<b>${s.nombre}</b>${s.rotulo ? `<small>${s.rotulo.replace(/ · /g, '<br>')}</small>` : ''}`, { pos: [...masAlla(centro(s.poligono), s.poligono, R_SITIOS, lado, 40), 0], padre: cSit, color: col, cls: 'lbl-p mini', ancla: lado === 'izq' ? [1, 0.5] : [0.5, 1] });
   }));
   // la basura viaja por la vía al relleno nuevo (camión de la ruta: flujo café)
   if (via) {
@@ -333,15 +330,15 @@ export function crear(esc, datos) {
     const pv = puntoEn(via, 0.8), [vx, vy] = masAlla(pv, [pv], R_SITIOS, 'izq', 200);
     esc.etiqueta(`<b>Vía al relleno</b><small>${(Math.round(largo(via) / 100) / 10).toLocaleString('es-CO')} km desde el borde del casco</small>`, { pos: [vx, vy, 0], padre: cVia, color: '#6f5233', cls: 'lbl-p mini', ancla: [1, 0.5] });
   }
-  // radio de 13 km del aeropuerto Yariguíes (RAC 14 de la Aerocivil): adentro, un relleno, una planta de tratamiento o una
+  // radio de 13 km del aeropuerto Yariguíes (reglamento aeronáutico, parte 14): adentro, un relleno, una planta de tratamiento o una
   // laguna necesitan su autorización previa, que se niega si atraen aves. El casco y la PTAR quedan adentro; Las Américas y
   // Kilómetro Cinco, afuera
   const arco = [];
   for (let a = 140; a <= 225; a += 2) arco.push([ARP[0] + 13000 * Math.cos((a * Math.PI) / 180), ARP[1] + 13000 * Math.sin((a * Math.PI) / 180), 2]);
   esc.linea(arco, { color: '#8e44ad', ancho: 2.5, punteada: true, guion: 30, opacidad: 0.85, padre: cSit });
   // el rótulo va sobre el tramo del arco que cruza el río (a 202°), lejos de la vía y de los sitios, y el detalle en
-  // dos renglones para que no sea tan ancho
-  esc.etiqueta('<b>13 km del aeropuerto Yariguíes</b><small>adentro, un relleno, una planta de tratamiento<br>o una laguna necesitan autorización de la Aerocivil</small>', { pos: [arco[31][0], arco[31][1], 4], padre: cSit, color: '#8e44ad', cls: 'lbl-p mini' });
+  // tres renglones para que no sea tan ancho
+  esc.etiqueta('<b>13 km del aeropuerto Yariguíes</b><small>adentro, un relleno, una planta de tratamiento<br>o una laguna necesitan autorización<br>de la Aeronáutica Civil</small>', { pos: [arco[31][0], arco[31][1], 4], padre: cSit, color: '#8e44ad', cls: 'lbl-p mini' });
   esc.sincronizarEtiquetas();
 
   const inv = () => esc.st.invalidate();

@@ -106,7 +106,7 @@
         ["Visitas", "Cada hogar al menos una vez al año, y más seguido las gestantes, los recién nacidos y los pacientes crónicos (meta de la propuesta)"],
         ["Dotación básica", "Un maletín por equipo: tensiómetro, fonendoscopio, glucómetro, oxímetro, termómetro, báscula, tallímetro, cinta métrica, termo de vacunas y botiquín"],
         ["Base 2025", "83 contratos por $1.537 M, con transporte incluido ($301 M)"],
-        ["Población rural", "10.755 habitantes proyectados a 2028"],
+        ["Población rural", "10.755 habitantes proyectados a 2028 (proyecciones del Departamento Administrativo Nacional de Estadística)"],
         ["Costo anual", "$1.620 M de 2026 (rango $968 M a $2.000 M), más ≈ $70 M de dotación una sola vez"],
         ["Norma", "Lineamiento de los equipos básicos de salud del Ministerio de Salud (versión 3, 2024) y Resolución 2206 de 2022"]
       ],
@@ -132,7 +132,7 @@
         ["Seguimiento en casa", "Unos 150 pacientes crónicos y gestantes de alto riesgo con equipos conectados"],
         ["Conexión", "Satelital portátil en las veredas sin señal, por 4 años; la red de fibra municipal en la cabecera"],
         ["Especialistas", "Ginecología, pediatría y medicina interna por convenio con la Gobernación y la Universidad de Antioquia o con la red de Barrancabermeja"],
-        ["Norma", "El hospital como prestador que remite por telemedicina (Resolución 1644 de 2026, que reemplazó a la 2654 de 2019)"]
+        ["Norma", "El hospital como nodo remisor de telemedicina (Resolución 1644 de 2026, que reemplazó a la 2654 de 2019)"]
       ],
       "costo": { "min": 450, "central": 715, "max": 1000 },
       "base_costo": "Estimación propia con precios de mercado de 2026: 7 maletines de telemedicina a ≈ $35 M ($245 M), 2 ecógrafos portátiles ($80 M), seguimiento en casa de unos 150 pacientes con equipos conectados ($120 M), conexión satelital portátil por 4 años ($100 M), plataforma por 4 años ($120 M) y capacitación e implementación ($50 M). El centro de telemedicina de la torre ya está en el costo de la torre.",
@@ -177,7 +177,7 @@
     { "fuente": "municipio", "monto": 4050, "mecanismo": "Contrapartida del municipio y el hospital en la torre ($1.400 M); Plan de Intervenciones Colectivas y Sistema General de Participaciones para los equipos básicos de salud ($1.680 M) y su dotación ($70 M); salud preventiva ($600 M) y telemedicina ($300 M)" },
     { "fuente": "gobernacion", "monto": 2700, "mecanismo": "Secretaría Seccional de Salud: torre ($2.300 M), con registro en el Plan Maestro de Inversiones en Infraestructura y Dotación en Salud de 2028, y salud preventiva ($400 M)" },
     { "fuente": "findeter", "monto": 1500, "mecanismo": "Crédito del municipio con tasa compensada para salud (Resolución 2316 de 2025) o Reactiva Colombia, para cerrar la obra de la torre; usa parte de la capacidad prudente de endeudamiento ($5.141 M a $10.281 M), que comparten salud, saneamiento, conectividad y agroindustria" },
-    { "fuente": "fondos", "monto": 1415, "mecanismo": "Fondo de Energías No Convencionales y Gestión Eficiente de la Energía (programa Con Energía): baterías y gestión energética de la torre ($1.000 M); Fondo Único de Tecnologías de la Información y las Comunicaciones: telemedicina rural ($415 M)" },
+    { "fuente": "fondos", "monto": 1415, "mecanismo": "Fondo de Energías No Convencionales y Gestión Eficiente de la Energía (programa ConEnergía): baterías y gestión energética de la torre ($1.000 M); Fondo Único de Tecnologías de la Información y las Comunicaciones: telemedicina rural ($415 M)" },
     { "fuente": "cooperacion", "monto": 700, "mecanismo": "Inversión social de Ecopetrol en los campos Casabe y Llanito: torre ($300 M) y salud preventiva ($100 M); Organización Panamericana de la Salud: torre ($200 M) y salud preventiva ($100 M)" }
   ],
   "proyectos_tipo": [
@@ -198,7 +198,7 @@
       "Gobernación de Antioquia · Secretaría Seccional de Salud (plan maestro de inversiones en salud, salud preventiva y telemedicina)",
       "Findeter · crédito con tasa compensada para infraestructura en salud",
       "Ministerio de Tecnologías de la Información y las Comunicaciones · telemedicina y conectividad de la torre ($400 M)",
-      "Fondo de Energías No Convencionales · programa Con Energía; Fondo Único de Tecnologías de la Información y las Comunicaciones · telemedicina rural",
+      "Fondo de Energías No Convencionales y Gestión Eficiente de la Energía · programa ConEnergía; Fondo Único de Tecnologías de la Información y las Comunicaciones · telemedicina rural",
       "Ecopetrol y Organización Panamericana de la Salud · inversión social y cooperación para la torre y la salud preventiva"
     ],
     "pasos": [
@@ -207,7 +207,7 @@
       "Antes de may-2027: decidir el uso del artículo 156 de la Ley 2294 (condonación invertida en el hospital) y gestionar con Central de Inversiones la cartera de Savia Salud y Nueva EPS.",
       "Abr–sep-2027: concertar el Documento de Capacidad Instalada con el Ministerio de Salud y verificar la iniciativa de salud rural del Plan de Acción para la Transformación Regional del Sur de Bolívar, para postular la torre a la Asignación para la Paz en las convocatorias 2027–2028.",
       "Nov-2027 a abr-2028: radicar la torre ante el Ministerio de Salud (concepto de viabilidad y control especial de oferta), cerrar la financiación e inscribir la dotación y las ambulancias en el banco de obras por impuestos.",
-      "Ene–jun-2028: antes del 31-mar-2028, el gerente que designe el nuevo alcalde firma las metas de los equipos básicos, la salud preventiva y la telemedicina; el plan de desarrollo 2028–2031 los incluye en el Plan de Intervenciones Colectivas y el hospital pide habilitarse como prestador que remite por telemedicina."
+      "Ene–jun-2028: antes del 31-mar-2028, el gerente que designe el nuevo alcalde firma las metas de los equipos básicos, la salud preventiva y la telemedicina; el plan de desarrollo 2028–2031 los incluye en el Plan de Intervenciones Colectivas y el hospital pide habilitarse como nodo remisor de telemedicina."
     ]
   },
   "metas": [
@@ -253,7 +253,7 @@
       "titulo": "Una torre y una salud que llega a la casa",
       "texto": "La torre se lleva el 80 % del costo del módulo; la salud preventiva, los equipos básicos de salud, la telemedicina y las ambulancias llevan la atención a las casas y a la zona rural, donde vive el 47 % de la población.",
       "leyenda": [
-        { "texto": "Microterritorios de los equipos básicos (OpenStreetMap); los lejanos, en su dirección", "color": "var(--m-salud)", "forma": "pt" },
+        { "texto": "Microterritorios de los equipos básicos; los lejanos, en su dirección", "color": "var(--m-salud)", "forma": "pt" },
         { "texto": "Telemedicina desde la torre hacia cada microterritorio", "color": "var(--data)", "forma": "dash" }
       ]
     },
@@ -312,14 +312,14 @@
       "tipo": "componente",
       "componente": "ebs",
       "titulo": "Siete equipos que conocen cada casa",
-      "texto": "Cinco equipos básicos de salud recorren San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta, y dos atienden la cabecera. Salen del hospital con tensiómetro, glucómetro, oxímetro, báscula y termo de vacunas; La Punta no aparece en OpenStreetMap y no se ubicó en la maqueta.",
+      "texto": "Cinco equipos básicos de salud recorren San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta, y dos atienden la cabecera. Salen del hospital con tensiómetro, glucómetro, oxímetro, báscula y termo de vacunas. La Punta todavía no tiene su punto en la maqueta.",
       "cifras": [
         { "v": "$1.537 M", "l": "contrató el hospital en 2025 para los equipos básicos de salud (83 contratos)", "fuente": "Sistema Electrónico de Contratación Pública (cálculo propio)", "url": "https://www.datos.gov.co/resource/f789-7hwg.json?nit_de_la_entidad=800014884" },
         { "v": "47 %", "l": "de los 22.429 habitantes de 2026 vive en la zona rural", "fuente": "Departamento Administrativo Nacional de Estadística, en docs/11 del repositorio", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/11-torre-hospital-nivel-1.md" },
         { "v": "≈ $70 M", "l": "cuesta el maletín de dotación básica de los 7 equipos", "fuente": "Estimación propia" }
       ],
       "leyenda": [
-        { "texto": "Microterritorios en su centro poblado (OpenStreetMap); los lejanos, en su dirección", "color": "var(--m-salud)", "forma": "pt" },
+        { "texto": "Microterritorios en su centro poblado; los lejanos, en su dirección", "color": "var(--m-salud)", "forma": "pt" },
         { "texto": "Telemedicina desde la torre hacia cada microterritorio", "color": "var(--data)", "forma": "dash" }
       ]
     },

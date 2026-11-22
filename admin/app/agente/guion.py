@@ -759,7 +759,8 @@ class Guion:
         inmersiones, con los controles de la simulación de las que muestran los pasos del capítulo, y los de la maqueta
         3D en este capítulo (`controles_maqueta`: lo que acciona `simular` sin un modelo del atlas). Si pasa de `tope`
         bytes (con la nota de la herramienta, por debajo de `MAX_CONTENIDO`), las fichas van sin descripción ni
-        referentes; si todavía pasa, los controles van sin su ayuda."""
+        referentes; si todavía pasa, los controles de las simulaciones van sin su ayuda (llega al ir al paso de la
+        inmersión), y si aún pasa, también los de la maqueta 3D (que `ir` trae sin ella: solo está aquí)."""
         c = self.capitulos[ci]
         pasos = []
         for pi, p in enumerate(c["pasos"]):
@@ -784,12 +785,20 @@ class Guion:
             out["componentes"] = [{k: v for k, v in x.items() if k not in ("descripcion", "proyectos_tipo")}
                                   for x in fichas]
             out["recortado"] = "Las fichas van sin descripción ni referentes para caber: pídalas con visual detalle."
+        # cada nivel dice lo que quitó solo si de verdad quitó algo (un capítulo sin simulaciones del atlas pasa al
+        # siguiente sin una nota que no es cierta)
+        sin_ayuda = False
         if pesa() > tope:
             for i in out["inmersiones"]:
-                if i.get("controles"):
+                if any("ayuda" in x for x in i.get("controles") or []):
                     i["controles"] = [{k: v for k, v in x.items() if k != "ayuda"} for x in i["controles"]]
+                    sin_ayuda = True
+            if sin_ayuda:
+                out["recortado"] += " Los controles de las simulaciones van sin su ayuda."
+        if pesa() > tope and any("ayuda" in x for x in out["controles_maqueta"]):
             out["controles_maqueta"] = [{k: v for k, v in x.items() if k != "ayuda"} for x in out["controles_maqueta"]]
-            out["recortado"] += " Los controles de las simulaciones van sin su ayuda."
+            out["recortado"] += (" Los de la maqueta 3D, también." if sin_ayuda
+                                 else " Los controles de la maqueta 3D van sin su ayuda.")
         return out
 
     def indice(self) -> dict:

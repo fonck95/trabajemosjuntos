@@ -7,9 +7,9 @@
   "propuesta": "Un anillo de fibra de 4,6 km por las calles del casco, con el centro de control en la alcaldía, une colegios, hospital, bomberos, el Centro de Integración Ciudadana, el coliseo y las 4 estaciones de bombeo de aguas residuales; de él salen 5 Zonas Digitales y la telemetría de esas estaciones, y la estación de bombeo de llegada nueva y la planta de tratamiento de aguas residuales reportan al centro de control por la red celular. Una granja solar pública de 1,2 megavatios pico frente a la subestación de Empresas Públicas de Medellín, en lugar de paneles en cada sede, cubre en balance anual el consumo oficial estimado, como autogeneración colectiva de una comunidad energética de la alcaldía, el hospital y Aguas y Aseo.",
   "cifras": [
     { "v": "3,56", "l": "accesos fijos a internet por cada 100 habitantes; Antioquia: 26,1", "fuente": "Departamento Nacional de Planeación, TerriData, con datos del Ministerio de Tecnologías de la Información y las Comunicaciones (cuarto trimestre de 2025)", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip", "tono": "alerta" },
-    { "v": "0", "l": "Zonas Digitales urbanas de wifi gratuito (registro nacional, 2023)", "fuente": "Ministerio de Tecnologías de la Información y las Comunicaciones, datos abiertos wg2u-d8ji", "url": "https://www.datos.gov.co/resource/wg2u-d8ji.json", "tono": "alerta" },
+    { "v": "0", "l": "Zonas Digitales urbanas de wifi gratuito (registro nacional, 2023)", "fuente": "Ministerio de Tecnologías de la Información y las Comunicaciones, registro de Zonas Digitales en datos abiertos", "url": "https://www.datos.gov.co/resource/wg2u-d8ji.json", "tono": "alerta" },
     { "v": "100 %", "l": "del consumo eléctrico oficial a 2031 lo cubriría la granja (estimado)", "fuente": "Cálculo propio: 1,62–1,80 gigavatios hora frente a 1,59 al año", "tono": "meta" },
-    { "v": "1.394", "l": "millones al año de ahorro en facturas oficiales (caso 1 de la regulación de energía, estimado)", "fuente": "Cálculo propio con tarifas de Empresas Públicas de Medellín (octubre de 2026) y la Resolución 101 072 de 2025", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_101-72_2025.htm", "tono": "meta" }
+    { "v": "1.394", "l": "millones al año de ahorro en facturas oficiales (caso 1 de la regulación de energía, estimado)", "fuente": "Cálculo propio con tarifas de Empresas Públicas de Medellín (octubre de 2026) y la Resolución 101 072 de 2025 de la Comisión de Regulación de Energía y Gas", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_101-72_2025.htm", "tono": "meta" }
   ],
   "inversion": { "min": 5511, "central": 6733, "max": 9066 },
   "componentes": [
@@ -40,7 +40,7 @@
       "id": "zonas",
       "nombre": "Zonas Digitales",
       "resumen": "5 zonas de wifi gratuito en parques y canchas, con el proyecto tipo nacional de Zonas Digitales",
-      "descripcion": "Wifi público gratuito al aire libre con el proyecto tipo del Departamento Nacional de Planeación y el Ministerio de Tecnologías de la Información y las Comunicaciones, en 5 sitios de la primera fase: Parque Principal, ciudadela deportiva (coliseo y Parque Educativo), Cancha de Sóftbol Casabe y parque lineal, plaza del Concejo, y Centro de Integración Ciudadana y Megacolegio. Cada zona tiene 2 o más puntos de acceso, 2.500 m² o más de cobertura y 200 usuarios a la vez, con el canal del anillo municipal. Villa María, la cancha de la alcaldía y la futura urbanización José Domingo Oliveros quedan para una segunda fase.",
+      "descripcion": "Wifi público gratuito al aire libre con el proyecto tipo del Departamento Nacional de Planeación y el Ministerio de Tecnologías de la Información y las Comunicaciones, en 5 sitios de la primera fase: Parque Principal, ciudadela deportiva (coliseo y Parque Educativo), Cancha de Sóftbol Casabe y parque lineal, plaza del Concejo, y Centro de Integración Ciudadana y Megacolegio. Cada zona tiene 2 o más puntos de acceso, 2.500 m² o más de cobertura y 200 usuarios a la vez, con el canal del anillo municipal. Villa María, la cancha de la alcaldía y el barrio nuevo de vivienda de interés social, cuando se defina su lote, quedan para una segunda fase.",
       "especificaciones": [
         ["Zonas", "5 en la primera fase; 3 candidatas para la segunda"],
         ["Cobertura", "2.500 m² o más y 2 o más puntos de acceso por zona"],
@@ -165,14 +165,14 @@
       "titulo": "Un anillo de fibra une lo público",
       "texto": "Un anillo de 4,6 km por las calles y un ramal de ≈280 m unen la alcaldía, donde va el centro de control, con el coliseo, los colegios, el hospital, los bomberos, el Centro de Integración Ciudadana y las 4 estaciones de bombeo de aguas residuales. De la misma red salen 5 Zonas Digitales de wifi gratis en la primera fase.",
       "cifras": [
-        { "v": "34", "l": "accesos de fibra hasta el hogar en todo Yondó, de 1.062 fijos (tercer trimestre de 2023)", "fuente": "Ministerio de Tecnologías de la Información y las Comunicaciones, datos abiertos n48w-gutb", "url": "https://www.datos.gov.co/resource/n48w-gutb.json?cod_municipio=05893", "tono": "alerta" },
+        { "v": "34", "l": "accesos de fibra hasta el hogar en todo Yondó, de 1.062 fijos (tercer trimestre de 2023)", "fuente": "Ministerio de Tecnologías de la Información y las Comunicaciones, accesos fijos a internet por tecnología en datos abiertos", "url": "https://www.datos.gov.co/resource/n48w-gutb.json?cod_municipio=05893", "tono": "alerta" },
         { "v": "7,64", "l": "accesos fijos por cada 100 habitantes en 2021; en 2025 bajaron a 3,56", "fuente": "Departamento Nacional de Planeación, TerriData, con datos del Ministerio de Tecnologías de la Información y las Comunicaciones", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip", "tono": "alerta" }
       ],
       "leyenda": [
         { "texto": "Anillo de fibra (4,6 km) y ramal a La Victoria", "color": "var(--data)", "forma": "dash" },
         { "texto": "Centro de control en la alcaldía", "color": "var(--data)", "forma": "pt" },
         { "texto": "Zonas Digitales (5 en la primera fase)", "color": "var(--m-tic)", "forma": "pt" },
-        { "texto": "Zonas Digitales candidatas a la segunda fase (3)", "color": "var(--muted)", "forma": "pt" }
+        { "texto": "Zonas Digitales candidatas a la segunda fase (3; la del barrio nuevo, al occidente del casco)", "color": "var(--muted)", "forma": "pt" }
       ]
     },
     {
@@ -258,8 +258,8 @@
   ],
   "fuentes_citadas": [
     { "titulo": "Departamento Nacional de Planeación, TerriData: ficha de Yondó, accesos fijos a internet por cada 100 habitantes (2025)", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip" },
-    { "titulo": "Ministerio de Tecnologías de la Información y las Comunicaciones, Zonas Digitales: datos abiertos wg2u-d8ji (corte 2023)", "url": "https://www.datos.gov.co/resource/wg2u-d8ji.json" },
-    { "titulo": "Ministerio de Tecnologías de la Información y las Comunicaciones, accesos fijos a internet por tecnología: datos abiertos n48w-gutb (2023)", "url": "https://www.datos.gov.co/resource/n48w-gutb.json?cod_municipio=05893" },
+    { "titulo": "Ministerio de Tecnologías de la Información y las Comunicaciones, registro de Zonas Digitales en datos abiertos (corte 2023)", "url": "https://www.datos.gov.co/resource/wg2u-d8ji.json" },
+    { "titulo": "Ministerio de Tecnologías de la Información y las Comunicaciones, accesos fijos a internet por tecnología en datos abiertos (2023)", "url": "https://www.datos.gov.co/resource/n48w-gutb.json?cod_municipio=05893" },
     { "titulo": "Departamento Nacional de Planeación y Ministerio de Tecnologías de la Información y las Comunicaciones, proyecto tipo Zonas Digitales de Acceso Público Gratuito (2023)", "url": "https://www.mintic.gov.co/portal/715/articles-326715_tipologia_02_002.pdf" },
     { "titulo": "Comisión de Regulación de Energía y Gas, Resolución 101 072, modificada por la 101 087: comunidades energéticas y autogeneración colectiva (2025)", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_101-72_2025.htm" },
     { "titulo": "Comisión de Regulación de Energía y Gas, Resolución 174: autogeneración a pequeña escala y capacidad instalada (2021)", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_0174_2021.htm" },

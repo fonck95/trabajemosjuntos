@@ -4,7 +4,7 @@
 // norte (en three, z = −y). Las piezas nacen con la base en y = 0 para que crezcan desde el piso al animarlas.
 import { THREE, mat, gsap } from '../core.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
-import { matT, matAgua, tex, texPalma, texHoja } from './texturas.js';
+import { matT, matAgua, texPalma, texHoja } from './texturas.js';
 
 export const V = (x, y, h = 0) => new THREE.Vector3(x, h, -y);
 // Une geometrías en una sola (una llamada de dibujo): sin coordenadas de textura, que no todas traen
@@ -503,86 +503,6 @@ export function enrocado(poly, n = 400, { tam = 1.4, alto = 0.6, semilla = 11, m
   });
   im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere();
   return im;
-}
-
-// ---------------------------------------------------------------- casas en serie (vivienda nueva) instanciadas
-// Casa de dos pisos en lote de 6 × 12 m: muros de pañete pintado, cubierta de teja a dos aguas paralela a la calle (con
-// aleros adelante y atrás, continua de casa a casa), puerta de madera con alero, ventana con reja y alféizar, balcón con
-// baranda en el segundo piso, ventanas atrás, antejardín con muro bajo y caminito. Una malla instanciada por material:
-// cien casas en nueve llamadas de dibujo. Coordenadas locales: x a lo largo de la calle, +z hacia la calle (la fachada)
-const FACHADAS = ['#f3efe6', '#f6e3bd', '#e3eef2', '#f4d6c8', '#e2eed9', '#efe1ec', '#f7efcf', '#dfe7f1', '#f2e6d8', '#e8f0e4'].map((c) => new THREE.Color(c));
-const caja = (w, h, d, x, y, z) => new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z);
-// faldón de cubierta con UV en metros (u a lo largo de la cumbrera, v por la pendiente) para la textura de teja
-function faldon(x0, x1, za, ya, zb, yb, esc = 0.5) {
-  const L = Math.hypot(zb - za, yb - ya), g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute([x0, ya, za, x1, ya, za, x1, yb, zb, x0, yb, zb], 3));
-  g.setAttribute('uv', new THREE.Float32BufferAttribute([x0 * esc, 0, x1 * esc, 0, x1 * esc, L * esc, x0 * esc, L * esc], 2));
-  g.setIndex(za > zb ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]); g.computeVertexNormals();
-  return g;
-}
-function plantillaCasa({ frente = 6, fondo = 9.5, alto = 2.7, pisos = 2, lote = 12 }) {
-  const H = alto * pisos, z0 = -lote / 2 + 0.75, zf = z0 + fondo, zc = z0 + fondo / 2, w = frente - 0.02, e = 0.65, pend = Math.tan(0.35);
-  const sube = (fondo / 2) * pend, P = { muro: [], techo: [], marco: [], vidrio: [], luz: [], puerta: [], concreto: [], cesped: [], baranda: [] };
-  P.muro.push(caja(w, H, fondo, 0, 0, z0 + fondo / 2));
-  // culatas (los triángulos de los extremos, en las dos caras)
-  const cul = new THREE.BufferGeometry(), cp = [];
-  [-w / 2, w / 2].forEach((x) => cp.push(x, H, z0, x, H + sube, zc, x, H, zf, x, H, z0, x, H, zf, x, H + sube, zc));
-  cul.setAttribute('position', new THREE.Float32BufferAttribute(cp, 3)); cul.computeVertexNormals(); P.muro.push(cul);
-  P.techo.push(faldon(-frente / 2, frente / 2, z0 - e, H - e * pend, zc, H + sube + 0.05), faldon(-frente / 2, frente / 2, zf + e, H - e * pend, zc, H + sube + 0.05));
-  // fachada a la calle: puerta, ventana con reja, alero sobre la puerta, escalón; segundo piso con balcón y ventana
-  const zF = zf + 0.03, marco = (x, y, ww, hh) => { P.marco.push(caja(ww + 0.16, 0.08, 0.06, x, y + hh, zF), caja(0.08, hh, 0.06, x - ww / 2 - 0.04, y, zF), caja(0.08, hh, 0.06, x + ww / 2 + 0.04, y, zF)); };
-  P.puerta.push(caja(1.0, 2.15, 0.06, -1.7, 0, zF)); marco(-1.7, 0, 1.0, 2.15);
-  P.concreto.push(caja(1.7, 0.08, 0.8, -1.7, 2.32, zf + 0.4), caja(1.9, 0.15, 1.0, -1.7, 0, zf + 0.5));
-  P.luz.push(caja(1.6, 1.2, 0.04, 1.15, 0.95, zF)); marco(1.15, 0.95, 1.6, 1.2); P.marco.push(caja(1.9, 0.07, 0.16, 1.15, 0.88, zf + 0.07));
-  for (let k = 0; k <= 6; k++) P.baranda.push(caja(0.025, 1.2, 0.025, 1.15 - 0.8 + k * (1.6 / 6), 0.95, zf + 0.07));
-  P.marco.push(caja(w + 0.06, 0.16, 0.1, 0, alto - 0.08, zf + 0.04));                       // franja del entrepiso
-  if (pisos > 1) {
-    P.vidrio.push(caja(1.2, 1.1, 0.04, -1.6, alto + 0.95, zF)); marco(-1.6, alto + 0.95, 1.2, 1.1); P.marco.push(caja(1.5, 0.07, 0.16, -1.6, alto + 0.88, zf + 0.07));
-    P.luz.push(caja(1.0, 2.1, 0.04, 1.2, alto + 0.05, zF)); marco(1.2, alto + 0.05, 1.0, 2.1);
-    P.concreto.push(caja(2.5, 0.12, 0.85, 1.2, alto - 0.02, zf + 0.42));                     // losa del balcón
-    P.baranda.push(caja(2.5, 0.05, 0.05, 1.2, alto + 1.0, zf + 0.82), caja(0.05, 1.0, 0.05, -0.05, alto + 0.1, zf + 0.82), caja(0.05, 1.0, 0.05, 2.45, alto + 0.1, zf + 0.82));
-    for (let k = 1; k < 10; k++) P.baranda.push(caja(0.022, 0.92, 0.022, -0.05 + k * 0.25, alto + 0.1, zf + 0.82));
-  }
-  // fachada de atrás: dos ventanas por piso
-  for (let p = 0; p < pisos; p++) [-1.5, 1.5].forEach((x) => P.vidrio.push(caja(1.0, 1.0, 0.04, x, p * alto + 1.1, z0 - 0.03)));
-  // antejardín: césped, muro bajo con la entrada frente a la puerta y caminito
-  const zl = lote / 2;
-  P.cesped.push(caja(frente - 0.1, 0.06, zl - zf - 0.1, 0, 0, (zf + zl) / 2));
-  const [gx0, gx1] = [-2.3, -1.1];   // la entrada del muro bajo, frente a la puerta
-  P.concreto.push(caja(gx0 + frente / 2, 0.55, 0.15, (-frente / 2 + gx0) / 2, 0, zl - 0.1), caja(frente / 2 - gx1, 0.55, 0.15, (frente / 2 + gx1) / 2, 0, zl - 0.1), caja(1.1, 0.07, zl - zf - 0.95, -1.7, 0, (zf + 1.0 + zl) / 2));
-  P.marco.push(caja(frente + 0.02, 0.2, 0.08, 0, H - e * pend - 0.18, zf + e - 0.02), caja(frente + 0.02, 0.2, 0.08, 0, H - e * pend - 0.18, z0 - e + 0.02));   // tapacanes
-  const out = {};
-  for (const [k, gs] of Object.entries(P)) if (gs.length) out[k] = k === 'techo' ? mergeGeometries(gs) : unir(gs);
-  return out;
-}
-const plantillas = new Map();
-export function casas(lotes, { frente = 6, fondo = 9.5, alto = 2.7, semilla = 9, lote = 12 } = {}) {
-  const g = new THREE.Group(), n = lotes.length;
-  if (!n) return g;
-  const r = azar(semilla);
-  const M = casas.mats || (casas.mats = {
-    muro: matT('estuco', { color: '#ffffff' }), techo: new THREE.MeshStandardMaterial({ map: tex('teja'), roughness: 0.78, side: THREE.DoubleSide }),
-    marco: matT('estuco', { color: '#fbfaf6' }), vidrio: mat(new THREE.Color('#3e5361'), { roughness: 0.05, metalness: 0.75 }), puerta: matT('madera', { color: '#b58a64' }),
-    luz: mat(new THREE.Color('#3e5361'), { roughness: 0.05, metalness: 0.75, emissive: new THREE.Color('#ffc27a'), emissiveIntensity: 0 }),
-    concreto: matT('concreto', { color: '#e6e2da' }), cesped: matT('cesped'), baranda: mat(new THREE.Color('#2a2e32'), { roughness: 0.45, metalness: 0.6 }),
-  });
-  const pisos = Math.max(...lotes.map((l) => l.pisos || 1)), clave = `${frente}|${fondo}|${alto}|${pisos}|${lote}`;
-  if (!plantillas.has(clave)) plantillas.set(clave, plantillaCasa({ frente, fondo, alto, pisos, lote }));
-  const T = plantillas.get(clave), partes = Object.keys(T);
-  const ims = partes.map((k) => new THREE.InstancedMesh(T[k], M[k], n)), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), eje = new THREE.Vector3(0, 1, 0), uno = new THREE.Vector3(1, 1, 1), tinte = new THREE.Color();
-  lotes.forEach((l, i) => {
-    q.setFromAxisAngle(eje, l.rot || 0); m4.compose(V(l.x, l.y), q, uno);
-    ims.forEach((im) => im.setMatrixAt(i, m4));
-    ims[partes.indexOf('muro')].setColorAt(i, FACHADAS[Math.floor(r() * FACHADAS.length)]);
-    ims[partes.indexOf('techo')].setColorAt(i, tinte.setRGB(0.9 + r() * 0.1, 0.88 + r() * 0.1, 0.86 + r() * 0.1));
-  });
-  ims.forEach((o) => { o.castShadow = true; o.receiveShadow = true; o.computeBoundingSphere(); });
-  const muro = ims[partes.indexOf('muro')];
-  [muro, ...ims.filter((o) => o !== muro)].forEach((o) => g.add(o));
-  g.userData.instancias = g.children.slice();
-  g.userData.crecerY = true;   // brotar: todas las partes crecen juntas desde el piso
-  g.userData.ventanas = M.luz;   // las ventanas que se encienden al atardecer (emissiveIntensity)
-  return g;
 }
 
 // ---------------------------------------------------------------- mobiliario, gente y carros instanciados

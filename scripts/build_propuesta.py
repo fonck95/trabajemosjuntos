@@ -426,7 +426,10 @@ out = {
 # espacios que no se cortan entre número y unidad («69 %», «10 × 22 m», «Lote 2», «1.ª etapa»): así una cifra no queda
 # partida entre dos líneas del panel. Solo en los textos de la presentación (no en geo ni territorio) y nunca en URL.
 NBSP = '\u00a0'
-UNIDAD = re.compile(r'(\d)[ \t](%|m²|m³|km²?\b|ha\b|m\b|L/s|L/día|kWp|MWp|kWh|MWh|kW\b|MW\b|kV\b|t/día|t/mes|t/h|t\b|horas?\b|días?\b|años?\b|meses\b|M\b|millones\b|billones\b)')
+UNIDAD = re.compile(r'(\d)[ \t](%|m²|m³|km²?\b|ha\b|m\b|L/s|L/día|kWp|MWp|kWh|MWh|kW\b|MW\b|kV\b|t/día|t/mes|t/h|t\b|horas?\b|días?\b|años?\b|meses\b|M\b|millones\b|billones\b|'
+                    # las mismas unidades escritas completas («16 litros por segundo», «1,2 megavatios pico», «5 hectáreas»)
+                    r'hectáreas?\b|(?:kiló|milí|centí)?metros?\b|litros?\b|toneladas?\b|pulgadas?\b|caballos\b|'
+                    r'(?:giga|mega|kilo)?vatios?\b|kilovoltios?\b|salarios?\b|minutos?\b|segundos?\b|semanas?\b)')
 POR = re.compile(r'(\d)[ \t]×[ \t](\d)')
 ROTULO = re.compile(r'\b(Lote|lote|Fase|fase|Sector|sector|Bloque|bloque|Etapa|etapa|Tramo|tramo|Calle|Carrera|manzana)[ \t](\d)')
 ORDINAL = re.compile(r'(\d\.[ªº])[ \t]')

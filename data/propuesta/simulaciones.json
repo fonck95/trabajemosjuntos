@@ -1,6 +1,6 @@
 {
   "torre": [
-    {"id": "proyecto_tipo", "nombre": "Área del puesto de salud tipo", "tipo": "si_no", "ayuda": "Muestra junto a la torre, a la misma escala, el área del puesto de salud tipo del DNP (un piso de 320,6 m²)."}
+    {"id": "proyecto_tipo", "nombre": "Área del puesto de salud tipo", "tipo": "si_no", "ayuda": "Muestra junto a la torre, a la misma escala, el área del puesto de salud tipo del Departamento Nacional de Planeación (un piso de 320,6 m²)."}
   ],
   "torre_pisos": [
     {"id": "piso", "nombre": "Piso elegido", "tipo": "opcion", "opciones": [
@@ -28,7 +28,7 @@
     {"id": "espectador", "nombre": "Modo espectador", "tipo": "si_no", "ayuda": "La cámara vuela y atraviesa muros y losas en vez de caminar."},
     {"id": "faltantes", "nombre": "Capa de faltantes", "tipo": "si_no", "ayuda": "Muestra en 3D las unidades del cierre de brechas y los recintos con exigencias que faltan."},
     {"id": "cumplimiento", "nombre": "Capa de cumplimiento", "tipo": "si_no", "ayuda": "Colorea el piso de cada recinto según su cumplimiento en dotación e infraestructura."},
-    {"id": "contraste", "nombre": "Comparar con el proyecto tipo", "tipo": "si_no", "ayuda": "Colorea el piso de cada recinto según el contraste con el proyecto tipo del DNP."},
+    {"id": "contraste", "nombre": "Comparar con el proyecto tipo", "tipo": "si_no", "ayuda": "Colorea el piso de cada recinto según el contraste con el proyecto tipo del Departamento Nacional de Planeación."},
     {"id": "infraestructura", "nombre": "Infraestructura normativa", "tipo": "si_no", "ayuda": "Lavamanos, tomas de gases, extintores, señalización y demás infraestructura que piden las normas."}
   ],
   "torre_laboratorio": [
@@ -48,7 +48,7 @@
     {"id": "espectador", "nombre": "Modo espectador", "tipo": "si_no", "ayuda": "La cámara vuela y atraviesa muros y losas en vez de caminar."},
     {"id": "faltantes", "nombre": "Capa de faltantes", "tipo": "si_no", "ayuda": "Muestra en 3D las unidades del cierre de brechas y los recintos con exigencias que faltan."},
     {"id": "cumplimiento", "nombre": "Capa de cumplimiento", "tipo": "si_no", "ayuda": "Colorea el piso de cada recinto según su cumplimiento en dotación e infraestructura."},
-    {"id": "contraste", "nombre": "Comparar con el proyecto tipo", "tipo": "si_no", "ayuda": "Colorea el piso de cada recinto según el contraste con el proyecto tipo del DNP."},
+    {"id": "contraste", "nombre": "Comparar con el proyecto tipo", "tipo": "si_no", "ayuda": "Colorea el piso de cada recinto según el contraste con el proyecto tipo del Departamento Nacional de Planeación."},
     {"id": "infraestructura", "nombre": "Infraestructura normativa", "tipo": "si_no", "ayuda": "Lavamanos, tomas de gases, extintores, señalización y demás infraestructura que piden las normas."}
   ],
   "torre_sismo": [
@@ -76,7 +76,7 @@
     {"id": "escala", "nombre": "Escala del registro", "tipo": "opcion", "opciones": [
       {"id": "fisica", "nombre": "×1 (físico)"},
       {"id": "nsr10", "nombre": "Nivel de diseño NSR-10"}
-    ], "ayuda": "Físico: el sismo tal como sale de la fuente; NSR-10: el registro se multiplica hasta el espectro de diseño de Yondó (escenario hipotético)."},
+    ], "ayuda": "Físico: el sismo tal como sale de la fuente; nivel de diseño: el registro se multiplica hasta el espectro de diseño de la norma sismorresistente en Yondó (escenario hipotético)."},
     {"id": "instante", "nombre": "Instante del sismo", "tipo": "numero", "min": 0, "max": 100, "paso": 1, "unidad": "%", "ayuda": "Lleva el sismo calculado a ese punto de su duración (0 el inicio, 100 el final) y lo deja quieto ahí."},
     {"id": "velocidad", "nombre": "Velocidad de reproducción", "tipo": "opcion", "opciones": [
       {"id": "lenta", "nombre": "0,25× (cámara lenta)"},
@@ -135,7 +135,7 @@
       {"id": "4d", "nombre": "4D: obra en el tiempo"},
       {"id": "interferencias", "nombre": "Interferencias"},
       {"id": "ifc", "nombre": "Descarga del IFC"}
-    ], "ayuda": "Abre esa pestaña del panel del modelo BIM; la de 4D muestra la barra del cronograma."},
+    ], "ayuda": "Abre esa pestaña del panel del modelo digital de la obra; la de 4D muestra la barra del cronograma."},
     {"id": "vista", "nombre": "Vista rápida", "tipo": "opcion", "opciones": [
       {"id": "todo", "nombre": "Todo"},
       {"id": "estructura", "nombre": "Estructura"},
@@ -205,7 +205,7 @@
       {"id": "noche", "nombre": "Noche"}
     ], "ayuda": "Pone la maqueta a esa hora: sol, cielo, luz y sombras; al atardecer y de noche se encienden las ventanas y luminarias que haya a la vista. Al cambiar de paso vuelve la hora del tema."},
     {"id": "reproducir_dia", "nombre": "Reproducir el día", "tipo": "si_no", "ayuda": "Sí: el sol recorre el cielo de la mañana a la noche en 24 segundos y las luces se encienden al oscurecer; no: lo pausa donde va."},
-    {"id": "luces", "nombre": "Luces de la maqueta", "tipo": "si_no", "capitulos": ["vivienda", "urbanismo"], "ayuda": "Sí: enciende las luminarias de vivienda y urbanismo (torres LED del estadio, postes, bolardos) con su luz en el piso (se nota al atardecer y de noche); no: las apaga."},
+    {"id": "luces", "nombre": "Luces de la maqueta", "tipo": "si_no", "capitulos": ["vivienda", "urbanismo"], "ayuda": "Sí: enciende las luminarias de vivienda y urbanismo (torres de luz del estadio, postes, bolardos) con su luz en el piso (se nota al atardecer y de noche); no: las apaga."},
     {"id": "partido", "nombre": "Partido de sóftbol", "tipo": "si_no", "capitulos": ["urbanismo"], "ayuda": "Sí: una jugada en la Cancha de Sóftbol Casabe (lanzamiento, elevado, doble y relevo) que se repite; no: la detiene. Solo con la cancha a la vista."}
   ]
 }
