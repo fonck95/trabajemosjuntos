@@ -543,6 +543,36 @@ ni en las canchas cubiertas junto al CIC, que encuadran otra cosa).
   en el paso siguiente si debe seguir. El estado de la presentación trae lo que se ve en `visual.simulacion`
   (`{hora, dia, luces, partido}`).
 
+### Cómo habla: la voz de la presentación
+
+Lo que oye la sala (los pasos del plan, la explicación suelta, la respuesta inmediata, las respuestas habladas y lo que
+el asistente responde sobre la propuesta) se le dice a la comunidad, no a ingenieros: tiene que entenderse a la
+primera. Las reglas están en un solo lugar, `app/agente/lenguaje.py`, y van a todos los que escriben lo que se dice.
+
+- **Sencillo y cercano**, como en una reunión del barrio o de la vereda: frases cortas, palabras de todos los días,
+  una idea por frase. **Explica cada parte**: qué es, para qué sirve y a quién le sirve, antes que los detalles, con
+  pocas cifras y las unidades dichas enteras (metros cuadrados, hectáreas, litros por segundo).
+- **Sin siglas ni tecnicismos**: el nombre completo («la planta de tratamiento de aguas residuales», no «la PTAR») y lo
+  que hace la cosa en vez de la palabra técnica («la torre aguanta un terremoto y sigue atendiendo», no «edificación
+  indispensable del grupo de uso IV»). El guion trae siglas porque sale de documentos técnicos: por eso cada capítulo
+  le llega al modelo con su glosario (`siglas`: el nombre completo y qué es cada una, de `lenguaje.SIGLAS`, solo las
+  que trae ese capítulo; `ir` trae las del paso). Una prueba (`tests/test_lenguaje.py`) falla si una sigla nueva del
+  guion no está explicada en el glosario.
+- **Con el léxico del candidato**: la primera persona del plural de la propuesta y la comunidad («le apostamos a…»,
+  «que podamos…», «juntos»), un «¿sí?» de vez en cuando para ver si la sala va entendiendo, «el casco urbano»
+  completo, «recursos económicos» y no «plata», «empleo» y no «trabajo» cuando se habla de puestos de empleo
+  («trabajo de parto» y «¡Trabajemos juntos!» no cambian). Los nombres van como los conoce la gente y sin variantes
+  (Yondó, el hospital Héctor Abad Gómez, la ruta chelera, la 15, la cancha de sóftbol, el parque principal, la Casa de
+  la Cultura, la iglesia, el centro agroindustrial, la planta de tratamiento de aguas residuales, vivienda joven), solo
+  donde el guion habla de ellos. No se nombran los puestos de salud ni el malecón: salieron de la propuesta.
+- **Cambian las palabras, no los datos**: cifras, nombres y plazos siguen saliendo solo del guion, sin ideas, promesas
+  ni datos nuevos, y nunca en primera persona del singular ni con citas del candidato (la voz puede ser la clonada).
+- **Dónde va.** Enteras (`COMO_SE_EXPLICA`) en las instrucciones del redactor del [plan en flujo](#el-plan-en-flujo) y
+  en las del asistente cuando tiene la presentación; en una frase (`EN_CORTO`) en la respuesta inmediata, las
+  respuestas habladas, la nota de `guion` y de `ir`, la descripción de la herramienta y las instrucciones del servidor
+  MCP. La [presentación automática](#presentación-automática), que no usa el modelo, dice frases escritas a mano con
+  estas mismas reglas.
+
 ### El plan guiado (recorridos narrados)
 
 Para explicar algo (una obra, un capítulo, «muéstrame el hospital»), el asistente no encadena órdenes sueltas ni lo
@@ -816,7 +846,9 @@ cuesta nada: la narración sale del guion (`app/automatica.py`).
   Por dentro, `POST /api/pantalla/auto` (`{accion, capitulo?}`, con el permiso `presentacion.ver`). Sin una pantalla en
   off abierta queda encendida y empieza cuando se abra una: solo corre allá.
 - **Qué dice en cada paso** (`narracion_del_paso`), lo primero que sirva de:
-  1. la narración escrita a mano;
+  1. la narración escrita a mano (hoy cada paso tiene la suya, con la [voz de la
+     presentación](#cómo-habla-la-voz-de-la-presentación): sencilla, sin siglas ni tecnicismos y con el léxico del
+     candidato; lo que sigue es para un paso que no la traiga);
   2. en el paso de metas, su **primera meta**, resumida (`primera_meta`): el indicador, el dato de la línea base y la
      meta con su año, sin las fuentes ni las aclaraciones entre paréntesis («La primera meta: sedes rurales de salud
      habilitadas en el REPS, de 0 a 5 en 2031.»); si así no cabe, solo la meta. La frase de su texto («Cada meta parte
@@ -829,13 +861,14 @@ cuesta nada: la narración sale del guion (`app/automatica.py`).
      su leyenda;
   5. el título del paso (uno largo ya es una frase y se dice tal cual).
 
-  Todo pasa las reglas de lo que se proyecta y nada habla de costos; un paso sin nada que decir se salta. Hoy son 52
-  pasos en 9 capítulos (solo dos dicen su título, que ya es una frase) y la vuelta completa dura unos 10 minutos y
-  medio: entre capítulo
-  y capítulo no hay cierre ni espera de preguntas (eso es de los planes del asistente), solo un segundo y medio.
+  Todo pasa las reglas de lo que se proyecta y nada habla de costos; un paso sin nada que decir se salta. Hoy son 55
+  pasos en 9 capítulos, todos con su narración escrita a mano: entre capítulo y capítulo no hay cierre ni espera de
+  preguntas (eso es de los planes del asistente), solo un segundo y medio.
 - **Escribir una narración a mano.** En `data/propuesta/general.json`, `tecnica.narracion` es
-  `{capítulo: {id del paso: "frase"}}` (hasta 220 caracteres, sin costos); `python3 scripts/build_propuesta.py` la
-  lleva al guion del asistente (queda en el paso como `narracion`) y manda sobre todo lo demás.
+  `{capítulo: {id del paso: "frase"}}` (hasta 220 caracteres, sin costos, con la voz de la presentación y solo con
+  datos del paso); `python3 scripts/build_propuesta.py` la lleva al guion del asistente (queda en el paso como
+  `narracion`) y manda sobre todo lo demás. `tests/test_lenguaje.py` revisa que cada paso tenga la suya, que no traiga
+  siglas, «plata», «el casco» sin «urbano» ni lo que salió de la propuesta, y que sea de un paso que existe.
 - **Cómo corre.** El servidor arma un [plan](#el-plan-guiado-recorridos-narrados) por capítulo
   (`plan_del_capitulo`): un paso del plan por cada paso del capítulo, con lo visual y la animación propios del paso
   y un movimiento suave de la cámara, sin cierre. La pantalla lo narra como cualquier otro (subtítulo y voz), sin la

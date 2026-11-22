@@ -42,8 +42,10 @@ Por qué está hecho así:
   atlas a la vista. Un control puede valer solo en unos capítulos (`capitulos`: el partido, en urbanismo);
   `Guion.controles(MAQUETA, capítulo)` da los de ese capítulo, sin esa clave.
 * Un paso puede traer su `narracion`: la frase muy resumida, escrita a mano, que dice la presentación automática en
-  ese paso (`tecnica.narracion[capítulo][id del paso]` de general.json; app/automatica.py). Es opcional: sin ella, la
-  automática dice la primera frase del texto del paso. Sin plata, como todo lo demás.
+  ese paso (`tecnica.narracion[capítulo][id del paso]` de general.json; app/automatica.py), con la voz de la
+  presentación (`lenguaje.py`: hoy la trae cada paso). Es opcional: sin ella, la automática dice la primera frase del
+  texto del paso. Sin plata, como todo lo demás. No va en lo que lee el modelo para armar un plan
+  (`capitulo_para_leer`): él escribe sus frases.
 * Nada se acorta: la herramienta le dice al modelo que explique «con esos datos (no invente otros)». El único tope es
   lo que pesa un paso para el modelo (`MAX_BYTES_PASO`): si una propuesta nueva lo pasa, `problemas` lo dice y
   build_propuesta.py --estricto falla, para decidir qué se saca en vez de cortar en silencio.
@@ -759,11 +761,12 @@ class Guion:
         inmersiones, con los controles de la simulación de las que muestran los pasos del capítulo, y los de la maqueta
         3D en este capítulo (`controles_maqueta`: lo que acciona `simular` sin un modelo del atlas). Si pasa de `tope`
         bytes (con la nota de la herramienta, por debajo de `MAX_CONTENIDO`), las fichas van sin descripción ni
-        referentes; si todavía pasa, los controles van sin su ayuda."""
+        referentes; si todavía pasa, los controles van sin su ayuda. Los pasos van sin su `narracion`: es la frase de la
+        presentación automática, que el modelo no dice (escribe la suya) y que solo le restaría lugar a las fichas."""
         c = self.capitulos[ci]
         pasos = []
         for pi, p in enumerate(c["pasos"]):
-            x = {k: v for k, v in p.items() if k != "componente"}
+            x = {k: v for k, v in p.items() if k not in ("componente", "narracion")}
             if isinstance(p.get("componente"), dict):
                 x["componente"] = p["componente"].get("id")
             if isinstance(p.get("inmersion"), dict):

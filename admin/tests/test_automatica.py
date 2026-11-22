@@ -6,6 +6,7 @@ Sin MongoDB ni modelo: los planes salen del guion real, el estado vive en la bas
 (`_Base`) y las rutas de app/api/pantalla.py se llaman como funciones (con la base y la persona en la mano). Solo datos
 inventados: la presentación es pública y la pantalla no guarda datos de personas."""
 import asyncio
+import json
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -24,6 +25,12 @@ from app.proyectable import texto_proyectable
 from test_pantalla_mcp import _Base
 
 G = guion_presentacion.cargar()
+# El guion real sin las narraciones escritas a mano: lo que diría la automática si un paso no trajera la suya
+_CRUDO = json.loads(guion_presentacion.RUTA.read_text(encoding="utf-8"))
+for _c in _CRUDO["capitulos"]:
+    for _p in _c["pasos"]:
+        _p.pop("narracion", None)
+G_SIN_MANO = guion_presentacion.Guion.desde(_CRUDO)
 UID = 7
 QUIEN = acceso.Quien(uid=UID, usuario="c7", nombre="Coordinadora de prueba", rol="coordinador",
                      permisos=acceso.PERMISOS["coordinador"])
@@ -108,10 +115,14 @@ def test_el_plan_puede_empezar_a_mitad_del_capitulo():
     assert automatica.plan_del_capitulo(G, ci, 0)["escenas"][0]["paso"] == 1   # un «desde» raro: desde el primero
 
 
-def test_la_narracion_real_es_la_primera_frase_cortada_donde_termina_una_idea():
+def test_sin_la_escrita_a_mano_es_la_primera_frase_cortada_donde_termina_una_idea():
+    """Hoy cada paso real trae su narración escrita a mano (test_lenguaje.py); sin ella, la automática deriva la frase
+    del texto del paso, y eso se prueba con el guion real sin esas narraciones."""
+    g = G_SIN_MANO
+
     def dice(capitulo, paso):
-        ci = G.por_id(capitulo)
-        return automatica.narracion_del_paso(G, ci, G.paso(ci, paso))
+        ci = g.por_id(capitulo)
+        return automatica.narracion_del_paso(g, ci, g.paso(ci, paso))
     # la primera frase, entera
     assert dice("portada", "territorio") == "Yondó queda frente a Barrancabermeja, al otro lado del Magdalena."
     assert dice("aguas", "sistema") == ("El agua sale de los pozos, se potabiliza, sube por impulsión al tanque de "
@@ -124,21 +135,25 @@ def test_la_narracion_real_es_la_primera_frase_cortada_donde_termina_una_idea():
                                                 "etapas que funcionan solas.")
     # sin dónde cortarla (lo que cabe antes del punto y coma pasa de 180), y el título es solo un rótulo: la primera
     # idea corta del texto (la parte que sigue al punto y coma), con mayúscula y punto
-    assert dice("salud", "portadilla") == "Los 5 puestos rurales están abandonados o en mal estado, sin habilitar."
+    assert dice("salud", "portadilla") == ("En la zona rural, donde vive el 47 % de la población, no hay ninguna sede "
+                                           "habilitada.")
     # la frase que habla de la plata no se narra, y el título es un rótulo: la otra idea de la misma frase
     assert "costo" in SALUD["pasos"][1]["texto"]
-    assert dice("salud", "componentes") == ("La telesalud, los EBS, los puestos y las ambulancias llevan la atención a "
-                                            "la zona rural, donde vive el 47 % de la población.")
+    assert dice("salud", "componentes") == ("La salud preventiva, los equipos básicos de salud, la telemedicina y las "
+                                            "ambulancias llevan la atención a las casas y a la zona rural, donde vive "
+                                            "el 47 % de la población.")
     # un título que ya es una frase se dice tal cual (no se busca otra)
-    assert dice("saneamiento", "residuos") == "Menos basura a la celda: ECA y compostaje en el mismo predio."
+    assert dice("saneamiento", "residuos") == "Menos basura a la celda: reciclaje y compostaje en el mismo predio."
     # el paso de metas nombra la primera meta de su módulo, resumida (su texto es el mismo en los siete)
-    assert dice("salud", "metas") == "La primera meta: sedes rurales de salud habilitadas en el REPS, de 0 a 5 en 2031."
-    assert dice("aguas", "metas") == ("La primera meta: horas de servicio al día en la red urbana, de 9 h a 24 h en el "
-                                      "sector piloto en 2029 y en todo el casco en 2030.")
-    metas = [dice(c["id"], "metas") for c in G.capitulos if any(p["id"] == "metas" for p in c["pasos"])]
+    assert dice("salud", "metas") == ("La primera meta: menores de 1 año vacunados con la pentavalente, frente a la meta "
+                                      "del Programa Ampliado de Inmunizaciones, de 93,9 % a 95 % o más en 2031.")
+    assert dice("aguas", "metas") == ("La primera meta: horas de servicio al día en la red urbana, de 9 horas a 24 horas "
+                                      "en el sector piloto en 2029 y en todo el casco en 2030.")
+    metas = [dice(c["id"], "metas") for c in g.capitulos if any(p["id"] == "metas" for p in c["pasos"])]
     assert len(metas) == 7 and len(set(metas)) == 7 and all(m.startswith("La primera meta") for m in metas)
     assert not any("Cada meta parte" in m or "→" in m or "(" in m for m in metas)
-    # si el guion trae una escrita a mano, es esa la que se dice (hoy ninguna: la prueba la cuida cuando se escriba)
+    # si el guion trae una escrita a mano, es esa la que se dice (en el real, todas: test_lenguaje.py las revisa)
+    assert all(p.get("narracion") for c in G.capitulos for p in c["pasos"])
     for ci, c in enumerate(G.capitulos):
         for pi, p in enumerate(c["pasos"]):
             if p.get("narracion"):

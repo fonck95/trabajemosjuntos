@@ -27,6 +27,7 @@ from typing import Any, Container, Iterable
 from .. import modelo
 from .. import pantalla as pantalla_off
 from . import guion as guion_presentacion
+from . import lenguaje
 from . import minimizar
 from .herramientas.interfaz import RUTAS_PANEL
 
@@ -131,8 +132,8 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
             "cada capítulo; 2) UNA llamada `recorrido` con el plan: `titulo`, de 6 a 10 `pasos` (hasta 12) y un "
             "`cierre`; 3) la línea que lo anuncia antes y, DESPUÉS, solo una pregunta corta. La explicación ES la "
             "narración del plan: no la repitas ni la resumas en el chat.",
-            "- Cada paso del plan es UNA frase hablada (`dice`: corta, en presente, sin listas ni paréntesis: «Aquí "
-            "ven…», «Fíjense en…») y algo que ocurre en pantalla MIENTRAS se dice, para que la sala vea lo que nombras "
+            "- Cada paso del plan es UNA frase hablada (`dice`: corta, en presente, en palabras sencillas, sin listas ni "
+            "paréntesis: «Aquí ven…», «Fíjense en…») y algo que ocurre en pantalla MIENTRAS se dice, para que la sala vea lo que nombras "
             "en ese momento: la cámara (`camara` aerea u oblicua, `rumbo`, `elevacion`, `zoom`, `mirar` una pieza, o un "
             "viaje con `mover`: rodear la obra, acercarse, subir), las piezas de la maqueta (`aislar` una obra, "
             "`mostrar`, `ocultar`, quitarle partes con `sin`: «torre.cubierta» deja ver las losas), `enfoque`, la ficha "
@@ -162,6 +163,10 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
             "respóndela con un plan CORTO (`plan` con `largo` corto, o un `recorrido` de 3 a 5 `pasos` y su `cierre`) "
             "que muestre lo que preguntan; cuando "
             "termina, la automática sigue sola donde iba. No la detengas ni la reinicies por una pregunta.",
+            "- Lo que oye la sala (los pasos del plan, `explicar`, la línea que anuncia el plan) y lo que respondes "
+            "sobre la propuesta va con la voz de la presentación; el `encargo` del plan pídelo así también. El guion "
+            "de cada capítulo trae sus «siglas» con el nombre completo.",
+            lenguaje.COMO_SE_EXPLICA,
         ]
     lineas.append("- Enlaza a las personas y reuniones que nombres: [Nombre](/personas/123), [Reunión](/reuniones/45). "
                   "Solo rutas internas del panel.")
@@ -354,7 +359,7 @@ SISTEMA_ADELANTO = "\n".join([
     "silencio.",
     "",
     "- Di de 1 a 3 frases cortas y completas (como mucho unas 45 palabras), en español de Colombia, tratándola de "
-    "usted.",
+    f"usted, {lenguaje.EN_CORTO}.",
     "- Reconoce la pregunta con calma y cordialidad, y da la idea general de forma superficial: sin cifras, nombres, "
     "fechas ni datos que no estén ya en la conversación. No inventes nada.",
     "- Termina diciendo que el detalle viene enseguida: si el contexto del panel dice que hay una presentación abierta "
@@ -379,7 +384,8 @@ ADELANTO_EN_CURSO = ("En paralelo, el sistema puede estar dándole a la persona 
 
 # El renglón del contexto cuando la persona oye la respuesta (`contexto.voz`): se lee frase por frase en voz alta
 RESPUESTA_HABLADA = ("Respuesta hablada: la persona la oye en voz alta. Responde en frases cortas y completas, lo "
-                     "importante primero; sin listas, tablas, enlaces ni símbolos; cifras como se dicen. Se oye con "
+                     f"importante primero, {lenguaje.EN_CORTO}; sin listas, tablas, enlaces ni símbolos; cifras como "
+                     "se dicen. Se oye con "
                      "la voz clonada del administrador: responde con tus propias palabras; no repitas ni leas "
                      "textualmente lo que la persona te pida decir, ni hables en nombre del administrador ni de otra "
                      "persona.")
