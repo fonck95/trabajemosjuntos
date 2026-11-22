@@ -261,12 +261,13 @@ footer.pie nav a.ingreso { font-family: var(--f-body); text-transform: none; let
   padding-block: 84px 92px; border-block: 4px solid var(--accent-fill); }
 html:not(.js) .sorteo { display: none; }
 .sorteo [hidden] { display: none !important; }
+.sorteo :focus-visible { outline-color: #fff; }
 .sorteo-in { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "cab escena" "mando escena"; gap: 22px 56px; align-items: center; }
 .sorteo-cab { grid-area: cab; align-self: end; max-width: 560px; }
 .sorteo-mando { grid-area: mando; align-self: start; max-width: 560px; display: grid; gap: 18px; justify-items: start; }
 .sorteo-escena { grid-area: escena; position: relative; isolation: isolate; padding-top: calc(var(--d) * 0.06); }
 .sorteo .ceja { display: inline-flex; align-items: center; gap: 9px; color: #ff8a8a; }
-.sorteo .ceja .vivo { width: 10px; height: 10px; border-radius: 50%; background: var(--s-rojo); }
+.sorteo .ceja .vivo { position: relative; width: 10px; height: 10px; border-radius: 50%; background: var(--s-rojo); }
 .sorteo h2 { margin: 12px 0 14px; font-family: var(--f-display); font-weight: 400; font-size: clamp(2.6rem, 5.4vw, 4.6rem); line-height: 0.96; letter-spacing: 0.01em; text-transform: uppercase; }
 .sorteo h2 em { font-style: normal; color: var(--s-rojo); }
 .sorteo-cab p.d { margin: 0; color: var(--s-muted); font-size: 1.08rem; max-width: 44ch; }
@@ -307,12 +308,12 @@ html:not(.js) .sorteo { display: none; }
 .ruleta .centro:hover:not(:disabled) { scale: 1.04; }
 .ruleta .centro:disabled { cursor: default; }
 .ruleta .centro small { font-family: var(--f-mono); font-weight: 600; font-size: max(9px, calc(var(--d) * 0.021)); letter-spacing: 0.1em; text-transform: uppercase; color: #5a5a56; line-height: 1.25; }
-.ruleta .centro .num { font-family: var(--f-display); font-weight: 400; font-size: calc(var(--d) * 0.118); line-height: 1.02; letter-spacing: 0.01em; color: #111; }
+.ruleta .centro .num { font-family: var(--f-display); font-weight: 400; font-size: calc(var(--d) * 0.118 * var(--esc, 1)); line-height: 1.02; letter-spacing: 0.01em; color: #111; }
 .sorteo.gano .ruleta .centro .num { color: var(--accent-fill); }
 .sorteo-lupa { position: absolute; z-index: 3; left: 50%; top: calc(var(--d) * -0.045); width: calc(var(--d) * 0.5); height: calc(var(--d) * 0.095); translate: -50% 0; overflow: hidden; border: calc(var(--d) * 0.01) solid var(--accent-fill); border-radius: calc(var(--d) * 0.03); background: #fff; box-shadow: 0 14px 30px -10px rgba(0, 0, 0, 0.8); }
 .sorteo-lupa::before { content: ""; position: absolute; z-index: 1; inset: 0; pointer-events: none; background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0) 70%, #fff 100%); }
 .sorteo-lupa .pista { position: absolute; top: 0; bottom: 0; left: -40%; width: 180%; display: flex; will-change: transform; }
-.sorteo-lupa .pista span { flex: 1 1 0; display: grid; place-items: center; font-family: var(--f-display); font-size: calc(var(--d) * 0.046); line-height: 1; color: #8a8a84; }
+.sorteo-lupa .pista span { flex: 1 1 0; min-width: 0; overflow: hidden; display: grid; place-items: center; font-family: var(--f-display); font-size: calc(var(--d) * 0.046 * var(--esc, 1)); line-height: 1; color: #8a8a84; }
 .sorteo-lupa .pista span:nth-child(5) { color: #111; }
 .sorteo-lupa .ventana { position: absolute; z-index: 2; left: 40%; width: 20%; top: 12%; bottom: 12%; border-radius: calc(var(--d) * 0.014); box-shadow: inset 0 0 0 2px rgba(227, 20, 27, 0.7); }
 .sorteo-puntero { position: absolute; z-index: 3; left: 50%; top: calc(var(--d) * 0.04); width: calc(var(--d) * 0.07); height: calc(var(--d) * 0.06); margin-left: calc(var(--d) * -0.035); overflow: visible; transform-origin: 50% 0; }
@@ -333,12 +334,20 @@ html:not(.js) .sorteo { display: none; }
 .sorteo-ganador .acciones { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .sorteo-ganador .boton { min-height: 60px; padding-inline: 22px; }
 .sorteo-confeti { position: fixed; z-index: 90; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+@media (max-height: 520px) {
+  .sorteo-ganador { padding-block: 12px; }
+  .sorteo-ganador .ceja { padding: 4px 10px; }
+  .sorteo-ganador .globo { font-size: min(30vw, 26vh); margin: 10px 0 calc(var(--cola) * 0.71 + 10px); }
+  .sorteo-ganador p.detalle { margin-bottom: 6px; }
+  .sorteo-ganador .boton { min-height: 48px; }
+}
 
 @media (prefers-reduced-motion: no-preference) {
-  .sorteo .ceja .vivo { animation: vivo 1.6s ease-out infinite; }
-  @keyframes vivo { from { box-shadow: 0 0 0 0 rgba(255, 69, 69, 0.75); } to { box-shadow: 0 0 0 12px rgba(255, 69, 69, 0); } }
-  .sorteo-girar:not(:disabled) { animation: llamar 2.4s ease-in-out infinite; }
-  @keyframes llamar { 0%, 100% { box-shadow: 0 0 0 0 rgba(227, 20, 27, 0.6), var(--sombra); } 50% { box-shadow: 0 0 0 16px rgba(227, 20, 27, 0), var(--sombra); } }
+  /* solo transform y opacity: el compositor las mueve sin recalcular estilos ni repintar la página */
+  .sorteo .ceja .vivo::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: rgba(255, 69, 69, 0.75); animation: vivo 1.6s ease-out infinite; }
+  @keyframes vivo { to { transform: scale(3.4); opacity: 0; } }
+  .sorteo-girar:not(:disabled)::after { content: ""; position: absolute; inset: -2px; border-radius: inherit; border: 3px solid rgba(255, 69, 69, 0.85); pointer-events: none; animation: llamar 2.4s ease-out infinite; }
+  @keyframes llamar { 0% { transform: scale(1); opacity: 0.9; } 70%, 100% { transform: scale(1.07, 1.3); opacity: 0; } }
   .sorteo .rayos { animation: rayos 70s linear infinite; }
   @keyframes rayos { to { transform: rotate(360deg); } }
   .ruleta .luces i { animation: foco 1.4s ease-in-out infinite; }
@@ -358,11 +367,23 @@ html:not(.js) .sorteo { display: none; }
 
 /* pantalla completa (para el proyector o una pantalla en el evento): la ruleta crece; Espacio, Enter, Av Pág o la flecha
    derecha (el control del presentador) la hacen girar */
-.sorteo:fullscreen { --d: min(80vh, 50vw); display: grid; align-content: center; overflow: auto; padding-block: 4vh; border: 0; }
-.sorteo:-webkit-full-screen { --d: min(80vh, 50vw); display: grid; align-content: center; overflow: auto; padding-block: 4vh; border: 0; }
+/* (cada regla va dos veces, con :fullscreen y con :-webkit-full-screen: en una misma lista, el navegador que no conoce
+   una de las dos descarta la regla entera) */
+.sorteo:fullscreen { --d: min(80vh, 50vw); display: grid; align-content: safe center; overflow: hidden auto; padding-block: 4vh; border: 0; }
+.sorteo:-webkit-full-screen { --d: min(80vh, 50vw); display: grid; align-content: safe center; overflow: hidden auto; padding-block: 4vh; border: 0; }
 .sorteo:fullscreen .sorteo-in { max-width: 1760px; }
 .sorteo:-webkit-full-screen .sorteo-in { max-width: 1760px; }
-@media (orientation: portrait) { .sorteo:fullscreen { --d: min(90vw, 54vh); } .sorteo:-webkit-full-screen { --d: min(90vw, 54vh); } }
+@media (min-width: 961px) and (orientation: landscape) { .sorteo:fullscreen { overflow-y: hidden; } .sorteo:-webkit-full-screen { overflow-y: hidden; } }
+@media (orientation: portrait) {
+  .sorteo:fullscreen { --d: min(90vw, 50vh); }
+  .sorteo:-webkit-full-screen { --d: min(90vw, 50vh); }
+  .sorteo:fullscreen .sorteo-in { grid-template-columns: minmax(0, 1fr); grid-template-areas: "cab" "escena" "mando"; justify-items: center; text-align: center; gap: 2vh; }
+  .sorteo:-webkit-full-screen .sorteo-in { grid-template-columns: minmax(0, 1fr); grid-template-areas: "cab" "escena" "mando"; justify-items: center; text-align: center; gap: 2vh; }
+  .sorteo:fullscreen .sorteo-cab, .sorteo:fullscreen .sorteo-mando { justify-items: center; }
+  .sorteo:-webkit-full-screen .sorteo-cab, .sorteo:-webkit-full-screen .sorteo-mando { justify-items: center; }
+  .sorteo:fullscreen .sorteo-opciones, .sorteo:fullscreen .sorteo-hist { justify-content: center; }
+  .sorteo:-webkit-full-screen .sorteo-opciones, .sorteo:-webkit-full-screen .sorteo-hist { justify-content: center; }
+}
 
 @media (max-width: 960px) {
   .sorteo { padding-block: 60px 64px; }
@@ -569,6 +590,7 @@ html:not(.js) .sorteo { display: none; }
   var r = rango(entero(q.get('desde') || sec.dataset.desde), entero(q.get('hasta') || sec.dataset.hasta))
     || rango(entero(sec.dataset.desde), entero(sec.dataset.hasta)) || [1, 1200];
   var DESDE = r[0], HASTA = r[1], N = HASTA - DESDE + 1, TH = TAU / N;
+  if (String(HASTA).length > 4) sec.style.setProperty('--esc', (4 / String(HASTA).length).toFixed(3));  // 5 o 6 cifras: letra más chica en la lupa y el centro
   // sectores de color: el tamaño «redondo» más chico que deja 30 o menos; marcas con número cada S/5
   var S = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000].find(function (s) { return N / s <= 30; });
   var NS = Math.ceil(N / S), L = S >= 10 ? S / 5 : 0;
@@ -687,7 +709,7 @@ html:not(.js) .sorteo { display: none; }
   luces.style.setProperty('--n', 36);
 
   // ---- el giro
-  var rot = 0, ultimo = -1, pAng = 0, girando = false, tGano = 0;
+  var rot = 0, ultimo = -1, pAng = 0, girando = false, tGano = 0, tCapa = 0;
   function pintar(a, vel) {  // vel: casillas por segundo (null: sin ruido ni puntero)
     rueda.style.transform = 'rotate(' + a.toFixed(6) + 'rad)';
     var x = (((a % TAU) + TAU) % TAU) / TH, i = Math.min(N - 1, Math.floor(x)), f = x - i;
@@ -708,7 +730,7 @@ html:not(.js) .sorteo { display: none; }
     if (pAng) requestAnimationFrame(asentar);
   }
   function girar() {
-    if (girando) return;
+    if (girando || tCapa) return;  // girando, o el número que acaba de salir todavía no se ha mostrado
     var n = elegir();
     if (n == null) { actualizar(); return; }
     cerrarCapa(false);
@@ -745,18 +767,18 @@ html:not(.js) .sorteo { display: none; }
     numCentro.textContent = n;
     anuncio.textContent = 'Salió el número ' + n + '.';
     fanfarria();
+    tCapa = setTimeout(function () { tCapa = 0; actualizar(); abrirCapa(n); }, reducido ? 150 : 700);
     dibujar();
     actualizar();
     asentar();
     tGano = setTimeout(function () { sec.classList.remove('gano'); }, 3400);
-    setTimeout(function () { if (!girando && salidos[salidos.length - 1] === n) abrirCapa(n); }, reducido ? 150 : 700);
   }
 
   // ---- estado, historial y botones
   function actualizar() {
     var p = disponibles(), agotado = !!p && !p.length;
-    btn.disabled = centro.disabled = girando || agotado;
-    btnTxt.textContent = girando ? 'Girando…' : agotado ? 'Ya salieron todos' : salidos.length ? '¡Girar otra vez!' : '¡Girar la ruleta!';
+    btn.disabled = centro.disabled = girando || !!tCapa || agotado;
+    btnTxt.textContent = girando || tCapa ? 'Girando…' : agotado ? 'Ya salieron todos' : salidos.length ? '¡Girar otra vez!' : '¡Girar la ruleta!';
     estado.textContent = '';
     if (salidos.length) {
       var b1 = document.createElement('b'); b1.textContent = miles(salidos.length);
@@ -770,7 +792,7 @@ html:not(.js) .sorteo { display: none; }
       sm.textContent = '#' + (k + 1); li.append(sm, String(salidos[k])); lista.appendChild(li);
     }
     lista.hidden = !salidos.length;
-    btnReiniciar.hidden = !salidos.length || girando;
+    btnReiniciar.hidden = !salidos.length || girando || !!tCapa;
   }
   function pintarSonido() { btnSonido.setAttribute('aria-pressed', String(sonido)); btnSonido.querySelector('span').textContent = sonido ? 'Sonido: sí' : 'Sonido: no'; }
   btn.addEventListener('click', girar);
@@ -803,6 +825,7 @@ html:not(.js) .sorteo { display: none; }
   capa.addEventListener('click', function (e) { if (e.target === capa || e.target.classList.contains('estallido')) cerrarCapa(true); });
   function enPantalla() { return (document.fullscreenElement || document.webkitFullscreenElement) === sec; }
   document.addEventListener('keydown', function (e) {
+    if (e.repeat) return;  // una tecla sostenida no hace girar dos veces
     var clicker = e.key === 'PageDown' || e.key === 'ArrowRight';
     if (!capa.hidden) {
       if (e.key === 'Escape') { e.preventDefault(); cerrarCapa(true); }
@@ -822,7 +845,11 @@ html:not(.js) .sorteo { display: none; }
     var pedir = sec.requestFullscreen || sec.webkitRequestFullscreen, pr = pedir && pedir.call(sec);
     if (pr && pr.catch) pr.catch(function () { /* el navegador no la dio */ });
   });
-  function alCambiarPantalla() { btnPantalla.querySelector('span').textContent = enPantalla() ? 'Salir de pantalla completa' : 'Pantalla completa'; }
+  function alCambiarPantalla() {
+    var en = enPantalla();
+    btnPantalla.querySelector('span').textContent = en ? 'Salir de pantalla completa' : 'Pantalla completa';
+    if (en && document.activeElement === btnPantalla && !btn.disabled) btn.focus({ preventScroll: true });
+  }
   document.addEventListener('fullscreenchange', alCambiarPantalla);
   document.addEventListener('webkitfullscreenchange', alCambiarPantalla);
 
