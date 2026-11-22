@@ -281,8 +281,10 @@ def test_la_op_guion_trae_la_maqueta_y_los_ejemplos_son_planes_que_corren():
     r = _hacer(db, 7, {"op": "guion", "capitulo": "Salud"}, por="asistente")
     assert r.acciones == [] and db.pantallas.find_one({"_id": 7}) is None   # leer no mueve ni guarda nada
     # (y los gestos del presentador que cada paso puede pedir, con lo que expresa cada uno)
+    # (y el glosario de las siglas que trae el capítulo, para decir su nombre completo: lenguaje.py)
     assert list(r.contenido) == ["capitulo", "pasos", "componentes", "maqueta", "controles_maqueta", "inmersiones", "gestos",
-                                 "nota"]
+                                 "siglas", "nota"]
+    assert r.contenido["siglas"]["NSR-10"].startswith("Reglamento Colombiano de Construcción Sismo Resistente")
     assert [x["id"] for x in r.contenido["maqueta"]] == ["hospital_hoy", "torre", "telesalud", "puestos"]
     assert [p["id"] for p in r.contenido["maqueta"][1]["partes"]] == ["cubierta", "equipos", "jardines"]
     # (con los controles de las simulaciones de sus modelos del atlas: el simulador sísmico, el BIM… por debajo del tope

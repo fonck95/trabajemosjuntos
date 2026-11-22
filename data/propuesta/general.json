@@ -422,6 +422,82 @@
         }
       ]
     },
+    "narracion_nota": "Lo que dice la presentación automática en cada paso ({capítulo: {id del paso: frase}}, hasta 220 caracteres, sin costos): en palabras sencillas para la comunidad, sin siglas ni tecnicismos, con «casco urbano» completo y solo con datos del paso (admin/app/agente/lenguaje.py; test_lenguaje.py lo revisa). scripts/build_propuesta.py la lleva al guion del asistente.",
+    "narracion": {
+      "portada": {
+        "inicio": "Bienvenidos. Les vamos a mostrar, obra por obra y en su sitio real, lo que le apostamos a construir en Yondó: qué es, para qué sirve y qué cambia cuando funcione.",
+        "territorio": "Yondó queda frente a Barrancabermeja, al otro lado del río Magdalena. Las obras van en el casco urbano y sus alrededores, en el acueducto, en el relleno nuevo y a la salida del puente."
+      },
+      "vivienda": {
+        "portadilla": "En el censo de 2018, seis de cada diez hogares de Yondó tenían problemas de vivienda, y el 37,8 % vivía en casas que toca reponer, sobre todo de madera o tabla.",
+        "componentes": "Primero, lo que ya se pagó: le apostamos a terminar esas obras y a titular los predios. Con eso pedimos los recursos económicos para 300 apartamentos, 200 casas rurales y 800 mejoramientos.",
+        "nuevas": "Un mejor futuro empieza en casa: un barrio nuevo de vivienda de interés social, con 300 apartamentos en 25 bloques de 3 pisos, alrededor de un parque.",
+        "apartamento": "Cada apartamento tiene dos alcobas, un baño, sala-comedor, cocina, zona de ropas y balcón, en 54,04 metros cuadrados. Son 4 por piso y 12 por bloque.",
+        "barrio": "El barrio no es solo bloques, ¿sí? En el centro va un parque con juegos para los niños, cancha múltiple, kiosco, gimnasio al aire libre y senderos.",
+        "mejoramientos": "En naranja, casas pequeñas de las afueras del casco urbano: así es la vivienda que mejoramos donde está. Las 400 se escogen con el Sisbén y el catastro.",
+        "rural": "En el campo cambiamos casas de madera o tabla por casas nuevas en el lote de cada familia, con saneamiento propio y energía solar donde no llega la red eléctrica.",
+        "metas": "La meta: que las 3 obras de vivienda que se pagaron y no se terminaron queden entregadas y escrituradas en 2029."
+      },
+      "urbanismo": {
+        "portadilla": "El coliseo, el Parque Educativo, la cancha de fútbol y el parque principal quedan muy cerca del estadio de sóftbol, pero no forman un conjunto: los separan calles sin sombra.",
+        "componentes": "Son seis piezas que se presentan como un solo proyecto por etapas, y cada etapa funciona sola: cuatro en la ciudadela deportiva y dos en el mirador junto al puente.",
+        "softbol": "Esta es la Cancha de Sóftbol Casabe: cabe en la manzana del estadio actual sin tocar una sola casa, y se juega de noche con seis torres de luz de bajo consumo.",
+        "cano": "El caño vuelve a ser parte del barrio: un sendero y una ciclorruta por la orilla, y tres puentes que unen el estadio con el Centro de Integración Ciudadana y el Megacolegio.",
+        "alameda": "Del estadio al parque principal hacemos una alameda por las calles que ya existen, con sombra y prioridad para el que camina, sin tumbar nada.",
+        "instalaciones": "Al otro lado del caño, en la explanada del Centro de Integración Ciudadana, le ponemos techo a dos canchas múltiples y a un skatepark.",
+        "mirador": "Este es el Mirador Puerta del Magdalena: primero protegemos la orilla del río; detrás va la plaza con las letras de Yondó y un paseo curvo hasta el mirador, en alto sobre el río.",
+        "metas": "La meta: que en 2029 Yondó tenga una cancha de sóftbol reglamentaria, con juego de noche. Hoy no hay ninguna."
+      },
+      "agroindustria": {
+        "portadilla": "Yondó produce mucho, pero lo vende en bruto: el ganado sale en pie, el arroz sin secar y el pescado sin frío. Así se nos va lo que se gana al transformarlo, y se va el empleo.",
+        "componentes": "Las plantas van en fila, de lo sucio a lo limpio, y comparten el frío, el agua tratada y el biodigestor, que convierte los desechos en gas.",
+        "matadero": "Aquí se sacrifican 30 reses y 40 cerdos por turno, y la carne pasa directo al frigorífico, pegado a la central de frío.",
+        "circuito": "Cada planta le compra o le vende a otra: lo que entra como grano o como animal sale empacado y frío por el puente hacia Barrancabermeja.",
+        "metas": "La meta para 2031: que en Yondó se sacrifiquen, en planta propia, 7.500 reses y 10.000 cerdos al año. Hoy son cero."
+      },
+      "salud": {
+        "portadilla": "Yondó tiene un solo hospital, el hospital Héctor Abad Gómez, en un edificio de 1989 que, según el propio hospital, no cumple la norma contra sismos. En el campo no hay ninguna sede.",
+        "componentes": "Le apostamos a dos cosas: una torre nueva para el hospital y una salud que llega a la casa, con prevención, equipos de salud, telemedicina y ambulancias.",
+        "torre": "La torre va al lado del hospital actual: urgencias y rayos X en el primer piso, consulta y laboratorio en el segundo, las camas y los partos en el tercero, y terapias en el cuarto.",
+        "torre_pisos": "Así queda la torre por dentro, piso por piso: cada color es un tipo de servicio, rojo para urgencias, azul para hospitalización y naranja para consulta.",
+        "torre_recorrido": "Ahora caminamos por dentro de la torre, a la altura de los ojos: cada equipo está en su sitio, con su ficha, lo que le pide la norma y su amarre por si tiembla.",
+        "torre_sismo": "Esta torre tiene que seguir atendiendo después de un terremoto. Está prediseñada con la norma colombiana contra sismos, y este simulador la sacude con temblores reales e imaginados.",
+        "torre_bim": "Antes de poner un solo ladrillo, la torre ya está hecha completa en el computador, con cada pieza en su sitio, y se revisó hasta que ninguna se cruzara con otra.",
+        "preventiva": "Prevenir en la casa antes que curar en el hospital: los equipos de salud salen a vacunar, a buscar a las embarazadas desde los primeros meses y a medir la presión y el azúcar casa a casa.",
+        "telesalud": "Con la telemedicina, el médico consulta en línea con especialistas en ginecología, pediatría y medicina interna, y el especialista llega a la vereda y a la casa.",
+        "equipos": "Cinco equipos de salud recorren San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta, y otros dos atienden en el casco urbano.",
+        "metas": "La meta para 2031: que el 95 % o más de los niños menores de un año tengan la vacuna pentavalente. Hoy vamos en 93,9 %."
+      },
+      "aguas": {
+        "portadilla": "Los pozos y la planta producen agua todo el día, pero a las casas del casco urbano solo les llega de 4 de la mañana a 1 de la tarde: 9 horas de 24, ¿sí?",
+        "sistema": "El agua sale de los pozos, se limpia en la potabilizadora, sube con bombas hasta el tanque y de ahí baja sola, por su propio peso, hasta el casco urbano.",
+        "sectores": "Dividimos la red en sectores, cada uno con su entrada medida y sus válvulas: así se arregla un daño sin dejar sin agua a todo el pueblo, y vamos de 9 a 24 horas.",
+        "ampliacion": "La planta de hoy alcanza para lo que se consume ahora, pero no para lo que se va a necesitar en 2044. Por eso se amplía, con un pozo más, cuando la demanda lo pida.",
+        "metas": "La meta: agua las 24 horas del día. Primero en un sector piloto, en 2029, y en todo el casco urbano en 2030. Hoy son 9 horas."
+      },
+      "saneamiento": {
+        "portadilla": "Hoy las aguas negras del casco urbano caen a dos caños sin ningún tratamiento, porque no hay planta de tratamiento de aguas residuales.",
+        "colectores": "En marrón, lo que hoy cae sin tratar. Dos tubos grandes, los interceptores, recogen esas aguas por la orilla de los caños y las llevan hasta la planta.",
+        "ptar": "Aquí va la primera planta de tratamiento de aguas residuales del casco urbano, al norte, más abajo de donde se juntan los dos caños. El agua tratada pasa por una laguna y vuelve al caño.",
+        "relleno_nuevo": "El relleno Las Américas ya no da más, así que hacemos uno nuevo en la vereda Kilómetro Cinco, en el sitio que Yondó ya tenía reservado, lejos del casco urbano y de los pozos.",
+        "residuos": "Menos basura al relleno: en el mismo predio separamos el reciclaje, con los recicladores de oficio, y hacemos abono con lo orgánico. Así el relleno dura más.",
+        "relleno": "Desde 2028 vamos tapando la basura vieja de Las Américas; en 2030 abre el relleno nuevo y el viejo deja de recibir basura. Desde 2031, encima, va una granja solar con un parque.",
+        "relleno_parque": "Así queda el relleno cerrado: encima, una granja de paneles solares; alrededor, lejos de la basura enterrada, lo que es para la gente, como el mirador, la huerta y el humedal.",
+        "metas": "La meta para 2031: que se trate el 100 % de las aguas negras que salen del casco urbano cuando no llueve. Hoy no se trata nada."
+      },
+      "tic": {
+        "portadilla": "En Yondó hay muy poco internet: 3,56 conexiones fijas por cada 100 habitantes, contra 26,1 en Antioquia. Y las sedes públicas pagan la energía a tarifa plena.",
+        "fibra": "Un anillo de fibra óptica, un cable de internet de alta velocidad, une la alcaldía con los colegios, el hospital, los bomberos y el coliseo. De ahí salen 5 zonas de wifi gratis.",
+        "telemetria": "Las estaciones de bombeo y la planta de tratamiento le avisan en línea al centro de control cómo van: el nivel, las bombas, cuánta agua pasa y cuánta energía gastan.",
+        "descartado": "Antes se pensaba en poner paneles solares en el techo de cada sede. Ahora la norma permite cambiarlo por una sola granja solar que reparte su energía entre todas las cuentas oficiales.",
+        "granja": "Esta es la granja solar, frente a la subestación de Empresas Públicas de Medellín: con ella le apostamos a que la energía de lo público salga del sol.",
+        "granja_cerca": "Funciona como una comunidad de energía: la granja produce y cada cuenta oficial, como las sedes, el alumbrado y los pozos, recibe una parte fija de lo que sale.",
+        "metas": "La meta para 2031: que toda la energía que gasta lo público salga del sol, y dejar de echarle al aire unas 200 toneladas de dióxido de carbono al año."
+      },
+      "ruta": {
+        "cronograma": "Cada barra es una obra, desde el primer estudio hasta que empieza a funcionar. Las que dependen de otras van después: el parque lineal espera a la planta de tratamiento de aguas residuales."
+      }
+    },
     "maqueta_nota": "Lo que el asistente puede mostrar, ocultar o aislar en la maqueta 3D de cada capítulo (las claves mostrar, ocultar, aislar y sin de lo visual): piezas con nombre, las capas de web/js/propuesta/modulos que las forman, sus grupos o su réplica y las partes que se les pueden quitar. Cuando la pieza es un componente del capítulo, lleva su id. scripts/build_propuesta.py lo revisa.",
     "maqueta": {
       "portada": [

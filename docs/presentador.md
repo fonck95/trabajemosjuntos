@@ -108,6 +108,16 @@ y el plan corre igual. Va al recorrido guardado (`recorrido.validar` lo revisa),
 presentador hace un gesto»), al reproductor y a la orden `escena` de la presentación, que se lo pasa al presentador. Un
 paso sin `gesto` (o un plan de antes, o la presentación automática) deja que el presentador elija solo, como antes.
 
+### Cómo habla
+
+Lo que dice el presentador sigue la voz de la presentación (`admin/app/agente/lenguaje.py`; detalles en
+[`admin/docs/agente.md`](../admin/docs/agente.md#cómo-habla-la-voz-de-la-presentación)): sencillo y cercano, para la
+comunidad, con el léxico del candidato («le apostamos», «que podamos», «el casco urbano», «recursos económicos»,
+«empleo»), sin siglas ni tecnicismos y explicando qué es y para qué sirve cada parte. Cambian las palabras, no los
+datos: las cifras y los nombres salen solo del guion, y nunca habla en primera persona del singular ni pone citas o
+promesas a nombre del candidato. En la presentación automática dice las frases escritas a mano de cada paso
+(`tecnica.narracion` de `data/propuesta/general.json`), escritas con esas mismas reglas.
+
 ## En la presentación
 
 Solo aparece dentro de la vista Presentación del panel (la pestaña del chat, la ventana del proyector y la pantalla en

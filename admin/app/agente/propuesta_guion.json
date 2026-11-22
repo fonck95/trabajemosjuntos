@@ -1012,7 +1012,8 @@
        "componentes": 4
       }
      ],
-     "nota": "Maqueta 3D con calles, caños y ciénagas de OpenStreetMap, huellas de edificaciones abiertas y réplicas de las sedes públicas levantadas con satélite, Street View y fotos. Toca un área para ir a ella."
+     "nota": "Maqueta 3D con calles, caños y ciénagas de OpenStreetMap, huellas de edificaciones abiertas y réplicas de las sedes públicas levantadas con satélite, Street View y fotos. Toca un área para ir a ella.",
+     "narracion": "Bienvenidos. Les vamos a mostrar, obra por obra y en su sitio real, lo que le apostamos a construir en Yondó: qué es, para qué sirve y qué cambia cuando funcione."
     },
     {
      "id": "territorio",
@@ -1027,7 +1028,8 @@
       "Depende de un puente de 917 m sobre el Magdalena que la socavación cerró del 16 al 20 de marzo de 2026 y que en junio seguía sin solución definitiva.",
       "El EOT 2022–2035 reconoce un déficit de 2.070 viviendas y reserva suelo para una PTAR y un relleno sanitario nuevo que todavía no existen."
      ],
-     "nota": "Fuentes: DANE, ANH, ART, EOT de Yondó (Acuerdo 013 de 2022) y prensa regional."
+     "nota": "Fuentes: DANE, ANH, ART, EOT de Yondó (Acuerdo 013 de 2022) y prensa regional.",
+     "narracion": "Yondó queda frente a Barrancabermeja, al otro lado del río Magdalena. Las obras van en el casco urbano y sus alrededores, en el acueducto, en el relleno nuevo y a la salida del puente."
     }
    ]
   },
@@ -1205,7 +1207,8 @@
        "fuente": "Plan de Desarrollo de Yondó 2024–2027"
       }
      ],
-     "propuesta": "Primero, terminar las tres obras inconclusas y titular 800 predios. Luego, un barrio nuevo de vivienda de interés social para cerca de 300 familias: 300 apartamentos en 25 bloques de 3 pisos, con parque central, cancha múltiple, zonas verdes y parqueaderos, en un lote de unas 5 hectáreas que falta definir. Además, 200 casas rurales en el lote de cada familia y 800 mejoramientos, 400 urbanos y 400 rurales."
+     "propuesta": "Primero, terminar las tres obras inconclusas y titular 800 predios. Luego, un barrio nuevo de vivienda de interés social para cerca de 300 familias: 300 apartamentos en 25 bloques de 3 pisos, con parque central, cancha múltiple, zonas verdes y parqueaderos, en un lote de unas 5 hectáreas que falta definir. Además, 200 casas rurales en el lote de cada familia y 800 mejoramientos, 400 urbanos y 400 rurales.",
+     "narracion": "En el censo de 2018, seis de cada diez hogares de Yondó tenían problemas de vivienda, y el 37,8 % vivía en casas que toca reponer, sobre todo de madera o tabla."
     },
     {
      "id": "componentes",
@@ -1248,7 +1251,8 @@
       "Barrio nuevo · lote indicativo de 5 ha",
       "Techos de casas tipo a mejorar (muestra)",
       "Resto de las cubiertas del casco, en gris"
-     ]
+     ],
+     "narracion": "Primero, lo que ya se pagó: le apostamos a terminar esas obras y a titular los predios. Con eso pedimos los recursos económicos para 300 apartamentos, 200 casas rurales y 800 mejoramientos."
     },
     {
      "id": "nuevas",
@@ -1295,7 +1299,8 @@
       "Lote indicativo de 5 ha · ubicación por definir",
       "25 bloques de 3 pisos · 300 apartamentos",
       "Parque central y zonas verdes"
-     ]
+     ],
+     "narracion": "Un mejor futuro empieza en casa: un barrio nuevo de vivienda de interés social, con 300 apartamentos en 25 bloques de 3 pisos, alrededor de un parque."
     },
     {
      "id": "apartamento",
@@ -1328,7 +1333,8 @@
       "Escalera central acristalada",
       "Franjas arena y terracota sobre fachada clara",
       "Piso 3 en corte: los 4 apartamentos"
-     ]
+     ],
+     "narracion": "Cada apartamento tiene dos alcobas, un baño, sala-comedor, cocina, zona de ropas y balcón, en 54,04 metros cuadrados. Son 4 por piso y 12 por bloque."
     },
     {
      "id": "barrio",
@@ -1361,7 +1367,8 @@
       "Cancha múltiple",
       "Vías internas con parqueaderos en bahía",
       "Zonas verdes, senderos y árboles"
-     ]
+     ],
+     "narracion": "El barrio no es solo bloques, ¿sí? En el centro va un parque con juegos para los niños, cancha múltiple, kiosco, gimnasio al aire libre y senderos."
     },
     {
      "id": "mejoramientos",
@@ -1397,7 +1404,8 @@
      "leyenda": [
       "Techos de casas tipo a mejorar (muestra)",
       "Resto de las cubiertas del casco, en gris"
-     ]
+     ],
+     "narracion": "En naranja, casas pequeñas de las afueras del casco urbano: así es la vivienda que mejoramos donde está. Las 400 se escogen con el Sisbén y el catastro."
     },
     {
      "id": "rural",
@@ -1434,7 +1442,8 @@
      "leyenda": [
       "Prototipo de un piso, con panel solar y tanque (5 casas de muestra)",
       "Lote de cada familia, junto a la vía al acueducto"
-     ]
+     ],
+     "narracion": "En el campo cambiamos casas de madera o tabla por casas nuevas en el lote de cada familia, con saneamiento propio y energía solar donde no llega la red eléctrica."
     },
     {
      "id": "metas",
@@ -1447,7 +1456,8 @@
       "Déficit de vivienda atendido por el barrio nuevo: unas 1.100 viviendas de déficit (equipo del proyecto, por confirmar) → 27 %: 300 familias con apartamento propio (2031)",
       "Viviendas mejoradas: 12 mejoradas (línea base del Plan 2024–2027) → +800: 400 urbanas y 400 rurales (2031)",
       "Predios titulados: 800 hogares sin título (Plan 2024–2027) → 800 títulos registrados (2030)"
-     ]
+     ],
+     "narracion": "La meta: que las 3 obras de vivienda que se pagaron y no se terminaron queden entregadas y escrituradas en 2029."
     }
    ]
   },
@@ -1700,7 +1710,8 @@
       "Ciudadela deportiva (4,8 ha)",
       "Cerramiento actual del estadio",
       "Caño Colector Shell, canalizado"
-     ]
+     ],
+     "narracion": "El coliseo, el Parque Educativo, la cancha de fútbol y el parque principal quedan muy cerca del estadio de sóftbol, pero no forman un conjunto: los separan calles sin sombra."
     },
     {
      "id": "componentes",
@@ -1743,7 +1754,8 @@
       "Ciudadela deportiva (4,8 ha)",
       "Parque lineal del caño",
       "Alameda (calle compartida)"
-     ]
+     ],
+     "narracion": "Son seis piezas que se presentan como un solo proyecto por etapas, y cada etapa funciona sola: cuatro en la ciudadela deportiva y dos en el mirador junto al puente."
     },
     {
      "id": "softbol",
@@ -1777,7 +1789,8 @@
       "Campo de juego reglamentario",
       "Graderías cubiertas, dugouts y baños",
       "Torres de luz"
-     ]
+     ],
+     "narracion": "Esta es la Cancha de Sóftbol Casabe: cabe en la manzana del estadio actual sin tocar una sola casa, y se juega de noche con seis torres de luz de bajo consumo."
     },
     {
      "id": "cano",
@@ -1811,7 +1824,8 @@
       "Ciclorruta de 2,5 m",
       "Laguna de retención y bosque inundable",
       "Puentes peatonales"
-     ]
+     ],
+     "narracion": "El caño vuelve a ser parte del barrio: un sendero y una ciclorruta por la orilla, y tres puentes que unen el estadio con el Centro de Integración Ciudadana y el Megacolegio."
     },
     {
      "id": "alameda",
@@ -1837,7 +1851,8 @@
      "leyenda": [
       "Calle compartida a nivel",
       "Árboles de sombra"
-     ]
+     ],
+     "narracion": "Del estadio al parque principal hacemos una alameda por las calles que ya existen, con sombra y prioridad para el que camina, sin tumbar nada."
     },
     {
      "id": "instalaciones",
@@ -1868,7 +1883,8 @@
      "leyenda": [
       "Dos canchas múltiples bajo cubierta",
       "Skatepark"
-     ]
+     ],
+     "narracion": "Al otro lado del caño, en la explanada del Centro de Integración Ciudadana, le ponemos techo a dos canchas múltiples y a un skatepark."
     },
     {
      "id": "mirador",
@@ -1911,7 +1927,8 @@
       "Zona A · protección hidráulica",
       "Zona B · plaza mirador",
       "Deck y mirador elevado"
-     ]
+     ],
+     "narracion": "Este es el Mirador Puerta del Magdalena: primero protegemos la orilla del río; detrás va la plaza con las letras de Yondó y un paseo curvo hasta el mirador, en alto sobre el río."
     },
     {
      "id": "metas",
@@ -1923,7 +1940,8 @@
       "Caño convertido en parque lineal: 0 m (2026) → ≈530 m (2031)",
       "Espacio público nuevo o renovado (parque lineal, alameda y plaza): 0 ha (2026) → ≈2,1 ha (2031)",
       "Orilla protegida frente al puente: sin protección definitiva (2026) → 283 m (2029)"
-     ]
+     ],
+     "narracion": "La meta: que en 2029 Yondó tenga una cancha de sóftbol reglamentaria, con juego de noche. Hoy no hay ninguna."
     }
    ]
   },
@@ -2249,7 +2267,8 @@
      "leyenda": [
       "Lote del parque (8,3 ha)",
       "Estribo del puente: orilla socavada en 2026"
-     ]
+     ],
+     "narracion": "Yondó produce mucho, pero lo vende en bruto: el ganado sale en pie, el arroz sin secar y el pescado sin frío. Así se nos va lo que se gana al transformarlo, y se va el empleo."
     },
     {
      "id": "componentes",
@@ -2317,7 +2336,8 @@
       "Zona logística · 1,84 ha",
       "Zona limpia · 2,68 ha",
       "Zona sucia · 3,79 ha"
-     ]
+     ],
+     "narracion": "Las plantas van en fila, de lo sucio a lo limpio, y comparten el frío, el agua tratada y el biodigestor, que convierte los desechos en gas."
     },
     {
      "id": "matadero",
@@ -2362,7 +2382,8 @@
      "leyenda": [
       "Zona sucia: corrales y matadero con frigorífico",
       "Zona limpia: central de frío"
-     ]
+     ],
+     "narracion": "Aquí se sacrifican 30 reses y 40 cerdos por turno, y la carne pasa directo al frigorífico, pegado a la central de frío."
     },
     {
      "id": "circuito",
@@ -2381,7 +2402,8 @@
       "Granos, alimento y animales",
       "Frío y salida por el puente a Barrancabermeja",
       "Subproductos al biodigestor"
-     ]
+     ],
+     "narracion": "Cada planta le compra o le vende a otra: lo que entra como grano o como animal sale empacado y frío por el puente hacia Barrancabermeja."
     },
     {
      "id": "metas",
@@ -2394,7 +2416,8 @@
       "Arroz paddy secado y trillado en Yondó: 0; se produjeron 2.404 toneladas (2025) → 11.000 toneladas al año (2031)",
       "Plantas con autorización sanitaria o registro agropecuario: 0 (2026) → 5 (2031)",
       "Empleos formales en el parque: 0; 81,9 % de los hogares con privación por trabajo informal (índice de pobreza multidimensional del Departamento Administrativo Nacional de Estadística, 2018; el documento base citaba 83,4 % de informalidad) → 250 (2031)"
-     ]
+     ],
+     "narracion": "La meta para 2031: que en Yondó se sacrifiquen, en planta propia, 7.500 reses y 10.000 cerdos al año. Hoy son cero."
     }
    ]
   },
@@ -2574,7 +2597,8 @@
        "l": "de los nacidos vivos con bajo peso en 2024; promedio 2014–2018: 5,9 %",
        "fuente": "TerriData (Departamento Nacional de Planeación), 2024; promedio: cálculo propio"
       }
-     ]
+     ],
+     "narracion": "Yondó tiene un solo hospital, el hospital Héctor Abad Gómez, en un edificio de 1989 que, según el propio hospital, no cumple la norma contra sismos. En el campo no hay ninguna sede."
     },
     {
      "id": "componentes",
@@ -2611,7 +2635,8 @@
      "leyenda": [
       "Microterritorios de los equipos básicos (OpenStreetMap); los lejanos, en su dirección",
       "Telemedicina desde la torre hacia cada microterritorio"
-     ]
+     ],
+     "narracion": "Le apostamos a dos cosas: una torre nueva para el hospital y una salud que llega a la casa, con prevención, equipos de salud, telemedicina y ambulancias."
     },
     {
      "id": "torre",
@@ -2667,7 +2692,8 @@
      "leyenda": [
       "Torre nueva de 4 pisos, con lo que hay en cada piso",
       "Hospital actual: administración y apoyo"
-     ]
+     ],
+     "narracion": "La torre va al lado del hospital actual: urgencias y rayos X en el primer piso, consulta y laboratorio en el segundo, las camas y los partos en el tercero, y terapias en el cuarto."
     },
     {
      "id": "torre_pisos",
@@ -2684,7 +2710,8 @@
       "15 consultorios y 3 unidades odontológicas; hoy (REPS 2022) hay 9 camas, 4 camillas y 13 consultorios.",
       "Rayos X digital, ecografía, vacunación, farmacia, terapias y un laboratorio de 24 horas con 55 pruebas en sitio.",
       "Urgencias en rojo, internación en azul, apoyo diagnóstico en amarillo, consulta en naranja, esterilización en verde y administración en violeta."
-     ]
+     ],
+     "narracion": "Así queda la torre por dentro, piso por piso: cada color es un tipo de servicio, rojo para urgencias, azul para hospitalización y naranja para consulta."
     },
     {
      "id": "torre_recorrido",
@@ -2701,7 +2728,8 @@
       "Cada unidad con su exigencia de la Res. 3100 de 2019, su clase de riesgo y su registro sanitario (Decreto 4725).",
       "Con el cierre de brechas, 11 de los 12 servicios que se habilitan quedan sin faltantes exigibles en dotación e infraestructura.",
       "El laboratorio del piso 2 hace unas 5.365 pruebas al mes: urgencias en 60 minutos o menos y tamizaje en 24 a 72 horas."
-     ]
+     ],
+     "narracion": "Ahora caminamos por dentro de la torre, a la altura de los ojos: cada equipo está en su sitio, con su ficha, lo que le pide la norma y su amarre por si tiembla."
     },
     {
      "id": "torre_sismo",
@@ -2718,7 +2746,8 @@
       "Columnas de 0,80 a 0,90 m, muros de 0,35 m y 146 pilotes de 15 m; período fundamental de 0,455 s.",
       "Deriva máxima de 0,939 % de la altura del piso, frente al límite de 1 % de la norma.",
       "Con el sismo del nido de Bucaramanga se mueve 0,056 % de la altura de cada piso y con un sismo local hipotético bajo Yondó, 0,416 %: queda en ocupación inmediata."
-     ]
+     ],
+     "narracion": "Esta torre tiene que seguir atendiendo después de un terremoto. Está prediseñada con la norma colombiana contra sismos, y este simulador la sacude con temblores reales e imaginados."
     },
     {
      "id": "torre_bim",
@@ -2735,7 +2764,8 @@
       "La primera coordinación encontró 280 interferencias duras; corregidas sus causas en la estructura, la planta y el modelo, quedan 0.",
       "Esquema IFC4 validado sin errores y con identificadores estables: regenerar el modelo no cambia lo que no cambió.",
       "Nivel de información (LOIN) objetivo: arquitectura ≈ 300, estructura ≈ 350, refuerzo ≈ 400 y dotación ≈ 200 a 300."
-     ]
+     ],
+     "narracion": "Antes de poner un solo ladrillo, la torre ya está hecha completa en el computador, con cada pieza en su sitio, y se revisó hasta que ninguna se cruzara con otra."
     },
     {
      "id": "preventiva",
@@ -2785,7 +2815,8 @@
       "Hogares de la cabecera visitados casa a casa (ilustrativo)",
       "Recorridos de los equipos básicos desde el hospital",
       "Torre: vacunación, consulta y laboratorio en el piso 2"
-     ]
+     ],
+     "narracion": "Prevenir en la casa antes que curar en el hospital: los equipos de salud salen a vacunar, a buscar a las embarazadas desde los primeros meses y a medir la presión y el azúcar casa a casa."
     },
     {
      "id": "telesalud",
@@ -2836,7 +2867,8 @@
       "Enlace torre – centro de control de la alcaldía, con datos en movimiento",
       "Enlaces hacia los microterritorios rurales (salen del cuadro)",
       "Torre: centro de telemedicina en el piso 4"
-     ]
+     ],
+     "narracion": "Con la telemedicina, el médico consulta en línea con especialistas en ginecología, pediatría y medicina interna, y el especialista llega a la vereda y a la casa."
     },
     {
      "id": "equipos",
@@ -2874,7 +2906,8 @@
      "leyenda": [
       "Microterritorios en su centro poblado (OpenStreetMap); los lejanos, en su dirección",
       "Telemedicina desde la torre hacia cada microterritorio"
-     ]
+     ],
+     "narracion": "Cinco equipos de salud recorren San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta, y otros dos atienden en el casco urbano."
     },
     {
      "id": "metas",
@@ -2889,7 +2922,8 @@
       "Microterritorios con teleconsulta de especialistas: ninguno confirmado (2026) → los 7 (2031)",
       "Camas de hospitalización: 9 (registro de prestadores, 2022) → 15 en la torre (2031)",
       "Laboratorio clínico: — → propio, 24 horas, con 55 pruebas en sitio (2031)"
-     ]
+     ],
+     "narracion": "La meta para 2031: que el 95 % o más de los niños menores de un año tengan la vacuna pentavalente. Hoy vamos en 93,9 %."
     }
    ]
   },
@@ -3108,7 +3142,8 @@
      "leyenda": [
       "Red del casco: con agua 9 de cada 24 horas",
       "Agua que baja del tanque al casco"
-     ]
+     ],
+     "narracion": "Los pozos y la planta producen agua todo el día, pero a las casas del casco urbano solo les llega de 4 de la mañana a 1 de la tarde: 9 horas de 24, ¿sí?"
     },
     {
      "id": "sistema",
@@ -3126,7 +3161,8 @@
      "leyenda": [
       "Agua en movimiento: sube al tanque y baja al casco",
       "Impulsión de 12 pulgadas y conducción por gravedad (trazado indicativo)"
-     ]
+     ],
+     "narracion": "El agua sale de los pozos, se limpia en la potabilizadora, sube con bombas hasta el tanque y de ahí baja sola, por su propio peso, hasta el casco urbano."
     },
     {
      "id": "sectores",
@@ -3152,7 +3188,8 @@
       "Sectores hidráulicos (indicativos)",
       "Válvula y macromedidor en la entrada de sector",
       "Red con agua las 24 horas"
-     ]
+     ],
+     "narracion": "Dividimos la red en sectores, cada uno con su entrada medida y sus válvulas: así se arregla un daño sin dejar sin agua a todo el pueblo, y vamos de 9 a 24 horas."
     },
     {
      "id": "ampliacion",
@@ -3195,7 +3232,8 @@
      "leyenda": [
       "Módulo nuevo de 20 litros por segundo (volumen indicativo)",
       "Agua tratada que sube al tanque"
-     ]
+     ],
+     "narracion": "La planta de hoy alcanza para lo que se consume ahora, pero no para lo que se va a necesitar en 2044. Por eso se amplía, con un pozo más, cuando la demanda lo pida."
     },
     {
      "id": "metas",
@@ -3208,7 +3246,8 @@
       "Agua no contabilizada: Más de 30 % en 10 de 14 meses (Superservicios, 2019–2020) → 25 % (2030) y 20 % (2031)",
       "Suscriptores con medidor funcionando: 88,2 % (dic-2019) → 100 % (2030)",
       "Capacidad de tratamiento de la potabilizadora: 40 litros por segundo (planta de 2003) → 60 litros por segundo con concesión vigente (diseño 2029; obra 2030–2032)"
-     ]
+     ],
+     "narracion": "La meta: agua las 24 horas del día. Primero en un sector piloto, en 2029, y en todo el casco urbano en 2030. Hoy son 9 horas."
     }
    ]
   },
@@ -3502,7 +3541,8 @@
      "leyenda": [
       "Vertimiento sin tratar de cada estación (2019)",
       "Estaciones de bombeo de aguas residuales que vierten hoy"
-     ]
+     ],
+     "narracion": "Hoy las aguas negras del casco urbano caen a dos caños sin ningún tratamiento, porque no hay planta de tratamiento de aguas residuales."
     },
     {
      "id": "colectores",
@@ -3547,7 +3587,8 @@
       "Vertimiento sin tratar (hoy)",
       "Interceptor nuevo",
       "Impulsión a presión"
-     ]
+     ],
+     "narracion": "En marrón, lo que hoy cae sin tratar. Dos tubos grandes, los interceptores, recogen esas aguas por la orilla de los caños y las llevan hasta la planta."
     },
     {
      "id": "ptar",
@@ -3593,7 +3634,8 @@
       "Planta de tratamiento, aguas abajo de la unión de los caños (4,2 ha)",
       "Laguna de pulimento y descarga al caño",
       "Sitios evaluados: A, alternativa en la reserva del Esquema de Ordenamiento Territorial; B (hacia el río) y C, descartados"
-     ]
+     ],
+     "narracion": "Aquí va la primera planta de tratamiento de aguas residuales del casco urbano, al norte, más abajo de donde se juntan los dos caños. El agua tratada pasa por una laguna y vuelve al caño."
     },
     {
      "id": "relleno_nuevo",
@@ -3648,7 +3690,8 @@
       "Descartado: ampliar junto a Las Américas",
       "Vía de acceso desde el borde del casco (≈6,5 km)",
       "Borde del radio de 13 km del aeropuerto Yariguíes (Aerocivil)"
-     ]
+     ],
+     "narracion": "El relleno Las Américas ya no da más, así que hacemos uno nuevo en la vereda Kilómetro Cinco, en el sitio que Yondó ya tenía reservado, lejos del casco urbano y de los pozos."
     },
     {
      "id": "residuos",
@@ -3696,7 +3739,8 @@
       "Estación de reciclaje de 10 toneladas al día",
       "Pilas de compostaje de orgánicos",
       "Reserva del Esquema de Ordenamiento Territorial (Tabla 35) y planta de lodos vecina (Tabla 34)"
-     ]
+     ],
+     "narracion": "Menos basura al relleno: en el mismo predio separamos el reciclaje, con los recicladores de oficio, y hacemos abono con lo orgánico. Así el relleno dura más."
     },
     {
      "id": "relleno",
@@ -3742,7 +3786,8 @@
      "leyenda": [
       "Granja solar de 997 kilovatios pico sobre las celdas clausuradas",
       "Parque ecotecnológico: coworking, granja y circuito de 0,9 km"
-     ]
+     ],
+     "narracion": "Desde 2028 vamos tapando la basura vieja de Las Américas; en 2030 abre el relleno nuevo y el viejo deja de recibir basura. Desde 2031, encima, va una granja solar con un parque."
     },
     {
      "id": "relleno_parque",
@@ -3759,7 +3804,8 @@
       "Unos 530 kWp en 2031 sobre las celdas cubiertas desde 2028 y el resto hacia 2033–2034.",
       "Coworking rural de 312 m² con 40 puestos, cafetería, taller de bicicletas, granja con invernadero, huerta y apiario, mirador, circuito y humedal.",
       "Todo lo que tiene gente va a 30 m o más de las celdas y las lagunas."
-     ]
+     ],
+     "narracion": "Así queda el relleno cerrado: encima, una granja de paneles solares; alrededor, lejos de la basura enterrada, lo que es para la gente, como el mirador, la huerta y el humedal."
     },
     {
      "id": "metas",
@@ -3774,7 +3820,8 @@
       "Vida útil del sitio de disposición final: Vencida: −1 año a diciembre de 2024 (Superservicios) → 25 años o más en el relleno nuevo (2030)",
       "Relleno Las Américas: Recibe basura con la licencia vencida (2026) → Celdas viejas cubiertas (2028), sin recibir basura desde 2030 y clausurado, en posclausura (2031)",
       "Residuos aprovechados en la estación de reciclaje y el compostaje: Sin medición (2026) → 15–20 % (2031)"
-     ]
+     ],
+     "narracion": "La meta para 2031: que se trate el 100 % de las aguas negras que salen del casco urbano cuando no llueve. Hoy no se trata nada."
     }
    ]
   },
@@ -3925,7 +3972,8 @@
      "propuesta": "Un anillo de fibra de 4,6 km por las calles del casco, con el centro de control en la alcaldía, une colegios, hospital, bomberos, el Centro de Integración Ciudadana, el coliseo y las 4 estaciones de bombeo de aguas residuales; de él salen 5 Zonas Digitales y la telemetría de esas estaciones, y la estación de bombeo de llegada nueva y la planta de tratamiento de aguas residuales reportan al centro de control por la red celular. Una granja solar pública de 1,2 megavatios pico frente a la subestación de Empresas Públicas de Medellín, en lugar de paneles en cada sede, cubre en balance anual el consumo oficial estimado, como autogeneración colectiva de una comunidad energética de la alcaldía, el hospital y Aguas y Aseo.",
      "leyenda": [
       "Sedes públicas: energía a tarifa oficial plena"
-     ]
+     ],
+     "narracion": "En Yondó hay muy poco internet: 3,56 conexiones fijas por cada 100 habitantes, contra 26,1 en Antioquia. Y las sedes públicas pagan la energía a tarifa plena."
     },
     {
      "id": "fibra",
@@ -3969,7 +4017,8 @@
       "Centro de control en la alcaldía",
       "Zonas Digitales (5 en la primera fase)",
       "Zonas Digitales candidatas a la segunda fase (3)"
-     ]
+     ],
+     "narracion": "Un anillo de fibra óptica, un cable de internet de alta velocidad, une la alcaldía con los colegios, el hospital, los bomberos y el coliseo. De ahí salen 5 zonas de wifi gratis."
     },
     {
      "id": "telemetria",
@@ -4000,7 +4049,8 @@
       "Datos de las estaciones y la planta hacia el centro de control",
       "Centro de control en la alcaldía",
       "Estación de llegada y planta de tratamiento: obras nuevas del módulo de Saneamiento"
-     ]
+     ],
+     "narracion": "Las estaciones de bombeo y la planta de tratamiento le avisan en línea al centro de control cómo van: el nivel, las bombas, cuánta agua pasa y cuánta energía gastan."
     },
     {
      "id": "descartado",
@@ -4024,7 +4074,8 @@
      "nota": "Lo que se pierde: la granja no mantiene encendidas las sedes si Empresas Públicas de Medellín corta el servicio, como sí lo harían las islas con baterías del modelo anterior. El respaldo queda en el respaldo eléctrico ininterrumpido de la sala del centro de control y en la torre del hospital (planta eléctrica, respaldo ininterrumpido y baterías, módulo de Salud); el respaldo del bombeo del acueducto no está costeado en este módulo ni en el de Aguas y queda pendiente.",
      "leyenda": [
       "Sedes que llevaban paneles en el modelo descartado"
-     ]
+     ],
+     "narracion": "Antes se pensaba en poner paneles solares en el techo de cada sede. Ahora la norma permite cambiarlo por una sola granja solar que reparte su energía entre todas las cuentas oficiales."
     },
     {
      "id": "granja",
@@ -4065,7 +4116,8 @@
       "Mesas solares: 1.200 kilovatios pico en el bloque A",
       "Línea de 13,2 kilovoltios a la subestación (40 m)",
       "Bloque B: 0,49 ha de reserva"
-     ]
+     ],
+     "narracion": "Esta es la granja solar, frente a la subestación de Empresas Públicas de Medellín: con ella le apostamos a que la energía de lo público salga del sol."
     },
     {
      "id": "granja_cerca",
@@ -4091,7 +4143,8 @@
       "Operación: el representante de la comunidad (la alcaldía, en esta propuesta) declara los porcentajes ante Empresas Públicas de Medellín y contrata un operador técnico; el centro de control vigila la producción en línea.",
       "Aparte: la granja de Las Américas (997 kilovatios pico) es otra comunidad, de hogares de estratos 1 y 2, con su propia frontera; las dos no se mezclan."
      ],
-     "nota": "Falta verificar en derecho si la Policía (entidad nacional), los bomberos y el alumbrado público pueden entrar a la comunidad con fronteras propias."
+     "nota": "Falta verificar en derecho si la Policía (entidad nacional), los bomberos y el alumbrado público pueden entrar a la comunidad con fronteras propias.",
+     "narracion": "Funciona como una comunidad de energía: la granja produce y cada cuenta oficial, como las sedes, el alumbrado y los pozos, recibe una parte fija de lo que sale."
     },
     {
      "id": "metas",
@@ -4104,7 +4157,8 @@
       "Sedes públicas y estaciones de bombeo conectadas por fibra al centro de control: 0 (2026) → 21 sedes y estaciones, más la alcaldía, con el centro de control operando las 24 horas (2029)",
       "Zonas Digitales urbanas en servicio: 0 (2023) → 5, con 1.000 o más usuarios únicos al mes (2029)",
       "Estaciones de bombeo y planta de tratamiento que reportan en línea al centro de control: 0 (2026) → 6 de 6 (2031)"
-     ]
+     ],
+     "narracion": "La meta para 2031: que toda la energía que gasta lo público salga del sol, y dejar de echarle al aire unas 200 toneladas de dióxido de carbono al año."
     }
    ]
   },
@@ -4240,7 +4294,8 @@
        ]
       }
      ],
-     "nota": "Plazos de prefactibilidad: se ajustan con los diseños de cada obra."
+     "nota": "Plazos de prefactibilidad: se ajustan con los diseños de cada obra.",
+     "narracion": "Cada barra es una obra, desde el primer estudio hasta que empieza a funcionar. Las que dependen de otras van después: el parque lineal espera a la planta de tratamiento de aguas residuales."
     }
    ]
   }

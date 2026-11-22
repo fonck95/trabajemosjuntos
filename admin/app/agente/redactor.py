@@ -27,6 +27,11 @@ paso, la herramienta devuelve un error y el modelo arma el plan como antes (`gui
 detiene (o llega otra orden u otro plan) mientras se escribe, la redacción se corta en el acto: no se gasta en lo que
 nadie va a oír.
 
+Cómo habla. Las instrucciones llevan la voz de la presentación (`lenguaje.COMO_SE_EXPLICA`: sencilla y cercana, con el
+léxico del candidato, sin siglas ni tecnicismos y explicando cada parte), y el guion del capítulo va con su glosario
+(`siglas`: el nombre completo y qué es cada sigla que trae ese capítulo, `lenguaje.siglas_en`). Cambian las palabras,
+no los datos: las cifras, los nombres y los plazos siguen saliendo solo del guion.
+
 Solo para el asistente del panel: por MCP no hay modelo del panel que lo escriba (el agente externo arma su plan con
 `recorrido`). Nada del contenido va al registro: solo tipos y códigos.
 """
@@ -45,6 +50,7 @@ from .. import pantalla as pantalla_off
 from .. import recorrido as rec
 from . import conversaciones as conv_db
 from . import guion as guion_presentacion
+from . import lenguaje
 from .herramientas.base import ErrorHerramienta, Resultado
 
 log = logging.getLogger("panel")
@@ -65,12 +71,13 @@ FORMATO: SOLO líneas JSON (JSON Lines): un objeto por línea, sin Markdown, sin
 1. Primera línea: {"titulo": "…"} (de 3 a 80 caracteres: lo que se va a mostrar).
 2. Después, los pasos del plan, uno por línea y en el orden en que se dicen (cuántos, lo dice el encargo). El primero \
 lleva "capitulo" (el id del capítulo) y "paso"; los demás, solo lo que cambia.
-3. Última línea: {"cierre": {"puntos": ["…", "…"]}, "sugerencias": ["…", "…"]}: de 1 a 3 ideas que quedan en la sala \
-(hasta 80 caracteres cada una, 200 entre todas) y hasta 3 sugerencias para seguir, de hasta 60 caracteres, como las \
-diría la persona («Muéstrame el agua potable»).
+3. Última línea: {"cierre": {"puntos": ["…", "…"]}, "sugerencias": ["…", "…"]}: de 1 a 3 ideas que quedan en la sala, \
+dichas en sencillo (hasta 80 caracteres cada una, 200 entre todas), y hasta 3 sugerencias para seguir, de hasta 60 \
+caracteres, como las diría la persona («Muéstrame el agua potable»).
 
-Cada paso es UNA frase hablada ("dice": corta, en presente, sin listas ni paréntesis, hasta 220 caracteres: «Aquí \
-ven…», «Fíjense en…») y lo que ocurre en pantalla MIENTRAS se dice. Claves de un paso (solo "dice" es obligatoria):
+Cada paso es UNA frase hablada ("dice": corta, en presente, en palabras sencillas, sin listas ni paréntesis, hasta 220 \
+caracteres: «Aquí ven…», «Fíjense en…») y lo que ocurre en pantalla MIENTRAS se dice. Claves de un paso (solo "dice" \
+es obligatoria):
 - "capitulo" (id) y "paso" (el id o el número del paso del capítulo; sin él, el mismo). Al cambiar de paso, lo visual \
 vuelve a lo de ese paso.
 - La cámara: "camara" (paso, aerea, oblicua, rasante, cerca o lejos), "rumbo" (grados desde el norte; 180 deja el \
@@ -91,20 +98,25 @@ proyecto, invitar al final) y "sostener" (segundos que la imagen se queda despu�
 Cada paso parte del anterior: di solo lo que cambia. Un arco que sirve: ubicar con una vista amplia; cómo está hoy; \
 qué se construye, pieza por pieza (aislar la obra, quitarle la cubierta, rodearla con mover); el dato clave (la ficha \
 con la especificación resaltada, un modelo del atlas); qué cambia y cuándo (la meta o la cifra resaltada); y el \
-cierre con 2 o 3 ideas. La frase nombra lo que se ve en ese momento.
+cierre con 2 o 3 ideas. La frase nombra lo que se ve en ese momento y explica qué es y para qué sirve.
+
+""" + lenguaje.COMO_SE_EXPLICA + """
 
 Reglas que no se relajan: cifras, nombres y plazos solo del guion y tal como vienen; nunca costos, plata, precios, \
 pesos ni financiación; nunca datos de personas, «@» ni números de 7 o más dígitos. Usa los ids del guion (pasos, \
-componentes, piezas, partes, modelos, controles): lo que no exista se descarta y el plan sigue con lo demás.
+componentes, piezas, partes, modelos, controles): lo que no exista se descarta y el plan sigue con lo demás. Las \
+siglas del capítulo, con su nombre completo, están en «siglas»: en la frase va el nombre, nunca la sigla.
 
 El guion del capítulo, lo único que sabes de él:
 """
 
 
 def sistema_de(g: guion_presentacion.Guion, ci: int) -> str:
-    """Las instrucciones de la redacción con el guion del capítulo `ci` (y los gestos del presentador): el mismo texto
-    para el mismo capítulo, así el proveedor lo saca de su caché la próxima vez que se presenta."""
-    guion = {**g.capitulo_para_leer(ci), "gestos": dict(rec.GESTOS)}
+    """Las instrucciones de la redacción con el guion del capítulo `ci` (los gestos del presentador y el glosario de
+    las siglas que trae el capítulo): el mismo texto para el mismo capítulo, así el proveedor lo saca de su caché la
+    próxima vez que se presenta."""
+    leer = g.capitulo_para_leer(ci)
+    guion = {**leer, "gestos": dict(rec.GESTOS), **({"siglas": s} if (s := lenguaje.siglas_en(leer)) else {})}
     return INSTRUCCIONES + json.dumps(guion, ensure_ascii=False, separators=(",", ":"))
 
 

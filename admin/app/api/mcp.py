@@ -31,6 +31,7 @@ from pydantic import ValidationError
 from pymongo.database import Database
 
 from ..acceso import PERMISOS
+from ..agente import lenguaje
 from ..agente.herramientas.base import ErrorHerramienta
 from ..agente.herramientas.interfaz import (D_PRESENTACION, PresentacionEntrada, _esquema_presentacion,
                                             presentacion_en_pantalla)
@@ -63,7 +64,9 @@ INSTRUCCIONES = (
     "lo que ocurre en pantalla mientras se dice) y un cierre; la pantalla en off lo ejecuta sola, paso a paso, con "
     "subtítulo y voz, mostrando mientras explica; estado dice por qué paso va y control_recorrido lo pausa, salta o "
     "detiene (uno que suena en la pestaña del panel de la persona se maneja desde ahí). La explicación es la "
-    "narración del plan: no la repitas. Hace falta la pantalla en off abierta. Si la persona quiere que la "
+    "narración del plan: no la repitas. Cada frase es para la comunidad: sencilla y cercana, explicando qué es y para "
+    f"qué sirve cada parte, {lenguaje.EN_CORTO} (guion trae en siglas el nombre completo de cada una); cambian las "
+    "palabras, no los datos. Hace falta la pantalla en off abierta. Si la persona quiere que la "
     "presentación corra sola, automatica con accion iniciar (y capitulo, si quiere empezar en uno): la pantalla en off "
     "recorre sola toda la presentación, capítulo por capítulo, con una frase muy resumida por paso, sin que escribas "
     "nada; estado dice por dónde va, un plan corto (3 a 5 pasos) la interrumpe para responder una pregunta y, cuando "

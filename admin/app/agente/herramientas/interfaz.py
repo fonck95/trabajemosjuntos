@@ -58,6 +58,7 @@ from ... import recorrido as rec
 from ...proyectable import DIGITOS_MAX, MAX_EXPLICACION, numero_largo, texto_proyectable  # noqa: F401
 from .. import conversaciones as conv_db
 from .. import guion as guion_presentacion
+from .. import lenguaje
 from .base import Contexto, ErrorHerramienta, Herramienta, Resultado
 from .gestion import (FiltrosBase, Id, IdOCero, Lugar, Nomenclatura, Perezosa, TipoLugar, _Entrada, error_de_busqueda,
                       esquema, exigir_permiso, miles, orden_lugar, pedir, preparar_filtros)
@@ -1312,7 +1313,10 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
     if a.op == "guion":
         ci = _resolver_capitulo(g, a.capitulo)
         c = g.capitulos[ci]
-        return Resultado({**g.capitulo_para_leer(ci), "gestos": dict(rec.GESTOS), "nota": NOTA_GUION},
+        leer = g.capitulo_para_leer(ci)
+        siglas = lenguaje.siglas_en(leer)
+        return Resultado({**leer, "gestos": dict(rec.GESTOS), **({"siglas": siglas} if siglas else {}),
+                          "nota": NOTA_GUION},
                          f"Guion de {c['nombre']} · {len(c['pasos'])} pasos, {len(c.get('componentes') or [])} componentes")
     doc = await run_in_threadpool(pantalla_off.leer, db, uid)
     abierta = pantalla_off.conectada(doc)
@@ -1391,9 +1395,12 @@ async def presentacion_en_pantalla(db: Any, uid: int, a: PresentacionEntrada, po
                          else "Ya era el primer paso de la presentación: queda en él.")
             ci, pi = destino
         c = g.capitulos[ci]
-        contenido = {**_paso_para_modelo(g, ci, pi), "nota": (
-            "Es lo que muestra la presentación en ese paso: explíquelo en el chat con esos datos (no invente otros). En "
-            "pantalla, si hace falta, solo una o dos frases cortas (explicar, hasta 220 caracteres).")}
+        paso = _paso_para_modelo(g, ci, pi)
+        siglas = lenguaje.siglas_en(paso["guion"])
+        contenido = {**paso, **({"siglas": siglas} if siglas else {}), "nota": (
+            "Es lo que muestra la presentación en ese paso: explíquelo en el chat con esos datos (no invente otros), "
+            f"{lenguaje.EN_CORTO} (las siglas del paso, con su nombre completo, en «siglas»). En pantalla, si hace "
+            "falta, solo una o dos frases cortas (explicar, hasta 220 caracteres).")}
         if aviso:
             contenido["aviso"] = aviso
         resumen = f"Mostré {c['nombre']} · paso {pi + 1} de {len(c['pasos'])}"
@@ -1982,7 +1989,9 @@ NOTA_GUION = (
     "resaltada, un modelo del atlas); qué cambia y cuándo (la meta o la cifra resaltada); y un cierre de 2 o 3 ideas. "
     "La frase nombra lo que se ve en ese momento, con las cifras tal como vienen aquí y sin costos. Lo que se puede "
     "resaltar en cada paso está en «resaltable». Lo opcional que no exista se descarta con un aviso y el plan corre "
-    "igual. Ejemplo: {\"op\":\"recorrido\",\"titulo\":\"La torre del hospital\",\"pasos\":[{\"capitulo\":\"salud\","
+    f"igual. Lo que oye la sala va {lenguaje.EN_CORTO}, explicando cada parte (qué es y para qué sirve): cada sigla, "
+    "con el nombre completo que trae «siglas». Ejemplo: {\"op\":\"recorrido\",\"titulo\":\"La torre del hospital\","
+    "\"pasos\":[{\"capitulo\":\"salud\","
     "\"paso\":\"torre\",\"camara\":\"oblicua\",\"mover\":{\"giro\":40},\"dice\":\"…\"},{\"aislar\":\"torre\",\"sin\":"
     "[\"torre.cubierta\"],\"elevacion\":55,\"dice\":\"…\"},{\"detalle\":\"torre\",\"resaltar\":{\"especificacion\":"
     "\"Estructura\"},\"dice\":\"…\"}],\"cierre\":{\"puntos\":[\"…\",\"…\"]}}")
@@ -2657,8 +2666,8 @@ D_PRESENTACION = (
     "Presenta la propuesta Yondó 2028–2031 en su versión técnica (lo que se construye, sin costos, en la maqueta 3D "
     "y los modelos del atlas) en el panel de la persona o en su pantalla en off. PARA EXPLICAR, PRIMERO UN PLAN: guion "
     "(datos de un capítulo) y luego recorrido, en UNA llamada: titulo, pasos (de 6 a 10, hasta 12) "
-    "y cierre {puntos}. Cada paso: dice (UNA frase de hasta 220 caracteres, proyectada y leída en voz "
-    "alta) y lo que ocurre MIENTRAS se dice: capitulo, paso, la cámara (camara, rumbo, elevacion, zoom, mirar, mover "
+    "y cierre {puntos}. Cada paso: dice (UNA frase sencilla y sin siglas, de hasta 220 caracteres, en "
+    "voz alta) y lo que ocurre MIENTRAS se dice: capitulo, paso, la cámara (camara, rumbo, elevacion, zoom, mirar, mover "
     "{giro, zoom, elevacion}), las piezas (aislar, mostrar, ocultar, sin «pieza.parte»), enfoque, detalle, comparar, "
     "inmersion y simular [{control, valor}] (el sismo o la hora de la maqueta), animar, resaltar, gesto; lo demás sigue. La "
     "pantalla lo ejecuta sola; lo que no exista se descarta con aviso. Ejemplo de pasos: [{\"capitulo\":"
@@ -2678,7 +2687,8 @@ D_PRESENTACION_ASISTENTE = (
     "con capitulo y encargo (qué mostrar y contar; largo corto para una pregunta): el panel escribe el plan con el guion "
     "y la sala lo ve y lo oye desde su primer paso, sin pedir guion. Para un plan de varios capítulos: guion y luego "
     "recorrido, en UNA llamada: titulo, pasos (de 6 a 10, hasta 12) y cierre {puntos}; cada paso: dice (UNA frase de "
-    "hasta 220 caracteres) y lo que ocurre MIENTRAS se dice: capitulo, paso, la cámara (camara, rumbo, elevacion, zoom, "
+    "hasta 220 caracteres, sencilla y sin siglas) y lo que ocurre MIENTRAS se dice: capitulo, paso, la cámara (camara, "
+    "rumbo, elevacion, zoom, "
     "mirar, mover {giro, zoom, elevacion}), las piezas (aislar, mostrar, ocultar, sin «pieza.parte»), enfoque, detalle, "
     "comparar, inmersion y simular [{control, valor}] (el sismo o la hora de la maqueta), animar, resaltar, gesto; lo "
     "demás sigue y lo que no exista se descarta con aviso. control_recorrido lo pausa, salta o detiene. automatica "
