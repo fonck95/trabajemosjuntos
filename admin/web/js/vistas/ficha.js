@@ -142,7 +142,11 @@ export async function vistaFicha(el, { params, ir }) {
     if (esC) { pintarConsultor(); return; }
     // Lo cambiado y no guardado sobrevive a las acciones que vuelven a pintar la ficha (nota, ubicación, teléfonos)
     const ahora = conservar ? leerForm() : null;
-    const pendientes = ahora && formInicial ? Object.entries(ahora).filter(([k, v]) => formInicial[k] !== v) : [];
+    // La edad calculada con la fecha no es algo escrito: no se devuelve (si no, al borrar luego la fecha quedaría esa
+    // edad como si la hubieran declarado); `enlazarEdad` la vuelve a calcular con la fecha que se vea
+    const edadCalculada = !!$('#f-datos [name="edad"]', el)?.dataset.calculada;
+    const pendientes = ahora && formInicial ? Object.entries(ahora)
+      .filter(([k, v]) => formInicial[k] !== v && !(k === 'edad' && edadCalculada)) : [];
     // Persona que no autorizó: P solo ve lo mínimo y solo puede registrar una autorización nueva o una solicitud
     if (p.consentimiento === 'no' && !adm) { pintarNoAutorizo(); return; }
     const campos = (cat.campos || []).filter((c) => c.activo);
@@ -772,7 +776,8 @@ export async function vistaFicha(el, { params, ir }) {
 
   async function registrarAutorizacion(boton) {
     const caja = boton.closest('form') || boton.closest('.tarjeta') || el;
-    const { aut, error } = leerAutorizacion(caja);
+    // Devolverle el «sí» a quien dijo «no» sigue con todos los pasos, también para el planillero
+    const { aut, error } = leerAutorizacion(caja, { estricta: p.consentimiento === 'no' });
     if (!aut) { aviso('Elija qué respondió el titular', 'error'); return; }
     if (error) { aviso(error, 'error'); return; }
     boton.disabled = true;

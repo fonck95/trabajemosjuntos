@@ -300,7 +300,7 @@ export function enlazarAutorizacion(raiz) {
 }
 
 /** Lee el bloque; devuelve {estado, medio, canales, evidencia, mayor_declarado} o null, y el error si falta algo. */
-export function leerAutorizacion(form) {
+export function leerAutorizacion(form, { estricta = false } = {}) {
   const est = form.querySelector('[name="aut_estado"]:checked')?.value;
   if (!est) return { aut: null };
   const aut = { estado: est };
@@ -310,8 +310,9 @@ export function leerAutorizacion(form) {
     aut.canales = $$('[name="aut_canal"]:checked', form).map((x) => x.value);
     aut.evidencia = campo('aut_evidencia')?.value.trim() || null;
     aut.mayor_declarado = !!campo('aut_mayor')?.checked;
-    // El planillero registra el «sí» sin más pasos: evidencia, canales y «mayor de 18» son opcionales para él
-    if (!administra() && sesion.rol !== 'planillero') {
+    // El planillero registra el «sí» sin más pasos: evidencia, canales y «mayor de 18» son opcionales para él, salvo
+    // `estricta` (devolverle el «sí» a quien dijo «no»)
+    if (!administra() && (sesion.rol !== 'planillero' || estricta)) {
       if (!aut.canales.length) return { aut, error: 'Marque al menos un canal autorizado' };
       if (!aut.evidencia) return { aut, error: 'Escriba la evidencia de la autorización' };
       if (!aut.mayor_declarado) return { aut, error: 'La autorización exige que declare ser mayor de 18 años' };
@@ -668,7 +669,9 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
       <label class="campo ancho"><span>Jefe de hogar</span><select name="jefe_hogar"><option value="">—</option><option value="si">Sí</option><option value="no">No</option></select></label>
       <details class="bloque ancho secundario" id="alta-votacion"><summary>Puesto y mesa de votación (opcional)</summary><div class="form">${camposVotacion(cat, {})}</div></details>
       ${necesidades.length ? html`<details class="bloque ancho secundario"><summary>Necesidades (opcional)</summary><div class="chips">${necesidades.map((e) => html`<button type="button" class="chip" data-et="${e.id}" aria-pressed="false">${e.nombre}</button>`)}</div></details>` : ''}
-      ${camposAutorizacion(cat, { obligatoria: !esPlanillero() })}
+      ${camposAutorizacion(cat, { obligatoria: !esPlanillero(),
+        // «Todavía no responde» es de A y K (el servidor se lo niega a los demás): sin responder, el alta queda pendiente
+        estados: administra() ? ['si', 'no', 'pendiente'] : ['si', 'no'] })}
       <div class="ancho" id="conflicto" aria-live="polite"></div>
     </form>`,
     pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="guardar">Guardar</button>`,
