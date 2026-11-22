@@ -307,10 +307,9 @@ export async function vistaAjustes(el, { q } = {}) {
           </form>
         </section>
         <section class="tarjeta c-6">
-          <h2>Presupuestos y sesiones</h2>
+          <h2>Sesiones y límites</h2>
+          <p class="sec">Sin tope de personas consultadas por día: planilleros y consultores consultan sin frenarse (cada consulta queda registrada).</p>
           <form id="f-limites" class="form" style="margin-top:12px">
-            ${numero('presupuesto_planillero', aj.presupuesto_diario?.planillero, 'Personas por día · planillero', 10, 100000)}
-            ${numero('presupuesto_consultor', aj.presupuesto_diario?.consultor, 'Personas por día · consultor', 10, 100000)}
             ${numero('horas_max', aj.sesion?.horas_max, 'Horas máximas de una sesión', 1, 24)}
             ${numero('inactividad_min', aj.sesion?.inactividad_min, 'Minutos de inactividad', 5, 600)}
             ${numero('max_por_usuario', aj.sesion?.max_por_usuario, 'Dispositivos por usuario', 1, 10)}
@@ -599,8 +598,7 @@ export async function vistaAjustes(el, { q } = {}) {
         await guardar({ aviso_privacidad: Object.fromEntries(Object.entries(datosForm(f)).map(([k, v]) => [k, v ?? ''])) }, 'Aviso guardado');
       } else if (f.id === 'f-limites') {
         const v = datosForm(f);
-        await guardar({ presupuesto_diario: { planillero: Number(v.presupuesto_planillero), consultor: Number(v.presupuesto_consultor) },
-          sesion: { horas_max: Number(v.horas_max), inactividad_min: Number(v.inactividad_min), max_por_usuario: Number(v.max_por_usuario) },
+        await guardar({ sesion: { horas_max: Number(v.horas_max), inactividad_min: Number(v.inactividad_min), max_por_usuario: Number(v.max_por_usuario) },
           tope_cedulas_dictadas: Number(v.tope_cedulas_dictadas) }, 'Límites guardados');
       } else if (f.id === 'f-otros') {
         const v = datosForm(f);
