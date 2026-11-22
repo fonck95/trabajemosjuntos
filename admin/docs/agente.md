@@ -475,7 +475,8 @@ o una opción habla de costos, presupuesto o valor, y en el atlas enmarcado el B
   accionar cada control) y lo copia a cada inmersión de `tecnica.inmersiones` como `controles`; `--estricto` lo lleva al
   guion del asistente (`app/agente/guion.py`: `Guion.controles` y `Guion.control`, por id o por nombre). El modelo los
   ve en `indice` (los ids), en `guion` (enteros, los de las inmersiones que muestran los pasos del capítulo; si el
-  capítulo pesa demasiado, primero sin las descripciones de las fichas y después sin la ayuda), al ir a un paso de
+  capítulo pesa demasiado, primero sin la ayuda de los controles de los modelos del atlas, después sin los
+  referentes de las fichas y, solo si aún no cabe, sin sus descripciones: `recortado` dice qué se quitó), al ir a un paso de
   inmersión y al abrir un modelo con `visual`.
 - **`simular`**: de 1 a 4 `{control, valor}` en orden (sin `valor` para una acción; en un número, uno de su rango; en
   una opción, su id o su nombre; en sí o no, `true` o `false`, y sin valor es sí). Va en un **paso del plan** (junto a
@@ -556,7 +557,7 @@ primera. Las reglas están en un solo lugar, `app/agente/lenguaje.py`, y van a t
   que hace la cosa en vez de la palabra técnica («la torre aguanta un terremoto y sigue atendiendo», no «edificación
   indispensable del grupo de uso IV»). El guion trae siglas porque sale de documentos técnicos: por eso cada capítulo
   le llega al modelo con su glosario (`siglas`: el nombre completo y qué es cada una, de `lenguaje.SIGLAS`, solo las
-  que trae ese capítulo; `ir` trae las del paso). Una prueba (`tests/test_lenguaje.py`) falla si una sigla nueva del
+  que trae ese capítulo; `ir` trae las del paso y las de lo que se puede pedir en él: las piezas y los controles). Una prueba (`tests/test_lenguaje.py`) falla si una sigla nueva del
   guion no está explicada en el glosario.
 - **Con el léxico del candidato**: la primera persona del plural de la propuesta y la comunidad («le apostamos a…»,
   «que podamos…», «juntos»), un «¿sí?» de vez en cuando para ver si la sala va entendiendo, «el casco urbano»
@@ -564,7 +565,8 @@ primera. Las reglas están en un solo lugar, `app/agente/lenguaje.py`, y van a t
   («trabajo de parto» y «¡Trabajemos juntos!» no cambian). Los nombres van como los conoce la gente y sin variantes
   (Yondó, el hospital Héctor Abad Gómez, la ruta chelera, la 15, la cancha de sóftbol, el parque principal, la Casa de
   la Cultura, la iglesia, el centro agroindustrial, la planta de tratamiento de aguas residuales, vivienda joven), solo
-  donde el guion habla de ellos. No se nombran los puestos de salud ni el malecón: salieron de la propuesta.
+  donde el guion habla de ellos. No se nombran los puestos de salud, el malecón, el muelle flotante ni la pasarela:
+  salieron de la propuesta (`lenguaje.RETIRADO`, que también va en `EN_CORTO`, así llega a los agentes por MCP).
 - **Cambian las palabras, no los datos**: cifras, nombres y plazos siguen saliendo solo del guion, sin ideas, promesas
   ni datos nuevos, y nunca en primera persona del singular ni con citas del candidato (la voz puede ser la clonada).
 - **Dónde va.** Enteras (`COMO_SE_EXPLICA`) en las instrucciones del redactor del [plan en flujo](#el-plan-en-flujo) y
@@ -615,7 +617,7 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
   control de la simulación que no existe, un resaltado imposible, el capítulo o el paso de un paso que no es el primero, un valor sin la forma o una clave que no existe)
   **se descarta**, y un número fuera de su rango **se recorta**; cada cosa deja un aviso legible con el número del
   paso y los candidatos («Paso 3: la pieza «tore» no está en Salud (aislar); piezas: hospital_hoy, torre, telesalud,
-  puestos») y el plan corre con lo demás. La presentación hace lo mismo con lo que le llega (el aviso `parcial`:
+  territorios») y el plan corre con lo demás. La presentación hace lo mismo con lo que le llega (el aviso `parcial`:
   «parte de lo pedido no se pudo mostrar»). Solo es un error, y entonces no se guarda nada: que el primer paso no
   tenga un capítulo que resuelva, que un texto no se pueda proyectar (con el número del paso), más de 12 pasos o un
   plan que pasa de la duración máxima.
@@ -653,7 +655,10 @@ controles), con tres cambios. Hacia el modelo y la persona se llama «plan» y �
   sugerencias como botones. Volver a reproducir (y `control_recorrido` reproducir del asistente) pasa por el
   servidor: lo registra con un id nuevo y la tarjeta sigue a ese; solo se puede con el último plan (con la
   [presentación automática](#presentación-automática) encendida, también con el último que ella reemplazó al
-  seguir). Mientras suena,
+  seguir). Cada plan se guarda con la huella de los capítulos que recorre (`Guion.huella`): si uno cambió después
+  (un paso nuevo corre los números, cambia un texto o una pieza), el plan ya no vale y no se vuelve a reproducir,
+  porque sus frases hablarían de otro paso (`pantalla.huella_vigente`; los guardados antes de la huella valen si
+  pasan `recorrido.validar`). Mientras suena,
   una barra fija arriba de la conversación lo deja a mano. En la presentación, las flechas, la barra espaciadora y los
   botones de su control pasan de paso, P pausa y Escape detiene. Si la persona mueve la maqueta o cambia de paso a
   mano, se pausa; al seguir, el paso vuelve. Si escribe en el chat, se pausa al terminar la frase. Cualquier otra

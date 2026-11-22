@@ -403,7 +403,7 @@ def test_un_plan_del_asistente_la_interrumpe_y_despues_sigue_donde_iba():
     assert d["recorrido"]["titulo"] == "La torre del hospital" and d["recorrido"]["auto"] is False and d["por"] == "asistente"
     assert d["auto"] == {"activa": True, "capitulo": "salud", "paso": 4, "rid": None, "vueltas": 0, "fallas": 0}
     assert [a["tipo"] for a in x.acciones] == ["recorrido"] and x.acciones[0]["destino"] == "pantalla_off"
-    assert "sigue sola en Salud, paso 4 de 10" in x.contenido["automatica"]
+    assert "sigue sola en Salud, paso 4 de 11" in x.contenido["automatica"]
     # el avance tardío del automático ya no es de nadie, y mientras suena el plan del asistente no se arma otro
     assert pantalla.guardar_progreso(db, UID, {"rid": automatico, "n": 5, "de": len(SALUD["pasos"]), "fase": "narrando",
                                                "frase": 0, "voz": "activa"}, G) is False
@@ -524,7 +524,7 @@ def test_detener_su_plan_con_la_automatica_encendida_le_dice_al_modelo_que_sigue
     x = _hacer(db, {"op": "control_recorrido", "accion": "detener"})
     assert x.contenido["plan"]["fase"] == "detenido" and _auto(db)["activa"] is True
     assert x.contenido["automatica"] == ("La presentación automática sigue encendida: en unos segundos retoma sola en "
-                                         "Salud, paso 3 de 10. Si la persona quiere silencio, apáguela con op "
+                                         "Salud, paso 3 de 11. Si la persona quiere silencio, apáguela con op "
                                          "automatica (accion detener).")
     # «pausar» no lo dice, ni «detener» con la automática apagada
     _hacer(db, TORRE)
@@ -830,24 +830,24 @@ def test_el_contexto_del_asistente_con_la_automatica_encendida():
     t = sistema.recorrido_del_contexto(db, UID)
     assert "\n" not in t and "Plan «" not in t
     assert t.startswith("Presentación automática encendida: la pantalla en off recorre sola toda la presentación, muy "
-                        "resumida; va en Salud (salud), paso 3 de 10; voz: activa. ")
+                        "resumida; va en Salud (salud), paso 3 de 11; voz: activa. ")
     assert "respóndele con un plan CORTO (plan con largo corto, o recorrido de 3 a 5 pasos): la interrumpe y, cuando termina, sigue sola" in t
     assert "No la detengas ni la reinicies si no te lo piden (op automatica)" in t
     bloque = sistema.contexto_del_panel({}, datetime.now(timezone.utc), recorrido=t)
     assert t in bloque and bloque.endswith("</contexto_del_panel>")
     assert _avance(db, "pausa", 3, motivo="boton")
-    assert "paso 3 de 10, en pausa; voz: activa" in sistema.recorrido_del_contexto(db, UID)
+    assert "paso 3 de 11, en pausa; voz: activa" in sistema.recorrido_del_contexto(db, UID)
     # Un plan del asistente la interrumpe: el plan en un renglón y la automática, en espera, en otro
     _hacer(db, TORRE)
     assert _avance(db, "narrando", 2)
     plan, auto = sistema.recorrido_del_contexto(db, UID).split("\n")
     assert plan.startswith("Plan «La torre del hospital» en la pantalla en off: paso 2 de 3 del plan, narrando")
     assert auto.startswith("Presentación automática encendida, en espera mientras termina ese plan: después sigue sola en "
-                           "Salud (salud), paso 3 de 10. ")
+                           "Salud (salud), paso 3 de 11. ")
     # Terminó ese plan: se nombra un rato como terminado, y la automática dice dónde sigue
     assert _avance(db, "fin", 3)
     plan, auto = sistema.recorrido_del_contexto(db, UID).split("\n")
-    assert "terminado" in plan and "va en Salud (salud), paso 3 de 10" in auto
+    assert "terminado" in plan and "va en Salud (salud), paso 3 de 11" in auto
     # Entre un capítulo y el siguiente el plan automático que terminó no se nombra como un plan
     assert pantalla.siguiente_auto(db, UID, G) is not None
     r = _doc(db)["recorrido"]

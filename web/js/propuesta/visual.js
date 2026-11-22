@@ -247,7 +247,9 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
     if (x) chipEnfoque.querySelector('b').textContent = x.nombre;
     // lo que el asistente dejó solo, quitó o añadió en la maqueta: la sala sabe que lo que ve no es todo el paso
     const P = piezasDe(cap()), nombre = (id) => corto(P.get(id)?.nombre);
-    const quitadas = vis.sin.map((s) => { const [a, b] = s.split('.'); return corto(parteDe(P.get(a), b)?.nombre).toLowerCase(); });
+    // la parte va en minúscula después de «Sin» («Sin cubiertas de las graderías»), salvo los nombres propios («Yondó»)
+    const minuscula = (s) => s.charAt(0).toLowerCase() + s.slice(1);
+    const quitadas = vis.sin.map((s) => { const [a, b] = s.split('.'); return minuscula(corto(parteDe(P.get(a), b)?.nombre)); });
     chip(chipSolo, vis.aislar ? nombre(vis.aislar) : '');
     chip(chipSin, lista([...(vis.aislar ? [] : vis.ocultar.map(nombre)), ...quitadas].filter(Boolean)));
     chip(chipMas, vis.aislar ? '' : lista(vis.mostrar.filter((id) => !vis.ocultar.includes(id)).map(nombre).filter(Boolean)));
@@ -278,6 +280,13 @@ export function crearVisual({ escena, datos, caps, estado, ctx3d, pres, pasar3D,
   function cajaDe(objs) {
     const b = new THREE.Box3();
     objs.forEach((o) => { const k = solidBox(o, 0.2); if (!k.isEmpty()) b.union(k); });
+    // una capa de solo rótulos (salud.hoy, viv.parque, tic.hoy): lo que se encuadra son sus anclas, con un margen para
+    // que un rótulo solo no quede como un punto
+    if (b.isEmpty()) {
+      const w = new THREE.Vector3();
+      objs.forEach((o) => o.traverse((x) => { if (x.isCSS2DObject) b.expandByPoint(x.getWorldPosition(w)); }));
+      if (!b.isEmpty() && b.max.x - b.min.x < 40 && b.max.z - b.min.z < 40) b.expandByScalar(20);
+    }
     return b.isEmpty() || !Number.isFinite(b.min.x + b.max.x + b.min.z + b.max.z) ? null : b;
   }
   const gruposEn = (capasIds, nombres) => { const out = []; for (const id of capasIds) escena.capas.get(id)?.traverse((o) => { if (o.name && nombres.includes(o.name)) out.push(o); }); return out; };

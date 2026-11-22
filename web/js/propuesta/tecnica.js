@@ -2,15 +2,16 @@
 // Lo que se construye, dónde, cómo funciona y cómo se mide, sin costos ni financiación (esos quedan en la propuesta para
 // la gestión, propuesta.html sin `modo`). Aquí van las piezas puras, sin DOM ni 3D, para que una prueba con Node las
 // compare con las de admin/app/agente/guion.py, que arma con las mismas reglas lo que sabe el asistente:
-// * `sinPlata`, `cifraTecnica` y `especificacionTecnica`: quitan lo que tiene plata (un paréntesis con «$», el tramo de
+// * `sinPlata`, `cifraTecnica` y `especificacionTecnica`: quitan lo que tiene plata (un paréntesis con «$» o «pesos», el tramo de
 //   una especificación entre «·» o «;», la frase que la lleve y la cifra en pesos o en millones).
 // * `pasosTecnicos` y `capsTecnica`: los capítulos (portada, siete módulos y cronograma de obra) y sus pasos (los del
 //   módulo sin el de financiación, las inmersiones de general.json detrás del paso que dicen y el de metas).
 // * `anios`: los años de un plazo («Diseño 2029; obra 2030–2032» → [2029, 2032]) para el cronograma.
 
-// Lo que delata plata en un texto: el signo de pesos o «millones de pesos» (`PLATA` de guion.py)
-export const PLATA = /\$|millones de pesos/;
-const PARENTESIS = /\s*\([^()]*\$[^()]*\)/g;
+// Lo que delata plata en un texto: el signo de pesos o la palabra («millones de pesos», «991 pesos por kilovatio hora»;
+// `PLATA` de guion.py)
+export const PLATA = /\$|\bpesos\b/i;
+const PARENTESIS = /\s*\([^()]*(?:\$|\bpesos\b)[^()]*\)/gi;
 // Dónde termina una frase: punto, cierre de pregunta o de exclamación, espacio y una mayúscula, un signo de apertura, un
 // paréntesis o una etiqueta (no un número: «Res. 3100» no parte)
 const FRASE = /(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡«(<])/;

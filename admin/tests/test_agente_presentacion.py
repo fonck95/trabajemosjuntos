@@ -53,7 +53,7 @@ from pydantic import ValidationError
 
 import ayudas_agente as aa
 from app import acceso, config, seguridad
-from app.agente import bucle, guion, herramientas, sistema
+from app.agente import bucle, guion, herramientas, lenguaje, sistema
 from app.agente.herramientas import interfaz as hi
 from app.agente.herramientas.base import ErrorHerramienta
 
@@ -240,6 +240,8 @@ def test_el_guion_trae_enteros_los_textos_de_la_pantalla():
     assert revisados > 800, revisados
     texto = json.dumps(json.loads(guion.RUTA.read_text(encoding="utf-8")), ensure_ascii=False)
     assert "$" not in texto and "millones de pesos" not in texto
+    # (ni una tarifa escrita en palabras: «991 pesos por kilovatio hora», como quedó al quitar las siglas de los módulos)
+    assert not re.search(r"\bpesos\b", texto, re.I), re.search(r".{60}\bpesos\b.{20}", texto, re.I)
     for c in G.capitulos:
         for x in c.get("componentes") or []:
             assert not any("$" in t or "millones de pesos" in t for t in _textos(x)), (c["id"], x["id"])
@@ -255,7 +257,7 @@ def test_el_guion_trae_enteros_los_textos_de_la_pantalla():
     assert "Laboratorio: 24 horas y 55 pruebas en sitio · hoy terceriza la mayor parte" in torre["especificaciones"]
     assert not any(e.startswith(("Proyectos:", "Dotación: $")) for e in torre["especificaciones"])
     r = paso("saneamiento", "relleno_nuevo")
-    assert len(r["texto"]) == 482 and len(r["componente"]["ubicacion"]) == 611
+    assert len(r["texto"]) == 514 and len(r["componente"]["ubicacion"]) == 694
     # Las inmersiones: el paso dice qué modelo del atlas muestra
     assert paso("salud", "torre_sismo")["inmersion"]["id"] == "torre_sismo"
     assert any("0,939 %" in t for t in paso("salud", "torre_sismo")["lista"])
@@ -318,7 +320,19 @@ def test_el_guion_trae_la_maqueta_de_cada_capitulo():
     texto = json.dumps([c.get("maqueta") for c in G.capitulos], ensure_ascii=False)
     assert '"capas"' not in texto and '"grupos"' not in texto and '"nodos"' not in texto and '"replica"' not in texto
     sa, ur, ag = G.por_id("salud"), G.por_id("urbanismo"), G.por_id("aguas")
-    assert [x["id"] for x in G.piezas(sa)] == ["hospital_hoy", "torre", "telesalud", "puestos"]
+    assert [x["id"] for x in G.piezas(sa)] == ["hospital_hoy", "torre", "telesalud", "territorios"]
+    # Lo que trajo el PR de la vivienda de 300 apartamentos: el bloque cortado y el parque tienen su pieza, «el bloque»
+    # ya no es el barrio entero, y lo que salió de la propuesta (los puestos de salud, el muelle) no se ofrece
+    vi = G.por_id("vivienda")
+    assert [x["id"] for x in G.piezas(vi)] == ["nuevas", "bloque", "parque", "mejoramientos", "rural"]
+    assert G.pieza(vi, "bloque")["id"] == "bloque" and G.pieza(vi, "el bloque cortado")["id"] == "bloque"
+    assert G.pieza(vi, "parque")["id"] == "parque" and G.pieza(vi, "barrio nuevo")["id"] == "nuevas"
+    assert G.pieza(sa, "microterritorios")["id"] == "territorios" and G.pieza(sa, "puestos") is None
+    assert G.parte(ur, "mirador", "muelle") is None
+    for c in G.capitulos:
+        for x in G.piezas(G.por_id(c["id"])):
+            for n in [x["nombre"], *(p["nombre"] for p in x["partes"])]:
+                assert not lenguaje.problemas_de_voz(n) and "Lote" not in n, (c["id"], n)
     assert [p["id"] for p in G.pieza(sa, "torre")["partes"]] == ["cubierta", "equipos", "jardines"]
     # Por id, por nombre sin tildes ni mayúsculas, o por las palabras con que empieza (si es una sola pieza)
     assert G.pieza(sa, "Torre nueva de cuatro pisos")["id"] == "torre" and G.pieza(sa, "TORRE NUEVA")["id"] == "torre"
@@ -339,14 +353,15 @@ def test_el_guion_trae_la_maqueta_de_cada_capitulo():
     assert leer["maqueta"][1] == {"id": "torre", "nombre": "Torre nueva de cuatro pisos", "partes": [
         {"id": "cubierta", "nombre": "Cubierta y parasoles (deja ver las losas)"},
         {"id": "equipos", "nombre": "Equipos en la cubierta"}, {"id": "jardines", "nombre": "Árboles y jardines"}]}
-    assert list(leer) == ["capitulo", "pasos", "componentes", "maqueta", "controles_maqueta", "inmersiones"]
+    assert list(leer) == ["capitulo", "pasos", "componentes", "maqueta", "controles_maqueta", "inmersiones", "recortado"]
+    assert all(x.get("descripcion") for x in leer["componentes"]), "lo que explica cada obra no se recorta"
     # y los controles de la maqueta 3D en el capítulo (lo que acciona simular sin un modelo del atlas): sin las luces,
     # que son de vivienda y urbanismo (donde hay luminarias), ni el partido, que es de urbanismo
     assert [c["id"] for c in leer["controles_maqueta"]] == ["hora", "reproducir_dia"]
     for c in G.capitulos:
         assert len(json.dumps(G.capitulo_para_leer(G.por_id(c["id"])), ensure_ascii=False).encode("utf-8")) < 36000, c["id"]
     indice = {c["id"]: c for c in G.indice()["capitulos"]}
-    assert indice["salud"]["maqueta"] == ["hospital_hoy", "torre", "telesalud", "puestos"]
+    assert indice["salud"]["maqueta"] == ["hospital_hoy", "torre", "telesalud", "territorios"]
     # Defensivo: sin catálogo, o con uno que no tiene la forma, el guion sale sin maqueta (o sin esa pieza) y vale
     for maqueta in (None, [], "x", {"salud": "torre"}, {"salud": [None, 3, {"nombre": "Sin id"}, {"id": 5}]}):
         d = guion.derivar({**datos, "tecnica": {**datos["tecnica"], "maqueta": maqueta}})
@@ -850,8 +865,8 @@ def test_turno_completo_la_presentacion_llega_al_navegador_y_el_paso_al_modelo(s
     assert "presentacion" in {t["name"] for t in primera["tools"]}
     # Al modelo le vuelve lo que muestra el paso de destino
     resultado = json.dumps(segunda["messages"][-1], ensure_ascii=False)
-    assert "toolu_pres1" in resultado and "300 viviendas en dos lotes reales" in resultado
-    assert "Paso 3 de" in resultado and "Lote 1" in resultado
+    assert "toolu_pres1" in resultado and "300 apartamentos en 25 bloques" in resultado
+    assert "Paso 3 de" in resultado and "Barrio nuevo de vivienda de interés social" in resultado
 
 
 # ───────────────────────────── CSP y despliegue ─────────────────────────────
@@ -2801,13 +2816,14 @@ def test_el_proyector_y_la_pestana_del_chat_no_se_desfasan(panel_con_sitio, cfg,
     assert s["csp"] == [] and s["errores"] == [], (s["csp"], s["errores"])
     p = s["pasos"]
     assert p["abre"]["chat"] == p["abre"]["proyector"] == {"hash": "#vivienda/3", "sub": EXPLICACION}, p["abre"]
-    assert p["abre"]["aviso"] is True and p["abre"]["barra"].startswith("Paso 3 de 6"), p["abre"]
+    de = len(G.capitulos[G.por_id("vivienda")]["pasos"])
+    assert p["abre"]["aviso"] is True and p["abre"]["barra"].startswith(f"Paso 3 de {de}"), p["abre"]
     for nombre, paso in (("siguiente", 4), ("teclado", 5), ("siguiente_2", 6), ("aqui", 5)):
         f = p[nombre]
         # Las dos pantallas en el mismo paso (sin la explicación del 3, que se quita al cambiar de paso), y la barra y el
         # estado del chat diciendo el paso que ve la sala
         assert f["chat"] == f["proyector"] == {"hash": f"#vivienda/{paso}", "sub": None}, (nombre, f)
-        assert f["barra"].startswith(f"Paso {paso} de 6"), (nombre, f)
+        assert f["barra"].startswith(f"Paso {paso} de {de}"), (nombre, f)
         assert f["estado"]["capitulo"] == "vivienda" and f["estado"]["paso"] == paso, (nombre, f)
 
 

@@ -28,8 +28,12 @@ from __future__ import annotations
 import re
 from typing import Any
 
-# Lo que salió de la propuesta y la voz no nombra (el registro de cambios de la campaña)
-RETIRADO = ("puestos de salud", "puesto de salud", "malecón")
+# Lo que salió de la propuesta y la voz no nombra (el registro de cambios de la campaña): los puestos de salud rurales,
+# el malecón y, en el mirador Puerta del Magdalena, el muelle flotante y su pasarela. `RETIRADO_DICHO` es como se le dice
+# al modelo; `RETIRADO`, lo que la revisión busca (también en singular)
+RETIRADO_DICHO = ("puestos de salud", "malecón", "muelle flotante", "pasarela")
+RETIRADO = (*RETIRADO_DICHO, "puesto de salud")
+_RETIRADO_EN_FRASE = ", ".join(RETIRADO_DICHO[:-1]) + " ni " + RETIRADO_DICHO[-1]
 # Los nombres que se dicen como los conoce la gente, sin variantes
 NOMBRES = ("Yondó", "el hospital Héctor Abad Gómez", "la ruta chelera", "la 15", "la cancha de sóftbol",
            "el parque principal", "la Casa de la Cultura", "la iglesia", "el centro agroindustrial",
@@ -56,13 +60,13 @@ COMO_SE_EXPLICA = "\n".join([
     "- Los nombres, como los conoce la gente y sin variantes: " + ", ".join(NOMBRES[:-1]) + " y " + NOMBRES[-1] +
     ". El hospital es siempre el hospital Héctor Abad Gómez. Úsalos donde el guion habla de ellos: no se los pongas a "
     "obras que no los traen.",
-    "- Nunca hablas de puestos de salud ni de malecón: salieron de la propuesta.",
+    f"- Nunca hablas de {_RETIRADO_EN_FRASE}: salieron de la propuesta.",
     "- Las palabras cambian; los datos no: cifras, nombres y plazos solo del guion, sin ideas, promesas ni datos que no "
     "estén en él. Nada de «yo» ni de citas o promesas a nombre del candidato.",
 ])
 
 EN_CORTO = ("en palabras sencillas: sin siglas (di el nombre completo) ni tecnicismos, «el casco urbano» completo y "
-            "«recursos económicos», nunca «plata»")
+            f"«recursos económicos», nunca «plata»; sin nombrar lo que salió de la propuesta ({_RETIRADO_EN_FRASE})")
 
 # Cada sigla, abreviatura o unidad del guion: su nombre completo y qué es, en palabras sencillas. La clave es como se
 # escribe en el guion (la búsqueda distingue mayúsculas: «ART» no es «arte»)

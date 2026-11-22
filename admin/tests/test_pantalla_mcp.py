@@ -203,7 +203,7 @@ def test_visual_cambia_lo_que_se_ve_y_vuelve_a_lo_del_paso():
     assert (d["detalle"], d["comparar"], d["inmersion"], d["tema"]) == ("telesalud", "hoy", "torre_sismo", "oscuro")
     e = _hacer(db, 7, {"op": "estado"}).contenido["pantalla"]
     assert e["visual"]["inmersion"] == "torre_sismo" and "Simulador sísmico" in e["muestra"]
-    assert "la ficha técnica de «Telesalud rural en red»" in e["muestra"] and "tema oscuro" in e["muestra"]
+    assert "la ficha técnica de «Telemedicina: el especialista llega a la vereda y a la casa»" in e["muestra"] and "tema oscuro" in e["muestra"]
     # Lo que vuelve a lo del paso: «paso», «cerrar» y la cámara «paso» (que devuelve también el rumbo)
     _hacer(db, 7, {"op": "visual", "enfoque": "paso", "detalle": "cerrar", "inmersion": "paso", "camara": "paso"})
     d = db.pantallas.find_one({"_id": 7})
@@ -255,9 +255,9 @@ def test_visual_con_la_camara_libre_las_piezas_y_las_partes():
     x = pantalla.para_pantalla(pantalla.estado(d, G), d, G)
     assert (x["mover"], x["animar"], x["aislar"]) == ({"giro": 90, "zoom": 2, "elevacion": 30}, True, "torre")
     assert list(x) == ["v", *pantalla.CAMPOS, "recorrido", "control_recorrido", "progreso", "auto"]
-    _hacer(db, 7, {"op": "visual", "ocultar": ["hospital_hoy", "telesalud"], "mostrar": "puestos"})
+    _hacer(db, 7, {"op": "visual", "ocultar": ["hospital_hoy", "telesalud"], "mostrar": "territorios"})
     d = db.pantallas.find_one({"_id": 7})
-    assert (d["mover"], d["animar"], d["ocultar"], d["mostrar"]) == (None, False, ["hospital_hoy", "telesalud"], ["puestos"])
+    assert (d["mover"], d["animar"], d["ocultar"], d["mostrar"]) == (None, False, ["hospital_hoy", "telesalud"], ["territorios"])
     # Lo último que se pide es lo que vale: lo que ahora se muestra deja de estar oculto, y lo que se aísla, también
     _hacer(db, 7, {"op": "visual", "mostrar": ["telesalud"]})
     d = db.pantallas.find_one({"_id": 7})
@@ -278,7 +278,7 @@ def test_visual_con_la_camara_libre_las_piezas_y_las_partes():
     avisos = r.contenido["avisos"]
     assert len(avisos) == 6 and "Lo de «avisos» no se pudo mostrar; lo demás sí." in r.contenido["nota"]
     assert "elevacion 99 quedó en 85 (va de 8 a 85)" in avisos and "zoom 0.1 quedó en 0.3 (va de 0.3 a 3)" in avisos
-    assert "la pieza «tore» no está en Salud (aislar); piezas: hospital_hoy, torre, telesalud, puestos" in avisos
+    assert "la pieza «tore» no está en Salud (aislar); piezas: hospital_hoy, torre, telesalud, territorios" in avisos
     assert any("«marte»" in a and "(ocultar)" in a for a in avisos) and any("no tiene la parte «techo»" in a for a in avisos)
     assert "mover.giro 500 quedó en 360 (va de -360 a 360)" in avisos
     # Si no queda nada que hacer, es un error con las piezas del capítulo, y no se mueve nada
@@ -330,7 +330,7 @@ def test_visual_no_mueve_nada_si_no_existe():
     # Con candidatos: los componentes con lugar en la maqueta (para enfoque) o todos (para detalle)
     with pytest.raises(hi.ErrorHerramienta) as e:
         _hacer(db, 7, {"op": "visual", "enfoque": "titulacion"})
-    assert {"id": "nuevas", "nombre": "Urbanización VIP/VIS urbana (Lote 1 y Lote 2)"} in e.value.detalle["con_lugar"]
+    assert {"id": "nuevas", "nombre": "Barrio nuevo de vivienda de interés social: 300 apartamentos en 25 bloques"} in e.value.detalle["con_lugar"]
     assert all(x["id"] != "titulacion" for x in e.value.detalle["con_lugar"])
 
 

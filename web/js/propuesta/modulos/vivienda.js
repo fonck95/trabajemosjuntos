@@ -496,13 +496,16 @@ export async function crear(esc, datos, cap) {
   // las ventanas de los bloques se encienden al atardecer
   esc.alHora?.((Hh) => { const m = blq.userData.ventanas; if (m) m.emissiveIntensity = 0.85 * Hh.encendido; esc.st.invalidate(); });
   // el bloque del paso del apartamento tipo se ve cortado: se saca su instancia (y se cierra cualquier animación de los
-  // bloques, que la devolvería a su sitio)
-  let animados = [];
+  // bloques, que la devolvería a su sitio). `cortado` lo recuerda para que una animación que empiece después (`animar`
+  // con la pieza «bloque» a la vista) no vuelva a poner el bloque entero encima del cortado
+  let animados = [], cortado = false;
   const verCorte = (v) => {
     if (iCorte < 0) return;
+    cortado = !!v;
     if (v) { animados.forEach((a) => a?.progress(1).kill()); animados = []; }
-    blq.userData.ocultar(iCorte, v); esc.st.updateShadows(); esc.st.invalidate();
+    blq.userData.ocultar(iCorte, cortado); esc.st.updateShadows(); esc.st.invalidate();
   };
+  const sinCortado = () => { if (cortado) blq.userData.ocultar(iCorte, true); };
 
   // mejoramientos: techos naranja sobre casas reales de los barrios con más carencias (casas pequeñas en la periferia)
   const metaMej = cap.componentes?.find((c) => c.id === 'mejoramientos')?.unidades || 400;
@@ -549,8 +552,12 @@ export async function crear(esc, datos, cap) {
   const vistaMej = () => esc.encuadrar(foco.length ? caja(foco, 40) : caja([cf], 200), { rumbo: 196, elev: 52, margen: 0.9 });
   const gris = (v) => esc.contextoGris?.(v);
   const animNueva = () => {
-    animados = [brotar(blq, { duracion: 1.8, retraso: 0.6, onUpdate: inv, alFinal: () => esc.st.updateShadows() }),
+    // brotar toma la primera vez la posición de cada bloque como base: el cortado va entero a ese momento y se vuelve a
+    // sacar en cada cuadro (sinCortado)
+    if (cortado) blq.userData.ocultar(iCorte, false);
+    animados = [brotar(blq, { duracion: 1.8, retraso: 0.6, onUpdate: () => { sinCortado(); inv(); }, alFinal: () => { sinCortado(); esc.st.updateShadows(); } }),
       ...[verdeVia, verdeBorde, verdePatio, ...(verdeParque || [])].map((v) => brotar(v, { duracion: 1.6, retraso: 1.4, onUpdate: inv }))];
+    sinCortado();
   };
   const antes = (enGris, corte = false) => () => { gris(enGris); verCorte(corte); };
   return {

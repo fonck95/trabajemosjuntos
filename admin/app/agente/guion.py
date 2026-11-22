@@ -55,6 +55,7 @@ Por qué está hecho así:
 """
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import re
@@ -116,10 +117,11 @@ def clave(v: Any) -> str:
 
 # ───────────────────────────── Sin plata (las mismas reglas de main.js) ─────────────────────────────
 
-# Lo que delata plata en un texto: el signo de pesos o «millones de pesos»
-PLATA = re.compile(r"\$|millones de pesos")
+# Lo que delata plata en un texto: el signo de pesos o la palabra («millones de pesos», «991 pesos por kilovatio hora»:
+# los módulos escriben completo lo que antes iba en siglas, y «$/kWh» quedó en palabras)
+PLATA = re.compile(r"\$|\bpesos\b", re.I)
 # Un paréntesis (sin otro adentro) que lleva plata, con el espacio de antes
-_PARENTESIS = re.compile(r"\s*\([^()]*\$[^()]*\)")
+_PARENTESIS = re.compile(r"\s*\([^()]*(?:\$|\bpesos\b)[^()]*\)", re.I)
 # Dónde termina una frase: un punto, un signo de cierre de pregunta o de exclamación, espacio y una mayúscula, un signo
 # de apertura, un paréntesis o una etiqueta (no un número: «Res. 3100» no parte)
 _FRASE = re.compile(r"(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡«(<])")
@@ -590,6 +592,22 @@ class Guion:
     # las simulaciones de la maqueta 3D ({id: MAQUETA, nombre, controles}), o None (un guion de antes)
     maqueta: dict | None = None
 
+    def huella(self, capitulos: Any) -> dict[str, str]:
+        """La huella del contenido de cada capítulo de `capitulos` (ids) que existe en el guion: {id: 12 hexadecimales}.
+        Va con cada plan guardado (`pantalla.guardar_recorrido`): si el capítulo cambió (otros pasos, otros textos,
+        otras piezas), las frases del plan pueden hablar de lo que ya no se ve, y el plan no se vuelve a reproducir."""
+        cache = self.__dict__.setdefault("_huellas", {})
+        out = {}
+        for cid in sorted({x for x in capitulos if isinstance(x, str)}):
+            ci = self.por_id(cid)
+            if ci is None:
+                continue
+            if cid not in cache:
+                texto = json.dumps(self.capitulos[ci], ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+                cache[cid] = hashlib.sha1(texto.encode("utf-8")).hexdigest()[:12]
+            out[cid] = cache[cid]
+        return out
+
     @classmethod
     def desde(cls, datos: Any) -> "Guion":
         malos = problemas(datos)
@@ -760,8 +778,9 @@ class Guion:
         las partes que se les pueden quitar (`maqueta`; una pieza sin partes va sin esa clave) y el catálogo de
         inmersiones, con los controles de la simulación de las que muestran los pasos del capítulo, y los de la maqueta
         3D en este capítulo (`controles_maqueta`: lo que acciona `simular` sin un modelo del atlas). Si pasa de `tope`
-        bytes (con la nota de la herramienta, por debajo de `MAX_CONTENIDO`), las fichas van sin descripción ni
-        referentes; si todavía pasa, los controles van sin su ayuda. Los pasos van sin su `narracion`: es la frase de la
+        bytes (con la nota de la herramienta, por debajo de `MAX_CONTENIDO`), los controles de los modelos del atlas van sin
+        su ayuda; si todavía pasa, las fichas van sin sus referentes y, si aún pasa, sin su descripción (`recortado`
+        dice qué se quitó). Los pasos van sin su `narracion`: es la frase de la
         presentación automática, que el modelo no dice (escribe la suya) y que solo le restaría lugar a las fichas."""
         c = self.capitulos[ci]
         pasos = []
@@ -783,16 +802,35 @@ class Guion:
                                 **({"controles": i["controles"]} if i["id"] in suyas and i.get("controles") else {})}
                                for i in self.inmersiones]}
         pesa = lambda: len(json.dumps(out, ensure_ascii=False).encode("utf-8"))   # noqa: E731
-        if pesa() > tope:
-            out["componentes"] = [{k: v for k, v in x.items() if k not in ("descripcion", "proyectos_tipo")}
-                                  for x in fichas]
-            out["recortado"] = "Las fichas van sin descripción ni referentes para caber: pídalas con visual detalle."
-        if pesa() > tope:
+        # Si no cabe, se quita por partes, de lo que menos le sirve al plan a lo que más: la ayuda de los controles de
+        # los modelos del atlas (llega entera al ir al paso de su modelo o al abrirlo; los de la maqueta, pocos, van
+        # siempre con la suya), los referentes de las fichas y, solo si todavía no cabe, su descripción (el qué es y
+        # para qué sirve de cada obra, con lo que se escribe el plan)
+        notas = []
+
+        def recortar(nota: str, quitar) -> None:
+            quitar()
+            notas.append(nota)
+            out["recortado"] = " ".join(notas)
+
+        def sin_ayuda() -> None:
             for i in out["inmersiones"]:
                 if i.get("controles"):
                     i["controles"] = [{k: v for k, v in x.items() if k != "ayuda"} for x in i["controles"]]
-            out["controles_maqueta"] = [{k: v for k, v in x.items() if k != "ayuda"} for x in out["controles_maqueta"]]
-            out["recortado"] += " Los controles de las simulaciones van sin su ayuda."
+
+        def sin_de_las_fichas(*claves: str):
+            def quitar() -> None:
+                out["componentes"] = [{k: v for k, v in x.items() if k not in claves} for x in out["componentes"]]
+            return quitar
+
+        if pesa() > tope and any(i.get("controles") for i in out["inmersiones"]):
+            recortar("Los controles de los modelos del atlas van sin su ayuda para caber: llega entera al ir al paso de "
+                     "su modelo.", sin_ayuda)
+        if pesa() > tope:
+            recortar("Las fichas van sin sus referentes (proyectos tipo) para caber.", sin_de_las_fichas("proyectos_tipo"))
+        if pesa() > tope:
+            recortar("Y sin su descripción: la de cada componente llega entera al ir a su paso.",
+                     sin_de_las_fichas("descripcion"))
         return out
 
     def indice(self) -> dict:

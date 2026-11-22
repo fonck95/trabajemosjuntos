@@ -505,18 +505,20 @@
         {"id": "territorio", "nombre": "Nombres del territorio: río, puente, Barrancabermeja y Kilómetro Cinco", "capas": ["portada.geo"]}
       ],
       "vivienda": [
-        {"id": "nuevas", "nombre": "Vivienda nueva: bloques del Lote 1 y casas del Lote 2", "capas": ["viv.nueva"]},
+        {"id": "nuevas", "nombre": "Barrio nuevo: los 25 bloques de tres pisos, el parque, las vías y las zonas verdes", "capas": ["viv.nueva"]},
+        {"id": "bloque", "nombre": "Bloque cortado en el tercer piso: el apartamento tipo por dentro", "capas": ["viv.bloque"], "efecto": "corte"},
+        {"id": "parque", "nombre": "Rótulos del parque del barrio: juegos, cancha, kiosco, gimnasio, letrero y parqueaderos", "capas": ["viv.parque"]},
         {"id": "mejoramientos", "nombre": "Techos de las casas a mejorar (muestra)", "capas": ["viv.mejoramiento"], "efecto": "gris"},
-        {"id": "rural", "nombre": "Casas rurales de muestra (prototipo VIVA)", "capas": ["viv.rural"]}
+        {"id": "rural", "nombre": "Casas rurales de muestra: el prototipo de la Empresa de Vivienda de Antioquia", "capas": ["viv.rural"]}
       ],
       "urbanismo": [
         {"id": "hoy", "nombre": "El estadio y el caño como están hoy", "capas": ["urb.hoy"]},
         {"id": "ciudadela", "nombre": "Contorno de la ciudadela y las sedes que integra", "capas": ["urb.ciudadela"]},
-        {"id": "softbol", "nombre": "Cancha de Sóftbol Casabe", "capas": ["urb.softbol"], "partes": [{"id": "cubierta", "nombre": "Cubiertas de las graderías", "grupos": ["cubierta"]}, {"id": "graderias", "nombre": "Graderías, dugouts y baños", "grupos": ["obras"]}, {"id": "luces", "nombre": "Torres de luz LED", "grupos": ["luces"]}, {"id": "arboles", "nombre": "Árboles", "grupos": ["verde"]}]},
+        {"id": "softbol", "nombre": "Cancha de Sóftbol Casabe", "capas": ["urb.softbol"], "partes": [{"id": "cubierta", "nombre": "Cubiertas de las graderías", "grupos": ["cubierta"]}, {"id": "graderias", "nombre": "Graderías, casetas de los jugadores y baños", "grupos": ["obras"]}, {"id": "luces", "nombre": "Torres de luz de bajo consumo", "grupos": ["luces"]}, {"id": "arboles", "nombre": "Árboles", "grupos": ["verde"]}]},
         {"id": "parque_lineal", "nombre": "Parque lineal del caño", "capas": ["urb.cano", "urb.puentes"], "partes": [{"id": "cauce", "nombre": "Cauce renaturalizado", "grupos": ["cauce", "orillas"]}, {"id": "sendas", "nombre": "Sendero y ciclorruta", "grupos": ["sendas"]}, {"id": "puentes", "nombre": "Puentes peatonales", "grupos": ["puentes"]}, {"id": "arboles", "nombre": "Bosque y jardines de lluvia", "grupos": ["verde", "suds"]}]},
         {"id": "alameda", "nombre": "Alameda de la ciudadela", "capas": ["urb.alameda"]},
         {"id": "instalaciones", "nombre": "Canchas cubiertas y skatepark", "capas": ["urb.instalaciones"], "partes": [{"id": "cubierta", "nombre": "Cubierta de las canchas", "grupos": ["cubierta", "obras"]}]},
-        {"id": "mirador", "nombre": "Mirador Puerta del Magdalena", "capas": ["urb.mirador"], "partes": [{"id": "proteccion", "nombre": "Zona A: protección de la orilla", "grupos": ["zonaA"]}, {"id": "plaza", "nombre": "Zona B: plaza", "grupos": ["plaza"]}, {"id": "letras", "nombre": "Letras YONDÓ", "grupos": ["letras"]}, {"id": "deck", "nombre": "Deck y mirador elevado", "grupos": ["deck"]}, {"id": "muelle", "nombre": "Muelle flotante", "grupos": ["muelle"]}]}
+        {"id": "mirador", "nombre": "Mirador Puerta del Magdalena", "capas": ["urb.mirador"], "partes": [{"id": "proteccion", "nombre": "Protección de la orilla (zona A)", "grupos": ["zonaA"]}, {"id": "plaza", "nombre": "Plaza (zona B)", "grupos": ["plaza"]}, {"id": "letras", "nombre": "Letras de Yondó", "grupos": ["letras"]}, {"id": "deck", "nombre": "Paseo curvo de madera y mirador en alto sobre el río", "grupos": ["deck"]}]}
       ],
       "agroindustria": [
         {"id": "lote_hoy", "nombre": "El lote como está hoy y el estribo socavado", "capas": ["agro.sitio"]},
@@ -530,28 +532,28 @@
         {"id": "leche", "nombre": "Acopio de leche", "capas": ["agro.parque"], "grupos": ["leche"]},
         {"id": "maquinaria", "nombre": "Banco de maquinaria", "capas": ["agro.parque"], "grupos": ["maquinaria"]},
         {"id": "biodigestor", "nombre": "Biodigestor y compostaje", "capas": ["agro.parque"], "grupos": ["biodigestor"]},
-        {"id": "agua", "nombre": "PTAR industrial", "capas": ["agro.parque"], "grupos": ["ptar"]}
+        {"id": "agua", "nombre": "Planta de tratamiento del agua del parque", "capas": ["agro.parque"], "grupos": ["ptar"]}
       ],
       "salud": [
         {"id": "hospital_hoy", "nombre": "El hospital de hoy", "capas": ["salud.hoy"]},
         {"id": "torre", "nombre": "Torre nueva de cuatro pisos", "capas": ["salud.torre"], "replica": {"id": "torre_hospital", "sin": ["solar", "conexion"]}, "partes": [{"id": "cubierta", "nombre": "Cubierta y parasoles (deja ver las losas)", "nodos": ["obra_nueva_cubierta", "obra_nueva_parasoles"]}, {"id": "equipos", "nombre": "Equipos en la cubierta", "nodos": ["equipos"]}, {"id": "jardines", "nombre": "Árboles y jardines", "nodos": ["obra_nueva_arboles", "obra_nueva_arbustos"]}]},
-        {"id": "telesalud", "nombre": "Red de telesalud", "capas": ["salud.red"]},
-        {"id": "puestos", "nombre": "Puestos de salud rurales", "capas": ["salud.puestos"]}
+        {"id": "telesalud", "nombre": "Red de telemedicina: la antena de la torre, el centro de control de la alcaldía y los enlaces", "capas": ["salud.red"]},
+        {"id": "territorios", "nombre": "Microterritorios de los equipos de salud: veredas y hogares del casco urbano", "capas": ["salud.territorios"]}
       ],
       "aguas": [
-        {"id": "sistema", "nombre": "Pozos, PTAP, tanque y conducción", "capas": ["aguas.sistema"]},
-        {"id": "red", "nombre": "Red de distribución del casco", "capas": ["aguas.red"]},
+        {"id": "sistema", "nombre": "Pozos, planta potabilizadora, tanque y conducción", "capas": ["aguas.sistema"]},
+        {"id": "red", "nombre": "Red de distribución del casco urbano", "capas": ["aguas.red"]},
         {"id": "red_intermitente", "nombre": "La red como está hoy: con agua 9 de cada 24 horas", "capas": ["aguas.red"], "efecto": "intermitente"},
         {"id": "sectorizacion", "nombre": "Sectores hidráulicos, válvulas y macromedidores", "capas": ["aguas.sectores"]},
-        {"id": "ptap", "nombre": "Módulo de ampliación de la PTAP", "capas": ["aguas.ampliacion"]}
+        {"id": "ptap", "nombre": "Ampliación de la planta potabilizadora", "capas": ["aguas.ampliacion"]}
       ],
       "saneamiento": [
         {"id": "vertimientos", "nombre": "Vertimientos de hoy sin tratar", "capas": ["san.hoy"]},
         {"id": "ebar", "nombre": "Estaciones de bombeo existentes", "capas": ["san.ebar"]},
-        {"id": "interceptores", "nombre": "Interceptores, impulsión y estación de llegada", "capas": ["san.colectores"]},
-        {"id": "ptar", "nombre": "PTAR central, laguna y descarga", "capas": ["san.ptar"], "partes": [{"id": "arboles", "nombre": "Barrera de árboles", "grupos": ["verde"]}]},
-        {"id": "sitios_ptar", "nombre": "Sitios evaluados para la PTAR", "capas": ["san.sitios"]},
-        {"id": "relleno_nuevo", "nombre": "Relleno nuevo de Kilómetro Cinco", "capas": ["san.relleno_nuevo"], "partes": [{"id": "celdas", "nombre": "Celdas", "grupos": ["celdas"]}, {"id": "obras", "nombre": "ECA, compostaje, lagunas y portería", "grupos": ["obras"]}]},
+        {"id": "interceptores", "nombre": "Interceptores, tubería de bombeo y estación de llegada", "capas": ["san.colectores"]},
+        {"id": "ptar", "nombre": "Planta de tratamiento de aguas residuales, laguna y descarga", "capas": ["san.ptar"], "partes": [{"id": "arboles", "nombre": "Barrera de árboles", "grupos": ["verde"]}]},
+        {"id": "sitios_ptar", "nombre": "Sitios evaluados para la planta de tratamiento", "capas": ["san.sitios"]},
+        {"id": "relleno_nuevo", "nombre": "Relleno nuevo de Kilómetro Cinco", "capas": ["san.relleno_nuevo"], "partes": [{"id": "celdas", "nombre": "Celdas", "grupos": ["celdas"]}, {"id": "obras", "nombre": "Aprovechamiento del reciclaje, compostaje, lagunas y portería", "grupos": ["obras"]}]},
         {"id": "sitios_relleno", "nombre": "Sitios evaluados para el relleno y radio del aeropuerto", "capas": ["san.relleno_sitios"]},
         {"id": "via_relleno", "nombre": "Vía al relleno", "capas": ["san.relleno_via"]},
         {"id": "relleno", "nombre": "Relleno Las Américas convertido en parque", "capas": ["san.relleno"], "replica": {"id": "relleno_parque", "sin": ["conexion"]}, "partes": [{"id": "granja", "nombre": "Granja solar sobre las celdas", "nodos": ["solar"]}, {"id": "parque", "nombre": "Parque: coworking, granja y circuito", "nodos": ["obra_nueva"]}, {"id": "baterias", "nombre": "Almacenamiento", "nodos": ["almacenamiento"]}]}
@@ -560,7 +562,7 @@
         {"id": "sedes_hoy", "nombre": "Sedes públicas hoy", "capas": ["tic.hoy"]},
         {"id": "fibra", "nombre": "Anillo de fibra y centro de control", "capas": ["tic.fibra"]},
         {"id": "zonas", "nombre": "Zonas Digitales", "capas": ["tic.zonas", "tic.zonas2"]},
-        {"id": "telemetria", "nombre": "Telemetría de las EBAR y la PTAR", "capas": ["tic.telemetria"]},
+        {"id": "telemetria", "nombre": "Telemetría de las estaciones de bombeo y la planta de tratamiento", "capas": ["tic.telemetria"]},
         {"id": "granja", "nombre": "Granja solar municipal", "capas": ["tic.granja", "tic.granja_det"], "replica": {"id": "relleno_parque", "sin": ["conexion"]}},
         {"id": "paneles_por_sede", "nombre": "Modelo descartado: paneles en cada sede", "capas": ["tic.descartado"], "efecto": "paneles_por_sede"}
       ],
@@ -570,8 +572,8 @@
         {"id": "agroindustria", "nombre": "Agroindustria", "capas": ["agro.parque"]},
         {"id": "salud", "nombre": "Salud", "capas": ["salud.torre"]},
         {"id": "aguas", "nombre": "Aguas", "capas": ["aguas.sistema"]},
-        {"id": "saneamiento", "nombre": "Saneamiento", "capas": ["san.ebar", "san.colectores", "san.ptar", "san.relleno_nuevo"]},
-        {"id": "tic", "nombre": "TIC y energía", "capas": ["tic.fibra", "tic.granja"]}
+        {"id": "saneamiento", "nombre": "Aseo y saneamiento", "capas": ["san.ebar", "san.colectores", "san.ptar", "san.relleno_nuevo"]},
+        {"id": "tic", "nombre": "Conectividad y energía", "capas": ["tic.fibra", "tic.granja"]}
       ]
     }
   }

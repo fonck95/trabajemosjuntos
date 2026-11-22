@@ -42,7 +42,7 @@ def test_la_voz_trae_el_lexico_del_candidato_y_lo_que_se_retiro():
     for x in ("le apostamos", "podamos", "juntos", "¿sí?", "«El casco urbano», completo", "«recursos económicos», "
               "nunca «plata»", "«empleo», no «trabajo»", "«¡Trabajemos juntos!» no se tocan", "Sin siglas",
               "Sin tecnicismos", "Explica cada parte: qué es, para qué sirve y a quién le sirve",
-              "el hospital Héctor Abad Gómez", "puestos de salud ni de malecón"):
+              "el hospital Héctor Abad Gómez", "puestos de salud, malecón, muelle flotante ni pasarela"):
         assert x in v, x
     for nombre in lenguaje.NOMBRES:
         assert nombre in v, nombre
@@ -111,6 +111,10 @@ def test_problemas_de_voz():
     assert lenguaje.problemas_de_voz("Sin plata no hay malecón.") == ["«malecón» salió de la propuesta",
                                                                       "«plata» en vez de «recursos económicos»"]
     assert lenguaje.problemas_de_voz("Los puestos de salud rurales.") == ["«puestos de salud» salió de la propuesta"]
+    # el mirador quedó sin muelle flotante ni pasarela (PR de la vivienda de 300 apartamentos), y eso llega también
+    # en la frase corta, la que leen los agentes por MCP y la respuesta inmediata
+    assert lenguaje.problemas_de_voz("Al mirador le quitamos el muelle flotante.") == ["«muelle flotante» salió de la propuesta"]
+    assert all(x in lenguaje.EN_CORTO for x in lenguaje.RETIRADO_DICHO)
     assert lenguaje.problemas_de_voz(None) == []
 
 

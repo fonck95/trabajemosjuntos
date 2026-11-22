@@ -233,6 +233,8 @@ def recorrido_de(doc: dict | None, guion: Any) -> dict | None:
     r = (doc or {}).get("recorrido")
     if not isinstance(r, dict) or r.get("destino") not in rec.DESTINOS or not isinstance(r.get("cerrado"), bool):
         return None
+    if not huella_vigente(r.get("huella"), guion):
+        return None
     # (`al_dia`: uno guardado antes del plan guiado, con lo que le falta en lo del paso)
     absoluto = rec.al_dia({k: r.get(k) for k in ("id", "titulo", "escenas", "cierre")})
     if rec.validar(absoluto, guion):
@@ -240,6 +242,23 @@ def recorrido_de(doc: dict | None, guion: Any) -> dict | None:
     return {**absoluto, "destino": r["destino"], "cerrado": r["cerrado"], "creado": r.get("creado"),
             "auto": r.get("auto") is True, "externo": r.get("externo") is True,
             "en_flujo": r.get("en_flujo") is True, "abierto": r.get("abierto") is True}
+
+
+def huella_de(absoluto: dict, guion: Any) -> dict | None:
+    """La huella de los capítulos que recorre un plan (`Guion.huella`), para guardarla con él; None sin guion."""
+    if guion is None or not callable(getattr(guion, "huella", None)):
+        return None
+    return guion.huella(e.get("capitulo") for e in absoluto.get("escenas") or () if isinstance(e, dict)) or None
+
+
+def huella_vigente(h: Any, guion: Any) -> bool:
+    """¿El plan guardado con la huella `h` sigue hablando del guion vigente? Sus pasos se guardan por número y sus
+    frases describen lo que se veía: si uno de sus capítulos cambió (se agregó o se corrió un paso, cambió un texto o
+    una pieza), al volver a reproducirlo la sala oiría frases de otro paso. Un plan sin huella (guardado antes de que
+    existiera, o escrito a mano en la base) vale si pasa `recorrido.validar`, como antes."""
+    if h is None or guion is None or not callable(getattr(guion, "huella", None)):
+        return True
+    return isinstance(h, dict) and bool(h) and guion.huella(h) == h
 
 
 def progreso_de(doc: dict | None, r: dict | None) -> dict | None:
@@ -272,29 +291,34 @@ def a_la_vista(doc: dict | None, guion: Any, r: dict | None = None) -> dict | No
     return {**doc, **base_en_curso(doc, r)}
 
 
-def _poner_recorrido(absoluto: dict, destino: str, por: str, abierto: bool = False) -> dict:
+def _poner_recorrido(absoluto: dict, destino: str, por: str, abierto: bool = False, guion: Any = None) -> dict:
     """Lo que se escribe al guardar un recorrido nuevo: sin control ni avance, con la base en su última escena y sin
     explicación. `externo`: lo escribió un agente por MCP, o es la copia de uno así (`controlar` «reproducir» la pasa
     con `externo`): la marca no se pierde aunque otro lo vuelva a reproducir. `abierto`: el plan en flujo que el panel
     todavía está escribiendo (`agente/redactor.py`): crece con `crecer_recorrido` y queda con `en_flujo` para siempre
-    (su avance puede contar menos pasos de los guardados: el navegador recibe los nuevos un momento después)."""
+    (su avance puede contar menos pasos de los guardados: el navegador recibe los nuevos un momento después). Con
+    `guion`, la huella de sus capítulos (`huella_de`)."""
     flujo = {"en_flujo": True, "abierto": True} if abierto else {}
+    huella = huella_de(absoluto, guion)
     return {**rec.estado_de_escena(absoluto["escenas"][-1]),
             "recorrido": {**{k: absoluto[k] for k in ("id", "titulo", "escenas", "cierre")}, "destino": destino,
                           "creado": _ahora(), "cerrado": False, "auto": por == "auto",
-                          "externo": por == "mcp" or absoluto.get("externo") is True, **flujo},
+                          "externo": por == "mcp" or absoluto.get("externo") is True, **flujo,
+                          **({"huella": huella} if huella else {})},
             "control_recorrido": None, "progreso": None, "actualizada": _ahora(), "por": por}
 
 
-def guardar_recorrido(db: Database, uid: int, absoluto: dict, destino: str, por: str, abierto: bool = False) -> dict:
+def guardar_recorrido(db: Database, uid: int, absoluto: dict, destino: str, por: str, abierto: bool = False,
+                      guion: Any = None) -> dict:
     """Guarda un recorrido nuevo de un agente o del panel (reemplaza al anterior), sin control ni avance, con la base
     en su última escena y sin explicación. Sube la versión. Si sonaba el plan de la presentación automática, lo suelta
     (`auto.rid` en None): la posición se queda y, cuando este termine, sigue desde ahí. (El plan automático lo guarda
-    `siguiente_auto`.) `abierto`: un plan en flujo que se sigue escribiendo (`crecer_recorrido`)."""
+    `siguiente_auto`.) `abierto`: un plan en flujo que se sigue escribiendo (`crecer_recorrido`). `guion`: el vigente,
+    para guardar la huella de los capítulos del plan (`huella_vigente`)."""
     if destino not in rec.DESTINOS or por not in ORIGENES or por == "auto":
         raise ValueError("pantalla.guardar_recorrido")
     doc = db.pantallas.find_one_and_update(
-        {"_id": uid}, {"$set": _poner_recorrido(absoluto, destino, por, abierto), "$inc": {"v": 1}},
+        {"_id": uid}, {"$set": _poner_recorrido(absoluto, destino, por, abierto, guion), "$inc": {"v": 1}},
         upsert=True, return_document=ReturnDocument.AFTER)
     # (desde la escritura de arriba el plan automático ya no es el vigente, y `auto_de` no lo da por suyo: esto solo
     # deja `auto.rid` como es. Aparte y con filtro: una pantalla que nunca la encendió no gana un `auto` a medias)
@@ -304,17 +328,20 @@ def guardar_recorrido(db: Database, uid: int, absoluto: dict, destino: str, por:
     return doc
 
 
-def crecer_recorrido(db: Database, uid: int, absoluto: dict, abierto: bool) -> dict | None:
+def crecer_recorrido(db: Database, uid: int, absoluto: dict, abierto: bool, guion: Any = None) -> dict | None:
     """El plan en flujo `absoluto` (el mismo id, con los pasos que ya tenía y los nuevos, y su cierre) mientras el panel
     lo escribe (`agente/redactor.py`): solo sobre ese recorrido, todavía sin cerrar y en flujo. Sube la versión (la
     pantalla en off ve los pasos nuevos en su próxima pregunta) y deja la base en su última escena, como al guardarlo.
     Con `abierto` en False ya está entero. Devuelve el documento nuevo, o None si ya no es el vigente (la persona lo
-    detuvo, otra orden lo cerró, llegó otro): entonces el panel deja de escribirlo."""
+    detuvo, otra orden lo cerró, llegó otro): entonces el panel deja de escribirlo. Con `guion`, la huella se pone al
+    día con los capítulos de los pasos nuevos."""
+    huella = huella_de(absoluto, guion)
     return db.pantallas.find_one_and_update(
         {"_id": uid, "recorrido.id": absoluto["id"], "recorrido.cerrado": False, "recorrido.en_flujo": True},
         {"$set": {**rec.estado_de_escena(absoluto["escenas"][-1]), "recorrido.titulo": absoluto["titulo"],
                   "recorrido.escenas": absoluto["escenas"], "recorrido.cierre": absoluto["cierre"],
-                  "recorrido.abierto": bool(abierto), "actualizada": _ahora()},
+                  "recorrido.abierto": bool(abierto), "actualizada": _ahora(),
+                  **({"recorrido.huella": huella} if huella else {})},
          "$inc": {"v": 1}},
         return_document=ReturnDocument.AFTER)
 
@@ -394,7 +421,7 @@ def controlar(db: Database, uid: int, guion: Any, accion: str, por: str, rid: st
         if previo and previo["id"] == rid:
             nuevo = {**{k: previo[k] for k in ("titulo", "escenas", "cierre")}, "id": secrets.token_hex(6),
                      "externo": previo["externo"]}
-            doc = guardar_recorrido(db, uid, nuevo, previo["destino"], por)
+            doc = guardar_recorrido(db, uid, nuevo, previo["destino"], por, guion=guion)
             return {"recorrido": recorrido_de(doc, guion), "doc": doc}
         raise ValueError("sin_recorrido")
     a = auto_de(doc, guion)
@@ -402,8 +429,8 @@ def controlar(db: Database, uid: int, guion: Any, accion: str, por: str, rid: st
     if accion == "reproducir":
         nuevo = {**{k: r[k] for k in ("titulo", "escenas", "cierre")}, "id": secrets.token_hex(6),
                  "externo": r["externo"]}
-        doc = (_guardar_plan_auto(db, uid, nuevo, a) if es_auto else None) or \
-            guardar_recorrido(db, uid, nuevo, r["destino"], por)
+        doc = (_guardar_plan_auto(db, uid, nuevo, a, guion=guion) if es_auto else None) or \
+            guardar_recorrido(db, uid, nuevo, r["destino"], por, guion=guion)
         return {"recorrido": recorrido_de(doc, guion), "doc": doc}
     n = ((doc or {}).get("control_recorrido") or {}).get("n")
     n = n + 1 if isinstance(n, int) and not isinstance(n, bool) else 1
@@ -537,7 +564,7 @@ def plan_sonando(doc: dict | None, guion: Any, ahora: datetime | None = None) ->
 
 
 def _guardar_plan_auto(db: Database, uid: int, plan: dict, a: dict, si: dict | None = None,
-                       previo: dict | None = None) -> dict | None:
+                       previo: dict | None = None, guion: Any = None) -> dict | None:
     """Guarda `plan` como el de la presentación automática (para la pantalla en off, `por` = auto) y deja la posición
     en su primer paso, en una sola escritura. Solo si sigue encendida y, con `si`, si el documento sigue como se leyó
     (su versión): un plan o una orden que llegó entretanto manda. Con `previo` (el recorrido que reemplaza, si no era
@@ -546,7 +573,7 @@ def _guardar_plan_auto(db: Database, uid: int, plan: dict, a: dict, si: dict | N
     esc = plan["escenas"][0]
     return db.pantallas.find_one_and_update(
         {"_id": uid, "auto.activa": True, **(si or {})},
-        {"$set": {**_poner_recorrido(plan, "pantalla_off", "auto"),
+        {"$set": {**_poner_recorrido(plan, "pantalla_off", "auto", guion=guion),
                   "auto": {"activa": True, "capitulo": esc["capitulo"], "paso": esc["paso"], "rid": plan["id"],
                            "vueltas": a["vueltas"], "fallas": a["fallas"]},
                   **({"recorrido_previo": previo} if previo else {})},
@@ -565,7 +592,7 @@ def _armar_auto(db: Database, uid: int, guion: Any, doc: dict | None, si: dict |
     plan, vueltas = x
     r = (doc or {}).get("recorrido")
     previo = r if isinstance(r, dict) and r.get("auto") is not True and isinstance(r.get("id"), str) else None
-    return _guardar_plan_auto(db, uid, plan, {**a, "vueltas": a["vueltas"] + vueltas}, si, previo)
+    return _guardar_plan_auto(db, uid, plan, {**a, "vueltas": a["vueltas"] + vueltas}, si, previo, guion)
 
 
 def recorrido_previo(doc: dict | None, guion: Any) -> dict | None:
