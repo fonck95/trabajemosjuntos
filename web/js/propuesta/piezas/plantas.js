@@ -935,8 +935,8 @@ function texturaLetrero(t1, t2) {
   const c = document.createElement('canvas'); c.width = 512; c.height = 192;
   const x = c.getContext('2d');
   x.fillStyle = '#f4f2ea'; x.fillRect(0, 0, 512, 192); x.fillStyle = '#f0a020'; x.fillRect(0, 0, 512, 22);
-  x.fillStyle = '#1d2b44'; x.font = 'bold 54px "Public Sans", Arial, sans-serif'; x.textAlign = 'center'; x.fillText(t1, 256, 96);
-  x.font = '600 30px "Public Sans", Arial, sans-serif'; x.fillStyle = '#4a5562'; x.fillText(t2, 256, 150);
+  x.fillStyle = '#1d2b44'; x.font = 'bold 54px "Public Sans", Arial, sans-serif'; x.textAlign = 'center'; x.fillText(t1, 256, 96, 488);
+  x.font = '600 30px "Public Sans", Arial, sans-serif'; x.fillStyle = '#4a5562'; x.fillText(t2, 256, 150, 488);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   return t;
 }
@@ -1025,7 +1025,7 @@ export function granjaSolar(poligono, { kwp = 1500, paso = 7.5, salida = null } 
   const ramal = [{ puntos: [[xa, yv], [xa, yb + s * 4.5]], ancho: 4 }];
   cercoAbierto(poligono, ramal).forEach((pts) => cercoMalla(K, M, pts, { base: 0.2 }));
   poligono.filter((_, i) => i % 2 === 0).forEach(([x, y]) => { const d = Math.hypot(cx - x, cy - y) || 1, ux = (cx - x) / d, uy = (cy - y) / d, px = x + ux * 1.2, pz = -(y + uy * 1.2); K.add(M.pintura, cil(0.09, 6, px, 0, pz, 8), '#5f686e').add(M.pintura, caja(0.5, 0.28, 0.28, px + ux * 0.4, 5.7, pz - uy * 0.4), '#e8eaeb'); });
-  const yl = yb + s * 2.2, letrero = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 1.6), new THREE.MeshStandardMaterial({ map: texturaLetrero('Granja Solar Municipal', 'Yondó · 1,2 MWp'), roughness: 0.6 }));
+  const yl = yb + s * 2.2, letrero = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 1.6), new THREE.MeshStandardMaterial({ map: texturaLetrero('Granja Solar Municipal', 'Yondó · 1,2 megavatios pico'), roughness: 0.6 }));
   letrero.position.set(xa + 5.2, 2.3, -yl); letrero.rotation.y = norte ? Math.PI : 0; raiz.add(letrero);
   K.add(M.pintura, caja(4.4, 1.8, 0.08, xa + 5.2, 1.4, -yl + s * 0.06), '#3a3f44');
   [-2, 2].forEach((d) => K.add(M.pintura, cil(0.07, 3.1, xa + 5.2 + d, 0, -yl + s * 0.14, 8), '#3a3f44'));

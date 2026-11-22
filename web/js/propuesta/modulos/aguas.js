@@ -83,8 +83,8 @@ export function crear(esc, datos) {
   As.volcar(cSis, Ms);
   const lbl = (html, p, h = 30, cls = 'lbl-p') => esc.etiqueta(html, { pos: [p[0], p[1], h], padre: cSis, color: `var(${color})`, cls });
   lbl('<b>Pozos profundos</b><small>captación</small>', capt, 16, 'lbl-p mini');
-  lbl('<b>PTAP · 40 L/s</b><small>opera las 24 horas</small>', ptap, 24);
-  lbl('<b>Tanque elevado</b><small>350 m³ · impulsión de 12"</small>', tanque, 46);
+  lbl('<b>Potabilizadora</b><small>40 litros por segundo, las 24 horas</small>', ptap, 24);
+  lbl('<b>Tanque elevado</b><small>350 m³ · impulsión de 12 pulgadas</small>', tanque, 46);
   const mid = baja[Math.floor(baja.length * 0.55)];
   lbl('<b>Conducción al casco</b><small>por gravedad</small>', mid, 18, 'lbl-p mini');
 
@@ -133,7 +133,7 @@ export function crear(esc, datos) {
   // módulo de ampliación de la PTAP, al lado de la planta actual
   const amp = sitio0(datos) || [ptap[0] + 62, ptap[1] - 18];
   const mod = moduloPTAP(amp[0], amp[1], 0); cAmp.add(mod);
-  esc.etiqueta('<b>Ampliación de la PTAP</b><small>de 40 a ~60 L/s (horizonte 2044)</small>', { pos: [amp[0], amp[1], 20], padre: cAmp, color: `var(${color})` });
+  esc.etiqueta('<b>Ampliación de la potabilizadora</b><small>de 40 a unos 60 litros por segundo (horizonte 2044)</small>', { pos: [amp[0], amp[1], 20], padre: cAmp, color: `var(${color})` });
   esc.sincronizarEtiquetas();
 
   const inv = () => esc.st.invalidate();

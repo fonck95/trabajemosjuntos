@@ -137,7 +137,7 @@ function texturaGrafiti() {
   x.fillStyle = '#c4bfb6'; x.fillRect(0, 0, 512, 128);
   ['#e8562f', '#2fa75a', '#f2c230', '#3b8fd9', '#c13b8a', '#2fb7b0'].forEach((col, i) => { x.fillStyle = col; x.globalAlpha = 0.85; x.beginPath(); x.ellipse(50 + i * 84 + r() * 16, 64 + (r() - 0.5) * 30, 46 + r() * 16, 30 + r() * 14, r() * 3, 0, 7); x.fill(); });
   x.globalAlpha = 1; x.font = 'bold 76px Anton, Impact, sans-serif'; x.textAlign = 'center'; x.lineWidth = 9; x.strokeStyle = '#1d2023';
-  x.strokeText('CASABE SK8', 256, 94); x.fillStyle = '#f7f3e8'; x.fillText('CASABE SK8', 256, 94);
+  x.strokeText('CASABE SKATE', 256, 94); x.fillStyle = '#f7f3e8'; x.fillText('CASABE SKATE', 256, 94);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   return t;
 }
@@ -497,7 +497,7 @@ export async function crear(esc, datos) {
   const cfgSoft = sb ? { home: [sb.x, sb.y], rumbo: sb.orientacion_grados ?? BASE.softbol.rumbo } : BASE.softbol;
   const cfgMir = {
     origen: mi ? [mi.x, mi.y] : BASE.mirador.origen, angulo: mi?.angulo_orilla ?? BASE.mirador.angulo,
-    diseno: { zonaA: S('mirador_zona_a')?.poligono, plaza: S('mirador_zona_b')?.poligono, mirador: S('mirador_elevado')?.poligono, muelle: S('muelle_flotante')?.poligono, letras: lt ? [lt.x, lt.y] : null, deck: Tz('sendero_deck')?.puntos, pasarela: Tz('pasarela_muelle')?.puntos, acceso: Tz('acceso_plaza')?.puntos, orilla: Tz('orilla_2025')?.puntos },
+    diseno: { zonaA: S('mirador_zona_a')?.poligono, plaza: S('mirador_zona_b')?.poligono, mirador: S('mirador_elevado')?.poligono, letras: lt ? [lt.x, lt.y] : null, deck: Tz('sendero_deck')?.puntos, acceso: Tz('acceso_plaza')?.puntos, orilla: Tz('orilla_2025')?.puntos },
   };
   const ala = Tz('alameda')?.puntos || BASE.alameda, conector = Tz('conector_cic')?.puntos;
   const eje = Tz('parque_lineal_f1')?.puntos || ejeCano();
@@ -536,14 +536,14 @@ export async function crear(esc, datos) {
   rot('Parque Educativo', null, BASE.hitos.parque_edu, 12);
   rot('Parque principal', null, BASE.hitos.parque_principal, 10);
   rot('Cancha de fútbol', null, futbol ? [S('cancha_futbol').x, S('cancha_futbol').y] : BASE.hitos.cancha, 6);
-  rot('CIC', null, BASE.hitos.cic, 12);
+  rot('Centro de Integración Ciudadana', null, BASE.hitos.cic, 12);
 
   // --- Cancha de Sóftbol Casabe
   const cSoft = esc.capa('urb.softbol'), soft = canchaSoftbol(cfgSoft);
   cSoft.add(soft);
   // el rótulo, detrás de la cerca del jardín central (no sobre el diamante)
   const [hx, hy] = soft.userData.aModelo(0, 88);
-  esc.etiqueta('<b>Cancha de Sóftbol Casabe</b><small>109 × 102,9 m · luz LED · graderías cubiertas</small>', { pos: [hx, hy, 12], padre: cSoft, color: `var(${color})`, ancla: [0.5, 1], punto: [...soft.userData.aModelo(0, 30), 1] });
+  esc.etiqueta('<b>Cancha de Sóftbol Casabe</b><small>109 × 102,9 m · torres de luz · graderías cubiertas</small>', { pos: [hx, hy, 12], padre: cSoft, color: `var(${color})`, ancla: [0.5, 1], punto: [...soft.userData.aModelo(0, 30), 1] });
 
   // --- parque lineal del caño colector (fase 1: del bosque del sur a la Calle 55)
   const cCano = esc.capa('urb.cano'), pl = parqueLineal(eje, { tramos, humedales, bosques, puentes: puentes.length ? puentes.map((s) => [s.x, s.y]) : undefined });
@@ -552,7 +552,8 @@ export async function crear(esc, datos) {
   const em = pl.userData.eje[Math.floor(pl.userData.eje.length * 0.62)];
   esc.etiqueta('<b>Parque lineal del caño colector</b><small>cauce vivo · sendero y ciclorruta · laguna y bosque inundable</small>', { pos: [em[0] + 22, em[1], 10], padre: cCano, color: `var(${color})`, ancla: [0, 0.5], punto: [em[0], em[1], 1] });
   const cPP = esc.capa('urb.puentes');
-  puentes.forEach((s) => esc.etiqueta(`<b>${s.id.toUpperCase()}</b>`, { pos: [s.x, s.y, 7], padre: cPP, color: '#a8703f', cls: 'lbl-p mini', titulo: s.nombre, ancla: [0.5, 1] }));
+  // «Puente 1», «Puente 2»…: el número sale del id del sitio (pp1, pp2…); el nombre completo va en el título
+  puentes.forEach((s) => esc.etiqueta(`<b>Puente ${s.id.replace(/\D+/g, '')}</b>`, { pos: [s.x, s.y, 7], padre: cPP, color: '#a8703f', cls: 'lbl-p mini', titulo: s.nombre, ancla: [0.5, 1] }));
 
   // --- alameda: calle compartida a nivel por las calles existentes (Calle 50, Carrera 54, carriles del coliseo y Calle 49
   // peatonal): adoquín con la franja central en el color del área y bordillos a nivel; en las esquinas, otro adoquín con
@@ -671,7 +672,7 @@ export async function crear(esc, datos) {
   // --- canchas cubiertas y skatepark en la explanada al sur del CIC
   const cInst = esc.capa('urb.instalaciones'), inst = instalacionesCIC(explanada);
   cInst.add(inst);
-  esc.etiqueta('<b>Canchas cubiertas y skatepark</b><small>explanada al sur del CIC · a un puente del estadio</small>', { pos: [...inst.userData.centro, 16], padre: cInst, color: `var(${color})`, ancla: [0, 1], punto: [...inst.userData.centro, 2] });
+  esc.etiqueta('<b>Canchas cubiertas y skatepark</b><small>junto al Centro de Integración Ciudadana</small>', { pos: [...inst.userData.centro, 16], padre: cInst, color: `var(${color})`, ancla: [0, 1], punto: [...inst.userData.centro, 2] });
 
   // --- Mirador Puerta del Magdalena: se arma aparte porque las letras usan una fuente que se descarga, y el capítulo no la
   // espera (el paso del mirador vuelve a encuadrar y anima cuando llega)
@@ -686,7 +687,6 @@ export async function crear(esc, datos) {
     esc.etiqueta('<b>Mirador elevado</b><small>10 × 10 m sobre pilotes</small>', { pos: [...U.mirador, 12], padre: cMir, color: '#a8703f', cls: 'lbl-p mini' });
     esc.etiqueta('<b>Zona A · protección hidráulica</b><small>283 m de orilla: enrocado y vegetación de ribera</small>', { pos: [...U.zonaA, 8], padre: cMir, color: 'var(--m-aguas)', cls: 'lbl-p mini' });
     esc.etiqueta('<b>Zona B · plaza mirador</b><small>letras YONDÓ · jardineras · parqueadero</small>', { pos: [...U.zonaB, 12], padre: cMir, color: `var(${color})`, cls: 'lbl-p mini' });
-    esc.etiqueta('<b>Muelle flotante</b><small>lanchas Barrancabermeja–Casabe</small>', { pos: [...U.muelle, 6], padre: cMir, color: '#a8703f', cls: 'lbl-p mini' });
     esc.sincronizarEtiquetas(); esc.st.updateShadows(); esc.st.invalidate();
     return m;
   }).catch((e) => { console.warn('mirador', e); return null; });
@@ -706,7 +706,7 @@ export async function crear(esc, datos) {
   // la explanada con el puente PP2, que la une con el estadio (con toda la cancha, en el celular la obra quedaba diminuta)
   const pp2 = puentes.find((s) => s.id === 'pp2');
   const vistaInst = () => esc.encuadrar([...explanada, ...(pp2 ? [[pp2.x, pp2.y]] : soft.userData.contorno)], { rumbo: 208, elev: 38, margen: 0.94, alto: 10 });
-  // la plaza, el deck, el mirador y el muelle, más toda la zona A (la protección de la orilla que abre el paso); en el
+  // la plaza, el deck y el mirador, más toda la zona A (la protección de la orilla que abre el paso); en el
   // celular, sin los 280 m de orilla, que dejarían el mirador diminuto (solo el punto del rótulo de la zona A)
   const encuadrarMir = (vuelo = true) => esc.encuadrar(mir ? [...mir.userData.contorno, ...(innerWidth > 640 ? mir.userData.contornoA : [mir.userData.zonaA])] : caja([cfgMir.origen], 150), { rumbo: 221, elev: 30, margen: 0.92, alto: 12, vuelo });
   // cuando el mirador termina de cargar se vuelve a encuadrar; con una narración en pantalla (esc.guiado) o un paseo de
@@ -738,7 +738,6 @@ export async function crear(esc, datos) {
     crecer(P.zonaA, { duracion: 1, retraso: 0.8, onUpdate: inv });
     crecer(P.letras, { duracion: 1.1, retraso: 1.3, onUpdate: inv });
     crecer(P.deck, { duracion: 1.1, retraso: 1.6, onUpdate: inv });
-    crecer(P.muelle, { duracion: 0.9, retraso: 1.9, onUpdate: inv });
     P.verde.children.forEach((g, i) => brotar(g, { duracion: 1.4, retraso: 1.2 + i * 0.2, onUpdate: inv }));
   };
   // el partido (simulación de la maqueta): se mueve en cada cuadro mientras está encendido y la cancha está a la vista

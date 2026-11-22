@@ -2,225 +2,243 @@
   "id": "salud",
   "nombre": "Salud",
   "corto": "Salud",
-  "lema": "De una sede a una red de salud rural",
-  "problema": "Yondó tiene una sola sede pública de salud habilitada, la E.S.E. Hospital Héctor Abad Gómez (nivel 1), en un edificio en uso desde 1989 que según la E.S.E. no cumple la norma sísmica de un hospital; los 5 puestos rurales están abandonados o en mal estado, sin habilitar. La E.S.E. está en programa de saneamiento fiscal y en 2025 contrató $440 M con un laboratorio externo; el 93,4 % de los afiliados al régimen subsidiado del municipio está en Savia Salud (EPS intervenida). El bajo peso al nacer promedió 9,2 % de los nacidos vivos en 2020–2024 (9,52 % en 2024), frente a 5,9 % en 2014–2018.",
-  "propuesta": "Cinco componentes por $48.679 M ($42.199 M de inversión y $6.480 M de operación de los EBS en 4 años): una torre de primer nivel junto al hospital, en la cabecera; telesalud hasta 5 puntos rurales; Equipos Básicos de Salud en la zona rural; un puesto nuevo en San Miguel del Tigre y 4 puestos satélite en San Luis Beltrán, San Francisco, La Soledad y La Punta, y dos ambulancias. Con ellos la red pasa de 1 a 6 sedes habilitadas y la torre abre hacia abril de 2030.",
+  "lema": "Una torre segura, prevención casa a casa y telemedicina",
+  "problema": "Yondó tiene una sola sede pública de salud habilitada, la Empresa Social del Estado Hospital Héctor Abad Gómez, de primer nivel, en un edificio de 1989 que, según el propio hospital, no cumple la norma sísmica de un hospital; en la zona rural, donde vive el 47 % de la población, no hay ninguna sede habilitada. El hospital está en saneamiento fiscal y en 2025 pagó $440 M a un laboratorio externo; el 93,4 % de los afiliados al régimen subsidiado está en Savia Salud, una aseguradora intervenida. El bajo peso al nacer llegó a 9,52 % de los nacidos vivos en 2024, frente a 5,9 % en 2014–2018.",
+  "propuesta": "Cinco componentes por $46.552 M, de los cuales $6.480 M son la operación de los equipos básicos de salud en 4 años: una torre de primer nivel junto al hospital, con urgencias, partos, 15 camas y laboratorio de 24 horas, que abre hacia abril de 2030; salud preventiva casa a casa (vacunación, control prenatal y tamizajes); siete equipos básicos de salud que visitan los hogares en 5 microterritorios rurales y 2 urbanos; telemedicina para que el especialista llegue a la vereda y a la casa, y dos ambulancias.",
   "cifras": [
     {
       "v": "1",
-      "l": "sede pública de salud habilitada (la E.S.E.); ningún puesto rural",
-      "fuente": "REPS, corte 12-mar-2026",
+      "l": "sede pública de salud habilitada (el hospital); ninguna en la zona rural",
+      "fuente": "Registro Especial de Prestadores de Servicios de Salud, corte 12-mar-2026",
       "url": "https://www.datos.gov.co/d/c36g-9fc2",
       "tono": "alerta"
     },
     {
       "v": "93,4 %",
-      "l": "de los subsidiados está en Savia Salud, una EPS intervenida",
-      "fuente": "ADRES, BDUA, 3-oct-2026 (cálculo propio)",
+      "l": "de los subsidiados está en Savia Salud, una aseguradora intervenida",
+      "fuente": "Administradora de los Recursos del Sistema de Salud, base de afiliados, 3-oct-2026 (cálculo propio)",
       "url": "https://www.datos.gov.co/d/d7a5-cnra",
       "tono": "alerta"
     },
     {
       "v": "9,52 %",
       "l": "de los nacidos vivos con bajo peso en 2024; promedio 2014–2018: 5,9 %",
-      "fuente": "TerriData (DNP), 2024; promedio: cálculo propio",
+      "fuente": "TerriData (Departamento Nacional de Planeación), 2024; promedio: cálculo propio",
       "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip",
       "tono": "alerta"
     },
     {
       "v": "$1.537 M",
-      "l": "contrató la E.S.E. en 2025 para Equipos Básicos de Salud (MinSalud)",
-      "fuente": "SECOP I, 83 contratos (cálculo propio)",
+      "l": "contrató el hospital en 2025 para los equipos básicos de salud (Ministerio de Salud)",
+      "fuente": "Sistema Electrónico de Contratación Pública, 83 contratos (cálculo propio)",
       "url": "https://www.datos.gov.co/resource/f789-7hwg.json?nit_de_la_entidad=800014884"
     }
   ],
-  "inversion": { "min": 34635, "central": 48679, "max": 65640 },
+  "inversion": { "min": 33235, "central": 46552, "max": 62590 },
   "componentes": [
     {
       "id": "torre",
       "nombre": "Torre de servicios de primer nivel del Hospital Héctor Abad Gómez",
-      "resumen": "4 pisos con urgencias, partos, 15 camas y laboratorio 24 h; abre hacia abril de 2030",
-      "descripcion": "Torre de 4 pisos en el lote del antiguo Centro Vida, diseñada para cumplir la NSR-10 para edificaciones indispensables y la Res. 1633 de 2025: urgencias, partos, hospitalización, consulta, odontología, rayos X, ecografía, vacunación, farmacia y laboratorio clínico de 24 horas con tamizaje. Atiende a los 22.429 habitantes de 2026 (47 % rurales) y saca lo asistencial de un edificio en uso desde 1989, que queda para administración, archivo y bodega.",
+      "resumen": "4 pisos con urgencias, partos, 15 camas y laboratorio de 24 horas; abre hacia abril de 2030",
+      "descripcion": "Torre de 4 pisos en el lote del antiguo Centro Vida, unida al hospital actual por una galería cubierta, con un piso para cada grupo de servicios. Se diseña con la norma sismorresistente para edificaciones indispensables, para que siga atendiendo después de un terremoto, y con la Resolución 1633 de 2025. Saca lo asistencial del edificio de 1989, que queda para administración, archivo y bodega.",
       "especificaciones": [
-        ["Área", "3.369,6 m² en 4 pisos, a 5,3 m del hospital actual"],
-        ["Capacidad", "15 camas (9 en el REPS de 2022), 6 camillas y 15 consultorios (13 en 2022)"],
+        ["Área", "3.369,6 m² en 4 pisos, a 5,3 m del hospital actual, en un lote de 2.460 m²"],
+        ["Capacidad", "15 camas (9 en el registro de prestadores de 2022), 6 camillas y 15 consultorios (13 en 2022)"],
         ["Laboratorio", "24 horas y 55 pruebas en sitio; hoy terceriza la mayor parte ($440 M en 2025)"],
-        ["Estructura", "Dual en concreto, grupo IV de la NSR-10, 146 pilotes de 15 m (prediseño)"],
+        ["Estructura", "Dual en concreto, edificación indispensable según la norma sismorresistente, 146 pilotes de 15 m (prediseño)"],
+        ["Respaldo", "Planta diésel con combustible para 72 horas, respaldo eléctrico ininterrumpido en las áreas críticas y 40 m³ de agua potable de reserva"],
+        ["Piso 1", "Urgencias las 24 horas con bahía de ambulancias, rayos X digital, toma de muestras y admisiones"],
+        ["Piso 2", "Consultorios, laboratorio, vacunación, farmacia, ecografía y toma de citologías"],
+        ["Piso 3", "13 camas de hospitalización, 2 habitaciones de parto y esterilización"],
+        ["Piso 4", "Terapias, odontología, psicología, nutrición, telemedicina y sala de expansión para emergencias"],
+        ["Tamizaje", "Unas 5.365 pruebas al mes: urgencias en 60 minutos o menos y tamizajes en 24 a 72 horas"],
+        ["Equipos principales", "Rayos X digital, ecógrafo, ventilador de transporte, camas de parto, autoclave, 3 unidades odontológicas y refrigerador de vacunas"],
         ["Dotación", "$4.294 M; con 42 ítems más ($46,9 M con precio y 12 por cotizar), 11 de 12 servicios cumplen en dotación e infraestructura"],
-        ["Energía", "Planta, UPS y baterías; los paneles pasan a la granja solar (el costo aún trae el P7 completo, $1.734 M, por recalcular)"],
-        ["Proyectos", "P1 estudios $1.832 M · P2 obra $22.197 M · P3 equipos fijos $6.172 M · P4–P7 $6.936 M"]
+        ["Proyectos", "Estudios y diseños $1.832 M · obra $22.197 M · equipos fijos $6.172 M · dotación, laboratorio, sistemas y energía $6.936 M"]
       ],
       "costo": { "min": 27363, "central": 37137, "max": 50600 },
-      "base_costo": "Presupuesto por capítulos con APU propios (docs/11, corte 25-oct-2026): $7,24 M de obra por m² ($5,46 M sin equipos ni solar, cerca de Monguí 2025 con $5,26 M y del tipo DNP con $5,42 M); falta sumar el ajuste del prediseño estructural ($1.742 M a $1.848 M con AIU) y recalcular el P7 de energía ($1.734 M), porque sus paneles pasan a la granja solar centralizada.",
+      "base_costo": "Presupuesto por capítulos con análisis de precios unitarios propios (docs/11, corte 25-oct-2026): $7,24 M de obra por m² ($5,46 M sin equipos ni energía solar, cerca de Monguí 2025 con $5,26 M y del proyecto tipo del Departamento Nacional de Planeación con $5,42 M). Por la dotación, lo más costoso es imágenes ($675 M), urgencias ($519 M), partos ($470 M), hospitalización ($397 M), esterilización ($365 M) y laboratorio ($357 M). Falta sumar el ajuste del prediseño estructural ($1.742 M a $1.848 M con administración, imprevistos y utilidad) y recalcular el proyecto de energía ($1.734 M), porque sus paneles pasan a la granja solar centralizada.",
       "proyecto_tipo": [
-        { "nombre": "Proyecto tipo DNP: Construcción y dotación de infraestructura básica en salud (v1.0, 2018), escalado con la Res. 1633", "url": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf" },
-        { "nombre": "Referente: hospital de primer nivel de Quimbaya, regalías 2025 (BPIN 2024000040010)", "url": "https://www.dnp.gov.co/Prensa_/Noticias/Paginas/regalias-apuestan-salud-quindio-28-mil-millones-nuevo-hospital-quimbaya.aspx" },
-        { "nombre": "Referente: reposición del hospital de Guarne con MinSalud ($35.059 M, 2026)", "url": "https://www.elcolombiano.com/antioquia/guarne-antioquia-nuevo-hospital-millones-ministerio-de-salud-EG36212125" },
-        { "nombre": "Referente: dotación biomédica de las E.S.E. PDET de Antioquia por obras por impuestos, Yondó incluido (BPIN 20250214000061)", "url": "https://www.datos.gov.co/d/cf9k-55fw" }
+        { "nombre": "Proyecto tipo del Departamento Nacional de Planeación: construcción y dotación de infraestructura básica en salud (2018), escalado con la Resolución 1633 de 2025", "url": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf" },
+        { "nombre": "Referente: hospital de primer nivel de Quimbaya, con regalías (2025)", "url": "https://www.dnp.gov.co/Prensa_/Noticias/Paginas/regalias-apuestan-salud-quindio-28-mil-millones-nuevo-hospital-quimbaya.aspx" },
+        { "nombre": "Referente: reposición del hospital de Guarne con el Ministerio de Salud ($35.059 M, 2026)", "url": "https://www.elcolombiano.com/antioquia/guarne-antioquia-nuevo-hospital-millones-ministerio-de-salud-EG36212125" },
+        { "nombre": "Referente: dotación biomédica por obras por impuestos para hospitales de Antioquia, Yondó incluido (2025)", "url": "https://www.datos.gov.co/d/cf9k-55fw" }
       ],
       "fuentes": ["sgr", "nacion", "oxi", "gobernacion", "findeter", "municipio", "fondos", "cooperacion"],
       "plazo": "2027–2030 (diseños en 2027, obra de 18 meses desde agosto de 2028)",
-      "ubicacion": "Lote del antiguo Centro Vida, al lado de la E.S.E. Hospital Héctor Abad Gómez (barrio José Domingo Oliveros, cabecera de Yondó).",
+      "ubicacion": "Lote del antiguo Centro Vida, al lado del Hospital Héctor Abad Gómez (barrio José Domingo Oliveros, cabecera de Yondó).",
       "unidades": 1
     },
     {
-      "id": "telesalud",
-      "nombre": "Telesalud rural en red",
-      "resumen": "Telemedicina en 5 puntos rurales y tablets para los EBS, con nodo en el hospital",
-      "descripcion": "Lleva el nodo de telemedicina de la torre (P6) a los 5 puestos rurales y a los EBS: estación de telemedicina con periféricos digitales y monitor clínico en cada puesto, tablets con historia clínica, conectividad y UPS. La E.S.E. se habilita como prestador remisor de telemedicina (Res. 2654 de 2019) y suma teleespecialidades por convenio (Contigo Antioquia con la UdeA o la red de Barrancabermeja); puede arrancar en 2028 desde el edificio actual, antes de la torre.",
+      "id": "preventiva",
+      "nombre": "Salud preventiva: vacunación, control prenatal y tamizajes",
+      "resumen": "Vacunación en la casa, control prenatal temprano y tamizajes de cáncer, hipertensión y diabetes",
+      "descripcion": "Un programa de 4 años que complementa, sin reemplazarla, la ruta de promoción y mantenimiento de la salud que pagan las aseguradoras (Resolución 3280 de 2018): vacunación en la casa y en la vereda, control prenatal temprano contra el bajo peso al nacer, tamizaje de cáncer, hipertensión y diabetes, y salud oral y mental comunitaria. Se hace en el piso 2 de la torre y casa a casa con los equipos básicos de salud.",
       "especificaciones": [
-        ["Puntos rurales", "5, con estación de telemedicina, periféricos y monitor clínico"],
-        ["EBS", "10 tablets con historia clínica"],
-        ["Conectividad", "Fibra ADSS donde llegue la red municipal; radioenlace o satelital en el resto"],
-        ["Respaldo", "5 enlaces con 2 años de servicio y 5 UPS"],
-        ["Plataforma", "4 años a $30 M por año, con teleespecialidades por convenio"],
-        ["Norma", "Res. 2654 de 2019: la E.S.E. como prestador remisor"]
+        ["Vacunación", "Cadena de frío para vacunar en la casa y en la vereda: refrigeradores solares, termos, cajas y registradores de temperatura"],
+        ["Gestantes", "Control prenatal desde el primer trimestre y apoyo nutricional contra el bajo peso al nacer (9,52 % en 2024)"],
+        ["Cuello uterino", "Prueba del virus del papiloma humano a las mujeres de 30 a 65 años, procesada en el laboratorio de la torre"],
+        ["Mama", "Examen clínico en la consulta y mamografía por convenio"],
+        ["Crónicos", "Tamizaje de hipertensión, diabetes y riesgo cardiovascular casa a casa"],
+        ["Salud oral y mental", "Jornadas comunitarias en la cabecera y en las veredas"],
+        ["Norma", "Rutas de promoción y mantenimiento de la salud y materno perinatal (Resolución 3280 de 2018)"]
       ],
-      "costo": { "min": 300, "central": 500, "max": 850 },
-      "base_costo": "Estimación propia con precios de mercado 2026 del repositorio y de la red de fibra (docs/13): equipos $130 M, tablets $25 M, conectividad con 2 años de servicio $125 M, UPS $50 M, plataforma $120 M e implementación $50 M; el máximo suma ecógrafos portátiles.",
+      "costo": { "min": 800, "central": 1200, "max": 1800 },
+      "base_costo": "Estimación propia para 4 años: cadena de frío ≈ $150 M (con el proyecto tipo del Departamento Nacional de Planeación «Fortalecimiento de la cadena de frío», 2016), control prenatal temprano y nutrición de las gestantes ≈ $350 M, tamizaje de cáncer de cuello uterino y de mama ≈ $400 M, tamizaje de hipertensión, diabetes y riesgo cardiovascular ≈ $150 M, y salud oral y mental comunitaria ≈ $150 M. Lo que ya pagan las aseguradoras en la ruta de promoción y mantenimiento no se suma.",
       "proyecto_tipo": [
-        { "nombre": "Sin proyecto tipo DNP: telesalud como proyecto propio con concepto de MinSalud (Res. 485 de 2025, num. 7.1.10)", "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%20485%20de%202025.pdf" },
-        { "nombre": "Referente: Contigo Antioquia, telemedicina de la Gobernación con la UdeA ($25.000 M, 2025)", "url": "https://consultorsalud.com/?p=325565" }
+        { "nombre": "Proyecto tipo del Departamento Nacional de Planeación: fortalecimiento de la cadena de frío (2016)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/cadenafrio/ptcadena.pdf" },
+        { "nombre": "Ministerio de Salud, Resolución 3280 de 2018: rutas de promoción y mantenimiento de la salud y materno perinatal", "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=80433" }
       ],
-      "fuentes": ["fondos", "municipio"],
-      "plazo": "2028–2030 (nodo y tablets de los EBS desde 2028; estaciones en cada puesto al terminar su adecuación, 2029–2030)",
-      "ubicacion": "Nodo en el hospital (luego en la torre) y puntos en San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta.",
-      "unidades": 5
+      "fuentes": ["municipio", "gobernacion", "cooperacion"],
+      "plazo": "2028–2031 (cadena de frío en 2028; control prenatal y tamizajes cada año)",
+      "ubicacion": "Piso 2 de la torre (vacunación, consulta y citologías) y las casas de la cabecera y de las veredas, con los equipos básicos de salud.",
+      "unidades": 1
     },
     {
       "id": "ebs",
-      "nombre": "Equipos Básicos de Salud (EBS) rurales 2028–2031",
-      "resumen": "Sostener los EBS que la E.S.E. operó en 2024–2025, en 5 microterritorios rurales",
-      "descripcion": "Equipos de medicina, enfermería, auxiliares, psicología, nutrición, salud oral y gestores comunitarios que visitan los hogares; la E.S.E. los operó en 2024 y 2025 con recursos de MinSalud (83 contratos por $1.537 M en 2025). La propuesta los sostiene 4 años en 5 microterritorios rurales anclados en los puestos y 2 urbanos, con transporte y tablets de telesalud. Es gasto de operación, no obra.",
+      "nombre": "Equipos básicos de salud que visitan los hogares",
+      "resumen": "7 equipos en 5 microterritorios rurales y 2 urbanos, con base en el hospital y un maletín de dotación básica",
+      "descripcion": "Equipos que visitan los hogares, conocen a cada familia y la llevan a la atención que necesita. El hospital los operó en 2024 y 2025 con recursos del Ministerio de Salud; la propuesta los sostiene 4 años en 7 microterritorios, con base en el hospital, transporte y un maletín de dotación básica para cada equipo. Casi todo es gasto de operación, no obra.",
       "especificaciones": [
-        ["Microterritorios", "5 rurales, anclados en los puestos, y 2 urbanos"],
+        ["Microterritorios", "5 rurales (San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta) y 2 en la cabecera"],
+        ["Base", "El hospital: de allí salen y allí remiten; la torre les da laboratorio, vacunas y telemedicina"],
+        ["Perfiles", "Medicina, enfermería, auxiliares, psicología, nutrición, salud oral y gestores comunitarios"],
+        ["Visitas", "Cada hogar al menos una vez al año, y más seguido las gestantes, los recién nacidos y los pacientes crónicos (meta de la propuesta)"],
+        ["Dotación básica", "Un maletín por equipo: tensiómetro, fonendoscopio, glucómetro, oxímetro, termómetro, báscula, tallímetro, cinta métrica, termo de vacunas y botiquín"],
         ["Base 2025", "83 contratos por $1.537 M, con transporte incluido ($301 M)"],
-        ["Perfiles", "Medicina, enfermería, auxiliares, psicología, nutrición, salud oral y gestores"],
         ["Población rural", "10.755 habitantes proyectados a 2028"],
-        ["Costo anual", "$1.620 M de 2026 (rango $968 M a $2.000 M)"],
-        ["Norma", "Lineamiento EBS de MinSalud (v3, 2024) y Res. 2206 de 2022"]
+        ["Costo anual", "$1.620 M de 2026 (rango $968 M a $2.000 M), más ≈ $70 M de dotación una sola vez"],
+        ["Norma", "Lineamiento de los equipos básicos de salud del Ministerio de Salud (versión 3, 2024) y Resolución 2206 de 2022"]
       ],
-      "costo": { "min": 3872, "central": 6480, "max": 8000 },
-      "base_costo": "Cálculo propio con SECOP I: los contratos EBS de 2025 ($1.537,3 M) llevados a pesos de 2026 dan $1.620 M al año por 4 años; el mínimo repite el nivel de 2024 ($968 M al año) y el máximo supone $2.000 M al año con más equipos o transporte fluvial.",
+      "costo": { "min": 3922, "central": 6550, "max": 8100 },
+      "base_costo": "Cálculo propio con los contratos de 2025 del Sistema Electrónico de Contratación Pública ($1.537,3 M) llevados a pesos de 2026: $1.620 M al año por 4 años ($6.480 M); el mínimo repite el nivel de 2024 ($968 M al año) y el máximo supone $2.000 M al año con más equipos o transporte por río. La dotación básica de los 7 equipos suma ≈ $70 M (estimación propia: ≈ $10 M por maletín, rango $50 M a $100 M).",
       "proyecto_tipo": [
-        { "nombre": "Sin proyecto tipo: Lineamiento técnico y operativo de los EBS, MinSalud (v3, 2024)", "url": "https://minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PP/lineamiento-tecnico-operativo-equipos-basicos-salud-modelo-pp.pdf" }
+        { "nombre": "Sin proyecto tipo: lineamiento técnico y operativo de los equipos básicos de salud, Ministerio de Salud (versión 3, 2024)", "url": "https://minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PP/lineamiento-tecnico-operativo-equipos-basicos-salud-modelo-pp.pdf" }
       ],
       "fuentes": ["nacion", "municipio"],
-      "plazo": "2028–2031 (anual)",
-      "ubicacion": "Zona rural de Yondó, con base en los puestos de San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta, más 2 microterritorios en la cabecera.",
+      "plazo": "2028–2031 (anual; la dotación en 2028)",
+      "ubicacion": "Con base en el hospital: 5 microterritorios rurales y 2 en la cabecera.",
       "unidades": 7
     },
     {
-      "id": "puestos",
-      "nombre": "Red de puestos de salud rurales",
-      "resumen": "Puesto nuevo en San Miguel del Tigre y 4 puestos satélite adecuados y habilitados",
-      "descripcion": "Construir un puesto nuevo de unos 320 m² en San Miguel del Tigre, el único corregimiento, con el proyecto tipo del DNP actualizado a la Res. 1633 de 2025, y adecuar los de San Luis Beltrán, San Francisco, La Soledad y La Punta como sedes satélite con consultorio, toma de muestras, vacunación y dispensación. Todos se habilitan en el REPS como sedes de la E.S.E. y atienden con días fijos, EBS y telesalud, para que la E.S.E., en saneamiento fiscal, los pueda sostener.",
+      "id": "telesalud",
+      "nombre": "Telemedicina: el especialista llega a la vereda y a la casa",
+      "resumen": "Centro de telemedicina en la torre y maletines conectados para los 7 equipos básicos de salud",
+      "descripcion": "El centro de telemedicina del piso 4 de la torre, ya costeado con ella, es el nodo: desde allí el médico consulta con especialistas por convenio. Los 7 equipos básicos llevan un maletín de telemedicina para atender en la vereda y en la casa con el especialista en línea, y unos 150 pacientes se siguen desde su casa con equipos conectados. Puede arrancar en 2028 desde el edificio actual, antes de la torre.",
       "especificaciones": [
-        ["Puesto nuevo", "San Miguel del Tigre: unos 320 m² con los 59 ítems de dotación del tipo"],
-        ["Satélites", "4 adecuaciones: San Luis Beltrán, San Francisco, La Soledad y La Punta"],
-        ["Servicios", "Consulta, toma de muestras, vacunación y dispensación"],
-        ["Obra", "Unos 130 días por puesto, según el proyecto tipo"],
-        ["Operación", "$29,6 M al mes un puesto completo (tipo DNP, 2026); satélites con días fijos"],
-        ["Norma", "Res. 1633 de 2025 y Res. 3100 de 2019 (habilitación en el REPS)"]
+        ["Nodo", "Centro de telemedicina en el piso 4 de la torre, con estación y retinógrafo portátil (costeados en la torre)"],
+        ["Maletines", "7, uno por equipo: tableta con historia clínica, tensiómetro y glucómetro conectados, oxímetro, electrocardiógrafo portátil, otoscopio y dermatoscopio digitales"],
+        ["Control prenatal", "2 ecógrafos portátiles para las veredas"],
+        ["Seguimiento en casa", "Unos 150 pacientes crónicos y gestantes de alto riesgo con equipos conectados"],
+        ["Conexión", "Satelital portátil en las veredas sin señal, por 4 años; la red de fibra municipal en la cabecera"],
+        ["Especialistas", "Ginecología, pediatría y medicina interna por convenio con la Gobernación y la Universidad de Antioquia o con la red de Barrancabermeja"],
+        ["Norma", "El hospital como prestador que remite por telemedicina (Resolución 1644 de 2026, que reemplazó a la 2654 de 2019)"]
       ],
-      "costo": { "min": 2400, "central": 3612, "max": 5100 },
-      "base_costo": "Cálculo propio: el proyecto tipo DNP de 2018 llevado a pesos de 2026 da $1.770 M para San Miguel del Tigre (obra con interventoría $1.572 M y dotación $198 M) y las 4 adecuaciones suman $1.842 M con el referente de MinSalud en Coyaima (≈ $460 M por puesto, 2026).",
+      "costo": { "min": 450, "central": 715, "max": 1000 },
+      "base_costo": "Estimación propia con precios de mercado de 2026: 7 maletines de telemedicina a ≈ $35 M ($245 M), 2 ecógrafos portátiles ($80 M), seguimiento en casa de unos 150 pacientes con equipos conectados ($120 M), conexión satelital portátil por 4 años ($100 M), plataforma por 4 años ($120 M) y capacitación e implementación ($50 M). El centro de telemedicina de la torre ya está en el costo de la torre.",
       "proyecto_tipo": [
-        { "nombre": "Proyecto tipo DNP: Construcción y dotación de infraestructura básica en salud (v1.0, 2018)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf" },
-        { "nombre": "MinSalud: Puesto de salud tipo (2017, 128,5 m², sin precios)", "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PSA/puesto-salud-tipo.pdf" },
-        { "nombre": "Referente: 4 adecuaciones de puestos en Coyaima, Tolima, por $1.842 M (MinSalud, 2026)", "url": "https://consultorsalud.com/rendicion-de-cuentas-minsalud-impacto-para-eps/" }
+        { "nombre": "Sin proyecto tipo: telemedicina como proyecto propio con concepto del Ministerio de Salud (Resolución 485 de 2025)", "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%20485%20de%202025.pdf" },
+        { "nombre": "Referente: Contigo Antioquia, telemedicina de la Gobernación con la Universidad de Antioquia ($25.000 M, 2025)", "url": "https://consultorsalud.com/?p=325565" },
+        { "nombre": "Ministerio de Salud, Resolución 1644 de 2026: nuevas reglas de la telesalud y la telemedicina", "url": "https://www.minsalud.gov.co/Comunicaciones/noticias/2026/Paginas/colombia-da-un-salto-historico-en-telesalud-y-telemedicina-el-ministerio-de-salud-expide-una-reglamentacion-mas-moderna.aspx" }
       ],
-      "fuentes": ["sgr", "gobernacion", "oxi"],
-      "plazo": "Estudios y diseños en 2028; obras 2029–2030",
-      "ubicacion": "San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta.",
-      "unidades": 5
+      "fuentes": ["fondos", "municipio"],
+      "plazo": "2028–2031 (maletines y plataforma desde 2028; en la torre desde 2030)",
+      "ubicacion": "Nodo en el hospital (en la torre desde 2030) y los 7 microterritorios de los equipos básicos.",
+      "unidades": 7
     },
     {
       "id": "ambulancias",
       "nombre": "Transporte asistencial: ambulancia medicalizada y reposición",
       "resumen": "Primera ambulancia medicalizada propia y una básica 4×4 nueva para la zona rural",
-      "descripcion": "Comprar una ambulancia medicalizada (TAM) para las remisiones graves a Barrancabermeja por el puente y reponer una ambulancia básica (TAB) 4×4 para la zona rural; en el REPS de 2022 la E.S.E. solo tenía 3 ambulancias básicas. Reemplaza al proyecto complementario P9 del estudio de la torre ($650 M, solo la TAM) y reformula con el proyecto tipo del DNP el proyecto de dos ambulancias de 2024, que se devolvió a la MGA.",
+      "descripcion": "Comprar una ambulancia medicalizada para las remisiones graves a Barrancabermeja por el puente y reponer una ambulancia básica 4×4 para la zona rural; en 2022 el hospital solo tenía 3 ambulancias básicas. Reformula con el proyecto tipo el proyecto de dos ambulancias de 2024, que se devolvió para corregir su formulación.",
       "especificaciones": [
-        ["Vehículos", "1 TAM y 1 TAB 4×4 con dotación según la NTC 3729"],
-        ["TAM", "$650 M (rango $460 M a $750 M)"],
-        ["TAB 4×4", "$300 M; la E.S.E. pagó $240 M por una TAB en julio de 2025"],
-        ["Flota registrada", "3 ambulancias básicas (REPS, 2022)"],
+        ["Vehículos", "1 ambulancia medicalizada y 1 básica 4×4, dotadas según la Norma Técnica Colombiana 3729"],
+        ["Medicalizada", "$650 M (rango $460 M a $750 M)"],
+        ["Básica 4×4", "$300 M; el hospital pagó $240 M por una ambulancia básica en julio de 2025"],
+        ["Flota registrada", "3 ambulancias básicas (registro de prestadores, 2022)"],
         ["Uso", "Remisiones a Barrancabermeja y traslados desde la zona rural"]
       ],
       "costo": { "min": 700, "central": 950, "max": 1090 },
-      "base_costo": "Cálculo propio: la TAM toma los $650 M del proyecto complementario P9 del estudio de la torre (el tipo DNP por IPC da $463 M) y la TAB 4×4 $300 M, entre el mercado ($240 M pagados por la E.S.E. en julio de 2025, $253 M de 2026; ≈ $265 M por TAB 4×2 en Cundinamarca, 2026) y el tipo DNP por IPC ($339 M).",
+      "base_costo": "Cálculo propio: la medicalizada toma los $650 M del proyecto complementario del estudio de la torre (el proyecto tipo del Departamento Nacional de Planeación, llevado por la inflación, da $463 M) y la básica 4×4 $300 M, entre el mercado ($240 M pagados por el hospital en julio de 2025, $253 M de 2026; ≈ $265 M por una básica 4×2 en Cundinamarca, 2026) y el proyecto tipo llevado por la inflación ($339 M).",
       "proyecto_tipo": [
-        { "nombre": "Proyecto tipo DNP: Dotación de ambulancias, transporte asistencial básico y medicalizado (v2.0, 2018)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/ambulancias/PTambulancias.pdf" },
-        { "nombre": "Referente: TAB comprada por la E.S.E. en julio de 2025 por $240 M (SECOP I)", "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-4-14477727" }
+        { "nombre": "Proyecto tipo del Departamento Nacional de Planeación: dotación de ambulancias, transporte asistencial básico y medicalizado (2018)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/ambulancias/PTambulancias.pdf" },
+        { "nombre": "Referente: ambulancia básica comprada por el hospital en julio de 2025 por $240 M (portal de contratación pública)", "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-4-14477727" }
       ],
       "fuentes": ["oxi"],
       "plazo": "2028–2029",
-      "ubicacion": "Base de ambulancias de la E.S.E. Hospital Héctor Abad Gómez, en la cabecera de Yondó.",
+      "ubicacion": "Base de ambulancias del Hospital Héctor Abad Gómez, en la cabecera de Yondó.",
       "unidades": 2
     }
   ],
   "financiacion": [
-    { "fuente": "sgr", "monto": 18337, "mecanismo": "Directas de Yondó $7.337 M, Asignación para la Paz por convocatoria del OCAD Paz (PDET) $8.300 M (torre y puestos), inversión local $1.200 M y regional $1.500 M" },
-    { "fuente": "nacion", "monto": 17200, "mecanismo": "MinSalud: $12.000 M para la obra y el equipamiento fijo de la torre con concepto de viabilidad (Res. 485 de 2025) y $4.800 M de EBS en 4 años; MinTIC: $400 M para la telemedicina y la conectividad de la torre (P6)" },
-    { "fuente": "oxi", "monto": 3750, "mecanismo": "ZOMAC/PDET: dotación de torre y puestos y 2 ambulancias, como la dotación PDET en ejecución (BPIN 20250214000061)" },
-    { "fuente": "municipio", "monto": 3280, "mecanismo": "Contrapartida del municipio y la E.S.E. en la torre ($1.400 M), PIC con estrategia APS y SGP para los EBS ($1.680 M) y telesalud ($200 M)" },
-    { "fuente": "gobernacion", "monto": 2812, "mecanismo": "Secretaría Seccional de Salud: torre ($2.300 M) y puestos ($512 M), con registro en el PMIDS de 2028" },
-    { "fuente": "findeter", "monto": 1500, "mecanismo": "Crédito del municipio con tasa compensada para salud (Res. 2316 de 2025) o Reactiva Colombia, para cerrar la obra de la torre; usa parte de la capacidad prudente de endeudamiento ($5.141 M a $10.281 M), que comparten salud, saneamiento, TIC y agroindustria" },
-    { "fuente": "fondos", "monto": 1300, "mecanismo": "FENOGE (Con Energía): baterías y gestión energética de la torre ($1.000 M); Fondo Único de TIC: conectividad rural ($300 M)" },
-    { "fuente": "cooperacion", "monto": 500, "mecanismo": "Inversión social de Ecopetrol en los campos Casabe y Llanito ($300 M) y cooperación internacional como la OPS ($200 M)" }
+    { "fuente": "sgr", "monto": 15537, "mecanismo": "Asignaciones directas de Yondó $7.337 M, Asignación para la Paz por convocatoria del Órgano Colegiado de Administración y Decisión Paz $5.500 M para la torre, inversión local $1.200 M y regional $1.500 M" },
+    { "fuente": "nacion", "monto": 17200, "mecanismo": "Ministerio de Salud: $12.000 M para la obra y el equipamiento fijo de la torre, con concepto de viabilidad (Resolución 485 de 2025), y $4.800 M para los equipos básicos de salud en 4 años; Ministerio de Tecnologías de la Información y las Comunicaciones: $400 M para la telemedicina y la conectividad de la torre" },
+    { "fuente": "oxi", "monto": 3450, "mecanismo": "Obras por impuestos en las zonas más afectadas por el conflicto armado: dotación de la torre ($2.500 M) y dos ambulancias ($950 M), como la dotación biomédica que ya se ejecuta en hospitales de Antioquia por este mecanismo" },
+    { "fuente": "municipio", "monto": 4050, "mecanismo": "Contrapartida del municipio y el hospital en la torre ($1.400 M); Plan de Intervenciones Colectivas y Sistema General de Participaciones para los equipos básicos de salud ($1.680 M) y su dotación ($70 M); salud preventiva ($600 M) y telemedicina ($300 M)" },
+    { "fuente": "gobernacion", "monto": 2700, "mecanismo": "Secretaría Seccional de Salud: torre ($2.300 M), con registro en el Plan Maestro de Inversiones en Infraestructura y Dotación en Salud de 2028, y salud preventiva ($400 M)" },
+    { "fuente": "findeter", "monto": 1500, "mecanismo": "Crédito del municipio con tasa compensada para salud (Resolución 2316 de 2025) o Reactiva Colombia, para cerrar la obra de la torre; usa parte de la capacidad prudente de endeudamiento ($5.141 M a $10.281 M), que comparten salud, saneamiento, conectividad y agroindustria" },
+    { "fuente": "fondos", "monto": 1415, "mecanismo": "Fondo de Energías No Convencionales y Gestión Eficiente de la Energía (programa Con Energía): baterías y gestión energética de la torre ($1.000 M); Fondo Único de Tecnologías de la Información y las Comunicaciones: telemedicina rural ($415 M)" },
+    { "fuente": "cooperacion", "monto": 700, "mecanismo": "Inversión social de Ecopetrol en los campos Casabe y Llanito: torre ($300 M) y salud preventiva ($100 M); Organización Panamericana de la Salud: torre ($200 M) y salud preventiva ($100 M)" }
   ],
   "proyectos_tipo": [
-    { "nombre": "Proyecto tipo DNP: Construcción y dotación de infraestructura básica en salud (v1.0, 2018)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf" },
-    { "nombre": "Proyecto tipo DNP: Dotación de ambulancias, transporte asistencial básico y medicalizado (v2.0, 2018)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/ambulancias/PTambulancias.pdf" },
-    { "nombre": "Proyecto tipo DNP: Fortalecimiento de la cadena de frío (v1.0, 2016)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/cadenafrio/ptcadena.pdf" },
-    { "nombre": "MinSalud: Puesto de salud tipo (2017)", "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PSA/puesto-salud-tipo.pdf" }
+    { "nombre": "Proyecto tipo del Departamento Nacional de Planeación: construcción y dotación de infraestructura básica en salud (2018)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf" },
+    { "nombre": "Proyecto tipo del Departamento Nacional de Planeación: fortalecimiento de la cadena de frío (2016)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/cadenafrio/ptcadena.pdf" },
+    { "nombre": "Proyecto tipo del Departamento Nacional de Planeación: dotación de ambulancias, transporte asistencial básico y medicalizado (2018)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/ambulancias/PTambulancias.pdf" },
+    { "nombre": "Ministerio de Salud: lineamiento técnico y operativo de los equipos básicos de salud (versión 3, 2024)", "url": "https://minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PP/lineamiento-tecnico-operativo-equipos-basicos-salud-modelo-pp.pdf" }
   ],
   "gestion": {
     "madurez": "Prefactibilidad",
-    "madurez_nota": "La torre (76 % del módulo) está en prefactibilidad, con programa, prediseño estructural, presupuesto con APU y modelo BIM, y le faltan los estudios y diseños (P1, $1.832 M); telesalud, puestos y ambulancias están en perfil, y los EBS operaron en 2024 y 2025 (en SECOP I no hay contratos de 2026).",
-    "pedido": "A MinSalud, $12.000 M para la torre (concepto técnico de viabilidad, Res. 485 de 2025) y sostener la asignación de los EBS en al menos $1.200 M al año ($4.800 M en 4 años; en 2025 la E.S.E. contrató $1.537 M); a MinTIC, $400 M para la telemedicina y la conectividad de la torre; al OCAD Paz, $8.300 M de la Asignación para la Paz con destino a la torre y los puestos rurales. A la ART, inscribir $3.750 M de dotación y ambulancias en el banco de obras por impuestos, y a la Gobernación, $2.812 M con registro en el PMIDS de 2028.",
+    "madurez_nota": "La torre (80 % del módulo) está en prefactibilidad, con programa por piso, prediseño estructural, presupuesto con análisis de precios unitarios y modelo digital, y le faltan los estudios y diseños ($1.832 M); la salud preventiva, la telemedicina y las ambulancias están en perfil, y los equipos básicos de salud operaron en 2024 y 2025 (en el portal de contratación pública no hay contratos de 2026).",
+    "pedido": "Al Ministerio de Salud, $12.000 M para la torre (concepto técnico de viabilidad, Resolución 485 de 2025) y sostener los equipos básicos de salud con al menos $1.200 M al año ($4.800 M en 4 años; en 2025 el hospital contrató $1.537 M); al Ministerio de Tecnologías de la Información y las Comunicaciones, $400 M para la telemedicina y la conectividad de la torre; al Órgano Colegiado de Administración y Decisión Paz, $5.500 M de la Asignación para la Paz para la torre. A la Agencia de Renovación del Territorio, inscribir $3.450 M de dotación y ambulancias en el banco de obras por impuestos, y a la Gobernación, $2.700 M para la torre y la salud preventiva, con registro en el plan maestro de inversiones en salud de 2028.",
     "a_quien": [
-      "MinSalud · concepto técnico de viabilidad (Res. 485) y Subdirección de Prestación de Servicios (Documento de Capacidad Instalada)",
-      "MinSalud · Dirección de Promoción y Prevención (asignación anual de los EBS)",
-      "SGR · OCAD Paz (Asignación para la Paz, convocatorias PDET)",
+      "Ministerio de Salud · concepto técnico de viabilidad (Resolución 485) y Subdirección de Prestación de Servicios (Documento de Capacidad Instalada)",
+      "Ministerio de Salud · Dirección de Promoción y Prevención (asignación anual de los equipos básicos de salud)",
+      "Sistema General de Regalías · Órgano Colegiado de Administración y Decisión Paz (Asignación para la Paz)",
       "Agencia de Renovación del Territorio · banco de proyectos de obras por impuestos",
-      "Gobernación de Antioquia · Secretaría Seccional de Salud (PMIDS y cofinanciación)",
+      "Gobernación de Antioquia · Secretaría Seccional de Salud (plan maestro de inversiones en salud, salud preventiva y telemedicina)",
       "Findeter · crédito con tasa compensada para infraestructura en salud",
-      "MinTIC · telemedicina y conectividad de la torre ($400 M)", "FENOGE · programa Con Energía; Fondo Único de TIC · conectividad rural",
-      "Ecopetrol · inversión social y obras por impuestos (campos Casabe y Llanito)"
+      "Ministerio de Tecnologías de la Información y las Comunicaciones · telemedicina y conectividad de la torre ($400 M)",
+      "Fondo de Energías No Convencionales · programa Con Energía; Fondo Único de Tecnologías de la Información y las Comunicaciones · telemedicina rural",
+      "Ecopetrol y Organización Panamericana de la Salud · inversión social y cooperación para la torre y la salud preventiva"
     ],
     "pasos": [
-      "Nov-2026 a feb-2027: aprobar los estudios y diseños de la torre (P1, $1.832 M) con el saldo de asignaciones directas 2025–2026 (≈ $7.297 M sin aprobar al 27-oct-2026).",
-      "Nov-2026 a mar-2027: publicar el estudio de vulnerabilidad sísmica de 2024, aclarar quién es dueño del lote y pedir a la Secretaría Seccional el ajuste del PMIDS para registrar la torre.",
-      "Antes de may-2027: decidir el uso del art. 156 de la Ley 2294 (condonación invertida en la E.S.E.) y gestionar con CISA la cartera de Savia Salud y Nueva EPS.",
-      "Abr–sep-2027: concertar el Documento de Capacidad Instalada con MinSalud y verificar la iniciativa PDET de salud rural del PATR Sur de Bolívar para postular la torre y los puestos a la Asignación para la Paz en las convocatorias del OCAD Paz 2027–2028.",
-      "Nov-2027 a abr-2028: radicar la torre ante MinSalud (concepto de viabilidad y control especial de oferta), cerrar la financiación e inscribir la dotación y las ambulancias en el banco de la ART.",
-      "Ene–jun-2028: registrar los puestos (y la torre, si no entró con el ajuste de 2027) en la actualización del PMIDS; antes del 31-mar-2028, el gerente que designe el nuevo alcalde firma metas de EBS, telesalud y puestos."
+      "Nov-2026 a feb-2027: aprobar los estudios y diseños de la torre ($1.832 M) con el saldo de asignaciones directas 2025–2026 (≈ $7.297 M sin aprobar al 27-oct-2026).",
+      "Nov-2026 a mar-2027: publicar el estudio de vulnerabilidad sísmica de 2024, aclarar quién es dueño del lote y pedir a la Secretaría Seccional de Salud que registre la torre en el plan maestro de inversiones en salud.",
+      "Antes de may-2027: decidir el uso del artículo 156 de la Ley 2294 (condonación invertida en el hospital) y gestionar con Central de Inversiones la cartera de Savia Salud y Nueva EPS.",
+      "Abr–sep-2027: concertar el Documento de Capacidad Instalada con el Ministerio de Salud y verificar la iniciativa de salud rural del Plan de Acción para la Transformación Regional del Sur de Bolívar, para postular la torre a la Asignación para la Paz en las convocatorias 2027–2028.",
+      "Nov-2027 a abr-2028: radicar la torre ante el Ministerio de Salud (concepto de viabilidad y control especial de oferta), cerrar la financiación e inscribir la dotación y las ambulancias en el banco de obras por impuestos.",
+      "Ene–jun-2028: antes del 31-mar-2028, el gerente que designe el nuevo alcalde firma las metas de los equipos básicos, la salud preventiva y la telemedicina; el plan de desarrollo 2028–2031 los incluye en el Plan de Intervenciones Colectivas y el hospital pide habilitarse como prestador que remite por telemedicina."
     ]
   },
   "metas": [
-    { "indicador": "Sedes rurales de salud habilitadas en el REPS", "base": "0 (2026)", "meta": "5 (2031)" },
-    { "indicador": "Camas de hospitalización", "base": "9 (REPS, 2022)", "meta": "15 en la torre (2031)" },
-    { "indicador": "Vacunación DPT/pentavalente de menores de 1 año frente a la meta del PAI", "base": "93,9 % (2025)", "meta": "95 % o más (2031)" },
-    { "indicador": "Hogares rurales con visita anual de un EBS", "base": "sin dato público (2026)", "meta": "100 % (2031)" },
+    { "indicador": "Menores de 1 año vacunados con la pentavalente, frente a la meta del Programa Ampliado de Inmunizaciones", "base": "93,9 % (2025)", "meta": "95 % o más (2031)" },
+    { "indicador": "Nacidos vivos con bajo peso", "base": "9,52 % (2024)", "meta": "menos de 7 % (2031)" },
+    { "indicador": "Mujeres de 30 a 65 años tamizadas para cáncer de cuello uterino con la prueba del virus del papiloma humano", "base": "sin dato público (2026)", "meta": "70 % (2031)" },
+    { "indicador": "Hogares con visita anual de un equipo básico de salud", "base": "sin dato público (2026)", "meta": "100 % (2031)" },
+    { "indicador": "Microterritorios con teleconsulta de especialistas", "base": "ninguno confirmado (2026)", "meta": "los 7 (2031)" },
+    { "indicador": "Camas de hospitalización", "base": "9 (registro de prestadores, 2022)", "meta": "15 en la torre (2031)" },
     { "indicador": "Laboratorio clínico", "base": "mayormente externo: $440 M en 2025", "meta": "propio, 24 horas, con 55 pruebas en sitio (2031)" }
   ],
   "riesgos": [
     {
-      "riesgo": "En el proyecto de presupuesto 2027 la inversión propia de MinSalud baja de $2,6 a $1,6 billones, el PGN 2027 quedó sin los $3 billones adicionales que pedía MinSalud y la reconstrucción del sismo compite por esa plata; con el escenario probable (MinSalud $3.000 M y obras por impuestos $1.800 M, sin crédito), a la torre le faltan ≈ $11.700 M.",
-      "mitigacion": "Partir la obra en dos etapas (pisos 1 a 3 con el bloque técnico primero, ≈ 85 % del valor), apoyarse más en directas y OCAD Paz y considerar la ruta llave en mano (Res. 1211 de 2025)."
+      "riesgo": "En el proyecto de presupuesto 2027 la inversión propia del Ministerio de Salud baja de $2,6 a $1,6 billones, el Presupuesto General de la Nación 2027 quedó sin los $3 billones adicionales que pedía el ministerio y la reconstrucción del sismo compite por esa plata; con el escenario probable (ministerio $3.000 M y obras por impuestos $1.800 M, sin crédito), a la torre le faltan ≈ $11.700 M.",
+      "mitigacion": "Partir la obra en dos etapas (pisos 1 a 3 con el bloque técnico primero, ≈ 85 % del valor), apoyarse más en las asignaciones directas y la Asignación para la Paz y considerar la ruta llave en mano (Resolución 1211 de 2025)."
     },
     {
-      "riesgo": "La E.S.E. está en saneamiento fiscal y el 93,4 % de los afiliados al régimen subsidiado de Yondó está en una EPS intervenida, de la que depende buena parte de su recaudo: poca contrapartida y riesgo de no poder operar los puestos (≈ $29,6 M al mes un puesto completo).",
-      "mitigacion": "Operar los puestos como sedes satélite con días fijos, EBS y telesalud; giro directo del 90 % (Decreto 930 de 2026), venta de cartera a CISA y art. 156 de la Ley 2294 antes de may-2027."
+      "riesgo": "El hospital está en saneamiento fiscal y el 93,4 % de los afiliados al régimen subsidiado de Yondó está en una aseguradora intervenida, de la que depende buena parte de su recaudo: poca contrapartida y riesgo de no poder sostener los equipos básicos, la salud preventiva y la telemedicina.",
+      "mitigacion": "Pagar los equipos básicos y la salud preventiva con la asignación del ministerio, el Plan de Intervenciones Colectivas y el Sistema General de Participaciones, no con la venta de servicios; giro directo del 90 % (Decreto 930 de 2026), venta de cartera a Central de Inversiones y artículo 156 de la Ley 2294 antes de may-2027."
     },
     {
-      "riesgo": "Los EBS dependen de una asignación anual de MinSalud que el nuevo gobierno puede cambiar; en SECOP I no hay contratos EBS de 2026 (corte 13-ene-2026).",
-      "mitigacion": "Incluir los EBS en el plan de desarrollo 2028–2031 y en el PIC con SGP, y pedir que el PND 2026–2030 mantenga la atención primaria territorial que propone MinSalud."
+      "riesgo": "Los equipos básicos de salud dependen de una asignación anual del Ministerio de Salud que el nuevo gobierno puede cambiar; en el portal de contratación pública no hay contratos de 2026 (corte 13-ene-2026).",
+      "mitigacion": "Incluir los equipos básicos en el plan de desarrollo 2028–2031 y en el Plan de Intervenciones Colectivas con el Sistema General de Participaciones, y pedir que el Plan Nacional de Desarrollo 2026–2030 mantenga la atención primaria en salud en los territorios."
     },
     {
-      "riesgo": "El cupo de obras por impuestos de 2027 no está publicado y la modalidad de reconstrucción del D.L. 1389 de 2026 compite por él.",
-      "mitigacion": "Inscribir temprano la dotación y las ambulancias en el banco de la ART, buscar contribuyentes con presencia local (Ecopetrol) y revisar qué recibe Yondó del proyecto BPIN 20250214000061 para no duplicar."
+      "riesgo": "En muchas veredas no hay señal y la telemedicina depende de la conexión satelital y de que haya especialistas disponibles por convenio.",
+      "mitigacion": "Conexión satelital portátil en cada maletín, consultas que se envían y se responden después cuando no hay conexión en vivo, y convenio con la Gobernación o con la red de Barrancabermeja antes de comprar los equipos."
+    },
+    {
+      "riesgo": "El cupo de obras por impuestos de 2027 no está publicado y la modalidad de reconstrucción del decreto ley 1389 de 2026 compite por él.",
+      "mitigacion": "Inscribir temprano la dotación de la torre y las ambulancias en el banco de obras por impuestos, buscar contribuyentes con presencia local (Ecopetrol) y revisar qué recibe Yondó de la dotación biomédica que ya se ejecuta, para no duplicar."
     }
   ],
   "pasos": [
@@ -232,11 +250,11 @@
     {
       "id": "componentes",
       "tipo": "componentes",
-      "titulo": "Cinco piezas, una sola red",
-      "texto": "La torre se lleva el 76 % del costo del módulo (88 % de la inversión, sin la operación de los EBS); la telesalud, los EBS, los puestos y las ambulancias llevan la atención a la zona rural, donde vive el 47 % de la población.",
+      "titulo": "Una torre y una salud que llega a la casa",
+      "texto": "La torre se lleva el 80 % del costo del módulo; la salud preventiva, los equipos básicos de salud, la telemedicina y las ambulancias llevan la atención a las casas y a la zona rural, donde vive el 47 % de la población.",
       "leyenda": [
-        { "texto": "Puestos rurales (OpenStreetMap); los lejanos, en su dirección", "color": "var(--m-salud)", "forma": "pt" },
-        { "texto": "Telesalud y rutas de los EBS desde el hospital", "color": "var(--data)", "forma": "dash" }
+        { "texto": "Microterritorios de los equipos básicos (OpenStreetMap); los lejanos, en su dirección", "color": "var(--m-salud)", "forma": "pt" },
+        { "texto": "Telemedicina desde la torre hacia cada microterritorio", "color": "var(--data)", "forma": "dash" }
       ]
     },
     {
@@ -244,69 +262,93 @@
       "tipo": "componente",
       "componente": "torre",
       "titulo": "Una torre que sigue atendiendo después de un sismo",
-      "texto": "La torre crece sobre el lote del antiguo Centro Vida, a 5,3 m del hospital actual y unida a él por una galería cubierta. Urgencias y rayos X van en el piso 1; consulta y laboratorio, en el 2; hospitalización y partos, en el 3, y terapias, odontología y telemedicina, en el 4.",
+      "texto": "La torre crece sobre el lote del antiguo Centro Vida, a 5,3 m del hospital actual. Urgencias y rayos X van en el piso 1; consulta, laboratorio y vacunación, en el 2; las 15 camas y los partos, en el 3, y terapias y telemedicina, en el 4. Su estructura sobre 146 pilotes la deja en servicio después de un sismo, y una planta diésel con combustible para 72 horas la mantiene encendida.",
       "cifras": [
-        { "v": "15", "l": "camas (9 en el REPS de 2022) y laboratorio propio de 24 horas", "fuente": "docs/11 del repositorio", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/11-torre-hospital-nivel-1.md" },
+        { "v": "15", "l": "camas (9 en el registro de 2022), 6 camillas y 15 consultorios", "fuente": "docs/11 del repositorio", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/11-torre-hospital-nivel-1.md" },
+        { "v": "55", "l": "pruebas de laboratorio en sitio, las 24 horas; hoy casi todo se paga afuera", "fuente": "docs/11 del repositorio", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/11-torre-hospital-nivel-1.md" },
         { "v": "18 meses", "l": "de obra desde agosto de 2028; apertura hacia abril de 2030", "fuente": "docs/11 del repositorio", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/11-torre-hospital-nivel-1.md" }
       ],
       "leyenda": [
-        { "texto": "Torre nueva de 4 pisos", "color": "var(--m-salud)", "forma": "area" },
+        { "texto": "Torre nueva de 4 pisos, con lo que hay en cada piso", "color": "var(--m-salud)", "forma": "area" },
         { "texto": "Hospital actual: administración y apoyo", "color": "#8e9391", "forma": "area" }
+      ]
+    },
+    {
+      "id": "preventiva",
+      "tipo": "componente",
+      "componente": "preventiva",
+      "titulo": "Prevenir en la casa antes que curar en el hospital",
+      "texto": "Los equipos básicos salen del hospital a vacunar, a buscar a las gestantes desde el primer trimestre y a medir la presión y el azúcar casa a casa. Las muestras de la prueba del virus del papiloma humano llegan al laboratorio de la torre, en el piso 2, junto a la vacunación y las citologías.",
+      "cifras": [
+        { "v": "9,52 %", "l": "de los nacidos vivos con bajo peso en 2024; en 2014–2018, 5,9 %", "fuente": "TerriData (Departamento Nacional de Planeación), 2024; promedio: cálculo propio", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip", "tono": "alerta" },
+        { "v": "93,9 %", "l": "de los menores de 1 año vacunados con la pentavalente en 2025; la meta es 95 %", "fuente": "Gobernación de Antioquia, cobertura de vacunación (2025)", "url": "https://www.datos.gov.co/resource/8u7u-645t.json?codigomunicipio=5893" },
+        { "v": "5 años", "l": "entre una prueba del virus del papiloma humano y la siguiente si sale negativa (mujeres de 30 a 65 años)", "fuente": "Resolución 3280 de 2018", "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=80433" }
+      ],
+      "leyenda": [
+        { "texto": "Hogares de la cabecera visitados casa a casa (ilustrativo)", "color": "var(--m-salud)", "forma": "pt" },
+        { "texto": "Recorridos de los equipos básicos desde el hospital", "color": "var(--m-salud)", "forma": "dash" },
+        { "texto": "Torre: vacunación, consulta y laboratorio en el piso 2", "color": "var(--m-salud)", "forma": "area" }
       ]
     },
     {
       "id": "telesalud",
       "tipo": "componente",
       "componente": "telesalud",
-      "titulo": "El especialista llega a la vereda por la red",
-      "texto": "Los arcos de datos van del hospital al centro de control de la alcaldía y salen hacia los puestos rurales. Cada puesto tendrá una estación de telemedicina; los EBS llevarán tablets con historia clínica, y las teleespecialidades llegarán por convenio.",
+      "titulo": "El especialista llega a la vereda y a la casa",
+      "texto": "Desde el centro de telemedicina del piso 4 de la torre, el médico consulta con especialistas en ginecología, pediatría y medicina interna. El enlace pasa por el centro de control de la alcaldía y sale hacia las veredas, donde los equipos básicos atienden con un maletín conectado y el especialista en línea.",
       "cifras": [
-        { "v": "5", "l": "puntos rurales con estación de telemedicina y enlace", "fuente": "Diseño de la propuesta (estimación propia)" },
-        { "v": "10", "l": "tablets con historia clínica para los EBS", "fuente": "Diseño de la propuesta (estimación propia)" }
+        { "v": "7", "l": "maletines de telemedicina, uno por equipo básico de salud", "fuente": "Diseño de la propuesta (estimación propia)" },
+        { "v": "150", "l": "pacientes crónicos y gestantes de alto riesgo seguidos desde su casa", "fuente": "Diseño de la propuesta (estimación propia)" },
+        { "v": "2", "l": "ecógrafos portátiles para el control prenatal en las veredas", "fuente": "Diseño de la propuesta (estimación propia)" }
       ],
       "leyenda": [
-        { "texto": "Enlace hospital – centro de control (alcaldía), con datos en movimiento", "color": "var(--data)", "forma": "dash" },
-        { "texto": "Enlaces hacia los puestos rurales (salen del cuadro)", "color": "var(--data)", "forma": "dash" },
-        { "texto": "Torre: nodo de telemedicina", "color": "var(--m-salud)", "forma": "area" }
+        { "texto": "Enlace torre – centro de control de la alcaldía, con datos en movimiento", "color": "var(--data)", "forma": "dash" },
+        { "texto": "Enlaces hacia los microterritorios rurales (salen del cuadro)", "color": "var(--data)", "forma": "dash" },
+        { "texto": "Torre: centro de telemedicina en el piso 4", "color": "var(--m-salud)", "forma": "area" }
       ]
     },
     {
-      "id": "rural",
+      "id": "equipos",
       "tipo": "componente",
-      "componente": "puestos",
-      "titulo": "Cinco puestos rurales vuelven a abrir",
-      "texto": "San Miguel del Tigre, el único corregimiento, tendrá un puesto nuevo de unos 320 m² con el proyecto tipo del DNP. Los otros 4 (San Luis Beltrán, San Francisco, La Soledad y La Punta) se adecúan como sedes satélite de los EBS y la telesalud, con días fijos; La Punta no se ubicó en la maqueta porque no aparece en OpenStreetMap.",
+      "componente": "ebs",
+      "titulo": "Siete equipos que conocen cada casa",
+      "texto": "Cinco equipos básicos de salud recorren San Miguel del Tigre, San Luis Beltrán, San Francisco, La Soledad y La Punta, y dos atienden la cabecera. Salen del hospital con tensiómetro, glucómetro, oxímetro, báscula y termo de vacunas; La Punta no aparece en OpenStreetMap y no se ubicó en la maqueta.",
       "cifras": [
-        { "v": "0", "l": "puestos rurales habilitados hoy", "fuente": "REPS, corte 12-mar-2026", "url": "https://www.datos.gov.co/d/c36g-9fc2", "tono": "alerta" },
-        { "v": "$29,6 M", "l": "al mes cuesta operar un puesto completo, según el tipo DNP (2026)", "fuente": "Proyecto tipo DNP (cálculo propio)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf" }
+        { "v": "$1.537 M", "l": "contrató el hospital en 2025 para los equipos básicos de salud (83 contratos)", "fuente": "Sistema Electrónico de Contratación Pública (cálculo propio)", "url": "https://www.datos.gov.co/resource/f789-7hwg.json?nit_de_la_entidad=800014884" },
+        { "v": "47 %", "l": "de los 22.429 habitantes de 2026 vive en la zona rural", "fuente": "Departamento Administrativo Nacional de Estadística, en docs/11 del repositorio", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/11-torre-hospital-nivel-1.md" },
+        { "v": "≈ $70 M", "l": "cuesta el maletín de dotación básica de los 7 equipos", "fuente": "Estimación propia" }
       ],
       "leyenda": [
-        { "texto": "Puestos en su centro poblado (OpenStreetMap); los lejanos, en su dirección", "color": "var(--m-salud)", "forma": "pt" },
-        { "texto": "Enlaces de telesalud y rutas de los EBS desde el hospital", "color": "var(--data)", "forma": "dash" }
+        { "texto": "Microterritorios en su centro poblado (OpenStreetMap); los lejanos, en su dirección", "color": "var(--m-salud)", "forma": "pt" },
+        { "texto": "Telemedicina desde la torre hacia cada microterritorio", "color": "var(--data)", "forma": "dash" }
       ]
     },
     {
       "id": "financiacion",
       "tipo": "financiacion",
-      "titulo": "Regalías y MinSalud ponen el 72 %",
-      "texto": "Las regalías (directas de Yondó, Asignación para la Paz del OCAD Paz, inversión local y regional) y MinSalud ponen el 72 %; las obras por impuestos pagan dotación y ambulancias. MinSalud es la fuente más incierta: en el proyecto de presupuesto 2027 su inversión propia baja de $2,6 a $1,6 billones."
+      "titulo": "Regalías y Ministerio de Salud ponen casi el 70 %",
+      "texto": "Las regalías (asignaciones directas de Yondó, Asignación para la Paz, inversión local y regional) y el Ministerio de Salud ponen casi el 70 %; las obras por impuestos pagan la dotación de la torre y las ambulancias, y el municipio, la Gobernación y la cooperación sostienen la salud preventiva. El ministerio es la fuente más incierta: en el proyecto de presupuesto 2027 su inversión propia baja de $2,6 a $1,6 billones."
     }
   ],
   "fuentes_citadas": [
-    { "titulo": "MinSalud, Resolución 485 de 2025: proyectos de inversión en infraestructura y dotación en salud (2025)", "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%20485%20de%202025.pdf" },
-    { "titulo": "MinSalud, Resolución 1020 de 2026: categorización del riesgo de las E.S.E. (2026)", "url": "https://hospitalneiva.gov.co/wp-content/uploads/2026/07/Resolucion-No-1020-de-2026-Categorizacion-riesgo-ESE-2026.pdf" },
-    { "titulo": "MinSalud, REPS: sedes de prestadores habilitadas, datos.gov.co (corte 12-mar-2026)", "url": "https://www.datos.gov.co/d/c36g-9fc2" },
-    { "titulo": "ADRES, BDUA: afiliados por EPS, datos.gov.co (3-oct-2026)", "url": "https://www.datos.gov.co/d/d7a5-cnra" },
-    { "titulo": "SECOP I: contratos de la E.S.E. Hospital Héctor Abad Gómez, datos.gov.co (2024–2026)", "url": "https://www.datos.gov.co/resource/f789-7hwg.json?nit_de_la_entidad=800014884" },
-    { "titulo": "DNP, TerriData: ficha de Yondó (2024)", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip" },
+    { "titulo": "Ministerio de Salud, Resolución 485 de 2025: proyectos de inversión en infraestructura y dotación en salud (2025)", "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%20485%20de%202025.pdf" },
+    { "titulo": "Ministerio de Salud, Resolución 1020 de 2026: categorización del riesgo de las empresas sociales del Estado (2026)", "url": "https://hospitalneiva.gov.co/wp-content/uploads/2026/07/Resolucion-No-1020-de-2026-Categorizacion-riesgo-ESE-2026.pdf" },
+    { "titulo": "Ministerio de Salud, Resolución 3280 de 2018: rutas de promoción y mantenimiento de la salud y materno perinatal", "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=80433" },
+    { "titulo": "Ministerio de Salud, Resolución 1644 de 2026: telesalud y telemedicina, reemplaza la Resolución 2654 de 2019 (2026)", "url": "https://www.minsalud.gov.co/Comunicaciones/noticias/2026/Paginas/colombia-da-un-salto-historico-en-telesalud-y-telemedicina-el-ministerio-de-salud-expide-una-reglamentacion-mas-moderna.aspx" },
+    { "titulo": "Ministerio de Salud, Registro Especial de Prestadores de Servicios de Salud: sedes habilitadas, datos.gov.co (corte 12-mar-2026)", "url": "https://www.datos.gov.co/d/c36g-9fc2" },
+    { "titulo": "Administradora de los Recursos del Sistema de Salud, base de afiliados por aseguradora, datos.gov.co (3-oct-2026)", "url": "https://www.datos.gov.co/d/d7a5-cnra" },
+    { "titulo": "Sistema Electrónico de Contratación Pública: contratos del Hospital Héctor Abad Gómez, datos.gov.co (2024–2026)", "url": "https://www.datos.gov.co/resource/f789-7hwg.json?nit_de_la_entidad=800014884" },
+    { "titulo": "Departamento Nacional de Planeación, TerriData: ficha de Yondó (2024)", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip" },
     { "titulo": "Gobernación de Antioquia, cobertura de vacunación por municipio, datos.gov.co (2023–2025)", "url": "https://www.datos.gov.co/resource/8u7u-645t.json?codigomunicipio=5893" },
-    { "titulo": "DNP, Proyecto tipo Construcción y dotación de infraestructura básica en salud (2018)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf" },
-    { "titulo": "DNP, Proyecto tipo Dotación de ambulancias (2018)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/ambulancias/PTambulancias.pdf" },
-    { "titulo": "MinSalud, Lineamiento técnico y operativo de los Equipos Básicos de Salud, versión 3 (2024)", "url": "https://minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PP/lineamiento-tecnico-operativo-equipos-basicos-salud-modelo-pp.pdf" },
-    { "titulo": "DNP, Mapa Inversiones: dotación biomédica PDET de Antioquia por obras por impuestos, BPIN 20250214000061 (2026)", "url": "https://www.datos.gov.co/d/cf9k-55fw" },
-    { "titulo": "Portafolio, MinSalud y los $3 billones que faltan en el presupuesto 2027 (22-oct-2026)", "url": "https://www.portafolio.co/economia/tenemos-que-recuperar-esos-3-billones-para-el-ano-entrante-minsalud-ana-maria-vesga-sobre-el-presupuesto-504949" },
+    { "titulo": "Departamento Nacional de Planeación, proyecto tipo Construcción y dotación de infraestructura básica en salud (2018)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf" },
+    { "titulo": "Departamento Nacional de Planeación, proyecto tipo Fortalecimiento de la cadena de frío (2016)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/cadenafrio/ptcadena.pdf" },
+    { "titulo": "Departamento Nacional de Planeación, proyecto tipo Dotación de ambulancias (2018)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/ambulancias/PTambulancias.pdf" },
+    { "titulo": "Ministerio de Salud, Lineamiento técnico y operativo de los equipos básicos de salud, versión 3 (2024)", "url": "https://minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PP/lineamiento-tecnico-operativo-equipos-basicos-salud-modelo-pp.pdf" },
+    { "titulo": "Consultorsalud, Contigo Antioquia: telemedicina de la Gobernación con la Universidad de Antioquia (2025)", "url": "https://consultorsalud.com/?p=325565" },
+    { "titulo": "Datos abiertos: dotación biomédica por obras por impuestos para hospitales de Antioquia (2026)", "url": "https://www.datos.gov.co/d/cf9k-55fw" },
+    { "titulo": "Portafolio, el Ministerio de Salud y los $3 billones que faltan en el presupuesto 2027 (22-oct-2026)", "url": "https://www.portafolio.co/economia/tenemos-que-recuperar-esos-3-billones-para-el-ano-entrante-minsalud-ana-maria-vesga-sobre-el-presupuesto-504949" },
     { "titulo": "Repositorio, docs/11: Torre de servicios de primer nivel para el Hospital Héctor Abad Gómez (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/11-torre-hospital-nivel-1.md" },
-    { "titulo": "Repositorio, docs/06: el hospital como puerta de entrada del dinero en 2028 (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/06-hospital-2028-financiacion.md" },
-    { "titulo": "Repositorio, docs/15: dotación para la habilitación de la torre (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/15-dotacion-y-habilitacion.md" }
+    { "titulo": "Repositorio, docs/15: dotación para la habilitación de la torre (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/15-dotacion-y-habilitacion.md" },
+    { "titulo": "Repositorio, docs/06: el hospital como puerta de entrada del dinero en 2028 (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/06-hospital-2028-financiacion.md" }
   ]
 }

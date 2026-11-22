@@ -110,7 +110,7 @@ function texturaPanel() {
   x.strokeStyle = '#e8b13a'; x.lineWidth = 3; x.beginPath(); x.moveTo(286, 193); x.lineTo(304, 197); x.stroke();
   x.strokeStyle = '#3a3a3a'; x.lineWidth = 2; x.beginPath(); x.moveTo(258, 246); x.lineTo(256, 276); x.moveTo(266, 246); x.lineTo(268, 276); x.stroke();
   x.fillStyle = '#2a3a33'; x.font = '19px "Public Sans", Arial, sans-serif';
-  x.fillText('Sendero 3 m · Ciclorruta 2,5 m · luz LED', 22, 128); x.fillText('Laguna de retención · bosque inundable', 22, 154);
+  x.fillText('Sendero 3 m · Ciclorruta 2,5 m · alumbrado', 22, 128); x.fillText('Laguna de retención · bosque inundable', 22, 154);
   x.fillStyle = '#1f5a46'; x.font = 'bold 18px "Public Sans", Arial, sans-serif'; x.fillText('Yondó 2028–2031 · Ciudadela deportiva ecológica', 22, 338);
   texPanel = new THREE.CanvasTexture(c); texPanel.colorSpace = THREE.SRGBColorSpace; texPanel.anisotropy = 8;
   return texPanel;

@@ -3,17 +3,16 @@
 // 36 m de ancho (30 m de ronda y 6 m de pie de enrocado dentro del agua), con enrocado en el talud y vegetación de ribera,
 // sin pavimento. Zona B: plaza de 0,46 ha detrás de la ronda, aguas abajo del puente, con las letras «YONDÓ» de frente a
 // la plaza, jardineras con árboles, bancas, luminarias y parqueadero. Un sendero curvo en deck cruza la ronda y corre por
-// el borde del agua hasta un mirador de 10 × 10 m sobre pilotes, y una pasarela articulada baja al muelle flotante de
-// 30 × 5 m donde hoy atracan las lanchas.
+// el borde del agua hasta un mirador de 10 × 10 m sobre pilotes. La propuesta no lleva muelle: el embarque de lanchas no
+// se formaliza aquí.
 //
 // Acabados: plaza de adoquín con franja perimetral y bordillo, prado, jardineras de concreto con guayacanes y plantas
-// tropicales, bancas, canecas, bolardos y luminarias con su charco de luz, caseta de tiquetes con el letrero «Puerta del
-// Magdalena», vendedores con carrito y sombrilla, parqueadero con carros y motos, gente. Deck de tablas sobre largueros y
-// pilotes, con baranda de parales de acero, pasamanos de madera y cinta LED; mirador con lona tensada. Muelle de tablas
-// sobre flotadores, con bitas, defensas de caucho y caseta de espera; chalupas de casco afilado con toldo azul, motor fuera
-// de borda y pasajeros con chaleco naranja, y una más cruzando el río. Ronda con pasto, geotextil, enrocado con helechos
-// entre las piedras y señal de ronda hídrica; frente al deck, el mirador y el muelle la ribera lleva matas y palmas bajas en
-// lugar de árboles, para que se lean desde la cámara del paso (que mira hacia el río).
+// tropicales, bancas, canecas, bolardos y luminarias con su charco de luz, caseta de información con el letrero «Puerta
+// del Magdalena», vendedores con carrito y sombrilla, parqueadero con carros y motos, gente. Deck de tablas sobre
+// largueros y pilotes, con baranda de parales de acero, pasamanos de madera y cinta de luz; mirador con lona tensada. En
+// el río, una chalupa de toldo amarillo cruza hacia Barrancabermeja con su estela (paisaje, no obra). Ronda con pasto,
+// geotextil, enrocado con helechos entre las piedras y señal de ronda hídrica; frente al deck y el mirador la ribera lleva
+// matas y palmas bajas en lugar de árboles, para que se lean desde la cámara del paso (que mira hacia el río).
 // Marco local: u a lo largo de la orilla aguas abajo y v hacia el río, con origen en el cruce del eje del puente con la
 // orilla; las piezas de geo3d reciben (u, −v).
 import { THREE, mat } from '../../core.js';
@@ -25,10 +24,8 @@ const DISENO = {
   zonaA: [[-80, -30], [-50, -28], [-25, -25], [0, -22], [25, -30], [50, -33], [75, -32.1], [100, -34.1], [125, -38], [150, -43], [175, -44], [200, -45], [200, -9], [175, -8], [150, -7], [125, -2], [100, 2], [75, 4], [50, 2.9], [25, 6], [0, 14], [-24.9, 11], [-50, 8], [-80, 6]],
   plaza: [[32, -32], [60, -33], [90, -34.1], [118, -37], [117.9, -86], [89.9, -87], [60, -88], [32, -87.1]],
   mirador: [[52, -5], [62, -5], [62, 5], [52, 5]],
-  muelle: [[92, 12], [122, 11.9], [122.1, 17], [92, 17]],
   letras: [80, -38.1],
   deck: [[112, -37], [117, -30], [119, -22], [116, -14], [109, -8], [100, -4], [90, -2], [80, -1.1], [71, -0.5], [63, 0]],
-  pasarela: [[102, -4], [104, 12]],
   acceso: [[-2, -100], [20, -96], [32, -92]],
   orilla: [[-80, 0], [-50, 2], [-25, 5], [0, 8], [25, 0], [49.9, -3], [75, -2], [100, -4], [125, -8], [150, -13], [175, -14], [200, -15.1]],
 };
@@ -61,7 +58,7 @@ function tira(A, B, hA, hB, cerrado = true) {
 }
 // bordillo o muro bajo sobre un anillo: cara de arriba y los dos costados (materiales de dos caras)
 function muroAnillo(poly, a0, a1, h0, h1) { const A = adentro(poly, a0), B = adentro(poly, a1); return unir([tira(A, B, h1, h1), tira(A, A, h0, h1), tira(B, B, h0, h1)]); }
-// los charcos de luz de postes y bolardos van a 0,16 m: sobre la plaza (0,18) o el muelle (0,63) se suben
+// los charcos de luz de postes y bolardos van a 0,16 m: sobre la plaza (0,18) se suben
 const alzarCharcos = (g, dy) => { g.traverse((o) => { if (o.name === 'charcos') o.position.y += dy; }); return g; };
 // matas por tipo, un grupo por tipo (lista): brotar escalona las instancias por el conteo de la primera malla del grupo, y
 // con tipos de conteos distintos en un mismo grupo los de más instancias quedaban encogidos al final. Solo las heliconias
@@ -131,18 +128,13 @@ const texLetrero = () => lienzo(1024, 220, (x, w, h) => {
   const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#1a4a72'); g.addColorStop(1, '#0f2f4c'); x.fillStyle = g; x.fillRect(0, 0, w, h);
   x.strokeStyle = '#f5c84a'; x.lineWidth = 7; x.beginPath(); for (let i = 0; i <= 64; i++) x.lineTo((i / 64) * w, 186 + Math.sin(i * 0.55) * 7); x.stroke();
   x.fillStyle = '#ffffff'; x.textAlign = 'center'; x.font = 'bold 92px Anton, Impact, "Arial Black", sans-serif'; x.fillText('PUERTA DEL MAGDALENA', w / 2, 110);
-  x.fillStyle = '#f5c84a'; x.font = '600 34px "Public Sans", Arial, sans-serif'; x.fillText('Tiquetes · lanchas a Barrancabermeja', w / 2, 160);
+  x.fillStyle = '#f5c84a'; x.font = '600 34px "Public Sans", Arial, sans-serif'; x.fillText('Información turística · mirador del río', w / 2, 160);
 });
 const texRonda = () => lienzo(512, 320, (x, w, h) => {
   x.fillStyle = '#1f6b4a'; x.fillRect(0, 0, w, h); x.strokeStyle = '#ffffff'; x.lineWidth = 10; x.strokeRect(14, 14, w - 28, h - 28);
   x.fillStyle = '#ffffff'; x.textAlign = 'center'; x.font = 'bold 64px "Public Sans", Arial, sans-serif'; x.fillText('RONDA HÍDRICA', w / 2, 112);
   x.font = '30px "Public Sans", Arial, sans-serif'; x.fillText('Río Grande de la Magdalena', w / 2, 170); x.fillText('Zona de protección · 30 m', w / 2, 214);
   x.strokeStyle = '#9fd3ea'; x.lineWidth = 6; [0, 1].forEach((k) => { x.beginPath(); for (let i = 0; i <= 20; i++) x.lineTo(150 + i * 10.6, 256 + k * 16 + Math.sin(i * 0.9) * 6); x.stroke(); });
-});
-const texEmbarque = () => lienzo(512, 128, (x, w, h) => {
-  x.fillStyle = '#f4f2ec'; x.fillRect(0, 0, w, h); x.fillStyle = '#1a4a72'; x.fillRect(0, 0, 18, h);
-  x.textAlign = 'center'; x.fillStyle = '#1a4a72'; x.font = 'bold 58px "Public Sans", Arial, sans-serif'; x.fillText('EMBARQUE', w / 2 + 9, 64);
-  x.fillStyle = '#c0392b'; x.font = '600 28px "Public Sans", Arial, sans-serif'; x.fillText('Barrancabermeja · Casabe', w / 2 + 9, 104);
 });
 
 // --- chalupa: casco afilado (popa plana, proa que se levanta), franja de color, fondo rojo bajo el agua, piso, bancas,
@@ -191,7 +183,7 @@ const geoCarrito = {
 const SOMBRILLAS = ['#d63b2b', '#f0c419', '#2e7fd1', '#2fa75a'].map((c) => new THREE.Color(c)), MOTOS = ['#c8372d', '#1f2329', '#2e5fa8', '#e9ebed', '#1f2329', '#9b2b26'].map((c) => new THREE.Color(c));
 
 // { origen: [x, y] (eje del puente en la orilla), angulo: grados desde el oriente (antihorario) de la orilla aguas abajo,
-//   diseno: { zonaA, plaza, mirador, muelle, letras, deck, pasarela, acceso, orilla } en metros del modelo (opcional) }
+//   diseno: { zonaA, plaza, mirador, letras, deck, acceso, orilla } en metros del modelo (opcional) }
 export async function miradorMagdalena({ origen, angulo, diseno = null }) {
   const raiz = new THREE.Group(), th = THREE.MathUtils.degToRad(angulo), c = Math.cos(th), s = Math.sin(th);
   raiz.position.set(origen[0], 0, -origen[1]); raiz.rotation.y = th;
@@ -199,7 +191,7 @@ export async function miradorMagdalena({ origen, angulo, diseno = null }) {
   const D = { ...DISENO };
   if (diseno) Object.entries(diseno).forEach(([k, v]) => { if (v?.length) D[k] = typeof v[0] === 'number' ? aLocal(v) : v.map(aLocal); });
   const capa = (n) => { const g = new THREE.Group(); g.name = n; raiz.add(g); return g; };
-  const zonaA = capa('zonaA'), plaza = capa('plaza'), deck = capa('deck'), muelle = capa('muelle'), verde = capa('verde'), letrasG = capa('letras');
+  const zonaA = capa('zonaA'), plaza = capa('plaza'), deck = capa('deck'), verde = capa('verde'), letrasG = capa('letras');
   const po = (k) => ({ polygonOffset: true, polygonOffsetFactor: -k, polygonOffsetUnits: -k });
   const C = {
     adoquin: matT('adoquin', { color: '#efe5d2' }), adoquinB: matT('adoquin', { color: '#bfb19a', side: THREE.DoubleSide, ...po(1) }),
@@ -211,12 +203,11 @@ export async function miradorMagdalena({ origen, angulo, diseno = null }) {
     ribera: matT('cesped', { color: '#cfd9ae', ...po(4) }), geotextil: matT('tierra', { color: '#7b7466', ...po(5) }),
     asfalto: matT('asfalto', po(1)), cal: new THREE.MeshBasicMaterial({ color: 0xf2f2f2, ...po(3) }), amarilla: new THREE.MeshBasicMaterial({ color: 0xf2c230, ...po(3) }),
     lona: matT('membrana', { color: '#f6f2e8' }), toldo: matT('membrana', { color: '#2f62b0' }),
-    flotador: mat(new THREE.Color('#26313b'), { roughness: 0.5 }), caucho: mat(new THREE.Color('#17191b'), { roughness: 0.9 }),
     casco: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, side: THREE.DoubleSide }), interior: mat(new THREE.Color('#7f8c94'), { roughness: 0.8 }),
     motor: mat(new THREE.Color('#24272a'), { roughness: 0.35, metalness: 0.35 }), estela: new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, depthWrite: false, roughness: 0.9, side: THREE.DoubleSide, ...po(4) }),   // con luz: al atardecer la espuma se apaga con el agua
     muro: matT('estuco', { color: '#f4efe4' }), ladrillo: matT('ladrillo'), vidrio: mat(new THREE.Color('#3e5361'), { roughness: 0.08, metalness: 0.7 }), techo: matT('zinc', { color: '#5d646a' }),
     letrero: new THREE.MeshStandardMaterial({ map: texLetrero(), roughness: 0.55, emissive: 0xffffff, emissiveIntensity: 0.08 }),
-    ronda: new THREE.MeshStandardMaterial({ map: texRonda(), roughness: 0.6 }), embarque: new THREE.MeshStandardMaterial({ map: texEmbarque(), roughness: 0.6 }),
+    ronda: new THREE.MeshStandardMaterial({ map: texRonda(), roughness: 0.6 }),
     carrito: mat(new THREE.Color('#f4f1ea'), { roughness: 0.5 }), sombrilla: new THREE.MeshStandardMaterial({ roughness: 0.7, side: THREE.DoubleSide }),
     moto: new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.45 }), llanta: mat(new THREE.Color('#17191b'), { roughness: 0.8 }),
   };
@@ -226,8 +217,8 @@ export async function miradorMagdalena({ origen, angulo, diseno = null }) {
   const volcar = (padre, lote, mats) => Object.entries(lote).forEach(([k, gs]) => { if (gs.length) padre.add(malla(unir(gs), mats[k], k !== 'led')); });
   const orilla = D.orilla, vOrilla = (u) => { for (let i = 1; i < orilla.length; i++) if (u <= orilla[i][0]) { const [a, b] = [orilla[i - 1], orilla[i]], t = (u - a[0]) / (b[0] - a[0] || 1); return a[1] + t * (b[1] - a[1]); } return orilla[orilla.length - 1][1]; };
   const r = azar(23);
-  // gente de cada parte en su grupo (el deck y el muelle crecen al animarse: la gente crece con ellos, no queda en el aire)
-  const quien = { plaza: [], sentados: [], deck: [], muelle: [], pasajeros: [] };
+  // gente de cada parte en su grupo (el deck crece al animarse: la gente crece con él, no queda en el aire)
+  const quien = { plaza: [], sentados: [], deck: [] };
 
   // --- zona A: franja de la ronda (tenue), talud con pasto de ribera, geotextil asomando sobre el enrocado del pie contra la
   // socavación, helechos entre las piedras y la señal de ronda hídrica
@@ -244,8 +235,7 @@ export async function miradorMagdalena({ origen, angulo, diseno = null }) {
   while (tFin < lFin && !dentro([fin[0] + (dirFin[0] / lFin) * tFin, fin[1] + (dirFin[1] / lFin) * tFin], md)) tFin += 0.25;
   const pDeck = tFin > 0 && tFin < lFin ? [...D.deck, [fin[0] + (dirFin[0] / lFin) * (tFin + 0.5), fin[1] + (dirFin[1] / lFin) * (tFin + 0.5)]] : D.deck;
   const ruta = suave(pDeck, 60), n = ruta.length, h0 = 0.35, h1 = 4.3, alto = (i) => h0 + (h1 - h0) * (i / (n - 1)) ** 0.85;
-  const [pa, pb] = D.pasarela, mm = D.muelle;
-  const cerca = (p, d) => distLinea(p, ruta) < d || dentro(p, md) || distLinea(p, [pa, pb]) < d || dentro(p, mm);
+  const cerca = (p, d) => distLinea(p, ruta) < d || dentro(p, md);
   zonaA.add(...matasPorTipo(racimos(banda(-6.6, -1.2), 34, 5, 19, (p) => !cerca(p, 2.6), ['helecho', 'helecho', 'heliconia']), { helecho: 0.95, heliconia: 1.3 }, 21));
   // señales de ronda hídrica en los dos extremos de la plaza, de cara a ella: postes y tablero unidos, la cara instanciada
   const senales = [-34, 160].map((u) => [u, vOrilla(u) - 25]);
@@ -318,7 +308,7 @@ export async function miradorMagdalena({ origen, angulo, diseno = null }) {
   // vía de acceso con su línea amarilla
   asfaltos.push(cinta(D.acceso.map(L), 7, 0.1));
   plaza.add(malla(unir(asfaltos), C.asfalto, false), malla(unir(aLoLargo(D.acceso, 4).map(([u, v, a]) => new THREE.BoxGeometry(1.8, 0.01, 0.12).rotateY(-a).translate(u, 0.112, v))), C.amarilla, false));
-  // caseta de tiquetes junto a la entrada del deck, con el letrero «Puerta del Magdalena» de cara a la plaza
+  // caseta de información turística junto a la entrada del deck, con el letrero «Puerta del Magdalena» de cara a la plaza
   {
     const g = new THREE.Group(), w = 3.8, d = 2.6, hm = 2.7;
     g.add(malla(new THREE.BoxGeometry(w, hm, d).translate(0, hm / 2, 0), C.muro), malla(new THREE.BoxGeometry(w + 0.04, 0.55, d + 0.04).translate(0, 0.275, 0), C.ladrillo));
@@ -364,9 +354,9 @@ export async function miradorMagdalena({ origen, angulo, diseno = null }) {
       [-1.35, 1.35].forEach((o) => { const x = a[0] + Math.sin(yaw) * o, z = a[1] + Math.cos(yaw) * o; lDeck.pilote.push(new THREE.CylinderGeometry(0.14, 0.14, ha + 3, 8).translate(x, (ha - 3) / 2, z)); });
     }
   }
-  // barandas a los dos lados, cortadas donde el deck entra a la plataforma y donde sale la pasarela al muelle
+  // barandas a los dos lados, cortadas donde el deck entra a la plataforma
   const lado = (o) => ruta.map(([u, v], i) => { const [a, b] = [ruta[Math.max(0, i - 1)], ruta[Math.min(n - 1, i + 1)]], ang = Math.atan2(b[1] - a[1], b[0] - a[0]); return [u - Math.sin(ang) * o, v + Math.cos(ang) * o, alto(i) + 0.1]; });
-  const tramos = (pts) => { const out = [[]]; pts.forEach((p) => { if (dentro([p[0], p[1]], md) || (Math.hypot(p[0] - pa[0], p[1] - pa[1]) < 1.9 && Math.hypot(p[0] - pb[0], p[1] - pb[1]) < Math.hypot(pa[0] - pb[0], pa[1] - pb[1]))) { if (out[out.length - 1].length) out.push([]); } else out[out.length - 1].push(p); }); return out.filter((t) => t.length > 1); };
+  const tramos = (pts) => { const out = [[]]; pts.forEach((p) => { if (dentro([p[0], p[1]], md)) { if (out[out.length - 1].length) out.push([]); } else out[out.length - 1].push(p); }); return out.filter((t) => t.length > 1); };
   [1.45, -1.45].forEach((o) => tramos(lado(o)).forEach((t) => barandal(t, lDeck)));
   // --- mirador: plataforma de 10 × 10 m sobre pilotes en el borde del agua, de tablas, con baranda y lona tensada
   const e1 = [md[1][0] - md[0][0], md[1][1] - md[0][1]], e2 = [md[3][0] - md[0][0], md[3][1] - md[0][1]], l1 = Math.hypot(...e1), l2 = Math.hypot(...e2), yawM = Math.atan2(-e1[1], e1[0]);
@@ -394,85 +384,46 @@ export async function miradorMagdalena({ origen, angulo, diseno = null }) {
   [[-3, 4.3], [-1.9, 4.4], [2.5, 4.2], [4.3, 2.0], [-4.2, 0.6]].forEach(([du, dv]) => quien.deck.push(Object.assign([mu + du, -(mv + dv), rotR], { h: h1 + 0.1 })));
   for (let i = 6; i < n - 6; i += 9) { const o = (r() - 0.5) * 1.6, [a, b] = [ruta[i - 1], ruta[i + 1]], ang = Math.atan2(b[1] - a[1], b[0] - a[0]); quien.deck.push(Object.assign([ruta[i][0] - Math.sin(ang) * o, -(ruta[i][1] + Math.cos(ang) * o), r() * 6.28], { h: alto(i) + 0.1 })); }
 
-  // --- pasarela articulada al muelle: tablas sobre largueros y baranda a los dos lados, de la cota del deck a la del muelle
-  const iPa = ruta.reduce((k, p, i) => (Math.hypot(p[0] - pa[0], p[1] - pa[1]) < Math.hypot(ruta[k][0] - pa[0], ruta[k][1] - pa[1]) ? i : k), 0);
-  const hPa = alto(iPa) + 0.1, hPb = 0.66, lp = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]), yawP = Math.atan2(-(pb[1] - pa[1]), pb[0] - pa[0]), pitchP = Math.atan2(hPb - hPa, lp);
-  const lMuelle = { madera: [], metal: [], led: [], tabla: [], pilote: [], flotador: [], caucho: [], casco: [], interior: [], toldo: [], motor: [] };
-  for (let t = 0.1; t < lp; t += 0.17) { const k = t / lp; lMuelle.tabla.push(new THREE.BoxGeometry(0.15, 0.05, 2).rotateZ(pitchP).rotateY(yawP).translate(pa[0] + (pb[0] - pa[0]) * k, hPa + (hPb - hPa) * k - 0.025, pa[1] + (pb[1] - pa[1]) * k)); }
-  [-1, 1].forEach((sg) => {
-    const ox = Math.sin(yawP) * sg * 1.0, oz = Math.cos(yawP) * sg * 1.0;
-    lMuelle.pilote.push(new THREE.BoxGeometry(lp, 0.2, 0.1).rotateZ(pitchP).rotateY(yawP).translate((pa[0] + pb[0]) / 2 + ox * 0.95, (hPa + hPb) / 2 - 0.15, (pa[1] + pb[1]) / 2 + oz * 0.95));
-    barandal([[pa[0] + ox, pa[1] + oz, hPa], [pb[0] + ox, pb[1] + oz, hPb]], lMuelle, { paso: 1.6 });
-  });
-
-  // --- muelle flotante de 30 × 5 m: tablas sobre flotadores, marco, bitas, defensas de caucho del lado del río, baranda del
-  // lado de tierra (abierta en la pasarela) y caseta de espera con toldo; se arma en su marco (x a lo largo, +z hacia el río)
-  const au = mm.reduce((a, p) => a + p[0], 0) / mm.length, av = mm.reduce((a, p) => a + p[1], 0) / mm.length;
-  const largoM = Math.hypot(mm[1][0] - mm[0][0], mm[1][1] - mm[0][1]), anchoM = Math.hypot(mm[2][0] - mm[1][0], mm[2][1] - mm[1][1]), angM = Math.atan2(mm[1][1] - mm[0][1], mm[1][0] - mm[0][0]);
-  const MF = new THREE.Matrix4().makeRotationY(-angM).setPosition(au, 0, av), enF = (x, z) => new THREE.Vector3(x, 0, z).applyMatrix4(MF);
-  const lx = largoM / 2, lz = anchoM / 2, F = { tabla: [], pilote: [], flotador: [], caucho: [], metal: [], madera: [], led: [], toldo: [] };
-  for (let x = -lx + 0.1; x < lx - 0.05; x += 0.2) F.tabla.push(new THREE.BoxGeometry(0.18, 0.06, anchoM - 0.05).translate(x, 0.63, 0));
-  F.pilote.push(new THREE.BoxGeometry(largoM + 0.14, 0.3, 0.14).translate(0, 0.45, lz), new THREE.BoxGeometry(largoM + 0.14, 0.3, 0.14).translate(0, 0.45, -lz), new THREE.BoxGeometry(0.14, 0.3, anchoM).translate(lx, 0.45, 0), new THREE.BoxGeometry(0.14, 0.3, anchoM).translate(-lx, 0.45, 0));
-  for (let x = -lx + 1.5; x < lx; x += 3) [-lz * 0.6, lz * 0.6].forEach((z) => F.flotador.push(new THREE.CylinderGeometry(0.34, 0.34, 2.7, 12).rotateZ(Math.PI / 2).translate(x, 0.14, z)));
-  for (let x = -lx + 1.5; x < lx; x += 3) F.caucho.push(new THREE.CylinderGeometry(0.11, 0.11, 0.62, 10).translate(x, 0.34, lz + 0.18));
-  [-0.8, -0.27, 0.27, 0.8].forEach((k) => F.metal.push(new THREE.CylinderGeometry(0.09, 0.11, 0.3, 10).translate(k * lx, 0.81, lz - 0.3), new THREE.CylinderGeometry(0.14, 0.14, 0.05, 10).translate(k * lx, 0.98, lz - 0.3)));
-  // baranda del lado de tierra y de las puntas, abierta donde llega la pasarela
-  const pbF = new THREE.Vector3(pb[0], 0, pb[1]).applyMatrix4(MF.clone().invert());
-  const lF = { metal: F.metal, madera: F.madera, led: F.led };
-  barandal([[-lx + 0.1, lz - 1.6, 0.66], [-lx + 0.1, -lz + 0.1, 0.66], [pbF.x - 1.3, -lz + 0.1, 0.66]], lF);
-  barandal([[pbF.x + 1.3, -lz + 0.1, 0.66], [lx - 0.1, -lz + 0.1, 0.66], [lx - 0.1, lz - 1.6, 0.66]], lF);
-  // caseta de espera en la punta de aguas arriba: parales, toldo azul, banca y letrero de embarque
-  const kx = -lx + 3.4;
-  [[-2.1, -2.2], [2.1, -2.2], [-2.1, 0.4], [2.1, 0.4]].forEach(([dx, z]) => F.metal.push(new THREE.BoxGeometry(0.08, 2.5, 0.08).translate(kx + dx, 0.66 + 1.25, z)));
-  F.toldo.push(new THREE.BoxGeometry(4.8, 0.07, 3.3).rotateX(0.06).translate(kx, 3.2, -0.9));
-  F.madera.push(new THREE.BoxGeometry(3.6, 0.06, 0.45).translate(kx, 1.11, -1.9)); [-1.5, 1.5].forEach((dx) => F.metal.push(new THREE.BoxGeometry(0.06, 0.45, 0.4).translate(kx + dx, 0.88, -1.9)));
-  F.metal.push(new THREE.BoxGeometry(4.24, 0.58, 0.04).translate(kx, 2.75, -2.24));
-  Object.entries(F).forEach(([k, gs]) => gs.forEach((g) => lMuelle[k].push(g.applyMatrix4(MF))));
-  const embarque = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 0.52).rotateY(Math.PI).translate(kx, 2.75, -2.305).applyMatrix4(MF), C.embarque); muelle.add(embarque);
-  const pLuces = [enF(-lx + 0.5, -lz + 0.4), enF(lx - 0.5, -lz + 0.4)].map((p) => [p.x, -p.z]);
-  muelle.add(alzarCharcos(postes(pLuces, 3.2), 0.5));
-  [[kx - 1.2, -1.9, true], [kx + 0.3, -1.9, true], [kx + 1.4, -1.0, false], [3, -0.5, false], [-1.5, 0.8, false]].forEach(([x, z, sent]) => { const p = enF(x, z); (sent ? quien.pasajeros : quien.muelle).push(Object.assign([p.x, -p.z, angM + r() * 0.6], { h: sent ? 0.63 + 0.51 - 0.42 : 0.66 })); });
-  // chalupas amarradas al costado del río (proa aguas arriba) y una cruzando hacia Barrancabermeja con su estela
-  const barcos = [[0.8, lz + 1.48, 12, 2.4, true, '#1f6fd1', 8], [-lx + 4.2, lz + 1.3, 8.4, 2.0, true, '#d63b2b', 4], [lx - 3.6, lz + 1.2, 6.6, 1.8, false, '#2fa75a', 0]].map(([x, z, Lc, B, t, f, np]) => ({ M: MF.clone().multiply(new THREE.Matrix4().makeRotationY(Math.PI).setPosition(x, 0, z)), Lc, B, t, f, np }));
-  barcos.push({ M: new THREE.Matrix4().makeRotationY(-Math.PI / 2 - 0.15).setPosition(au - 34, 0, av + 30), Lc: 11, B: 2.3, t: true, f: '#f0c419', np: 6, estela: true });
-  barcos.forEach(({ M, Lc, B, t, f, np, estela }) => {
-    const ch = chalupa(Lc, B, { toldo: t, franja: f });
-    lMuelle.casco.push(ch.casco.applyMatrix4(M)); lMuelle.interior.push(ch.piso.applyMatrix4(M));
-    ch.madera.forEach((g) => lMuelle.madera.push(g.applyMatrix4(M))); ch.metal.forEach((g) => lMuelle.metal.push(g.applyMatrix4(M))); ch.lona.forEach((g) => lMuelle.toldo.push(g.applyMatrix4(M))); ch.motor.forEach((g) => lMuelle.motor.push(g.applyMatrix4(M)));
+  // --- en el río, una chalupa de toldo amarillo cruza hacia Barrancabermeja con su estela, frente al mirador: paisaje del
+  // Magdalena, no obra (la propuesta no lleva muelle). Va suelta en la pieza, sin grupo: no es una parte que se quite
+  const rio = new THREE.Group(); raiz.add(rio);
+  const pasajeros = [], piloto = [];
+  {
+    const Lc = 11, B = 2.3, M = new THREE.Matrix4().makeRotationY(-Math.PI / 2 - 0.15).setPosition(mu + 16, 0, mv + 44.5);
+    const ch = chalupa(Lc, B, { toldo: true, franja: '#f0c419' });
+    const lote = { casco: [ch.casco], interior: [ch.piso], madera: ch.madera, metal: ch.metal, toldo: ch.lona, motor: ch.motor };
+    Object.values(lote).forEach((gs) => gs.forEach((g) => g.applyMatrix4(M)));
+    volcar(rio, lote, C);
+    rio.add(new THREE.Mesh(estelaGeo(Lc, B).applyMatrix4(M), C.estela));
     const yaw = new THREE.Euler().setFromRotationMatrix(M, 'YXZ').y;
-    ch.puestos.slice(0, np).forEach(([x, z]) => { const p = new THREE.Vector3(x, 0, z).applyMatrix4(M); quien.pasajeros.push(Object.assign([p.x, -p.z, yaw], { h: 0.475 - 0.42, camisa: true })); });
-    const pm = new THREE.Vector3(ch.popa, 0, 0).applyMatrix4(M); quien.muelle.push(Object.assign([pm.x, -pm.z, yaw, { camisa: '#f07a1f' }], { h: 0.18 }));
-    if (estela) {
-      muelle.add(new THREE.Mesh(estelaGeo(Lc, B).applyMatrix4(M), C.estela));
-    }
-  });
+    ch.puestos.slice(0, 6).forEach(([x, z]) => { const p = new THREE.Vector3(x, 0, z).applyMatrix4(M); pasajeros.push(Object.assign([p.x, -p.z, yaw, { camisa: '#f07a1f' }], { h: 0.475 - 0.42 })); });
+    const pm = new THREE.Vector3(ch.popa, 0, 0).applyMatrix4(M); piloto.push(Object.assign([pm.x, -pm.z, yaw, { camisa: '#f07a1f' }], { h: 0.18 }));
+  }
   volcar(deck, lDeck, { ...C, tabla: C.tabla, led: luzComun() });
-  volcar(muelle, lMuelle, { ...C, tabla: C.tabla, led: luzComun(), toldo: C.toldo });
   volcar(plaza, lPlaza, { ...C, led: luzComun() });
 
-  // --- gente: en la plaza, sentados en las bancas, en el deck y el mirador, en el muelle y en las lanchas (chaleco naranja)
-  const chaleco = (l) => l.map((it) => (it.camisa === true ? Object.assign([it[0], it[1], it[2], { camisa: '#f07a1f' }], { h: it.h }) : it));
+  // --- gente: en la plaza, sentados en las bancas, en el deck y el mirador, y en la chalupa que cruza (chaleco naranja)
   plaza.add(gente(quien.plaza.map((it) => (it.h != null ? it : Object.assign(it, { h: 0.18 }))), { semilla: 61 }), gente(quien.sentados, { sentado: true, semilla: 62 }));
   deck.add(gente(quien.deck, { semilla: 63 }));
-  muelle.add(gente(quien.muelle, { semilla: 65 }), gente(chaleco(quien.pasajeros), { sentado: true, semilla: 66 }));
+  rio.add(gente(piloto, { semilla: 65 }), gente(pasajeros, { sentado: true, semilla: 66 }));
 
-  // --- vegetación de ribera en la ronda: árboles nativos lejos del deck y del muelle, y fuera del cono de la cámara del paso
-  // (que mira hacia +v por encima de la plaza): ahí, matas y palmas bajas, para que el deck, el mirador y el muelle se lean
-  const us = [...ruta, ...md, ...mm].map((p) => p[0]), uMin = Math.min(...us) - 12, uMax = Math.max(...us) + 10;
+  // --- vegetación de ribera en la ronda: árboles nativos lejos del deck, y fuera del cono de la cámara del paso (que mira
+  // hacia +v por encima de la plaza): ahí, matas y palmas bajas, para que el deck y el mirador se lean
+  const us = [...ruta, ...md].map((p) => p[0]), uMin = Math.min(...us) - 12, uMax = Math.max(...us) + 10;
   const ribera = sembrar(banda(-27, -9.5), 90, 6.5, 29).filter(([u, v]) => distLinea([u, v], ruta) > 9 && !dentro([u, v], D.plaza) && Math.abs(u) > 16 && (u < uMin || u > uMax));
   // con los tres árboles del prado de la plaza en la misma malla
   verde.add(arboles([[cu - 16, cv - 12], [cu, cv - 13], [cu + 16, cv - 11], ...ribera].map(L), { alto: 9.5, semilla: 57, especie: 'mixto' }));
   verde.add(palmas(sembrar(banda(-24, -12), 14, 13, 31).filter(([u, v]) => distLinea([u, v], ruta) > 6.5 && Math.abs(u) > 16 && !dentro([u, v], md)).map(L), { alto: 9, semilla: 58 }));
   verde.add(...matasPorTipo(racimos(bandaU(uMin, uMax, -27, -8.5), 36, 4.6, 33, (p) => !cerca(p, 2.4) && !dentro(p, D.plaza), ['heliconia', 'helecho', 'cordyline', 'helecho']), { heliconia: 1.5, helecho: 0.9, cordyline: 1.0 }, 70));
 
-  raiz.userData.partes = { zonaA, plaza, deck, muelle, verde, letras: letrasG };
+  raiz.userData.partes = { zonaA, plaza, deck, verde, letras: letrasG };
   raiz.updateMatrixWorld(true);
   const aModelo = (u, v) => { const p = new THREE.Vector3(u, 0, v).applyMatrix4(raiz.matrixWorld); return [p.x, -p.z]; };
   raiz.userData.aModelo = aModelo;
-  const usC = [...D.plaza, ...ruta, ...md, ...mm].map((p) => p[0]), vsC = [...D.plaza, ...ruta, ...md, ...mm].map((p) => p[1]);
+  const usC = [...D.plaza, ...ruta, ...md].map((p) => p[0]), vsC = [...D.plaza, ...ruta, ...md].map((p) => p[1]);
   raiz.userData.contorno = [[Math.min(...usC) - 6, Math.min(...vsC) - 6], [Math.max(...usC) + 6, Math.min(...vsC) - 6], [Math.max(...usC) + 6, Math.max(...vsC) + 6], [Math.min(...usC) - 6, Math.max(...vsC) + 6]].map(([u, v]) => aModelo(u, v));
   raiz.userData.contornoA = D.zonaA.map(([u, v]) => aModelo(u, v));
   raiz.userData.zonaA = aModelo(14, vOrilla(14) - 16); raiz.userData.zonaB = aModelo(cu, cv - 21);
-  raiz.userData.mirador = aModelo(mu, mv); raiz.userData.muelle = aModelo(au, av);
+  raiz.userData.mirador = aModelo(mu, mv);
   return raiz;
 }

@@ -397,7 +397,7 @@ export function rellenoNuevo({ predio, celdas, futuras = [], lixiviados = [], ec
     const L = local(px, py, ang);
     personas.obras.push([...L(-2.5, -4.3), ang - Math.PI / 2, { camisa: '#2b4a7a', pantalon: '#1f2329' }]);
     // el letrero, de frente a quien llega por la entrada (al lado derecho, antes de la talanquera)
-    const cartel = letrero([['RELLENO SANITARIO', 1], ['Kilómetro Cinco · Yondó', 0.8], ['ECA · compostaje · celdas', 0.6]], { w: 5.5, h: 2 });
+    const cartel = letrero([['RELLENO SANITARIO', 1], ['Kilómetro Cinco · Yondó', 0.8], ['reciclaje · compostaje · celdas', 0.6]], { w: 5.5, h: 2 });
     const [lx, ly] = L(-25, 7); cartel.position.copy(V(lx, ly)); cartel.rotation.y = ang + Math.PI; obras.add(cartel);
     obras.add(g);
   }

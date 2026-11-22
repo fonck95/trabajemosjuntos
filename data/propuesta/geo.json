@@ -2,8 +2,8 @@
  "_nota": "Sitios y trazados de la propuesta 2028–2031 en metros del modelo (x al oriente, y al norte; origen 7,0065 N, −73,9115 O). Levantamiento propio con OpenStreetMap, las huellas de edificaciones del repositorio e imagen satelital de referencia (Esri World Imagery 2020 y sep-2025, solo para medir; no se publica). Son prediseños: faltan topografía, estudio de títulos y estudios hidráulicos. Corte: 28-oct-2026.",
  "pines": {
   "vivienda": [
-   -575.8,
-   -327.0
+   -1140.0,
+   5.0
   ],
   "urbanismo": [
    -52.4,
@@ -56,932 +56,815 @@
  "vivienda": {
   "sitios": [
    {
-    "id": "lote_jdo",
-    "nombre": "Lote 1 · predio José Domingo Oliveros (1,71 ha)",
+    "id": "lote_barrio",
+    "nombre": "Barrio nuevo · lote indicativo de 5 ha (ubicación por definir)",
     "rol": "lote",
-    "x": -575.8,
-    "y": -327.0,
+    "x": -1140.0,
+    "y": 5.0,
     "poligono": [
      [
-      -603.0,
-      -256.0
-     ],
-     [
-      -561.0,
-      -256.0
-     ],
-     [
-      -531.0,
-      -273.0
-     ],
-     [
-      -499.0,
-      -297.0
-     ],
-     [
-      -496.0,
-      -339.0
-     ],
-     [
-      -502.0,
-      -380.0
-     ],
-     [
-      -537.0,
-      -395.0
-     ],
-     [
-      -585.0,
-      -398.0
-     ],
-     [
-      -632.0,
-      -383.0
-     ],
-     [
-      -659.0,
-      -365.0
-     ],
-     [
-      -653.0,
-      -339.0
-     ],
-     [
-      -620.0,
-      -297.0
-     ],
-     [
-      -608.0,
-      -273.0
-     ]
-    ],
-    "area_m2": 17094
-   },
-   {
-    "id": "lote_oeste",
-    "nombre": "Lote 2 · lote occidental (2,54 ha)",
-    "rol": "lote",
-    "x": -1116.0,
-    "y": 78.2,
-    "poligono": [
-     [
-      -1198.0,
-      2.0
-     ],
-     [
-      -1120.0,
-      4.0
-     ],
-     [
-      -1062.0,
-      8.0
+      -1248.0,
+      -112.0
      ],
      [
       -1032.0,
-      20.0
+      -112.0
      ],
      [
-      -1028.0,
-      80.0
+      -1032.0,
+      122.0
      ],
      [
-      -1036.0,
-      150.0
-     ],
-     [
-      -1110.0,
-      158.0
-     ],
-     [
-      -1170.0,
-      160.0
-     ],
-     [
-      -1200.0,
-      140.0
-     ],
-     [
-      -1204.0,
-      60.0
+      -1248.0,
+      122.0
      ]
     ],
-    "area_m2": 25368
-   },
-   {
-    "id": "mz_jdo_1",
-    "nombre": "Lote 1 · manzana 1",
-    "rol": "manzana",
-    "x": -600.5,
-    "y": -290.6,
-    "poligono": [
-     [
-      -580.0,
-      -263.0
-     ],
-     [
-      -580.0,
-      -321.0
-     ],
-     [
-      -630.0,
-      -321.0
-     ],
-     [
-      -613.7,
-      -300.1
-     ],
-     [
-      -601.5,
-      -275.6
-     ],
-     [
-      -597.8,
-      -263.0
-     ]
-    ],
-    "area_m2": 1796
-   },
-   {
-    "id": "mz_jdo_2",
-    "nombre": "Lote 1 · manzana 2",
-    "rol": "manzana",
-    "x": -541.3,
-    "y": -291.3,
-    "poligono": [
-     [
-      -562.8,
-      -263.0
-     ],
-     [
-      -534.8,
-      -278.9
-     ],
-     [
-      -505.8,
-      -300.7
-     ],
-     [
-      -504.3,
-      -321.0
-     ],
-     [
-      -570.0,
-      -321.0
-     ],
-     [
-      -570.0,
-      -263.0
-     ]
-    ],
-    "area_m2": 2740
-   },
-   {
-    "id": "mz_jdo_3",
-    "nombre": "Lote 1 · manzana 3",
-    "rol": "manzana",
-    "x": -615.7,
-    "y": -361.2,
-    "poligono": [
-     [
-      -584.1,
-      -390.9
-     ],
-     [
-      -628.9,
-      -376.6
-     ],
-     [
-      -651.1,
-      -361.9
-     ],
-     [
-      -646.5,
-      -342.1
-     ],
-     [
-      -639.4,
-      -333.0
-     ],
-     [
-      -580.0,
-      -333.0
-     ],
-     [
-      -580.0,
-      -390.7
-     ]
-    ],
-    "area_m2": 3198
-   },
-   {
-    "id": "mz_jdo_4",
-    "nombre": "Lote 1 · manzana 4",
-    "rol": "manzana",
-    "x": -532.2,
-    "y": -359.7,
-    "poligono": [
-     [
-      -503.0,
-      -338.7
-     ],
-     [
-      -508.4,
-      -375.1
-     ],
-     [
-      -538.6,
-      -388.1
-     ],
-     [
-      -570.0,
-      -390.0
-     ],
-     [
-      -570.0,
-      -333.0
-     ],
-     [
-      -503.4,
-      -333.0
-     ]
-    ],
-    "area_m2": 3356
+    "area_m2": 50544
    },
    {
     "id": "bloque_1",
-    "nombre": "Bloque 1 · 5 pisos · 20 VIP",
+    "nombre": "Bloque 1 · 3 pisos · 12 apartamentos",
     "rol": "bloque",
-    "x": -557.0,
-    "y": -289.0,
+    "x": -1200.0,
+    "y": 100.0,
     "poligono": [
      [
-      -546.0,
-      -294.0
+      -1210.5,
+      94.0
      ],
      [
-      -546.0,
-      -284.0
+      -1189.5,
+      94.0
      ],
      [
-      -568.0,
-      -284.0
+      -1189.5,
+      106.0
      ],
      [
-      -568.0,
-      -294.0
+      -1210.5,
+      106.0
      ]
     ],
-    "area_m2": 220,
-    "pisos": 5,
-    "unidades": 20
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
    },
    {
     "id": "bloque_2",
-    "nombre": "Bloque 2 · 5 pisos · 20 VIP",
+    "nombre": "Bloque 2 · 3 pisos · 12 apartamentos",
     "rol": "bloque",
-    "x": -557.0,
-    "y": -308.0,
+    "x": -1170.0,
+    "y": 100.0,
     "poligono": [
      [
-      -546.0,
-      -313.0
+      -1180.5,
+      94.0
      ],
      [
-      -546.0,
-      -303.0
+      -1159.5,
+      94.0
      ],
      [
-      -568.0,
-      -303.0
+      -1159.5,
+      106.0
      ],
      [
-      -568.0,
-      -313.0
+      -1180.5,
+      106.0
      ]
     ],
-    "area_m2": 220,
-    "pisos": 5,
-    "unidades": 20
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
    },
    {
     "id": "bloque_3",
-    "nombre": "Bloque 3 · 5 pisos · 20 VIP",
+    "nombre": "Bloque 3 · 3 pisos · 12 apartamentos",
     "rol": "bloque",
-    "x": -529.0,
-    "y": -308.0,
+    "x": -1140.0,
+    "y": 100.0,
     "poligono": [
      [
-      -518.0,
-      -313.0
+      -1150.5,
+      94.0
      ],
      [
-      -518.0,
-      -303.0
+      -1129.5,
+      94.0
      ],
      [
-      -540.0,
-      -303.0
+      -1129.5,
+      106.0
      ],
      [
-      -540.0,
-      -313.0
+      -1150.5,
+      106.0
      ]
     ],
-    "area_m2": 220,
-    "pisos": 5,
-    "unidades": 20
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
    },
    {
     "id": "bloque_4",
-    "nombre": "Bloque 4 · 5 pisos · 20 VIP",
+    "nombre": "Bloque 4 · 3 pisos · 12 apartamentos",
     "rol": "bloque",
-    "x": -610.1,
-    "y": -340.0,
+    "x": -1110.0,
+    "y": 100.0,
     "poligono": [
      [
-      -599.1,
-      -345.0
+      -1120.5,
+      94.0
      ],
      [
-      -599.1,
-      -335.0
+      -1099.5,
+      94.0
      ],
      [
-      -621.1,
-      -335.0
+      -1099.5,
+      106.0
      ],
      [
-      -621.1,
-      -345.0
+      -1120.5,
+      106.0
      ]
     ],
-    "area_m2": 220,
-    "pisos": 5,
-    "unidades": 20
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
    },
    {
     "id": "bloque_5",
-    "nombre": "Bloque 5 · 5 pisos · 20 VIP",
+    "nombre": "Bloque 5 · 3 pisos · 12 apartamentos",
     "rol": "bloque",
-    "x": -610.1,
-    "y": -359.0,
+    "x": -1080.0,
+    "y": 100.0,
     "poligono": [
      [
-      -599.1,
-      -364.0
+      -1090.5,
+      94.0
      ],
      [
-      -599.1,
-      -354.0
+      -1069.5,
+      94.0
      ],
      [
-      -621.1,
-      -354.0
+      -1069.5,
+      106.0
      ],
      [
-      -621.1,
-      -364.0
+      -1090.5,
+      106.0
      ]
     ],
-    "area_m2": 220,
-    "pisos": 5,
-    "unidades": 20
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
    },
    {
     "id": "bloque_6",
-    "nombre": "Bloque 6 · 5 pisos · 20 VIP",
+    "nombre": "Bloque 6 · 3 pisos · 12 apartamentos",
     "rol": "bloque",
-    "x": -557.0,
-    "y": -340.0,
+    "x": -1200.0,
+    "y": -90.0,
     "poligono": [
      [
-      -546.0,
-      -345.0
+      -1210.5,
+      -96.0
      ],
      [
-      -546.0,
-      -335.0
+      -1189.5,
+      -96.0
      ],
      [
-      -568.0,
-      -335.0
+      -1189.5,
+      -84.0
      ],
      [
-      -568.0,
-      -345.0
+      -1210.5,
+      -84.0
      ]
     ],
-    "area_m2": 220,
-    "pisos": 5,
-    "unidades": 20
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
    },
    {
     "id": "bloque_7",
-    "nombre": "Bloque 7 · 5 pisos · 20 VIP",
+    "nombre": "Bloque 7 · 3 pisos · 12 apartamentos",
     "rol": "bloque",
-    "x": -529.0,
-    "y": -340.0,
+    "x": -1170.0,
+    "y": -90.0,
     "poligono": [
      [
-      -518.0,
-      -345.0
+      -1180.5,
+      -96.0
      ],
      [
-      -518.0,
-      -335.0
+      -1159.5,
+      -96.0
      ],
      [
-      -540.0,
-      -335.0
+      -1159.5,
+      -84.0
      ],
      [
-      -540.0,
-      -345.0
+      -1180.5,
+      -84.0
      ]
     ],
-    "area_m2": 220,
-    "pisos": 5,
-    "unidades": 20
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
    },
    {
     "id": "bloque_8",
-    "nombre": "Bloque 8 · 5 pisos · 20 VIP",
+    "nombre": "Bloque 8 · 3 pisos · 12 apartamentos",
     "rol": "bloque",
-    "x": -557.0,
-    "y": -359.0,
+    "x": -1140.0,
+    "y": -90.0,
     "poligono": [
      [
-      -546.0,
-      -364.0
+      -1150.5,
+      -96.0
      ],
      [
-      -546.0,
-      -354.0
+      -1129.5,
+      -96.0
      ],
      [
-      -568.0,
-      -354.0
+      -1129.5,
+      -84.0
      ],
      [
-      -568.0,
-      -364.0
+      -1150.5,
+      -84.0
      ]
     ],
-    "area_m2": 220,
-    "pisos": 5,
-    "unidades": 20
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
    },
    {
     "id": "bloque_9",
-    "nombre": "Bloque 9 · 5 pisos · 20 VIP",
+    "nombre": "Bloque 9 · 3 pisos · 12 apartamentos",
     "rol": "bloque",
-    "x": -529.0,
-    "y": -359.0,
+    "x": -1110.0,
+    "y": -90.0,
     "poligono": [
      [
-      -518.0,
-      -364.0
+      -1120.5,
+      -96.0
      ],
      [
-      -518.0,
-      -354.0
+      -1099.5,
+      -96.0
      ],
      [
-      -540.0,
-      -354.0
+      -1099.5,
+      -84.0
      ],
      [
-      -540.0,
-      -364.0
+      -1120.5,
+      -84.0
      ]
     ],
-    "area_m2": 220,
-    "pisos": 5,
-    "unidades": 20
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
    },
    {
     "id": "bloque_10",
-    "nombre": "Bloque 10 · 5 pisos · 20 VIP",
+    "nombre": "Bloque 10 · 3 pisos · 12 apartamentos",
     "rol": "bloque",
-    "x": -557.0,
-    "y": -378.0,
+    "x": -1080.0,
+    "y": -90.0,
     "poligono": [
      [
-      -546.0,
-      -383.0
+      -1090.5,
+      -96.0
      ],
      [
-      -546.0,
-      -373.0
+      -1069.5,
+      -96.0
      ],
      [
-      -568.0,
-      -373.0
+      -1069.5,
+      -84.0
      ],
      [
-      -568.0,
-      -383.0
+      -1090.5,
+      -84.0
      ]
     ],
-    "area_m2": 220,
-    "pisos": 5,
-    "unidades": 20
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
    },
    {
-    "id": "mz_oeste_1",
-    "nombre": "Lote 2 · manzana 1 (cesión: parque y salón comunal)",
-    "rol": "cesion",
-    "x": -1156.6,
-    "y": 139.3,
+    "id": "bloque_11",
+    "nombre": "Bloque 11 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1226.0,
+    "y": -55.0,
     "poligono": [
      [
-      -1112.0,
-      152.0
+      -1232.0,
+      -65.5
      ],
      [
-      -1112.0,
-      126.0
+      -1220.0,
+      -65.5
+     ],
+     [
+      -1220.0,
+      -44.5
+     ],
+     [
+      -1232.0,
+      -44.5
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_12",
+    "nombre": "Bloque 12 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1226.0,
+    "y": -25.0,
+    "poligono": [
+     [
+      -1232.0,
+      -35.5
+     ],
+     [
+      -1220.0,
+      -35.5
+     ],
+     [
+      -1220.0,
+      -14.5
+     ],
+     [
+      -1232.0,
+      -14.5
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_13",
+    "nombre": "Bloque 13 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1226.0,
+    "y": 5.0,
+    "poligono": [
+     [
+      -1232.0,
+      -5.5
+     ],
+     [
+      -1220.0,
+      -5.5
+     ],
+     [
+      -1220.0,
+      15.5
+     ],
+     [
+      -1232.0,
+      15.5
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_14",
+    "nombre": "Bloque 14 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1226.0,
+    "y": 35.0,
+    "poligono": [
+     [
+      -1232.0,
+      24.5
+     ],
+     [
+      -1220.0,
+      24.5
+     ],
+     [
+      -1220.0,
+      45.5
+     ],
+     [
+      -1232.0,
+      45.5
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_15",
+    "nombre": "Bloque 15 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1226.0,
+    "y": 65.0,
+    "poligono": [
+     [
+      -1232.0,
+      54.5
+     ],
+     [
+      -1220.0,
+      54.5
+     ],
+     [
+      -1220.0,
+      75.5
+     ],
+     [
+      -1232.0,
+      75.5
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_16",
+    "nombre": "Bloque 16 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1054.0,
+    "y": -55.0,
+    "poligono": [
+     [
+      -1060.0,
+      -65.5
+     ],
+     [
+      -1048.0,
+      -65.5
+     ],
+     [
+      -1048.0,
+      -44.5
+     ],
+     [
+      -1060.0,
+      -44.5
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_17",
+    "nombre": "Bloque 17 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1054.0,
+    "y": -25.0,
+    "poligono": [
+     [
+      -1060.0,
+      -35.5
+     ],
+     [
+      -1048.0,
+      -35.5
+     ],
+     [
+      -1048.0,
+      -14.5
+     ],
+     [
+      -1060.0,
+      -14.5
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_18",
+    "nombre": "Bloque 18 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1054.0,
+    "y": 35.0,
+    "poligono": [
+     [
+      -1060.0,
+      24.5
+     ],
+     [
+      -1048.0,
+      24.5
+     ],
+     [
+      -1048.0,
+      45.5
+     ],
+     [
+      -1060.0,
+      45.5
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_19",
+    "nombre": "Bloque 19 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1054.0,
+    "y": 65.0,
+    "poligono": [
+     [
+      -1060.0,
+      54.5
+     ],
+     [
+      -1048.0,
+      54.5
+     ],
+     [
+      -1048.0,
+      75.5
+     ],
+     [
+      -1060.0,
+      75.5
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_20",
+    "nombre": "Bloque 20 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1176.0,
+    "y": 59.0,
+    "poligono": [
+     [
+      -1186.5,
+      53.0
+     ],
+     [
+      -1165.5,
+      53.0
+     ],
+     [
+      -1165.5,
+      65.0
+     ],
+     [
+      -1186.5,
+      65.0
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_21",
+    "nombre": "Bloque 21 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1140.0,
+    "y": 59.0,
+    "poligono": [
+     [
+      -1150.5,
+      53.0
+     ],
+     [
+      -1129.5,
+      53.0
+     ],
+     [
+      -1129.5,
+      65.0
+     ],
+     [
+      -1150.5,
+      65.0
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_22",
+    "nombre": "Bloque 22 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1104.0,
+    "y": 59.0,
+    "poligono": [
+     [
+      -1114.5,
+      53.0
+     ],
+     [
+      -1093.5,
+      53.0
+     ],
+     [
+      -1093.5,
+      65.0
+     ],
+     [
+      -1114.5,
+      65.0
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_23",
+    "nombre": "Bloque 23 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1176.0,
+    "y": -49.0,
+    "poligono": [
+     [
+      -1186.5,
+      -55.0
+     ],
+     [
+      -1165.5,
+      -55.0
+     ],
+     [
+      -1165.5,
+      -43.0
+     ],
+     [
+      -1186.5,
+      -43.0
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_24",
+    "nombre": "Bloque 24 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1140.0,
+    "y": -49.0,
+    "poligono": [
+     [
+      -1150.5,
+      -55.0
+     ],
+     [
+      -1129.5,
+      -55.0
+     ],
+     [
+      -1129.5,
+      -43.0
+     ],
+     [
+      -1150.5,
+      -43.0
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "bloque_25",
+    "nombre": "Bloque 25 · 3 pisos · 12 apartamentos",
+    "rol": "bloque",
+    "x": -1104.0,
+    "y": -49.0,
+    "poligono": [
+     [
+      -1114.5,
+      -55.0
+     ],
+     [
+      -1093.5,
+      -55.0
+     ],
+     [
+      -1093.5,
+      -43.0
+     ],
+     [
+      -1114.5,
+      -43.0
+     ]
+    ],
+    "area_m2": 252,
+    "pisos": 3,
+    "unidades": 12
+   },
+   {
+    "id": "parque_central",
+    "nombre": "Parque central: juegos infantiles, cancha múltiple, kiosco, gimnasio al aire libre y senderos",
+    "rol": "parque",
+    "x": -1140.0,
+    "y": 5.0,
+    "poligono": [
+     [
+      -1192.0,
+      -37.0
+     ],
+     [
+      -1088.0,
+      -37.0
+     ],
+     [
+      -1088.0,
+      47.0
      ],
      [
       -1192.0,
-      126.0
-     ],
-     [
-      -1192.0,
-      140.5
-     ],
-     [
-      -1174.8,
-      152.0
+      47.0
      ]
     ],
-    "area_m2": 1981
+    "area_m2": 8736
    },
    {
-    "id": "mz_oeste_2",
-    "nombre": "Lote 2 · manzana 2 (12 lotes de 6 × 12 m: un lado inclinado)",
-    "rol": "manzana_casas",
-    "x": -1074.5,
-    "y": 140.5,
-    "poligono": [
-     [
-      -1102.0,
-      126.0
-     ],
-     [
-      -1102.0,
-      152.0
-     ],
-     [
-      -1091.7,
-      152.0
-     ],
-     [
-      -1039.6,
-      146.4
-     ],
-     [
-      -1037.3,
-      126.0
-     ]
-    ],
-    "area_m2": 1499,
-    "lotes": 12
-   },
-   {
-    "id": "mz_oeste_3",
-    "nombre": "Lote 2 · manzana 3 (26 lotes de 6 × 12 m)",
-    "rol": "manzana_casas",
-    "x": -1152.0,
-    "y": 103.0,
-    "poligono": [
-     [
-      -1192.0,
-      90.0
-     ],
-     [
-      -1192.0,
-      116.0
-     ],
-     [
-      -1112.0,
-      116.0
-     ],
-     [
-      -1112.0,
-      90.0
-     ]
-    ],
-    "area_m2": 2080,
-    "lotes": 26
-   },
-   {
-    "id": "mz_oeste_4",
-    "nombre": "Lote 2 · manzana 4 (22 lotes de 6 × 12 m)",
-    "rol": "manzana_casas",
-    "x": -1062.4,
-    "y": 105.4,
-    "poligono": [
-     [
-      -1036.0,
-      90.0
-     ],
-     [
-      -1102.0,
-      90.0
-     ],
-     [
-      -1102.0,
-      116.0
-     ],
-     [
-      -1036.1,
-      116.0
-     ],
-     [
-      -1036.0,
-      114.8
-     ]
-    ],
-    "area_m2": 1716,
-    "lotes": 22
-   },
-   {
-    "id": "mz_oeste_5",
-    "nombre": "Lote 2 · manzana 5 (26 lotes de 6 × 12 m)",
-    "rol": "manzana_casas",
-    "x": -1152.0,
-    "y": 67.0,
-    "poligono": [
-     [
-      -1192.0,
-      54.0
-     ],
-     [
-      -1192.0,
-      80.0
-     ],
-     [
-      -1112.0,
-      80.0
-     ],
-     [
-      -1112.0,
-      54.0
-     ]
-    ],
-    "area_m2": 2080,
-    "lotes": 26
-   },
-   {
-    "id": "mz_oeste_6",
-    "nombre": "Lote 2 · manzana 6 (22 lotes de 6 × 12 m)",
-    "rol": "manzana_casas",
-    "x": -1069.0,
-    "y": 67.0,
-    "poligono": [
-     [
-      -1102.0,
-      54.0
-     ],
-     [
-      -1102.0,
-      80.0
-     ],
-     [
-      -1036.0,
-      80.0
-     ],
-     [
-      -1036.0,
-      54.0
-     ]
-    ],
-    "area_m2": 1716,
-    "lotes": 22
-   },
-   {
-    "id": "mz_oeste_7",
-    "nombre": "Lote 2 · manzana 7 (20 lotes de 6 × 12 m: esquina cortada)",
-    "rol": "manzana_casas",
-    "x": -1064.8,
-    "y": 29.3,
-    "poligono": [
-     [
-      -1102.0,
-      18.0
-     ],
-     [
-      -1102.0,
-      44.0
-     ],
-     [
-      -1036.0,
-      44.0
-     ],
-     [
-      -1036.0,
-      22.7
-     ],
-     [
-      -1047.8,
-      18.0
-     ]
-    ],
-    "area_m2": 1688,
-    "lotes": 20
-   },
-   {
-    "id": "mz_oeste_8",
-    "nombre": "Lote 2 · manzana 8 (cesión: parque y salón comunal)",
-    "rol": "cesion",
-    "x": -1152.0,
-    "y": 31.0,
-    "poligono": [
-     [
-      -1192.0,
-      18.0
-     ],
-     [
-      -1192.0,
-      44.0
-     ],
-     [
-      -1112.0,
-      44.0
-     ],
-     [
-      -1112.0,
-      18.0
-     ]
-    ],
-    "area_m2": 2080
+    "id": "entrada_barrio",
+    "nombre": "Entrada al barrio con el letrero de bienvenida",
+    "rol": "entrada",
+    "x": -1040.0,
+    "y": -7.0
    }
   ],
   "trazados": [
    {
-    "id": "via_jdo_1",
-    "nombre": "Vía interna E–O del Lote 1 (desde la vía al hospital, Carrera 58)",
+    "id": "via_anillo",
+    "nombre": "Vía interna en anillo del barrio nuevo, con parqueaderos en bahía",
     "tipo": "via",
     "puntos": [
      [
-      -497.0,
-      -327.0
+      -1202.0,
+      -66.0
      ],
      [
-      -648.0,
-      -327.0
-     ]
-    ],
-    "longitud_m": 151,
-    "ancho_m": 12
-   },
-   {
-    "id": "via_jdo_2",
-    "nombre": "Vía interna N–S del Lote 1",
-    "tipo": "via",
-    "puntos": [
-     [
-      -575.0,
-      -259.0
+      -1078.0,
+      -66.0
      ],
      [
-      -575.0,
-      -394.0
+      -1078.0,
+      76.0
+     ],
+     [
+      -1202.0,
+      76.0
+     ],
+     [
+      -1202.0,
+      -66.0
      ]
     ],
-    "longitud_m": 135,
+    "longitud_m": 532,
     "ancho_m": 10
    },
    {
-    "id": "via_jdo_3",
-    "nombre": "Circuito perimetral del Lote 1 (peatonal y servicio)",
+    "id": "via_acceso",
+    "nombre": "Vía de acceso al barrio nuevo desde la calle del barrio del oeste",
     "tipo": "via",
     "puntos": [
      [
-      -600.0,
-      -262.0
+      -1078.0,
+      5.0
      ],
      [
-      -530.0,
-      -279.0
+      -1032.0,
+      5.0
      ],
      [
-      -503.0,
-      -300.0
-     ],
-     [
-      -500.0,
-      -375.0
-     ],
-     [
-      -540.0,
-      -390.0
-     ],
-     [
-      -630.0,
-      -379.0
-     ],
-     [
-      -652.0,
-      -360.0
+      -955.0,
+      1.0
      ]
     ],
-    "longitud_m": 344,
-    "ancho_m": 6
-   },
-   {
-    "id": "via_oeste_1",
-    "nombre": "Vía interna 1 del Lote 2",
-    "tipo": "via",
-    "puntos": [
-     [
-      -1107,
-      6
-     ],
-     [
-      -1107,
-      158
-     ]
-    ],
-    "longitud_m": 152,
+    "longitud_m": 123,
     "ancho_m": 10
-   },
-   {
-    "id": "via_oeste_2",
-    "nombre": "Vía interna 2 del Lote 2",
-    "tipo": "via",
-    "puntos": [
-     [
-      -1200,
-      121
-     ],
-     [
-      -1030,
-      121
-     ]
-    ],
-    "longitud_m": 170,
-    "ancho_m": 10
-   },
-   {
-    "id": "via_oeste_3",
-    "nombre": "Vía interna 3 del Lote 2",
-    "tipo": "via",
-    "puntos": [
-     [
-      -1200,
-      85
-     ],
-     [
-      -1030,
-      85
-     ]
-    ],
-    "longitud_m": 170,
-    "ancho_m": 10
-   },
-   {
-    "id": "via_oeste_4",
-    "nombre": "Vía interna 4 del Lote 2",
-    "tipo": "via",
-    "puntos": [
-     [
-      -1200,
-      49
-     ],
-     [
-      -1030,
-      49
-     ]
-    ],
-    "longitud_m": 170,
-    "ancho_m": 10
-   },
-   {
-    "id": "via_oeste_5",
-    "nombre": "Conexión del Lote 2 al barrio occidental (camino existente)",
-    "tipo": "via",
-    "puntos": [
-     [
-      -1062,
-      10
-     ],
-     [
-      -1010,
-      45
-     ],
-     [
-      -960,
-      85
-     ],
-     [
-      -935,
-      105
-     ]
-    ],
-    "longitud_m": 159,
-    "ancho_m": 12
    }
   ]
  },
@@ -1426,7 +1309,7 @@
    },
    {
     "id": "explanada_cic",
-    "nombre": "Explanada al sur del CIC",
+    "nombre": "Explanada al sur del Centro de Integración Ciudadana",
     "rol": "instalaciones",
     "x": -280.2,
     "y": 90.2,
@@ -1452,7 +1335,7 @@
    },
    {
     "id": "humedal_sur",
-    "nombre": "Laguna de retención y jardín de lluvia (H2)",
+    "nombre": "Laguna de retención y jardín de lluvia",
     "rol": "humedal",
     "x": -209.2,
     "y": 80.9,
@@ -1479,7 +1362,7 @@
    },
    {
     "id": "bosque_sur",
-    "nombre": "Bosque inundable sur (H3)",
+    "nombre": "Bosque inundable sur",
     "rol": "bosque",
     "x": -200.9,
     "y": -64.0,
@@ -1514,7 +1397,7 @@
    },
    {
     "id": "humedal_norte",
-    "nombre": "Humedal norte (H1)",
+    "nombre": "Humedal norte",
     "rol": "humedal",
     "x": -217.0,
     "y": 720.0,
@@ -1541,7 +1424,7 @@
    },
    {
     "id": "pp1",
-    "nombre": "PP1 · culvert de la vía a Barrancabermeja",
+    "nombre": "Puente peatonal 1 · alcantarilla de la vía a Barrancabermeja",
     "rol": "puente",
     "x": -180.9,
     "y": -31.7,
@@ -1549,7 +1432,7 @@
    },
    {
     "id": "pp2",
-    "nombre": "PP2 · prolongación de la Calle 51 (estadio–CIC)",
+    "nombre": "Puente peatonal 2 · prolongación de la Calle 51 (estadio–Centro de Integración Ciudadana)",
     "rol": "puente",
     "x": -188.5,
     "y": 168.0,
@@ -1557,7 +1440,7 @@
    },
    {
     "id": "pp3",
-    "nombre": "PP3 · prolongación de la Calle 54",
+    "nombre": "Puente peatonal 3 · prolongación de la Calle 54",
     "rol": "puente",
     "x": -189.8,
     "y": 280.0,
@@ -1565,7 +1448,7 @@
    },
    {
     "id": "pp4",
-    "nombre": "PP4 · prolongación de la Calle 55",
+    "nombre": "Puente peatonal 4 · prolongación de la Calle 55",
     "rol": "puente",
     "x": -200.7,
     "y": 394.0,
@@ -1782,32 +1665,6 @@
     "area_m2": 100
    },
    {
-    "id": "muelle_flotante",
-    "nombre": "Muelle flotante (30 × 5 m)",
-    "rol": "muelle",
-    "x": 1465.6,
-    "y": 7997.4,
-    "poligono": [
-     [
-      1475.2,
-      7985.6
-     ],
-     [
-      1452.6,
-      8005.4
-     ],
-     [
-      1455.9,
-      8009.2
-     ],
-     [
-      1478.5,
-      7989.4
-     ]
-    ],
-    "area_m2": 150
-   },
-   {
     "id": "letras_yondo",
     "nombre": "Letras «YONDÓ»",
     "rol": "hito",
@@ -1893,7 +1750,7 @@
    },
    {
     "id": "conector_cic",
-    "nombre": "Conector estadio – PP2 – CIC",
+    "nombre": "Conector estadio – puente peatonal 2 – Centro de Integración Ciudadana",
     "tipo": "sendero",
     "puntos": [
      [
@@ -2117,23 +1974,6 @@
     ],
     "longitud_m": 82,
     "ancho_m": 3
-   },
-   {
-    "id": "pasarela_muelle",
-    "nombre": "Pasarela articulada al muelle",
-    "tipo": "pasarela",
-    "puntos": [
-     [
-      1457.1,
-      7980.2
-     ],
-     [
-      1466.2,
-      7993.5
-     ]
-    ],
-    "longitud_m": 16,
-    "ancho_m": 2
    },
    {
     "id": "acceso_plaza",
@@ -2522,7 +2362,7 @@
    },
    {
     "id": "tramo_t6",
-    "nombre": "Parque lineal, tramo T6 Petrobras – culverts",
+    "nombre": "Parque lineal, tramo T6 Petrobras – alcantarillas",
     "tipo": "tramo",
     "puntos": [
      [
@@ -3245,50 +3085,50 @@
    {
     "id": "san_miguel_del_tigre",
     "nombre": "San Miguel del Tigre",
-    "rol": "puesto",
+    "rol": "microterritorio",
     "x": -3849.4,
     "y": 8964.4,
     "lat": 7.0870282,
     "lon": -73.94634,
-    "uso": "puesto nuevo de ≈320 m² (corregimiento)",
+    "uso": "equipo básico de salud · telemedicina en casa",
     "distancia_km": 9.8,
     "fuente": "OpenStreetMap (Nominatim), oct-2026"
    },
    {
     "id": "san_luis_beltran",
     "nombre": "San Luis Beltrán",
-    "rol": "puesto",
+    "rol": "microterritorio",
     "x": -4767.7,
     "y": -5598.3,
     "lat": 6.95621,
     "lon": -73.9546513,
-    "uso": "sede satélite",
+    "uso": "equipo básico de salud · telemedicina en casa",
     "distancia_km": 7.4,
     "fuente": "OpenStreetMap (Nominatim), oct-2026"
    },
    {
     "id": "san_francisco",
     "nombre": "San Francisco",
-    "rol": "puesto",
+    "rol": "microterritorio",
     "x": -33070.4,
     "y": -437.3,
     "lat": 7.0025718,
     "lon": -74.2108109,
-    "uso": "sede satélite",
+    "uso": "equipo básico de salud · telemedicina en casa",
     "distancia_km": 33.1,
     "fuente": "OpenStreetMap (Nominatim), oct-2026"
    },
    {
     "id": "la_soledad",
     "nombre": "La Soledad",
-    "rol": "puesto",
+    "rol": "microterritorio",
     "x": -26719.7,
     "y": -7031.8,
     "lat": 6.943333,
     "lon": -74.153333,
-    "uso": "sede satélite (posición de su escuela rural)",
+    "uso": "equipo básico de salud · telemedicina en casa",
     "distancia_km": 27.6,
-    "fuente": "OpenStreetMap (Nominatim), oct-2026"
+    "fuente": "OpenStreetMap (Nominatim), oct-2026; posición de su escuela rural"
    }
   ],
   "trazados": []
