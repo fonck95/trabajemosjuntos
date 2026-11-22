@@ -93,9 +93,12 @@ export function leerFecha(texto, { min = '', max = '' } = {}) {
  */
 export function enmascararFecha(texto) {
   const t = String(texto ?? '');
-  const pegado = /^\s*(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\s*$/.exec(t);
-  if (pegado) return `${DOS(pegado[3])}/${DOS(pegado[2])}/${pegado[1]}`;
-  // El año primero, a medio pegar o escribir («1985/03»): no se le ponen barras de día y mes; se lee al salir del campo
+  const pegado = /^\s*(\d{4})[-/.](\d{1,2})[-/.](\d{2})\s*$/.exec(t);
+  if (pegado) return `${pegado[3]}/${DOS(pegado[2])}/${pegado[1]}`;
+  // Lo que todavía puede ser un año que empieza («19», «198», «2022») queda como se escribe: con barras, «2022-01-15»
+  // tecla por tecla sería 20/02/2011. Con la quinta cifra sin separador es un día y un mes («19081985» → 19/08/1985)
+  if (/^\s*(19|20)\d{0,2}\s*$/.test(t)) return t;
+  // El año primero, a medio pegar o escribir («1985/03», «1985-3-7»): no se le ponen barras; se lee al salir del campo
   if (/^\s*\d{3,}[-/.]/.test(t)) return t;
   const partes = [];
   let actual = '';
