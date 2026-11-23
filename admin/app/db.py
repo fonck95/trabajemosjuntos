@@ -177,8 +177,18 @@ def _indices() -> dict[str, list[IndexModel]]:
         # Quién dejó de autorizar (`olvidar_en_conversaciones`): solo hace falta mientras dura una herramienta que la
         # estaba leyendo (un turno nunca pasa de 10 minutos)
         "agente_olvidos": [i("ts", expireAfterSeconds=3600), i("persona_id")],
-        # La clave MCP de la presentación (app/api/pantalla.py): _id es su SHA-256; una por persona
-        "claves_mcp": [i("uid")],
+        # Las claves MCP (app/api/pantalla.py): _id es su SHA-256; una de presentación y una de datos por persona. La
+        # de datos vence (`expira`, 30 días); la de presentación no lleva la fecha y no vence
+        "claves_mcp": [i("uid"), i("expira", expireAfterSeconds=0)],
+        # Lo que un agente externo propone escribir por MCP (app/api/mcp.py): la tarjeta lleva datos de personas
+        # (`personas`, para borrarla en la supresión o un «no»); vence a las 48 h sin aprobarse y, decidida, a los
+        # 7 días
+        "mcp_propuestas": [i("expira", expireAfterSeconds=0), i([("uid", ASCENDING), ("estado", ASCENDING)]),
+                           i("clave_h"), i("personas")],
+        # Cada llamada con una clave de datos y a quiénes se entregó (tope diario de llamadas y de personas distintas
+        # por clave; ante un reclamo, a qué clave se le entregó quién): 90 días, como `lecturas`
+        "mcp_entregas": [i("ts", expireAfterSeconds=90 * 24 * 3600), i([("clave_h", ASCENDING), ("dia", ASCENDING)]),
+                         i("personas")],
     }
 
 
@@ -308,7 +318,7 @@ def soltar_turno(db: Database, nombre: str, dueño: str) -> None:
 # ───────────────────────────── Auditoría ─────────────────────────────
 
 CLAVES_AUDITORIA = frozenset({"ts", "usuario", "accion", "entidad", "entidad_id", "detalle", "ip", "uid", "rol", "campos",
-                              "completados", "reuniones"})
+                              "completados", "reuniones", "via"})
 OCULTO = "(oculto)"
 # Claves de `detalle` que llevan una cédula: quedan solo sus 3 últimos dígitos, para todos los roles
 CLAVES_CEDULA = frozenset({"cedula", "cedulas_anteriores", "cedula_en_traspaso", "cedula_correcta", "cedula_digitada",
@@ -380,7 +390,8 @@ def auditar(db: Database, quien: Any, accion: str, entidad: str | None = None, e
     """Una entrada de la auditoría.
 
     `quien` es el nombre de usuario (texto, como siempre) o un `acceso.Quien`: con él la entrada lleva además `uid`
-    (0 para el administrador) y `rol`, y su IP si no se pasa otra. `campos` y `completados` son solo nombres canónicos.
+    (0 para el administrador) y `rol`, y su IP si no se pasa otra; si la petición la hizo un agente externo con la
+    clave MCP de la persona (`Quien.via`), también `via`. `campos` y `completados` son solo nombres canónicos.
     `extra` va al nivel superior: campos no personales que los indicadores necesitan aun después de una supresión
     (`capturado_por`, `canal`, `resultado`, `estado`…). El detalle se enmascara (`enmascarar`). Toda entrada sobre una
     persona usa entidad «persona» y su id: así la supresión limpia todo su rastro.
@@ -397,6 +408,8 @@ def auditar(db: Database, quien: Any, accion: str, entidad: str | None = None, e
            "ip": ip}
     if quien is not None and not isinstance(quien, str):
         doc.update(usuario=quien.usuario, uid=quien.uid, rol=quien.rol, ip=ip if ip is not None else quien.ip)
+        if getattr(quien, "via", None):  # «mcp»: lo hizo un agente externo con la clave de la persona
+            doc["via"] = quien.via
     if campos is not None:
         doc["campos"] = list(campos)
     if completados is not None:
@@ -1176,7 +1189,8 @@ def olvidar_en_conversaciones(db: Database, ids: Iterable[int]) -> int:
     esas fichas (activas) o de las que se unieron con ellas, como en la supresión. Las unidas se buscan de una vez por
     nivel, no ficha por ficha: una importación puede traer miles de «no». Antes de borrar se anota quiénes dejaron de
     autorizar (`agente_olvidos`, una hora): un turno que las estaba leyendo todavía no las tenía anotadas y las busca
-    ahí al anotarlas (`agente.conversaciones.dejaron_de_autorizar`). Devuelve cuántas conversaciones borró."""
+    ahí al anotarlas (`agente.conversaciones.dejaron_de_autorizar`). Las propuestas por MCP cuya tarjeta las muestra
+    se borran igual (`borrar_propuestas_mcp`). Devuelve cuántas conversaciones borró."""
     grupo = set(ids)
     frontera = list(grupo)
     while frontera:
@@ -1187,16 +1201,27 @@ def olvidar_en_conversaciones(db: Database, ids: Iterable[int]) -> int:
         return 0
     ts = datetime.now(timezone.utc)  # una fecha (no el texto de `ahora`): la compara el turno y la vence el índice TTL
     db.agente_olvidos.insert_many([{"persona_id": p, "ts": ts} for p in sorted(grupo)], ordered=False)
+    borrar_propuestas_mcp(db, grupo)
     return borrar_conversaciones(db, {"personas": {"$in": sorted(grupo)}})
+
+
+def borrar_propuestas_mcp(db: Database, ids: Iterable[int]) -> int:
+    """Borra las propuestas de escritura por MCP (`mcp_propuestas`, app/api/mcp.py) que muestran o devolvieron datos
+    de alguna de esas personas: su tarjeta lleva los valores enteros y su resultado lo que se le entregaría al agente
+    externo. Se borran en cualquier estado (también una pendiente: ya no se puede aprobar). Las entregas
+    (`mcp_entregas`) quedan, como `lecturas`: dicen a qué clave se le entregó quién, sin datos. Devuelve cuántas."""
+    ids = sorted({p for p in ids if isinstance(p, int) and not isinstance(p, bool)})
+    return db.mcp_propuestas.delete_many({"personas": {"$in": ids}}).deleted_count if ids else 0
 
 
 def limpiar_ligados(db: Database, ids: list[int], cedulas: Iterable[str] = ()) -> None:
     """Lo ligado a fichas suprimidas: borra coincidencias, conflictos e idempotencia; anonimiza acercamientos y
     autorizaciones (conservan uid, canal, resultado, efectivo y fecha para los indicadores) y deja las solicitudes
     como constancia, sin su texto. Borra enteras las conversaciones del asistente en que el modelo vio a alguna de
-    esas personas (`borrar_conversaciones`)."""
+    esas personas (`borrar_conversaciones`) y las propuestas por MCP que las muestran (`borrar_propuestas_mcp`)."""
     cedulas = [c for c in cedulas if c]
     borrar_conversaciones(db, {"personas": {"$in": list(ids)}})
+    borrar_propuestas_mcp(db, ids)
     db.coincidencias.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"candidato_id": {"$in": ids}}]})
     db.conflictos_cedula.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"cedula": {"$in": cedulas}}]})
     db.idempotencia.delete_many({"persona_id": {"$in": ids}})

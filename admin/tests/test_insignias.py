@@ -14,12 +14,12 @@ def test_insignias_por_rol(sesion, como, monkeypatch):
             situacion={"estado": "fallecida", "confirmada": False})
     db.conflictos_cedula.insert_one({"_id": 1, "estado": "pendiente", "motivo": "dictada"})
     db.solicitudes.insert_one({"_id": 1, "estado": "pendiente", "tipo": "consulta"})
-    esperado = {"calidad": 0, "conflictos": 1, "solicitudes": 1, "situaciones": 1, "trabajo": 2}
+    esperado = {"calidad": 0, "conflictos": 1, "solicitudes": 1, "situaciones": 1, "trabajo": 2, "propuestas_mcp": 0}
     assert sesion.get("/api/insignias").json() == esperado
     assert coordinador(sesion.app, db).get("/api/insignias").json() == esperado
     p = como("planillero", asignacion={"lugares": [l1], "areas": []})
     assert p.get("/api/insignias").json() == {"calidad": 0, "conflictos": 0, "solicitudes": 0, "situaciones": 0,
-                                              "trabajo": 1}
+                                              "trabajo": 1, "propuestas_mcp": 0}
     c = como("consultor")
     assert c.get("/api/insignias").json()["trabajo"] == 0
     pid = contactable(db, "VICENTA INVENTADA CUATRO", "3008880001")

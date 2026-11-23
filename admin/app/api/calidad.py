@@ -3,6 +3,7 @@
 autorizaciones de planilla y nomenclátor de lugares."""
 from __future__ import annotations
 
+import re
 from collections import Counter
 from datetime import date
 from typing import Annotated, Literal
@@ -553,6 +554,77 @@ def editar_lugar(lid: int, body: LugarIn, db: Database = Depends(obtener_db), ad
         bd.subir_catalogos_version(db)
         _recalcular(db)
     return {"ok": True}
+
+
+class AliasIn(BaseModel):
+    alias: str = Field(..., min_length=2, max_length=80)
+
+
+def alias_de(texto: str | None) -> str:
+    """El alias como lo guarda el nomenclátor (mayúsculas sin tildes, como en `crear_lugar` y `editar_lugar`)."""
+    return tx.limpiar(texto)
+
+
+def _forma(s: str | None) -> str:
+    """Un nombre como lo compara el nomenclátor de las direcciones (`pipeline.direcciones.Nomenclator`): sin signos."""
+    return re.sub(r"\s+", " ", re.sub(r"[^A-Z0-9 ]", " ", tx.limpiar(s))).strip()
+
+
+def otro_lugar_con(db: Database, lid: int, alias: str) -> dict | None:
+    """Otro lugar que ya se llama o se escribe así: el alias lo volvería ambiguo (son unos cien lugares)."""
+    forma = _forma(alias)
+    for l in db.lugares.find({"_id": {"$ne": lid}}, {"nombre": 1, "tipo": 1, "alias": 1}):
+        if forma in {_forma(l.get("nombre")), *(_forma(a) for a in l.get("alias") or [] if isinstance(a, str))}:
+            return l
+    return None
+
+
+def personas_con_lugar_escrito(db: Database, alias: str) -> list[int]:
+    """Las personas activas sin barrio o vereda cuyo lugar escrito (`lugar_texto`, el que lista «Sin reconocer»)
+    contiene el alias como palabras enteras: las únicas a las que un alias nuevo puede cambiarles la ubicación."""
+    forma = f" {_forma(alias)} "
+    return [p["_id"] for p in db.personas.find({**bd.ACTIVA, "lugar_id": None, "lugar_texto": {"$nin": [None, ""]}},
+                                               {"lugar_texto": 1})
+            if isinstance(p.get("lugar_texto"), str) and forma in f" {_forma(p['lugar_texto'])} "]
+
+
+@r.post("/lugares/{lid}/alias")
+def agregar_alias(lid: int, body: AliasIn, db: Database = Depends(obtener_db), adm: Admin = Depends(requiere_admin)):
+    """Agrega un alias a un barrio o vereda sin reemplazar la lista (`$addToSet`: dos personas que agregan a la vez no
+    se pisan, como pasaría con `editar_lugar`, que lee, cambia y escribe la lista entera) y vuelve a ubicar solo a las
+    personas sin barrio o vereda que tienen ese lugar escrito (`personas_con_lugar_escrito`), no a toda la base: cabe
+    en el plazo de una escritura del asistente. Idempotente: repetirlo no cambia el lugar ni se audita otra vez, y solo
+    vuelve a ubicar a esas mismas personas. 409 `ambiguo` si ya es el nombre o un alias de otro lugar. Devuelve cuántas
+    personas se revisaron y cuántas quedaron en el lugar (`reconocidas`; sin quienes no autorizaron,
+    `reconocidas_tratables`, la cifra que puede ver el asistente)."""
+    lugar = db.lugares.find_one({"_id": lid}, {"nombre": 1, "alias": 1})
+    if lugar is None:
+        raise HTTPException(404, "No existe")
+    alias = alias_de(body.alias)
+    if len(_forma(alias)) < 2:
+        raise HTTPException(422, "Escriba el nombre del lugar con letras")
+    otro = otro_lugar_con(db, lid, alias)
+    if otro is not None:
+        raise HTTPException(409, {"mensaje": f"«{alias}» ya es el nombre o un alias de {otro.get('nombre')} "
+                                             f"({otro.get('tipo')})", "codigo": "ambiguo", "id": otro["_id"]})
+    nuevo = False
+    if _forma(alias) != _forma(lugar.get("nombre")) and alias not in (lugar.get("alias") or []):
+        db.lugares.update_one({"_id": lid, "alias": None}, {"$set": {"alias": []}})  # sin lista: $addToSet fallaría
+        nuevo = db.lugares.update_one({"_id": lid, "alias": {"$ne": alias}},
+                                      {"$addToSet": {"alias": alias}, "$set": {"editado": True}}).modified_count > 0
+    if nuevo:
+        bd.auditar(db, adm, "agregar_alias", "lugar", lid, {"alias": alias}, adm.ip)
+        bd.subir_catalogos_version(db)
+    ids = personas_con_lugar_escrito(db, alias)
+    reconocidas = tratables = 0
+    if ids:
+        georreferenciar(db, ids)
+        bd.recalcular_completitud(db, ids)
+        reconocidas = db.personas.count_documents({"_id": {"$in": ids}, "lugar_id": lid})
+        tratables = db.personas.count_documents({"_id": {"$in": ids}, "lugar_id": lid, "consentimiento": {"$ne": "no"}})
+    actual = db.lugares.find_one({"_id": lid}, {"alias": 1}) or {}
+    return {"ok": True, "id": lid, "alias": sorted(a for a in actual.get("alias") or [] if isinstance(a, str)),
+            "nuevo": nuevo, "personas": len(ids), "reconocidas": reconocidas, "reconocidas_tratables": tratables}
 
 
 @r.post("/georreferenciar")

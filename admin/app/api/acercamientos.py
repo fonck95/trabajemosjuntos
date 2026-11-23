@@ -739,8 +739,12 @@ def per_asignacion(db: Database, quien: Quien) -> dict | None:
 @r.get("/insignias")
 def insignias(tratables: int = 0, db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("insignias"))):
     """Conteos livianos para el menú. Reemplaza pedir todos los indicadores. Con `tratables` (el asistente), el trabajo
-    y las situaciones no cuentan a quien no autorizó: mi_trabajo y buscar_personas tampoco, y la resta lo diría."""
-    out = {"calidad": 0, "conflictos": 0, "solicitudes": 0, "situaciones": 0, "trabajo": 0}
+    y las situaciones no cuentan a quien no autorizó: mi_trabajo y buscar_personas tampoco, y la resta lo diría.
+    `propuestas_mcp`: los cambios que un agente externo propuso con la clave MCP de quien pregunta y esperan que los
+    apruebe en Mi cuenta (app/api/mcp.py; siempre 0 para quien no puede tener una clave de datos)."""
+    from .mcp import pendientes_de  # aquí: mcp importa el asistente, que no hace falta para lo demás
+    out = {"calidad": 0, "conflictos": 0, "solicitudes": 0, "situaciones": 0, "trabajo": 0,
+           "propuestas_mcp": pendientes_de(db, quien.uid)}
     hoy, aj = modelo.hoy_local(), modelo.leer_ajustes(db)
     tratable = TRATABLE if tratables else {}
     vigente_req = {"$and": [modelo.filtro_vigente(), {"requiere_actualizacion": {"$ne": None}, **tratable}]}

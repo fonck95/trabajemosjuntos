@@ -275,6 +275,11 @@ const P = {
   reloj: '<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm0-13.5V12l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   abajo: '<path d="M12 5v14m0 0-6-6m6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
   info: '<path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm0-10v5.5m0-8.6v.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  // las fotos de planillas físicas (el cuadro de escribir del asistente y Importar y exportar → Planillas por foto):
+  // tomar con la cámara, elegir de la galería y girar 90° a la derecha
+  camara: '<path d="M4 8h3l1.6-2.5h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/>',
+  galeria: '<rect x="3.5" y="4.5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="m4 17 5-5 4 4 2.5-2.5L20 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="15.5" cy="9" r="1.6"/>',
+  girar: '<path d="M19.5 12a7.5 7.5 0 1 1-2.4-5.5M19.5 4v4.5H15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   // lo que hace cada paso del plan guiado con la maqueta (los chips de la tarjeta del chat: `HACE` de agente-recorrido.js)
   capas: '<path d="m12 3.5 9 4.5-9 4.5L3 8zM3 12.5 12 17l9-4.5M3 16.5 12 21l9-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   aislar: '<rect x="8.5" y="8.5" width="7" height="7" rx="1.5"/><path d="M4 8.5V4h4.5M15.5 4H20v4.5M20 15.5V20h-4.5M8.5 20H4v-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',

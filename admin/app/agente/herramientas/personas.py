@@ -675,7 +675,7 @@ BUSCAR = Herramienta(
         "en el tope diario de consultas del planillero y del consultor: pide solo lo necesario y, para saber cuántas "
         "son, usa el total de la primera página en vez de recorrerlas."),
     entrada=BuscarEntrada, tipo="lectura", permisos=("personas.buscar",), etiqueta="Buscando habitantes",
-    ejecutar=_buscar, esquema=esquema(BuscarEntrada))
+    ejecutar=_buscar, esquema=esquema(BuscarEntrada), mcp="lectura")
 
 
 # ───────────────────────────── ver_persona ─────────────────────────────
@@ -701,7 +701,7 @@ VER = Herramienta(
         "autorizó. Cuenta en el tope diario del planillero y del consultor. El consultor solo abre fichas de su "
         "trabajo (tomadas de su cola o con un acercamiento suyo reciente), nunca de menores."),
     entrada=VerEntrada, tipo="lectura", permisos=("personas.ver",), etiqueta="Consultando la ficha", ejecutar=_ver,
-    esquema=esquema(VerEntrada))
+    esquema=esquema(VerEntrada), mcp="lectura")
 
 
 # ───────────────────────────── personas_parecidas ─────────────────────────────
@@ -750,7 +750,7 @@ PARECIDAS = Herramienta(
         "si no estás seguro de que la persona no exista. Unir fichas no se hace aquí: es del administrador, en "
         "Calidad."),
     entrada=ParecidasEntrada, tipo="lectura", permisos=("personas.parecidas",), etiqueta="Buscando fichas parecidas",
-    ejecutar=_parecidas, esquema=esquema(ParecidasEntrada))
+    ejecutar=_parecidas, esquema=esquema(ParecidasEntrada), mcp="lectura")
 
 
 # ───────────────────────────── crear_persona ─────────────────────────────
@@ -914,7 +914,7 @@ CREAR = Herramienta(
         "cédulas, teléfonos ni otros datos. El planillero no registra menores de edad. La autorización de datos se "
         "registra después con registrar_autorizacion. Devuelve el id y lo que le falta a la ficha creada."),
     entrada=CrearEntrada, tipo="escritura", permisos=("personas.crear",), etiqueta="Creando la ficha",
-    ejecutar=_crear, confirmar=_confirmar_crear, esquema=esquema(CrearEntrada))
+    ejecutar=_crear, confirmar=_confirmar_crear, esquema=esquema(CrearEntrada), mcp="escritura")
 
 
 # ───────────────────────────── editar_persona ─────────────────────────────
@@ -1283,7 +1283,7 @@ EDITAR = Herramienta(
         "coordinador, con `motivo_cambio_cedula`. Si otra persona cambió la ficha entre la tarjeta y la aprobación, "
         "falla con «cambiada»: vuelve a leerla y propón de nuevo. Usa solo valores dictados, nunca supuestos."),
     entrada=EditarEntrada, tipo="escritura", permisos=("personas.editar",), etiqueta="Editando la ficha",
-    ejecutar=_editar, confirmar=_confirmar_editar, esquema=esquema(EditarEntrada))
+    ejecutar=_editar, confirmar=_confirmar_editar, esquema=esquema(EditarEntrada), mcp="escritura")
 
 
 # ───────────────────────────── agregar_nota ─────────────────────────────
@@ -1336,7 +1336,7 @@ NOTA = Herramienta(
         "registrar; no pongas datos sensibles (salud, etnia, discapacidad, condición de víctima, afiliación política) "
         "ni cédulas o teléfonos completos. Para un contacto con la persona usa registrar_acercamiento."),
     entrada=NotaEntrada, tipo="escritura", permisos=("personas.notas",), etiqueta="Agregando una nota",
-    ejecutar=_nota, confirmar=_confirmar_nota, esquema=esquema(NotaEntrada))
+    ejecutar=_nota, confirmar=_confirmar_nota, esquema=esquema(NotaEntrada), mcp="escritura")
 
 
 # ───────────────────────────── registrar_acercamiento ─────────────────────────────
@@ -1514,7 +1514,7 @@ ACERCAMIENTO = Herramienta(
         "agregar_nota. Devuelve el abordaje actualizado."),
     entrada=AcercamientoEntrada, tipo="escritura", permisos=("acercamientos.registrar",),
     etiqueta="Registrando el acercamiento", ejecutar=_acercamiento, confirmar=_confirmar_acercamiento,
-    esquema=esquema(AcercamientoEntrada))
+    esquema=esquema(AcercamientoEntrada), mcp="escritura")
 
 
 # ───────────────────────────── registrar_autorizacion ─────────────────────────────
@@ -1744,7 +1744,7 @@ UBICAR = Herramienta(
         "automática por su dirección (`automatica: true`). Usa exactamente una de las tres. Se guarda solo si la "
         "persona del equipo lo aprueba. No inventes coordenadas: usa solo las que te den."),
     entrada=UbicarEntrada, tipo="escritura", permisos=("personas.ubicar",), etiqueta="Ubicando a la persona",
-    ejecutar=_ubicar, confirmar=_confirmar_ubicar, esquema=esquema(UbicarEntrada))
+    ejecutar=_ubicar, confirmar=_confirmar_ubicar, esquema=esquema(UbicarEntrada), mcp="escritura")
 
 
 # ───────────────────────────── agregar_telefono ─────────────────────────────
@@ -1798,7 +1798,7 @@ TELEFONO = Herramienta(
         "estaba, solo se actualizan sus marcas. Lo que agrega el consultor queda confirmado. Se guarda solo si la "
         "persona del equipo lo aprueba. No inventes números ni los completes."),
     entrada=TelefonoEntrada, tipo="escritura", permisos=("personas.telefonos",), etiqueta="Agregando un teléfono",
-    ejecutar=_telefono, confirmar=_confirmar_telefono, esquema=esquema(TelefonoEntrada))
+    ejecutar=_telefono, confirmar=_confirmar_telefono, esquema=esquema(TelefonoEntrada), mcp="escritura")
 
 
 HERRAMIENTAS: list[Herramienta] = [BUSCAR, VER, PARECIDAS, CREAR, EDITAR, NOTA, ACERCAMIENTO, AUTORIZACION, UBICAR,

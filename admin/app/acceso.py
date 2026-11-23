@@ -98,6 +98,9 @@ class Quien:
     asignacion: dict | None = None  # {lugares: [int], areas: [int]} de P y C; None para A y K (sin límite)
     # La reunión en cuya pantalla se hizo la petición (cabecera X-Reunion del modo reunión; ver app/trazas.py)
     reunion: int | None = None
+    # Por dónde llegó la petición si no es el navegador: «mcp», un agente externo con la clave de la persona (la sesión
+    # interna de `app/sesion_interna.py`). La auditoría lo guarda (`db.auditar`); None en el panel
+    via: str | None = None
 
     def puede(self, permiso: str) -> bool:
         """¿Tiene el permiso? Lo de `SOLO_ADMIN` es solo de A, aunque otro rol tenga «*»."""
@@ -126,24 +129,48 @@ def quien_admin(cfg, ip: str | None = None) -> Quien:
     return Quien(uid=0, usuario=cfg.usuario, nombre=cfg.usuario, rol="admin", ip=ip, permisos=PERMISOS["admin"])
 
 
+# Las vías de las sesiones internas (`app/sesion_interna.py`): otro valor guardado en una sesión no se toma
+VIAS = frozenset({"mcp"})
+
+
+def _quien_de_usuario(u: dict | None, uid: int, ip: str | None, via: str | None) -> Quien | None:
+    """El `Quien` de un usuario de la base ya leído, o None si está inactivo, borrado o con un rol inválido."""
+    rol = (u or {}).get("rol")
+    if not (u or {}).get("activo") or rol not in ROLES_USUARIO:  # inactivo, borrado o rol inválido: falla cerrada
+        return None
+    asignacion = u.get("asignacion") or {}
+    return Quien(uid=uid, usuario=u.get("usuario"), nombre=u.get("nombre"), rol=rol, ip=ip,
+                 permisos=PERMISOS.get(rol, frozenset()),
+                 asignacion=None if rol in ROLES_ADMIN else {"lugares": list(asignacion.get("lugares") or []),
+                                                             "areas": list(asignacion.get("areas") or [])},
+                 via=via)
+
+
 def _quien_de(db: Database, request: Request, s: dict) -> Quien:
     cfg = request.app.state.cfg
     uid = s.get("uid")
+    via = s.get("via") if s.get("via") in VIAS else None
     if uid in (None, 0):
         # El rol de administrador sale solo de una sesión sin uid (o con 0) firmada con la credencial vigente de .env
         if not hmac.compare_digest(str(s.get("huella") or ""), huella(cfg)):
             raise HTTPException(401, "Inicie sesión")
         return Quien(uid=0, usuario=s.get("usuario"), nombre=s.get("usuario"), rol="admin", ip=ip_de(request),
-                     permisos=PERMISOS["admin"])
+                     permisos=PERMISOS["admin"], via=via)
     u = s.get("_usuario") or db.usuarios.find_one({"_id": uid, "activo": True}, {"clave": 0})
-    rol = (u or {}).get("rol")
-    if not (u or {}).get("activo") or rol not in ROLES_USUARIO:  # inactivo, borrado o rol inválido: falla cerrada
+    quien = _quien_de_usuario(u, uid, ip_de(request), via)
+    if quien is None:
         raise HTTPException(401, "Inicie sesión")
-    asignacion = u.get("asignacion") or {}
-    return Quien(uid=uid, usuario=u.get("usuario"), nombre=u.get("nombre"), rol=rol, ip=ip_de(request),
-                 permisos=PERMISOS.get(rol, frozenset()),
-                 asignacion=None if rol in ROLES_ADMIN else {"lugares": list(asignacion.get("lugares") or []),
-                                                             "areas": list(asignacion.get("areas") or [])})
+    return quien
+
+
+def quien_de_uid(db: Database, cfg, uid: int, ip: str | None = None, via: str | None = None) -> Quien | None:
+    """El `Quien` de `uid` (0: el administrador de `.env`) sin una petición con sesión: lo que arma `requiere`, para
+    lo que se decide antes de abrir una (qué herramientas ofrece una clave MCP). None si la cuenta ya no vale.
+    No revisa la cuenta al día (`rechazo_de_cuenta`): eso lo hace quien llama."""
+    if uid in (None, 0):
+        return Quien(uid=0, usuario=cfg.usuario, nombre=cfg.usuario, rol="admin", ip=ip, permisos=PERMISOS["admin"],
+                     via=via)
+    return _quien_de_usuario(db.usuarios.find_one({"_id": uid, "activo": True}, {"clave": 0}), uid, ip, via)
 
 
 def reunion_de(request: Request) -> int | None:

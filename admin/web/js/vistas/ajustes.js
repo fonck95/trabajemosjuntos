@@ -25,6 +25,12 @@
 // La respuesta inmediata (docs/agente.md, «La respuesta inmediata»): la casilla «Respuesta inmediata» del formulario
 // del asistente (`agente_adelanto`, encendida por defecto; PUT /api/ajustes, solo el administrador) decide si cada
 // pregunta recibe primero una o dos frases con la idea general mientras se prepara la respuesta o la presentación.
+//
+// Las planillas físicas por foto (`agente_planillas`: quiénes suben fotos, cuántas horas se guardan la foto y lo leído,
+// y si se leen otros formatos además de la planilla de campo) y los agentes externos por MCP (`agente_mcp`: quiénes
+// crean claves con datos, si proponen cambios y los topes diarios por clave) son permisos: los guarda el administrador
+// (PUT /api/ajustes) y el coordinador los ve en solo lectura. Guardar las planillas le avisa al asistente: quién puede
+// adjuntar fotos sale de su estado (`adjuntos`).
 import { api, puede } from '../api.js';
 import { url } from '../base.js';
 import { $, aviso, avisoError, confirmar, datosForm, dialogo, fecha, hayEscrito, html, montar, num } from '../ui.js';
@@ -37,6 +43,15 @@ const SOLO_ADMIN = html`<p class="sec ancho" style="margin:0">Solo el administra
 // Los roles del asistente (agente.roles y agente_mensajes_diarios): clave, quiénes lo usan y de quién es el tope
 const ROLES_AGENTE = [['admin', 'Administrador', 'administrador'], ['coordinador', 'Coordinadores', 'coordinador'],
   ['planillero', 'Planilleros', 'planillero'], ['consultor', 'Consultores', 'consultor']];
+// Las planillas físicas por foto (`agente_planillas`) y los agentes externos por MCP (`agente_mcp`): los roles y los
+// rangos que acepta el servidor (`politica.ROLES_PLANILLAS`, `RETENCION_HORAS`, `ROLES_MCP`, `LLAMADAS_DIARIAS_MCP` y
+// `PERSONAS_DIARIAS_MCP`; una prueba compara los dos lados). Nunca el consultor: no tiene papel que fotografiar ni
+// claves con datos
+const ROLES_PLANILLAS = [['admin', 'Administrador'], ['coordinador', 'Coordinadores'], ['planillero', 'Planilleros']];
+const ROLES_MCP = [['admin', 'Administrador'], ['coordinador', 'Coordinadores']];
+const RETENCION_HORAS = [1, 168];
+const LLAMADAS_MCP = [10, 20000];
+const PERSONAS_MCP = [10, 5000];
 
 // Los permisos que puede dar una cuenta de Mnemo, como los ve el administrador (en la página de permisos de Mnemo salen
 // con su propio texto). `mnemo:model` es el que deja al asistente usar los modelos de la cuenta
@@ -278,6 +293,10 @@ export async function vistaAjustes(el, { q } = {}) {
     const ag = aj.agente || {};
     const rolesAgente = new Set(Array.isArray(ag.roles) ? ag.roles : []);
     const mensajes = aj.agente_mensajes_diarios || {};
+    const pl = aj.agente_planillas || {};
+    const rolesPlanillas = new Set(Array.isArray(pl.roles) ? pl.roles : []);
+    const mc = aj.agente_mcp || {};
+    const rolesMcp = new Set(Array.isArray(mc.roles) ? mc.roles : []);
     montar(el, html`
       <div class="cabecera"><div><h1>Ajustes</h1><div class="sub">Reglas de contacto, privacidad y catálogos. Cada cambio queda en la auditoría.</div></div></div>
       <div class="rejilla r-12">
@@ -341,6 +360,31 @@ export async function vistaAjustes(el, { q } = {}) {
             ${ROLES_AGENTE.map(([k, , t]) => numero(`mensajes_${k}`, mensajes[k], `Mensajes por día · ${t}`, 1, 5000))}
             <div class="aviso-legal ancho">Lo que el asistente consulta de la base viaja al proveedor del modelo: con Mnemo conectado, a Mnemo y, de ahí, al proveedor de modelos que esa cuenta tenga elegido; en modo directo, a Anthropic. Son terceros, posiblemente en el exterior: datos mínimos, cédulas y teléfonos enmascarados, nunca datos sensibles ni listas, y nada de quien no autorizó. Revise el aviso de privacidad y la autorización con un abogado antes de encenderlo para el equipo. Las conversaciones se borran solas a los días indicados desde su último mensaje; bajar el plazo acorta también las que ya existen.</div>
             ${soloLectura ? SOLO_ADMIN : html`<div class="ancho"><button class="btn primario">Guardar asistente</button></div>`}
+          </form>
+        </section>
+        <section class="tarjeta c-6">
+          <h2>Planillas físicas por foto</h2>
+          <p class="sec">Quien tiene el papel le toma una foto en el chat del asistente o en Importar y exportar: el panel la lee, la coteja con la base y propone cargarla. Nada se guarda sin la aprobación de alguien que puede importar (administrador o coordinador), con el folio del papel.</p>
+          <form id="f-planillas" class="form" style="margin-top:12px">
+            <div class="campo ancho"><span>Quiénes suben fotos (además tienen que usar el asistente)</span>
+              <div class="chips">${ROLES_PLANILLAS.map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="planillas_rol_${k}" ${rolesPlanillas.has(k) ? 'checked' : ''}> ${t}</label>`)}</div></div>
+            ${numero('retencion_horas', pl.retencion_horas, 'Horas que se guardan la foto y lo leído', RETENCION_HORAS[0], RETENCION_HORAS[1])}
+            ${casilla('otros_formatos', pl.otros_formatos === true, 'Leer también listas de asistencia y otros formatos, que pueden traer columnas sensibles (si no, solo la planilla de campo del panel)')}
+            <div class="aviso-legal ancho">La foto entera, con cédulas, teléfonos y firmas de habitantes, viaja al proveedor del modelo para leerla: con Mnemo conectado, a Mnemo y al proveedor de modelos que esa cuenta tenga elegido; en modo directo, a Anthropic. Son terceros, posiblemente en el exterior: antes de encenderlo, revise con un abogado que el aviso de privacidad y la autorización cubran esa transmisión. Las autorizaciones leídas de una foto quedan «declaradas en planilla» y no habilitan el contacto hasta que un administrador o un coordinador las confirme con el papel en Importar y exportar. Nunca se leen fotos de cédulas. La foto se borra al cargarla (queda su huella) o, si no, a las horas indicadas.</div>
+            ${soloLectura ? SOLO_ADMIN : html`<div class="ancho"><button class="btn primario">Guardar planillas por foto</button></div>`}
+          </form>
+        </section>
+        <section class="tarjeta c-6">
+          <h2>Agentes externos por MCP</h2>
+          <p class="sec">En Mi cuenta, cada persona con permiso crea una clave de datos para conectar su propio agente (por ejemplo, Claude Desktop): consulta, analiza o propone cambios con los permisos de esa persona. Cada cambio queda como propuesta hasta que ella lo aprueba en Mi cuenta.</p>
+          <form id="f-mcp" class="form" style="margin-top:12px">
+            <div class="campo ancho"><span>Quiénes crean claves con datos</span>
+              <div class="chips">${ROLES_MCP.map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="mcp_rol_${k}" ${rolesMcp.has(k) ? 'checked' : ''}> ${t}</label>`)}</div></div>
+            ${casilla('mcp_escritura', mc.escritura !== false, 'Proponer cambios en la base: cada propuesta espera la aprobación de la persona en Mi cuenta antes de guardarse')}
+            ${numero('llamadas_diarias', mc.llamadas_diarias, 'Llamadas por clave y día', LLAMADAS_MCP[0], LLAMADAS_MCP[1])}
+            ${numero('personas_diarias', mc.personas_diarias, 'Personas distintas por clave y día', PERSONAS_MCP[0], PERSONAS_MCP[1])}
+            <div class="aviso-legal ancho">Lo que consulta un agente por MCP sale del panel hacia ese agente y su proveedor de modelos: terceros que el panel no controla. Leer fichas de personas por MCP es solo del administrador (quien puede exportar); el coordinador, solo análisis y propuestas. Nunca salen datos sensibles, listas ni quien no autorizó. Las claves de datos vencen a los 30 días y se revocan en Mi cuenta; revocarla anula sus propuestas pendientes.</div>
+            ${soloLectura ? SOLO_ADMIN : html`<div class="ancho"><button class="btn primario">Guardar agentes por MCP</button></div>`}
           </form>
         </section>
         <section class="tarjeta c-12">
@@ -407,6 +451,10 @@ export async function vistaAjustes(el, { q } = {}) {
       </div>`);
     if (soloLectura) {  // el coordinador ve la política, los límites y el asistente, pero no los cambia
       for (const id of ['#f-politica', '#f-limites', '#f-agente', '#f-voz']) {
+        for (const c of $(id, el).querySelectorAll('input, select, textarea')) c.disabled = true;
+      }
+      // (y las planillas por foto y los agentes por MCP: también son permisos)
+      for (const id of ['#f-planillas', '#f-mcp']) {
         for (const c of $(id, el).querySelectorAll('input, select, textarea')) c.disabled = true;
       }
       const dePermisos = new Set(aj.ajustes_de_permisos || []);  // datos sensibles y compromiso: también solo A
@@ -638,6 +686,19 @@ export async function vistaAjustes(el, { q } = {}) {
         await pintar();
       } else if (f.id === 'f-mnemo') {
         await conectarMnemo(f);
+      } else if (f.id === 'f-planillas') {
+        const v = datosForm(f);
+        const roles = ROLES_PLANILLAS.map(([k]) => k).filter((k) => v[`planillas_rol_${k}`] === true);
+        await guardar({ agente_planillas: { roles, retencion_horas: Number(v.retencion_horas),
+          otros_formatos: v.otros_formatos === true } }, 'Planillas por foto guardadas');
+        // Quién puede adjuntar fotos en el chat sale del estado del asistente (`adjuntos`): que lo vuelva a pedir
+        avisarAlAsistente();
+      } else if (f.id === 'f-mcp') {
+        const v = datosForm(f);
+        const roles = ROLES_MCP.map(([k]) => k).filter((k) => v[`mcp_rol_${k}`] === true);
+        await guardar({ agente_mcp: { roles, escritura: v.mcp_escritura === true,
+          llamadas_diarias: Number(v.llamadas_diarias), personas_diarias: Number(v.personas_diarias) } },
+        'Agentes por MCP guardados');
       }
     } catch (err) { avisoError(err); }
   });

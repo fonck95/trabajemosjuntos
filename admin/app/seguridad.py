@@ -273,7 +273,9 @@ def _borrar_cookie_vieja(request: Request, response: Response) -> None:
 def crear_sesion(db: Database, cfg, response: Response, usuario: str, request: Request, uid: int = 0,
                  rol: str = "admin", version=None, horas: float | None = None) -> str:
     """Abre una sesión y deja la cookie. La de un usuario (`uid` > 0) dura como mucho `horas` y, al abrirla, se cierran
-    sus sesiones más viejas por encima de `ajustes.sesion.max_por_usuario`."""
+    sus sesiones más viejas por encima de `ajustes.sesion.max_por_usuario`. Las internas (con `via`: las de un agente
+    externo por MCP, `app/sesion_interna.py`) ni cuentan ni se cierran: duran minutos y no son de un navegador; si
+    contaran, una llamada en curso le cerraría a la persona la sesión de su teléfono."""
     token = secrets.token_urlsafe(32)
     csrf = secrets.token_urlsafe(24)
     ahora = datetime.now(timezone.utc)
@@ -288,7 +290,8 @@ def crear_sesion(db: Database, cfg, response: Response, usuario: str, request: R
                             "agente": (request.headers.get("user-agent") or "")[:200]})
     if uid:
         maximo = max(1, int(modelo.leer_ajustes(db)["sesion"].get("max_por_usuario") or 2))
-        viejas = [x["_id"] for x in db.sesiones.find({"uid": uid}, {"_id": 1}).sort([("creada", -1), ("_id", 1)]).skip(maximo)]
+        viejas = [x["_id"] for x in db.sesiones.find({"uid": uid, "via": {"$exists": False}}, {"_id": 1})
+                  .sort([("creada", -1), ("_id", 1)]).skip(maximo)]
         if viejas:
             db.sesiones.delete_many({"_id": {"$in": viejas}})
     _borrar_cookie_vieja(request, response)
