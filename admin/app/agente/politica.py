@@ -38,6 +38,12 @@ VOZ_POR_DEFECTO: dict[str, Any] = {"motor": "mnemo", "voz": "", "nombre": "", "c
                                    "roles": ["admin", "coordinador"], "respuestas": True, "automatica": True}
 # La respuesta inmediata (`agente_adelanto`): el mismo valor por defecto que `modelo.AJUSTES_POR_DEFECTO`
 ADELANTO_POR_DEFECTO = True
+# Las planillas físicas por foto (`agente_planillas`) y los datos por MCP (`agente_mcp`): los mismos valores por
+# defecto que `modelo.AJUSTES_POR_DEFECTO` y los mismos rangos que acepta `api/ajustes.py` (una prueba compara los lados)
+PLANILLAS_POR_DEFECTO: dict[str, Any] = {"roles": ["admin", "coordinador"], "retencion_horas": 24}
+RETENCION_HORAS = (1, 168)
+MCP_POR_DEFECTO: dict[str, Any] = {"roles": ["admin"], "escritura": True, "llamadas_diarias": 2000}
+LLAMADAS_DIARIAS_MCP = (10, 20000)
 ID_VOZ = re.compile(r"[A-Za-z0-9_.:-]{1,100}")   # el id de una voz en Mnemo (un ObjectId: 24 hexadecimales)
 MAX_NOMBRE_VOZ = 60
 HUELLA_CUENTA = re.compile(r"[0-9a-f]{32}")
@@ -122,6 +128,41 @@ def adelanto(ajustes: dict | None) -> bool:
     return v if isinstance(v, bool) else ADELANTO_POR_DEFECTO
 
 
+def _roles(v: Any, por_defecto: list[str]) -> list[str]:
+    if isinstance(v, list):
+        return sorted({r for r in v if isinstance(r, str) and r in ROLES})
+    return list(por_defecto)
+
+
+def ajustes_planillas(ajustes: dict | None) -> dict:
+    """Los ajustes `agente_planillas` vigentes, completos y validados (una copia nueva en cada llamada): `roles` (quién
+    sube fotos de planillas físicas al asistente) y `retencion_horas` (cuánto se guardan la foto y lo leído)."""
+    crudo = (ajustes or {}).get("agente_planillas")
+    crudo = crudo if isinstance(crudo, dict) else {}
+    horas = _entero(crudo.get("retencion_horas"), RETENCION_HORAS)
+    return {"roles": _roles(crudo.get("roles"), PLANILLAS_POR_DEFECTO["roles"]),
+            "retencion_horas": horas if horas is not None else PLANILLAS_POR_DEFECTO["retencion_horas"]}
+
+
+def ajustes_mcp(ajustes: dict | None) -> dict:
+    """Los ajustes `agente_mcp` vigentes, completos y validados (una copia nueva en cada llamada): `roles` (quién crea
+    claves MCP con datos), `escritura` (si una clave puede proponer cambios, que siempre se aprueban en el panel) y
+    `llamadas_diarias` (tope por clave y día)."""
+    crudo = (ajustes or {}).get("agente_mcp")
+    crudo = crudo if isinstance(crudo, dict) else {}
+    llamadas = _entero(crudo.get("llamadas_diarias"), LLAMADAS_DIARIAS_MCP)
+    escritura = crudo.get("escritura")
+    return {"roles": _roles(crudo.get("roles"), MCP_POR_DEFECTO["roles"]),
+            "escritura": escritura if isinstance(escritura, bool) else MCP_POR_DEFECTO["escritura"],
+            "llamadas_diarias": llamadas if llamadas is not None else MCP_POR_DEFECTO["llamadas_diarias"]}
+
+
+def usa_planillas(quien: Any, ajustes: dict | None) -> bool:
+    """¿Esta persona puede subir fotos de planillas físicas al asistente? Su rol en `agente_planillas.roles` (además
+    de usar el asistente: `agente.roles`, que se revisa aparte)."""
+    return getattr(quien, "rol", None) in ajustes_planillas(ajustes)["roles"]
+
+
 def mensajes_diarios(ajustes: dict | None, rol: str | None) -> int:
     """Cuántos mensajes al asistente puede mandar una persona de ese rol en un día (hora de Colombia)."""
     crudo = (ajustes or {}).get("agente_mensajes_diarios")
@@ -138,6 +179,8 @@ def leer(db) -> tuple[dict, dict]:
     ajustes["agente_mensajes_diarios"] = {r: mensajes_diarios(ajustes, r) for r in ROLES}
     ajustes["agente_voz"] = ajustes_voz(ajustes)
     ajustes["agente_adelanto"] = adelanto(ajustes)
+    ajustes["agente_planillas"] = ajustes_planillas(ajustes)
+    ajustes["agente_mcp"] = ajustes_mcp(ajustes)
     return ajustes, agente
 
 

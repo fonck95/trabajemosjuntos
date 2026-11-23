@@ -150,10 +150,22 @@ class Herramienta:
     nombre_remoto: str | None = None
     # Su plazo en el bucle, si no es el de siempre (`PLAZO_HERRAMIENTA_S`): la presentación escribe un plan en flujo
     plazo: float | None = None
+    # Por MCP (`api/mcp.py`): el alcance de la clave que la ofrece. None = sale del tipo (lectura → «lectura»,
+    # escritura → «escritura»; las de interfaz nunca); «» = nunca por MCP (necesita el chat: una foto, el navegador);
+    # o un alcance explícito («analitica»)
+    mcp: str | None = None
 
     def __post_init__(self) -> None:
         if self.tipo == "escritura" and self.confirmar is None:
             raise ValueError(f"La herramienta de escritura {self.nombre} necesita `confirmar`")
+
+    def alcance_mcp(self) -> str | None:
+        """El alcance de clave MCP que ofrece esta herramienta, o None si no se ofrece por MCP."""
+        if self.nombre_remoto or self.mcp == "":
+            return None
+        if self.mcp:
+            return self.mcp
+        return {"lectura": "lectura", "escritura": "escritura"}.get(self.tipo)
 
     def permitida(self, quien: Any) -> bool:
         return all(quien.puede(p) for p in self.permisos)

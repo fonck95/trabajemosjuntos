@@ -219,6 +219,16 @@ AJUSTES_POR_DEFECTO: dict[str, Any] = {
     # la presentación, adelanta en una o dos frases la idea general (una llamada corta más al modelo por pregunta). Un
     # booleano aparte, de un nivel: solo lo cambia el administrador (gasta del mismo modelo)
     "agente_adelanto": True,
+    # Las planillas físicas fotografiadas (docs/agente.md, «Planillas físicas por foto»): quién sube fotos al asistente
+    # para que las lea, las coteje con la base y proponga cargarlas, y cuántas horas se guardan la foto y lo leído (traen
+    # cédulas y teléfonos completos de habitantes). Cargar exige además el permiso `importar` (A y K). De un nivel y de
+    # permisos, como `agente`: solo lo cambia el administrador
+    "agente_planillas": {"roles": ["admin", "coordinador"], "retencion_horas": 24},
+    # Los datos por MCP (docs/agente.md, «Pantalla en off y agentes por MCP»): qué roles pueden crear claves que leen
+    # datos, piden análisis o proponen cambios (los cambios siempre esperan la aprobación de la persona en el panel),
+    # si se pueden proponer escrituras y cuántas llamadas por día admite cada clave. Denegar por defecto: solo el
+    # administrador. De permisos: solo lo cambia el administrador
+    "agente_mcp": {"roles": ["admin"], "escritura": True, "llamadas_diarias": 2000},
 }
 
 

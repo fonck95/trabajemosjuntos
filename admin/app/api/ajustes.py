@@ -140,6 +140,35 @@ class VozAgente(BaseModel):
         return None if v is None else sorted(set(v))
 
 
+class PlanillasAgente(BaseModel):
+    """Las fotos de planillas físicas en el asistente (docs/agente.md, «Planillas físicas por foto»): quién las sube y
+    cuántas horas se guardan la foto y lo leído. Los mismos rangos con que `agente.politica.ajustes_planillas` lee lo
+    guardado."""
+    model_config = ConfigDict(extra="forbid")
+    roles: list[RolAgente] | None = Field(None, max_length=4)
+    retencion_horas: StrictInt | None = Field(None, ge=politica.RETENCION_HORAS[0], le=politica.RETENCION_HORAS[1])
+
+    @field_validator("roles")
+    @classmethod
+    def _roles(cls, v):
+        return None if v is None else sorted(set(v))
+
+
+class McpAgente(BaseModel):
+    """Los datos por MCP (docs/agente.md): quién crea claves con datos, si proponen cambios (que siempre se aprueban en
+    el panel) y el tope de llamadas por clave y día. Los mismos rangos de `agente.politica.ajustes_mcp`."""
+    model_config = ConfigDict(extra="forbid")
+    roles: list[RolAgente] | None = Field(None, max_length=4)
+    escritura: StrictBool | None = None
+    llamadas_diarias: StrictInt | None = Field(None, ge=politica.LLAMADAS_DIARIAS_MCP[0],
+                                                le=politica.LLAMADAS_DIARIAS_MCP[1])
+
+    @field_validator("roles")
+    @classmethod
+    def _roles(cls, v):
+        return None if v is None else sorted(set(v))
+
+
 class AjustesIn(BaseModel):
     """PUT parcial: solo cambia lo enviado (también dentro de los objetos). La vigencia de la base solo se muestra."""
     model_config = ConfigDict(extra="forbid")
@@ -163,6 +192,8 @@ class AjustesIn(BaseModel):
     agente_voz: VozAgente | None = None
     # La respuesta inmediata del asistente (docs/agente.md): de permisos (gasta del modelo) y estricta, como `agente`
     agente_adelanto: StrictBool | None = None
+    agente_planillas: PlanillasAgente | None = None
+    agente_mcp: McpAgente | None = None
 
     @field_validator("eleccion_vigente")
     @classmethod
