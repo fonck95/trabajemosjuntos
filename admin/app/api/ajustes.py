@@ -145,8 +145,9 @@ class PlanillasAgente(BaseModel):
     cuántas horas se guardan la foto y lo leído. Los mismos rangos con que `agente.politica.ajustes_planillas` lee lo
     guardado."""
     model_config = ConfigDict(extra="forbid")
-    roles: list[RolAgente] | None = Field(None, max_length=4)
+    roles: list[Literal["admin", "coordinador", "planillero"]] | None = Field(None, max_length=3)
     retencion_horas: StrictInt | None = Field(None, ge=politica.RETENCION_HORAS[0], le=politica.RETENCION_HORAS[1])
+    otros_formatos: StrictBool | None = None
 
     @field_validator("roles")
     @classmethod
@@ -158,10 +159,12 @@ class McpAgente(BaseModel):
     """Los datos por MCP (docs/agente.md): quién crea claves con datos, si proponen cambios (que siempre se aprueban en
     el panel) y el tope de llamadas por clave y día. Los mismos rangos de `agente.politica.ajustes_mcp`."""
     model_config = ConfigDict(extra="forbid")
-    roles: list[RolAgente] | None = Field(None, max_length=4)
+    roles: list[Literal["admin", "coordinador"]] | None = Field(None, max_length=2)
     escritura: StrictBool | None = None
     llamadas_diarias: StrictInt | None = Field(None, ge=politica.LLAMADAS_DIARIAS_MCP[0],
                                                 le=politica.LLAMADAS_DIARIAS_MCP[1])
+    personas_diarias: StrictInt | None = Field(None, ge=politica.PERSONAS_DIARIAS_MCP[0],
+                                                le=politica.PERSONAS_DIARIAS_MCP[1])
 
     @field_validator("roles")
     @classmethod

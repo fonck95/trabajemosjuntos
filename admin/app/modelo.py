@@ -223,12 +223,12 @@ AJUSTES_POR_DEFECTO: dict[str, Any] = {
     # para que las lea, las coteje con la base y proponga cargarlas, y cuántas horas se guardan la foto y lo leído (traen
     # cédulas y teléfonos completos de habitantes). Cargar exige además el permiso `importar` (A y K). De un nivel y de
     # permisos, como `agente`: solo lo cambia el administrador
-    "agente_planillas": {"roles": ["admin", "coordinador"], "retencion_horas": 24},
+    "agente_planillas": {"roles": ["admin", "coordinador"], "retencion_horas": 24, "otros_formatos": False},
     # Los datos por MCP (docs/agente.md, «Pantalla en off y agentes por MCP»): qué roles pueden crear claves que leen
     # datos, piden análisis o proponen cambios (los cambios siempre esperan la aprobación de la persona en el panel),
-    # si se pueden proponer escrituras y cuántas llamadas por día admite cada clave. Denegar por defecto: solo el
-    # administrador. De permisos: solo lo cambia el administrador
-    "agente_mcp": {"roles": ["admin"], "escritura": True, "llamadas_diarias": 2000},
+    # si se pueden proponer escrituras, cuántas llamadas por día admite cada clave y a cuántas personas distintas por
+    # día puede ver. Denegar por defecto: solo el administrador. De permisos: solo lo cambia el administrador
+    "agente_mcp": {"roles": ["admin"], "escritura": True, "llamadas_diarias": 2000, "personas_diarias": 300},
 }
 
 
