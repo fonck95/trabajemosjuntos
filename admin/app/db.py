@@ -189,6 +189,16 @@ def _indices() -> dict[str, list[IndexModel]]:
         # por clave; ante un reclamo, a qué clave se le entregó quién): 90 días, como `lecturas`
         "mcp_entregas": [i("ts", expireAfterSeconds=90 * 24 * 3600), i([("clave_h", ASCENDING), ("dia", ASCENDING)]),
                          i("personas")],
+        # Las fotos de planillas físicas y lo leído de ellas (app/planillas.py): cifradas, vencen en `expira` (las
+        # horas de `agente_planillas.retencion_horas`); `huellas.h` y `personas` dejan a la supresión encontrar sus
+        # filas sin abrir lo cifrado (`vaciar_planillas`)
+        "planillas": [i("expira", expireAfterSeconds=0), i([("uid", ASCENDING), ("ts", DESCENDING)]),
+                      i([("ts", DESCENDING)]), i([("uid", ASCENDING), ("sha256", ASCENDING)]), i("estado"),
+                      i("huellas.h"), i("personas")],
+        # Cada foto subida (quién y cuándo, nada más): los topes por hora y por día, aunque se borren las fotos
+        "planillas_subidas": [i("ts", expireAfterSeconds=26 * 3600), i([("uid", ASCENDING), ("ts", ASCENDING)])],
+        # Una foto ya cargada se reconoce por su SHA-256 (no se paga otra lectura ni se carga dos veces)
+        "importaciones": [i("fotos_sha256")],
     }
 
 
@@ -1235,6 +1245,38 @@ def limpiar_ligados(db: Database, ids: list[int], cedulas: Iterable[str] = ()) -
                                {"$set": {"descripcion": None, "respuesta": None, "suprimido": True}})
 
 
+def vaciar_planillas(db: Database, ids: Iterable[int], huellas: Iterable[str]) -> int:
+    """En la supresión: las filas de las planillas por foto (app/planillas.py) que son de esas personas, por la ficha
+    que les tocó al cotejar o cargar (`filas_pid`) o por las huellas de su cédula o de su nombre con un teléfono
+    (`huellas.h`, las mismas de `suprimidos`), quedan vacías: lo leído está cifrado con una llave que la base no tiene,
+    así que se marcan (`filas_suprimidas`, que `planillas.lectura_de` nunca vuelve a mostrar y la próxima escritura
+    deja vacías) y salen de las huellas y de `personas`. La foto, que también la muestra, se borra. Se cambia
+    `actualizada`, así una corrección que estaba en curso no vuelve a escribir la fila. Devuelve cuántas planillas
+    tocó."""
+    ids = sorted({p for p in ids if isinstance(p, int) and not isinstance(p, bool)})
+    huellas = set(huellas or ())
+    o: list[dict] = []
+    if ids:
+        o.append({"personas": {"$in": ids}})
+    if huellas:
+        o.append({"huellas.h": {"$in": sorted(huellas)}})
+    if not o:
+        return 0
+    tocadas = 0
+    for p in db.planillas.find({"$or": o}, {"huellas": 1, "filas_pid": 1, "cargadas": 1}):
+        filas = {f["n"] for f in p.get("huellas") or [] if set(f.get("h") or []) & huellas}
+        filas |= {int(n) for n, pid in (p.get("filas_pid") or {}).items() if pid in ids and str(n).isdigit()}
+        cambios: dict[str, Any] = {"foto": None, "actualizada": datetime.now(timezone.utc)}
+        cambios.update({f"filas_pid.{n}": None for n in filas})
+        cambios.update({f"cargadas.{n}.persona_id": None for n, c in (p.get("cargadas") or {}).items()
+                        if isinstance(c, dict) and c.get("persona_id") in ids})
+        db.planillas.update_one({"_id": p["_id"]}, {
+            "$set": cambios, "$addToSet": {"filas_suprimidas": {"$each": sorted(filas)}},
+            "$pull": {"huellas": {"n": {"$in": sorted(filas)}}, "personas": {"$in": ids}}})
+        tocadas += 1
+    return tocadas
+
+
 def suprimir(db: Database, pid: int, quien: Any, ip: str | None = None) -> list[int]:
     """Borra los datos personales de la ficha y de todas las unidas con ella, limpia su rastro en la auditoría y en lo
     ligado (2.6) y deja las huellas (HMAC, sin datos en claro) para que una importación no la vuelva a crear."""
@@ -1252,11 +1294,12 @@ def suprimir(db: Database, pid: int, quien: Any, ip: str | None = None) -> list[
                 *(x for t in tramites for x in (t.get("telefono") or "").split(";"))]
         pares.update(pares_identidad(nombres, fichas, tels))
     pares.update(("cedula", c) for c in cedulas)
-    registrar_huellas(db, pares)
+    huellas = registrar_huellas(db, pares)
     for i in ids:
         db.personas.replace_one({"_id": i}, {**persona_vacia(), "_id": i, "nombre": "SUPRIMIDO", "nombre_norm": "",
                                              "eliminado": True, "actualizado_en": ahora()})
     limpiar_ligados(db, ids, cedulas)
+    vaciar_planillas(db, ids, huellas)
     # La traza de reuniones también: con ella se sabría en qué reuniones estuvo la persona suprimida
     db.auditoria.update_many({"entidad": "persona", "entidad_id": {"$in": ids}},
                              {"$set": {"detalle": None}, "$unset": {"reuniones": ""}})

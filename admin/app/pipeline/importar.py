@@ -846,6 +846,231 @@ def _importar(db: Database, rutas: list[Path], usuario: str | None, nombres: lis
     return res
 
 
+# ───────────────────────────── Filas sueltas: la foto de una planilla física ─────────────────────────────
+#
+# Lo que se leyó de una foto (`app/planillas.py`) entra por la misma cascada que la planilla de campo en Excel
+# (`_importar_registros` con la fuente «planilla»): mismas reglas de identidad, de procedencia (1.5), de supresión y
+# de quien no autorizó. Dos diferencias, a propósito: las autorizaciones quedan SIEMPRE «declaradas en planilla» (lo
+# que el modelo leyó en la columna «Medio» no habilita el contacto: va a `datos.medio_leido` y A o K las confirman con
+# el papel en Importar y exportar), y el post-proceso se acota a las fichas que tocó la carga (son pocas filas: no se
+# recorre la base entera como tras un Excel).
+
+# Lo que la vista previa responde por fila (`simular_registros`) y lo que quedó de cada una tras cargar
+# (`importar_registros`): el mismo vocabulario, en condicional y en pasado
+ESTADOS_SIMULACION = ("nueva", "nueva_sin_autorizacion", "completaria", "igual", "revocaria", "conflicto_cedula",
+                      "revision", "no_autorizo", "no_se_carga", "otra_eleccion")
+ESTADO_CARGADO = {"completaria": "completada", "otra_eleccion": "completada", "revocaria": "revocada"}
+MOTIVOS_CONFLICTO = ("nombre_distinto", "cedula_anterior")  # la fila no se aplica a ninguna ficha
+# Ids de la vista previa: negativos, para no gastar el contador de personas ni confundirse con una ficha real
+IDS_SIMULADOS = 10_000
+
+
+def _actor_de(quien) -> dict:
+    return {"uid": getattr(quien, "uid", 0) if quien is not None else 0,
+            "usuario": getattr(quien, "usuario", None) if quien is not None else "sistema",
+            "rol": getattr(quien, "rol", "admin") if quien is not None else "admin"}
+
+
+def solo_declaradas(registros) -> list[Registro]:
+    """Copias de los registros con la autorización «declarada en planilla»: sin `autorizacion_medio` (así
+    `_guardar_eventos` guarda el «sí» como `declarado_planilla`, que no habilita el contacto hasta que A o K lo
+    confirme con el papel) y con el medio leído en `datos.medio_leido`, para quien revise. La copia no toca los
+    registros de quien llama."""
+    out = []
+    for r in registros:
+        r = copy.deepcopy(r)
+        datos = dict(r.datos or {})
+        medio = datos.pop("autorizacion_medio", None) or r.autorizacion_medio
+        if medio and not datos.get("medio_leido"):
+            datos["medio_leido"] = medio
+        r.autorizacion_medio, r.datos = None, datos
+        out.append(r)
+    return out
+
+
+def _es_suprimida(alm: _Almacen, r: Registro) -> bool:
+    """¿La fila es de alguien que pidió la supresión? La misma prueba del paso 0 de la cascada (sin bloquear nada)."""
+    cedulas = [c for c in (r.cedula, r.datos.get("cedula_digitada"), r.datos.get("cedula_repetida")) if c]
+    return any(alm.suprimida("cedula", c) for c in cedulas) or \
+        any(alm.suprimida(t, v) for t, v in bd.pares_identidad([r.nombre], [], r.telefonos))
+
+
+def _mostrar(campo: str, v):
+    """Un valor para la vista previa: la votación como «puesto · mesa»; lo demás, tal cual."""
+    if campo == "votacion":
+        d = modelo.derivar_votacion(v)
+        return " · ".join(str(x) for x in (d.get("puesto_votacion"), d.get("mesa")) if x) or None
+    return v
+
+
+def _cambios_de(alm: _Almacen, pid: int) -> tuple[list[str], list[dict]]:
+    """(campos que la fila llenaría en la ficha, valores distintos de lo guardado) de una ficha que ya existía, según
+    lo que la cascada anotó en memoria (`_cambio`): un campo vacío se llena; uno con otro valor lo reemplaza la
+    planilla si puede (1.5) o el de la planilla va a alternos."""
+    c = alm.cambios.get(pid)
+    if c is None:
+        return [], []
+    d, foto = alm.docs[pid], c["foto"]
+    llenaria, distintos = [], []
+    for campo in sorted(c["proc"]):
+        antes, despues = modelo.valor_campo(foto, campo), d.get(campo)
+        if modelo.vacio(antes):
+            llenaria.append(CANONICOS.get(campo, campo))
+        elif modelo.comparable(campo, antes) != modelo.comparable(campo, despues):
+            distintos.append({"campo": CANONICOS.get(campo, campo), "base": _mostrar(campo, antes),
+                              "planilla": _mostrar(campo, despues), "queda": "planilla"})
+    for a in c["alternos"]:
+        if a.get("fuente") == "planilla" and a.get("campo") not in c["proc"]:
+            campo = a["campo"]
+            distintos.append({"campo": CANONICOS.get(campo, campo), "base": _mostrar(campo, d.get(campo)),
+                              "planilla": _mostrar(campo, a.get("valor")), "queda": "base"})
+    if c["cedula"]:
+        llenaria.append("cedula")
+    if "telefono" in c["campos"]:
+        llenaria.append("telefono")
+    llenaria += [k for k in c["simples"] if k not in llenaria]
+    return list(dict.fromkeys(llenaria)), distintos
+
+
+def _filas_de(alm: _Almacen, registros: list[Registro], suprimidas: set[int]) -> dict[int, dict]:
+    """Qué le pasa a cada fila (por su número), leído de la cascada en memoria antes de guardar: `{persona_id,
+    estado, motivo, llenaria, distintos}` con los estados de `ESTADOS_SIMULACION`. Una fila suprimida es
+    «no_se_carga», sin motivo (nunca se dice que alguien pidió la supresión); una en conflicto de cédula no se aplica a
+    ninguna ficha (sin persona); una «No autoriza» es «nueva_sin_autorizacion», «revocaria» (la ficha decía «sí») o
+    «no_autorizo» (y ninguna lleva campos)."""
+    conflictos: dict[int, list[dict]] = defaultdict(list)
+    for c in alm.conflictos:
+        conflictos[(c.get("registro") or {}).get("fila")].append(c)
+    en_revision = {c["persona_id"] for c in alm.coincidencias}
+    cruzadas = {pid for pid, _ in alm.cruces}
+    out: dict[int, dict] = {}
+    for r in registros:
+        fila = {"persona_id": None, "estado": "no_se_carga", "motivo": None, "llenaria": [], "distintos": []}
+        out[r.fila] = fila
+        if r.fila in suprimidas:
+            continue
+        suyos = conflictos.get(r.fila, [])
+        duro = next((c for c in suyos if c["motivo"] in MOTIVOS_CONFLICTO), None)
+        if duro is not None:
+            fila.update(estado="conflicto_cedula", motivo=duro["motivo"])
+            continue
+        pid = alm.por_llave.get(("planilla", r.clave_fila))
+        d = alm.docs.get(pid) if pid is not None else None
+        if d is None:
+            continue
+        nueva = pid in alm.nuevas
+        fila["persona_id"] = pid
+        if r.autorizacion == "no":
+            fila["estado"] = "nueva_sin_autorizacion" if nueva else \
+                "revocaria" if d.get("consentimiento") == "si" else "no_autorizo"
+            continue
+        if not nueva and alm.es_no(d):
+            fila["estado"] = "no_autorizo"
+            continue
+        digitacion = next((c for c in suyos if c["motivo"] == "posible_digitacion"), None)
+        if nueva:
+            fila["llenaria"] = modelo.completados(None, d)
+            if digitacion is not None:
+                fila.update(estado="revision", motivo="posible_digitacion")
+            elif pid in en_revision:
+                fila.update(estado="revision", motivo="posible_duplicado")
+            else:
+                fila["estado"] = "nueva"
+            continue
+        llenaria, distintos = _cambios_de(alm, pid)
+        fila.update(llenaria=llenaria, distintos=distintos, estado="completaria" if llenaria or distintos else "igual")
+        cambio = alm.cambios.get(pid)
+        votacion = (cambio["foto"] if cambio is not None else d).get("votacion")  # la de antes de esta fila
+        if (r.puesto_texto or r.mesa_texto) and isinstance(votacion, dict) and votacion.get("eleccion") != alm.vigente:
+            fila.update(estado="otra_eleccion", motivo="puesto_de_otra_eleccion")
+        elif digitacion is not None:
+            fila.update(estado="revision", motivo="posible_digitacion")
+        elif pid in cruzadas:
+            fila["motivo"] = "cruce_automatico"
+    return out
+
+
+def simular_registros(db: Database, registros, *, quien=None, capturado_por: int | None = None) -> dict[int, dict]:
+    """Vista previa fiel de cargar `registros` (de la fuente «planilla») sin escribir nada: la misma cascada que
+    `importar_registros` sobre todas las fichas activas, sin guardar. Devuelve por número de fila `{persona_id,
+    estado, motivo, llenaria, distintos}` (ver `_filas_de`); `persona_id` es None en lo que crearía una ficha nueva.
+
+    Sin efectos: `bloquear` no anota huellas, las fichas nuevas llevan ids negativos (no gastan el contador) y no se
+    llama a `guardar`, a las coincidencias ni a los eventos. Solo lee (y crea la clave de supresión si no existía, como
+    cualquier importación). Sin el turno de importación: la carga de verdad vuelve a correr la cascada dentro de él."""
+    registros = solo_declaradas(registros)
+    alm = _Almacen(db, actor=_actor_de(quien))
+    alm.bloquear = lambda pares: None
+    alm.ids_libres = list(range(-1, -(max(IDS_SIMULADOS, 2 * len(registros)) + 1), -1))
+    res = Resumen()
+    alm.res = res
+    suprimidas = {r.fila for r in registros if _es_suprimida(alm, r)}
+    _importar_registros(alm, "planilla", registros, 0, res, capturado_por)
+    filas = _filas_de(alm, registros, suprimidas)
+    for f in filas.values():
+        if isinstance(f["persona_id"], int) and f["persona_id"] < 0:
+            f["persona_id"] = None
+    return filas
+
+
+def importar_registros(db: Database, registros, *, quien=None, capturado_por: int | None = None,
+                       archivo: str, sha: str | None, fotos_sha256: list[str] | None = None,
+                       importacion_id: int | None = None) -> tuple[Resumen, dict[int, dict]]:
+    """Carga `registros` (filas de la fuente «planilla» ya armadas, p. ej. con `lectores.registro_planilla`) como una
+    importación: con el turno «importando» (`ImportacionEnCurso` si otra corre), el registro en `importaciones` (con
+    `evidencia_sha256` {archivo: sha} y, de una foto, `fotos_sha256`, por donde se reconoce una foto ya cargada) y la
+    auditoría de siempre. Las autorizaciones quedan «declaradas en planilla» (`solo_declaradas`).
+
+    El post-proceso se acota a las fichas que tocó la carga (tomadas antes de `guardar`, que las olvida): coincidencias
+    imposibles, georreferenciación y completitud. Devuelve el `Resumen` y, por número de fila, `{persona_id, estado,
+    motivo}`: los estados de la vista previa en pasado («completada», «revocada»…; `ESTADO_CARGADO`) y «no_guardada»
+    si la ficha cambió en el panel mientras tanto y no se pudo escribir. `importacion_id`: el número que tendrá la
+    importación, si quien llama ya lo reservó (`bd.siguiente_id(db, "importaciones")`) para saber cuál fue."""
+    registros = solo_declaradas(registros)
+    actor = _actor_de(quien)
+    usuario = actor["usuario"]
+    dueño = uuid.uuid4().hex
+    if not bd.tomar_turno(db, "importando", dueño, TURNO_MIN):
+        raise ImportacionEnCurso()
+    try:
+        res = Resumen()
+        res.archivos.append({"archivo": archivo, "tipo": "planilla", "filas": len(registros)})
+        res.registros_por_fuente["planilla"] = len(registros)
+        imp_id = importacion_id if importacion_id is not None else bd.siguiente_id(db, "importaciones")
+        alm = _Almacen(db, actor=actor)
+        alm.res = res
+        suprimidas = {r.fila for r in registros if _es_suprimida(alm, r)}
+        _importar_registros(alm, "planilla", registros, imp_id, res, capturado_por, archivo=archivo, sha=sha)
+        filas = _filas_de(alm, registros, suprimidas)
+        tocadas = set(alm.nuevas) | set(alm.cambios)
+        bd.renovar_turno(db, "importando", dueño, TURNO_MIN)
+        res.no_guardadas = alm.guardar()
+        alm.guardar_coincidencias()
+        alm.despues_de_guardar(imp_id, usuario)
+        bd.renovar_turno(db, "importando", dueño, TURNO_MIN)
+        pids = sorted(tocadas - alm.fallidas)
+        if pids:
+            bd.cerrar_coincidencias_imposibles(db, pids)
+            res.geo = georreferenciar(db, pids)
+            bd.recalcular_completitud(db, pids)
+        salida: dict[int, dict] = {}
+        for n, f in filas.items():
+            estado = "no_guardada" if f["persona_id"] in alm.fallidas else ESTADO_CARGADO.get(f["estado"], f["estado"])
+            salida[n] = {"persona_id": f["persona_id"], "estado": estado, "motivo": f["motivo"]}
+        folios = sorted({str(r.datos["folio"]) for r in registros if r.datos.get("folio")})
+        doc = {"_id": imp_id, "ts": bd.ahora(), "usuario": usuario, "uid": actor["uid"], "capturado_por": capturado_por,
+               "archivo": archivo, "tipo": "planilla", "evidencia_sha256": {archivo: sha} if sha else {},
+               "fotos_sha256": list(fotos_sha256 or []), "resumen": res.dict()}
+        if folios:
+            doc["folio"] = ", ".join(folios)
+        db.importaciones.insert_one(doc)
+        bd.auditar(db, SimpleNamespace(**actor, ip=None), "importar", "importacion", imp_id, res.dict(),
+                   capturado_por=capturado_por)
+        return res, salida
+    finally:
+        bd.soltar_turno(db, "importando", dueño)
+
+
 def _importar_tramites(alm: _Almacen, filas, res: Resumen) -> None:
     alm.res = res
     grupos = cruce.agrupar_tramites(filas)

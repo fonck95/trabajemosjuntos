@@ -278,9 +278,16 @@ def _si_no(v: object) -> bool | None:
     return True if t in ("SI", "S", "X") else False if t in ("NO", "N") else None
 
 
-def leer_planilla(ruta: str | Path):
-    """Filas de la planilla de campo como `Registro`s. Si «Cédula» y «Repita la cédula» difieren, la fila va sin cédula
-    y las dos quedan en `datos` (cedula_digitada y cedula_repetida) para el conflicto de posible digitación."""
+def registro_planilla(valores: dict, fila: int):
+    """Una fila de la planilla de campo como `Registro`, o None si no trae nombre. `valores` va por la clave
+    normalizada de cada columna de la plantilla («CEDULA», «REPITALACEDULA», «NOMBRECOMPLETO», «CELULAR»…, como las
+    deja `_clave`) con lo que dice la celda tal cual; `fila` es el número de la fila (en el Excel, la de la hoja; en
+    una foto, la de la planilla). La usan el Excel (`leer_planilla`) y la foto de una planilla física
+    (`app/planillas.py`): la misma fila da el mismo `Registro` (y la misma `clave_fila`), así la misma hoja subida
+    después en Excel no se duplica.
+
+    Si «Cédula» y «Repita la cédula» difieren, la fila va sin cédula y las dos quedan en `datos` (cedula_digitada y
+    cedula_repetida) para el conflicto de posible digitación."""
     from .. import modelo
     from .fuentes import Registro, clave_fila
     tipos = {**{_clave(k): k for k in modelo.TIPOS_DOCUMENTO}, **_inverso(modelo.TIPOS_DOCUMENTO)}
@@ -288,69 +295,78 @@ def leer_planilla(ruta: str | Path):
     estados = {**_inverso(modelo.ESTADOS_AUTORIZACION), "SI": "si", "NO": "no", "AUTORIZA": "si"}
     medios = _inverso(modelo.MEDIOS_AUTORIZACION)
     canales = _inverso(modelo.CANALES_AUTORIZACION)
+
+    def busca(*opciones):
+        for c in opciones:
+            if valores.get(c) not in (None, ""):
+                return valores[c]
+        return None
+
+    nombre = tx.nombre_visible(busca("NOMBRECOMPLETO"))
+    if not tx.nombre_norm(nombre):
+        return None
+    datos: dict = {"fila": fila}
+    cedula = tx.cedula(busca("CEDULA")) or None
+    repetida_cruda = busca("REPITALACEDULA")
+    repetida = tx.cedula(repetida_cruda) or None
+    if repetida_cruda is not None and cedula != repetida:
+        datos.update(cedula_digitada=cedula, cedula_repetida=repetida or _texto(repetida_cruda))
+        cedula = None
+    tipo = tipos.get(_clave(busca("TIPODEDOCUMENTO")))
+    tels = []
+    for t in (*tx.telefonos(busca("CELULAR", "TELEFONO")), *tx.telefonos(busca("OTROTELEFONO"))):
+        if t not in tels:
+            tels.append(t)
+    edad = busca("EDAD")
+    try:
+        edad = int(float(edad)) if edad is not None else None
+        if edad is not None and not 0 <= edad <= 120:
+            edad = None
+    except (TypeError, ValueError):
+        edad = None
+    fecha_nac = _fecha_local(busca("FECHADENACIMIENTO"))
+    barrio = _texto(busca("BARRIOOVEREDA")) or None
+    direccion = _texto(busca("DIRECCION")) or None
+    # El barrio se pega a la dirección y queda además aparte (`lugar_texto`, en el origen de la fila): una descripción
+    # («AL LADO DE…») puede taparlo, y `importar.barrio_declarado` lo recupera al georreferenciar
+    if barrio and tx.limpiar(barrio) not in tx.limpiar(direccion or ""):
+        direccion = f"{direccion}, {barrio}" if direccion else barrio
+    mesa = busca("MESA")
+    lista_canales = [canales[_clave(c)] for c in str(busca("CANALESAUTORIZADOS") or "").replace(";", ",").split(",")
+                     if _clave(c) in canales]
+    reg = Registro(
+        fuente="planilla", fila=fila, clave_fila="", cedula=cedula,
+        tipo_documento=tipo or ("CC" if cedula else None), nombre=nombre, telefonos=tels,
+        direccion=direccion, lugar_texto=barrio, sexo=sexos.get(_clave(busca("SEXO"))), edad=edad,
+        fecha_nacimiento=fecha_nac, puesto_texto=_texto(busca("PUESTODEVOTACION")) or None,
+        mesa_texto=_texto(mesa) or None, autorizacion=estados.get(_clave(busca("AUTORIZACIONDEDATOS"))),
+        autorizacion_medio=medios.get(_clave(busca("MEDIODELAAUTORIZACION"))),
+        canales=list(dict.fromkeys(lista_canales)),
+        planillero=_texto(busca("PLANILLEROUSUARIO", "PLANILLERO")).lower() or None,
+        fecha=_fecha_local(busca("FECHA")), observaciones=_texto(busca("OBSERVACIONES")) or None)
+    reg.clave_fila = clave_fila(cedula, nombre, fecha_nac or edad, tels, barrio)
+    datos["mayor_de_18"] = _si_no(busca("MAYORDE"))
+    reg.datos = {**{k: v for k, v in reg.dict().items()
+                    if k not in ("fuente", "fila", "clave_fila", "datos") and v not in (None, "", [], {})},
+                 **{k: v for k, v in datos.items() if v is not None}}
+    return reg
+
+
+def leer_planilla(ruta: str | Path):
+    """Filas de la planilla de campo como `Registro`s (`registro_planilla`, con lo que dice cada celda por la clave de
+    su columna). Se saltan las filas vacías y las que no traen nombre."""
     with _libro(ruta) as wb:
         ws, fila_enc, enc = _hoja_con(wb, PLANILLA)
         if ws is None:
             raise ValueError("El archivo no tiene una hoja con Cédula, Nombre completo y Autorización de datos")
         col = {c: i for i, c in enumerate(enc)}
 
-        def busca(f, *opciones):
-            for c in opciones:
-                if c in col and col[c] < len(f) and f[col[c]] not in (None, ""):
-                    return f[col[c]]
-            return None
-
         for i, f in enumerate(ws.iter_rows(values_only=True)):
             if i <= fila_enc or not any(x not in (None, "") for x in f):
                 continue
-            nombre = tx.nombre_visible(busca(f, "NOMBRECOMPLETO"))
-            if not tx.nombre_norm(nombre):
-                continue
-            datos: dict = {"fila": i + 1}
-            cedula = tx.cedula(busca(f, "CEDULA")) or None
-            repetida_cruda = busca(f, "REPITALACEDULA")
-            repetida = tx.cedula(repetida_cruda) or None
-            if repetida_cruda is not None and cedula != repetida:
-                datos.update(cedula_digitada=cedula, cedula_repetida=repetida or _texto(repetida_cruda))
-                cedula = None
-            tipo = tipos.get(_clave(busca(f, "TIPODEDOCUMENTO")))
-            tels = []
-            for t in (*tx.telefonos(busca(f, "CELULAR", "TELEFONO")), *tx.telefonos(busca(f, "OTROTELEFONO"))):
-                if t not in tels:
-                    tels.append(t)
-            edad = busca(f, "EDAD")
-            try:
-                edad = int(float(edad)) if edad is not None else None
-                if edad is not None and not 0 <= edad <= 120:
-                    edad = None
-            except (TypeError, ValueError):
-                edad = None
-            fecha_nac = _fecha_local(busca(f, "FECHADENACIMIENTO"))
-            barrio = _texto(busca(f, "BARRIOOVEREDA")) or None
-            direccion = _texto(busca(f, "DIRECCION")) or None
-            # El barrio se pega a la dirección y queda además aparte (`lugar_texto`, en el origen de la fila): una
-            # descripción («AL LADO DE…») puede taparlo, y `importar.barrio_declarado` lo recupera al georreferenciar
-            if barrio and tx.limpiar(barrio) not in tx.limpiar(direccion or ""):
-                direccion = f"{direccion}, {barrio}" if direccion else barrio
-            mesa = busca(f, "MESA")
-            lista_canales = [canales[_clave(c)] for c in str(busca(f, "CANALESAUTORIZADOS") or "").replace(";", ",").split(",")
-                             if _clave(c) in canales]
-            reg = Registro(
-                fuente="planilla", fila=i + 1, clave_fila="", cedula=cedula,
-                tipo_documento=tipo or ("CC" if cedula else None), nombre=nombre, telefonos=tels,
-                direccion=direccion, lugar_texto=barrio, sexo=sexos.get(_clave(busca(f, "SEXO"))), edad=edad,
-                fecha_nacimiento=fecha_nac, puesto_texto=_texto(busca(f, "PUESTODEVOTACION")) or None,
-                mesa_texto=_texto(mesa) or None, autorizacion=estados.get(_clave(busca(f, "AUTORIZACIONDEDATOS"))),
-                autorizacion_medio=medios.get(_clave(busca(f, "MEDIODELAAUTORIZACION"))),
-                canales=list(dict.fromkeys(lista_canales)),
-                planillero=_texto(busca(f, "PLANILLEROUSUARIO", "PLANILLERO")).lower() or None,
-                fecha=_fecha_local(busca(f, "FECHA")), observaciones=_texto(busca(f, "OBSERVACIONES")) or None)
-            reg.clave_fila = clave_fila(cedula, nombre, fecha_nac or edad, tels, barrio)
-            datos["mayor_de_18"] = _si_no(busca(f, "MAYORDE"))
-            reg.datos = {**{k: v for k, v in reg.dict().items()
-                            if k not in ("fuente", "fila", "clave_fila", "datos") and v not in (None, "", [], {})},
-                         **{k: v for k, v in datos.items() if v is not None}}
-            yield reg
+            reg = registro_planilla({c: f[j] for c, j in col.items() if j < len(f)}, i + 1)
+            if reg is not None:
+                yield reg
 
 
 # ───────────────────────────── Base general de la campaña ─────────────────────────────

@@ -58,6 +58,10 @@ LIMITE_JSON = 256 * 1024  # el JSON más grande del panel (una ficha o una reuni
 # graba en audio/mp4, que pesa más). La ruta vuelve a contarlo al leerlo
 LIMITE_AUDIO = 2 * 1024 * 1024 + 4096
 RUTA_AUDIO = "/api/agente/transcribir"
+# La foto de una planilla física (`app/planillas.py`, MAX_BYTES = 1,5 MB: el navegador la reduce antes). La ruta vuelve
+# a contarla al leerla y responde 413 `pesada` con su mensaje; esto es el techo de la guardia, con un margen
+LIMITE_FOTO = 1_500_000 + 64 * 1024
+RUTA_FOTOS = "/api/planillas/fotos"
 # El servidor MCP de la presentación (app/api/mcp.py) tampoco usa la sesión: lo autentica su clave, en la ruta
 RUTAS_SIN_SESION = {"/api/login", "/api/yo", "/api/mcp"}
 # Con la clave temporal sin cambiar o el compromiso sin aceptar, un usuario solo llega a estas rutas (3.5)
@@ -519,7 +523,7 @@ class GuardiaApi:
         app, ruta = scope["app"], ruta_interna(scope)
         # Importar acepta hasta 6 Excel de max_subida_mb cada uno; el resto es JSON pequeño
         limite = (app.state.cfg.max_subida_mb * 6 + 1) * MB if ruta == "/api/importar" else \
-            LIMITE_AUDIO if ruta == RUTA_AUDIO else LIMITE_JSON
+            LIMITE_AUDIO if ruta == RUTA_AUDIO else LIMITE_FOTO if ruta == RUTA_FOTOS else LIMITE_JSON
         largo = Headers(scope=scope).get("content-length", "")
         if largo.isdigit() and int(largo) > limite:
             return await JSONResponse({"detail": "La petición es demasiado grande"}, 413)(scope, receive, send)
