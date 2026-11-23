@@ -101,17 +101,19 @@ class ApiInterna:
         return cls(request.app, request.cookies.get(COOKIE, ""), str(sesion.get("csrf") or ""), ip_de(request))
 
     async def pedir(self, metodo: str, ruta: str, *, params: dict | None = None, json_: Any = None,
-                    clave: str | None = None, respuesta: bool = False, plazo: float | None = None) -> Any:
+                    clave: str | None = None, respuesta: bool = False, plazo: float | None = None,
+                    lectura: bool = False) -> Any:
         """`metodo` y `ruta` (`/api/...`) de una ruta existente; `params` sin vacíos; `clave` = Idempotency-Key de una
         escritura (la misma para el mismo `tool_use`); `plazo`: los segundos que puede esperar una escritura (el que le
-        queda a la herramienta, `Contexto.plazo_escritura`). Devuelve el JSON (o la respuesta entera con
-        `respuesta`)."""
+        queda a la herramienta, `Contexto.plazo_escritura`). `lectura`: un POST que no escribe (una vista previa con
+        cuerpo) se pide como una lectura, sin el blindaje de las escrituras (si vence, se cancela). Devuelve el JSON (o
+        la respuesta entera con `respuesta`)."""
         if not ruta.startswith("/api/"):
             raise ValueError("Solo rutas de la API del panel")
         limpio = {k: v for k, v in (params or {}).items() if v is not None and v != ""}
         cab = {"idempotency-key": clave} if clave else None
         try:
-            if metodo.upper() in LECTURAS:
+            if metodo.upper() in LECTURAS or lectura:
                 r = await self._cliente.request(metodo, ruta, params=limpio or None, json=json_, headers=cab)
             else:
                 r = await self._escribir(lambda: self._cliente.request(metodo, ruta, params=limpio or None, json=json_,

@@ -89,10 +89,16 @@ class Resultado:
 
 @dataclass
 class Confirmacion:
-    """La tarjeta que el panel muestra antes de una escritura: qué se va a hacer, con los valores exactos."""
+    """La tarjeta que el panel muestra antes de una escritura: qué se va a hacer, con los valores exactos.
+
+    `personas`: los ids de las personas cuyos datos muestra la tarjeta aunque la entrada no los nombre con
+    `persona_id`/`persona_ids` (un conflicto, una solicitud, un grupo de duplicados, las filas de una planilla). El bucle
+    (y las propuestas por MCP) las anotan junto con las de la entrada: si alguna se suprime o dice «no», se borra lo que
+    las guarda. No va a la interfaz."""
     titulo: str
     detalle: list[tuple[str, str]] = field(default_factory=list)
     aviso: str | None = None
+    personas: set[int] = field(default_factory=set)
 
     def para_interfaz(self) -> dict:
         return {"titulo": self.titulo, "detalle": [[str(k), str(v)] for k, v in self.detalle], "aviso": self.aviso}
@@ -121,11 +127,18 @@ class Contexto:
     emitir: Callable[[dict], None] | None = None
     # Cuándo empezó la herramienta: el bucle arma el contexto justo antes de correrla
     inicio: float = field(default_factory=time.monotonic)
+    # El plazo de esta herramienta (`Herramienta.plazo` o el de siempre): una carga de planilla o una unión en lote
+    # tienen más que los 60 s de siempre, y sus escrituras deben poder usarlo
+    plazo: float = PLAZO_HERRAMIENTA_S
+    # Por dónde llega la llamada: «chat» (el asistente del panel) o «mcp» (un agente externo con la clave de la
+    # persona, `api/mcp.py`). Las herramientas pueden ser más estrictas por MCP (páginas más chicas, sin filas de quien
+    # no autorizó)
+    via: str = "chat"
 
     def plazo_escritura(self) -> float:
         """Los segundos que le quedan a una escritura del panel para terminar antes de que el bucle corte la
         herramienta, con margen para avisar que pudo quedar hecha (`interno.ApiInterna.pedir`)."""
-        return self.inicio + PLAZO_HERRAMIENTA_S - MARGEN_PLAZO_S - time.monotonic()
+        return self.inicio + self.plazo - MARGEN_PLAZO_S - time.monotonic()
 
 
 Ejecutar = Callable[[Contexto, Any], Awaitable[Resultado]]
@@ -150,22 +163,26 @@ class Herramienta:
     nombre_remoto: str | None = None
     # Su plazo en el bucle, si no es el de siempre (`PLAZO_HERRAMIENTA_S`): la presentación escribe un plan en flujo
     plazo: float | None = None
-    # Por MCP (`api/mcp.py`): el alcance de la clave que la ofrece. None = sale del tipo (lectura → «lectura»,
-    # escritura → «escritura»; las de interfaz nunca); «» = nunca por MCP (necesita el chat: una foto, el navegador);
-    # o un alcance explícito («analitica»)
+    # Por MCP (`api/mcp.py`): el alcance de clave que la ofrece («lectura», «analitica» o «escritura»). None = nunca
+    # por MCP: cada herramienta que sale del panel hacia un agente externo se decide una por una (una prueba fija los
+    # nombres por alcance)
     mcp: str | None = None
+    # Condición extra que depende de los ajustes de primer nivel del panel (`politica.leer`: `agente_planillas`,
+    # `agente_mcp`…), no solo de los del asistente: (quien, ajustes) -> bool. Sin ajustes se evalúa con los de defecto
+    disponible_ajustes: Callable[[Any, dict], bool] | None = None
 
     def __post_init__(self) -> None:
         if self.tipo == "escritura" and self.confirmar is None:
             raise ValueError(f"La herramienta de escritura {self.nombre} necesita `confirmar`")
 
     def alcance_mcp(self) -> str | None:
-        """El alcance de clave MCP que ofrece esta herramienta, o None si no se ofrece por MCP."""
-        if self.nombre_remoto or self.mcp == "":
+        """El alcance de clave MCP que ofrece esta herramienta, o None si no se ofrece por MCP (lo de siempre: hay
+        que marcarla). Nunca las de Mnemo ni las de interfaz (mueven el navegador del panel)."""
+        if self.nombre_remoto or self.tipo == "interfaz" or self.mcp not in ("lectura", "analitica", "escritura"):
             return None
-        if self.mcp:
-            return self.mcp
-        return {"lectura": "lectura", "escritura": "escritura"}.get(self.tipo)
+        if (self.mcp == "escritura") != (self.tipo == "escritura"):
+            return None
+        return self.mcp
 
     def permitida(self, quien: Any) -> bool:
         return all(quien.puede(p) for p in self.permisos)

@@ -64,6 +64,7 @@ from .. import db as bd
 from ..seguridad import SIN_BASE
 from . import adelanto as adelanto_
 from . import conversaciones as conv_db
+from . import grafico
 from . import politica, proveedores, sistema
 from . import voz as voz_clonada
 # El plazo de una herramienta del panel es uno solo: el de `herramientas/base.py` (con él calcula una escritura cuánto
@@ -132,7 +133,8 @@ REINTENTOS = 2               # repeticiones de una ronda tras fallos pasajeros (
 TURNOS_POR_PROCESO = 4
 # Cómo termina una ronda que se cortó: con `tool_use` no se ejecuta (la entrada puede estar a medias), sin él se avisa
 CORTES = frozenset({"max_tokens", "model_context_window_exceeded", "other"})
-ACCIONES = frozenset({"navegar", "recargar", "insignias", "mapa", "presentacion", "recorrido", "automatica"})
+ACCIONES = frozenset({"navegar", "recargar", "insignias", "mapa", "presentacion", "recorrido", "automatica",
+                      "grafico"})
 FLUJO = {"X-Accel-Buffering": "no", "Cache-Control": "no-store"}
 
 RECHAZADA = "La persona rechazó esta acción: no la vuelvas a proponer salvo que lo pida."
@@ -467,6 +469,7 @@ class Turno:
         self.expira = None
         self.tokens = int((conv or {}).get("tokens_ultima") or 0)
         self.imagenes_ronda = 0  # base64 de imágenes en los resultados de la ronda en curso (TOPE_IMAGENES)
+        self.graficos: dict[str, dict] = {}  # los gráficos que mostró cada herramienta del turno (`_ui`)
         # Lo que ya lleva la conversación (TOPE_IMAGENES_CONVERSACION y MAX_IMAGENES_CONVERSACION): base64 y cantidad
         self.imagenes_conv = self.imagenes_n = 0
         self.servido = 0  # caracteres de resultados de herramientas que se le pasaron al modelo en el turno
@@ -671,7 +674,7 @@ class Turno:
         from . import herramientas as registro
         from . import mnemo_cliente
         from .herramientas import mnemo as hmnemo
-        ofrecidas = list(registro.para(self.quien, self.agente, self.cfg))
+        ofrecidas = list(registro.para(self.quien, self.agente, self.cfg, ajustes=self.ajustes))
         defs_mnemo, de_mnemo, instrucciones, aviso = [], [], None, None
         try:
             cliente = (await run_in_threadpool(mnemo_cliente.cliente_de, self.app)
@@ -681,7 +684,7 @@ class Turno:
                     hmnemo.definiciones(cliente, self.cfg.mnemo_herramientas), PLAZO_MNEMO_S) or [])
                 json.dumps(defs_mnemo)  # se guardan con la conversación: tienen que ser JSON de verdad
                 de_mnemo = [h for h in hmnemo.desde_definiciones(defs_mnemo)
-                            if politica.ofrecida(h, self.quien, self.agente, self.cfg)]
+                            if politica.ofrecida(h, self.quien, self.agente, self.cfg, ajustes=self.ajustes)]
                 instrucciones = getattr(cliente, "instrucciones", None)
         except asyncio.CancelledError:
             raise
@@ -725,7 +728,7 @@ class Turno:
             except Exception as e:  # noqa: BLE001 - la conversación sigue sin Mnemo
                 log.warning("Asistente: no se pudieron rehacer las herramientas de Mnemo (%s)", type(e).__name__)
         self.herramientas = {n: fijas.get(n) or de_mnemo[n] for n in nombres if n in fijas or n in de_mnemo}
-        self.permitidas = {h.nombre for h in registro.para(self.quien, self.agente, self.cfg)}
+        self.permitidas = {h.nombre for h in registro.para(self.quien, self.agente, self.cfg, ajustes=self.ajustes)}
         if de_mnemo:
             try:
                 from . import mnemo_cliente
@@ -736,12 +739,12 @@ class Turno:
                 self.mnemo = None
             if self.mnemo is not None:
                 self.permitidas |= {n for n, h in de_mnemo.items()
-                                    if politica.ofrecida(h, self.quien, self.agente, self.cfg)}
+                                    if politica.ofrecida(h, self.quien, self.agente, self.cfg, ajustes=self.ajustes)}
 
-    def _contexto(self, tid: str) -> Contexto:
+    def _contexto(self, tid: str, h: Herramienta | None = None) -> Contexto:
         return Contexto(quien=self.quien, db=self.db, cfg=self.cfg, app=self.app, api=self.api, ajustes=self.ajustes,
                         conversacion_id=self.cid, tool_use_id=tid, mnemo=self.mnemo, proveedor=self.proveedor,
-                        emitir=self.emitir)
+                        emitir=self.emitir, plazo=_plazo(h) if h is not None else PLAZO_HERRAMIENTA_S)
 
     async def _guardar(self, rol: str, contenido: Any = None, replay: bool = True, tokens: int | None = None,
                        **campos: Any) -> None:
@@ -769,6 +772,13 @@ class Turno:
         except Exception as e:  # noqa: BLE001 - la respuesta sigue, sin voz
             log.warning("Asistente: las frases de la respuesta hablada fallaron (%s)", type(e).__name__)
             self.frases = None
+
+    def _ui(self, tid: str, estado: str, resumen: str) -> dict:
+        """El estado de una herramienta para el historial de la interfaz, con el gráfico que mostró, si mostró uno."""
+        ui = {"id": tid, "estado": estado, "resumen": resumen}
+        if tid in self.graficos:
+            ui["grafico"] = self.graficos[tid]
+        return ui
 
     def _herramienta(self, tid: str, nombre: str, etiqueta: str, estado: str, resumen: str | None = None) -> None:
         ev = {"tipo": "herramienta", "id": tid, "nombre": nombre, "etiqueta": etiqueta, "estado": estado}
@@ -867,7 +877,7 @@ class Turno:
                 self._herramienta(tid, nombre, etiqueta, "error", "No se ejecutó")
             elif decisiones.get(tid) is True:
                 bloque, estado, resumen, fatal = await self._aprobada(ll)
-                resultados[tid], ui[tid] = bloque, {"id": tid, "estado": estado, "resumen": resumen}
+                resultados[tid], ui[tid] = bloque, self._ui(tid, estado, resumen)
             else:
                 resultados[tid] = _resultado(tid, RECHAZADA, True)
                 ui[tid] = {"id": tid, "estado": "rechazada", "resumen": "Rechazada"}
@@ -1117,7 +1127,7 @@ class Turno:
                     else:
                         bloque, estado, resumen, fatal = await self._correr_herramienta(h, tid, args)
             bloques[tid] = bloque
-            ui.append({"id": tid, "estado": estado, "resumen": resumen})
+            ui.append(self._ui(tid, estado, resumen))
         if fatal is not None and llamadas:
             for ll in llamadas:  # el turno termina: lo que esperaba aprobación tampoco se ejecuta
                 bloques[ll["id"]] = self._fallo(ll["id"], ll["nombre"], ll["etiqueta"], ErrorHerramienta(
@@ -1159,15 +1169,16 @@ class Turno:
             await run_in_threadpool(bd.borrar_conversaciones, self.db, {"_id": self.cid})
             raise FinDelTurno(SUPRIMIDA, "borrada")
 
-    async def _correr_herramienta(self, h: Herramienta, tid: str, args: Any) -> tuple:
-        """Ejecuta una herramienta con plazo: (tool_result, estado, resumen, error fatal o None)."""
+    async def _correr_herramienta(self, h: Herramienta, tid: str, args: Any, anotadas: set[int] | None = None) -> tuple:
+        """Ejecuta una herramienta con plazo: (tool_result, estado, resumen, error fatal o None). `anotadas`: en una
+        escritura aprobada, las personas que mostró su tarjeta (ya anotadas en la conversación)."""
         if h.tipo != "escritura" and self.servido >= TOPE_RESULTADOS_TURNO:  # ni se lee: el modelo no lo recibiría
             return self._fallo(tid, h.nombre, h.etiqueta, ErrorHerramienta(TOPE_TURNO, "tope_turno"))
         desde = _ahora() - MARGEN_OLVIDO
         try:
             if h.nombre_remoto:
                 await self._mnemo_vigente(h)
-            res = await asyncio.wait_for(h.ejecutar(self._contexto(tid), args), _plazo(h))
+            res = await asyncio.wait_for(h.ejecutar(self._contexto(tid, h), args), _plazo(h))
             if not isinstance(res, Resultado):
                 raise TypeError("la herramienta no devolvió un Resultado")
             texto = res.texto_para_modelo()
@@ -1215,12 +1226,19 @@ class Turno:
                       "verlas, que la persona empiece una conversación nueva.]")
         personas = _personas(res.personas)
         if personas:
-            await self._anotar(personas, desde, _personas_de_entrada(args) if h.tipo == "escritura" else frozenset())
+            await self._anotar(personas, desde, ((_personas_de_entrada(args) | (anotadas or set()))
+                                                 if h.tipo == "escritura" else frozenset()))
         resumen = _corto(res.resumen) or "Listo"
         if res.termina_turno:
             self.termina_turno = True
         self._herramienta(tid, h.nombre, h.etiqueta, "ok", resumen)
         for a in _acciones(res.acciones):
+            if a.get("tipo") == "grafico":
+                a = grafico.validar(a)
+                if a is None:
+                    log.warning("Asistente: se descartó un gráfico que no cumple el contrato")
+                    continue
+                self.graficos[tid] = a  # queda con la herramienta en el historial: se ve al repintar
             self.emitir({"tipo": "accion", "accion": a})
         contenido: Any = [{"type": "text", "text": texto}, *imagenes] if imagenes else texto
         return _resultado(tid, contenido), "ok", resumen, None
@@ -1229,7 +1247,7 @@ class Turno:
         """Arma la tarjeta de una escritura: (llamada pendiente, None) o (None, fallo) si `confirmar` falla."""
         desde = _ahora() - MARGEN_OLVIDO  # la tarjeta también lee la ficha (lo de «antes → después»)
         try:
-            conf = await asyncio.wait_for(h.confirmar(self._contexto(tid), args), PLAZO_HERRAMIENTA_S)
+            conf = await asyncio.wait_for(h.confirmar(self._contexto(tid, h), args), _plazo(h))
             if not isinstance(conf, Confirmacion):
                 raise TypeError("confirmar no devolvió una Confirmacion")
             tarjeta = _tarjeta(conf)
@@ -1244,7 +1262,7 @@ class Turno:
             log.error("Asistente: la herramienta %s no pudo preparar la acción (%s)", h.nombre, type(e).__name__)
             return None, self._fallo(tid, h.nombre, h.etiqueta, ErrorHerramienta(
                 "No se pudo preparar la acción por un error interno del panel.", "error"))
-        personas = _personas_de_entrada(args)
+        personas = _personas_de_entrada(args) | _personas(conf.personas)
         if personas:
             await self._anotar(personas, desde)
         self._herramienta(tid, h.nombre, h.etiqueta, "pendiente")
@@ -1253,7 +1271,7 @@ class Turno:
         # anterior (que los cortaba a 500 caracteres sin decirlo) no se aprueba (`abrir_confirmacion`)
         return {"id": tid, "nombre": h.nombre, "etiqueta": h.etiqueta,
                 "entrada": conv_db.a_json(_entrada_pendiente(h, args, uso.get("input"))),
-                "confirmacion": {**tarjeta, "entera": True}}, None
+                "confirmacion": {**tarjeta, "entera": True}, "personas": sorted(_personas(conf.personas))}, None
 
     async def _aprobada(self, ll: dict) -> tuple:
         """Una escritura aprobada: se vuelven a comprobar los permisos (pudieron cambiar) y se ejecuta."""
@@ -1269,7 +1287,7 @@ class Turno:
             return self._fallo(tid, nombre, etiqueta, ErrorHerramienta(
                 "La acción ya no es válida: vuelve a prepararla.", "INVALID_JSON"))
         self._herramienta(tid, h.nombre, h.etiqueta, "aprobada")
-        return await self._correr_herramienta(h, tid, args)
+        return await self._correr_herramienta(h, tid, args, _personas(ll.get("personas") or []))
 
 
 # ───────────────────────────── Apertura del turno (antes del flujo) ─────────────────────────────
@@ -1380,7 +1398,7 @@ async def _frases_para(app: Any, quien: Any, ajustes: dict, cid: int, conv: dict
     datos de habitantes; si no, None. Con el eco de lo que escribió la persona (`texto`, el mensaje nuevo, y sus
     mensajes anteriores de la conversación): una frase que lo repite no se dice con la voz clonada. Nunca impide el
     turno."""
-    if not pedida or (conv or {}).get("personas"):
+    if not pedida or conv_db.con_datos(conv):
         return None
     try:
         if not await run_in_threadpool(voz_clonada.respuestas_para, app, quien, ajustes):
@@ -1397,7 +1415,7 @@ async def _frases_del_adelanto(app: Any, quien: Any, cid: int, conv: dict | None
     conversación no trae datos de habitantes, unas `voz.Frases` propias, firmadas y con el eco
     como las de la respuesta. Con la voz clonada o sin ella: el navegador las dice con la suya si no la hay (lo que
     dice, con las reglas de lo que se dice ante una sala, `voz.hablable`). Si no, None. Nunca impide el turno."""
-    if not pedida or (conv or {}).get("personas"):
+    if not pedida or conv_db.con_datos(conv):
         return None
     try:
         return await _frases_nuevas(app, quien, cid, conv, texto)

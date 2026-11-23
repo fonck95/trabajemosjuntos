@@ -208,14 +208,19 @@ def exigir(quien: Any, cfg: Any, agente: dict, db: Any) -> None:
                                   "mensaje": "El asistente no está habilitado para su rol."})
 
 
-def ofrecida(h: Any, quien: Any, agente: dict, cfg: Any) -> bool:
-    """¿Se le ofrece (o se le deja usar) esta herramienta ahora? Las mismas reglas de `herramientas.para`, para las
-    que no son fijas (Mnemo): permisos, el ajuste de escritura y la condición propia de la herramienta."""
+def ofrecida(h: Any, quien: Any, agente: dict, cfg: Any, *, ajustes: dict | None = None) -> bool:
+    """¿Se le ofrece (o se le deja usar) esta herramienta ahora? Permisos, el ajuste de escritura, la condición propia
+    de la herramienta con los ajustes del asistente (`disponible`) y la que depende de los del panel
+    (`disponible_ajustes`, con `ajustes` de `leer` o, sin ellos, los de defecto). La usan `herramientas.para`, las de
+    Mnemo y el servidor MCP."""
     if not h.permitida(quien):
         return False
     if h.tipo == "escritura" and not agente.get("escritura", True):
         return False
-    return h.disponible is None or bool(h.disponible(quien, agente, cfg))
+    if h.disponible is not None and not h.disponible(quien, agente, cfg):
+        return False
+    extra = getattr(h, "disponible_ajustes", None)
+    return extra is None or bool(extra(quien, ajustes if ajustes is not None else {}))
 
 
 def origen_mnemo(url: Any) -> str | None:

@@ -35,6 +35,7 @@ from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
 
 from .. import modelo
+from . import grafico
 from .llm import CENTINELA
 
 CONVERSACIONES, MENSAJES, USO, OLVIDOS = "agente_conversaciones", "agente_mensajes", "agente_uso", "agente_olvidos"
@@ -182,11 +183,25 @@ def sumar_personas(db: Database, cid: int, ids: set[int]) -> None:
 
 
 def tiene_personas(db: Database, cid: Any) -> bool:
-    """¿El modelo ya recibió en esta conversación datos de alguna persona (`personas` no está vacía)? Lo que escribe en
-    ella no se proyecta ante una sala (la guarda de la herramienta `presentacion`). Sin conversación, no."""
+    """¿El modelo ya recibió en esta conversación datos de alguna persona (`personas` no está vacía, o `con_datos`: lo
+    leído de una planilla física, que trae personas que aún no tienen ficha)? Lo que escribe en ella no se proyecta ante
+    una sala (la guarda de la herramienta `presentacion`) ni se dice con la voz clonada. Sin conversación, no."""
     if not isinstance(cid, int) or isinstance(cid, bool):
         return False
-    return db[CONVERSACIONES].find_one({"_id": cid, "personas.0": {"$exists": True}}, {"_id": 1}) is not None
+    return db[CONVERSACIONES].find_one({"_id": cid, "$or": [{"personas.0": {"$exists": True}}, {"con_datos": True}]},
+                                       {"_id": 1}) is not None
+
+
+def con_datos(conv: dict | None) -> bool:
+    """La misma pregunta que `tiene_personas` sobre un documento de conversación ya leído."""
+    return bool((conv or {}).get("personas")) or (conv or {}).get("con_datos") is True
+
+
+def marcar_datos(db: Database, cid: Any) -> None:
+    """Marca que el modelo recibió en esta conversación datos de personas que no se pueden anotar por su id (las filas
+    de una planilla física leída): desde ahí cuenta como `tiene_personas`."""
+    if isinstance(cid, int) and not isinstance(cid, bool):
+        db[CONVERSACIONES].update_one({"_id": cid}, {"$set": {"con_datos": True}})
 
 
 def suprimidas(db: Database, ids: set[int]) -> list[int]:
@@ -301,6 +316,9 @@ def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> di
             p = partes.get(h.get("id")) if isinstance(h, dict) else None
             if p is not None:
                 p["estado"], p["resumen"] = h.get("estado") or p["estado"], h.get("resumen") or ""
+                g = grafico.validar(h.get("grafico")) if h.get("grafico") is not None else None
+                if g is not None:
+                    p["grafico"] = g
 
     for d in docs:
         rol = d.get("rol")

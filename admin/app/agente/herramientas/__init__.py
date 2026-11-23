@@ -27,17 +27,9 @@ def por_nombre() -> dict[str, Herramienta]:
     return {h.nombre: h for h in fijas()}
 
 
-def para(quien: Any, ajustes_agente: dict, cfg: Any) -> list[Herramienta]:
+def para(quien: Any, ajustes_agente: dict, cfg: Any, *, ajustes: dict | None = None) -> list[Herramienta]:
     """Las herramientas fijas que se le ofrecen a `quien`: sus permisos, el ajuste de escritura y la condición propia
-    de cada una. El orden es el de `fijas()`."""
-    escritura = bool(ajustes_agente.get("escritura", True))
-    out = []
-    for h in fijas():
-        if not h.permitida(quien):
-            continue
-        if h.tipo == "escritura" and not escritura:
-            continue
-        if h.disponible is not None and not h.disponible(quien, ajustes_agente, cfg):
-            continue
-        out.append(h)
-    return out
+    de cada una (`disponible`, con los ajustes del asistente, y `disponible_ajustes`, con los del panel: `ajustes`, ya
+    validados por `politica.leer`; sin ellos, los de defecto). El orden es el de `fijas()`."""
+    from .. import politica  # aquí: politica importa el proveedor del modelo
+    return [h for h in fijas() if politica.ofrecida(h, quien, ajustes_agente, cfg, ajustes=ajustes)]
