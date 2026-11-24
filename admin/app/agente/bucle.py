@@ -759,7 +759,9 @@ class Turno:
     def _contexto(self, tid: str, h: Herramienta | None = None) -> Contexto:
         return Contexto(quien=self.quien, db=self.db, cfg=self.cfg, app=self.app, api=self.api, ajustes=self.ajustes,
                         conversacion_id=self.cid, tool_use_id=tid, mnemo=self.mnemo, proveedor=self.proveedor,
-                        emitir=self.emitir, plazo=_plazo(h) if h is not None else PLAZO_HERRAMIENTA_S)
+                        emitir=self.emitir, plazo=_plazo(h) if h is not None else PLAZO_HERRAMIENTA_S,
+                        politicos_conversacion=sistema.con_politicos(
+                            {d.get("name") for d in self.definiciones if isinstance(d, dict)}))
 
     async def _guardar(self, rol: str, contenido: Any = None, replay: bool = True, tokens: int | None = None,
                        **campos: Any) -> None:

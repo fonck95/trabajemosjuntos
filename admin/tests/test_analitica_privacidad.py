@@ -312,8 +312,11 @@ def test_las_bases_politicas_no_se_deducen(sesion):
     """30 personas que vienen solo de la base «general» o de la base con cédula (importadas por el administrador):
     ninguna tabla por fuente, quién capturó o mes de alta, serie de altas, anomalía, cohorte ni captura cambia con
     ellas, salvo la casilla «importación» (que junta todas las importaciones de bases, también la de trámites) y el
-    total."""
+    total. Con los datos políticos apagados (`agente_politicos`): encendidos, la fuente nombra esas bases
+    (tests/test_politicos_analitica.py)."""
     db = sesion.app.state.db
+    db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente_politicos": {"asistente": False, "mcp": False}}},
+                       upsert=True)
     u1, u2 = crear_usuario(db, "planillero")["_id"], crear_usuario(db, "planillero")["_id"]
     filas = []
     for i in range(60):
@@ -508,11 +511,13 @@ def test_planillero_y_consultor_reciben_403(sesion, como, rol):
 
 @pytest.mark.parametrize("consulta", [
     {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"q": "ana"}},
-    {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"lista": "Lista A"}},
+    # Los políticos válidos (lista, tipo, fuente general o cedulas, la dimensión lider) ya no son 422: 403 con
+    # `agente_politicos` apagado y 200 encendido (tests/test_politicos_analitica.py)
+    {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"lista": ""}},
     {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"lider": 1}},
-    {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"tipo": "lider"}},
-    {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"fuente": "general"}},
-    {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"fuente": "cedulas"}},
+    {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"tipo": "candidato"}},
+    {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"fuente": "otra_base"}},
+    {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"varios_lideres": False}},
     {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"regimen_salud": "Subsidiado"}},
     {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"consentimiento": "no"}},
     {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"reunion_id": 1}},
@@ -528,7 +533,8 @@ def test_planillero_y_consultor_reciben_403(sesion, como, rol):
     {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"zona": "rural", "sexo": "F", "menor": False,
                                                            "con_cedula": True}},
     {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"zona": "rural", "faltan": ["cedula", "telefono", "sexo"]}},
-    {"tipo": "tabla", "dimensiones": ["lider"]},
+    {"tipo": "tabla", "dimensiones": ["lideres"]},
+    {"tipo": "tabla", "dimensiones": ["lider", "fuente"]},
     {"tipo": "tabla", "dimensiones": ["regimen_salud"]},
     {"tipo": "tabla", "dimensiones": ["listas"]},
     {"tipo": "tabla", "dimensiones": ["creado_por"]},

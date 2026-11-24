@@ -119,14 +119,18 @@ def test_definiciones_son_json_schema_validos_para_la_messages_api():
         assert h.mcp == "analitica" and h.alcance_mcp() == "analitica"
         json.loads(json.dumps(d))  # determinista y serializable (el bucle la congela por conversación)
     assert H["diagnostico"].plazo == 120.0 and H["analizar"].plazo is None
-    # Los filtros nunca ofrecen búsqueda por texto, listas, líderes, salud, bases políticas, reunión ni creador
+    # Los filtros nunca ofrecen búsqueda por texto, salud, reunión ni creador. Los políticos (lista, tipo, líder, las
+    # bases de cédulas y general) están, pero el servidor solo los acepta con `agente_politicos` (403 si no)
     filtros = H["analizar"].definicion()["input_schema"]["properties"]["filtros"]["properties"]
-    assert not {"q", "lista", "lider", "tipo", "regimen_salud", "ids", "poligono", "mios", "reunion_id", "creado_por",
+    assert not {"q", "lider", "regimen_salud", "ids", "poligono", "mios", "reunion_id", "creado_por",
                 "actualizado_por", "situacion", "ocupacion", "tratables"} & set(filtros)
-    assert set(filtros["fuente"]["enum"]) == {"tramites", "reunion", "manual", "planilla"}
+    assert {"lista", "tipo", "lider_id", "varios_lideres", "sin_lider"} <= set(filtros)
+    assert set(filtros["fuente"]["enum"]) == {"tramites", "reunion", "manual", "planilla", "cedulas", "general",
+                                              "ambas"}
     assert "no" not in filtros["consentimiento"]["enum"]
     dims = H["analizar"].definicion()["input_schema"]["properties"]["dimensiones"]["items"]["enum"]
-    assert not {"lider", "listas", "regimen_salud", "creado_por", "fuente_politica", "sensibles"} & set(dims)
+    assert not {"listas", "regimen_salud", "creado_por", "fuente_politica", "sensibles"} & set(dims)
+    assert {"tipo", "lider", "lista"} <= set(dims)
     assert "diagnostico" not in H["analizar"].definicion()["input_schema"]["properties"]["tipo"]["enum"]
 
 
@@ -156,7 +160,7 @@ def test_van_en_el_catalogo_entre_planillas_y_gestion_y_solo_para_a_y_k(sesion, 
                                                            "zona": "rural", "sexo": "F", "menor": True}},
     {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"q": "ana"}},
     {"tipo": "tabla", "dimensiones": ["sexo"], "filtros": {"edad_min": 18}},
-    {"tipo": "tabla", "dimensiones": ["lider"]},
+    {"tipo": "tabla", "dimensiones": ["lider", "etiqueta"]},
     {"tipo": "tabla", "dimensiones": ["sexo"], "personas": [1]},
 ])
 def test_entradas_invalidas_se_rechazan_antes_de_llamar(entrada):
@@ -166,7 +170,7 @@ def test_entradas_invalidas_se_rechazan_antes_de_llamar(entrada):
 
 def test_diagnostico_valida_su_entrada():
     H["diagnostico"].validar({"fecha_meta": "2027-03-01", "meta_pct": 25, "filtros": {"zona": "rural"}})
-    for mala in ({"tipo": "tabla"}, {"meta_pct": 0}, {"fecha_meta": "2027-02-30"}, {"filtros": {"lista": "x"}}):
+    for mala in ({"tipo": "tabla"}, {"meta_pct": 0}, {"fecha_meta": "2027-02-30"}, {"filtros": {"lista": ""}}):
         with pytest.raises(ValidationError):
             H["diagnostico"].validar(mala)
 

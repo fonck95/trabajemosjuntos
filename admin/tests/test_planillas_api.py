@@ -1,7 +1,7 @@
 """La bandeja de planillas físicas por la API (app/api/planillas.py): subir una foto (validada, limpia, cifrada, con
-topes y sin leer el cuerpo de quien no puede), leerla de fondo, verla (A y K completa, P la suya enmascarada), la foto
-con sus cabeceras, IDOR entre personas, fotos repetidas y ya cargadas, retención y auditoría. Con un proveedor del
-modelo falso (sin red) e imágenes inventadas."""
+topes y sin leer el cuerpo de quien no puede), leerla de fondo, verla (A y K completa o enmascarada como la recibe el
+modelo; P y C, 403 en todo), la foto con sus cabeceras, fotos repetidas y ya cargadas, retención y auditoría. Con un
+proveedor del modelo falso (sin red) e imágenes inventadas."""
 import base64
 import dataclasses
 from datetime import datetime, timedelta, timezone
@@ -10,6 +10,7 @@ import pytest
 
 from app import planillas as pl
 from app.agente import cifrado
+from ayudas_g3 import coordinador
 from ayudas_planillas import (GPS_TEXTO, ProveedorFalso, abre, asgi, cabeceras_de, encender, esperar, fila, jpeg,
                               lectura_json, leer, png, subir)
 
@@ -102,38 +103,42 @@ def test_la_foto_con_su_tipo_y_sin_que_el_navegador_la_interprete(cliente, sesio
     assert b"TEXTO-SECRETO" not in r.content and abre(r.content).size == (1000, 800)
 
 
-def test_p_ve_sus_fotos_enmascaradas_y_nada_de_otros(cliente, sesion, como, monkeypatch):
-    encender(monkeypatch, cliente.app, _proveedor())
-    p1, p2 = como("planillero"), como("planillero")
-    d = subir(p1, jpeg()).json()
+def test_solo_a_y_k_usan_la_bandeja_y_la_enmascarada_es_la_del_modelo(cliente, sesion, como, monkeypatch):
+    encender(monkeypatch, cliente.app, _proveedor())  # con «planillero» guardado en los roles: no cuenta
+    k = coordinador(cliente.app, cliente.app.state.db)
+    d = subir(k, jpeg()).json()
     leer(cliente, d["id"])
     pid = d["id"]
-    # P1: la suya, enmascarada (y aunque pida la completa)
-    for v in (p1.get(f"/api/planillas/{pid}").json(), p1.get(f"/api/planillas/{pid}?enmascarada=0").json()):
-        a, no, menor = v["filas"]
-        assert a["cedula"] == "···101" and a["cedula_coincide"] is True and a["celular"] == "···4501"
-        assert "fecha_nacimiento" not in a and a["edad"] >= 40 and a["tiene_observaciones"] is True
-        assert "observaciones" not in a and "Vive" not in str(v)
-        assert no == {"n": 2, "nombre": "CENOBIA INVENTADA PACHECO", "lugar": "TRES DE OCTUBRE",
-                      "consentimiento": "no", "aviso": no["aviso"], "estado": "no_autoriza"}
-        assert "celular" not in menor and menor["menor"] is True
-    assert p1.get(f"/api/planillas/{pid}/foto").status_code == 200
-    # P2 no la ve, ni su foto, ni la relee ni la borra: como si no existiera
-    for r in (p2.get(f"/api/planillas/{pid}"), p2.get(f"/api/planillas/{pid}/foto"),
-              p2.post(f"/api/planillas/{pid}/leer", json={}), p2.delete(f"/api/planillas/{pid}")):
-        assert r.status_code == 404 and r.json()["detail"]["codigo"] == "no_existe", r.text
-    assert p2.get("/api/planillas").json() == {"planillas": []}
-    assert [x["id"] for x in p1.get("/api/planillas").json()["planillas"]] == [pid]
+    # K: enmascarada si la pide (como la recibe el modelo), completa si no
+    v = k.get(f"/api/planillas/{pid}?enmascarada=1").json()
+    a, no, menor = v["filas"]
+    assert a["cedula"] == "···101" and a["cedula_coincide"] is True and a["celular"] == "···4501"
+    assert "fecha_nacimiento" not in a and a["edad"] >= 40 and a["tiene_observaciones"] is True
+    assert "observaciones" not in a and "Vive" not in str(v)
+    assert no == {"n": 2, "nombre": "CENOBIA INVENTADA PACHECO", "lugar": "TRES DE OCTUBRE",
+                  "consentimiento": "no", "aviso": no["aviso"], "estado": "no_autoriza"}
+    assert "celular" not in menor and menor["menor"] is True
+    assert k.get(f"/api/planillas/{pid}").json()["filas"][0]["valores"]["cedula"] == "90000101"
+    assert k.get(f"/api/planillas/{pid}/foto").status_code == 200
+    # P y C: 403 `permiso` en todas las rutas, también en la bandeja (ni se sabe si la planilla existe)
+    for rol in ("planillero", "consultor"):
+        c = como(rol)
+        for r in (c.get("/api/planillas"), c.get(f"/api/planillas/{pid}"), c.get(f"/api/planillas/{pid}/foto"),
+                  c.post(f"/api/planillas/{pid}/leer", json={}), c.delete(f"/api/planillas/{pid}"),
+                  c.patch(f"/api/planillas/{pid}", json={}), c.post(f"/api/planillas/{pid}/simular", json={}),
+                  c.post(f"/api/planillas/{pid}/cargar", json={}), subir(c, jpeg(1250, 900))):
+            assert r.status_code == 403 and r.json()["detail"]["codigo"] == "permiso", (rol, r.text)
     # A la ve completa, con la de todos
     a = sesion.get(f"/api/planillas/{pid}").json()
     assert a["filas"][0]["valores"]["cedula"] == "90000101"
     assert sesion.get(f"/api/planillas/{pid}?enmascarada=1").json()["filas"][0]["cedula"] == "···101"
-    assert pid in [x["id"] for x in sesion.get("/api/planillas").json()["planillas"]]
+    assert [x["id"] for x in sesion.get("/api/planillas").json()["planillas"]] == [pid]
     assert sesion.get("/api/planillas/no-es-un-id").status_code == 404
-    # P1 la borra
-    assert p1.delete(f"/api/planillas/{pid}").json() == {"borrada": True}
+    # K la borra
+    assert k.delete(f"/api/planillas/{pid}").json() == {"borrada": True}
     assert sesion.get(f"/api/planillas/{pid}").status_code == 404
     assert cliente.app.state.db.auditoria.find_one({"accion": "borrar_planilla", "planilla": pid})
+    k.close()
 
 
 def test_la_bandeja_no_trae_datos_de_personas(cliente, sesion, monkeypatch):
@@ -157,9 +162,10 @@ def test_la_misma_foto_es_la_misma_y_una_ya_cargada_no_se_sube(cliente, sesion, 
     r = subir(sesion, datos)
     assert r.status_code == 200 and r.json()["id"] == d["id"] and r.json()["repetida"] is True
     assert len(encoladas) == 1  # no se paga otra lectura
-    # Otra persona con la misma foto tiene la suya (no ve la de A)
-    k = como("planillero")
+    # Otra persona con la misma foto tiene la suya
+    k = coordinador(cliente.app, cliente.app.state.db)
     assert subir(k, datos).json()["id"] != d["id"]
+    k.close()
     leer(cliente, d["id"])
     c = sesion.post(f"/api/planillas/{d['id']}/cargar", json={})
     assert c.status_code == 200, c.text
@@ -194,12 +200,18 @@ def test_rechazo_antes_de_leer_el_cuerpo(cliente, sesion, como, monkeypatch):
         h = cabeceras_de(c, **{"content-type": tipo, "content-length": str(largo or len(cuerpo))})
         return asgi(app, metodo, ruta, h, partes)
 
-    # Consultor (sin `plantillas`) y planillero sin el rol en agente_planillas.roles: 403 sin leer nada
+    # Consultor y planillero (sin `importar`): 403 `permiso` sin leer nada; un coordinador sin el rol en
+    # agente_planillas.roles, 403 `planillas_apagado`
     estado, leidas, resp = mandar(como("consultor"))
     assert (estado, leidas) == (403, 0) and b'"permiso"' in resp
     planillero = como("planillero")
     estado, leidas, resp = mandar(planillero)
+    assert (estado, leidas) == (403, 0) and b'"permiso"' in resp
+    app.state.db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente_planillas.roles": ["admin"]}})
+    k = coordinador(app, app.state.db)
+    estado, leidas, resp = mandar(k)
     assert (estado, leidas) == (403, 0) and b'"planillas_apagado"' in resp
+    k.close()
     # Tipo que no es foto, tamaño de más (por la guardia o por la ruta): sin leer nada
     estado, leidas, resp = mandar(sesion, tipo="text/html")
     assert (estado, leidas) == (415, 0) and b'"tipo"' in resp
@@ -212,12 +224,14 @@ def test_rechazo_antes_de_leer_el_cuerpo(cliente, sesion, como, monkeypatch):
     monkeypatch.setattr(proveedores, "clave_para_nueva", lambda cfg, db: None)
     estado, leidas, resp = mandar(sesion)
     assert (estado, leidas) == (503, 0) and b'"sin_configurar"' in resp
-    # Las rutas de importar: P recibe 403 sin que se lea su cuerpo
+    # Todas las rutas: P recibe 403 sin que se lea su cuerpo, aunque un ajuste guardado lo nombre
     app.state.db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente_planillas.roles": ["admin", "planillero"]}})
     pid = pl.nuevo_id()
     for metodo, ruta in (("PATCH", f"/api/planillas/{pid}"), ("POST", f"/api/planillas/{pid}/simular"),
-                         ("POST", f"/api/planillas/{pid}/cargar")):
-        estado, leidas, resp = mandar(planillero, ruta=ruta, tipo="application/json", metodo=metodo)
+                         ("POST", f"/api/planillas/{pid}/cargar"), ("POST", f"/api/planillas/{pid}/leer"),
+                         ("POST", "/api/planillas/fotos")):
+        tipo = "image/jpeg" if ruta.endswith("/fotos") else "application/json"
+        estado, leidas, resp = mandar(planillero, ruta=ruta, tipo=tipo, metodo=metodo)
         assert (estado, leidas) == (403, 0) and b'"permiso"' in resp, (ruta, estado, leidas)
 
 
@@ -257,7 +271,7 @@ def test_formatos_que_no_sean_la_planilla_solo_si_el_ajuste_lo_permite(cliente, 
 def test_topes_por_persona(cliente, como, monkeypatch):
     encender(monkeypatch, cliente.app, _proveedor())
     db = cliente.app.state.db
-    p = como("planillero")
+    p = coordinador(cliente.app, db)
     ahora = datetime.now(timezone.utc)
     db.planillas_subidas.insert_many([{"uid": p.uid, "ts": ahora - timedelta(minutes=5)} for _ in range(pl.POR_HORA)])
     r = subir(p, jpeg())
@@ -340,8 +354,9 @@ def test_cupo_por_proceso():
 def test_para_el_chat(cliente, sesion, como, monkeypatch):
     encender(monkeypatch, cliente.app, _proveedor())
     d = subir(sesion, jpeg()).json()
-    p = como("planillero")
+    p = coordinador(cliente.app, cliente.app.state.db)
     otra = subir(p, jpeg(1250, 900)).json()
+    p.close()
     db = cliente.app.state.db
     fotos = pl.fotos_de(db, 0, [otra["id"], d["id"], "no-es-id", d["id"]])
     assert [f["id"] for f in fotos] == [d["id"]] and fotos[0]["estado"] == "leyendo" and fotos[0]["con_foto"]

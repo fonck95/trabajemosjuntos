@@ -544,6 +544,9 @@ def test_enlazables_son_filtros_de_habitantes_y_de_la_api():
 
 
 def test_catalogo(sesion):
+    # Con los datos políticos apagados: encendidos, también tipo, lider y lista (tests/test_politicos_analitica.py)
+    sesion.app.state.db.meta.update_one({"_id": "ajustes"},
+                                        {"$set": {"agente_politicos": {"asistente": False, "mcp": False}}}, upsert=True)
     c = sesion.get("/api/analitica/catalogo").json()
     assert set(c["tipos"]) == set(an.TIPOS) and c["tipos"]["ritmo"]["obligatorios"] == ["fecha_meta"]
     assert "lider" not in c["dimensiones"]["personas"] and "regimen_salud" not in c["filtros"]

@@ -18,7 +18,10 @@ Por qué está hecho así:
   la cédula enmascarada, las personas con `minimizar.fila`, la fuente solo si es trámites o planilla (si no,
   «otra_base») y de las dos cédulas escritas en la planilla solo si coinciden; de las solicitudes, nunca la persona ni
   la descripción (que alguien pidió suprimir sus datos es un dato suyo); de las importaciones, nada de las bases
-  políticas (cédulas y general: ni los conteos ni los archivos).
+  políticas (cédulas y general: ni los conteos ni los archivos). Con `agente_politicos` encendido para la vía
+  (`Contexto.politicos`; estas rutas son de A y K, que las ven en el panel), la fuente real de un conflicto y, de las
+  importaciones de esas bases, su tipo, su archivo y sus conteos (también los tipos marcados y los líderes
+  asignados).
 * De quien no autorizó, solo `minimizar.no_autorizo`: un grupo de duplicados o un conflicto que la incluye sale sin
   señales ni datos y no se resuelve desde el asistente (unir es tratar sus datos); las situaciones y los lugares sin
   reconocer no la cuentan. Por MCP esas filas no salen (queda su conteo).
@@ -543,10 +546,10 @@ def _involucradas(c: dict) -> list[tuple[str, dict]]:
     return [(rol, c[rol]) for rol in ("persona", "otra_persona", "duena") if isinstance(c.get(rol), dict)]
 
 
-def conflicto_para_modelo(c: dict, lugares: frozenset[str]) -> dict:
+def conflicto_para_modelo(c: dict, lugares: frozenset[str], politicos: bool = False) -> dict:
     """Un conflicto de cédula: lista blanca. Las personas con `minimizar.fila`; la cédula y la de la fila
     enmascaradas; la fuente solo si es trámites o planilla («otra_base» si no: cédulas y general revelan una base
-    política); de las dos cédulas escritas en la planilla, solo si coinciden."""
+    política), o la real con `politicos`; de las dos cédulas escritas en la planilla, solo si coinciden."""
     out: dict[str, Any] = {"id": c.get("id"), "motivo": c.get("motivo"), "estado": c.get("estado"),
                            "fecha": fecha_de(c.get("creado_en"))}
     involucradas = _involucradas(c)
@@ -559,7 +562,8 @@ def conflicto_para_modelo(c: dict, lugares: frozenset[str]) -> dict:
                                                     "resuelve en Calidad de datos del panel."}
     out["cedula_ult3"] = acceso.enmascarar_cedula(c.get("cedula"))
     if c.get("motivo") != "dictada":
-        out["fuente"] = c.get("fuente") if c.get("fuente") in FUENTES_VISIBLES else "otra_base"
+        visible = c.get("fuente") in FUENTES_VISIBLES or (politicos and isinstance(c.get("fuente"), str))
+        out["fuente"] = c.get("fuente") if visible else "otra_base"
     reg = c.get("registro") if isinstance(c.get("registro"), dict) else {}
     if c.get("motivo") != "dictada" and reg:
         fila: dict[str, Any] = {"nombre": minimizar.texto_libre(reg.get("nombre"), 160),
@@ -585,7 +589,8 @@ async def _conflictos(ctx: Contexto, a: ConflictosEntrada) -> Resultado:
     if a.motivo:
         lista = [c for c in lista if c.get("motivo") == a.motivo]
     lugares = await nombres_del_nomenclator(ctx)
-    filas = [conflicto_para_modelo(c, lugares) for c in lista]
+    politicos = ctx.quien.administra and ctx.politicos()
+    filas = [conflicto_para_modelo(c, lugares, politicos) for c in lista]
     filas, ocultos = sin_no_autorizo_por_mcp(ctx, filas, lambda c: c.get("no_autorizo"))
     mostradas = filas[:a.limite]
     out: dict[str, Any] = {"total": len(filas), "mostrados": len(mostradas), "conflictos": mostradas,
@@ -1013,19 +1018,30 @@ RESUMEN_IMPORTACION = ("personas_nuevas", "personas_actualizadas", "tramites_nue
                        "alternos_agregados", "registros_en_revision", "conflictos_cedula", "no_guardadas",
                        "omitidas_sin_autorizacion", "votacion_por_confirmar", "autorizaciones_por_confirmar",
                        "lugares_nuevos")
+# Con `agente_politicos`: lo que cuenta la importación de la base general (tipos marcados y líderes) y por fuente
+RESUMEN_POLITICO = ("lideres_asignados", "lideres_sin_resolver")
+RESUMEN_POLITICO_POR_CLAVE = ("tipos_marcados", "registros_por_fuente")
 
 
-def importacion_para_modelo(x: dict) -> dict:
+def importacion_para_modelo(x: dict, politicos: bool = False) -> dict:
     """Una importación: la fecha, quién la hizo (del equipo) y, si solo trae trámites o planillas, el archivo y los
     conteos. Una con la base con cédula o la base general sale como «otra_base», sin archivo ni conteos: revelan el
-    tamaño de una base política."""
+    tamaño de una base política. Con `politicos` (A y K con `agente_politicos` encendido) sale como es, con lo que
+    contó de tipos marcados, líderes y registros por fuente."""
     tipos = [t.strip() for t in str(x.get("tipo") or "").split(",") if t.strip()]
     out: dict[str, Any] = {"id": x.get("id"), "fecha": fecha_de(x.get("ts")), "usuario": x.get("usuario")}
-    if not tipos or any(t not in FUENTES_VISIBLES for t in tipos):
+    if not politicos and (not tipos or any(t not in FUENTES_VISIBLES for t in tipos)):
         return {**out, "tipo": "otra_base"}
     resumen = x.get("resumen") if isinstance(x.get("resumen"), dict) else {}
+    claves = (*RESUMEN_IMPORTACION, *RESUMEN_POLITICO) if politicos else RESUMEN_IMPORTACION
     out.update({"tipo": tipos, "archivo": minimizar.texto_libre(x.get("archivo"), 160),
-                "resumen": {k: resumen[k] for k in RESUMEN_IMPORTACION if isinstance(resumen.get(k), int)}})
+                "resumen": {k: resumen[k] for k in claves if isinstance(resumen.get(k), int)
+                            and not isinstance(resumen.get(k), bool)}})
+    if politicos:
+        for k in RESUMEN_POLITICO_POR_CLAVE:
+            if isinstance(resumen.get(k), dict):
+                out["resumen"][k] = {str(t): n for t, n in resumen[k].items()
+                                     if isinstance(n, int) and not isinstance(n, bool)}
     if isinstance(x.get("capturado_por"), int):
         out["capturado_por"] = x["capturado_por"]
     return out
@@ -1033,7 +1049,8 @@ def importacion_para_modelo(x: dict) -> dict:
 
 async def _importaciones(ctx: Contexto, a: ImportacionesEntrada) -> Resultado:
     lista = _lista(await pedir(ctx, "GET", "/api/importaciones"))
-    filas = [importacion_para_modelo(x) for x in lista[:a.limite]]
+    politicos = ctx.quien.administra and ctx.politicos()
+    filas = [importacion_para_modelo(x, politicos) for x in lista[:a.limite]]
     por_confirmar = sum(int((f.get("resumen") or {}).get("autorizaciones_por_confirmar") or 0) for f in filas)
     out = {"mostradas": len(filas), "importaciones": filas, "ruta": "/importar",
            "nota": ("Las autorizaciones «declaradas en planilla» no habilitan el contacto hasta que el administrador o "
@@ -1050,7 +1067,9 @@ IMPORTACIONES = Herramienta(
         "Las últimas importaciones de datos (Importar y exportar): fecha, quién la hizo, el tipo (trámites o planilla "
         "de campo), el archivo y los conteos (personas nuevas y actualizadas, teléfonos, conflictos de cédula, filas "
         "en revisión, omitidas por no autorizar, votación por confirmar y autorizaciones declaradas en planilla por "
-        "confirmar). Las de otras bases salen sin archivo ni conteos. Úsala para contar qué entró, qué quedó por "
+        "confirmar). Las de la base con cédula y la base general (bases políticas) salen con su tipo, archivo y "
+        "conteos solo si los datos políticos están habilitados; si no, como otra_base, sin archivo ni conteos. Úsala "
+        "para contar qué entró, qué quedó por "
         "revisar y qué autorizaciones faltan por confirmar con la evidencia física (eso se hace en el panel). No "
         "importa nada. Solo administrador y coordinador."),
     entrada=ImportacionesEntrada, tipo="lectura", permisos=("importar",), etiqueta="Revisando las importaciones",

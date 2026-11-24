@@ -30,7 +30,14 @@
 // y si se leen otros formatos además de la planilla de campo) y los agentes externos por MCP (`agente_mcp`: quiénes
 // crean claves con datos, si proponen cambios y los topes diarios por clave) son permisos: los guarda el administrador
 // (PUT /api/ajustes) y el coordinador los ve en solo lectura. Guardar las planillas le avisa al asistente: quién puede
-// adjuntar fotos sale de su estado (`adjuntos`).
+// adjuntar fotos sale de su estado (`adjuntos`). Las fotos las suben solo el administrador y los coordinadores; si el
+// compromiso de confidencialidad vigente no deja fotografiar planillas (`compromiso_permite_fotos`), el bloque lo
+// advierte y al administrador le ofrece pasar a la versión que lo permite (`compromiso_con_fotos`): cada persona lo
+// acepta de nuevo en su siguiente petición, como con cualquier versión nueva.
+//
+// Los datos políticos (`agente_politicos`: tipo de persona, «Liderado por», listas, líderes y fuentes políticas) en el
+// asistente y por MCP: dos casillas, encendidas por defecto, que guarda el administrador (el coordinador las ve en solo
+// lectura). Cada rol los recibe solo como ya los ve en el panel.
 import { api, puede } from '../api.js';
 import { url } from '../base.js';
 import { $, aviso, avisoError, confirmar, datosForm, dialogo, fecha, hayEscrito, html, montar, num } from '../ui.js';
@@ -45,9 +52,9 @@ const ROLES_AGENTE = [['admin', 'Administrador', 'administrador'], ['coordinador
   ['planillero', 'Planilleros', 'planillero'], ['consultor', 'Consultores', 'consultor']];
 // Las planillas físicas por foto (`agente_planillas`) y los agentes externos por MCP (`agente_mcp`): los roles y los
 // rangos que acepta el servidor (`politica.ROLES_PLANILLAS`, `RETENCION_HORAS`, `ROLES_MCP`, `LLAMADAS_DIARIAS_MCP` y
-// `PERSONAS_DIARIAS_MCP`; una prueba compara los dos lados). Nunca el consultor: no tiene papel que fotografiar ni
-// claves con datos
-const ROLES_PLANILLAS = [['admin', 'Administrador'], ['coordinador', 'Coordinadores'], ['planillero', 'Planilleros']];
+// `PERSONAS_DIARIAS_MCP`; una prueba compara los dos lados). Solo el administrador y los coordinadores: los
+// planilleros y consultores nunca suben fotos de planillas ni tienen claves con datos
+const ROLES_PLANILLAS = [['admin', 'Administrador'], ['coordinador', 'Coordinadores']];
 const ROLES_MCP = [['admin', 'Administrador'], ['coordinador', 'Coordinadores']];
 const RETENCION_HORAS = [1, 168];
 const LLAMADAS_MCP = [10, 20000];
@@ -297,6 +304,7 @@ export async function vistaAjustes(el, { q } = {}) {
     const rolesPlanillas = new Set(Array.isArray(pl.roles) ? pl.roles : []);
     const mc = aj.agente_mcp || {};
     const rolesMcp = new Set(Array.isArray(mc.roles) ? mc.roles : []);
+    const po = aj.agente_politicos || {};
     montar(el, html`
       <div class="cabecera"><div><h1>Ajustes</h1><div class="sub">Reglas de contacto, privacidad y catálogos. Cada cambio queda en la auditoría.</div></div></div>
       <div class="rejilla r-12">
@@ -343,7 +351,7 @@ export async function vistaAjustes(el, { q } = {}) {
             ${numero('dias_reintento_dato', aj.dias_reintento_dato, 'Días antes de volver a pedir un dato que no dieron', 7, 730)}
             <label class="campo"><span>Versión del compromiso de confidencialidad</span><input name="compromiso_version" value="${aj.compromiso_version || ''}" maxlength="40" required></label>
             <label class="campo ancho"><span>Enlace para consultar el puesto (Registraduría; verifíquelo antes de usarlo)</span><input name="enlace_consulta_puesto" type="url" value="${aj.enlace_consulta_puesto || ''}" maxlength="300" placeholder="https://…"></label>
-            <p class="sec ancho" style="margin:0">Vigencia de la base: ${aj.vigencia_base ? fecha(aj.vigencia_base) : 'sin definir'}. Cambiar la versión del compromiso pide a planilleros y consultores aceptarlo de nuevo.</p>
+            <p class="sec ancho" style="margin:0">Vigencia de la base: ${aj.vigencia_base ? fecha(aj.vigencia_base) : 'sin definir'}. Cambiar la versión del compromiso pide a coordinadores, planilleros y consultores aceptarlo de nuevo.</p>
             <div class="ancho"><button class="btn primario">Guardar</button></div>
           </form>
         </section>
@@ -364,8 +372,9 @@ export async function vistaAjustes(el, { q } = {}) {
         </section>
         <section class="tarjeta c-6">
           <h2>Planillas físicas por foto</h2>
-          <p class="sec">Quien tiene el papel le toma una foto en el chat del asistente o en Importar y exportar: el panel la lee, la coteja con la base y propone cargarla. Nada se guarda sin la aprobación de alguien que puede importar (administrador o coordinador), con el folio del papel.</p>
+          <p class="sec">El administrador o un coordinador le toma una foto al papel en el chat del asistente o en Importar y exportar: el panel la lee, la coteja con la base y propone cargarla. Nada se guarda sin su aprobación, con el folio del papel. Los planilleros no suben fotos: el que llenó la planilla queda como «Capturado por».</p>
           <form id="f-planillas" class="form" style="margin-top:12px">
+            ${aj.compromiso_permite_fotos === false ? html`<div class="aviso-legal ancho" id="pf-compromiso" role="alert">El compromiso de confidencialidad vigente (versión ${aj.compromiso_version}) prohíbe fotografiar los datos: con él nadie sube fotos de planillas. La versión ${aj.compromiso_con_fotos} lo permite solo para planillas físicas que se suben por el panel, nunca cédulas ni otros documentos, y pide borrar la foto del teléfono después de subirla. ${soloLectura ? 'Solo el administrador cambia la versión del compromiso.' : html`<button type="button" class="btn chico" id="compromiso-fotos" data-version="${aj.compromiso_con_fotos}">Usar el compromiso ${aj.compromiso_con_fotos}</button>`}</div>` : ''}
             <div class="campo ancho"><span>Quiénes suben fotos (además tienen que usar el asistente)</span>
               <div class="chips">${ROLES_PLANILLAS.map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="planillas_rol_${k}" ${rolesPlanillas.has(k) ? 'checked' : ''}> ${t}</label>`)}</div></div>
             ${numero('retencion_horas', pl.retencion_horas, 'Horas que se guardan la foto y lo leído', RETENCION_HORAS[0], RETENCION_HORAS[1])}
@@ -385,6 +394,16 @@ export async function vistaAjustes(el, { q } = {}) {
             ${numero('personas_diarias', mc.personas_diarias, 'Personas distintas por clave y día', PERSONAS_MCP[0], PERSONAS_MCP[1])}
             <div class="aviso-legal ancho">Lo que consulta un agente por MCP sale del panel hacia ese agente y su proveedor de modelos: terceros que el panel no controla. Leer fichas de personas por MCP es solo del administrador (quien puede exportar); el coordinador, solo análisis y propuestas. Nunca salen datos sensibles, listas ni quien no autorizó. Las claves de datos vencen a los 30 días y se revocan en Mi cuenta; revocarla anula sus propuestas pendientes.</div>
             ${soloLectura ? SOLO_ADMIN : html`<div class="ancho"><button class="btn primario">Guardar agentes por MCP</button></div>`}
+          </form>
+        </section>
+        <section class="tarjeta c-12">
+          <h2>Datos políticos en el asistente y por MCP</h2>
+          <p class="sec">El tipo de persona (líder, votante, concejal), «Liderado por», las listas, los líderes con sus conteos, los filtros por ellos y las fuentes políticas de importación. Cada rol los recibe solo como ya los ve en el panel: el administrador y los coordinadores, todo; el planillero, el tipo y el líder donde el panel se los muestra (y solo puede agregarlos); el consultor, nada.</p>
+          <form id="f-politicos" class="form" style="margin-top:12px">
+            ${casilla('politicos_asistente', po.asistente !== false, 'El asistente del panel los consulta, los filtra y propone cambiarlos (cada cambio se aprueba en una tarjeta)')}
+            ${casilla('politicos_mcp', po.mcp !== false, 'Los agentes externos por MCP también los reciben, con la clave de datos de cada persona')}
+            <div class="aviso-legal ancho">La orientación política es un dato sensible (Ley 1581 de 2012, art. 5). El asistente solo la muestra a los roles que ya la ven en el panel, pero lo que consulta viaja al proveedor del modelo y, por MCP, al agente de cada persona: terceros, posiblemente en el exterior. Quien no autorizó y los datos de salud, etnia, discapacidad o víctima nunca salen.</div>
+            ${soloLectura ? SOLO_ADMIN : html`<div class="ancho"><button class="btn primario">Guardar datos políticos</button></div>`}
           </form>
         </section>
         <section class="tarjeta c-12">
@@ -453,8 +472,8 @@ export async function vistaAjustes(el, { q } = {}) {
       for (const id of ['#f-politica', '#f-limites', '#f-agente', '#f-voz']) {
         for (const c of $(id, el).querySelectorAll('input, select, textarea')) c.disabled = true;
       }
-      // (y las planillas por foto y los agentes por MCP: también son permisos)
-      for (const id of ['#f-planillas', '#f-mcp']) {
+      // (y las planillas por foto, los agentes por MCP y los datos políticos: también son permisos)
+      for (const id of ['#f-planillas', '#f-mcp', '#f-politicos']) {
         for (const c of $(id, el).querySelectorAll('input, select, textarea')) c.disabled = true;
       }
       const dePermisos = new Set(aj.ajustes_de_permisos || []);  // datos sensibles y compromiso: también solo A
@@ -592,6 +611,23 @@ export async function vistaAjustes(el, { q } = {}) {
     });
   }
 
+  /** «Usar el compromiso …» (bloque de las planillas por foto, solo el administrador): pone como vigente la versión
+   * del compromiso que deja fotografiar planillas físicas. Cada persona lo lee y lo acepta de nuevo en su siguiente
+   * petición; el asistente vuelve a leer su estado (la cámara del chat depende del compromiso). */
+  async function usarCompromisoConFotos(boton) {
+    const version = boton.dataset.version;
+    if (!version || !await confirmar(`¿Cambiar el compromiso de confidencialidad a la versión ${version}? Los coordinadores, `
+      + 'planilleros y consultores tendrán que leerlo y aceptarlo de nuevo antes de seguir trabajando.', { si: 'Cambiar' })) return;
+    boton.disabled = true;
+    try {
+      await guardar({ compromiso_version: version }, `Compromiso ${version} vigente: cada persona lo aceptará de nuevo`);
+      avisarAlAsistente();
+    } catch (err) {
+      avisoError(err);
+      if (boton.isConnected) boton.disabled = false;
+    }
+  }
+
   function horario(f) {
     const h = {};
     for (const [k] of DIAS) {
@@ -699,6 +735,10 @@ export async function vistaAjustes(el, { q } = {}) {
         await guardar({ agente_mcp: { roles, escritura: v.mcp_escritura === true,
           llamadas_diarias: Number(v.llamadas_diarias), personas_diarias: Number(v.personas_diarias) } },
         'Agentes por MCP guardados');
+      } else if (f.id === 'f-politicos') {
+        const v = datosForm(f);
+        await guardar({ agente_politicos: { asistente: v.politicos_asistente === true, mcp: v.politicos_mcp === true } },
+          'Datos políticos guardados');
       }
     } catch (err) { avisoError(err); }
   });
@@ -712,6 +752,8 @@ export async function vistaAjustes(el, { q } = {}) {
     // (sin esperas antes: el clic es el gesto que deja sonar el audio de la ventana)
     const pv = e.target.closest('#voz-probar');
     if (pv) { probarVoz(pv); return; }
+    const cf = e.target.closest('#compromiso-fotos');
+    if (cf) { await usarCompromisoConFotos(cf); return; }
     // «Volver a conectar para usar la voz»: lo mismo que «Volver a conectar» del bloque de Mnemo (Mnemo pide el permiso)
     if (e.target.closest('#voz-reconectar')) { const f = $('#f-mnemo', el); if (f) await conectarMnemo(f); return; }
     const c = e.target.closest('[data-campo]');

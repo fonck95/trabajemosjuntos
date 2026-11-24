@@ -13,7 +13,7 @@
 * POST /api/agente/mensajes y POST /api/agente/confirmaciones — un turno en flujo (NDJSON, `bucle.py`). Lo que impide
   el turno sale antes como JSON normal (503, 403, 404, 409, 422, 429); entre ellos, 409 `proveedor` si la conversación
   es de un proveedor del modelo que ya no está. Un mensaje puede traer fotos de planillas físicas (`adjuntos`: ids de
-  la bandeja de planillas de quien escribe, como mucho 4; con ellas el texto puede ir vacío): 403
+  la bandeja de planillas de quien escribe, como mucho 4; con ellas el texto puede ir vacío; solo A y K): 403
   `planillas_apagado` si su rol no sube fotos, 422 `fotos` si alguna no es suya o ya no está.
 * POST /api/agente/transcribir — una pregunta por voz: el cuerpo es el audio crudo que grabó el panel y la respuesta,
   su texto (`agente/dictado.py`, que se lo pide a la cuenta de Mnemo conectada). No guarda nada.
@@ -201,7 +201,9 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
     está disponible para ella y `agente_adelanto` está encendido en Ajustes). `adjuntos`: si puede adjuntar fotos de
     planillas físicas al chat, los topes con que el navegador las prepara (`planillas.estado_adjuntos`:
     `{max_por_mensaje: 4, lado_max: 2000 con Mnemo o 2576 en modo directo, calidad: 0.8, max_bytes: 1500000}`); None si
-    el asistente no está disponible para ella, su rol no está en `agente_planillas.roles` o no hay modelo."""
+    el asistente no está disponible para ella, no es A ni K (`importar`), su rol no está en `agente_planillas.roles`, el
+    compromiso de confidencialidad vigente no deja fotografiar planillas (`politica.fotos_permitidas`) o no hay
+    modelo."""
     cfg = request.app.state.cfg
     ajustes, agente = politica.leer(db)
     sesion = (request.scope.get("state") or {}).get("sesion")
@@ -212,17 +214,20 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
     mnemo: dict[str, Any] = {"activo": activo, "origen": politica.origen_mnemo(conexion.get("url")) if activo else None}
     if quien.administra:
         mnemo["conexion"] = conexion if quien.es_admin else {**conexion, "cuenta": None, "url_sugerida": None}
-    # Las fotos de planillas: solo si el asistente está disponible para esta persona, su rol sube fotos
-    # (`agente_planillas.roles`) y hay modelo; el lado mayor depende del proveedor (Mnemo lee hasta 2000 px)
-    adjuntos = (bandeja.estado_adjuntos(proveedor) if motivo is None and quien.puede("plantillas")
-                and politica.usa_planillas(quien, ajustes) else None)
+    # Las fotos de planillas: solo si el asistente está disponible para esta persona, es A o K con su rol en
+    # `agente_planillas.roles` (nunca P ni C), el compromiso vigente deja fotografiarlas y hay modelo; el lado mayor
+    # depende del proveedor (Mnemo lee hasta 2000 px)
+    adjuntos = (bandeja.estado_adjuntos(proveedor) if motivo is None and quien.puede("importar")
+                and politica.usa_planillas(quien, ajustes) and politica.fotos_permitidas(ajustes) else None)
     return {"disponible": motivo is None, "motivo": motivo, "configurado": proveedor is not None,
             "proveedor": proveedor, "es_admin": quien.es_admin, "escritura": agente["escritura"],
             "limite": {"usados": conv_db.uso_de(db, quien.uid), "maximo": politica.mensajes_diarios(ajustes, quien.rol)},
             "mnemo": mnemo, "dictado": _dictado(request.app, conexion),
             "voz": _voz(request.app, db, quien, ajustes, conexion),
             "adelanto": motivo is None and ajustes["agente_adelanto"], "adjuntos": adjuntos,
-            "sugerencias": politica.sugerencias(quien.rol) if motivo is None else []}
+            "sugerencias": (politica.sugerencias(quien.rol, ajustes, planillas=quien.puede("importar")
+                                                 and politica.usa_planillas(quien, ajustes))
+                            if motivo is None else [])}
 
 
 @r.get("/agente/conversaciones")

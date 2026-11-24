@@ -2,28 +2,32 @@
 la vista Importar y exportar → Planillas por foto y las herramientas del asistente (por `ApiInterna`, con la sesión de
 quien conversa): las mismas rutas, los mismos permisos.
 
-* POST /api/planillas/fotos — sube una foto: el cuerpo es la imagen cruda (`Content-Type: image/jpeg` o `image/png`,
-  hasta 1,5 MB), `?nota=&formato=` (planilla_campo | asistencia | otro). `plantillas` (A, K y P) y el rol en
-  `agente_planillas.roles`, con un modelo conectado: todo eso se revisa antes de leer el cuerpo. Responde 201 `{id,
-  estado: "leyendo", bytes, ancho, alto, expira}` y la lectura sigue de fondo; la misma foto de la misma persona, 200
-  con la que ya estaba (si había fallado, se vuelve a leer); una foto ya cargada, 409 `ya_cargada`.
-* GET /api/planillas — la bandeja `{planillas: [...]}` (A y K, todas; P, las suyas), sin datos de personas.
-* GET /api/planillas/{pid} — una planilla con sus filas: A y K con los valores completos (`?enmascarada=1` los pide
-  enmascarados, como los vería el modelo); P, la suya, siempre enmascarada.
-* GET /api/planillas/{pid}/foto — la foto limpia (A y K, o P si es suya), con su tipo real, `nosniff` y `no-store`.
-* PATCH /api/planillas/{pid} — `importar` (A y K): corrige celdas `{filas: [{n, campo, valor}], descartar: [n],
-  restaurar: [n]}` y responde la planilla completa.
-* POST /api/planillas/{pid}/leer — vuelve a leer la foto (dueño o A/K; como mucho 2 lecturas por foto) `{desde_fila?}`
-  (solo en una lectura incompleta): 202 `{id, estado: "leyendo"}`.
-* DELETE /api/planillas/{pid} — la borra entera (dueño o A/K).
-* POST /api/planillas/{pid}/simular — `importar`: la vista previa fiel de cargar `{filas?, capturado_por?}`, sin
-  escribir: `{id, filas: [{n, estado, persona_id, llenaria, distintos, motivo}], conteo}`.
-* POST /api/planillas/{pid}/cargar — `importar`, idempotente con `Idempotency-Key`: carga `{filas?, folio?,
-  capturado_por?}` con el importador real y responde `{importacion_id, resumen, filas: {n: {persona_id, estado,
-  motivo}}}`.
+Todas exigen `importar`: solo el administrador y los coordinadores. Planilleros y consultores reciben 403 `permiso`
+en cada una, antes de leer el cuerpo y diga lo que diga `agente_planillas.roles` (el planillero que llenó el papel queda
+como «capturado por» de lo cargado).
 
-Las rutas de `importar` leen su cuerpo después de comprobar el permiso: a P y C se les responde 403 sin leerlo. Los
-errores son `{codigo, mensaje}` (`planillas.ErrorPlanilla`)."""
+* POST /api/planillas/fotos — sube una foto: el cuerpo es la imagen cruda (`Content-Type: image/jpeg` o `image/png`,
+  hasta 1,5 MB), `?nota=&formato=` (planilla_campo | asistencia | otro). El rol en `agente_planillas.roles`, un modelo
+  conectado y un compromiso de confidencialidad vigente que deje fotografiar planillas (409 `compromiso_fotos`): todo
+  eso se revisa antes de leer el cuerpo. Responde 201 `{id, estado: "leyendo", bytes, ancho, alto, expira}` y la
+  lectura sigue de fondo; la misma foto de la misma persona, 200 con la que ya estaba (si había fallado, se vuelve a
+  leer); una foto ya cargada, 409 `ya_cargada`.
+* GET /api/planillas — la bandeja `{planillas: [...]}` (todas), sin datos de personas.
+* GET /api/planillas/{pid} — una planilla con sus filas, con los valores completos (`?enmascarada=1` los pide
+  enmascarados, como los recibe el modelo).
+* GET /api/planillas/{pid}/foto — la foto limpia, con su tipo real, `nosniff` y `no-store`.
+* PATCH /api/planillas/{pid} — corrige celdas `{filas: [{n, campo, valor}], descartar: [n], restaurar: [n]}` y
+  responde la planilla completa.
+* POST /api/planillas/{pid}/leer — vuelve a leer la foto (como mucho 2 lecturas por foto) `{desde_fila?}` (solo en
+  una lectura incompleta): 202 `{id, estado: "leyendo"}`.
+* DELETE /api/planillas/{pid} — la borra entera.
+* POST /api/planillas/{pid}/simular — la vista previa fiel de cargar `{filas?, capturado_por?}`, sin escribir: `{id,
+  filas: [{n, estado, persona_id, llenaria, distintos, motivo}], conteo}`.
+* POST /api/planillas/{pid}/cargar — idempotente con `Idempotency-Key`: carga `{filas?, folio?, capturado_por?}` con
+  el importador real y responde `{importacion_id, resumen, filas: {n: {persona_id, estado, motivo}}}`.
+
+Las rutas leen su cuerpo después de comprobar el permiso. Los errores son `{codigo, mensaje}`
+(`planillas.ErrorPlanilla`)."""
 from __future__ import annotations
 
 from typing import Annotated, Literal
@@ -40,6 +44,8 @@ from ..agente import politica, proveedores
 from ..agente.lector_planillas import COLUMNAS, MAX_N
 
 r = APIRouter(prefix="/api", tags=["planillas"])
+# Las planillas por foto son una forma de importar: solo A y K, en cada ruta (sin depender de los ajustes guardados)
+PLANILLAS = requiere("importar")
 
 Fila = StrictInt
 
@@ -85,8 +91,8 @@ async def _cuerpo(request: Request, modelo: type[BaseModel]) -> BaseModel:
 
 
 async def _exigir_lectura(request: Request, quien: Quien) -> dict:
-    """Subir o releer manda la foto al modelo: el rol en `agente_planillas.roles` (403 `planillas_apagado`) y un
-    proveedor del modelo conectado (503 `sin_configurar`). Devuelve los ajustes validados."""
+    """Subir o releer manda la foto al modelo: el rol en `agente_planillas.roles` (403 `planillas_apagado`; solo A y K
+    pueden estar) y un proveedor del modelo conectado (503 `sin_configurar`). Devuelve los ajustes validados."""
     db, cfg = request.app.state.db, request.app.state.cfg
     ajustes, _ = await run_in_threadpool(politica.leer, db)
     if not politica.usa_planillas(quien, ajustes):
@@ -107,13 +113,15 @@ async def _capturado_por(request: Request, uid: int | None) -> None:
 @r.post("/planillas/fotos", status_code=201)
 async def subir(request: Request, nota: str | None = Query(None, max_length=2000),
                 formato: str = Query("planilla_campo", max_length=40),
-                quien: Quien = Depends(requiere("plantillas"))):
+                quien: Quien = Depends(PLANILLAS)):
     """Sube la foto de una planilla física (ver el docstring del módulo). Errores, todos `{codigo, mensaje}`: 403
-    `planillas_apagado`, 503 `sin_configurar`, 415 `tipo`, 413 `pesada`, 422 `formato`, `imagen`, `dimensiones` o
-    `vacia`, 400 `cortada` o `lenta`, 429 `frecuencia`, 409 `pendientes` o `ya_cargada` (con `importacion_id`)."""
+    `permiso` o `planillas_apagado`, 503 `sin_configurar`, 409 `compromiso_fotos`, 415 `tipo`, 413 `pesada`, 422
+    `formato`, `imagen`, `dimensiones` o `vacia`, 400 `cortada` o `lenta`, 429 `frecuencia`, 409 `pendientes` o
+    `ya_cargada` (con `importacion_id`)."""
     app = request.app
     db, cfg = app.state.db, app.state.cfg
     ajustes = await _exigir_lectura(request, quien)
+    pl.exigir_compromiso(ajustes)
     media = pl.tipo_de(request.headers.get("content-type"))
     if media not in pl.TIPOS:
         raise pl.ErrorPlanilla(415, "tipo")
@@ -139,7 +147,7 @@ async def subir(request: Request, nota: str | None = Query(None, max_length=2000
 
 @r.get("/planillas")
 async def bandeja(request: Request, estado: str | None = Query(None, max_length=20),
-                  quien: Quien = Depends(requiere("plantillas"))):
+                  quien: Quien = Depends(PLANILLAS)):
     """La bandeja: `{planillas: [{id, estado, subida_por: {uid, usuario, nombre}, ts, expira, formato, tipo_formato,
     filas, dudosas, pendientes, cargadas, incompleta, importacion_id, nota, error, ancho, alto, bytes, lecturas,
     con_foto, progreso}]}` (las 100 más nuevas; `?estado=` filtra)."""
@@ -148,7 +156,7 @@ async def bandeja(request: Request, estado: str | None = Query(None, max_length=
 
 @r.get("/planillas/{pid}")
 async def ver(pid: str, request: Request, enmascarada: bool = False,
-              quien: Quien = Depends(requiere("plantillas"))):
+              quien: Quien = Depends(PLANILLAS)):
     """Una planilla con su encabezado y sus filas (`planillas.detalle`)."""
     db, cfg = request.app.state.db, request.app.state.cfg
     doc = await run_in_threadpool(pl.buscar, db, pid, quien)
@@ -156,7 +164,7 @@ async def ver(pid: str, request: Request, enmascarada: bool = False,
 
 
 @r.get("/planillas/{pid}/foto")
-async def foto(pid: str, request: Request, quien: Quien = Depends(requiere("plantillas"))):
+async def foto(pid: str, request: Request, quien: Quien = Depends(PLANILLAS)):
     """La foto limpia (sin metadatos), para verla al lado de la grilla. 404 `sin_foto` si ya se borró."""
     db, cfg = request.app.state.db, request.app.state.cfg
     doc = await run_in_threadpool(pl.buscar, db, pid, quien)
@@ -171,7 +179,7 @@ async def foto(pid: str, request: Request, quien: Quien = Depends(requiere("plan
 
 
 @r.patch("/planillas/{pid}")
-async def corregir(pid: str, request: Request, quien: Quien = Depends(requiere("importar"))):
+async def corregir(pid: str, request: Request, quien: Quien = Depends(PLANILLAS)):
     """Corrige celdas y descarta o recupera filas; responde la planilla completa. 409 `leyendo`, `cargando`,
     `no_leida` o `cambiada`; 422 `fila`, `campo` o `suprimida`."""
     cuerpo = await _cuerpo(request, CorreccionIn)
@@ -183,7 +191,7 @@ async def corregir(pid: str, request: Request, quien: Quien = Depends(requiere("
 
 
 @r.post("/planillas/{pid}/leer", status_code=202)
-async def releer(pid: str, request: Request, quien: Quien = Depends(requiere("plantillas"))):
+async def releer(pid: str, request: Request, quien: Quien = Depends(PLANILLAS)):
     """Vuelve a leer la foto de fondo. 409 `leyendo`, `cargando`, `sin_foto` o `max_lecturas`; 422 `desde_fila`."""
     cuerpo = await _cuerpo(request, ReleerIn)
     db, cfg = request.app.state.db, request.app.state.cfg
@@ -195,7 +203,7 @@ async def releer(pid: str, request: Request, quien: Quien = Depends(requiere("pl
 
 
 @r.delete("/planillas/{pid}")
-async def borrar(pid: str, request: Request, quien: Quien = Depends(requiere("plantillas"))):
+async def borrar(pid: str, request: Request, quien: Quien = Depends(PLANILLAS)):
     """Borra la planilla entera (la foto y lo leído). 409 `cargando`."""
     db = request.app.state.db
     doc = await run_in_threadpool(pl.buscar, db, pid, quien)
@@ -204,7 +212,7 @@ async def borrar(pid: str, request: Request, quien: Quien = Depends(requiere("pl
 
 
 @r.post("/planillas/{pid}/simular")
-async def simular(pid: str, request: Request, quien: Quien = Depends(requiere("importar"))):
+async def simular(pid: str, request: Request, quien: Quien = Depends(PLANILLAS)):
     """La vista previa de cargar: por fila `{n, estado, persona_id, llenaria, distintos: [{campo, base, planilla,
     queda}], motivo}`. Estados: nueva, nueva_sin_autorizacion, completaria, igual, revocaria, conflicto_cedula,
     revision, no_autorizo, no_se_carga, sin_nombre, ya_cargada, otra_eleccion (y descartada, si se pide). No escribe
@@ -217,7 +225,7 @@ async def simular(pid: str, request: Request, quien: Quien = Depends(requiere("i
 
 
 @r.post("/planillas/{pid}/cargar")
-async def cargar(pid: str, request: Request, quien: Quien = Depends(requiere("importar"))):
+async def cargar(pid: str, request: Request, quien: Quien = Depends(PLANILLAS)):
     """Carga las filas con el importador real (ver `planillas.cargar`). Idempotente con `Idempotency-Key`. 409
     `importando` (otra importación o unión en curso), `cargando` o `no_leida`; 422 `sin_filas`, `fila` o
     `planillero`."""

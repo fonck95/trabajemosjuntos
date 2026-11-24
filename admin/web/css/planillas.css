@@ -133,7 +133,6 @@
 .pf-fija { font-size: 13.5px; }
 .pf-fija-texto { position: sticky; left: 92px; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px;
   max-width: min(520px, calc(100vw - 180px)); }
-.pf-enmascarada .pf-n { left: 0; box-shadow: 1px 0 0 var(--line-soft); }
 
 /* Cotejar y cargar */
 .pf-acciones { display: grid; gap: 10px; border-top: 1px solid var(--line-soft); padding-top: 12px; }

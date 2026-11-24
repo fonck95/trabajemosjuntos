@@ -128,9 +128,14 @@ const BRILLO_MIN = 70;                        // brillo medio (0–255) por deba
 const NITIDEZ_MIN = 40;
 const CALIDAD_MIN = 0.5;                      // la calidad JPEG más baja que se prueba antes de achicar la foto
 const MINIATURA = { ancho: 54, alto: 72 };    // la miniatura del cuadro de escribir, en píxeles CSS
-// El aviso fijo junto a la cámara: qué se fotografía y qué no (Ley 1581: datos sensibles y biométricos)
+// El aviso fijo junto a la cámara: qué se fotografía y qué no (Ley 1581: datos sensibles y biométricos). Las columnas
+// políticas también se tapan: el lector no las transcribe (`lector_planillas.INSTRUCCIONES`), así que en la foto solo
+// llegarían al proveedor del modelo, también con `agente_politicos` apagado
 const AVISO_FOTOS = 'Solo planillas o listas. No fotografíe cédulas. Tape columnas de salud, etnia, víctima o '
   + 'políticas. Borre la foto del teléfono.';
+// Lo que dice que esta persona ya no puede subir fotos (su rol, los ajustes o el compromiso vigente cambiaron): se
+// vuelve a leer el estado y la cámara se oculta
+const FOTOS_APAGADAS = new Set(['planillas_apagado', 'compromiso_fotos', 'permiso']);
 const AVISOS_FOTO = {
   pequena: 'Foto pequeña: puede que la letra no se lea. Acérquese o use la cámara con más resolución.',
   oscura: 'Foto oscura: tómela con más luz.',
@@ -2962,6 +2967,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       const [mensaje, reintentar] = explicarFoto(e);
       Object.assign(f, { estado: 'error', error: mensaje, reintentar });
       bandejaAbierta = true;
+      if (e instanceof ErrorApi && FOTOS_APAGADAS.has(e.codigo)) releerEstado();
     } finally {
       f.control = null;
     }

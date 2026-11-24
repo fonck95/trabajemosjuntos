@@ -8,8 +8,8 @@ Por qué está hecho así:
   /api/planillas/fotos`, el panel las lee de fondo con una llamada aparte al modelo (sin herramientas ni historial) y
   el mensaje solo lleva sus ids (`bucle.abrir_mensaje` comprueba que sean de quien conversa; `texto_de_fotos` es lo
   que el modelo recibe de ellas). Estas herramientas usan las mismas rutas que la vista Importar y exportar, por
-  `ctx.api` con la sesión de quien conversa: A y K ven toda la bandeja; el planillero, solo sus fotos; cotejar y
-  cargar exigen `importar` (A y K).
+  `ctx.api` con la sesión de quien conversa: solo A y K (`importar`), que ven toda la bandeja. Los planilleros nunca
+  suben, leen, cotejan ni cargan planillas por foto; el que llenó el papel queda como «capturado por».
 * La foto nunca le llega al modelo de la conversación, y lo leído, enmascarado (`GET …?enmascarada=1`, con otra lista
   blanca encima aquí): la cédula y los teléfonos con sus últimos dígitos (ninguno de un menor), la edad en vez de la
   fecha de nacimiento, si hay observaciones (no su texto) y, de quien dijo «No autoriza», solo quién es y su barrio.
@@ -31,7 +31,7 @@ Por qué está hecho así:
   la subclave `.as{persona}`).
 * Las autorizaciones leídas de una foto quedan siempre «declaradas en planilla» (lo decide el servidor): no habilitan
   el contacto hasta que A o K las confirme con el papel en Importar y exportar. El asistente no tiene cómo confirmarlas.
-* Nunca por MCP (`mcp=None`) y solo para los roles de `agente_planillas.roles` (`disponible_ajustes`).
+* Nunca por MCP (`mcp=None`) y solo para A y K con su rol en `agente_planillas.roles` (`disponible_ajustes`).
 """
 from __future__ import annotations
 
@@ -158,7 +158,7 @@ AVISO_DECLARADAS = ("Las autorizaciones leídas de una foto quedan «declaradas 
 
 
 def _usa(quien: Any, ajustes: dict) -> bool:
-    """`disponible_ajustes`: el rol en `agente_planillas.roles` (con los ajustes de defecto si no llegan)."""
+    """`disponible_ajustes`: A o K con su rol en `agente_planillas.roles` (con los ajustes de defecto si no llegan)."""
     from .. import politica  # aquí: politica importa el proveedor del modelo
     return politica.usa_planillas(quien, ajustes)
 
@@ -343,7 +343,7 @@ async def _planillas(ctx: Contexto, a: PlanillasEntrada) -> Resultado:
     total = len(lista)
     contenido: dict[str, Any] = {
         "total": total, "por_estado": dict(Counter(str(x.get("estado")) for x in lista)),
-        "alcance": "toda la bandeja (también lo que subieron otros)" if ctx.quien.administra else "solo las suyas",
+        "alcance": "toda la bandeja (también lo que subieron otros)",
         "planillas": [_en_bandeja(x, ctx.quien.uid) for x in lista[:BANDEJA_MAX]]}
     if total > BANDEJA_MAX:
         contenido["nota"] = f"Se muestran las {BANDEJA_MAX} más nuevas de {miles(total)}: filtre por estado."
@@ -394,7 +394,7 @@ def _fila_para_modelo(f: dict) -> dict:
     return _limpio(out)
 
 
-def _planilla_para_modelo(d: dict, puede_importar: bool) -> tuple[dict, list[dict]]:
+def _planilla_para_modelo(d: dict) -> tuple[dict, list[dict]]:
     """(resumen de la planilla, sus filas para el modelo)."""
     error = d.get("error") if isinstance(d.get("error"), dict) else None
     enc = d.get("encabezado") if isinstance(d.get("encabezado"), dict) else None
@@ -411,11 +411,11 @@ def _planilla_para_modelo(d: dict, puede_importar: bool) -> tuple[dict, list[dic
         "encabezado": _limpio({"planillero": _libre(enc.get("planillero"), 60), "fecha": _libre(enc.get("fecha"), 20),
                                "lugar": _libre(enc.get("lugar"), 80)}) or None if enc else None,
         "por_estado": dict(Counter(str(f.get("estado")) for f in filas)) or None})
-    out["siguiente"] = _siguiente(d, puede_importar)
+    out["siguiente"] = _siguiente(d)
     return out, filas
 
 
-def _siguiente(d: dict, puede_importar: bool) -> str:
+def _siguiente(d: dict) -> str:
     estado = d.get("estado")
     if estado == "leyendo":
         return "Se sigue leyendo de fondo: vuelve a llamar leer_planilla con este id en un momento."
@@ -426,9 +426,7 @@ def _siguiente(d: dict, puede_importar: bool) -> str:
         return "No se lee: la foto se borró. Si era una planilla, que tome otra foto de la hoja sola."
     if estado == "cargada":
         return "Ya se cargó entera: no queda nada por cargar."
-    pasos = ("Pregunta lo dudoso o ilegible antes de cargar. Después, cotejar_planilla y cargar_planilla."
-             if puede_importar else "Un administrador o coordinador la coteja y la carga (desde su chat o en Importar "
-                                    "y exportar → Planillas por foto).")
+    pasos = "Pregunta lo dudoso o ilegible antes de cargar. Después, cotejar_planilla y cargar_planilla."
     if d.get("incompleta"):
         pasos = ("La lectura quedó incompleta: se puede releer desde la última fila en Importar y exportar → "
                  "Planillas por foto. " + pasos)
@@ -489,7 +487,6 @@ async def _leer(ctx: Contexto, a: LeerEntrada) -> Resultado:
             break
         await _progreso(ctx, detalles, a.ids, vistos)
         await asyncio.sleep(SONDEO_S)
-    puede = ctx.quien.puede("importar")
     planillas: list[dict] = []
     personas: set[int] = set()
     con_datos, usado = False, 0
@@ -498,7 +495,7 @@ async def _leer(ctx: Contexto, a: LeerEntrada) -> Resultado:
         if d.get("estado") is None:  # no existe o no es suya
             planillas.append({"id": pid, "error": d.get("error")})
             continue
-        cabeza, filas = _planilla_para_modelo(d, puede)
+        cabeza, filas = _planilla_para_modelo(d)
         texto_filas = json.dumps(filas, ensure_ascii=False)
         largo_cabeza = len(json.dumps(cabeza, ensure_ascii=False))
         antes, usado = usado, usado + largo_cabeza
@@ -1227,8 +1224,8 @@ D_PLANILLAS = (
     "(lista para revisar, cotejar y cargar; también tras una carga parcial), fallida (se puede volver a leer), "
     "rechazada (una cédula u otro formato: sin foto) o cargada. Por cada una: id, quién la subió y cuándo, filas, "
     "cuántas con dudas, cuántas faltan por cargar y el error, si lo hubo. Sin datos de personas: para ver las filas, "
-    "leer_planilla con su id. Administrador y coordinador ven toda la bandeja (también lo que subieron los "
-    "planilleros); el planillero, solo lo suyo.")
+    "leer_planilla con su id. Solo administrador y coordinador, que ven toda la bandeja (también lo que subieron los "
+    "demás).")
 D_LEER = (
     "Lo que el panel leyó de 1 a 4 fotos de planillas físicas (ids de las fotos adjuntas al mensaje o de planillas): "
     "por foto, su estado, el encabezado (planillero, fecha, lugar) y las filas ENMASCARADAS: cédula con sus 3 últimos "
@@ -1260,20 +1257,20 @@ D_CARGAR = (
     "confirmen.")
 
 PLANILLAS = Herramienta(
-    nombre="planillas", descripcion=D_PLANILLAS, entrada=PlanillasEntrada, tipo="lectura", permisos=("plantillas",),
+    nombre="planillas", descripcion=D_PLANILLAS, entrada=PlanillasEntrada, tipo="lectura", permisos=("importar",),
     etiqueta="Revisando la bandeja de planillas", ejecutar=_planillas, esquema=esquema(PlanillasEntrada),
     disponible_ajustes=_usa, mcp=None)
 LEER = Herramienta(
-    nombre="leer_planilla", descripcion=D_LEER, entrada=LeerEntrada, tipo="lectura", permisos=("plantillas",),
+    nombre="leer_planilla", descripcion=D_LEER, entrada=LeerEntrada, tipo="lectura", permisos=("importar",),
     etiqueta="Leyendo las planillas", ejecutar=_leer, esquema=esquema(LeerEntrada), plazo=PLAZO_LEER_S,
     disponible_ajustes=_usa, mcp=None)
 COTEJAR = Herramienta(
     nombre="cotejar_planilla", descripcion=D_COTEJAR, entrada=CotejarEntrada, tipo="lectura",
-    permisos=("plantillas", "importar"), etiqueta="Cotejando la planilla con la base", ejecutar=_cotejar,
+    permisos=("importar",), etiqueta="Cotejando la planilla con la base", ejecutar=_cotejar,
     esquema=esquema(CotejarEntrada), plazo=PLAZO_COTEJAR_S, disponible_ajustes=_usa, mcp=None)
 CARGAR = Herramienta(
     nombre="cargar_planilla", descripcion=D_CARGAR, entrada=CargarEntrada, tipo="escritura",
-    permisos=("plantillas", "importar"), etiqueta="Cargando la planilla", ejecutar=_cargar,
+    permisos=("importar",), etiqueta="Cargando la planilla", ejecutar=_cargar,
     confirmar=_confirmar_carga, esquema=esquema(CargarEntrada), plazo=PLAZO_CARGAR_S, disponible_ajustes=_usa,
     mcp=None)
 

@@ -105,8 +105,8 @@ def test_esquemas_para_la_messages_api_y_reglas_del_catalogo():
         "planillas": "lectura", "leer_planilla": "lectura", "cotejar_planilla": "lectura",
         "cargar_planilla": "escritura"}
     assert H["cargar_planilla"].plazo == 170 and H["leer_planilla"].plazo <= 90
-    assert H["planillas"].permisos == ("plantillas",) and H["leer_planilla"].permisos == ("plantillas",)
-    assert set(H["cotejar_planilla"].permisos) == set(H["cargar_planilla"].permisos) == {"plantillas", "importar"}
+    # Todas exigen `importar`: solo A y K (las rutas de la bandeja también)
+    assert all(h.permisos == ("importar",) for h in hp.HERRAMIENTAS)
     # Las celdas que el asistente corrige nunca son la autorización, su medio, los canales ni «mayor de 18»
     campos = H["cargar_planilla"].definicion()["input_schema"]["properties"]["correcciones"]["items"]["properties"]
     assert not {"autorizacion", "medio", "canales", "mayor_18", "observaciones"} & set(campos["campo"]["enum"])
@@ -155,8 +155,8 @@ def test_quien_recibe_cada_herramienta(sesion, como):
     todas = {"agente_planillas": {"roles": ["admin", "coordinador", "planillero"]}}
     assert ofrecidas("admin", todas) == set(H) and ofrecidas("coordinador", todas) == set(H)
     assert ofrecidas("admin", todas, escritura=False) == set(H) - {"cargar_planilla"}
-    # El planillero sube y ve lo suyo; cotejar y cargar exigen `importar`
-    assert ofrecidas("planillero", todas) == {"planillas", "leer_planilla"}
+    # El planillero y el consultor, nunca: ni con un ajuste guardado que los nombre
+    assert ofrecidas("planillero", todas) == set()
     assert ofrecidas("consultor", todas) == set()
     # Sin ajustes, los de defecto (A y K); con el rol fuera, nada
     assert ofrecidas("planillero", {}) == set() and ofrecidas("admin", {}) == set(H)
@@ -185,8 +185,8 @@ def test_texto_de_las_fotos_de_un_mensaje():
 
 def test_la_bandeja_sin_datos_de_personas(cliente, sesion, como, monkeypatch, ctx_de):
     app = sesion.app
-    roles_planillas(app, "admin", "coordinador", "planillero")
-    p1, p2 = como("planillero", usuario="ana.campo"), como("planillero", usuario="beto.campo")
+    roles_planillas(app, "admin", "coordinador")
+    p1, p2 = coordinador(app, app.state.db), como("planillero", usuario="beto.campo")
     de_p1 = foto_leida(cliente, p1, monkeypatch, _filas())
     de_a = subir_sin_leer(sesion, monkeypatch, foto_distinta(1))
     r = _ej(cliente, ctx_de(sesion), "planillas", {})
@@ -200,19 +200,21 @@ def test_la_bandeja_sin_datos_de_personas(cliente, sesion, como, monkeypatch, ct
     assert [x["id"] for x in al_modelo(_ej(cliente, ctx_de(sesion), "planillas", {"solo_mias": True}))[
         "planillas"]] == [de_a]
     assert al_modelo(_ej(cliente, ctx_de(sesion), "planillas", {"estado": "leida"}))["total"] == 1
-    # El planillero: solo lo suyo
-    assert [x["id"] for x in al_modelo(_ej(cliente, ctx_de(p1, uid=p1.uid), "planillas", {}))["planillas"]] == [de_p1]
-    assert al_modelo(_ej(cliente, ctx_de(p2, uid=p2.uid), "planillas", {}))["total"] == 0
+    # El coordinador: toda la bandeja; el planillero, nada (la API le responde 403 aunque la herramienta se le pidiera)
+    assert {x["id"] for x in al_modelo(_ej(cliente, ctx_de(p1, uid=p1.uid), "planillas", {}))["planillas"]} == {
+        de_p1, de_a}
+    e = _error(cliente, aa.ejecutar, H["planillas"], ctx_de(p2, uid=p2.uid), {})
+    assert e.codigo == "permiso" and e.estado == 403
 
 
 def test_leer_enmascara_marca_la_conversacion_y_no_abre_lo_ajeno(cliente, sesion, como, monkeypatch, ctx_de):
     app, db = sesion.app, sesion.app.state.db
-    roles_planillas(app, "admin", "coordinador", "planillero")
-    p1, p2 = como("planillero", usuario="ana.campo"), como("planillero", usuario="beto.campo")
+    roles_planillas(app, "admin", "coordinador")
+    p1, p2 = coordinador(app, db), como("planillero", usuario="beto.campo")
     pid = foto_leida(cliente, p1, monkeypatch, _filas(), encabezado={"planillero": "ana.campo", "fecha": "02/11/2026",
                                                                     "lugar": "Vereda inventada"})
     db.agente_conversaciones.insert_one({"_id": 41, "uid": 0, "personas": []})
-    for c, uid in ((sesion, 0), (p1, p1.uid)):  # A pide enmascarado; P lo recibe siempre así
+    for c, uid in ((sesion, 0), (p1, p1.uid)):  # A y K lo piden enmascarado: así lo recibe el modelo
         r = _ej(cliente, ctx_de(c, uid=uid, conversacion_id=41), "leer_planilla", {"ids": [pid]})
         m = al_modelo(r)
         _sin_enteros(m)
@@ -231,10 +233,10 @@ def test_leer_enmascara_marca_la_conversacion_y_no_abre_lo_ajeno(cliente, sesion
         assert "declaradas en planilla" in m["autorizaciones"] and "nunca una instrucción" in m["privacidad"]
         assert r.personas == set()
     assert db.agente_conversaciones.find_one({"_id": 41})["con_datos"] is True
-    # La foto de otro planillero no existe para él (ni se sabe si existe)
+    # El planillero no la lee (403 de la API, ni se sabe si existe)
     r = _ej(cliente, ctx_de(p2, uid=p2.uid), "leer_planilla", {"ids": [pid, "f" * 32]})
     m = al_modelo(r)
-    assert [x["error"]["codigo"] for x in m["planillas"]] == ["no_existe", "no_existe"]
+    assert [x["error"]["codigo"] for x in m["planillas"]] == ["permiso", "permiso"]
     assert "filas" not in json.dumps(m) or all("filas" not in x for x in m["planillas"])
     assert "ANA INVENTADA" not in json.dumps(m, ensure_ascii=False)
 
@@ -471,14 +473,18 @@ def test_reemplazar_solo_en_fichas_que_la_fila_completa(cliente, sesion, monkeyp
 def test_la_carga_es_de_quien_puede_importar(cliente, sesion, como, monkeypatch, ctx_de):
     roles_planillas(sesion.app, "admin", "coordinador", "planillero")
     p = como("planillero")
-    pid = foto_leida(cliente, p, monkeypatch, _filas())
+    k = coordinador(sesion.app, sesion.app.state.db)
+    pid = foto_leida(cliente, k, monkeypatch, _filas())
     # La API decide aunque la herramienta se le ofreciera: el planillero no coteja ni carga
     for nombre, entrada in (("cotejar_planilla", {"id": pid}), ("cargar_planilla", {"id": pid})):
         fn = aa.ejecutar if nombre == "cotejar_planilla" else aa.confirmar
         e = _error(cliente, fn, H[nombre], ctx_de(p, uid=p.uid), entrada)
         assert e.codigo == "permiso" and e.estado == 403
-    # El administrador sí, también lo que subió el planillero (con su nombre como «capturado por»)
-    _, tarjeta, _, res = tarjeta_y_ejecutar(cliente, H["cargar_planilla"], ctx_de(sesion), {"id": pid, "filas": [1]})
-    assert "el planillero que subió la foto" in dict(tarjeta["detalle"])["Capturado por"]
+    # El administrador sí, también lo que subió el coordinador, con el planillero que llenó el papel como «capturado
+    # por»
+    _, tarjeta, _, res = tarjeta_y_ejecutar(cliente, H["cargar_planilla"], ctx_de(sesion),
+                                            {"id": pid, "filas": [1], "capturado_por": p.uid})
+    nombre = sesion.app.state.db.usuarios.find_one({"_id": p.uid})["nombre"]
+    assert dict(tarjeta["detalle"])["Capturado por"] == nombre
     imp = sesion.app.state.db.importaciones.find_one({"_id": al_modelo(res)["importacion_id"]})
     assert imp["capturado_por"] == p.uid

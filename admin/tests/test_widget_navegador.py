@@ -28,8 +28,8 @@ import pytest
 
 from test_agente_navegador import _servir, requiere_navegador
 
-AVISO = ("Solo planillas o listas. No fotografíe cédulas. Tape columnas de salud, etnia, víctima o políticas. Borre la "
-         "foto del teléfono.")
+AVISO = ("Solo planillas o listas. No fotografíe cédulas. Tape columnas de salud, etnia, víctima o políticas. Borre "
+         "la foto del teléfono.")
 
 
 def _imagenes(dir_: Path) -> dict[str, str]:

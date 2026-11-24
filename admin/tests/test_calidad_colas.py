@@ -16,6 +16,8 @@ from ayudas_g3 import autorizada, coordinador, persona
 from app import db as bd
 
 FORMA_NO_AUTORIZO = {"id", "nombre", "lugar", "consentimiento", "aviso"}
+# Las pruebas que fijan lo de siempre con los datos políticos apagados (`agente_politicos`)
+SIN_POLITICOS = {"agente_politicos": {"asistente": False, "mcp": False}}
 
 
 def _no(db, **extra) -> int:
@@ -202,11 +204,13 @@ def _conflicto(db, pid, motivo="posible_digitacion", fuente="general", **extra) 
 
 
 def test_conflictos_con_lista_blanca_y_fuente_politica_como_otra_base(sesion, ctx_de):
+    """Con los datos políticos apagados (`agente_politicos`): encendidos, la fuente sale como es
+    (tests/test_politicos_herramientas.py)."""
     db = sesion.app.state.db
     pid = rica(db)
     cid = _conflicto(db, pid)
     _conflicto(db, pid, motivo="nombre_distinto", fuente="planilla")
-    res = leer(sesion, ctx_de(sesion), "conflictos_cedula", {})
+    res = leer(sesion, ctx_de(sesion, ajustes=SIN_POLITICOS), "conflictos_cedula", {})
     out = modelo(res)
     sin_datos(out, "93000554", "93000545", "1986-04-02", "CALLE 9")
     assert res.personas == {pid} and out["total"] == 2
@@ -215,7 +219,8 @@ def test_conflictos_con_lista_blanca_y_fuente_politica_como_otra_base(sesion, ct
     assert c["fila"]["cedulas_coinciden"] is False and c["fila"]["numero_fila"] == 7
     assert c["persona"]["cedula_ult3"] == "···555" and c["decisiones"] == ["corregir", "descartar"]
     assert next(x for x in out["conflictos"] if x["id"] != cid)["fuente"] == "planilla"
-    assert modelo(leer(sesion, ctx_de(sesion), "conflictos_cedula", {"motivo": "nombre_distinto"}))["total"] == 1
+    assert modelo(leer(sesion, ctx_de(sesion, ajustes=SIN_POLITICOS), "conflictos_cedula",
+                       {"motivo": "nombre_distinto"}))["total"] == 1
 
 
 def test_conflicto_con_quien_no_autorizo(sesion, ctx_de):
@@ -342,6 +347,8 @@ def test_solicitudes_sin_de_quien_son_y_actualizar_una_vez(sesion, como, ctx_de)
 # ───────────────────────────── importaciones ─────────────────────────────
 
 def test_importaciones_sin_las_bases_politicas(sesion, como, ctx_de):
+    """Con los datos políticos apagados (`agente_politicos`): encendidos, salen como son
+    (tests/test_politicos_herramientas.py)."""
     db = sesion.app.state.db
     db.importaciones.insert_many([
         {"_id": 1, "ts": "2026-11-01T15:00:00+00:00", "usuario": "admin", "uid": 0, "capturado_por": None,
@@ -356,7 +363,7 @@ def test_importaciones_sin_las_bases_politicas(sesion, como, ctx_de):
          "resumen": {"personas_nuevas": 14, "autorizaciones_por_confirmar": 6, "registros_por_fuente": {"planilla": 15},
                      "suprimidas_omitidas": 1, "planilleros_desconocidos": ["MARTA INVENTADA"]}},
     ])
-    res = leer(sesion, ctx_de(sesion), "importaciones", {})
+    res = leer(sesion, ctx_de(sesion, ajustes=SIN_POLITICOS), "importaciones", {})
     out = modelo(res)
     sin_datos(out, "812", "lideres", "lider", "MARTA", "suprimidas")
     por_id = {x["id"]: x for x in out["importaciones"]}

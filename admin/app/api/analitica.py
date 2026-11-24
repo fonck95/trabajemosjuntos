@@ -7,6 +7,11 @@
   no lleva datos de personas (solo dimensiones, fechas y filtros de catálogo). Una consulta mal formada responde 422
   `invalido` con los errores en `campos` (el asistente se los pasa al modelo para que corrija).
 * `GET /api/analitica/catalogo`: los tipos, dimensiones, métricas, eventos y filtros que se admiten, con los límites.
+* Los datos políticos (dimensiones `tipo`, `lider` y `lista`, sus filtros y las bases «cedulas» y «general»), solo
+  para A y K (como en Habitantes, donde P y C no los filtran) y con `agente_politicos` encendido para la vía de la
+  petición (`politicos_de`): «mcp» si llega por la sesión interna de un agente externo (`Quien.via`), el asistente si
+  no (el panel no usa esta ruta: la piden el asistente y MCP). Si no, una consulta que los use responde 403
+  `permiso` y el catálogo no los lista.
 """
 from __future__ import annotations
 
@@ -17,6 +22,7 @@ from pydantic import ValidationError
 from pymongo.database import Database
 
 from .. import analitica as motor
+from .. import modelo
 from ..acceso import Quien, requiere
 from ..seguridad import obtener_db
 
@@ -46,12 +52,20 @@ def leer_consulta(texto: str | None) -> motor.Consulta:
         raise _invalida("La consulta no es válida: " + "; ".join(errores[:3]), errores) from None
 
 
+def politicos_de(db: Database, quien: Quien) -> bool:
+    """¿Esta petición puede usar los datos políticos? A o K (`administra`) con `agente_politicos` encendido para su
+    vía (`politica.usa_politicos`: «mcp» mira el ajuste `mcp`; lo demás, el del asistente)."""
+    from ..agente import politica  # aquí: politica importa el proveedor del modelo
+    return bool(quien.administra) and politica.usa_politicos(modelo.leer_ajustes(db), quien.via)
+
+
 @r.get("/analitica")
-def analitica(consulta: str | None = Query(None), db: Database = Depends(obtener_db), _: Quien = Depends(VER)):
+def analitica(consulta: str | None = Query(None), db: Database = Depends(obtener_db), quien: Quien = Depends(VER)):
     """Un análisis agregado de la base (sin quienes no autorizaron, con supresión de celdas pequeñas)."""
-    return motor.analizar(db, leer_consulta(consulta))
+    c = leer_consulta(consulta)
+    return motor.analizar(db, c, politicos=politicos_de(db, quien))
 
 
 @r.get("/analitica/catalogo")
-def catalogo(db: Database = Depends(obtener_db), _: Quien = Depends(VER)):
-    return motor.catalogo(db)
+def catalogo(db: Database = Depends(obtener_db), quien: Quien = Depends(VER)):
+    return motor.catalogo(db, politicos=politicos_de(db, quien))

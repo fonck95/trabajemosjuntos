@@ -77,15 +77,14 @@ def test_el_estado_anuncia_las_fotos_segun_el_rol_y_el_proveedor(sesion, como, m
     assert sesion.get("/api/agente/estado").json()["adjuntos"] is None
     k = coordinador(app, db)
     assert k.get("/api/agente/estado").json()["adjuntos"] == ADJUNTOS
-    # El planillero: con el asistente y su rol en `agente_planillas.roles`
+    # El planillero y el consultor, nunca: aunque usen el asistente y un ajuste guardado los nombre
     _agente_para(db, "admin", "coordinador", "planillero", "consultor")
     p, c = como("planillero"), como("consultor")
     assert p.get("/api/agente/estado").json()["adjuntos"] is None
-    roles_planillas(app, "admin", "coordinador", "planillero")
-    assert p.get("/api/agente/estado").json()["adjuntos"] == ADJUNTOS
-    assert c.get("/api/agente/estado").json()["adjuntos"] is None
-    _agente_para(db, "admin", "coordinador")  # sin el asistente, tampoco
+    roles_planillas(app, "admin", "coordinador", "planillero", "consultor")
     assert p.get("/api/agente/estado").json()["adjuntos"] is None
+    assert c.get("/api/agente/estado").json()["adjuntos"] is None
+    assert k.get("/api/agente/estado").json()["adjuntos"] == ADJUNTOS
 
 
 def test_mensajes_con_fotos_que_no_se_aceptan(sesion, como, monkeypatch):

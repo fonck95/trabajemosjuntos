@@ -1,14 +1,16 @@
 // Importación de los Excel (se procesan y se descartan; solo quedan los datos), exportación de la base única y las
 // planillas físicas por foto (docs/agente.md, «Planillas físicas por foto»).
 //
-// Planillas por foto: la bandeja del panel (app/api/planillas.py), la misma que usa el asistente del chat. Quien tiene
-// el papel toma o elige la foto de cada hoja; el navegador la reduce y la vuelve a codificar (sin EXIF ni GPS) y la
-// sube cruda a POST /api/planillas/fotos, donde se lee de fondo (la bandeja se consulta cada pocos segundos mientras
-// haya alguna «leyendo»). A y K abren una: la foto al lado de la grilla con los valores completos, lo dudoso y lo
-// ilegible marcado (con un signo, no solo con color), las celdas se corrigen (PATCH), «Cotejar» da la vista previa
-// fiel del importador por fila, y las filas elegidas se cargan con el folio del papel y el planillero; el resultado
-// enlaza a la confirmación de las autorizaciones «declaradas en planilla», que sigue siendo de una persona con el
-// papel. P ve sus fotos con su estado y sus filas enmascaradas (como las sirve el servidor), sin corregir ni cargar.
+// Planillas por foto: la bandeja del panel (app/api/planillas.py), la misma que usa el asistente del chat. Solo el
+// administrador y los coordinadores (`importar`): los planilleros nunca suben ni ven fotos de planillas (el que llenó
+// el papel queda como «Capturado por»). Se toma o elige la foto de cada hoja; el navegador la reduce y la vuelve a
+// codificar (sin EXIF ni GPS) y la sube cruda a POST /api/planillas/fotos, donde se lee de fondo (la bandeja se
+// consulta cada pocos segundos mientras haya alguna «leyendo»). Al abrir una: la foto al lado de la grilla con los
+// valores completos, lo dudoso y lo ilegible marcado (con un signo, no solo con color), las celdas se corrigen (PATCH),
+// «Cotejar» da la vista previa fiel del importador por fila, y las filas elegidas se cargan con el folio del papel y
+// el planillero; el resultado enlaza a la confirmación de las autorizaciones «declaradas en planilla», que sigue
+// siendo de una persona con el papel. Si el compromiso de confidencialidad vigente no deja fotografiar planillas
+// (`compromiso_permite_fotos` de Ajustes, o 409 `compromiso_fotos` al subir), la subida se oculta con el motivo.
 //
 // Privacidad: la foto se pide con la sesión y se dibuja en un canvas (nunca en una URL ni en el almacenamiento del
 // navegador) y se suelta al cerrar la planilla o salir de la vista; los valores viven solo en la memoria de la vista.
@@ -328,13 +330,13 @@ async function prepararFoto(archivo, lim) {
 // ───────────────────────────── Planillas por foto: la sección de la vista ─────────────────────────────
 
 /**
- * Monta «Planillas por foto» en `caja` (la bandeja) y `cajaAbierta` (la planilla abierta). `planilleros` son los de
- * «Capturado por»; `ajustes`, los del panel si la persona los puede leer (A y K: retención, roles y otros formatos);
+ * Monta «Planillas por foto» en `caja` (la bandeja) y `cajaAbierta` (la planilla abierta), solo para A y K. `planilleros`
+ * son los de «Capturado por»; `ajustes`, los del panel si se pudieron leer (retención, roles, otros formatos y si el
+ * compromiso vigente deja fotografiar planillas);
  * `inicial`, el id de `?planilla=` para abrirla al entrar; `alCargar`, lo que se refresca tras una carga (historial e
  * insignias). Devuelve la limpieza de la vista: corta las consultas y suelta la foto.
  */
 function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, alCargar }) {
-  const revisa = puede('importar');          // A y K: valores completos, corregir, cotejar y cargar
   const control = new AbortController();     // al salir de la vista se cortan las peticiones en curso
   const op = { signal: control.signal };
   const ap = ajustes?.agente_planillas || null;
@@ -343,7 +345,8 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
   let filtro = 'todas';
   let reloj = null, consultando = null;
   let limites;                               // los topes de la foto (promesa, se piden una vez)
-  let subiendo = false, sinSubida = ap && !ap.roles?.includes(sesion.rol) ? 'rol' : null;
+  let subiendo = false;
+  let sinSubida = ap && !ap.roles?.includes(sesion.rol) ? 'rol' : ajustes?.compromiso_permite_fotos === false ? 'compromiso' : null;
   // La planilla abierta
   let abierta = null;                        // el detalle de GET /api/planillas/{id}
   let ediciones = new Map();                 // `${n}|${campo}` → valor escrito (sin guardar)
@@ -362,7 +365,7 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
   const retencion = ap?.retencion_horas;
   montar(caja, html`
     <header><h2 id="pf-titulo">Planillas por foto</h2><span class="nota" id="pf-cuenta"></span></header>
-    <p class="sec pf-intro">Tome o elija la foto de cada hoja de la planilla de campo: el panel la lee de fondo mientras usted sigue con la siguiente.${revisa ? ' Luego ábrala para revisar lo leído al lado de la foto, corregir, cotejar con la base y cargar.' : ' Un coordinador la revisa y la carga.'}</p>
+    <p class="sec pf-intro">Tome o elija la foto de cada hoja de la planilla de campo: el panel la lee de fondo mientras usted sigue con la siguiente. Luego ábrala para revisar lo leído al lado de la foto, corregir, cotejar con la base y cargar.</p>
     <div class="pf-subir" id="pf-subir">
       <div class="pf-botones">
         <button type="button" class="btn primario" id="pf-camara">${icono('camara')}<span>Tomar foto</span></button>
@@ -388,6 +391,9 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
       ? 'Su rol no sube fotos de planillas: actívelo en Ajustes → Planillas físicas por foto.'
       : 'Su rol no sube fotos de planillas: el administrador lo habilita en Ajustes.',
     modelo: 'El panel no tiene un modelo conectado para leer las fotos: el administrador lo conecta en Ajustes → Asistente.',
+    compromiso: puede('permisos.modificar')
+      ? `El compromiso de confidencialidad vigente no permite fotografiar planillas: cámbielo a la versión ${ajustes?.compromiso_con_fotos || '2026-11-v2'} en Ajustes → Planillas físicas por foto (cada persona lo acepta de nuevo).`
+      : 'El compromiso de confidencialidad vigente no permite fotografiar planillas: el administrador elige en Ajustes una versión que lo permita.',
   };
   function pintarSubida() {
     $('#pf-subir', caja).hidden = !!sinSubida;
@@ -472,8 +478,8 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
         } catch (e) {
           if (cancelada(e)) return;
           pintar('error', e.message || 'No se pudo subir.', prep.avisos);
-          if (e instanceof ErrorApi && ['planillas_apagado', 'sin_configurar'].includes(e.codigo)) {
-            sinSubida = e.codigo === 'sin_configurar' ? 'modelo' : 'rol';
+          if (e instanceof ErrorApi && ['planillas_apagado', 'sin_configurar', 'compromiso_fotos'].includes(e.codigo)) {
+            sinSubida = { sin_configurar: 'modelo', compromiso_fotos: 'compromiso' }[e.codigo] || 'rol';
             parar = true;
           } else if (e instanceof ErrorApi && ['frecuencia', 'pendientes'].includes(e.codigo)) {
             parar = true;
@@ -517,12 +523,12 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
       const quien = p.subida_por?.nombre || p.subida_por?.usuario || '';
       const releer = p.estado === 'fallida' && p.con_foto && (p.lecturas || 0) < LECTURAS_MAX;
       return html`<li class="pf-item${abierta?.id === p.id ? ' abierta' : ''}" data-id="${p.id}">
-        <div class="pf-item-cab">${chip([e.clase, e.texto])}<b>Foto del ${fecha(p.ts, true)}</b>${revisa && quien ? html`<span class="sec">· ${quien}</span>` : ''}</div>
+        <div class="pf-item-cab">${chip([e.clase, e.texto])}<b>Foto del ${fecha(p.ts, true)}</b>${quien ? html`<span class="sec">· ${quien}</span>` : ''}</div>
         ${datos ? html`<div class="sec pf-item-datos">${datos}</div>` : ''}
         ${p.nota ? html`<div class="pf-item-nota">Nota: ${p.nota}</div>` : ''}
         ${p.error?.mensaje && (p.estado === 'fallida' || p.estado === 'rechazada') ? html`<div class="pf-item-error">${p.error.mensaje}</div>` : ''}
         <div class="pf-item-acciones">
-          <button type="button" class="btn chico${revisa && p.estado === 'leida' && p.pendientes ? ' oscuro' : ''}" data-abrir="${p.id}">${revisa && p.estado === 'leida' ? 'Revisar' : 'Ver'}</button>
+          <button type="button" class="btn chico${p.estado === 'leida' && p.pendientes ? ' oscuro' : ''}" data-abrir="${p.id}">${p.estado === 'leida' ? 'Revisar' : 'Ver'}</button>
           ${releer ? html`<button type="button" class="btn chico" data-releer="${p.id}">${icono('repetir')} Volver a leer</button>` : ''}
           <button type="button" class="btn chico fantasma peligro" data-borrar="${p.id}" aria-label="Borrar la foto del ${fecha(p.ts, true)}">${icono('basura')}</button>
         </div></li>`;
@@ -781,7 +787,7 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
           ? html`<details class="pf-cotejo"><summary>${chip(COTEJO[c.estado] || ['borde', c.estado])}</summary><ul>${detalles.map((t) => html`<li>${t}</li>`)}</ul></details>`
           : chip(COTEJO[c.estado] || ['borde', c.estado])) : ''}
         ${c?.persona_id > 0 ? html`<a class="pf-ficha" href="/personas/${c.persona_id}" target="_blank" rel="noopener">Ficha #${c.persona_id}</a>` : ''}
-        ${abierta.estado === 'leida' && revisa && (editable || descartada) ? html`<button type="button" class="btn chico fantasma" data-${descartada ? 'restaurar' : 'descartar'}="${f.n}">${descartada ? 'Recuperar' : 'Descartar'}</button>` : ''}
+        ${abierta.estado === 'leida' && (editable || descartada) ? html`<button type="button" class="btn chico fantasma" data-${descartada ? 'restaurar' : 'descartar'}="${f.n}">${descartada ? 'Recuperar' : 'Descartar'}</button>` : ''}
       </td>
       ${columnas.map((k) => {
         const dudoso = f.dudosos?.includes(k), ilegible = f.ilegibles?.includes(k), corregido = f.corregidos?.includes(k);
@@ -804,19 +810,6 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
 
   function filaCargada(f, columnas) {
     return filaFija(f, columnas, html`${CARGADO[f.resultado] || 'Cargada'}${f.persona_id > 0 ? html` · <a href="/personas/${f.persona_id}" target="_blank" rel="noopener">Ficha #${f.persona_id}</a>` : ''}`);
-  }
-
-  // P: las filas enmascaradas como las sirve el servidor (sin corregir ni cargar)
-  function tablaEnmascarada(filas) {
-    return html`<div class="envoltura-tabla pf-tabla-env"><table class="tabla pf-tabla pf-enmascarada"><thead><tr><th>Fila</th><th>Estado</th><th>Nombre</th><th>Cédula</th><th>Celular</th><th>Barrio o vereda</th><th>Autorización</th><th>Para revisar</th></tr></thead>
-      <tbody>${filas.map((f) => html`<tr class="sin-clic" data-n="${f.n}"><th scope="row" class="pf-n">${f.n}</th>
-        <td>${chip(ESTADOS_FILA[f.estado] || ['borde', f.estado])}</td>
-        <td>${f.nombre || ''}</td>
-        <td>${f.cedula || ''}${f.cedula_coincide === false ? html` <span class="chip ambar">no coincide con su repetición</span>` : ''}</td>
-        <td>${f.celular || ''}${f.menor ? html` <span class="chip borde">menor de edad</span>` : ''}</td>
-        <td>${f.barrio || f.lugar || ''}</td>
-        <td>${f.consentimiento === 'no' ? 'No autoriza' : f.autorizacion || ''}</td>
-        <td>${[...(f.dudosos || []).map((k) => `${COLUMNAS[k] || k} dudosa`), ...(f.ilegibles || []).map((k) => `${COLUMNAS[k] || k} ilegible`)].join(', ')}</td></tr>`)}</tbody></table></div>`;
   }
 
   function avisosLectura(d) {
@@ -857,13 +850,13 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
     const enc = d.encabezado || {};
     const encabezado = [['Planillero', enc.planillero], ['Fecha', enc.fecha], ['Lugar', enc.lugar]].filter(([, v]) => v);
     const quien = d.subida_por?.nombre || d.subida_por?.usuario || '';
-    const puedeCargar = revisa && d.estado === 'leida';
+    const puedeCargar = d.estado === 'leida';
     const releerTodo = d.puede_releer && (d.estado === 'leida' || d.estado === 'fallida');
     cajaAbierta.hidden = false;
     montar(cajaAbierta, html`
       <header class="pf-abierta-cab">
         <div><h2 id="pf-abierta-titulo">Planilla del ${fecha(d.ts, true)}</h2>
-          <div class="sec">${[revisa && quien ? `Subida por ${quien}` : '', d.formato && d.formato !== 'planilla_campo' ? FORMATOS[d.formato] || d.formato : '',
+          <div class="sec">${[quien ? `Subida por ${quien}` : '', d.formato && d.formato !== 'planilla_campo' ? FORMATOS[d.formato] || d.formato : '',
             d.estado !== 'cargada' && d.expira ? `vence ${fecha(d.expira, true)}` : '', d.nota ? `Nota: ${d.nota}` : ''].filter(Boolean).join(' · ')}</div></div>
         <div class="acciones">${chip([estadoPlanilla(d).clase, estadoPlanilla(d).texto])}
           ${releerTodo ? html`<button type="button" class="btn chico" id="pf-releer">${icono('repetir')} Volver a leer</button>` : ''}
@@ -885,7 +878,7 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
         </div>` : ''}
         <div class="pf-grilla">
           ${!filas.length ? html`<p class="sec">${d.estado === 'leyendo' ? 'Las filas aparecen cuando termine la lectura.' : 'No hay filas leídas.'}</p>`
-            : revisa ? html`
+            : html`
             ${d.estado === 'leida' ? html`<div class="pf-grilla-barra">
               <span class="pf-leyenda"><span class="pf-marca" data-marca="dudoso">?</span> dudoso <span class="pf-marca" data-marca="ilegible">✕</span> ilegible <span class="pf-marca" data-marca="corregido">✓</span> corregido: compárelo con la foto</span>
               <span class="pf-elegir" role="group" aria-label="Elegir filas para cargar">Elegir: <button type="button" class="btn chico fantasma" data-elegir-grupo="limpias">limpias</button><button type="button" class="btn chico fantasma" data-elegir-grupo="todas">todas</button><button type="button" class="btn chico fantasma" data-elegir-grupo="ninguna">ninguna</button></span>
@@ -893,8 +886,7 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
             <div class="envoltura-tabla pf-tabla-env"><table class="tabla pf-tabla"><thead><tr><th class="pf-sel"><span class="sr">Cargar</span></th><th class="pf-n">Fila</th><th class="pf-estado-celda">Estado</th>${columnas.map((k) => html`<th data-campo="${k}">${COLUMNAS[k]}</th>`)}</tr></thead>
               <tbody>${filas.map((f) => (f.estado === 'cargada' ? filaCargada(f, columnas)
                 : f.estado === 'no_se_carga' ? filaFija(f, columnas, 'Esta fila no se carga.')
-                  : filaRevisable(f, columnas)))}</tbody></table></div>`
-            : tablaEnmascarada(filas)}
+                  : filaRevisable(f, columnas)))}</tbody></table></div>`}
           ${puedeCargar ? html`<div class="pf-acciones" id="pf-acciones">
             <div class="form pf-carga">
               <label class="campo"><span>Folio o ubicación del papel</span><input id="pf-folio" maxlength="${FOLIO_MAX}" value="${folio}" placeholder="Por ejemplo: carpeta 3, hoja 12" autocomplete="off"></label>
@@ -1262,7 +1254,8 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
 }
 
 export async function vistaImportar(el, { q } = {}) {
-  const conImportar = puede('importar'), conFotos = puede('plantillas');
+  // Las planillas por foto van con importar (A y K), como en el servidor: un planillero nunca ve la sección
+  const conImportar = puede('importar'), conFotos = conImportar;
   const [historial, catalogos, ajustes] = await Promise.all([
     conImportar ? api.get('/api/importaciones') : [],
     conImportar ? api.get('/api/catalogos').catch(() => ({})) : {},
@@ -1270,9 +1263,9 @@ export async function vistaImportar(el, { q } = {}) {
   ]);
   if (!el.isConnected) return; // mientras cargaba se pidió otra vista
   const planilleros = (catalogos.usuarios || []).filter((u) => u.rol === 'planillero' && u.activo !== false);
-  const titulo = puede('exportar') ? 'Importar y exportar' : conImportar ? 'Importar' : 'Planillas por foto';
+  const titulo = puede('exportar') ? 'Importar y exportar' : 'Importar';
   montar(el, html`
-    <div class="cabecera"><div><h1>${titulo}</h1><div class="sub">${conImportar ? 'Suba versiones nuevas cuando quiera: nada se duplica, lo editado en el panel no se pisa y lo distinto queda como dato alterno.' : 'Suba las fotos de sus planillas de campo: el panel las lee y un coordinador las revisa y las carga.'}</div></div></div>
+    <div class="cabecera"><div><h1>${titulo}</h1><div class="sub">Suba versiones nuevas cuando quiera: nada se duplica, lo editado en el panel no se pisa y lo distinto queda como dato alterno.</div></div></div>
     <div class="rejilla r-12">
       ${conImportar ? html`<section class="tarjeta c-7">
         <h2>Importar archivos de Excel</h2>

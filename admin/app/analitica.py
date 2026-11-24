@@ -21,10 +21,19 @@ Por qué está hecho así:
   entre sí; por eso los filtros son pocos y gruesos.
 * **Conteos del equipo sin supresión.** Lo que hizo cada usuario (equipo, franjas por usuario, calidad de captura) no
   es un dato de habitantes y sale completo, pero siempre sin lo hecho con quienes no autorizaron.
-* **Nada político ni sensible.** Las dimensiones son una lista cerrada: nunca listas de origen, líderes, tipo de
-  persona, régimen de salud, datos sensibles ni etiquetas sensibles. `fuente` es «tiene la fuente X» solo para trámites,
-  reunión, panel y planilla, sin resto ni total (el resto serían las bases políticas). Las altas por importación de una
-  base van a «importación», nunca al usuario que importó (`quien_capturo`); las de una planilla, al planillero.
+* **Nada sensible; lo político, solo si se habilita.** Las dimensiones son una lista cerrada: nunca régimen de
+  salud, datos sensibles ni etiquetas sensibles. Los datos políticos (las dimensiones `tipo`, `lider` y `lista`, los
+  filtros `tipo`, `lider_id`, `varios_lideres`, `sin_lider` y `lista`, y las fuentes «cedulas», «general» y «ambas»
+  como filtro) solo con `politicos` (`analizar`): A o K con `agente_politicos` encendido para la vía de la petición
+  (`api/analitica.py`: «mcp» con una clave por MCP, el asistente si no); si no, 403 `permiso`. Esas dimensiones son
+  una partición (cada persona en un solo grupo), así valen la supresión exacta y las tablas de dos dimensiones: `tipo`
+  es la combinación de sus tipos («Líder y votante»), `lider` su único líder nombrable (o «varios», «sin líder» o «sin
+  nombre») y `lista` su única lista (o «varias» o «sin lista»); los líderes y las listas de menos de 10 personas van
+  juntos («otros»), como los lugares. Un líder que no autorizó el tratamiento nunca se nombra ni sirve de filtro.
+  `fuente` sigue siendo «tiene la fuente X» solo para trámites, reunión, panel y planilla, sin resto ni total, también
+  con `politicos`: con las bases políticas, el resto sería la parte que falta y un grupo chico se deduciría. Las altas
+  por importación de una base van a «importación», nunca al usuario que importó (`quien_capturo`); las de una
+  planilla, al planillero.
 * **Filtros acotados.** Como mucho 3, de una lista blanca; edad y completitud en múltiplos de 5 y días sin
   acercamiento de una lista fija (con valores finos, dos consultas casi iguales aislarían a una persona). Sin `q`,
   `ids`, polígonos, reunión, creador ni actualizador.
@@ -43,6 +52,7 @@ import statistics
 from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta
 from functools import cached_property
+from itertools import combinations
 from typing import Annotated, Any, Callable, Iterable, Literal
 from urllib.parse import urlencode
 
@@ -75,6 +85,9 @@ OCULTA = "oculta"
 RECHAZOS = frozenset({"no_contactar", "solicitud_derechos"})
 UTILES = frozenset(modelo.EFECTIVOS - RECHAZOS)
 FUENTES_SEGURAS = ("tramites", "reunion", "manual", "planilla")
+FUENTES_POLITICAS = ("cedulas", "general")  # las bases que revelan listas de origen, partido o liderazgo
+# Las fuentes como filtro (con `politicos`, también las bases políticas; «ambas»: trámites y cédulas, como Habitantes)
+FUENTES_FILTRO = (*FUENTES_SEGURAS, *FUENTES_POLITICAS, "ambas")
 # Las altas de estas fuentes (la primera de la ficha) entraron por una importación, no por el panel
 IMPORTADAS = frozenset({"tramites", "cedulas", "general", "planilla"})
 IMPORTACION = "importacion"
@@ -102,8 +115,28 @@ DIM_PERSONA = (
     "votacion_estado", "donde", "consentimiento", "consentimiento_medio", "contacto_habilitado", "abordaje_estado",
     "ultimo_resultado", "ultimo_canal", "intentos", "completitud", "con_cedula", "cedula_verificada",
     "telefono_usable", "varios_telefonos", "requiere_actualizacion", "etiqueta", "asistencia", "fuente",
-    "quien_capturo", "mes_alta")
+    "quien_capturo", "mes_alta", "tipo", "lider", "lista")
+# Datos políticos: solo con `politicos` (`analizar`). Sus dimensiones son una partición (ver `valor_de`)
+DIM_POLITICAS = ("tipo", "lider", "lista")
+FILTROS_POLITICOS = ("tipo", "lider_id", "varios_lideres", "sin_lider", "lista")
 MULTI = ("etiqueta", "fuente")  # una persona cae en varios grupos: sin total, sin resto y sin %
+SIN_TIPO, SIN_LIDER, SIN_LISTA = "sin_tipo", "sin_lider", "sin_lista"
+VARIOS_LIDERES, VARIAS_LISTAS = "varios_lideres", "varias_listas"
+LIDER_OCULTO = "lider_sin_nombre"  # solo líderes que no autorizaron (o ya no están activos): nunca se nombran
+# Los grupos con nombre propio de menos de 10 personas van juntos (con valores chicos, dos consultas casi iguales
+# aislarían a una persona, y quedarían tantas celdas ocultas que no se publicaría el desglose)
+JUNTOS = {"lugar": "otros_lugares", "lider": "otros_lideres", "lista": "otras_listas"}
+POLITICOS_APAGADOS = {
+    "codigo": "permiso",
+    "mensaje": "Los datos políticos (tipo de persona, líderes, listas y las bases de cédulas y general) no están "
+               "habilitados para esta vía en Ajustes, o su rol no los usa: la analítica no cuenta por ellos."}
+NOTA_LIDER = ("Cada persona va en un solo grupo: el de su líder si la trae uno solo, «Varios líderes» si la traen varios, "
+              "«Sin líder» si no tiene. Los líderes que no autorizaron el tratamiento de sus datos no se nombran (sus "
+              "personas van a «sin nombre») y los de menos de 10 personas van juntos en «Otros líderes». Para los "
+              "conteos de cada líder, la lista de líderes.")
+LIDER_NO_USABLE = {"codigo": "invalido", "campo": "lider_id",
+                   "mensaje": "No hay un líder o concejal con ese id que se pueda usar (los que no autorizaron el "
+                              "tratamiento de sus datos no se usan)."}
 DIM_EVENTO = ("canal", "usuario", "resultado", "medio", "campo", "franja", "dia_semana")
 DIMENSIONES = DIM_PERSONA + DIM_EVENTO
 # Dimensiones de lo que hace el equipo: sus conteos de acercamientos no se suprimen
@@ -151,7 +184,18 @@ ENLAZABLES = frozenset({
     "proximo_vencido", "canal_autorizado", "requiere_actualizacion", "situacion", "menor", "area_id", "tipo_documento",
     "cedula_verificada", "telefono_estado", "estado_civil", "nivel_educativo", "situacion_laboral", "estrato",
     "tenencia_vivienda", "jefe_hogar", "sin_cedula", "sin_telefono", "sin_sexo", "sin_edad", "sin_lugar", "sin_puesto",
-    "sin_mesa", "sin_direccion"})
+    "sin_mesa", "sin_direccion", *FILTROS_POLITICOS})
+
+def _tipos_legibles(tipos: Iterable[str]) -> str:
+    """«Concejal», «Líder y votante», «Concejal, líder y votante»."""
+    nombres = [modelo.TIPOS_PERSONA[t] for t in tipos]
+    nombres = nombres[:1] + [n.lower() for n in nombres[1:]]
+    return nombres[0] if len(nombres) == 1 else f"{', '.join(nombres[:-1])} y {nombres[-1]}"
+
+
+# Los grupos de `tipo`: cada combinación de tipos (en el orden de `modelo.TIPOS_PERSONA`), de uno en adelante
+_COMBINACIONES = [c for n in range(1, len(modelo.TIPOS_PERSONA) + 1)
+                  for c in combinations(modelo.TIPOS_PERSONA, n)]
 
 ETIQUETAS: dict[str, dict[str, str]] = {
     "zona": {"urbana": "Urbana", "rural": "Rural", "sin": "Sin zona"},
@@ -183,6 +227,11 @@ ETIQUETAS: dict[str, dict[str, str]] = {
     "requiere_actualizacion": {**modelo.MOTIVOS_ACTUALIZACION, "no": "Sin pedido"},
     "asistencia": {"0": "Ninguna", "1": "Una", "2+": "Dos o más"},
     "fuente": {"tramites": "Base de trámites", "reunion": "Reuniones", "manual": "Panel", "planilla": "Planillas"},
+    "tipo": {**{"+".join(c): _tipos_legibles(c) for c in _COMBINACIONES}, SIN_TIPO: "Sin tipo"},
+    "lider": {VARIOS_LIDERES: "Varios líderes", LIDER_OCULTO: "Solo líderes sin nombre (no autorizaron o ya no están "
+              "activos)", JUNTOS["lider"]: "Otros líderes (menos de 10 personas cada uno)", SIN_LIDER: "Sin líder"},
+    "lista": {VARIAS_LISTAS: "Varias listas", JUNTOS["lista"]: "Otras listas (menos de 10 personas cada una)",
+              SIN_LISTA: "Sin lista"},
     "campo": {c: modelo.ETIQUETAS_CAMPOS.get(c, c) for c in CAMPOS_COMPLETADOS},
     "franja": {"madrugada": "Madrugada (22 a 6)", "manana": "Mañana (6 a 12)", "tarde": "Tarde (12 a 18)",
                "noche": "Noche (18 a 22)"},
@@ -206,7 +255,7 @@ ORDEN["menor"] = ORDEN["contacto_habilitado"] = ["si", "no"]
 ORDEN["abordaje_estado"] = list(modelo.ESTADOS_ABORDAJE)
 ORDEN["consentimiento"] = ["si", "por_confirmar", "pendiente"]
 POR_CANTIDAD = frozenset({"lugar", "quien_capturo", "etiqueta", "usuario", "mesa", "consentimiento_medio", "medio",
-                          "resultado", "ultimo_resultado", "campo", "canal", "ultimo_canal"})
+                          "resultado", "ultimo_resultado", "campo", "canal", "ultimo_canal", "lider", "lista"})
 
 
 # ───────────────────────────── Entrada ─────────────────────────────
@@ -245,11 +294,21 @@ class _Entrada(BaseModel):
 
 class FiltrosConsulta(_Entrada):
     """Los filtros de Habitantes que admite la analítica (como mucho 3). Fuera a propósito: búsqueda por texto o por
-    números, ids, polígonos, listas, líderes, tipo de persona, régimen de salud, bases políticas, reunión, creador y
-    actualizador, ocupación y perfil, y la situación (la base es siempre la de personas vigentes)."""
+    números, ids, polígonos, régimen de salud, reunión, creador y actualizador, ocupación y perfil, y la situación (la
+    base es siempre la de personas vigentes). Los políticos (`tipo`, `lider_id`, `varios_lideres`, `sin_lider`,
+    `lista` y las fuentes «cedulas», «general» y «ambas») solo valen con `politicos` (`analizar`)."""
     zona: Literal["urbana", "rural", "sin"] | None = Field(None, description="urbana, rural o sin zona")
     lugar_id: IdOCero | None = Field(None, description="Barrio o vereda (id del nomenclátor); 0 = sin lugar")
-    fuente: Literal[FUENTES_SEGURAS] | None = Field(None, description="Tiene esa fuente")
+    fuente: Literal[FUENTES_FILTRO] | None = Field(
+        None, description="Tiene esa fuente; cedulas, general y ambas (trámites y cédulas) son bases políticas: solo "
+                          "con los datos políticos habilitados")
+    tipo: Literal[(*modelo.TIPOS_PERSONA, SIN_TIPO)] | None = Field(
+        None, description="Tipo de persona: concejal, lider, votante o sin_tipo (dato político)")
+    lider_id: Id | None = Field(None, description="Las que trajo ese líder o concejal (dato político)")
+    varios_lideres: bool | None = Field(None, description="true: las que trae más de un líder (dato político)")
+    sin_lider: bool | None = Field(None, description="true: las que nadie lidera (dato político)")
+    lista: str | None = Field(None, min_length=1, max_length=120,
+                              description="Lista de origen, con su nombre exacto (dato político)")
     etiqueta: Id | None = Field(None, description="Necesidad, interés o rol (id; nunca una sensible)")
     con_cedula: bool | None = None
     con_telefono: bool | None = Field(None, description="Con un teléfono usable")
@@ -307,9 +366,18 @@ class FiltrosConsulta(_Entrada):
             raise ValueError("edad_min no puede ser mayor que edad_max")
         if self.requiere_actualizacion is not None and self.motivos_actualizacion:
             raise ValueError("Use requiere_actualizacion o motivos_actualizacion, no los dos")
-        if self.proximo_vencido is False:
-            raise ValueError("proximo_vencido solo admite true")
+        for k in ("proximo_vencido", "varios_lideres", "sin_lider"):
+            if getattr(self, k) is False:
+                raise ValueError(f"{k} solo admite true")
         return self
+
+    def politicos(self) -> list[str]:
+        """Los filtros políticos que trae (también una fuente política)."""
+        datos = self.model_dump(exclude_none=True)
+        usados = [k for k in FILTROS_POLITICOS if k in datos]
+        if datos.get("fuente") in (*FUENTES_POLITICAS, "ambas"):
+            usados.append("fuente")
+        return usados
 
 
 class Consulta(_Entrada):
@@ -410,6 +478,12 @@ PARAMETROS: dict[str, tuple[set[str], set[str]]] = {
 }
 BANDERAS = ("con_cedula", "con_telefono", "varios_telefonos", "asistio", "menor", "cedula_verificada", "con_puesto",
             "con_mesa", "abordado", "contactado")
+SOLO_SI = ("proximo_vencido", "varios_lideres", "sin_lider")  # filtros que solo valen con true
+
+
+def politicos_de(c: "Consulta") -> list[str]:
+    """Lo político que usa una consulta: sus dimensiones políticas y sus filtros políticos."""
+    return [x for x in c.dimensiones or [] if x in DIM_POLITICAS] + (c.filtros.politicos() if c.filtros else [])
 
 
 def a_filtros(f: FiltrosConsulta | None) -> dict[str, Any]:
@@ -422,7 +496,7 @@ def a_filtros(f: FiltrosConsulta | None) -> dict[str, Any]:
             continue
         if k in BANDERAS:
             out[k] = 1 if v else 0
-        elif k == "proximo_vencido":
+        elif k in SOLO_SI:
             out[k] = 1
         elif k == "faltan":
             for campo in v:
@@ -444,6 +518,28 @@ def consulta_mongo(db: Database, params: dict[str, Any], hoy: date, *, vigentes:
     if vigentes:
         y.append(dict(VIGENTE))
     return {"$and": y}
+
+
+def lider_usable(db: Database, lid: int) -> bool:
+    """¿`lid` es una ficha activa que autorizó y que lidera (marcada como líder o concejal, o que figura como líder de
+    alguien, como la lista de líderes)? Un líder que no autorizó no sirve de filtro: contar a quienes trajo diría que
+    lidera."""
+    l = db.personas.find_one({"_id": lid, **bd.ACTIVA, "consentimiento": {"$ne": "no"}},
+                             {t: 1 for t in modelo.TIPOS_LIDERAN})
+    if l is None:
+        return False
+    return modelo.lidera(l) or db.personas.count_documents({**bd.ACTIVA, "lideres.id": lid}, limit=1) > 0
+
+
+def exigir_politicos(db: Database, c: "Consulta", politicos: bool) -> None:
+    """403 `permiso` si la consulta usa datos políticos sin `politicos`; 422 si filtra por un líder que no sirve (el
+    mismo mensaje para todo motivo: no dice si el id existe)."""
+    if not politicos_de(c):
+        return
+    if not politicos:
+        raise HTTPException(403, dict(POLITICOS_APAGADOS))
+    if c.filtros is not None and c.filtros.lider_id is not None and not lider_usable(db, c.filtros.lider_id):
+        raise HTTPException(422, dict(LIDER_NO_USABLE))
 
 
 def exigir_etiqueta(db: Database, f: FiltrosConsulta | None) -> None:
@@ -790,6 +886,11 @@ PROYECCION = {
     "ra_on": {"$ne": [{"$ifNull": ["$requiere_actualizacion", None]}, None]},
     "asis": {"$map": {"input": _lista("$asistencias"), "as": "a", "in": "$$a.creado_en"}},
 }
+# Lo político que se lee de cada persona, solo con `politicos`: el tipo, los ids de sus líderes y sus listas
+PROYECCION_POLITICA = {
+    **{t: 1 for t in modelo.TIPOS_PERSONA}, "listas": 1,
+    "lids": {"$map": {"input": _lista("$lideres"), "as": "l", "in": "$$l.id"}},
+}
 
 
 def _catalogo(v: Any, cat: Iterable[str]) -> str:
@@ -829,8 +930,10 @@ class Datos:
     tratables con los filtros, proyectadas), los catálogos y los eventos de un periodo, siempre de personas de la
     base."""
 
-    def __init__(self, db: Database, filtros: FiltrosConsulta | None = None, hoy: date | None = None):
+    def __init__(self, db: Database, filtros: FiltrosConsulta | None = None, hoy: date | None = None,
+                 politicos: bool = False):
         self.db = db
+        self.politicos = politicos
         self.hoy = hoy or modelo.hoy_local()
         self.ajustes = modelo.leer_ajustes(db)
         self.eleccion = self.ajustes.get("eleccion_vigente")
@@ -867,6 +970,17 @@ class Datos:
     def no_autorizaron(self) -> set[int]:
         return set(uapi._no_autorizaron(self.db))
 
+    @cached_property
+    def lideres(self) -> dict[int, dict]:
+        """Los líderes que lideran a alguien de la base y se pueden nombrar: activos y que autorizaron (solo con
+        `politicos`). Los demás no cuentan como líderes de nadie aquí (`valor_de`)."""
+        ids = {i for p in self.personas for i in p.get("lideres") or []}
+        if not ids:
+            return {}
+        return {x["_id"]: x for x in self.db.personas.find(
+            {"_id": {"$in": sorted(ids)}, **bd.ACTIVA, "consentimiento": {"$ne": "no"}},
+            {"nombre": 1, **{t: 1 for t in modelo.TIPOS_LIDERAN}})}
+
     def nombre_usuario(self, uid: Any) -> str:
         if uid == IMPORTACION:
             return ETIQUETAS["quien_capturo"][IMPORTACION]
@@ -876,7 +990,8 @@ class Datos:
     # ── La base ──
     @cached_property
     def personas(self) -> list[dict]:
-        cursor = self.db.personas.aggregate([{"$match": self.consulta}, {"$project": PROYECCION}], maxTimeMS=MAX_MS)
+        proyeccion_ = {**PROYECCION, **PROYECCION_POLITICA} if self.politicos else PROYECCION
+        cursor = self.db.personas.aggregate([{"$match": self.consulta}, {"$project": proyeccion_}], maxTimeMS=MAX_MS)
         return [self._ficha(x) for x in cursor]
 
     @cached_property
@@ -954,6 +1069,12 @@ class Datos:
             "avance": avance, "ultimo_contacto": modelo.fecha_valida(x.get("ultimo_contacto")),
         }
         p["faltan"] = self._faltan(x, p)
+        if self.politicos:
+            p["tipos"] = [t for t in modelo.TIPOS_PERSONA if x.get(t) is True]
+            p["lideres"] = list(dict.fromkeys(i for i in x.get("lids") or []
+                                              if isinstance(i, int) and not isinstance(i, bool)))
+            p["listas"] = list(dict.fromkeys(l.strip() for l in x.get("listas") or [] if isinstance(l, str)
+                                             and l.strip()))
         return p
 
     def _faltan(self, x: dict, p: dict) -> list[str]:
@@ -1097,6 +1218,17 @@ def valor_de(d: Datos, dim: str, p: dict) -> Any:
         return "0" if p["asistencias"] == 0 else "1" if p["asistencias"] == 1 else "2+"
     if dim == "fuente":
         return list(dict.fromkeys(p["fuentes"]))
+    if dim == "tipo":
+        return "+".join(p.get("tipos") or []) or SIN_TIPO
+    if dim == "lider":
+        ids = p.get("lideres") or []
+        visibles = [i for i in ids if i in d.lideres]
+        if len(visibles) > 1:
+            return VARIOS_LIDERES
+        return visibles[0] if visibles else LIDER_OCULTO if ids else SIN_LIDER
+    if dim == "lista":
+        listas = p.get("listas") or []
+        return VARIAS_LISTAS if len(listas) > 1 else listas[0] if listas else SIN_LISTA
     if dim == "quien_capturo":
         return p["quien"]
     raise ValueError(dim)
@@ -1118,6 +1250,12 @@ def etiqueta_de(d: Datos, dim: str, v: Any) -> str:
         return d.nombre_usuario(v)
     if dim == "etiqueta":
         return (d.etiquetas.get(v) or {}).get("nombre") or f"#{v}"
+    if dim == "lider" and isinstance(v, int):
+        l = d.lideres.get(v) or {}
+        tipo = next((modelo.TIPOS_PERSONA[t] for t in modelo.TIPOS_LIDERAN if l.get(t) is True), "Ya no marcado")
+        return f"{l.get('nombre') or f'#{v}'} ({tipo})"
+    if dim == "lista":
+        return str(v)[:120]
     if dim in ("puesto", "mesa") and isinstance(v, str) and v.startswith("p"):
         pid, _, mesa = v[1:].partition(":")
         pu = d.puestos.get(int(pid)) or {}
@@ -1143,23 +1281,25 @@ def _orden_grupos(d: Datos, dim: str, conteos: Counter) -> list:
 
 def agrupar(d: Datos, dim: str, personas: list[dict] | None = None,
             max_grupos: int = MAX_GRUPOS) -> tuple[list, dict[Any, list[dict]]]:
-    """(orden, miembros) de una dimensión: los lugares con menos de 10 personas van juntos en «otros_lugares» y, con
-    más de `max_grupos` grupos, los más chicos van a «otros»."""
+    """(orden, miembros) de una dimensión: los lugares, líderes y listas con menos de 10 personas van juntos
+    (`JUNTOS`: «otros_lugares»…) y, con más de `max_grupos` grupos, los más chicos van a «otros»."""
     personas = d.personas if personas is None else personas
     miembros: dict[Any, list[dict]] = defaultdict(list)
     for p in personas:
         v = valor_de(d, dim, p)
         for x in (v if isinstance(v, list) else [v]):
             miembros[x].append(p)
-    if dim == "lugar":
-        chicos = [k for k, ps in miembros.items() if isinstance(k, int) and len(ps) < MINIMO_POBLACION]
+    juntos = JUNTOS.get(dim)
+    if juntos:
+        chicos = [k for k, ps in miembros.items() if k not in ETIQUETAS.get(dim, {}) and k != "sin"
+                  and len(ps) < MINIMO_POBLACION]
         if chicos:
             otros = [p for k in chicos for p in miembros.pop(k)]
-            miembros["otros_lugares"] = otros
+            miembros[juntos] = otros
     conteos = Counter({k: len(v) for k, v in miembros.items()})
     orden = _orden_grupos(d, dim, conteos)
-    if dim == "lugar" and "otros_lugares" in orden:
-        orden = [k for k in orden if k != "otros_lugares"] + ["otros_lugares"]
+    if juntos and juntos in orden:
+        orden = [k for k in orden if k != juntos] + [juntos]
     if len(orden) > max_grupos:
         principales = sorted(orden, key=lambda k: -conteos[k])[:max_grupos]
         resto = [k for k in orden if k not in principales]
@@ -1218,6 +1358,8 @@ def _tabla(d: Datos, c: Consulta) -> dict:
                                    else " Sin las etiquetas sensibles."))
     else:
         out["base"] = {"personas": n}
+        if dim == "lider":
+            out["nota"] = NOTA_LIDER
     return out
 
 
@@ -2800,10 +2942,13 @@ def ajustar(out: dict) -> dict:
     return out
 
 
-def analizar(db: Database, c: Consulta, hoy: date | None = None) -> dict:
-    """El análisis pedido, ya protegido y recortado."""
+def analizar(db: Database, c: Consulta, hoy: date | None = None, *, politicos: bool = False) -> dict:
+    """El análisis pedido, ya protegido y recortado. `politicos`: se pueden usar los datos políticos (A o K con
+    `agente_politicos` encendido para la vía de la petición, `api/analitica.py`); sin él, una consulta que los use
+    responde 403 y `fuente` no nombra las bases políticas."""
     exigir_etiqueta(db, c.filtros)
-    d = Datos(db, c.filtros, hoy)
+    exigir_politicos(db, c, politicos)
+    d = Datos(db, c.filtros, hoy, politicos=politicos)
     out = ANALISIS[c.tipo](d, c)
     if out == POCAS:
         return dict(POCAS)
@@ -2813,9 +2958,9 @@ def analizar(db: Database, c: Consulta, hoy: date | None = None) -> dict:
     return ajustar(out)
 
 
-def catalogo(db: Database) -> dict:
+def catalogo(db: Database, politicos: bool = False) -> dict:
     """Lo que admite la analítica: tipos con sus parámetros, dimensiones, métricas, eventos y filtros (y los puestos
-    de la elección vigente, para `puesto_id`)."""
+    de la elección vigente, para `puesto_id`). Las dimensiones y los filtros políticos, solo con `politicos`."""
     aj = modelo.leer_ajustes(db)
     descripciones = {
         "tabla": "Conteos y métricas por 1 o 2 dimensiones de personas",
@@ -2839,11 +2984,13 @@ def catalogo(db: Database) -> dict:
     return {
         "tipos": {t: {"descripcion": descripciones[t], "obligatorios": sorted(PARAMETROS[t][0]),
                       "opcionales": sorted(PARAMETROS[t][1])} for t in TIPOS},
-        "dimensiones": {"personas": list(DIM_PERSONA), "varios_grupos": list(MULTI), "eventos": list(DIM_EVENTO),
-                        "comparar": DIM_COMPARAR},
+        "dimensiones": {"personas": [x for x in DIM_PERSONA if politicos or x not in DIM_POLITICAS],
+                        "varios_grupos": [x for x in MULTI if politicos or x not in DIM_POLITICAS],
+                        "eventos": list(DIM_EVENTO), "comparar": DIM_COMPARAR},
         "metricas": list(METRICAS), "eventos": DESGLOSES, "granularidades": list(GRANULARIDADES),
         "metricas_comparar": list(METRICAS_COMPARAR),
-        "filtros": sorted(FiltrosConsulta.model_fields), "faltan": list(FALTAN),
+        "filtros": sorted(k for k in FiltrosConsulta.model_fields if politicos or k not in FILTROS_POLITICOS),
+        "fuentes_filtro": list(FUENTES_FILTRO if politicos else FUENTES_SEGURAS), "faltan": list(FALTAN),
         "valores": {"dias_brechas": list(DIAS_BRECHAS), "sin_acercamiento_dias": list(DIAS_SIN_ACERCAMIENTO)},
         "limites": {"minimo_poblacion": MINIMO_POBLACION, "minimo_celda": MINIMO_CELDA, "max_filtros": MAX_FILTROS,
                     "max_grupos": MAX_GRUPOS, "max_puntos": MAX_PUNTOS, "max_dias": MAX_DIAS,

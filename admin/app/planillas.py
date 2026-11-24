@@ -1,8 +1,10 @@
 """La bandeja de planillas físicas por foto (docs/agente.md, «Planillas físicas por foto»): de la foto de una planilla
 de campo en papel a la importación, con la persona que la revisa en el medio.
 
-Flujo. Quien tiene el papel (A, K o el planillero, si su rol está en `agente_planillas.roles`) sube la foto desde el
-chat o desde Importar y exportar (`POST /api/planillas/fotos`, `app/api/planillas.py`). La foto se valida y se limpia
+Flujo. El administrador o un coordinador (con su rol en `agente_planillas.roles`; nunca planilleros ni consultores,
+que no tienen `importar`) sube la foto del papel desde el chat o desde Importar y exportar (`POST /api/planillas/fotos`,
+`app/api/planillas.py`), si el compromiso de confidencialidad vigente lo permite (`exigir_compromiso`; la versión
+2026-11-v2 deja fotografiar planillas físicas solo para subirlas por el panel). La foto se valida y se limpia
 (`validar_imagen`), se guarda cifrada y se lee de fondo (`leer_foto`, con `agente/lector_planillas.py`): una llamada
 aparte al modelo que la transcribe. Lo leído queda cifrado en la misma planilla. A o K lo revisan (la grilla con la
 foto al lado, celdas corregibles), lo cotejan con la base (`simular`: la vista previa fiel del importador, sin
@@ -22,7 +24,8 @@ Privacidad (Ley 1581):
 * Las autorizaciones de una foto quedan SIEMPRE «declaradas en planilla» (`importar.solo_declaradas`): no habilitan el
   contacto hasta que A o K las confirme con el papel en Importar y exportar. Una autorización «sí» dudosa o ilegible
   cuenta como sin marcar; una «no» dudosa se trata como «no» (lo que protege a quien quizá no autorizó).
-* P ve solo sus fotos, con las filas enmascaradas; A y K, todas, con los valores completos (`detalle`).
+* Solo A y K usan la bandeja: ven todas las planillas, con los valores completos (`detalle`); el modelo de una
+  conversación las recibe enmascaradas. El planillero que llenó el papel queda como «capturado por» de lo cargado.
 
 Concurrencia: las lecturas de fondo tienen un cupo por proceso (`A_LA_VEZ`: 1 con Mnemo, que comparte sus cuatro
 llamadas con el chat y el dictado; 2 con Anthropic) y esperan su turno en cola; sobreviven a que el navegador se vaya.
@@ -109,6 +112,8 @@ SOLO_NO = ("nombre", "cedula", "barrio")
 MENSAJES = {
     "planillas_apagado": "Su rol no sube fotos de planillas: el administrador lo habilita en Ajustes → Planillas "
                          "físicas por foto.",
+    "compromiso_fotos": "El compromiso de confidencialidad vigente no permite fotografiar planillas: el administrador "
+                        "elige en Ajustes una versión que lo permita (2026-11-v2) y cada persona la acepta de nuevo.",
     "sin_configurar": "El panel no tiene un modelo conectado para leer las fotos: el administrador lo conecta en "
                       "Ajustes → Asistente.",
     "tipo": "Solo se reciben fotos JPEG o PNG.",
@@ -413,6 +418,14 @@ def validar_imagen(crudo: bytes, media_type: str | None) -> Imagen:
 
 def nota_de(v: Any) -> str | None:
     return lector.una_linea(v, NOTA_MAX)[0]
+
+
+def exigir_compromiso(ajustes: dict) -> None:
+    """409 `compromiso_fotos` si el compromiso de confidencialidad vigente (`compromiso_version`) no deja fotografiar
+    planillas físicas (`acceso.compromiso_permite_fotos`): nadie sube la foto que el compromiso que aceptó le prohíbe
+    tomar. Se revisa antes de leer el cuerpo; lo ya subido se sigue revisando y cargando."""
+    if not acceso.compromiso_permite_fotos((ajustes or {}).get("compromiso_version")):
+        raise ErrorPlanilla(409, "compromiso_fotos")
 
 
 def exigir_subida(db: Database, quien: Any, ajustes: dict, formato: str, largo: str | None) -> None:
@@ -787,8 +800,9 @@ def vigente(db: Database, doc: dict) -> dict:
 
 
 def buscar(db: Database, pid: str, quien: Any) -> dict:
-    """La planilla `pid` si `quien` la puede ver (A y K, todas; los demás, solo las suyas), con la regla del latido;
-    si no, 404 `no_existe` (de otra persona es igual que si no existiera)."""
+    """La planilla `pid` si `quien` la puede ver, con la regla del latido; si no, 404 `no_existe`. A y K ven todas (las
+    rutas no dejan pasar a nadie más); el filtro por dueño queda por si otro rol llegara aquí: de otra persona es igual
+    que si no existiera."""
     if not isinstance(pid, str) or not ID.fullmatch(pid):
         raise ErrorPlanilla(404, "no_existe")
     filtro: dict[str, Any] = {"_id": pid}
@@ -828,7 +842,7 @@ def _sin_binarios(db: Database, filtro: dict, limite: int = BANDEJA_MAX) -> list
 
 
 def bandeja(db: Database, quien: Any, estado: str | None = None) -> list[dict]:
-    """Las planillas de la bandeja (A y K, todas; los demás, las suyas), de la más nueva a la más vieja."""
+    """Las planillas de la bandeja (A y K, todas; otro rol, solo las suyas), de la más nueva a la más vieja."""
     filtro: dict[str, Any] = {} if quien.administra else {"uid": quien.uid}
     if estado in ESTADOS:
         filtro["estado"] = estado
@@ -1175,7 +1189,7 @@ def cargar(db: Database, cfg: Any, quien: Any, doc: dict, pedidas: list[int] | N
     declaradas). Devuelve `{importacion_id, resumen, filas: {n: {persona_id, estado, motivo}}}`. Las filas cargadas
     pierden sus datos en la lectura (queda número, estado y ficha); cuando no queda ninguna pendiente, se borran la foto
     y lo leído y la planilla queda «cargada». Sin el planillero, el «capturado por» es quien subió la foto si es
-    planillero."""
+    planillero (una foto subida antes de que las planillas por foto quedaran solo para A y K)."""
     doc = _tomar(db, doc)
     try:
         lectura = lectura_de(cfg, doc)

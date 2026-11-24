@@ -2,10 +2,13 @@
 
 * Los ajustes viven en `meta` (documento «ajustes») con los demás del panel: `agente` (`roles`, `escritura`,
   `mnemo_coordinadores`, `retencion_dias`), `agente_mensajes_diarios` (tope por rol), `agente_voz` (la voz del
-  asistente: la del navegador o una voz clonada de Mnemo, quién la hace sonar y para qué; `agente/voz.py`) y
-  `agente_adelanto` (la respuesta inmediata de cada pregunta, `agente/adelanto.py`; encendida por defecto). Se leen con
-  `modelo.leer_ajustes` y se validan aquí otra vez: un valor que falta o que no tiene la forma esperada toma el valor
-  por defecto, así un ajuste guardado a mano (o de una versión anterior) no abre ni rompe nada.
+  asistente: la del navegador o una voz clonada de Mnemo, quién la hace sonar y para qué; `agente/voz.py`),
+  `agente_adelanto` (la respuesta inmediata de cada pregunta, `agente/adelanto.py`; encendida por defecto),
+  `agente_planillas` (las planillas físicas por foto: solo el administrador y los coordinadores), `agente_mcp` (los
+  datos por MCP) y `agente_politicos` (si el asistente y los agentes por MCP reciben los datos políticos que el panel
+  ya muestra a cada rol). Se leen con `modelo.leer_ajustes` y se validan aquí otra vez: un valor que falta o que no
+  tiene la forma esperada toma el valor por defecto, así un ajuste guardado a mano (o de una versión anterior) no abre
+  ni rompe nada.
 * Denegar por defecto: planilleros y consultores no usan el asistente hasta que el administrador los agrega a
   `agente.roles`, y un rol desconocido no tiene mensajes.
 * Ofrecer una herramienta no autoriza nada: cada llamada vuelve a pasar por los permisos de la API. Pero lo que se
@@ -21,7 +24,7 @@ from urllib.parse import urlsplit
 
 from fastapi import HTTPException
 
-from .. import modelo
+from .. import acceso, modelo
 from ..seguridad import rechazo_de_cuenta
 from . import proveedores
 
@@ -40,9 +43,10 @@ VOZ_POR_DEFECTO: dict[str, Any] = {"motor": "mnemo", "voz": "", "nombre": "", "c
 ADELANTO_POR_DEFECTO = True
 # Las planillas físicas por foto (`agente_planillas`) y los datos por MCP (`agente_mcp`): los mismos valores por
 # defecto que `modelo.AJUSTES_POR_DEFECTO` y los mismos rangos que acepta `api/ajustes.py` (una prueba compara los lados)
-# Las fotos las suben A, K o P (el planillero tiene el papel; cotejar y cargar exigen `importar`: A y K); nunca el
-# consultor. Las claves MCP con datos, solo A y K (y leer personas por MCP, solo quien puede exportar: A)
-ROLES_PLANILLAS = ("admin", "coordinador", "planillero")
+# Las fotos de planillas las suben, leen, cotejan y cargan solo A y K (las rutas exigen `importar`): nunca el
+# planillero ni el consultor, aunque un ajuste guardado de antes los nombre (`ajustes_planillas` los quita). Las claves
+# MCP con datos, solo A y K (y leer personas por MCP, solo quien puede exportar: A)
+ROLES_PLANILLAS = ("admin", "coordinador")
 ROLES_MCP = ("admin", "coordinador")
 PLANILLAS_POR_DEFECTO: dict[str, Any] = {"roles": ["admin", "coordinador"], "retencion_horas": 24,
                                          "otros_formatos": False}
@@ -51,18 +55,25 @@ MCP_POR_DEFECTO: dict[str, Any] = {"roles": ["admin"], "escritura": True, "llama
                                    "personas_diarias": 300}
 LLAMADAS_DIARIAS_MCP = (10, 20000)
 PERSONAS_DIARIAS_MCP = (10, 5000)
+# Los datos políticos (`agente_politicos`): si el asistente (`asistente`) y los agentes por MCP (`mcp`) reciben el tipo
+# de persona, el «Liderado por», las listas, la lista de líderes con sus conteos, los filtros por ellos y las fuentes
+# políticas de importación, cada rol solo lo que el panel ya le muestra. Los mismos valores por defecto que
+# `modelo.AJUSTES_POR_DEFECTO` y la misma forma que acepta `api/ajustes.py` (`PoliticosAgente`)
+VIAS_POLITICOS = ("asistente", "mcp")
+POLITICOS_POR_DEFECTO: dict[str, bool] = {"asistente": True, "mcp": True}
 ID_VOZ = re.compile(r"[A-Za-z0-9_.:-]{1,100}")   # el id de una voz en Mnemo (un ObjectId: 24 hexadecimales)
 MAX_NOMBRE_VOZ = 60
 HUELLA_CUENTA = re.compile(r"[0-9a-f]{32}")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f\u2028\u2029]")
 
 # Lo que la bienvenida del chat ofrece a cada rol (botones que mandan la frase): solo lo que ese rol puede pedir con
-# los ajustes por defecto (A y K: análisis, planillas por foto y calidad de datos; P y C, su trabajo y las fichas), lo
-# que más rinde y lo que muestra lo que el asistente sabe hacer. Pocas: el widget las apila todas
+# los ajustes por defecto (A y K: análisis, también por líder con `agente_politicos`, planillas por foto y calidad de
+# datos; P y C, su trabajo y las fichas: las planillas por foto no son suyas), lo que más rinde y lo que muestra lo que
+# el asistente sabe hacer. Pocas: el widget las apila todas
 SUGERENCIAS = {
     "admin": ["¿Qué deberíamos priorizar esta semana?",
               "¿En qué barrios y veredas llevamos más tiempo sin ir?",
-              "¿A qué horas contesta más la gente cuando llamamos?",
+              "¿Qué líderes tienen más votantes sin contactar?",
               "¿Qué planillas por foto hay por cargar?",
               "¿Hay fichas duplicadas o conflictos de cédula por resolver?",
               "Muéstrame en el mapa a las personas que faltan por ubicar.",
@@ -151,9 +162,9 @@ def _roles(v: Any, por_defecto: list[str], validos: tuple[str, ...] = ROLES) -> 
 
 def ajustes_planillas(ajustes: dict | None) -> dict:
     """Los ajustes `agente_planillas` vigentes, completos y validados (una copia nueva en cada llamada): `roles` (quién
-    sube fotos de planillas físicas: admin, coordinador o planillero), `retencion_horas` (cuánto se guardan la foto y
-    lo leído) y `otros_formatos` (si además de la planilla de campo del panel se leen listas de asistencia u otros
-    formatos, que pueden traer columnas sensibles: apagado por defecto)."""
+    sube fotos de planillas físicas: admin o coordinador; un «planillero» guardado de antes se quita),
+    `retencion_horas` (cuánto se guardan la foto y lo leído) y `otros_formatos` (si además de la planilla de campo del
+    panel se leen listas de asistencia u otros formatos, que pueden traer columnas sensibles: apagado por defecto)."""
     crudo = (ajustes or {}).get("agente_planillas")
     crudo = crudo if isinstance(crudo, dict) else {}
     horas = _entero(crudo.get("retencion_horas"), RETENCION_HORAS)
@@ -179,10 +190,34 @@ def ajustes_mcp(ajustes: dict | None) -> dict:
             "personas_diarias": personas if personas is not None else MCP_POR_DEFECTO["personas_diarias"]}
 
 
+def ajustes_politicos(ajustes: dict | None) -> dict:
+    """Los ajustes `agente_politicos` vigentes, completos y validados (una copia nueva en cada llamada): `asistente`
+    (el chat del panel) y `mcp` (los agentes externos con clave de datos), booleanos. Lo que no es un booleano vale lo
+    de por defecto (encendido)."""
+    crudo = (ajustes or {}).get("agente_politicos")
+    crudo = crudo if isinstance(crudo, dict) else {}
+    return {k: crudo[k] if isinstance(crudo.get(k), bool) else POLITICOS_POR_DEFECTO[k] for k in VIAS_POLITICOS}
+
+
+def usa_politicos(ajustes: dict | None, via: str | None = "chat") -> bool:
+    """¿Los datos políticos pueden llegar por esta vía? `via` es la de `Contexto.via`: «mcp» mira `agente_politicos.mcp`
+    y cualquier otra (el chat), `agente_politicos.asistente`. Solo enciende la vía: qué ve cada rol lo siguen decidiendo
+    los permisos y `proyeccion.tipo_visible`, como en el panel."""
+    return ajustes_politicos(ajustes)["mcp" if via == "mcp" else "asistente"]
+
+
 def usa_planillas(quien: Any, ajustes: dict | None) -> bool:
-    """¿Esta persona puede subir fotos de planillas físicas al asistente? Su rol en `agente_planillas.roles` (además
-    de usar el asistente: `agente.roles`, que se revisa aparte)."""
-    return getattr(quien, "rol", None) in ajustes_planillas(ajustes)["roles"]
+    """¿Esta persona puede subir fotos de planillas físicas al asistente? Solo A y K (`ROLES_PLANILLAS`), con su rol
+    en `agente_planillas.roles` (además de usar el asistente: `agente.roles`, que se revisa aparte)."""
+    rol = getattr(quien, "rol", None)
+    return rol in ROLES_PLANILLAS and rol in ajustes_planillas(ajustes)["roles"]
+
+
+def fotos_permitidas(ajustes: dict | None) -> bool:
+    """¿El compromiso de confidencialidad vigente (`compromiso_version`) deja fotografiar planillas físicas para
+    subirlas por el panel (`acceso.compromiso_permite_fotos`)? Si no, no se sube ninguna foto (409 `compromiso_fotos`)
+    y el chat no ofrece la cámara; lo ya subido se sigue revisando, cotejando y cargando."""
+    return acceso.compromiso_permite_fotos((ajustes or {}).get("compromiso_version"))
 
 
 def mensajes_diarios(ajustes: dict | None, rol: str | None) -> int:
@@ -193,8 +228,9 @@ def mensajes_diarios(ajustes: dict | None, rol: str | None) -> int:
 
 
 def leer(db) -> tuple[dict, dict]:
-    """(ajustes del panel, ajustes del asistente). En los del panel, `agente`, `agente_mensajes_diarios`, `agente_voz` y
-    `agente_adelanto` quedan ya validados: es lo que reciben las herramientas en `Contexto.ajustes`."""
+    """(ajustes del panel, ajustes del asistente). En los del panel, `agente`, `agente_mensajes_diarios`, `agente_voz`,
+    `agente_adelanto`, `agente_planillas`, `agente_mcp` y `agente_politicos` quedan ya validados: es lo que reciben las
+    herramientas en `Contexto.ajustes`."""
     ajustes = modelo.leer_ajustes(db)
     agente = ajustes_agente(ajustes)
     ajustes["agente"] = agente
@@ -203,6 +239,7 @@ def leer(db) -> tuple[dict, dict]:
     ajustes["agente_adelanto"] = adelanto(ajustes)
     ajustes["agente_planillas"] = ajustes_planillas(ajustes)
     ajustes["agente_mcp"] = ajustes_mcp(ajustes)
+    ajustes["agente_politicos"] = ajustes_politicos(ajustes)
     return ajustes, agente
 
 
@@ -254,5 +291,15 @@ def origen_mnemo(url: Any) -> str | None:
     return f"{partes.scheme}://{partes.netloc}" if partes.scheme and partes.netloc else None
 
 
-def sugerencias(rol: str | None) -> list[str]:
-    return list(SUGERENCIAS.get(rol or "", []))
+# Las sugerencias que dependen de un ajuste: sin él, la bienvenida no las ofrece (el asistente no podría responderlas)
+SUGERENCIA_POLITICA = "¿Qué líderes tienen más votantes sin contactar?"
+SUGERENCIA_PLANILLAS = "¿Qué planillas por foto hay por cargar?"
+
+
+def sugerencias(rol: str | None, ajustes: dict | None = None, *, planillas: bool = True) -> list[str]:
+    """Las preguntas de la bienvenida del rol. Con `ajustes`, sin la de los datos políticos si `agente_politicos`
+    está apagado para el asistente; con `planillas=False`, sin la de las planillas por foto."""
+    out = list(SUGERENCIAS.get(rol or "", []))
+    if ajustes is not None and not usa_politicos(ajustes, "chat"):
+        out = [s for s in out if s != SUGERENCIA_POLITICA]
+    return out if planillas else [s for s in out if s != SUGERENCIA_PLANILLAS]

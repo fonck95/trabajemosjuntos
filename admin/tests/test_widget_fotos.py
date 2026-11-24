@@ -26,8 +26,8 @@ JS = RAIZ / "web" / "js"
 AGENTE = (JS / "agente.js").read_text(encoding="utf-8")
 CSS = (RAIZ / "web" / "css" / "agente.css").read_text(encoding="utf-8")
 UI = (JS / "ui.js").read_text(encoding="utf-8")
-AVISO = ("Solo planillas o listas. No fotografíe cédulas. Tape columnas de salud, etnia, víctima o políticas. Borre la "
-         "foto del teléfono.")
+AVISO = ("Solo planillas o listas. No fotografíe cédulas. Tape columnas de salud, etnia, víctima o políticas. Borre "
+         "la foto del teléfono.")
 
 requiere_node = pytest.mark.skipif(shutil.which("node") is None, reason="sin Node para cargar web/js/agente.js")
 

@@ -83,7 +83,7 @@ def test_el_coordinador_los_ve_en_solo_lectura():
     assert 'id="f-planillas"' in CODIGO and 'id="f-mcp"' in CODIGO
     assert "<h2>Planillas físicas por foto</h2>" in CODIGO and "<h2>Agentes externos por MCP</h2>" in CODIGO
     solo = CODIGO[CODIGO.index("if (soloLectura) {"):]
-    assert "for (const id of ['#f-planillas', '#f-mcp']) {" in solo[:solo.index("const dePermisos")]
+    assert "for (const id of ['#f-planillas', '#f-mcp', '#f-politicos']) {" in solo[:solo.index("const dePermisos")]
     # Sin botón para el coordinador: el aviso de solo lectura
     for boton in ("Guardar planillas por foto", "Guardar agentes por MCP"):
         assert ("${soloLectura ? SOLO_ADMIN : html`<div class=\"ancho\"><button class=\"btn primario\">"
@@ -102,7 +102,7 @@ def test_el_coordinador_los_ve_en_solo_lectura():
 def test_lo_que_manda_el_formulario_se_guarda_y_se_ve_igual(sesion, coord):
     """El cuerpo que arma cada formulario (como en `_rama`): PUT /api/ajustes lo acepta y GET lo devuelve igual. El
     coordinador lo lee y recibe 403 al guardarlo."""
-    planillas = {"roles": ["admin", "coordinador", "planillero"], "retencion_horas": 48, "otros_formatos": True}
+    planillas = {"roles": ["admin", "coordinador"], "retencion_horas": 48, "otros_formatos": True}
     mcp = {"roles": ["admin", "coordinador"], "escritura": False, "llamadas_diarias": 500, "personas_diarias": 50}
     r = sesion.put("/api/ajustes", json={"agente_planillas": planillas})
     assert r.status_code == 200, r.text
@@ -116,7 +116,7 @@ def test_lo_que_manda_el_formulario_se_guarda_y_se_ve_igual(sesion, coord):
     # Fuera de rango (lo que el formulario no deja escribir): 422
     for cuerpo in ({"agente_planillas": {"retencion_horas": 169}}, {"agente_mcp": {"llamadas_diarias": 9}},
                    {"agente_mcp": {"personas_diarias": 5001}}, {"agente_planillas": {"roles": ["consultor"]}},
-                   {"agente_mcp": {"roles": ["planillero"]}}):
+                   {"agente_planillas": {"roles": ["planillero"]}}, {"agente_mcp": {"roles": ["planillero"]}}):
         assert sesion.put("/api/ajustes", json=cuerpo).status_code == 422, cuerpo
     # El coordinador los ve (para la vista en solo lectura) y no los puede cambiar
     k = coord.get("/api/ajustes")

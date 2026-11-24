@@ -142,10 +142,11 @@ class VozAgente(BaseModel):
 
 class PlanillasAgente(BaseModel):
     """Las fotos de planillas físicas en el asistente (docs/agente.md, «Planillas físicas por foto»): quién las sube y
-    cuántas horas se guardan la foto y lo leído. Los mismos rangos con que `agente.politica.ajustes_planillas` lee lo
+    cuántas horas se guardan la foto y lo leído. Los mismos roles (`agente.politica.ROLES_PLANILLAS`: solo el
+    administrador y los coordinadores, nunca planilleros ni consultores) y rangos con que `ajustes_planillas` lee lo
     guardado."""
     model_config = ConfigDict(extra="forbid")
-    roles: list[Literal["admin", "coordinador", "planillero"]] | None = Field(None, max_length=3)
+    roles: list[Literal["admin", "coordinador"]] | None = Field(None, max_length=2)
     retencion_horas: StrictInt | None = Field(None, ge=politica.RETENCION_HORAS[0], le=politica.RETENCION_HORAS[1])
     otros_formatos: StrictBool | None = None
 
@@ -170,6 +171,16 @@ class McpAgente(BaseModel):
     @classmethod
     def _roles(cls, v):
         return None if v is None else sorted(set(v))
+
+
+class PoliticosAgente(BaseModel):
+    """Los datos políticos (tipo de persona, «Liderado por», listas, líderes con sus conteos, sus filtros y las fuentes
+    políticas de importación) en el asistente (`asistente`) y por MCP (`mcp`): cada rol recibe solo lo que el panel ya
+    le muestra. Booleanos estrictos, como `Agente`; la misma forma con que `agente.politica.ajustes_politicos` lee lo
+    guardado."""
+    model_config = ConfigDict(extra="forbid")
+    asistente: StrictBool | None = None
+    mcp: StrictBool | None = None
 
 
 class AjustesIn(BaseModel):
@@ -197,6 +208,7 @@ class AjustesIn(BaseModel):
     agente_adelanto: StrictBool | None = None
     agente_planillas: PlanillasAgente | None = None
     agente_mcp: McpAgente | None = None
+    agente_politicos: PoliticosAgente | None = None
 
     @field_validator("eleccion_vigente")
     @classmethod
@@ -240,10 +252,16 @@ def _vigentes(db: Database) -> dict:
 
 
 def _vista_ajustes(db: Database, quien: Quien) -> dict:
-    return {**_vigentes(db), "elecciones": sorted(x for x in db.puestos.distinct("eleccion") if x),
+    """Los ajustes vigentes y lo que la vista necesita para pintarlos: las elecciones con puestos, la versión de los
+    catálogos, qué ajustes son permisos y si esta persona los cambia, y si el compromiso vigente deja fotografiar
+    planillas físicas (`compromiso_permite_fotos`; si no, Ajustes ofrece la versión `compromiso_con_fotos`)."""
+    vigentes = _vigentes(db)
+    return {**vigentes, "elecciones": sorted(x for x in db.puestos.distinct("eleccion") if x),
             "catalogos_version": bd.catalogos_version(db),
             "ajustes_de_permisos": sorted(AJUSTES_DE_PERMISOS),
-            "puede_modificar_permisos": quien.puede("permisos.modificar")}
+            "puede_modificar_permisos": quien.puede("permisos.modificar"),
+            "compromiso_permite_fotos": politica.fotos_permitidas(vigentes),
+            "compromiso_con_fotos": acceso.compromiso_con_fotos()}
 
 
 def _acortar_conversaciones(db: Database, dias: int) -> int:

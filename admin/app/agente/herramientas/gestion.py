@@ -9,9 +9,11 @@ Por qué está hecho así:
   personas se lee directo de la base: el nomenclátor (`db.lugares`), las etiquetas y, para no crear dos veces la misma
   reunión, las reuniones del propio usuario en esa fecha (`db.reuniones`).
 * Al modelo le llega lo mínimo: conteos y resúmenes en vez de listas, y las personas que aparecen (asistentes, la cola
-  de llamadas) pasan por `minimizar`, con sus ids en `Resultado.personas`. De los indicadores nunca salen las listas de
-  origen, los datos sensibles, los líderes, la base con cédula ni la actividad del equipo (auditoría): el modelo es un
-  tercero (Ley 1581) y esos datos revelan afiliación política o salud.
+  de llamadas) pasan por `minimizar`, con sus ids en `Resultado.personas`. De los indicadores nunca salen los datos
+  sensibles ni la actividad del equipo (auditoría): el modelo es un tercero (Ley 1581) y esos datos revelan salud o
+  vigilarían al equipo. Las listas de origen, los líderes y las bases de cédulas y general (datos políticos) salen solo
+  con `agente_politicos` encendido para la vía (`Contexto.politicos`) y solo para A y K, como en el Tablero; con el
+  ajuste apagado, tampoco.
 * De quien no autorizó el tratamiento, nada más que quién es: los indicadores se calculan siempre sin esas personas
   (`tratables`) y la lista de asistentes de una reunión no las trae ni suma sus necesidades. Un desglose de un grupo
   pequeño, o la resta de dos conteos, diría su sexo, su edad o sus necesidades. Por eso los conteos de las reuniones,
@@ -19,8 +21,10 @@ Por qué está hecho así:
   las cuentan (`tratables` en la API).
 * Las entradas vienen de un LLM: modelos pydantic con `extra="forbid"` (una clave mal escrita es un error visible, no
   un filtro que se ignora), los topes y valores de la API y una lista blanca de filtros. Fuera de esa lista quedan los
-  que revelan datos políticos o de salud y la búsqueda por texto o número: contar con `q` dejaría reconstruir, dígito a
-  dígito, una cédula o un teléfono que el modelo recibe enmascarados.
+  que revelan datos de salud y la búsqueda por texto o número: contar con `q` dejaría reconstruir, dígito a dígito,
+  una cédula o un teléfono que el modelo recibe enmascarados. Los políticos (tipo, líder, lista, bases de cédulas y
+  general) están en la lista pero solo valen para A y K con `agente_politicos` encendido
+  (`personas.exigir_filtros_politicos`).
 * Los lugares se resuelven en el servidor con el nomenclátor del panel (`Nomenclator`, sus alias y `PRIORIDAD`). Un
   nombre ambiguo («La Paz»: barrio del casco y vereda) no se adivina: vuelve con sus candidatos para que el modelo
   pregunte. Los homónimos del mismo sitio («San Miguel del Tigre»: corregimiento, vereda y centro poblado en el mismo
@@ -45,6 +49,7 @@ from ... import modelo
 from ...pipeline import direcciones as dirs
 from ...pipeline import texto as tx
 from .. import minimizar
+from . import personas as hp
 from .base import Confirmacion, Contexto, ErrorHerramienta, Herramienta, Resultado
 
 MAX_ID = 2_000_000_000
@@ -449,7 +454,7 @@ FALTAN = ("cedula", "telefono", "sexo", "edad", "lugar", "puesto", "mesa", "dire
 # Banderas que la API lee como 0/1 en los dos sentidos, y las que solo valen con 1
 BANDERAS = ("con_cedula", "con_telefono", "varios_telefonos", "asistio", "menor", "cedula_verificada", "con_puesto",
             "con_mesa", "abordado", "contactado")
-SOLO_SI = ("tratables", "proximo_vencido")
+SOLO_SI = ("tratables", "proximo_vencido", "varios_lideres", "sin_lider")
 NO_SON_FILTRO = ("lugar", "tipo_lugar")
 
 
@@ -457,15 +462,21 @@ class FiltrosBase(_Entrada):
     """Los filtros de Habitantes (`filtros.Filtros`) que el asistente puede usar, con los valores que acepta la API.
 
     Fuera a propósito: `q` (contar por texto o por números dejaría reconstruir una cédula, un teléfono o un correo
-    enmascarados), las listas de origen, los líderes y la base con cédula (revelan afiliación política), el régimen de
-    salud y las etiquetas sensibles (datos sensibles), y `ids`, `poligono`, `area_id` y `mios`, que tienen otra vía."""
+    enmascarados), el régimen de salud y las etiquetas sensibles (datos sensibles), y `ids`, `poligono`, `area_id` y
+    `mios`, que tienen otra vía. Los políticos (`tipo`, `lider_id`, `varios_lideres`, `sin_lider`, `lista` y las
+    fuentes «cedulas», «general» y «ambas»), solo A y K con `agente_politicos` encendido (`preparar_filtros`)."""
     lugar: str | None = Field(None, min_length=2, max_length=80,
                               description="Barrio o vereda por nombre; el servidor lo busca en el nomenclátor")
     tipo_lugar: TipoLugar | None = Field(None, description="Tipo del lugar, si el nombre se repite (con `lugar`)")
     lugar_id: IdOCero | None = Field(None, description="Id del barrio o vereda (buscar_lugar); 0 = sin barrio ni "
                                                        "vereda reconocidos")
     zona: Literal["urbana", "rural", "sin"] | None = Field(None, description="urbana, rural o sin zona")
-    fuente: Literal["tramites", "reunion", "manual", "planilla"] | None = Field(None, description="De dónde llegó")
+    fuente: Literal[(*hp.FUENTES, *hp.FUENTES_POLITICAS)] | None = Field(None, description=hp.D_FUENTE)
+    tipo: Literal[hp.TIPOS_FILTRO] | None = Field(None, description=hp.D_TIPO)
+    lider_id: Id | None = Field(None, description=hp.D_LIDER_ID)
+    varios_lideres: bool | None = Field(None, description="true: las que trae más de un líder (dato político)")
+    sin_lider: bool | None = Field(None, description="true: las que nadie lidera (dato político)")
+    lista: str | None = Field(None, min_length=1, max_length=120, description=hp.D_LISTA)
     etiqueta: Id | None = Field(None, description="Necesidad, interés o rol (id de catalogos)")
     con_cedula: bool | None = None
     con_telefono: bool | None = Field(None, description="Con algún teléfono usable")
@@ -576,9 +587,11 @@ def _exigir_etiqueta(db: Any, eid: int) -> None:
 async def preparar_filtros(ctx: Contexto, f: FiltrosBase | None,
                            nom: Callable[[], Awaitable[Nomenclatura]]) -> tuple[dict[str, str], dict[str, Any]]:
     """(parámetros para la API y el navegador, los mismos legibles para el modelo). Resuelve el lugar por nombre y
-    rechaza una etiqueta sensible o inexistente antes de contar nada."""
+    rechaza una etiqueta sensible o inexistente, y un filtro político sin `agente_politicos` o de un rol que no los
+    usa en Habitantes, antes de contar nada."""
     if f is None:
         return {}, {}
+    await hp.exigir_filtros_politicos(ctx, hp.filtros_politicos(f), f.lider_id)
     lugar = None
     if f.lugar is not None:
         lugar = (await nom()).resolver(f.lugar, tipo=f.tipo_lugar)
@@ -602,9 +615,11 @@ class IndicadoresEntrada(_Entrada):
                                "no dan desgloses)")
 
 
-# Lo que de los indicadores nunca llega al modelo: los líderes y la base con cédula revelan afiliación política
+# Lo que de los indicadores no llega al modelo sin `agente_politicos`: los líderes y la base con cédula revelan
+# afiliación política (con el ajuste, A y K los reciben, como en el Tablero)
 KPI_FUERA = frozenset({"lideres", "en_ambas_bases"})
 CAMPOS_FUERA = frozenset({"regimen_salud"})
+MAX_LISTAS = 40  # listas de origen de los indicadores (las de más personas)
 
 
 def _dict_numeros(v: Any) -> dict:
@@ -616,10 +631,12 @@ def _lista(v: Any) -> list[dict]:
     return [x for x in v if isinstance(x, dict)] if isinstance(v, list) else []
 
 
-def compactar_indicadores(d: dict, sens_ids: frozenset[int], sens_nombres: frozenset[str]) -> dict:
+def compactar_indicadores(d: dict, sens_ids: frozenset[int], sens_nombres: frozenset[str],
+                          politicos: bool = False) -> dict:
     """La respuesta de `GET /api/indicadores` reducida a lo que el modelo necesita: los totales y los rankings
-    principales (los 10 primeros). Nunca `listas`, `sensibles`, `actividad`, `fuentes`, `demografia` (trae el régimen
-    de salud), los líderes ni la base con cédula."""
+    principales (los 10 primeros). Nunca `sensibles`, `actividad` ni `demografia` (trae el régimen de salud). Los
+    líderes, la base con cédula, las `listas` de origen y las `fuentes` (datos políticos), solo con `politicos` (A y K
+    con `agente_politicos` encendido)."""
     out: dict[str, Any] = {}
     if isinstance(d.get("area"), dict):
         out["area"] = {k: d["area"].get(k) for k in ("m2", "perimetro_m")}
@@ -630,7 +647,15 @@ def compactar_indicadores(d: dict, sens_ids: frozenset[int], sens_nombres: froze
                    nota="La zona tiene menos de 10 personas: el panel no da desgloses para no identificar a nadie.")
         return out
     kpi = d.get("kpi") if isinstance(d.get("kpi"), dict) else {}
-    out["kpi"] = {k: v for k, v in kpi.items() if k not in KPI_FUERA}
+    out["kpi"] = {k: v for k, v in kpi.items() if politicos or k not in KPI_FUERA}
+    if politicos:
+        listas = [{"lista": minimizar.texto_libre(x.get("lista"), minimizar.LISTA_MAX), "n": x.get("n")}
+                  for x in _lista(d.get("listas")) if isinstance(x.get("lista"), str)]
+        out["listas"] = listas[:MAX_LISTAS]
+        if len(listas) > MAX_LISTAS:
+            out["listas_total"] = len(listas)
+        if isinstance(d.get("fuentes"), dict):
+            out["fuentes"] = _dict_numeros(d["fuentes"])
     for k in ("zonas", "precision", "abordaje", "autorizacion", "rangos_edad", "sexo"):
         if isinstance(d.get(k), dict):
             out[k] = _dict_numeros(d[k])
@@ -672,8 +697,9 @@ async def _indicadores(ctx: Contexto, a: IndicadoresEntrada) -> Resultado:
     params, legible = await preparar_filtros(ctx, a.filtros, Perezosa(ctx))  # con area_id, si lo trae
     d = await pedir(ctx, "GET", "/api/indicadores", params={**params, "tratables": "1", "alcance": a.alcance})
     sens_ids, sens_nombres = await run_in_threadpool(_nombres_sensibles, ctx.db)
+    politicos = ctx.quien.administra and ctx.politicos()
     out = {"alcance": a.alcance, "filtros": legible, **compactar_indicadores(d if isinstance(d, dict) else {},
-                                                                              sens_ids, sens_nombres)}
+                                                                              sens_ids, sens_nombres, politicos)}
     if isinstance(out.get("autorizacion"), dict):
         out["autorizacion"].pop("no", None)  # siempre 0 aquí: no es que nadie haya dicho que no
     out["nota_autorizacion"] = SIN_NO_AUTORIZARON
@@ -1355,7 +1381,9 @@ D_INDICADORES = (
     "con más personas, las necesidades más frecuentes, los puestos de votación, la cobertura de cédula por lugar y las "
     "reuniones recientes. Acepta los filtros de Habitantes (zona, lugar por nombre o id, sexo, edad, autorización, "
     "abordaje, datos que faltan…) y un área de trabajo (area_id, con alcance «zona»). Úsela para preguntas de cuántos, "
-    "cómo va o qué falta: no lista personas. Nunca trae datos sensibles, listas de origen ni actividad del equipo, y "
+    "cómo va o qué falta: no lista personas. Si los datos políticos están habilitados, al administrador y al "
+    "coordinador les trae también los líderes, las personas en las dos bases, las listas de origen con cuántas "
+    "personas tiene cada una y las fuentes. Nunca trae datos sensibles ni actividad del equipo, y "
     "no cuenta a quienes no autorizaron el tratamiento de sus datos (cuántos son: buscar_personas con consentimiento "
     "«no»). Solo administrador y coordinador.")
 D_LISTAR_REUNIONES = (

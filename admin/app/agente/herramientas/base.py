@@ -134,11 +134,36 @@ class Contexto:
     # persona, `api/mcp.py`). Las herramientas pueden ser más estrictas por MCP (páginas más chicas, sin filas de quien
     # no autorizó)
     via: str = "chat"
+    # En el chat, ¿la conversación se creó con las herramientas políticas (`sistema.HERRAMIENTAS_POLITICAS`)? Sus
+    # instrucciones y su lista de herramientas quedan fijas al crearla: una que empezó con el ajuste apagado no trae las
+    # reglas de los datos políticos y no los recibe aunque después se encienda (hay que abrir una nueva). Por MCP no
+    # aplica (cada llamada lee el ajuste)
+    politicos_conversacion: bool = True
+
+    def politicos(self) -> bool:
+        """¿Esta llamada recibe los datos políticos que el panel le muestra al rol (`agente_politicos`: `asistente`
+        en el chat, `mcp` por MCP)? Solo enciende la vía: qué ve cada rol lo sigue decidiendo la API (A y K, todo; P,
+        el tipo y el «Liderado por» de su zona, `proyeccion.tipo_visible`; C, nada)."""
+        from .. import politica  # aquí: politica importa el proveedor del modelo
+        return self.politicos_conversacion and politica.usa_politicos(self.ajustes, self.via)
 
     def plazo_escritura(self) -> float:
         """Los segundos que le quedan a una escritura del panel para terminar antes de que el bucle corte la
         herramienta, con margen para avisar que pudo quedar hecha (`interno.ApiInterna.pedir`)."""
         return self.inicio + self.plazo - MARGEN_PLAZO_S - time.monotonic()
+
+
+def via_de(quien: Any) -> str:
+    """La vía de una persona fuera de una llamada (al decidir qué herramientas se le ofrecen): «mcp» si su sesión es la
+    interna de un agente externo (`acceso.Quien.via`), «chat» si no."""
+    return "mcp" if getattr(quien, "via", None) == "mcp" else "chat"
+
+
+def politicos_ofrecidos(quien: Any, ajustes: dict) -> bool:
+    """`disponible_ajustes` de las herramientas que solo tratan datos políticos (la lista de líderes, marcar un tipo,
+    asignar un líder): `agente_politicos` encendido para la vía de `quien`."""
+    from .. import politica  # aquí: politica importa el proveedor del modelo
+    return politica.usa_politicos(ajustes, via_de(quien))
 
 
 Ejecutar = Callable[[Contexto, Any], Awaitable[Resultado]]

@@ -8,9 +8,9 @@ completos, lo dudoso marcado; corrige una celda (PATCH) y la fila queda corregid
 importador por fila: nueva, completa una ficha, nueva sin autorización); desmarca una fila y carga las demás con el
 folio y el planillero; el resultado enlaza a la confirmación de las autorizaciones «declaradas en planilla», que se
 confirman con el papel; luego carga la fila que faltaba y la planilla queda cargada, sin foto. En el celular, sin
-desborde horizontal. La insignia de «Mi cuenta» cuenta las propuestas MCP pendientes. Un planillero, con la misma
-vista, sube su foto y ve sus filas enmascaradas, sin corregir ni cargar. Sin errores de consola ni violaciones de la
-CSP. Solo datos inventados; las imágenes se generan en la prueba.
+desborde horizontal. La insignia de «Mi cuenta» cuenta las propuestas MCP pendientes. Un planillero no ve las
+planillas por foto (son solo del administrador y los coordinadores): la vista no le muestra la sección ni le pide la
+bandeja. Sin errores de consola ni violaciones de la CSP. Solo datos inventados; las imágenes se generan en la prueba.
 
 Se salta si no hay Node con Playwright, salvo en el CI."""
 import json
@@ -248,34 +248,25 @@ const filaSel = (n) => `.pf-tabla tr[data-n="${n}"]`;
   salida.csp.push(...await page.evaluate(() => window.__csp));
   await ctx.close();
 
-  // ── El planillero: la misma vista, sin corregir ni cargar (sus filas enmascaradas) ──
+  // ── El planillero: no ve las planillas por foto (solo A y K) ──
   const p = await contexto(nav, 390);
   await ingresar(p.page, usuarioP, claveP);
-  await p.page.evaluate(async () => {
+  const pedidasP = [];
+  p.page.on('request', (r) => { if (r.url().includes('/api/planillas')) pedidasP.push(r.url()); });
+  salida.p = await p.page.evaluate(async () => {
     const m = await import(new URL('vistas/importar.js', document.querySelector('script[type=module]').src).href);
     const div = document.createElement('div');
     div.className = 'vista';
     div.id = 'prueba-p';
     document.querySelector('#vista').replaceChildren(div);
-    window.__limpiarP = await m.vistaImportar(div, { q: new URLSearchParams() });
+    const limpiar = await m.vistaImportar(div, { q: new URLSearchParams() });
+    limpiar?.();
+    return { secciones: [...div.querySelectorAll('section')].map((s) => s.id || s.querySelector('h2')?.textContent),
+      galeria: !!div.querySelector('#pf-galeria-in'), aviso: !!div.querySelector('.pf-aviso'),
+      desborde: document.documentElement.scrollWidth - innerWidth };
   });
-  await p.page.waitForSelector('#prueba-p #pf-galeria-in', presente);
-  salida.p = { secciones: await p.page.evaluate(() => [...document.querySelectorAll('#prueba-p section')].map((s) => s.id || s.querySelector('h2')?.textContent)) };
-  await p.page.setInputFiles('#prueba-p #pf-galeria-in', fotoP);
-  await p.page.waitForFunction(() => /Por revisar/.test(document.querySelector('#prueba-p .pf-item')?.textContent || ''), null, espera);
-  await p.page.click('#prueba-p [data-abrir]');
-  await p.page.waitForSelector('#prueba-p .pf-enmascarada', espera);
-  await p.page.waitForFunction(() => (document.querySelector('#pf-lienzo')?.width || 0) > 0, null, espera);
+  salida.p.pedidas = pedidasP;
   await capturar(p.page, '3-planillero-celular');
-  Object.assign(salida.p, await p.page.evaluate(() => ({
-    texto: document.querySelector('#prueba-p .pf-enmascarada').textContent.replace(/\s+/g, ' '),
-    entradas: document.querySelectorAll('#prueba-p .pf-entrada').length,
-    cargar: !!document.querySelector('#prueba-p #pf-cargar'),
-    folio: !!document.querySelector('#prueba-p #pf-folio'),
-    desborde: document.documentElement.scrollWidth - innerWidth,
-  })));
-  // Al salir de la vista se suelta todo (sin errores)
-  await p.page.evaluate(() => window.__limpiarP?.());
   salida.csp.push(...await p.page.evaluate(() => window.__csp));
   await p.ctx.close();
   console.log(JSON.stringify(salida));
@@ -431,14 +422,11 @@ def test_planillas_por_foto_en_chromium(panel_web, cfg, tmp_path, monkeypatch):
     assert cenobia["consentimiento"] == "no" and not cenobia.get("telefonos") and not cenobia.get("direccion")
     assert any(t["numero"] == "3101234503" for t in db.personas.find_one({"_id": carmen})["telefonos"])
 
-    # El planillero: su foto, sus filas enmascaradas, sin corregir ni cargar, en el celular sin desborde
+    # El planillero: ni la sección, ni la cámara, ni el aviso, ni una petición a la bandeja; sin desborde
     p = s["p"]
-    assert p["secciones"] == ["planillas-foto", "planilla-abierta"]
-    assert "DORA INVENTADA MEJIA" in p["texto"] and "···404" in p["texto"] and "···4504" in p["texto"]
-    assert "90000404" not in p["texto"] and "3101234504" not in p["texto"]
-    assert p["entradas"] == 0 and p["cargar"] is False and p["folio"] is False and p["desborde"] <= 0
-    # La foto del planillero queda a su nombre, por revisar
-    assert db.planillas.find_one({"uid": pp["_id"]})["estado"] == "leida"
+    assert p["secciones"] == [] and p["galeria"] is False and p["aviso"] is False and p["pedidas"] == []
+    assert p["desborde"] <= 0
+    assert db.planillas.count_documents({"uid": pp["_id"]}) == 0
 
 
 GUION_CASOS = r"""const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');

@@ -14,8 +14,13 @@ Por qué está hecho así:
   `model_validator`: una unión discriminada metería `oneOf` y `const` en el esquema), más el lugar por nombre, que se
   resuelve aquí con el nomenclátor (un nombre ambiguo vuelve con sus candidatos para que el modelo pregunte). Una
   etiqueta sensible se rechaza antes de contar.
-* No sale ninguna persona (`Resultado.personas` vacío): solo agregados, nombres de lugares, puestos y usuarios del
-  equipo. Los títulos de las reuniones pasan por `texto_libre` (los escribe una persona y pueden traer un número).
+* No sale ninguna persona: solo agregados, nombres de lugares, puestos y usuarios del equipo, salvo los líderes de
+  una tabla por `lider` (dato político: solo con `agente_politicos` encendido para la vía, y nunca uno que no
+  autorizó), que van en `Resultado.personas` (la conversación queda con datos de personas: sin voz clonada ni
+  proyección, y se borra si alguno se suprime). Los títulos de las reuniones y los nombres de las listas pasan por
+  `texto_libre` (los escribe una persona y pueden traer un número).
+* Los datos políticos (dimensiones `tipo`, `lider` y `lista`, sus filtros y las bases «cedulas» y «general») los
+  decide el servidor (`analitica.exigir_politicos`): A y K con `agente_politicos` encendido; si no, 403 `permiso`.
 """
 from __future__ import annotations
 
@@ -98,12 +103,37 @@ async def consultar(ctx: Contexto, consulta: dict) -> Any:
 
 
 def _limpio(out: Any) -> Any:
-    """Lo que el modelo recibe: los títulos de reuniones con `texto_libre` (texto que escribe una persona)."""
+    """Lo que el modelo recibe: los títulos de reuniones y los nombres de las listas con `texto_libre` (texto que
+    escribe una persona)."""
     if isinstance(out, dict):
         for x in out.get("reuniones") or []:
             if isinstance(x, dict) and isinstance(x.get("titulo"), str):
                 x["titulo"] = minimizar.texto_libre(x["titulo"], 120)
+        for x in _grupos_de(out, "lista"):
+            for k in ("valor", "etiqueta"):
+                if isinstance(x.get(k), str):
+                    x[k] = minimizar.texto_libre(x[k], minimizar.LISTA_MAX)
     return out
+
+
+def _grupos_de(out: dict, dim: str) -> list[dict]:
+    """Los grupos de la dimensión `dim` en una salida: las filas (primera dimensión de una tabla), las columnas (la
+    segunda) o los grupos del embudo."""
+    dims = out.get("dimensiones") or ([out["dimension"]] if out.get("dimension") else [])
+    grupos: list[Any] = []
+    if dims[:1] == [dim]:
+        grupos += out.get("filas") or out.get("grupos") or []
+    if dims[1:2] == [dim]:
+        grupos += out.get("columnas") or []
+    return [x for x in grupos if isinstance(x, dict)]
+
+
+def lideres_de(out: Any) -> set[int]:
+    """Los líderes que nombra una salida por `lider` (su `valor` es el id; los grupos sin nombre no son números)."""
+    if not isinstance(out, dict):
+        return set()
+    return {x["valor"] for x in _grupos_de(out, "lider") if isinstance(x.get("valor"), int)
+            and not isinstance(x.get("valor"), bool)}
 
 
 # ───────────────────────────── Gráfico ─────────────────────────────
@@ -269,7 +299,7 @@ def _resultado(out: Any, legible: dict) -> Resultado:
         out = {**out, "nota": "Con estos filtros quedan menos de 10 personas: el panel no da cifras para no "
                               "identificar a nadie. Quite un filtro."}
     g = grafico_de(out)
-    return Resultado(out, _resumen(out), [g] if g else [])
+    return Resultado(out, _resumen(out), [g] if g else [], personas=lideres_de(out))
 
 
 async def _analizar(ctx: Contexto, a: AnalizarEntrada) -> Resultado:
@@ -301,7 +331,9 @@ ANALIZAR = Herramienta(
         "faltan), franjas (horas, días y canales que más contestan), intentos (cuándo dejar de insistir), captura "
         "(calidad por quien capturó), comparar (qué explica el cambio de una métrica entre dos periodos) y "
         "reuniones_efecto (4 semanas antes y después). Cada tipo admite solo sus parámetros. Filtros: como mucho 3, "
-        "edad en múltiplos de 5. Las cifras no cuentan a quienes no autorizaron ni a fallecidos; de 1 a 4 personas "
+        "edad en múltiplos de 5. Datos políticos (si están habilitados): dimensiones tipo, lider y lista, filtros "
+        "tipo, lider_id, varios_lideres, sin_lider y lista, y fuentes cedulas, general y ambas. Las cifras no "
+        "cuentan a quienes no autorizaron ni a fallecidos; de 1 a 4 personas "
         "salen «<5» y otras «oculta» para que no se deduzcan; un % sale null si dejaría ver a pocas personas; con "
         "menos de 10 responde pocas. Úsalo antes de opinar sobre números; cita las cifras como vienen y no describas "
         "el gráfico punto por punto: ya se ve."),

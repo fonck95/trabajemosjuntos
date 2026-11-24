@@ -239,6 +239,10 @@ AJUSTES_DE_PERMISOS = frozenset({
     # Las fotos de planillas físicas (traen cédulas y teléfonos completos al modelo) y los datos por MCP (salen del
     # panel hacia el cliente MCP de cada persona)
     "agente_planillas", "agente_mcp",
+    # Si el asistente y los agentes por MCP reciben los datos políticos (tipo de persona, «Liderado por», listas y
+    # fuentes políticas) que el panel ya muestra a cada rol: la orientación política es un dato sensible (Ley 1581,
+    # art. 5) que sale hacia el proveedor del modelo o hacia el cliente MCP
+    "agente_politicos",
 })
 
 
@@ -547,7 +551,10 @@ def _soltar_idempotencia(db: Database, request: Request) -> None:
 
 # ───────────────────────────── Compromiso de confidencialidad ─────────────────────────────
 
-# Texto versionado (3.5). Lo valida un abogado antes de desplegar (riesgo R-E); una versión nueva va en Ajustes
+# Texto versionado (3.5). Una versión nueva se agrega aquí y se elige en Ajustes → Datos sensibles y compromiso
+# (`compromiso_version`): cada usuario la acepta de nuevo en su siguiente petición. La 2026-11-v1 prohíbe toda foto
+# de los datos; la 2026-11-v2 (la de defecto, `modelo.AJUSTES_POR_DEFECTO`) deja fotografiar las planillas físicas
+# solo para subirlas por el panel (Planillas físicas por foto, que usan el administrador y los coordinadores)
 COMPROMISOS = {
     "2026-11-v1": [
         "Guardaré la confidencialidad de los datos personales que conozca en este panel, también después de terminar "
@@ -557,9 +564,39 @@ COMPROMISOS = {
         "No contactaré a quien no autorizó el tratamiento de sus datos ni a quien pidió no ser contactado.",
         "Sé que las fichas que consulto, los cambios que hago y mis indicadores de trabajo quedan registrados.",
     ],
+    "2026-11-v2": [
+        "Guardaré la confidencialidad de los datos personales que conozca en este panel, también después de terminar "
+        "mi relación con el equipo (Ley 1581 de 2012, art. 4, literal h).",
+        "Usaré los datos solo para la finalidad informada al titular. No los copiaré, exportaré ni compartiré, ni "
+        "haré capturas de pantalla. Solo fotografiaré planillas físicas, y únicamente para subirlas por el panel "
+        "cuando mi rol lo permita (la cámara del asistente o Importar y exportar → Planillas por foto); nunca cédulas "
+        "ni otros documentos. Borraré la foto del teléfono después de subirla.",
+        "No contactaré a quien no autorizó el tratamiento de sus datos ni a quien pidió no ser contactado.",
+        "Sé que las fichas que consulto, los cambios que hago y mis indicadores de trabajo quedan registrados.",
+    ],
 }
+# Las versiones cuyo texto deja fotografiar planillas físicas para subirlas por el panel (`compromiso_permite_fotos`).
+# Una versión nueva que lo siga permitiendo se agrega también aquí
+COMPROMISOS_CON_FOTOS = frozenset({"2026-11-v2"})
+
+
+def _version_del_texto(version: str | None) -> str:
+    """La versión cuyo texto rige para `version`: la misma si tiene texto propio; si no, la más reciente."""
+    return version if version in COMPROMISOS else max(COMPROMISOS)
 
 
 def texto_compromiso(version: str | None) -> list[str]:
     """Los puntos del compromiso de esa versión (o los de la más reciente, si la versión no tiene texto propio)."""
-    return list(COMPROMISOS.get(version or "") or COMPROMISOS[max(COMPROMISOS)])
+    return list(COMPROMISOS[_version_del_texto(version)])
+
+
+def compromiso_permite_fotos(version: str | None) -> bool:
+    """¿El texto del compromiso que rige para esa versión (el de `texto_compromiso`) deja fotografiar planillas físicas
+    para subirlas por el panel? Con False, POST /api/planillas/fotos responde 409 `compromiso_fotos` y el chat no
+    ofrece la cámara: nadie fotografía lo que el compromiso que aceptó le prohíbe."""
+    return _version_del_texto(version) in COMPROMISOS_CON_FOTOS
+
+
+def compromiso_con_fotos() -> str:
+    """La versión más reciente que deja fotografiar planillas físicas: la que Ajustes ofrece poner como vigente."""
+    return max(COMPROMISOS_CON_FOTOS)
