@@ -14,7 +14,9 @@ llama con `run_in_threadpool`.
 * `agente_mensajes`: un documento por mensaje, con `seq` creciente; nunca se edita lo guardado (append-only). Los
   bloques van como texto JSON (`contenido`): vuelven idénticos al reenviarlos y aceptan cualquier clave que escriba el
   modelo (también «$x» o «a.b»). `replay` dice si el mensaje se le reenvía al modelo (un rechazo o un aviso, no). La
-  respuesta inmediata de un turno (`adelanto.py`) es un mensaje `adelanto` con su `texto`, que nunca se reenvía.
+  respuesta inmediata de un turno (`adelanto.py`) es un mensaje `adelanto` con su `texto`, que nunca se reenvía. Un
+  mensaje de la persona con fotos de planillas físicas guarda sus ids y medidas (`adjuntos`), nunca la imagen: las
+  fotos son de la bandeja de planillas del panel (`app/planillas.py`), con su propia retención.
 * `agente_uso`: mensajes, tokens y (con Mnemo) créditos por persona y día (hora de Colombia), para el tope diario y
   para ver el gasto.
 * `agente_olvidos`: quién dejó de autorizar en la última hora (`persona_id` y `ts`, nada más; lo anota
@@ -291,8 +293,18 @@ def mensajes_de(db: Database, cid: int) -> list[dict]:
     return list(db[MENSAJES].find({"conversacion": cid}).sort("seq", 1))
 
 
+def _adjuntos(v: Any) -> list[dict]:
+    """Las fotos de planillas que trajo un mensaje, como se guardaron (`bucle.Turno._fotos`): id y medidas."""
+    out = []
+    for a in v if isinstance(v, list) else []:
+        if isinstance(a, dict) and isinstance(a.get("id"), str):
+            out.append({"id": a["id"], **{k: a[k] for k in ("ancho", "alto") if isinstance(a.get(k), int)}})
+    return out
+
+
 def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> dict:
-    """La conversación como la pinta el widget: `mensajes` de la persona (su texto, sin el contexto del panel) y del
+    """La conversación como la pinta el widget: `mensajes` de la persona (su texto, sin el contexto del panel, y las
+    fotos de planillas que adjuntó, `adjuntos`: id y medidas, solo si trajo; nunca la imagen) y del
     asistente (partes: texto, notas de progreso, herramientas con su estado y avisos; y, la primera, la respuesta
     inmediata del turno, `{"tipo": "adelanto", "texto"}`, aunque se haya guardado después de otras), lo que espera
     aprobación (con `vieja` si su tarjeta la guardó una versión anterior del panel, que no mostraba los valores enteros)
@@ -325,7 +337,11 @@ def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> di
         if rol == "user":
             estado(d.get("herramientas"))
             if isinstance(d.get("texto"), str):
-                mensajes.append({"rol": "usuario", "texto": d["texto"]})
+                m = {"rol": "usuario", "texto": d["texto"]}
+                fotos = _adjuntos(d.get("adjuntos"))
+                if fotos:  # solo si las trae: un mensaje sin fotos queda igual que siempre
+                    m["adjuntos"] = fotos
+                mensajes.append(m)
                 actual = None
         elif rol == "assistant" and d.get("replay"):
             for b in de_json(d.get("contenido"), []):

@@ -32,6 +32,12 @@ Cómo corre un turno (docs/agente.md):
   lo que escribió la persona no se firma (el eco: su mensaje y sus mensajes anteriores). Desde que el modelo recibe
   datos de una persona (`_anotar`), deja de emitirlas. Nada de esto impide el turno: si algo falla, la respuesta sigue
   sin voz.
+* Las fotos de planillas físicas (docs/agente.md, «Planillas físicas por foto»): un mensaje puede traer los ids de
+  fotos de la bandeja de planillas de quien conversa (`adjuntos`; `abrir_mensaje` comprueba que su rol las suba y que
+  sean suyas). El modelo nunca recibe la imagen: después del contexto del panel va un bloque de texto con sus ids y en
+  qué va cada una (`herramientas.planillas.texto_de_fotos`) y las herramientas de planillas le pasan lo leído,
+  enmascarado. Un mensaje con solo fotos le llega con un texto fijo (`SOLO_FOTOS`): nunca un bloque de texto vacío. Una
+  herramienta que deja en la conversación datos sin id (las filas de una planilla: `marcar_datos`) también apaga la voz.
 * La respuesta inmediata (docs/agente.md, «La respuesta inmediata»; `adelanto.py`): en un mensaje nuevo, con
   `agente_adelanto` encendido, otra petición corta al mismo proveedor adelanta en una a tres frases la idea general
   mientras el modelo principal prepara la respuesta completa (`adelanto`, `adelanto_frase` y `adelanto_fin`, entre los
@@ -165,6 +171,12 @@ AVISO_LARGA = "La conversación ya es muy larga: empiece una nueva para seguir."
 AVISO_CORTADA = "La respuesta se cortó por larga. Pida que continúe o que lo resuma."
 AVISO_INCOMPLETA = "La respuesta del modelo terminó antes de tiempo. Pida que continúe o intente de nuevo."
 AVISO_VACIA = "El asistente no respondió nada. Intente de nuevo o reformule la pregunta."
+# Lo que recibe el modelo de un mensaje que trae solo fotos de planillas (nunca un bloque de texto vacío)
+SOLO_FOTOS = "(Envié fotos sin texto.)"
+FOTOS = {"codigo": "fotos", "mensaje": "Una de las fotos ya no está en la bandeja de planillas (se borró o venció) o "
+                                       "no es suya: quítela del mensaje y vuelva a adjuntarla."}
+PLANILLAS_APAGADO = {"codigo": "planillas_apagado", "mensaje": "Su rol no sube fotos de planillas: el administrador lo "
+                                                               "habilita en Ajustes → Planillas físicas por foto."}
 SUPRIMIDA = ("La conversación se borró: tenía datos de una persona que se suprimió o que dejó de autorizar mientras el "
              "asistente respondía. Empiece una nueva.")
 OCUPADA = {"codigo": "ocupada", "mensaje": "El asistente todavía está respondiendo otro mensaje suyo. Espere a que "
@@ -481,6 +493,9 @@ class Turno:
         self.frases_adelanto: voz_clonada.Frases | None = None
         self.adelanto: adelanto_.Adelanto | None = None
         self.ficha_adelanto: object | None = None  # con Mnemo, su lugar en el proceso (`adelanto.tomar_mnemo`)
+        # Las fotos de planillas que trae el mensaje (sus ids, de la bandeja de quien conversa: `abrir_mensaje` ya lo
+        # comprobó). Nunca la imagen: el modelo recibe sus ids y su estado (`herramientas.planillas.texto_de_fotos`)
+        self.adjuntos: list[str] = []
 
     # ── El productor y la respuesta ──
     def lanzar(self, trabajo: Callable[[], Awaitable[str]]) -> None:
@@ -780,6 +795,24 @@ class Turno:
             ui["grafico"] = self.graficos[tid]
         return ui
 
+    async def _fotos(self) -> tuple[list[dict], dict]:
+        """Las fotos de planillas del mensaje: el bloque de texto que va después del contexto del panel (sus ids y en
+        qué va cada una, leído ahora: la lectura de fondo pudo avanzar desde que se subieron) y lo que se guarda de
+        ellas con el mensaje para la interfaz (`adjuntos`: id y medidas, nunca la imagen). Sin fotos, nada."""
+        if not self.adjuntos:
+            return [], {}
+        from .. import planillas as bandeja
+        from .herramientas import planillas as hpl
+        fotos = await run_in_threadpool(bandeja.fotos_de, self.db, self.quien.uid, self.adjuntos)
+        # La herramienta tiene que estar entre las de la conversación (congeladas al crearla: una de antes de que su
+        # rol subiera fotos no la tiene) y permitida hoy
+        leer = "leer_planilla" in self.herramientas and "leer_planilla" in self.permitidas
+        texto = hpl.texto_de_fotos(fotos, self.adjuntos, leer)
+        por_id = {f.get("id"): f for f in fotos if isinstance(f, dict)}
+        guardar = [{"id": i, "ancho": (por_id.get(i) or {}).get("ancho"), "alto": (por_id.get(i) or {}).get("alto")}
+                   for i in self.adjuntos]
+        return [{"type": "text", "text": texto}], {"adjuntos": guardar}
+
     def _herramienta(self, tid: str, nombre: str, etiqueta: str, estado: str, resumen: str | None = None) -> None:
         ev = {"tipo": "herramienta", "id": tid, "nombre": nombre, "etiqueta": etiqueta, "estado": estado}
         if resumen is not None:
@@ -834,11 +867,17 @@ class Turno:
         # idea general
         contexto_panel = sistema.contexto_del_panel(contexto, ahora, etiquetas, guion, pantalla, recorrido,
                                                     adelanto=self.con_adelanto)
-        bloques = conv_db.limpio(bloques + [{"type": "text", "text": contexto_panel}, {"type": "text", "text": texto}])
-        await self._guardar("user", bloques, texto=texto, herramientas=ui)
+        # Al modelo nunca un bloque de texto vacío (la API lo rechaza y, como el historial no se edita, la conversación
+        # quedaría inservible): un mensaje con solo fotos le llega con un texto fijo. Lo que se guarda para la interfaz
+        # es lo que escribió la persona (nada)
+        al_modelo = texto if texto.strip() else SOLO_FOTOS
+        fotos, campos = await self._fotos()
+        bloques = conv_db.limpio(bloques + [{"type": "text", "text": contexto_panel}, *fotos,
+                                            {"type": "text", "text": al_modelo}])
+        await self._guardar("user", bloques, texto=texto, herramientas=ui, **campos)
         if self.con_adelanto:  # (después de guardar el mensaje: lo que muestre se guarda tras él)
             self._lanzar_adelanto(historial, conv_db.limpio(sistema.contexto_del_panel(
-                contexto, ahora, etiquetas, guion, pantalla, recorrido)), texto)
+                contexto, ahora, etiquetas, guion, pantalla, recorrido)), al_modelo)
         historial.append({"role": "user", "content": bloques})
         if aviso:
             await self._avisar(aviso, "alerta")
@@ -1228,6 +1267,11 @@ class Turno:
         if personas:
             await self._anotar(personas, desde, ((_personas_de_entrada(args) | (anotadas or set()))
                                                  if h.tipo == "escritura" else frozenset()))
+        elif getattr(self, "frases", None) is not None and await run_in_threadpool(conv_db.tiene_personas, self.db,
+                                                                                    self.cid):
+            # La herramienta dejó en la conversación datos de personas que no tienen id (las filas de una planilla
+            # leída: `conversaciones.marcar_datos`): desde aquí, tampoco con la voz clonada
+            self.frases = None
         resumen = _corto(res.resumen) or "Listo"
         if res.termina_turno:
             self.termina_turno = True
@@ -1424,8 +1468,26 @@ async def _frases_del_adelanto(app: Any, quien: Any, cid: int, conv: dict | None
         return None
 
 
-async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, contexto: Any) -> StreamingResponse:
-    """POST /api/agente/mensajes: las comprobaciones previas y el turno en flujo."""
+async def _exigir_fotos(db: Any, quien: Any, ajustes: dict, adjuntos: list[str]) -> list[str]:
+    """Las fotos de planillas de un mensaje (ids de la bandeja, sin repetir, en el orden en que llegaron): el rol tiene
+    que subir fotos (`agente_planillas.roles`: 403 `planillas_apagado`) y cada una tiene que ser de quien conversa y
+    seguir en la bandeja (`planillas.fotos_de`: si no, 422 `fotos`, igual si es de otra persona o si no existe)."""
+    ids = list(dict.fromkeys(adjuntos))
+    if not ids:
+        return []
+    if not quien.puede("plantillas") or not politica.usa_planillas(quien, ajustes):
+        raise HTTPException(403, dict(PLANILLAS_APAGADO))
+    from .. import planillas as bandeja
+    suyas = await run_in_threadpool(bandeja.fotos_de, db, quien.uid, ids)
+    if {f.get("id") for f in suyas if isinstance(f, dict)} != set(ids):
+        raise HTTPException(422, dict(FOTOS))
+    return ids
+
+
+async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, contexto: Any,
+                        adjuntos: list[str] | tuple = ()) -> StreamingResponse:
+    """POST /api/agente/mensajes: las comprobaciones previas y el turno en flujo. `adjuntos`: ids de fotos de planillas
+    de la bandeja de quien conversa (`_exigir_fotos`); con ellas el texto puede venir vacío."""
     app = request.app
     db, cfg = app.state.db, app.state.cfg
     ajustes, agente = await run_in_threadpool(politica.leer, db)
@@ -1438,6 +1500,11 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
             raise HTTPException(404, {"codigo": "no_existe", "mensaje": "No existe esa conversación."})
         if conv_db.larga(conv):
             raise HTTPException(409, dict(LARGA))
+    fotos = await _exigir_fotos(db, quien, ajustes, list(adjuntos or ()))
+    if not texto.strip():
+        if not fotos:
+            raise HTTPException(422, "El mensaje está vacío")
+        texto = ""  # solo fotos: el modelo recibe `SOLO_FOTOS`
     proveedor = await _proveedor(app, conv)
     turno_id = secrets.token_hex(8)
     fresca = await _ocupar(app, quien.uid, cid, turno_id)
@@ -1449,10 +1516,11 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
         else:  # la conversación se crea al empezar el flujo (con Mnemo, si toca): aquí solo se reserva su id
             cid = await run_in_threadpool(bd.siguiente_id, db, conv_db.CONVERSACIONES)
             ocupacion_de(app).agregar(cid)
-            titulo = conv_db.titulo_de(texto)
+            titulo = conv_db.titulo_de(texto) if texto.strip() else "Fotos de planillas"
         limite = await _contar(db, quien, ajustes)
         turno = Turno(app=app, quien=quien, ajustes=ajustes, agente=agente, api=ApiInterna.desde_peticion(request),
                       conv=conv, cid=cid, titulo=titulo, turno=turno_id, limite=limite, proveedor=proveedor)
+        turno.adjuntos = fotos
         voz_pedida = isinstance(contexto, dict) and contexto.get("voz") is True
         # La sala oye (una presentación abierta con su «Voz») sin «Leer las respuestas»: solo la respuesta inmediata se
         # dice (`contexto.voz_adelanto`); la respuesta sigue escrita, sin frases ni `RESPUESTA_HABLADA`

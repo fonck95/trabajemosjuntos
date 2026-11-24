@@ -56,18 +56,26 @@ MAX_NOMBRE_VOZ = 60
 HUELLA_CUENTA = re.compile(r"[0-9a-f]{32}")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f\u2028\u2029]")
 
+# Lo que la bienvenida del chat ofrece a cada rol (botones que mandan la frase): solo lo que ese rol puede pedir con
+# los ajustes por defecto (A y K: análisis, planillas por foto y calidad de datos; P y C, su trabajo y las fichas), lo
+# que más rinde y lo que muestra lo que el asistente sabe hacer. Pocas: el widget las apila todas
 SUGERENCIAS = {
-    "admin": ["¿Cómo va la base? Dame los indicadores principales.",
+    "admin": ["¿Qué deberíamos priorizar esta semana?",
+              "¿En qué barrios y veredas llevamos más tiempo sin ir?",
+              "¿A qué horas contesta más la gente cuando llamamos?",
+              "¿Qué planillas por foto hay por cargar?",
+              "¿Hay fichas duplicadas o conflictos de cédula por resolver?",
               "Muéstrame en el mapa a las personas que faltan por ubicar.",
-              "¿Qué pendientes de calidad hay para hoy?",
-              "Resume las reuniones del último mes.",
               "Preséntame la propuesta 2028–2031, capítulo por capítulo."],
     "planillero": ["¿Qué tengo pendiente en mi trabajo?",
                    "¿Qué datos le faltan a la ficha que tengo abierta?",
+                   "¿Cuándo fue el último contacto con la persona de esta ficha?",
                    "Busca a una persona por su nombre."],
     "consultor": ["¿A quién llamo ahora en mi cola?",
-                  "Busca a una persona por su nombre.",
-                  "Ayúdame a registrar el resultado de la llamada."],
+                  "Ayúdame a registrar el resultado de la llamada.",
+                  "¿Qué acercamientos tiene ya la persona que estoy llamando?",
+                  "El número que marqué está equivocado: márcalo en la ficha.",
+                  "Busca a una persona por su nombre."],
 }
 SUGERENCIAS["coordinador"] = SUGERENCIAS["admin"]
 

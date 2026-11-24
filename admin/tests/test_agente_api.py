@@ -101,7 +101,7 @@ def test_estado_sin_clave(sesion):
     assert e == {"disponible": False, "motivo": "sin_configurar", "configurado": False, "proveedor": None,
                  "es_admin": True, "escritura": True, "limite": {"usados": 0, "maximo": 300},
                  "mnemo": {"activo": False, "origen": None, "conexion": SIN_CONECTAR}, "sugerencias": [],
-                 "dictado": False, "voz": SIN_VOZ, "adelanto": False}
+                 "dictado": False, "voz": SIN_VOZ, "adelanto": False, "adjuntos": None}
 
 
 def test_estado_con_clave_y_tope_diario(sesion, falsas):

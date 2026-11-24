@@ -2945,8 +2945,18 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
         timeout: ESPERA_FOTO_MS, signal: f.control.signal });
       const id = typeof d?.id === 'string' && ID_FOTO.test(d.id) ? d.id : null;
       if (!id) throw errorFoto('El panel respondió algo inesperado al recibir la foto. Reintente.');
-      if (f.quitada) { borrarDeLaBandeja(id); return; } // se quitó mientras subía
-      Object.assign(f, { estado: 'lista', id, lectura: texto(d.estado, 20) || null });
+      // `repetida`: la bandeja ya tenía esa foto de esta persona (elegida otra vez, de otro mensaje o subida en
+      // Importar y exportar, quizá corregida o cargada en parte). No es de esta subida: el cuadro nunca la borra (como
+      // una que ya llegó en un mensaje) y, si ya va en este mensaje, la copia sobra
+      const repetida = d.repetida === true;
+      if (f.quitada) { if (!repetida) borrarDeLaBandeja(id); return; } // se quitó mientras subía
+      Object.assign(f, { estado: 'lista', id, lectura: texto(d.estado, 20) || null, enviada: repetida });
+      if (repetida && fotos.some((o) => o !== f && o.id === id)) {
+        const esperaba = enviarAlSubir;
+        quitarFoto(f);   // (si el envío esperaba esta subida, sale ahora y su aviso manda)
+        if (!esperaba || enviarAlSubir) decirFotos('Esa foto ya estaba adjunta.');
+        return;
+      }
     } catch (e) {
       if (f.quitada) return;
       const [mensaje, reintentar] = explicarFoto(e);
