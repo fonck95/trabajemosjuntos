@@ -8,15 +8,19 @@ Contrato (Mnemo: `apps/api/src/agent-api/catalog/model.ts` y `docs/agentes-exter
 * Entrada, en la forma de la Messages API: `system` (texto), `messages` (`text`, `image{media_type, data}`, `tool_use`,
   `tool_result{content: texto, is_error?}`, `thinking{text, signature?}`), `tools` (`name`, `description`,
   `input_schema`), `max_tokens`, `reasoning` (`off|low|medium|high`) y `model` (`{provider, model}`, o `{model}` con
-  `principal` o `ligero`; sin él, el modelo por defecto de la cuenta).
+  `principal`, `ligero` o `vision`, el modelo de la cuenta para leer imágenes; sin él, el modelo por defecto de la
+  cuenta).
 * Salida en `structuredContent` (la copia en texto puede venir recortada): `content` (`text`, `tool_use`, `thinking`),
   `stop_reason` (`end_turn|tool_use|max_tokens|refusal|other`), `model` y `usage` (con `credits` si la pagó el plan).
 * Avance: con `_meta.progressToken`, cada trozo de texto del modelo llega antes del resultado como
   `notifications/progress` (`message`: el trozo). Los `tool_use` y el razonamiento no llegan a trozos.
 * Errores: `isError` con `{error: {code, message, details?}}`: `PLAN_REQUIRED`, `CREDITS_EXHAUSTED`, `RATE_LIMITED`
-  (`details.reason`: `provider` o `concurrency`), `UNAVAILABLE`, `INVALID_ARGUMENT` (`details.reason: "context_window"`
-  si la conversación no cabe en el modelo, `details.available` si el modelo pedido no es de la cuenta), `TIMEOUT` e
-  `INTERNAL`.
+  (`details.reason`: `provider` o `concurrency`), `UNAVAILABLE` (`details.reason: "vision_unavailable"` si con
+  `vision` el modelo de la persona para leer imágenes no se puede usar ahora), `INVALID_ARGUMENT`
+  (`details.reason: "context_window"` si la conversación no cabe en el modelo, `"no_vision"` si con `vision` Mnemo sabe
+  que ningún modelo de la cuenta lee imágenes, `"provider_rejected"` si con `vision` el proveedor rechazó la petición,
+  `details.available` si el modelo pedido no es de la cuenta; sin `details`, un alias que ese Mnemo no conoce, una
+  petición fuera del contrato o, sin `vision`, un rechazo del proveedor), `TIMEOUT` e `INTERNAL`.
 
 Por qué está hecho así:
 
@@ -38,13 +42,31 @@ Por qué está hecho así:
   Por eso el tope de imágenes de una ronda es más bajo que con Anthropic (`TOPE_IMAGENES`).
 * Reintentos (`reintento`): un corte de red, un plazo vencido o un 5xx esperan 1 y 2 s; `RATE_LIMITED` (o un 429),
   10 y 20 s, o de 2 a 5 s si es el tope de llamadas a la vez; `UNAVAILABLE` (el proveedor de la cuenta falló, o la
-  cuenta no tiene modelo), una vez tras 1 s; una conexión que cambió a mitad (otra cuenta, otra vuelta), medio
-  segundo. El bucle no repite si con la espera se pasaría del tope del turno.
+  cuenta no tiene modelo), una vez tras 1 s, salvo `vision_unavailable` (el modelo de la cuenta para leer imágenes no
+  se puede usar: repetir no lo arregla, se arregla en Mnemo); una conexión que cambió a mitad (otra cuenta, otra
+  vuelta), medio segundo.
+  El bucle no repite si con la espera se pasaría del tope del turno.
 * Los errores se explican sin datos ni nombres de variables (`explicar`), con códigos que el widget distingue:
   `mnemo_conexion` (sin conexión, caída, revocada, alterada o el 401 que sigue tras renovar), `mnemo_plan` (el plan
   no incluye usar sus modelos desde el panel, o no incluye el modelo de frontera elegido para el panel),
   `mnemo_creditos`, `mnemo_sin_modelo` (sin modelo disponible en la cuenta, o la conexión sin `mnemo:model`),
-  `larga`, `llm_peticion`, `llm_limite`, `llm_conexion`, `llm_no_disponible` y `llm_respuesta`.
+  `mnemo_sin_vision` (ningún modelo de la cuenta lee imágenes, el de leerlas no se puede usar ahora o su proveedor no
+  aceptó la foto; el mensaje dice qué hacer en Mnemo. Solo sale al leer la foto de una planilla: queda como el error
+  de la planilla y no llega al widget en un turno), `larga`, `llm_peticion`, `llm_limite`, `llm_conexion`,
+  `llm_no_disponible` y `llm_respuesta`.
+* Leer la foto de una planilla (`lector_planillas.py`, `generar(..., vision=True)`) pide `{"model": "vision"}`, no
+  `MNEMO_MODELO`: sin el alias, Mnemo la manda al modelo principal de la cuenta aunque no lea imágenes (y la persona
+  haya elegido otro para leerlas en Ajustes → Modelos → Plantel, «leer imágenes»), y el modelo responde que no vio
+  nada. Mnemo lo resuelve así: el modelo que la persona eligió para leer imágenes (o el que Mnemo eligió solo porque el
+  principal no las lee); si ese no se puede usar ahora, `UNAVAILABLE` con `vision_unavailable`; si sabe que ninguno de
+  la cuenta las lee, `INVALID_ARGUMENT` con `no_vision`; si no lo puede saber, el principal, como sin alias. Si el
+  proveedor rechaza la petición (un modelo que no acepta imágenes, o no esa), `INVALID_ARGUMENT` con
+  `provider_rejected`. Ninguno de los tres se repite. Un Mnemo anterior no conoce el alias y responde
+  `INVALID_ARGUMENT` sin `reason` ni `available`: se repite una vez, en la misma llamada a `generar`, con el modelo de
+  siempre (lo que se pedía antes del alias), la `Respuesta` lo dice (`sin_alias_vision`: el lector no sugiere el
+  plantel, que ese Mnemo no consulta) y queda una línea `info` en el registro, sin contenido. Un Mnemo de ahora, con
+  `vision`, solo responde así a una petición fuera del contrato, que no llega a ningún modelo (y vuelve a fallar sin
+  gastar). Las conversaciones y la respuesta inmediata siguen con `MNEMO_MODELO`.
 * La respuesta inmediata del turno (`adelanto.py`) es otra llamada a `mnemo_model_complete` con `rapido`: el mismo
   modelo, sin herramientas, `reasoning: "off"` y un tope de tokens corto. Ocupa una de las llamadas a la vez de la
   conexión mientras dura (unos segundos).
@@ -82,6 +104,12 @@ IMAGEN_MAX = 3_000_000         # Mnemo: una imagen en base64
 TIPOS_IMAGEN = ("image/png", "image/jpeg", "image/gif", "image/webp")
 FINES = ("end_turn", "tool_use", "max_tokens", "refusal", "other")
 ALIAS_MODELO = ("principal", "ligero")
+# El modelo de la cuenta para leer imágenes: solo lo pide la lectura de una planilla (`generar(..., vision=True)`), no
+# es un valor de `MNEMO_MODELO`
+MODELO_VISION = {"model": "vision"}
+SIN_VISION = "no_vision"                    # `INVALID_ARGUMENT`: Mnemo sabe que ningún modelo de la cuenta ve
+VISION_NO_DISPONIBLE = "vision_unavailable"  # `UNAVAILABLE`: el de leer imágenes no se puede usar ahora
+VISION_RECHAZADA = "provider_rejected"       # `INVALID_ARGUMENT`: con `vision`, el proveedor rechazó la petición
 # AGENTE_ESFUERZO → `reasoning` de Mnemo (que no tiene «xhigh» ni «max»)
 ESFUERZOS = {"low": "low", "medium": "medium", "high": "high", "xhigh": "high", "max": "high"}
 ESPERA_RED_S = 1.0             # corte de red, plazo vencido o 5xx: 1 s y 2 s
@@ -109,6 +137,18 @@ MENSAJE_SIN_MODELO = ("La cuenta de Mnemo conectada no tiene un modelo disponibl
                       "con su clave rechazada o con el proveedor caído). Si se repite, avise al administrador.")
 MENSAJE_MODELO_AJENO = ("El modelo que el panel le pide a Mnemo no está entre los de la cuenta conectada. Avise al "
                         "administrador.")
+# Los de leer la foto de una planilla (`mnemo_sin_vision`): con lo que el administrador hace en Mnemo. Caben en los
+# 300 caracteres con que el asistente ve el error de una planilla (`herramientas/planillas.py`)
+MENSAJE_SIN_VISION = ("Ningún modelo de la cuenta de Mnemo conectada lee imágenes: no se pudo leer la foto. Avise al "
+                      "administrador: en Mnemo, en Ajustes → Modelos → Plantel, puede elegir en «leer imágenes» un "
+                      "modelo que las lea (o usar como principal uno que las lea).")
+MENSAJE_VISION_NO_DISPONIBLE = ("El modelo de Mnemo para leer imágenes no se puede usar ahora (sin saldo o con la "
+                                "clave de su proveedor rechazada): no se pudo leer la foto. Avise al administrador: en "
+                                "Mnemo puede recargar el saldo o revisar la clave de ese proveedor, o elegir otro en "
+                                "Ajustes → Modelos → Plantel, «leer imágenes».")
+MENSAJE_VISION_RECHAZADA = ("El proveedor del modelo de Mnemo para leer imágenes rechazó la foto: puede que ese "
+                            "modelo no lea imágenes, o no esta (por su formato o su tamaño). Avise al administrador: "
+                            "en Mnemo puede elegir otro en Ajustes → Modelos → Plantel, «leer imágenes».")
 MENSAJE_LARGA = "La conversación ya es muy larga: empiece una nueva para seguir."
 MENSAJE_PETICION = "El modelo rechazó la petición. Si se repite, empiece otra conversación."
 MENSAJE_LIMITE = "Mnemo está recibiendo demasiadas peticiones del panel. Intente de nuevo en un minuto."
@@ -267,17 +307,18 @@ def modelo_pedido(valor: Any) -> dict | None:
 
 
 def argumentos(sistema: str, mensajes: list[dict], herramientas: list[dict], *, max_tokens: int, esfuerzo: str,
-               modelo: Any = None, rapido: bool = False) -> dict:
+               modelo: Any = None, rapido: bool = False, vision: bool = False) -> dict:
     """Los argumentos de `mnemo_model_complete` para una ronda (sin acotar su tamaño: `ajustar`). Con `rapido` (la
     respuesta inmediata del turno, `adelanto.py`): sin herramientas y sin razonar (`reasoning: "off"`), con el mismo
-    modelo."""
+    modelo. Con `vision` (leer la foto de una planilla): `{"model": "vision"}`, el modelo de la cuenta para leer
+    imágenes, en vez de `modelo`."""
     args: dict[str, Any] = {"system": _texto(sistema), "messages": para_mnemo(mensajes)}
     tools = [] if rapido else herramientas_para_mnemo(herramientas)
     if tools:
         args["tools"] = tools
     args["max_tokens"] = max_tokens
     args["reasoning"] = "off" if rapido else ESFUERZOS.get(esfuerzo, "medium")
-    pedido = modelo_pedido(modelo)
+    pedido = dict(MODELO_VISION) if vision else modelo_pedido(modelo)
     if pedido is not None:
         args["model"] = pedido
     return args
@@ -438,6 +479,18 @@ def _conexion(e: ErrorHerramienta) -> str | None:
     return e.detalle.get("conexion") if isinstance(e.detalle, dict) else None
 
 
+def alias_desconocido(e: BaseException) -> bool:
+    """¿Es un `INVALID_ARGUMENT` sin `details.reason` ni `details.available`? Así rechaza un Mnemo anterior un alias
+    que no conoce (`vision`: lo acepta el esquema y lo rechaza al elegir el modelo, sin llamar a ninguno). Los rechazos
+    que el panel sabe explicar llevan uno de los dos (`context_window`, `no_vision`, `provider_rejected`, el modelo que
+    no es de la cuenta) y no se repiten. Un Mnemo de ahora, con `vision`, le pone motivo al rechazo del proveedor
+    (`provider_rejected`): sin motivo solo queda una petición fuera del contrato, que tampoco llega a ningún modelo y
+    vuelve a fallar al repetirla, sin gastar. Así, la repetición con el modelo de siempre solo le llega a un modelo
+    cuando el Mnemo conectado no conoce el alias."""
+    codigo, detalles = _de_mnemo(e)
+    return codigo == "INVALID_ARGUMENT" and "reason" not in detalles and "available" not in detalles
+
+
 class ProveedorMnemo:
     """Los modelos de la cuenta de Mnemo conectada (ver `proveedores.Proveedor` y el docstring del módulo)."""
 
@@ -453,10 +506,11 @@ class ProveedorMnemo:
         return f"ProveedorMnemo(modelo={self.modelo!r})"
 
     async def generar(self, sistema: str, mensajes: list[dict], herramientas: list[dict], *, max_tokens: int,
-                      esfuerzo: str, al_evento: Callable[[Evento], None], rapido: bool = False) -> Respuesta:
+                      esfuerzo: str, al_evento: Callable[[Evento], None], rapido: bool = False,
+                      vision: bool = False) -> Respuesta:
         # Fuera del bucle de eventos: con imágenes son megas de JSON que medir
         args = await run_in_threadpool(self._argumentos, sistema, mensajes, herramientas, max_tokens, esfuerzo,
-                                       rapido)
+                                       rapido, vision)
         cliente = await run_in_threadpool(mc.cliente_de, self.app)
         if cliente is None:
             raise await run_in_threadpool(_sin_cliente, self.app.state.db)
@@ -468,7 +522,21 @@ class ProveedorMnemo:
                 emitido.append(trozo)
                 al_evento({"tipo": "texto", "texto": trozo})
 
-        res = await cliente.llamar(HERRAMIENTA, args, PLAZO_S, al_progreso, tope=TOPE_S)
+        sin_alias = False
+        try:
+            res = await cliente.llamar(HERRAMIENTA, args, PLAZO_S, al_progreso, tope=TOPE_S)
+        except ErrorHerramienta as e:
+            if not (vision and alias_desconocido(e)):
+                raise
+            # Un Mnemo anterior, sin el alias `vision` (ver `alias_desconocido`): una vez con el modelo de siempre. Lo
+            # que ya se hubiera mostrado queda en `emitido`, así que si llegara algo, el texto final lo reemplaza
+            # (`texto_ronda`)
+            log.info("Mnemo: rechazó sin motivo el modelo para leer imágenes (un Mnemo anterior, sin el alias); se "
+                     "pide con el modelo del panel")
+            sin_alias = True
+            args = await run_in_threadpool(self._argumentos, sistema, mensajes, herramientas, max_tokens, esfuerzo,
+                                           rapido, False)
+            res = await cliente.llamar(HERRAMIENTA, args, PLAZO_S, al_progreso, tope=TOPE_S)
         datos = res.get("structuredContent")
         if not isinstance(datos, dict) or not isinstance(datos.get("content"), list):
             log.warning("Mnemo: la respuesta del modelo no trae structuredContent")
@@ -486,13 +554,13 @@ class ProveedorMnemo:
             if b["type"] == "tool_use":
                 al_evento({"tipo": "herramienta", "id": b["id"], "nombre": b["name"]})
         return Respuesta(contenido=contenido, fin=fin, modelo=modelo_de(datos.get("model")),
-                         uso=uso_de(datos.get("usage")))
+                         uso=uso_de(datos.get("usage")), sin_alias_vision=sin_alias)
 
     def _argumentos(self, sistema: str, mensajes: list[dict], herramientas: list[dict], max_tokens: int,
-                    esfuerzo: str, rapido: bool = False) -> dict:
+                    esfuerzo: str, rapido: bool = False, vision: bool = False) -> dict:
         return ajustar(conv_db.limpio(argumentos(sistema, mensajes, herramientas, max_tokens=max_tokens,
                                                  esfuerzo=esfuerzo, modelo=getattr(self.cfg, "mnemo_modelo", ""),
-                                                 rapido=rapido)))
+                                                 rapido=rapido, vision=vision)))
 
     def reintento(self, e: BaseException, intento: int) -> float | None:
         if not isinstance(e, ErrorHerramienta):
@@ -510,6 +578,8 @@ class ProveedorMnemo:
             return ESPERA_RITMO_S * 2 ** intento
         if codigo is None and isinstance(e.estado, int) and e.estado >= 500:
             return ESPERA_RED_S * 2 ** intento
+        if codigo == "UNAVAILABLE" and detalles.get("reason") == VISION_NO_DISPONIBLE:
+            return None  # el modelo de la cuenta para leer imágenes no se puede usar: repetir no lo arregla
         if codigo == "UNAVAILABLE" and intento == 0:
             # Mnemo lo da también cuando el proveedor de la cuenta falló (ya tras sus propios reintentos): se repite
             # una vez. Si la cuenta no tiene modelo, vuelve a fallar al instante y sin gastar
@@ -538,10 +608,16 @@ class ProveedorMnemo:
         if codigo == "CREDITS_EXHAUSTED":
             return MENSAJE_CREDITOS, "mnemo_creditos"
         if codigo == "UNAVAILABLE":
+            if detalles.get("reason") == VISION_NO_DISPONIBLE:
+                return MENSAJE_VISION_NO_DISPONIBLE, "mnemo_sin_vision"
             return MENSAJE_SIN_MODELO, "mnemo_sin_modelo"
         if codigo == "INVALID_ARGUMENT":
             if detalles.get("reason") == "context_window":
                 return MENSAJE_LARGA, "larga"
+            if detalles.get("reason") == SIN_VISION:
+                return MENSAJE_SIN_VISION, "mnemo_sin_vision"
+            if detalles.get("reason") == VISION_RECHAZADA:
+                return MENSAJE_VISION_RECHAZADA, "mnemo_sin_vision"
             if "available" in detalles:
                 return MENSAJE_MODELO_AJENO, "mnemo_sin_modelo"
             return MENSAJE_PETICION, "llm_peticion"

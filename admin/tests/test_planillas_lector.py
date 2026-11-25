@@ -1,15 +1,20 @@
 """El lector de planillas físicas (app/agente/lector_planillas.py): la llamada aparte al modelo (sin herramientas, con
-la imagen y un texto, `al_evento` que nunca rompe, topes de tokens por proveedor, plazo y errores explicados), la salida
-compacta, el saneo de cada valor y las reglas de rechazo y de rescate. Con un proveedor falso: sin red. Solo datos
-inventados."""
+la imagen y un texto, con `vision`, `al_evento` que nunca rompe, topes de tokens por proveedor, plazo y errores
+explicados; `sin_imagen` con el modelo que respondió), la salida compacta, el saneo de cada valor y las reglas de
+rechazo y de rescate. Con un proveedor falso (y, en modo directo, con `ProveedorAnthropic` y Anthropic simulado): sin
+red. Solo datos inventados."""
 import asyncio
 import base64
 import json
+from dataclasses import replace
+from types import SimpleNamespace
 
 import pytest
 
 from app.agente import lector_planillas as lp
+from app.agente import llm
 from app.agente.proveedores import ErrorProveedor, Uso
+from ayudas_agente import T, cliente_falso, sse
 from ayudas_planillas import COLUMNAS, ProveedorFalso, fila, jpeg, lectura_json
 
 ANA = dict(cedula="90000101", cedula_repetida="90000101", nombre="ANA INVENTADA RUIZ", celular="3101234501",
@@ -135,6 +140,7 @@ def test_la_llamada_aparte_sin_herramientas():
     lec = _leer(p, progreso=progreso.append)
     (llamada,) = p.llamadas
     assert llamada["herramientas"] == [] and llamada["rapido"] is False and llamada["esfuerzo"] == "medium"
+    assert llamada["vision"] is True  # con Mnemo, el modelo de la cuenta para leer imágenes
     assert llamada["max_tokens"] == lp.MAX_TOKENS_DIRECTO == 24_000
     assert llamada["sistema"] == lp.instrucciones(False)
     (m,) = llamada["mensajes"]
@@ -174,6 +180,73 @@ def test_rechazo_y_errores_del_proveedor_con_el_uso():
     with pytest.raises(lp.ErrorLectura) as e:
         _leer(p)
     assert e.value.codigo == "sin_imagen" and e.value.uso.salida == 340  # el uso se suma igual
+
+
+def test_sin_imagen_nombra_el_modelo_que_respondio():
+    """Si el modelo dice que no vio la foto, el mensaje nombra el que respondió (`Respuesta.modelo`): así el
+    administrador ve a cuál le llegó. Con Mnemo dice además dónde se elige el que lee imágenes. Sin modelo conocido,
+    el mensaje de siempre."""
+    class Responde(ProveedorFalso):
+        def __init__(self, modelo, *a, **kw):
+            super().__init__(*a, **kw)
+            self.que_modelo = modelo
+
+        async def generar(self, *a, **kw):
+            return replace(await super().generar(*a, **kw), modelo=self.que_modelo)
+
+    sin_ver = lectura_json([], imagen_visible=False)
+    p = Responde("deepseek/deepseek-v4-flash", sin_ver, clave="mnemo")
+    with pytest.raises(lp.ErrorLectura) as e:
+        _leer(p)
+    m = e.value.mensaje
+    assert e.value.codigo == "sin_imagen" and e.value.uso.salida == 340 and str(e.value) == m
+    assert "(deepseek/deepseek-v4-flash) no pudo ver la foto" in m and "Plantel" in m and "«leer imágenes»" in m
+    assert p.llamadas[0]["vision"] is True
+    # En modo directo, sin la pista de Mnemo; el nombre va en una línea y recortado
+    with pytest.raises(lp.ErrorLectura) as e:
+        _leer(Responde("claude-\nopus-5-5" + "x" * 200, sin_ver))
+    m = e.value.mensaje
+    assert "(claude- opus-5-5xxx" in m and "Mnemo" not in m and "\n" not in m and "no pudo ver la foto" in m
+    assert len(m) <= 300 and len(lp.mensaje_sin_imagen("p/" + "m" * 400, "mnemo")) <= 300  # el asistente ve 300
+    # Sin modelo conocido (Mnemo no lo dijo: «mnemo»), el de siempre
+    for modelo, clave in (("", "anthropic"), ("mnemo", "mnemo"), (None, "mnemo")):
+        assert lp.mensaje_sin_imagen(modelo, clave) == lp.MENSAJES["sin_imagen"]
+    with pytest.raises(lp.ErrorLectura) as e:
+        _leer(Responde("mnemo", sin_ver, clave="mnemo"))
+    assert e.value.mensaje == lp.MENSAJES["sin_imagen"]
+
+    # Con un Mnemo anterior, sin el alias `vision` (`Respuesta.sin_alias_vision`), la foto fue al modelo de siempre:
+    # elegir uno en el plantel no lo cambia, así que el mensaje no lo sugiere y pide actualizar Mnemo
+    class Anterior(Responde):
+        async def generar(self, *a, **kw):
+            return replace(await super().generar(*a, **kw), sin_alias_vision=True)
+
+    with pytest.raises(lp.ErrorLectura) as e:
+        _leer(Anterior("deepseek/deepseek-v4-flash", sin_ver, clave="mnemo"))
+    m = e.value.mensaje
+    assert "(deepseek/deepseek-v4-flash) no pudo ver la foto" in m and "actualizar Mnemo" in m
+    assert "Plantel" not in m and e.value.codigo == "sin_imagen"
+    assert len(lp.mensaje_sin_imagen("p/" + "m" * 400, "mnemo", sin_alias=True)) <= 300
+    # Los demás rechazos no cambian
+    with pytest.raises(lp.ErrorLectura) as e:
+        _leer(Responde("deepseek/deepseek-v4-flash", lectura_json([], visibles=0)))
+    assert e.value.codigo == "sin_filas" and e.value.mensaje == lp.MENSAJES["sin_filas"]
+
+
+def test_en_modo_directo_lee_con_el_proveedor_de_verdad():
+    """La lectura con `ProveedorAnthropic` (Anthropic simulado, sin red): acepta `vision` (lo que pide el lector) y la
+    foto va al modelo de `AGENTE_MODELO`, sin herramientas. Con `ProveedorFalso` no se vería si el proveedor de verdad
+    dejara de aceptarlo: cada lectura en modo directo fallaría."""
+    cliente, api = cliente_falso(sse(T(lectura_json([fila(1, **ANA)]))))
+    app = SimpleNamespace(state=SimpleNamespace(agente_cliente=cliente))
+    p = llm.ProveedorAnthropic(app, SimpleNamespace(agente_modelo="claude-opus-5-5", agente_esfuerzo="high"))
+    lec = _leer(p)
+    (pedido,) = api.peticiones
+    j = pedido["json"]
+    assert j["model"] == "claude-opus-5-5" and "tools" not in j and j["max_tokens"] == lp.MAX_TOKENS_DIRECTO
+    (m,) = j["messages"]
+    assert m["content"][0]["type"] == "image" and m["content"][0]["source"]["media_type"] == "image/jpeg"
+    assert lec.modelo == "claude-opus-5-5" and lec.filas[0]["valores"]["cedula"] == ANA["cedula"]
 
 
 def test_plazo_propio():

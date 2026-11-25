@@ -9,7 +9,9 @@ Qué se prueba: la forma de lo que se manda (`system` y herramientas sin `eager_
 uso, el razonamiento reenviado tal cual y no mostrado, el tope de 4 MB, los reintentos (con un reloj falso: nadie
 espera de verdad; `UNAVAILABLE` una vez), la renovación tras un 401, cada código de fin (el plan sin el modelo de
 frontera elegido, aparte), una conexión alterada a mitad, el proveedor congelado en la conversación (409
-`proveedor`), Mnemo antes que `ANTHROPIC_API_KEY` y el estado."""
+`proveedor`), Mnemo antes que `ANTHROPIC_API_KEY` y el estado. Y, sin MongoDB (con un cliente de Mnemo guionizado),
+el modelo para leer imágenes de la foto de una planilla (`vision`): el alias, un Mnemo anterior que no lo conoce (se
+repite una vez con el modelo de siempre, y la respuesta lo dice) y `mnemo_sin_vision`."""
 import asyncio
 import json
 import time
@@ -679,6 +681,158 @@ def test_reintento_y_explicar_de_mnemo():
     assert p.explicar(ErrorHerramienta("x", mc.COD_RED)) == (modelo_mnemo.MENSAJE_RED, "llm_conexion")
     assert p.explicar(ErrorHerramienta("x", mc.COD_PLAZO)) == (modelo_mnemo.MENSAJE_PLAZO, "llm_conexion")
     assert p.explicar(RuntimeError("datos de alguien")) == (modelo_mnemo.MENSAJE_ERROR, "error")
+    # Leer la foto de una planilla: ningún modelo de la cuenta lee imágenes, o el elegido no se puede usar ahora
+    assert p.explicar(de_mnemo("INVALID_ARGUMENT", detalles={"reason": "no_vision"})) == (
+        modelo_mnemo.MENSAJE_SIN_VISION, "mnemo_sin_vision")
+    assert p.explicar(de_mnemo("UNAVAILABLE", detalles={"reason": "vision_unavailable"})) == (
+        modelo_mnemo.MENSAJE_VISION_NO_DISPONIBLE, "mnemo_sin_vision")
+    assert p.reintento(de_mnemo("UNAVAILABLE", detalles={"reason": "vision_unavailable"}), 0) is None
+    assert p.reintento(de_mnemo("INVALID_ARGUMENT", detalles={"reason": "no_vision"}), 0) is None
+    assert p.explicar(de_mnemo("INVALID_ARGUMENT", detalles={"reason": "provider_rejected"})) == (
+        modelo_mnemo.MENSAJE_VISION_RECHAZADA, "mnemo_sin_vision")
+    assert p.explicar(de_mnemo("UNAVAILABLE", detalles={"reason": "otra"})) == (modelo_mnemo.MENSAJE_SIN_MODELO,
+                                                                                 "mnemo_sin_modelo")
+    assert p.explicar(de_mnemo("INVALID_ARGUMENT")) == (modelo_mnemo.MENSAJE_PETICION, "llm_peticion")
+
+
+# ───────────────────────────── La foto de una planilla: el modelo para leer imágenes ─────────────────────────────
+
+class _ClienteGuion:
+    """El cliente de Mnemo (lo que devuelve `mnemo_cliente.cliente_de`), falso: cada `llamar` anota los argumentos y
+    responde lo siguiente de `respuestas` (una excepción se lanza; un texto, como el de `mnemo_model_complete`)."""
+
+    def __init__(self, *respuestas):
+        self.respuestas, self.pedidos = list(respuestas), []
+
+    async def llamar(self, nombre, argumentos, plazo, al_progreso=None, *, tope=None):
+        assert nombre == modelo_mnemo.HERRAMIENTA
+        self.pedidos.append(argumentos)
+        r = self.respuestas.pop(0)
+        if isinstance(r, BaseException):
+            raise r
+        return {"structuredContent": {"content": [{"type": "text", "text": r}], "stop_reason": "end_turn",
+                                      "model": {"provider": "proveedor-falso", "model": "lee-imagenes"}}}
+
+
+def _error_mnemo(codigo, detalles=None):
+    """Un `isError` de Mnemo como lo entrega `mnemo_cliente` (`detalle` con `code` y, si los hay, `details`)."""
+    return ErrorHerramienta("Mnemo dice algo.", mc.COD_MNEMO,
+                            detalle={"code": codigo, **({"details": detalles} if detalles is not None else {})})
+
+
+def _proveedor_con(monkeypatch, cliente, mnemo_modelo=""):
+    monkeypatch.setattr(mc, "cliente_de", lambda app: cliente)
+    return modelo_mnemo.ProveedorMnemo(SimpleNamespace(state=SimpleNamespace(db=None)),
+                                       SimpleNamespace(mnemo_modelo=mnemo_modelo))
+
+
+def _generar(p, *, vision=True):
+    mensajes = [{"role": "user", "content": [{"type": "image", "source": {"type": "base64", "media_type": "image/png",
+                                                                          "data": PNG}},
+                                             {"type": "text", "text": "Transcribe la foto."}]}]
+    eventos: list = []
+    r = asyncio.run(p.generar("Instrucciones inventadas.", mensajes, [], max_tokens=16_000, esfuerzo="medium",
+                              al_evento=eventos.append, rapido=False, vision=vision))
+    return r, eventos
+
+
+def test_argumentos_con_vision_piden_el_modelo_para_leer_imagenes():
+    base = {"max_tokens": 100, "esfuerzo": "medium"}
+    m = [{"role": "user", "content": [{"type": "text", "text": "Hola"}]}]
+    assert modelo_mnemo.argumentos("S", m, [], **base, vision=True)["model"] == {"model": "vision"}
+    # En vez de `MNEMO_MODELO`, sea cual sea
+    for modelo in ("", "principal", "ligero", "proveedor-falso/modelo-inventado"):
+        assert modelo_mnemo.argumentos("S", m, [], **base, modelo=modelo, vision=True)["model"] == {"model": "vision"}
+    # Sin `vision`, lo de siempre: el alias no es un valor de `MNEMO_MODELO`
+    assert "model" not in modelo_mnemo.argumentos("S", m, [], **base)
+    assert modelo_mnemo.argumentos("S", m, [], **base, modelo="ligero")["model"] == {"model": "ligero"}
+    assert modelo_mnemo.modelo_pedido("vision") is None
+    args = modelo_mnemo.argumentos("S", m, [], **base, vision=True)
+    args["model"]["model"] = "otro"  # cada petición lleva su copia
+    assert modelo_mnemo.MODELO_VISION == {"model": "vision"}
+
+
+def test_la_foto_va_al_modelo_para_leer_imagenes(monkeypatch):
+    cliente = _ClienteGuion('{"imagen_visible": true}')
+    r, eventos = _generar(_proveedor_con(monkeypatch, cliente, "proveedor-falso/solo-texto"))
+    (pedido,) = cliente.pedidos
+    assert pedido["model"] == {"model": "vision"} and "tools" not in pedido
+    assert pedido["messages"][0]["content"][0] == {"type": "image", "media_type": "image/png", "data": PNG}
+    assert r.modelo == "proveedor-falso/lee-imagenes" and r.contenido == [{"type": "text",
+                                                                            "text": '{"imagen_visible": true}'}]
+    assert r.sin_alias_vision is False  # Mnemo aceptó el alias
+    assert eventos == [{"tipo": "texto", "texto": '{"imagen_visible": true}'}]
+    # Las conversaciones siguen con `MNEMO_MODELO`
+    cliente = _ClienteGuion("Hola.")
+    _generar(_proveedor_con(monkeypatch, cliente, "proveedor-falso/solo-texto"), vision=False)
+    assert cliente.pedidos[0]["model"] == {"provider": "proveedor-falso", "model": "solo-texto"}
+
+
+@pytest.mark.parametrize("mnemo_modelo, esperado", [
+    ("", None), ("principal", {"model": "principal"}),
+    ("proveedor-falso/modelo-inventado", {"provider": "proveedor-falso", "model": "modelo-inventado"})])
+def test_un_mnemo_anterior_sin_el_alias_recibe_el_modelo_de_siempre(monkeypatch, caplog, mnemo_modelo, esperado):
+    """Un Mnemo que no conoce `vision` responde `INVALID_ARGUMENT` sin `reason` ni `available`: se repite una vez, en
+    la misma llamada, con lo que se pedía antes del alias, y queda una línea `info` sin contenido."""
+    cliente = _ClienteGuion(_error_mnemo("INVALID_ARGUMENT"), '{"imagen_visible": true}')
+    p = _proveedor_con(monkeypatch, cliente, mnemo_modelo)
+    with caplog.at_level("INFO", logger="panel"):
+        r, _ = _generar(p)
+    primero, segundo = cliente.pedidos
+    assert primero["model"] == {"model": "vision"} and segundo.get("model") == esperado
+    assert {k: v for k, v in primero.items() if k != "model"} == {k: v for k, v in segundo.items() if k != "model"}
+    assert r.contenido == [{"type": "text", "text": '{"imagen_visible": true}'}]
+    assert r.sin_alias_vision is True  # el lector no sugiere el plantel, que ese Mnemo no consulta
+    lineas = [x for x in caplog.records if "leer imágenes" in x.getMessage()]
+    assert len(lineas) == 1 and lineas[0].levelname == "INFO"
+    assert "Transcribe" not in caplog.text and PNG not in caplog.text
+
+
+def test_un_mnemo_anterior_que_vuelve_a_fallar_no_se_repite_mas(monkeypatch):
+    cliente = _ClienteGuion(_error_mnemo("INVALID_ARGUMENT"), _error_mnemo("INVALID_ARGUMENT"), "no debería llegar")
+    p = _proveedor_con(monkeypatch, cliente)
+    with pytest.raises(ErrorHerramienta) as e:
+        _generar(p)
+    assert len(cliente.pedidos) == 2 and p.explicar(e.value) == (modelo_mnemo.MENSAJE_PETICION, "llm_peticion")
+
+
+@pytest.mark.parametrize("error, codigo", [
+    (_error_mnemo("INVALID_ARGUMENT", {"reason": "no_vision"}), "mnemo_sin_vision"),
+    (_error_mnemo("UNAVAILABLE", {"reason": "vision_unavailable"}), "mnemo_sin_vision"),
+    (_error_mnemo("INVALID_ARGUMENT", {"reason": "provider_rejected"}), "mnemo_sin_vision"),
+    (_error_mnemo("INVALID_ARGUMENT", {"reason": "context_window"}), "larga"),
+    (_error_mnemo("INVALID_ARGUMENT", {"available": ["proveedor-falso/otro"]}), "mnemo_sin_modelo"),
+    (_error_mnemo("CREDITS_EXHAUSTED", {"reason": "credit"}), "mnemo_creditos"),
+    (_error_mnemo("UNAVAILABLE"), "mnemo_sin_modelo"),
+])
+def test_con_vision_los_demas_errores_no_se_repiten_aqui(monkeypatch, error, codigo):
+    """Solo el alias desconocido se repite sin el alias: `no_vision`, `vision_unavailable` y `provider_rejected` (el
+    proveedor del modelo para leer imágenes rechazó la foto: repetirla con otro modelo la mandaría a uno que puede no
+    verla, y cobraría) llegan al lector con su código (y ninguno lo repite `reintento`); los demás, como siempre."""
+    cliente = _ClienteGuion(error, "no debería llegar")
+    p = _proveedor_con(monkeypatch, cliente)
+    with pytest.raises(ErrorHerramienta) as e:
+        _generar(p)
+    assert len(cliente.pedidos) == 1 and p.explicar(e.value)[1] == codigo
+    if codigo == "mnemo_sin_vision":
+        assert p.reintento(e.value, 0) is None
+
+
+def test_sin_vision_un_invalid_argument_no_se_repite(monkeypatch):
+    """Las conversaciones (sin `vision`) no cambian: un `INVALID_ARGUMENT` sin detalles no se repite."""
+    cliente = _ClienteGuion(_error_mnemo("INVALID_ARGUMENT"), "no debería llegar")
+    with pytest.raises(ErrorHerramienta):
+        _generar(_proveedor_con(monkeypatch, cliente), vision=False)
+    assert len(cliente.pedidos) == 1
+
+
+def test_los_mensajes_de_sin_vision_dicen_que_hacer_en_mnemo():
+    for m in (modelo_mnemo.MENSAJE_SIN_VISION, modelo_mnemo.MENSAJE_VISION_NO_DISPONIBLE,
+              modelo_mnemo.MENSAJE_VISION_RECHAZADA):
+        assert "Ajustes → Modelos → Plantel" in m and "«leer imágenes»" in m and "administrador" in m
+        assert len(m) <= 300 and "MNEMO_" not in m  # cabe en lo que ve el asistente; sin nombres de variables
+    # Sin saldo o con la clave rechazada: qué arreglar, como el plantel de Mnemo (`rosterBlockedMessage`)
+    assert "recargar el saldo o revisar la clave" in modelo_mnemo.MENSAJE_VISION_NO_DISPONIBLE
 
 
 # ───────────────────────────── Códigos de fin ─────────────────────────────

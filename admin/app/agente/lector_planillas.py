@@ -9,9 +9,17 @@ la foto: no depende de que el navegador siga abierto.
 
 Cómo se pide (`leer`): `proveedor.generar(sistema, [{"role": "user", "content": [imagen, texto]}], [],
 max_tokens=16000 con Mnemo (su tope) o 24000 directo, esfuerzo="medium", al_evento=<cuenta las filas que van
-llegando>, rapido=False)`, con su propio plazo (`PLAZO_S` por llamada y `PLAZO_TOTAL_S` en total, con un reintento si
-el proveedor dice que vale la pena). Con Mnemo, la imagen se valida antes con `modelo_mnemo._imagen`: Mnemo cambia por
-un texto la que no acepta y el modelo, sin imagen, podría inventar filas.
+llegando>, rapido=False, vision=True)`, con su propio plazo (`PLAZO_S` por llamada y `PLAZO_TOTAL_S` en total, con un
+reintento si el proveedor dice que vale la pena). Con Mnemo, la imagen se valida antes con `modelo_mnemo._imagen`:
+Mnemo cambia por un texto la que no acepta y el modelo, sin imagen, podría inventar filas.
+
+Qué modelo la ve (`vision=True`). Con Mnemo, el de la cuenta para leer imágenes (`{"model": "vision"}`, ver
+`modelo_mnemo.py`): el que el administrador eligió en Mnemo, en Ajustes → Modelos → Plantel, «leer imágenes», o el
+principal si Mnemo no sabe de otro; no el de la conversación (`MNEMO_MODELO`), que puede no leer imágenes. Si Mnemo
+sabe que ninguno las lee, el de leerlas no se puede usar ahora o su proveedor rechazó la foto, la lectura falla con
+`mnemo_sin_vision` y lo que hay que hacer en Mnemo; un Mnemo anterior, sin el alias, recibe el modelo de siempre (y,
+si ese no la ve, el mensaje pide actualizar Mnemo en vez de elegir un modelo en el plantel). En modo directo es el
+mismo modelo (Claude lee imágenes).
 
 Qué se pide (`INSTRUCCIONES`): una salida compacta (las columnas una vez y cada fila como un arreglo de valores), con
 `imagen_visible`, `tipo_formato`, `filas_visibles` y, por fila, `firma`, `dudosos` e `ilegibles`. Lo escrito en la
@@ -22,7 +30,8 @@ transcriben. Los políticos (tipo de persona, líder, listas) tampoco, aunque el
 columna o en las observaciones irían a la ficha como texto libre, fuera de los permisos que los protegen en el panel
 (el tipo y el «Liderado por» se marcan en la ficha, o con `marcar_tipo` y `asignar_lider`).
 
-Qué se rechaza (`interpretar`, `ErrorLectura` con su código): `sin_imagen` (el modelo no vio la foto), `sin_filas`,
+Qué se rechaza (`interpretar`, `ErrorLectura` con su código): `sin_imagen` (el modelo no vio la foto; `leer` nombra
+en el mensaje el modelo que respondió, `Respuesta.modelo`, para que el administrador vea a cuál le llegó), `sin_filas`,
 `inventadas` (más filas que las que dice ver), `documento_identidad` (la foto de una cédula: se borra la foto),
 `formato` (otro formato con `agente_planillas.otros_formatos` apagado: también se borra), `rechazo` (el modelo se negó),
 `respuesta` (no respondió en el formato pedido), `lectura_cortada` (se cortó antes de la primera fila completa) y los
@@ -98,6 +107,16 @@ MENSAJES = {
     "plazo": "El modelo tardó demasiado en leer la foto. Vuelva a intentarlo en un momento.",
     "imagen": "La foto no tiene un formato que el modelo acepte.",
 }
+# `sin_imagen` cuando se sabe qué modelo respondió (`mensaje_sin_imagen`). Con el nombre cabe en los 300 caracteres con
+# que el asistente ve el error de una planilla (`herramientas/planillas.py`)
+SIN_IMAGEN_MODELO = ("El modelo que respondió ({modelo}) no pudo ver la foto: no se leyó nada. Si se repite, ese "
+                     "modelo no lee imágenes: avise al administrador{pista}.")
+PISTA_MNEMO = ", que en Mnemo puede elegir uno que las lea en Ajustes → Modelos → Plantel, «leer imágenes»"
+# Con un Mnemo anterior, que no conoce el alias `vision` (`Respuesta.sin_alias_vision`): la foto fue al modelo de
+# siempre, y elegir uno en el plantel no lo cambia
+PISTA_MNEMO_ANTERIOR = (", que debe actualizar Mnemo: esta versión no le pasa la foto al modelo elegido para leer "
+                        "imágenes")
+MODELO_MAX = 64          # el nombre del modelo en ese mensaje
 
 INSTRUCCIONES = """Eres un transcriptor de planillas en papel del panel de datos de habitantes de Yondó (Antioquia, \
 Colombia). Recibes UNA foto y devuelves lo escrito en ella como UN objeto JSON. No conversas, no explicas y no haces \
@@ -445,6 +464,19 @@ def max_tokens_de(proveedor: Any) -> int:
     return MAX_TOKENS_MNEMO if getattr(proveedor, "clave", None) == MNEMO else MAX_TOKENS_DIRECTO
 
 
+def mensaje_sin_imagen(modelo: Any, clave: str | None = None, sin_alias: bool = False) -> str:
+    """El mensaje de `sin_imagen` con el modelo que respondió (`Respuesta.modelo`, en una línea y recortado), para que
+    el administrador vea a cuál le llegó la foto; con Mnemo (`clave`), además dónde se elige el que lee imágenes, salvo
+    con un Mnemo anterior que no conoce el alias (`sin_alias`, de `Respuesta.sin_alias_vision`): ese no consulta lo
+    elegido, y lo que sirve es actualizarlo. Sin modelo conocido (vacío, o solo «mnemo» cuando Mnemo no lo dijo), el
+    de siempre."""
+    nombre, _ = una_linea(modelo, MODELO_MAX)
+    if nombre is None or nombre == MNEMO:
+        return MENSAJES["sin_imagen"]
+    pista = "" if clave != MNEMO else PISTA_MNEMO_ANTERIOR if sin_alias else PISTA_MNEMO
+    return SIN_IMAGEN_MODELO.format(modelo=nombre, pista=pista)
+
+
 async def leer(proveedor: Any, imagen: bytes, media_type: str, *, formato: str = "planilla_campo",
                otros_formatos: bool = False, desde_fila: int | None = None,
                progreso: Callable[[int], None] | None = None, plazo_s: float = PLAZO_S,
@@ -464,8 +496,9 @@ async def leer(proveedor: Any, imagen: bytes, media_type: str, *, formato: str =
         queda = hasta - time.monotonic()
         try:
             async with asyncio.timeout(max(1.0, min(plazo_s, queda))):
+                # `vision`: con Mnemo, el modelo de la cuenta para leer imágenes (no el de la conversación)
                 r = await proveedor.generar(sistema, mensajes, [], max_tokens=tope, esfuerzo="medium",
-                                            al_evento=_contador(progreso), rapido=False)
+                                            al_evento=_contador(progreso), rapido=False, vision=True)
             break
         except asyncio.CancelledError:
             raise
@@ -490,6 +523,9 @@ async def leer(proveedor: Any, imagen: bytes, media_type: str, *, formato: str =
     try:
         lectura = interpretar(texto, r.fin, otros_formatos=otros_formatos, desde_fila=desde_fila)
     except ErrorLectura as e:
+        if e.codigo == "sin_imagen":  # con el modelo que respondió: el administrador ve a cuál le llegó la foto
+            raise ErrorLectura("sin_imagen", mensaje_sin_imagen(r.modelo, getattr(proveedor, "clave", None),
+                                                                r.sin_alias_vision), uso=uso) from None
         e.uso = uso
         raise
     lectura.uso, lectura.modelo = uso, r.modelo
