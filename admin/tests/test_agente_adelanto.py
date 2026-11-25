@@ -218,7 +218,8 @@ class ProveedorFalso:
         self.llamadas: list[dict] = []
         self.cancelada = False
 
-    async def generar(self, sistema_, mensajes, herramientas, *, max_tokens, esfuerzo, al_evento, rapido=False):
+    async def generar(self, sistema_, mensajes, herramientas, *, max_tokens, esfuerzo, al_evento, rapido=False,
+                      vision=False):
         self.llamadas.append({"sistema": sistema_, "mensajes": mensajes, "herramientas": herramientas,
                               "max_tokens": max_tokens, "esfuerzo": esfuerzo, "rapido": rapido})
         try:

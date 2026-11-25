@@ -49,7 +49,8 @@ class Redactor:
         self.fin: float | None = None
         self.cancelado = False
 
-    async def generar(self, sistema, mensajes, herramientas, *, max_tokens, esfuerzo, al_evento, rapido=False):
+    async def generar(self, sistema, mensajes, herramientas, *, max_tokens, esfuerzo, al_evento, rapido=False,
+                      vision=False):
         self.pedidos.append({"sistema": sistema, "mensajes": mensajes, "herramientas": herramientas,
                              "max_tokens": max_tokens, "rapido": rapido})
         try:

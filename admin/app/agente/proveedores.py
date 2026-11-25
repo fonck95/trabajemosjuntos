@@ -17,13 +17,16 @@ Interfaz:
 
 * `Proveedor` — `clave` («mnemo» | «anthropic», la que se guarda), `modelo` (el que se pide, para la conversación),
   `max_tokens`, `tope_imagenes` (base64 de las imágenes de los resultados de una ronda) y:
-  - `async generar(sistema, mensajes, herramientas, *, max_tokens, esfuerzo, al_evento, rapido=False) -> Respuesta`:
-    una ronda. `sistema` es el texto congelado de la conversación, `mensajes` el historial guardado tal cual (cada
-    proveedor arma su forma de envío) y `herramientas` las definiciones congeladas. Mientras llega, llama
-    `al_evento(ev)` con `{"tipo": "texto" | "progreso" | "texto_ronda", "texto"}`, `{"tipo": "aviso", "texto",
-    "nivel"}` o `{"tipo": "herramienta", "id", "nombre"}` (un `tool_use` que empieza: el bucle le pone la etiqueta y lo
-    anuncia). Con `rapido` es la respuesta inmediata del turno (`adelanto.py`): una petición corta, sin herramientas
-    ni razonamiento (o el mínimo, si el modelo no deja apagarlo), que no se guarda ni se reenvía.
+  - `async generar(sistema, mensajes, herramientas, *, max_tokens, esfuerzo, al_evento, rapido=False,
+    vision=False) -> Respuesta`: una ronda. `sistema` es el texto congelado de la conversación, `mensajes` el
+    historial guardado tal cual (cada proveedor arma su forma de envío) y `herramientas` las definiciones congeladas.
+    Mientras llega, llama `al_evento(ev)` con `{"tipo": "texto" | "progreso" | "texto_ronda", "texto"}`, `{"tipo":
+    "aviso", "texto", "nivel"}` o `{"tipo": "herramienta", "id", "nombre"}` (un `tool_use` que empieza: el bucle le pone
+    la etiqueta y lo anuncia). Con `rapido` es la respuesta inmediata del turno (`adelanto.py`): una petición corta, sin
+    herramientas ni razonamiento (o el mínimo, si el modelo no deja apagarlo), que no se guarda ni se reenvía. Con
+    `vision` la petición es para leer una imagen (solo la lectura de una planilla, `lector_planillas.py`): con Mnemo se
+    le pide el modelo de la cuenta para leer imágenes (el alias `vision`, ver `modelo_mnemo.py`) en vez del de la
+    conversación; en modo directo no cambia nada (los modelos Claude leen imágenes). Las conversaciones no lo usan.
   - `reintento(e, intento) -> float | None`: los segundos que hay que esperar antes de repetir la ronda tras el fallo
     `e` (`intento`: las repeticiones que ya se hicieron), o None si no vale la pena repetirla.
   - `explicar(e) -> (mensaje, codigo)`: el fallo para la persona (sin datos ni nombres de variables) y su código.
@@ -71,7 +74,10 @@ class Respuesta:
     * `modelo`: el que respondió (con Mnemo, «proveedor/modelo»).
     * `detalles`: `stop_details` (la categoría de un rechazo), si los hay.
     * `transformaciones`: lo que el proveedor cambió de la entrada (Anthropic), para auditoría.
-    * `respaldos`: los avisos de cambio de modelo a mitad de la respuesta, para el historial."""
+    * `respaldos`: los avisos de cambio de modelo a mitad de la respuesta, para el historial.
+    * `sin_alias_vision`: con `vision`, el Mnemo conectado no aceptó el alias (una versión anterior) y respondió el
+      modelo de siempre (`modelo_mnemo.py`): lo elegido en su plantel para leer imágenes no cambia a quién le llega la
+      foto, y el lector no lo sugiere (`lector_planillas.mensaje_sin_imagen`)."""
     contenido: list[dict]
     fin: str
     modelo: str
@@ -79,6 +85,7 @@ class Respuesta:
     detalles: dict | None = None
     transformaciones: list[dict] = field(default_factory=list)
     respaldos: list[str] = field(default_factory=list)
+    sin_alias_vision: bool = False
 
 
 class ErrorProveedor(Exception):
@@ -97,7 +104,8 @@ class Proveedor(Protocol):
     tope_imagenes: int
 
     async def generar(self, sistema: str, mensajes: list[dict], herramientas: list[dict], *, max_tokens: int,
-                      esfuerzo: str, al_evento: Callable[[Evento], None], rapido: bool = False) -> Respuesta: ...
+                      esfuerzo: str, al_evento: Callable[[Evento], None], rapido: bool = False,
+                      vision: bool = False) -> Respuesta: ...
 
     def reintento(self, e: BaseException, intento: int) -> float | None: ...
 

@@ -20,6 +20,9 @@ el cliente, la forma de cada petición, el flujo de cada ronda y las reglas para
   con el esfuerzo `low` que apagado, que puede colar marcas de razonamiento en el texto que se dice) o que no está en
   `CAPACIDADES` (los actuales piensan por defecto) recibe además `MARGEN_PENSAR_RAPIDO` tokens: si no, lo que razone se
   comería la frase.
+* `vision` (la lectura de la foto de una planilla, `lector_planillas.py`) no cambia nada: va al modelo de
+  `AGENTE_MODELO`, y los modelos Claude leen imágenes. Con Mnemo, en cambio, pide el modelo de la cuenta para leer
+  imágenes (`modelo_mnemo.py`).
 """
 from __future__ import annotations
 
@@ -272,7 +275,9 @@ class ProveedorAnthropic:
         return f"ProveedorAnthropic(modelo={self.modelo!r})"
 
     async def generar(self, sistema: str, mensajes: list[dict], herramientas: list[dict], *, max_tokens: int,
-                      esfuerzo: str, al_evento: Callable[[Evento], None], rapido: bool = False) -> Respuesta:
+                      esfuerzo: str, al_evento: Callable[[Evento], None], rapido: bool = False,
+                      vision: bool = False) -> Respuesta:
+        # `vision` no cambia nada aquí: el modelo de `AGENTE_MODELO` lee imágenes (ver el docstring del módulo)
         if rapido:  # la respuesta inmediata: sin herramientas ni caché (sus mensajes cambian en cada turno)
             # (salvo un `system` largo, que se repite: el del plan en flujo, con el guion de un capítulo)
             kw: dict[str, Any] = {"system": sistema_para_peticion(sistema) if len(sistema) >= SISTEMA_CACHEABLE

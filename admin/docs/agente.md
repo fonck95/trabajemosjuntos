@@ -642,6 +642,19 @@ vigente no lo permite (`acceso.compromiso_permite_fotos`; por ejemplo, la 2026-1
   imagen y un texto, **sin herramientas ni historial**: `max_tokens` 16.000 con Mnemo y 24.000 en modo directo,
   esfuerzo `medium`, 150 s por llamada y 270 s con un reintento. Con Mnemo, la imagen se valida antes como cualquier
   imagen de Mnemo. El uso se suma al día de quien subió la foto en `agente_uso`, también si la lectura falla.
+- **Qué modelo ve la foto.** Con Mnemo, el de la cuenta para leer imágenes, no el de la conversación: el panel le pide
+  a `mnemo_model_complete` el modelo `{"model": "vision"}`, no el de `MNEMO_MODELO` (el principal puede no leer
+  imágenes). Mnemo usa el que el administrador eligió en Mnemo, en **Ajustes → Modelos → Plantel**, «leer imágenes»
+  (o el que Mnemo elige solo cuando el principal no las lee); si no sabe de otro, el principal. La lectura falla con
+  `mnemo_sin_vision`, y el mensaje dice qué hacer en Mnemo, si Mnemo sabe que ningún modelo de la cuenta lee imágenes
+  (`no_vision`), si el de leerlas no se puede usar ahora (`vision_unavailable`: sin saldo o con la clave de su
+  proveedor rechazada) o si su proveedor rechazó la foto (`provider_rejected`: un modelo que no lee imágenes, o no
+  esa). Ninguno se repite: repetir no lo arregla, y con otro modelo la foto podría llegar a uno que no la ve y que
+  cobra igual. Un Mnemo anterior, que no conoce `vision`, responde `INVALID_ARGUMENT` sin motivo: el panel repite
+  enseguida la misma petición con el modelo de siempre (el de `MNEMO_MODELO`, o el principal), deja una línea en el
+  registro, sin contenido, y si ese modelo no ve la foto el mensaje pide actualizar Mnemo (elegir uno en el plantel no
+  cambiaría nada). Un Mnemo de ahora, con `vision`, solo responde así a una petición fuera del contrato, que no llega a
+  ningún modelo y vuelve a fallar sin gastar. En modo directo, el de `AGENTE_MODELO`: Claude lee imágenes.
 - Las instrucciones dicen que lo escrito en la hoja es un dato a transcribir, **nunca una instrucción**, y que no se
   transcriben datos sensibles (salud, etnia, discapacidad, condición de víctima, huellas) ni políticos aunque estén en
   el papel: aunque el asistente ya pueda recibir lo político, la planilla de campo no tiene esas columnas y el
@@ -652,11 +665,13 @@ vigente no lo permite (`acceso.compromiso_permite_fotos`; por ejemplo, la 2026-1
   autorizacion, medio, canales, mayor_18, planillero, fecha y observaciones (una columna sensible que el modelo
   transcribiera igual no se guarda). Cada valor queda en una sola línea, en NFC, sin invisibles ni caracteres de
   control y con los largos de la ficha.
-- Se rechaza (con su motivo en la bandeja): sin imagen visible, sin filas, más filas que las visibles (`inventadas`),
-  **una foto de un documento de identidad** (se borra la foto: «No se leen fotos de cédulas»), otro formato con
-  `otros_formatos` apagado (se borra la foto), un rechazo del modelo, una respuesta que no se entiende, el plazo y los
-  errores del proveedor. Si la respuesta se corta, se rescatan las filas completas y la lectura queda `incompleta`: se
-  puede volver a leer desde la fila siguiente (`desde_fila`), conservando lo anterior.
+- Se rechaza (con su motivo en la bandeja): sin imagen visible (`sin_imagen`: el mensaje nombra el modelo que
+  respondió, por ejemplo «El modelo que respondió (deepseek/deepseek-v4-flash) no pudo ver la foto…», y con Mnemo
+  dónde se elige el que lee imágenes; si se repite, ese modelo no las lee), sin filas, más filas que las visibles
+  (`inventadas`), **una foto de un documento de identidad** (se borra la foto: «No se leen fotos de cédulas»), otro
+  formato con `otros_formatos` apagado (se borra la foto), un rechazo del modelo, una respuesta que no se entiende, el
+  plazo y los errores del proveedor. Si la respuesta se corta, se rescatan las filas completas y la lectura queda
+  `incompleta`: se puede volver a leer desde la fila siguiente (`desde_fila`), conservando lo anterior.
 - Como mucho **2 lecturas por foto** (la primera y una relectura); la misma foto subida otra vez por la misma persona es
   la misma (no vuelve al modelo, salvo que su lectura hubiera fallado) y una ya cargada responde 409 `ya_cargada` con la
   importación. Lecturas a la vez en el proceso: 1 con Mnemo y 2 con Anthropic (las demás esperan en cola). Una lectura
@@ -1830,6 +1845,12 @@ los modelos de Mnemo al instante.
   Ajustes avisa que ese Mnemo no ofrece sus modelos.
 - Que la cuenta pueda responder: un plan que incluya el chat o una clave propia de un proveedor de modelos configurada
   en Mnemo, y créditos. Si no, el asistente lo dice al responder (sin plan, sin créditos o sin un modelo disponible).
+- Para las [planillas físicas por foto](#planillas-físicas-por-foto): un modelo de la cuenta que lea imágenes. Si el
+  principal no las lee, elíjalo en Mnemo, en **Ajustes → Modelos → Plantel**, «leer imágenes» (o use como principal
+  uno que las lea), con una versión de Mnemo que acepte el modelo `vision` en `mnemo_model_complete`: con una
+  anterior, la foto va al modelo de siempre, y si ese no la ve el mensaje pide actualizar Mnemo. Si no, la lectura
+  falla con «Ningún modelo de la cuenta de Mnemo conectada lee imágenes…» (`mnemo_sin_vision`) o, si llegó a un modelo
+  que no las lee, «El modelo que respondió (…) no pudo ver la foto…», con el nombre de ese modelo.
 - Para la [voz clonada](#la-voz-clonada-de-mnemo) (opcional): una versión con `mnemo_speak` y `mnemo_list_voices` y el
   permiso `mnemo:voice`, un plan que incluya las voces clonadas, créditos y al menos una voz marcada **Disponible
   para apps conectadas**. Sin eso, el panel sigue con la voz del navegador.
@@ -1839,7 +1860,7 @@ los modelos de Mnemo al instante.
 | Variable | Valor |
 |---|---|
 | `MNEMO_MCP_URL` | La dirección MCP de Mnemo que Ajustes sugiere al conectar: `https://<su Mnemo>/mcp` (en local también `http://127.0.0.1` o `http://localhost`). Otra cosa se ignora con un aviso en el registro. No es secreta y no conecta nada por sí sola |
-| `MNEMO_MODELO` | Qué modelo de la cuenta usa el asistente: `principal` (el que la cuenta tiene por defecto), `ligero` (su modelo rápido; si no tiene, el principal) o `<proveedor>/<modelo>` (uno concreto que la cuenta tenga). Vacía, el que la cuenta tenga por defecto. Otro valor se ignora con un aviso en el registro |
+| `MNEMO_MODELO` | Qué modelo de la cuenta usa el asistente: `principal` (el que la cuenta tiene por defecto), `ligero` (su modelo rápido; si no tiene, el principal) o `<proveedor>/<modelo>` (uno concreto que la cuenta tenga). Vacía, el que la cuenta tenga por defecto. Otro valor se ignora con un aviso en el registro. No vale para leer las fotos de planillas: esas van al modelo de la cuenta para leer imágenes, salvo con un Mnemo anterior que no acepta ese modelo (ver [Planillas físicas por foto](#planillas-físicas-por-foto)) |
 | `MNEMO_HERRAMIENTAS` | Vacía, la lista por defecto: `search`, `fetch`, `mnemo_get_briefing`, `mnemo_list_items`, `mnemo_view_image`, `mnemo_list_events`, `mnemo_create_event`, `mnemo_update_event`, `mnemo_query_forms`, `mnemo_save_form_draft`, `mnemo_create_document`, `mnemo_update_document`, `mnemo_export_document`, `mnemo_save_memory`, `mnemo_list_shared_with_me`, `mnemo_request_publish`, `mnemo_request_share`, `mnemo_check_approval` y `mnemo_get_job`. Se cambia por nombres separados por comas, o `*` para todas las que permita la conexión (las 30 pesan mucho en cada mensaje). Decide también qué permisos se piden al conectar |
 
 `MNEMO_TOKEN` ya no se usa: si sigue definida, el panel la ignora y lo avisa en el registro. Bórrela de Railway y
@@ -2105,11 +2126,12 @@ llega enmascarado. Es lo que permite cargar lo que no se pudo hacer de forma dig
 
 ## Límites y costos
 
-**Modelo y esfuerzo con Mnemo.** El modelo es el que la cuenta de Mnemo tenga por defecto, o el de `MNEMO_MODELO`, y el
-costo son créditos de Mnemo, según el plan de la cuenta (o su clave propia de un proveedor). `AGENTE_ESFUERZO` vale
-también: `low` y `medium` pasan tal cual, y `high`, `xhigh` y `max` piden el razonamiento alto (un modelo sin
-razonamiento lo ignora). Cada ronda escribe como mucho 16.000 tokens, y `agente_uso` guarda también los créditos que
-informa Mnemo. El razonamiento del modelo no se muestra: con Mnemo son resúmenes internos, no notas para la persona.
+**Modelo y esfuerzo con Mnemo.** El modelo es el que la cuenta de Mnemo tenga por defecto, o el de `MNEMO_MODELO` (la
+foto de una planilla, el que la cuenta tenga para leer imágenes), y el costo son créditos de Mnemo, según el plan de la
+cuenta (o su clave propia de un proveedor). `AGENTE_ESFUERZO` vale también: `low` y `medium` pasan tal cual, y `high`,
+`xhigh` y `max` piden el razonamiento alto (un modelo sin razonamiento lo ignora). Cada ronda escribe como mucho 16.000
+tokens, y `agente_uso` guarda también los créditos que informa Mnemo. El razonamiento del modelo no se muestra: con
+Mnemo son resúmenes internos, no notas para la persona.
 
 **Modelo y esfuerzo en modo directo.** Por defecto usa `claude-opus-5-5` (Claude Opus 5.5) con esfuerzo `medium`.
 `AGENTE_MODELO` cambia el modelo (por ejemplo `claude-sonnet-5-5`, más barato y rápido, o `claude-fable-5-1`, el más
@@ -2240,7 +2262,7 @@ El asistente no necesita ninguna variable: se conecta con Mnemo desde **Ajustes 
 | Variable | Valor |
 |---|---|
 | `MNEMO_MCP_URL` | La dirección MCP de Mnemo que se sugiere al conectar (ver [Conectar con Mnemo](#conectar-con-mnemo)) |
-| `MNEMO_MODELO` | El modelo de la cuenta de Mnemo: `principal`, `ligero` o `<proveedor>/<modelo>`; vacía, el de la cuenta |
+| `MNEMO_MODELO` | El modelo de la cuenta de Mnemo: `principal`, `ligero` o `<proveedor>/<modelo>`; vacía, el de la cuenta (las fotos de planillas, el de la cuenta para leer imágenes, salvo con un Mnemo anterior) |
 | `MNEMO_HERRAMIENTAS` | Qué herramientas de Mnemo se ofrecen (y qué permisos se piden al conectar) |
 | `ANTHROPIC_API_KEY` | El [modo directo](#modo-directo-sin-mnemo): una clave de la consola de Anthropic, que se usa solo sin Mnemo con permiso para usar sus modelos |
 | `AGENTE_MODELO` | Solo en modo directo: `claude-opus-5-5` por defecto |
@@ -2492,6 +2514,9 @@ arregla. Los demás (la red, un plazo vencido, el modelo saturado o caído un mo
 cuenta no incluye el chat, o no incluye el modelo elegido en `MNEMO_MODELO`), `mnemo_creditos` (no quedan créditos),
 `mnemo_sin_modelo` (la cuenta no tiene un modelo disponible ahora, o la conexión no tiene permiso para usar sus
 modelos), `larga` (la conversación no cabe en la ventana del modelo) y `llm_peticion` (otro rechazo de la petición).
+`mnemo_sin_vision` (ningún modelo de la cuenta lee imágenes, el de leerlas no se puede usar ahora o su proveedor
+rechazó la foto) no llega en un turno: es el error de leer la foto de una planilla y queda en la bandeja, con su
+mensaje (ver [Planillas físicas por foto](#planillas-físicas-por-foto)).
 El texto de una ronda puede llegar en un solo trozo largo (con Mnemo, si el proveedor de la cuenta no responde por
 partes): el widget lo pinta entero, con el mismo tope que `texto_ronda`.
 

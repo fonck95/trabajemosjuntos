@@ -130,10 +130,11 @@ class ProveedorFalso:
     def agregar(self, *respuestas) -> None:
         self.respuestas.extend(respuestas)
 
-    async def generar(self, sistema, mensajes, herramientas, *, max_tokens, esfuerzo, al_evento, rapido=False):
+    async def generar(self, sistema, mensajes, herramientas, *, max_tokens, esfuerzo, al_evento, rapido=False,
+                      vision=False):
         self.llamadas.append({"sistema": sistema, "mensajes": mensajes, "herramientas": herramientas,
                               "max_tokens": max_tokens, "esfuerzo": esfuerzo, "al_evento": al_evento,
-                              "rapido": rapido})
+                              "rapido": rapido, "vision": vision})
         if not self.respuestas:
             raise AssertionError("ProveedorFalso: no quedan respuestas")
         r = self.respuestas.pop(0)
