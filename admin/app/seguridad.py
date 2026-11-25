@@ -58,6 +58,10 @@ LIMITE_JSON = 256 * 1024  # el JSON más grande del panel (una ficha o una reuni
 # graba en audio/mp4, que pesa más). La ruta vuelve a contarlo al leerlo
 LIMITE_AUDIO = 2 * 1024 * 1024 + 4096
 RUTA_AUDIO = "/api/agente/transcribir"
+# La foto de una planilla física (`app/planillas.py`, MAX_BYTES = 1,5 MB: el navegador la reduce antes). La ruta vuelve
+# a contarla al leerla y responde 413 `pesada` con su mensaje; esto es el techo de la guardia, con un margen
+LIMITE_FOTO = 1_500_000 + 64 * 1024
+RUTA_FOTOS = "/api/planillas/fotos"
 # El servidor MCP de la presentación (app/api/mcp.py) tampoco usa la sesión: lo autentica su clave, en la ruta
 RUTAS_SIN_SESION = {"/api/login", "/api/yo", "/api/mcp"}
 # Con la clave temporal sin cambiar o el compromiso sin aceptar, un usuario solo llega a estas rutas (3.5)
@@ -273,7 +277,9 @@ def _borrar_cookie_vieja(request: Request, response: Response) -> None:
 def crear_sesion(db: Database, cfg, response: Response, usuario: str, request: Request, uid: int = 0,
                  rol: str = "admin", version=None, horas: float | None = None) -> str:
     """Abre una sesión y deja la cookie. La de un usuario (`uid` > 0) dura como mucho `horas` y, al abrirla, se cierran
-    sus sesiones más viejas por encima de `ajustes.sesion.max_por_usuario`."""
+    sus sesiones más viejas por encima de `ajustes.sesion.max_por_usuario`. Las internas (con `via`: las de un agente
+    externo por MCP, `app/sesion_interna.py`) ni cuentan ni se cierran: duran minutos y no son de un navegador; si
+    contaran, una llamada en curso le cerraría a la persona la sesión de su teléfono."""
     token = secrets.token_urlsafe(32)
     csrf = secrets.token_urlsafe(24)
     ahora = datetime.now(timezone.utc)
@@ -288,7 +294,8 @@ def crear_sesion(db: Database, cfg, response: Response, usuario: str, request: R
                             "agente": (request.headers.get("user-agent") or "")[:200]})
     if uid:
         maximo = max(1, int(modelo.leer_ajustes(db)["sesion"].get("max_por_usuario") or 2))
-        viejas = [x["_id"] for x in db.sesiones.find({"uid": uid}, {"_id": 1}).sort([("creada", -1), ("_id", 1)]).skip(maximo)]
+        viejas = [x["_id"] for x in db.sesiones.find({"uid": uid, "via": {"$exists": False}}, {"_id": 1})
+                  .sort([("creada", -1), ("_id", 1)]).skip(maximo)]
         if viejas:
             db.sesiones.delete_many({"_id": {"$in": viejas}})
     _borrar_cookie_vieja(request, response)
@@ -516,7 +523,7 @@ class GuardiaApi:
         app, ruta = scope["app"], ruta_interna(scope)
         # Importar acepta hasta 6 Excel de max_subida_mb cada uno; el resto es JSON pequeño
         limite = (app.state.cfg.max_subida_mb * 6 + 1) * MB if ruta == "/api/importar" else \
-            LIMITE_AUDIO if ruta == RUTA_AUDIO else LIMITE_JSON
+            LIMITE_AUDIO if ruta == RUTA_AUDIO else LIMITE_FOTO if ruta == RUTA_FOTOS else LIMITE_JSON
         largo = Headers(scope=scope).get("content-length", "")
         if largo.isdigit() and int(largo) > limite:
             return await JSONResponse({"detail": "La petición es demasiado grande"}, 413)(scope, receive, send)

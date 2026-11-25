@@ -222,6 +222,9 @@ body:has(#franja-llamada) .agente-panel {
 .agente-fila textarea { flex: 1; min-width: 0; resize: none; border: 1px solid var(--line); background: var(--surface);
   border-radius: 12px; padding: 10px 12px; min-height: 44px; max-height: 160px; line-height: 1.4; font-size: 15px;
   overflow-y: auto; }
+/* Con la cámara y el micrófono al lado, en un celular angosto la indicación no cabe: un renglón, con puntos
+   suspensivos */
+.agente-fila textarea::placeholder { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .agente-fila textarea:focus { outline: none; border-color: var(--ink);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 10%, transparent); }
 .btn.agente-enviar { width: 44px; height: 44px; padding: 0; border-radius: 12px; flex: none; }
@@ -261,6 +264,76 @@ body:has(#franja-llamada) .agente-panel {
 .agente-pie .poco { color: var(--accent-text); font-weight: 650; }
 .agente-pie span:empty { display: none; }
 @media (pointer: coarse) { .agente-ayuda { display: none; } }
+
+/* ───────── Fotos de planillas físicas (agente.js): el botón de la cámara y la bandeja del cuadro de escribir ─────────
+   El botón, a la izquierda del cuadro, con cuántas fotos lleva el mensaje. La bandeja, encima: el aviso fijo (qué se
+   fotografía y qué no), «Tomar foto» y «Elegir de la galería», y cada foto con su miniatura (un canvas), su estado, sus
+   avisos y sus botones (reintentar, girar, quitar). */
+.btn.agente-adjuntar { position: relative; width: 44px; height: 44px; padding: 0; border-radius: 12px; flex: none; }
+.btn.agente-adjuntar svg { width: 20px; height: 20px; }
+.btn.agente-adjuntar[aria-expanded="true"] { background: var(--sunken); }
+.agente-adjuntar-n { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 750; line-height: 18px;
+  text-align: center; font-variant-numeric: tabular-nums; }
+.agente-adjuntar-n[hidden] { display: none; }
+.agente-fotos { margin: 0 0 8px; padding: 8px; border: 1px solid var(--line-soft); border-radius: 12px;
+  background: var(--raised);
+  display: flex; flex-direction: column; gap: 8px; max-height: min(46vh, 340px); max-height: min(46dvh, 340px);
+  overflow-y: auto; overscroll-behavior: contain; }
+.agente-fotos[hidden] { display: none; }
+.agente-fotos-aviso { margin: 0; display: flex; gap: 7px; align-items: flex-start; font-size: 12.5px; line-height: 1.4;
+  color: var(--ink-2); background: color-mix(in srgb, var(--warn) 16%, transparent); border-radius: 8px;
+  padding: 6px 9px; }
+.agente-fotos-aviso svg { width: 15px; height: 15px; flex: none; margin-top: 1px;
+  color: color-mix(in srgb, var(--warn) 60%, var(--ink)); }
+.agente-fotos-botones { display: flex; flex-wrap: wrap; gap: 6px; }
+.agente-fotos-botones .btn { display: inline-flex; align-items: center; gap: 6px; }
+.agente-fotos-botones .btn svg { width: 16px; height: 16px; flex: none; }
+.agente-fotos-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.agente-fotos-lista:empty { display: none; }
+.agente-foto { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 9px; align-items: center;
+  padding: 5px 5px 5px 6px; border-radius: 10px; border: 1px solid var(--line-soft); background: var(--surface); }
+.agente-foto[data-estado="error"] { border-color: color-mix(in srgb, var(--crit) 45%, transparent); }
+.agente-foto-mini { display: block; width: 54px; height: 72px; border-radius: 6px; background: var(--sunken); }
+.agente-foto-texto { min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 12.5px;
+  line-height: 1.35; }
+.agente-foto-texto b { font-size: 13px; }
+.agente-foto-estado { display: flex; align-items: center; gap: 6px; color: var(--ink-2); overflow-wrap: anywhere; }
+.agente-foto-estado .agente-giro { flex: none; }
+.agente-foto[data-estado="lista"] .agente-foto-estado { color: var(--ok-text); }
+.agente-foto[data-estado="error"] .agente-foto-estado { color: var(--crit); }
+.agente-foto-avisos { color: color-mix(in srgb, var(--warn) 60%, var(--ink)); overflow-wrap: anywhere; }
+.agente-foto-avisos[hidden] { display: none; }
+.agente-foto-botones { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 2px; }
+.agente-foto-botones .btn.agente-icono { width: 34px; height: 34px; }
+.agente-foto-botones .btn.agente-icono svg { width: 16px; height: 16px; }
+.agente-foto-reintentar[hidden] { display: none; }
+.agente-fotos-estado { margin: 0; font-size: 12px; color: var(--ink-2); }
+.agente-fotos-estado:empty { display: none; }
+/* En el mensaje enviado: cuántas fotos llevaba (y, en vivo, sus miniaturas) */
+.agente-fotos-chip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 650;
+  color: var(--ink-2); }
+.agente-msj.agente-persona .agente-fotos-chip + p { margin-top: 4px; }
+.agente-fotos-chip svg { width: 16px; height: 16px; flex: none; }
+.agente-fotos-chip canvas { width: 27px; height: 36px; border-radius: 4px; background: var(--surface); }
+/* En un celular angosto los botones de cada foto bajan debajo de su texto */
+@media (max-width: 360px) {
+  .agente-foto { grid-template-columns: 54px minmax(0, 1fr); }
+  .agente-foto-botones { grid-column: 1 / -1; }
+}
+
+/* ───────── Gráficos de la analítica (agente-graficos.js, con graficos.js: barras, columnas, apilada, serie) ─── */
+.agente-grafico { margin: 0; padding: 10px 12px 12px; border: 1px solid var(--line-soft); border-radius: 12px;
+  background: var(--surface); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.agente-grafico figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 13.5px;
+  line-height: 1.35; }
+.agente-grafico figcaption b { font-weight: 750; overflow-wrap: anywhere; }
+.agente-grafico figcaption small { color: var(--muted); font-size: 12px; }
+.agente-grafico-cuerpo { min-width: 0; }
+.agente-grafico .lista-barras { gap: 7px; }
+.agente-grafico .lista-barras .f { grid-template-columns: minmax(72px, 38%) 1fr auto; gap: 8px; font-size: 13px; }
+.agente-grafico .leyenda { margin-top: 8px; font-size: 12px; }
+.agente-grafico-nota { margin: 0; font-size: 12px; color: var(--muted); }
 
 /* ───────── Conversaciones anteriores ───────── */
 .agente-historial { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 12px 14px 14px; display: flex;

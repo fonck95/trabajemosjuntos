@@ -401,7 +401,8 @@ def _turno(herramientas):
         t.guardado.append((rol, contenido))
     t._guardar = guardar
     t._frases = lambda *a: None
-    t._contexto = lambda tid: SimpleNamespace(tool_use_id=tid)
+    t._contexto = lambda tid, h=None: SimpleNamespace(tool_use_id=tid)
+    t.graficos = {}
     return t
 
 

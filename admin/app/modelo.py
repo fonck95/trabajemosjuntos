@@ -192,7 +192,9 @@ AJUSTES_POR_DEFECTO: dict[str, Any] = {
     "horario": {"semana": ["07:00", "19:00"], "sabado": ["08:00", "15:00"], "domingo": False},
     "sensibles_activos": False, "eleccion_vigente": "2026-presidencial",
     "aviso_privacidad": {"version": "2026-11-v1", "responsable": "", "contacto": "", "canal_derechos": "", "texto": ""},
-    "vigencia_base": None, "compromiso_version": "2026-11-v1",
+    # El compromiso de confidencialidad vigente (`acceso.COMPROMISOS`): la 2026-11-v2 deja fotografiar las planillas
+    # físicas solo para subirlas por el panel; con la 2026-11-v1 no se suben fotos (`acceso.compromiso_permite_fotos`)
+    "vigencia_base": None, "compromiso_version": "2026-11-v2",
     "presupuesto_diario": {"planillero": 1000, "consultor": 300},
     "sesion": {"horas_max": 10, "inactividad_min": 60, "max_por_usuario": 2},
     "tope_cedulas_dictadas": 20,
@@ -219,6 +221,21 @@ AJUSTES_POR_DEFECTO: dict[str, Any] = {
     # la presentación, adelanta en una o dos frases la idea general (una llamada corta más al modelo por pregunta). Un
     # booleano aparte, de un nivel: solo lo cambia el administrador (gasta del mismo modelo)
     "agente_adelanto": True,
+    # Las planillas físicas fotografiadas (docs/agente.md, «Planillas físicas por foto»): quién sube fotos al asistente
+    # para que las lea, las coteje con la base y proponga cargarlas, y cuántas horas se guardan la foto y lo leído (traen
+    # cédulas y teléfonos completos de habitantes). Solo el administrador y los coordinadores (`importar`): nunca
+    # planilleros ni consultores. De un nivel y de permisos, como `agente`: solo lo cambia el administrador
+    "agente_planillas": {"roles": ["admin", "coordinador"], "retencion_horas": 24, "otros_formatos": False},
+    # Los datos por MCP (docs/agente.md, «Pantalla en off y agentes por MCP»): qué roles pueden crear claves que leen
+    # datos, piden análisis o proponen cambios (los cambios siempre esperan la aprobación de la persona en el panel),
+    # si se pueden proponer escrituras, cuántas llamadas por día admite cada clave y a cuántas personas distintas por
+    # día puede ver. Denegar por defecto: solo el administrador. De permisos: solo lo cambia el administrador
+    "agente_mcp": {"roles": ["admin"], "escritura": True, "llamadas_diarias": 2000, "personas_diarias": 300},
+    # Los datos políticos (tipo de persona, «Liderado por», listas, la lista de líderes con sus conteos, los filtros por
+    # ellos y las fuentes políticas de importación) en el asistente (`asistente`) y por MCP (`mcp`): cada rol recibe
+    # solo lo que el panel ya le muestra (`acceso.PERMISOS`, `proyeccion.tipo_visible`). Encendidos por defecto; la
+    # orientación política es un dato sensible (Ley 1581, art. 5): de permisos, solo lo cambia el administrador
+    "agente_politicos": {"asistente": True, "mcp": True},
 }
 
 

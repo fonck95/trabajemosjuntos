@@ -477,6 +477,41 @@ label.chip.opcion:has(input:disabled) { cursor: default; opacity: .75; }
 .mcp-copiar { display: flex; gap: 8px; align-items: flex-end; }
 .mcp-copiar .campo { flex: 1; min-width: 0; }
 @media (max-width: 640px) { .datos-mcp { grid-template-columns: 1fr; } }
+/* La clave de datos: el aviso de que los datos salen del panel, los permisos (con el motivo de los que no tiene) y los
+   cambios que propone el agente, cada uno con su tarjeta entera (los valores tal como se van a escribir) */
+.mcp-datos { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line-soft); display: grid; gap: 12px; }
+.mcp-datos h3 { font-size: 15px; margin: 0; }
+.mcp-aviso { display: grid; gap: 6px; }
+.mcp-aviso p { margin: 0; }
+.mcp-aviso code { font-family: var(--f-mono); font-size: 12.5px; }
+.mcp-alcances { border: 1px solid var(--line); border-radius: var(--r-s); padding: 10px 14px 12px; margin: 0; display: grid; gap: 8px; }
+.mcp-alcances legend { font-size: 12.5px; font-weight: 650; color: var(--muted); padding: 0 4px; }
+.mcp-alcance { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; min-height: 44px; }
+.mcp-alcance input { margin: 3px 0 0; accent-color: var(--accent); flex: none; width: 18px; height: 18px; }
+.mcp-alcance > span { display: grid; gap: 2px; }
+.mcp-alcance .sec { font-size: 12.5px; }
+.mcp-alcance.no { cursor: default; opacity: .75; }
+.mcp-propuestas { display: grid; gap: 12px; }
+.mcp-propuesta { border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 12px; background: var(--surface);
+  padding: 12px 14px; display: grid; gap: 8px; }
+.mcp-propuesta.resaltada { box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 45%, transparent); }
+.mcp-propuesta[data-estado="en_curso"] { border-left-color: var(--s1); }
+.mcp-propuesta-et { margin: 0; font-size: 11.5px; font-weight: 750; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.mcp-propuesta h4 { margin: 0; font-size: 15px; font-weight: 750; line-height: 1.3; }
+.mcp-motivo { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+.mcp-propuesta dl { display: grid; grid-template-columns: minmax(72px, max-content) minmax(0, 1fr); gap: 5px 12px; margin: 0; font-size: 13.5px; }
+.mcp-propuesta dl > div { display: contents; }
+.mcp-propuesta dt { color: var(--muted); font-weight: 650; font-size: 12.5px; }
+/* Cada valor entero y con sus espacios y saltos: lo que se aprueba es exactamente lo que se escribe */
+.mcp-propuesta dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mcp-propuesta-aviso { margin: 0; font-size: 13px; color: var(--ink-2); background: color-mix(in srgb, var(--warn) 14%, transparent);
+  border-radius: 8px; padding: 8px 10px; }
+.mcp-origen { margin: 0; font-size: 12.5px; }
+.mcp-propuesta-estado { margin: 0; font-size: 13px; font-weight: 650; }
+.mcp-propuesta .fila-botones .btn { flex: 1 1 110px; min-height: 44px; }
+.mcp-recientes summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+.mcp-recientes ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
+@media (max-width: 640px) { .mcp-propuesta dl { grid-template-columns: 1fr; gap: 2px; } .mcp-propuesta dd { margin-bottom: 6px; } }
 .sub-tarjeta { font-size: 15px; margin: 22px 0 12px; }
 .una-columna { grid-template-columns: 1fr; }
 .grupo-campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }

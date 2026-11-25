@@ -15,6 +15,17 @@
 // navegador); la respuesta sigue escrita. Vive en document.body, fuera de #raiz y de #vista: sobrevive a cada cambio
 // de vista.
 //
+// Fotos de planillas físicas (docs/agente.md, «Planillas físicas por foto»): si el estado trae `adjuntos` (el rol está
+// en `agente_planillas.roles` y hay modelo), el cuadro de escribir ofrece la cámara (input con capture="environment") y
+// la galería (con `multiple`), como mucho `max_por_mensaje` fotos. Cada foto se prepara en el navegador, de a una (la
+// memoria de un celular económico no da para varias de 12 MP a la vez): se reduce a `lado_max`, se vuelve a codificar
+// como JPEG (sin EXIF ni GPS) con `calidad`, bajándola si pasa de `max_bytes`, se avisa si es pequeña, oscura o movida,
+// se puede girar, y su miniatura se dibuja en un canvas (nunca con `.src =`). Se sube cruda a POST /api/planillas/fotos
+// (la bandeja de planillas del panel, que empieza a leerla de fondo) y el mensaje lleva sus ids en `adjuntos`.
+// «Reintentar» y «Nueva conversación» conservan las fotos (en memoria, nunca en el almacenamiento del navegador). Los
+// gráficos de la analítica (acción `grafico`, y la parte `grafico` de una herramienta al repintar) los dibuja
+// agente-graficos.js.
+//
 // Seguridad: nada de lo que escribe el modelo se pinta como HTML. Entra con textContent o como nodos de texto, y el
 // Markdown se convierte a nodos con una lista cerrada de elementos (lo demás, también «<img …>», queda como texto). Los
 // enlaces solo van a rutas del panel (las de RUTAS en app.js que el rol puede abrir) o, en otra pestaña, al origen https
@@ -95,6 +106,40 @@ const CAIDA_MNEMO = {
   clave: 'Cambió la clave del administrador del panel y la conexión guardada ya no se puede leer.',
   alterada: 'Sus datos en la base del panel no coinciden con los que se guardaron cifrados (o se guardó con una versión anterior del panel): por seguridad, dejó de usarse.',
   error: 'Mnemo respondió algo inesperado al renovarla.',
+};
+// Las fotos de planillas físicas: la bandeja del panel (app/api/planillas.py). La subida lleva la foto tal cual como
+// cuerpo (como el audio del dictado) y quitar una foto que no se llegó a mandar la borra de la bandeja (es de quien la
+// subió)
+const RUTA_FOTOS = '/api/planillas/fotos';
+const rutaFoto = (id) => `/api/planillas/${encodeURIComponent(id)}`;
+const ID_FOTO = /^[A-Za-z0-9_-]{1,64}$/;       // el id que da la bandeja (va en la ruta: nada más)
+const ESPERA_FOTO_MS = 90 * 1000;             // una subida de ~1 MB con la señal del campo
+const LADO_MIN_FOTO = 200;                    // el servidor no acepta un lado mayor más chico (tampoco se lee)
+const LADO_AVISO_FOTO = 1600;                 // más chica, la letra de una planilla de 20 columnas no se distingue
+const LADO_REVISION = 400;                    // la copia chica de la foto entera donde se mide la luz
+// La nitidez se mide en un recorte del centro de RECORTE_NITIDEZ px, con la foto a LADO_NITIDEZ de lado mayor: la
+// escala en la que el trazo de la letra de una planilla tiene 1 a 3 px (en la copia de 400 px una foto movida se ve
+// nítida)
+const LADO_NITIDEZ = 1200;
+const RECORTE_NITIDEZ = 400;
+const BRILLO_MIN = 70;                        // brillo medio (0–255) por debajo del cual la foto está oscura
+// Varianza del laplaciano por debajo de la cual está movida o desenfocada: baja a propósito (solo lo muy borroso; un
+// aviso de más cansa y se deja de leer)
+const NITIDEZ_MIN = 40;
+const CALIDAD_MIN = 0.5;                      // la calidad JPEG más baja que se prueba antes de achicar la foto
+const MINIATURA = { ancho: 54, alto: 72 };    // la miniatura del cuadro de escribir, en píxeles CSS
+// El aviso fijo junto a la cámara: qué se fotografía y qué no (Ley 1581: datos sensibles y biométricos). Las columnas
+// políticas también se tapan: el lector no las transcribe (`lector_planillas.INSTRUCCIONES`), así que en la foto solo
+// llegarían al proveedor del modelo, también con `agente_politicos` apagado
+const AVISO_FOTOS = 'Solo planillas o listas. No fotografíe cédulas. Tape columnas de salud, etnia, víctima o '
+  + 'políticas. Borre la foto del teléfono.';
+// Lo que dice que esta persona ya no puede subir fotos (su rol, los ajustes o el compromiso vigente cambiaron): se
+// vuelve a leer el estado y la cámara se oculta
+const FOTOS_APAGADAS = new Set(['planillas_apagado', 'compromiso_fotos', 'permiso']);
+const AVISOS_FOTO = {
+  pequena: 'Foto pequeña: puede que la letra no se lea. Acérquese o use la cámara con más resolución.',
+  oscura: 'Foto oscura: tómela con más luz.',
+  movida: 'Foto movida o desenfocada: si las letras no se leen, tome otra.',
 };
 
 // ───────── Utilidades ─────────
@@ -233,6 +278,219 @@ export function bloqueoTarjeta(ev) {
       + 'que lo divida en partes o lo acorte.';
   }
   return null;
+}
+
+// ───────── Fotos de planillas: lo que se calcula sin el navegador ─────────
+
+/** Los topes de las fotos que da el estado (`adjuntos`: {max_por_mensaje, lado_max, calidad, max_bytes}), o null si
+ * no llegan o no tienen la forma esperada: sin ellos la cámara no se ofrece. */
+export function limitesFotos(a) {
+  if (!a || typeof a !== 'object' || Array.isArray(a)) return null;
+  const entre = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
+  const { max_por_mensaje: max, lado_max: lado, calidad, max_bytes: bytes } = a;
+  if (!entre(max, 1, 10) || !entre(lado, LADO_MIN_FOTO, 8000) || !entre(bytes, 50000, 20000000)) return null;
+  if (typeof calidad !== 'number' || !Number.isFinite(calidad) || calidad < 0.3 || calidad > 1) return null;
+  return { maxPorMensaje: max, ladoMax: lado, calidad, maxBytes: bytes };
+}
+
+/** El tamaño al que se reduce una foto de `ancho` × `alto` para que su lado mayor no pase de `ladoMax` (nunca se
+ * agranda): {ancho, alto, escala}, en píxeles enteros de al menos 1. */
+export function medidasFoto(ancho, alto, ladoMax) {
+  const escala = Math.min(1, ladoMax / Math.max(ancho, alto, 1));
+  return { ancho: Math.max(1, Math.round(ancho * escala)), alto: Math.max(1, Math.round(alto * escala)), escala };
+}
+
+/** Las calidades JPEG que se prueban, de la del estado hacia abajo de a 0,1 hasta CALIDAD_MIN: si con la más baja la
+ * foto todavía pesa más de `max_bytes`, se achica. */
+export function pasosCalidad(calidad) {
+  const pasos = [];
+  for (let q = calidad; q >= CALIDAD_MIN - 1e-9; q -= 0.1) pasos.push(Math.round(q * 100) / 100);
+  return pasos.length ? pasos : [calidad];
+}
+
+/** La luz y la nitidez de una copia chica de la foto (`datos`: los píxeles RGBA de `ancho` × `alto`, como los da
+ * getImageData): `brillo`, la luminancia media (0–255), y `nitidez`, la varianza del laplaciano de la luminancia (baja
+ * en una foto movida o desenfocada: los bordes de la letra se borran). */
+export function revisarLuz(datos, ancho, alto) {
+  const n = ancho * alto;
+  if (!n || !datos || datos.length < n * 4) return { brillo: 0, nitidez: 0 };
+  const y = new Float32Array(n);
+  let suma = 0;
+  for (let i = 0; i < n; i++) {
+    y[i] = 0.299 * datos[i * 4] + 0.587 * datos[i * 4 + 1] + 0.114 * datos[i * 4 + 2];
+    suma += y[i];
+  }
+  let s = 0, s2 = 0, k = 0;
+  for (let f = 1; f < alto - 1; f++) {
+    for (let c = 1; c < ancho - 1; c++) {
+      const i = f * ancho + c;
+      const l = y[i - 1] + y[i + 1] + y[i - ancho] + y[i + ancho] - 4 * y[i];
+      s += l;
+      s2 += l * l;
+      k++;
+    }
+  }
+  const media = k ? s / k : 0;
+  return { brillo: suma / n, nitidez: k ? s2 / k - media * media : 0 };
+}
+
+/** Qué avisar de una foto ya preparada: `pequena` (su lado mayor original no llega a LADO_AVISO_FOTO), `oscura` y
+ * `movida`. Son avisos: la foto se puede mandar igual. Una foto oscura tiene poco contraste y por eso también poca
+ * nitidez: se avisa solo lo primero (más luz lo arregla). */
+export function avisosFoto({ ladoOriginal, brillo, nitidez }) {
+  const avisos = [];
+  if (ladoOriginal < LADO_AVISO_FOTO) avisos.push('pequena');
+  if (brillo < BRILLO_MIN) avisos.push('oscura');
+  else if (nitidez < NITIDEZ_MIN) avisos.push('movida');
+  return avisos;
+}
+
+// ───────── Fotos de planillas: prepararlas en el navegador ─────────
+// Todo pasa por un canvas: la foto se abre con su orientación (EXIF), se dibuja al tamaño de subida y se vuelve a
+// codificar como JPEG, así que no sale nada de lo que traía el archivo (EXIF, GPS, el modelo del teléfono). Los lienzos
+// grandes se sueltan en cuanto dejan de servir (ancho 0) y la imagen abierta, con close(): una foto a la vez.
+
+const errorFoto = (mensaje) => Object.assign(new Error(mensaje), { mensajeFoto: mensaje });
+
+/** La imagen abierta (un archivo del selector o una foto ya preparada), derecha según su EXIF. */
+async function abrirImagen(fuente) {
+  try {
+    return await createImageBitmap(fuente, { imageOrientation: 'from-image' });
+  } catch {
+    return createImageBitmap(fuente); // un navegador sin las opciones (también la endereza: es lo que hace por defecto)
+  }
+}
+
+function lienzo(ancho, alto) {
+  const c = document.createElement('canvas');
+  c.width = ancho;
+  c.height = alto;
+  return c;
+}
+
+/** Dibuja `fuente` en todo `destino`, sobre blanco (un PNG transparente no queda negro en el JPEG). */
+function pintarEn(destino, fuente, opciones) {
+  const ctx = destino.getContext('2d', opciones);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, destino.width, destino.height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(fuente, 0, 0, destino.width, destino.height);
+  return ctx;
+}
+
+/** La luz de `fuente` (en una copia entera de LADO_REVISION px) y su nitidez (en un recorte del centro, a la escala
+ * de la letra). Si el navegador no deja leer los píxeles, no se avisa nada. */
+function medirLuz(fuente) {
+  const { width: w, height: h } = fuente;
+  const m = medidasFoto(w, h, LADO_REVISION);
+  const c = lienzo(m.ancho, m.alto);
+  // El recorte: RECORTE_NITIDEZ px de la foto puesta a LADO_NITIDEZ (o lo que haya, si es más chica)
+  const escala = Math.min(1, LADO_NITIDEZ / Math.max(w, h));
+  const sw = Math.min(w, RECORTE_NITIDEZ / escala), sh = Math.min(h, RECORTE_NITIDEZ / escala);
+  const r = lienzo(Math.max(1, Math.round(sw * escala)), Math.max(1, Math.round(sh * escala)));
+  try {
+    const ctx = pintarEn(c, fuente, { willReadFrequently: true });
+    const { brillo } = revisarLuz(ctx.getImageData(0, 0, m.ancho, m.alto).data, m.ancho, m.alto);
+    const cr = r.getContext('2d', { willReadFrequently: true });
+    cr.fillStyle = '#fff';
+    cr.fillRect(0, 0, r.width, r.height);
+    cr.drawImage(fuente, (w - sw) / 2, (h - sh) / 2, sw, sh, 0, 0, r.width, r.height);
+    const { nitidez } = revisarLuz(cr.getImageData(0, 0, r.width, r.height).data, r.width, r.height);
+    return { brillo, nitidez };
+  } catch {
+    return { brillo: 255, nitidez: Infinity };
+  } finally {
+    c.width = c.height = 0;
+    r.width = r.height = 0;
+  }
+}
+
+/** La miniatura de la foto en su canvas (entera, centrada): lo único que se ve de ella en el chat. */
+function dibujarMiniatura(mini, fuente) {
+  const ctx = mini?.getContext('2d');
+  if (!ctx) return;
+  ctx.clearRect(0, 0, mini.width, mini.height);
+  const e = Math.min(mini.width / fuente.width, mini.height / fuente.height);
+  const w = fuente.width * e, h = fuente.height * e;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(fuente, (mini.width - w) / 2, (mini.height - h) / 2, w, h);
+}
+
+const aBlob = (c, calidad) => new Promise((listo) => c.toBlob(listo, 'image/jpeg', calidad));
+
+/** El JPEG de `c` que cabe en `lim.maxBytes`: con la calidad del estado y, si pesa más, con calidades más bajas
+ * (pasosCalidad); si ni con la más baja cabe, más chica (un 80 % por vuelta). {blob, ancho, alto}. `c` no se toca. */
+async function codificar(c, lim) {
+  let actual = c;
+  try {
+    for (;;) {
+      for (const q of pasosCalidad(lim.calidad)) {
+        const b = await aBlob(actual, q);
+        if (b && b.type === 'image/jpeg' && b.size <= lim.maxBytes) {
+          return { blob: b, ancho: actual.width, alto: actual.height };
+        }
+      }
+      const m = medidasFoto(actual.width, actual.height, Math.floor(Math.max(actual.width, actual.height) * 0.8));
+      if (Math.max(m.ancho, m.alto) < LADO_MIN_FOTO) {
+        throw errorFoto('La foto pesa demasiado aun reducida: tómela de nuevo.');
+      }
+      const chico = lienzo(m.ancho, m.alto);
+      pintarEn(chico, actual);
+      if (actual !== c) actual.width = actual.height = 0;
+      actual = chico;
+    }
+  } finally {
+    if (actual !== c) actual.width = actual.height = 0;
+  }
+}
+
+/** Prepara para subir la foto `archivo` con los topes `lim` (limitesFotos) y dibuja su miniatura en `mini`:
+ * {blob, ancho, alto, avisos}. Falla con `mensajeFoto` si no es una imagen que el navegador abra o es demasiado
+ * chica. */
+async function prepararImagen(archivo, lim, mini) {
+  let bmp;
+  try {
+    bmp = await abrirImagen(archivo);
+  } catch {
+    throw errorFoto('No se pudo abrir esa imagen: elija una foto (JPEG o PNG).');
+  }
+  let c = null;
+  try {
+    const ladoOriginal = Math.max(bmp.width, bmp.height);
+    if (ladoOriginal < LADO_MIN_FOTO) throw errorFoto('La imagen es demasiado pequeña para leer una planilla.');
+    const luz = medirLuz(bmp);
+    const m = medidasFoto(bmp.width, bmp.height, lim.ladoMax);
+    c = lienzo(m.ancho, m.alto);
+    pintarEn(c, bmp);
+    bmp.close();    // la imagen entera ya no hace falta: se suelta antes de codificar
+    dibujarMiniatura(mini, c);
+    const r = await codificar(c, lim);
+    return { ...r, avisos: avisosFoto({ ladoOriginal, ...luz }) };
+  } finally {
+    bmp.close();
+    if (c) c.width = c.height = 0;
+  }
+}
+
+/** La foto `blob` girada 90° a la derecha, con los mismos topes, y su miniatura nueva en `mini`:
+ * {blob, ancho, alto}. */
+async function girarImagen(blob, lim, mini) {
+  const bmp = await abrirImagen(blob);
+  let c = null;
+  try {
+    c = lienzo(bmp.height, bmp.width);
+    const ctx = c.getContext('2d');
+    ctx.translate(c.width, 0);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(bmp, 0, 0);
+    bmp.close();
+    dibujarMiniatura(mini, c);
+    return await codificar(c, lim);
+  } finally {
+    bmp.close();
+    if (c) c.width = c.height = 0;
+  }
 }
 
 /** El origen de Mnemo que da el estado, solo si es `https://host[:puerto]` (si no, ningún enlace sale del panel). */
@@ -664,8 +922,20 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
         </div>
         <span class="sr" id="agente-voz-vivo" role="status" aria-live="polite"></span>
         <span class="sr" id="agente-adelanto-vivo" role="status" aria-live="polite"></span>
+        <div class="agente-fotos" id="agente-fotos" role="group" aria-labelledby="agente-fotos-aviso" hidden>
+          <p class="agente-fotos-aviso" id="agente-fotos-aviso">${icono('alerta')}<span></span></p>
+          <div class="agente-fotos-botones">
+            <button type="button" class="btn chico" id="agente-foto-camara">${icono('camara')}<span>Tomar foto</span></button>
+            <button type="button" class="btn chico" id="agente-foto-galeria">${icono('galeria')}<span>Elegir de la galería</span></button>
+          </div>
+          <ul class="agente-fotos-lista" id="agente-fotos-lista"></ul>
+          <p class="agente-fotos-estado" id="agente-fotos-estado" role="status" aria-live="polite"></p>
+          <input type="file" id="agente-foto-camara-in" accept="image/*" capture="environment" tabindex="-1" hidden>
+          <input type="file" id="agente-foto-galeria-in" accept="image/*" multiple tabindex="-1" hidden>
+        </div>
         <div class="agente-fila">
           <label class="sr" for="agente-texto">Mensaje para el asistente</label>
+          <button type="button" class="btn agente-adjuntar" id="agente-adjuntar" aria-label="Adjuntar fotos de planillas" title="Adjuntar fotos de planillas" aria-expanded="false" aria-controls="agente-fotos" hidden>${icono('camara')}<span class="agente-adjuntar-n" aria-hidden="true" hidden></span></button>
           <textarea id="agente-texto" rows="1" maxlength="4000" placeholder="Escriba su pregunta…" enterkeyhint="send" autocomplete="off" spellcheck="true"></textarea>
           <button type="button" class="btn agente-voz" id="agente-voz" aria-label="Preguntar por voz" title="Preguntar por voz" aria-pressed="false" hidden>${icono('microfono')}</button>
           <button type="submit" class="btn primario agente-enviar" id="agente-enviar" aria-label="Enviar" title="Enviar">${icono('enviar')}</button>
@@ -690,6 +960,12 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   // turno y lo de adentro no se anuncia hasta que termina; esta región, fuera de ella, la anuncia en cuanto termina
   const adelantoVivo = $('#agente-adelanto-vivo');
   const ayuda = $('.agente-ayuda');
+  // Las fotos de planillas: el botón del cuadro de escribir, la bandeja con el aviso, los dos selectores y la lista
+  const adjuntarBtn = $('#agente-adjuntar'), adjuntarN = $('.agente-adjuntar-n'), bandeja = $('#agente-fotos');
+  const fotoCamaraBtn = $('#agente-foto-camara'), fotoGaleriaBtn = $('#agente-foto-galeria');
+  const fotoCamaraIn = $('#agente-foto-camara-in'), fotoGaleriaIn = $('#agente-foto-galeria-in');
+  const listaFotos = $('#agente-fotos-lista'), estadoFotos = $('#agente-fotos-estado');
+  $('#agente-fotos-aviso > span').textContent = AVISO_FOTOS;
   // La barra fija del recorrido narrado: arriba de la conversación mientras suena uno
   montarBarraRecorrido(cuerpo, { el, ico });
 
@@ -720,6 +996,17 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   let vez = 0;                // cambia con cada conversación que se pinta: una respuesta tardía no pisa la nueva
   const chips = new Map();    // id del tool_use → chip
   const tarjetas = new Map(); // id del tool_use → tarjeta de aprobación
+  let ultimoOk = null;        // el chip de la última herramienta que terminó: su gráfico va debajo
+  // Las fotos de planillas del cuadro de escribir, en orden. Viven en memoria (nunca en el almacenamiento del
+  // navegador) y se van con el mensaje; el turno las guarda para «Reintentar» y «Nueva conversación». Cada una: {estado
+  // ('preparando' | 'subiendo' | 'lista' | 'error'), lim (los topes con que se preparó), blob, ancho, alto, avisos, id
+  // (de la bandeja), lectura (el estado que dio la bandeja), error, reintentar, enviada (llegó en un mensaje: quitarla
+  // no la borra de la bandeja), quitada, control (corta la subida), item (sus nodos)}
+  const fotos = [];
+  let colaPreparar = Promise.resolve(); // se preparan de a una: en un celular económico no caben varias de 12 MP
+  let colaSubir = Promise.resolve();    // y se suben de a una (con la señal del campo, la primera llega antes)
+  let enviarAlSubir = null;   // se pidió enviar con fotos todavía subiendo: {voz}, y sale sola al terminar
+  let bandejaAbierta = false;
   // Las respuestas habladas: la preferencia de la pestaña («Leer las respuestas en voz alta»), la voz de la ventana
   // (voz-panel.js: se toma la primera vez que hace falta y no se suelta) y el locutor, que dice en orden las frases del
   // turno. Mientras la presentación de esta ventana o el proyector tienen un plan sonando (no en pausa), espera: la
@@ -756,8 +1043,9 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   let cuadro = 0;
   const op = { rutaPanel, origenMnemo: null };
 
-  // Con algo escrito o un turno en curso, una sesión vencida abre el ingreso en un diálogo en vez de recargar
-  const conAlgo = () => !!entrada.value.trim() || !!turno;
+  // Con algo escrito, fotos en el cuadro o un turno en curso, una sesión vencida abre el ingreso en un diálogo en vez
+  // de recargar (las fotos solo están en la memoria de la pestaña)
+  const conAlgo = () => !!entrada.value.trim() || fotos.length > 0 || !!turno;
   registrarPendiente(conAlgo);
 
   // ── Guardado en la pestaña (nada de la conversación: solo su id; y si la persona quiere oír las respuestas) ──
@@ -800,6 +1088,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
           ofreceModelo: c.ofrece_modelo !== false } : null,
       sugerencias: (Array.isArray(o.sugerencias) ? o.sugerencias : []).map((s) => texto(s, 200).trim()).filter(Boolean)
         .slice(0, 6),
+      // ¿Puede adjuntar fotos de planillas físicas, y con qué topes? (null: la cámara no se ofrece)
+      adjuntos: limitesFotos(o.adjuntos),
     };
   }
 
@@ -865,6 +1155,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     form.hidden = !info.disponible || historialAbierto;
     nuevaBtn.hidden = verHistBtn.hidden = !info.disponible;
     aplicarVoz();
+    aplicarFotos();
   }
 
   /** ¿Se pueden oír las respuestas? El asistente está disponible y la voz clonada de Mnemo, ofrecida para esta persona
@@ -938,6 +1229,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     locutor.callar();
     turno?.control.abort();
     dictado.cancelar();   // ni se sigue oyendo ni se espera una transcripción
+    vaciarFotos();        // las fotos del cuadro salen de la memoria (la bandeja las borra sola al vencer)
     caja.removeAttribute('data-usable');
     boton.hidden = true;
     if (abierto) cerrar();
@@ -1064,6 +1356,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     cuadro = 0;
     sucias.clear();
     chips.clear();
+    ultimoOk = null;
     tarjetas.clear();
     largos?.disconnect();
     actual = ultima = null;
@@ -1094,12 +1387,34 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     return s;
   }
 
-  function agregarUsuario(t) {
+  /** El mensaje de la persona: `adjuntas`, las fotos que lleva (en vivo, con sus miniaturas) o cuántas eran (al
+   * repintar una conversación guardada solo se sabe eso): un chip con la cámara y «n fotos adjuntas», arriba del
+   * texto. */
+  function agregarUsuario(t, adjuntas = []) {
     const m = el('div', 'agente-msj agente-persona');
-    m.append(quien('usuario', 'Usted: '), el('p', null, t));
+    m.append(quien('usuario', 'Usted: '));
+    const n = Array.isArray(adjuntas) ? adjuntas.length : adjuntas;
+    if (n > 0) m.append(chipFotos(n, Array.isArray(adjuntas) ? adjuntas : []));
+    if (t) m.append(el('p', null, t));
     log.append(m);
     actual = ultima = null;
     return m;
+  }
+
+  function chipFotos(n, lista) {
+    const c = el('div', 'agente-fotos-chip');
+    c.append(ico('camara'), el('span', null, n === 1 ? '1 foto adjunta' : `${num(n)} fotos adjuntas`));
+    for (const f of lista) {
+      const mini = f.item?.mini;
+      if (!mini?.width) continue;
+      const copia = document.createElement('canvas');
+      copia.width = mini.width;
+      copia.height = mini.height;
+      copia.getContext('2d')?.drawImage(mini, 0, 0);
+      copia.setAttribute('aria-hidden', 'true');
+      c.append(copia);
+    }
+    return c;
   }
 
   function nuevoAsistente() {
@@ -1310,6 +1625,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       if (estado === 'inicio') ronda.partes.push(c);
     }
     pintarChip(c, etiqueta, estado, resumen);
+    if (estado === 'ok') ultimoOk = c;  // el servidor manda el gráfico de una herramienta justo después de su resultado
     pildoraPreparando({ nombre: texto(ev.nombre, 64), estado, resumen });
     const t = tarjetas.get(id);
     if (t) estadoTarjeta(t, estado, resumen);
@@ -1477,6 +1793,42 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     else if (a.tipo === 'presentacion') presentacion(a);
     else if (a.tipo === 'recorrido') tarjetaRecorrido(a);
     else if (a.tipo === 'automatica') franjaAutomatica(a);
+    else if (a.tipo === 'grafico') grafico(a);
+  }
+
+  // ── Los gráficos de la analítica (agente-graficos.js): los arma el servidor con las cifras que calculó ──
+  // El módulo (con graficos.js, el del Tablero) se carga con el primer gráfico: la mayoría de las conversaciones no
+  // tiene ninguno
+  let modGraficos = null;
+  /** Pone el gráfico `a` debajo del chip de la herramienta que lo armó (`chip`: en vivo, la última que terminó, porque
+   * el servidor manda la acción justo después de su resultado; al repintar, la de la parte), después de los que ese
+   * chip ya tenga: así queda en el mismo lugar en vivo y al volver a abrir la conversación, aunque el texto que sigue
+   * llegue mientras carga el módulo. Sin chip, al final del mensaje. Lo que no cumple el contrato no se dibuja: el chip
+   * ya dice qué se hizo. */
+  function grafico(a, chip = ultimoOk) {
+    const esta = vez;
+    const dentro = chip?.el.isConnected ? null : enAsistente();
+    modGraficos ||= import('./agente-graficos.js');
+    modGraficos.then((m) => {
+      if (esta !== vez) return; // mientras tanto se pintó otra conversación
+      const fig = m.pintarGrafico(a);
+      if (!fig) return;
+      if (chip?.el.isConnected) {
+        let antes = chip.el;
+        while (antes.nextElementSibling?.classList.contains('agente-grafico')) antes = antes.nextElementSibling;
+        antes.after(fig);
+      } else if (dentro?.isConnected) {
+        dentro.append(fig);
+        if (ultima && dentro.contains(ultima.el)) ultima = null; // lo que siga del texto va debajo del gráfico
+      } else {
+        return;
+      }
+      programar();
+      aviseNovedad();
+    }, (e) => {
+      modGraficos = null; // se reintenta con el próximo
+      console.error(e);
+    });
   }
 
   // ── La presentación automática: la franja con «Detener» (agente-recorrido.js) ──
@@ -1807,14 +2159,19 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     }
   }
 
-  async function enviar(t, { reusar = null } = {}) {
+  /** Manda un mensaje: `t` y, en `fotos`, las fotos de planillas ya subidas que van con él (un mensaje puede ser solo
+   * fotos). `reusar`: la burbuja de un mensaje que no llegó, que «Reintentar» vuelve a mandar. */
+  async function enviar(t, { reusar = null, fotos: adjuntas = [] } = {}) {
     if (turno || cargando || !info?.disponible) return;
     t = t.trim();
-    if (!t) return;
+    if (!t && !adjuntas.length) return;
     if (t.length > MAX_TEXTO) {
       nota(`El mensaje es demasiado largo: el máximo es ${num(MAX_TEXTO)} caracteres.`, 'alerta');
       return;
     }
+    // Las fotos se van con el mensaje: dejan el cuadro de escribir (el turno las guarda para «Reintentar» y «Nueva
+    // conversación»)
+    soltarFotos(adjuntas);
     // Un mensaje enviado a mano mientras se oía: lo que se dictaba se descarta (si no, llegaría después como otra pregunta)
     if (!vozEntregando && vozActiva()) dictado.cancelar();
     if (historialAbierto) verHistorial(false);
@@ -1827,7 +2184,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       actual = { el: reusar.msj };
       log.append(burbuja, reusar.msj); // al final, aunque después se hayan escrito otras cosas
     } else {
-      burbuja = agregarUsuario(t);
+      burbuja = agregarUsuario(t, adjuntas);
       nuevoAsistente();
     }
     // Un recorrido que suena se pausa al terminar la frase: la sala no sigue oyendo mientras se pregunta otra cosa. Y la
@@ -1844,8 +2201,13 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     const sinAprobar = pendientesSinEnviar();
     for (const x of sinAprobar) x.enviada = true;
     alFinal(true);
-    await correr('/api/agente/mensajes', { conversacion: conv, texto: t, contexto: contexto({ voz: leer, vozAdelanto: sala }) },
-      { tipo: 'mensaje', texto: t, burbuja, msj: actual.el, sinAprobar, hablar: leer || sala, sala });
+    // Las fotos van por sus ids de la bandeja (`adjuntos`, solo si hay): el servidor comprueba que sean de quien
+    // escribe
+    const ids = adjuntas.map((f) => f.id);
+    const cuerpo = { conversacion: conv, texto: t, contexto: contexto({ voz: leer, vozAdelanto: sala }) };
+    const datos = { tipo: 'mensaje', texto: t, burbuja, msj: actual.el, sinAprobar, hablar: leer || sala, sala };
+    const conFotos = ids.length ? { adjuntos: ids } : {};
+    await correr('/api/agente/mensajes', { ...cuerpo, ...conFotos }, { ...datos, fotos: adjuntas });
   }
 
   // ── Cómo terminó el turno ──
@@ -1906,17 +2268,22 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   function cerrarTurno(t, terminado) {
     const codigoFinal = t.excepcion ? (t.excepcion instanceof ErrorApi ? t.excepcion.codigo : null) : t.error?.codigo;
     if (t.tipo === 'confirmacion' && codigoFinal === 'sin_pendientes') { traerLoPendiente(); return; }
+    // Las fotos de un mensaje que llegó ya están en esa conversación: quitarlas después del cuadro no las borra de la
+    // bandeja
+    if (t.inicio) for (const f of t.fotos || []) f.enviada = true;
     const dentro = t.msj || actual?.el || null;
     const reintento = (reusar) => ['Reintentar', () => {
       entrada.focus({ preventScroll: true });
-      enviar(t.texto, { reusar });
+      enviar(t.texto, { reusar, fotos: t.fotos });
     }];
     // Si el mensaje no llegó a la conversación (un error antes del flujo) o quedó sin responder porque la conversación
-    // ya era demasiado larga (`larga`, también a mitad del turno), la nueva lo trae escrito para enviarlo ahí
+    // ya era demasiado larga (`larga`, también a mitad del turno), la nueva lo trae escrito (y con sus fotos) para
+    // enviarlo ahí
     const otra = (codigo) => ['Nueva conversación', () => {
       nuevaConversacion();
       const traer = t.tipo === 'mensaje' && (!t.inicio || codigo === 'larga');
       if (traer && !entrada.value.trim()) { entrada.value = t.texto; autoAltura(); }
+      if (traer) devolverFotos(t.fotos);
     }];
     const releer = (codigo) => { if (RELEER_ESTADO.has(codigo)) releerEstado(); };
     const acciones = [];
@@ -2252,7 +2619,9 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     limpiarConversacion();
     fijarConversacion(Number.isInteger(d?.id) ? d.id : null, d?.titulo);
     for (const m of Array.isArray(d?.mensajes) ? d.mensajes : []) {
-      if (m?.rol === 'usuario' && texto(m.texto)) { agregarUsuario(texto(m.texto)); continue; }
+      // las fotos de un mensaje (`adjuntos`, solo si llevaba): el chip, sin las imágenes (no vuelven al navegador)
+      const conFotos = m?.rol === 'usuario' && Array.isArray(m.adjuntos) ? Math.min(m.adjuntos.length, 20) : 0;
+      if (m?.rol === 'usuario' && (texto(m.texto) || conFotos)) { agregarUsuario(texto(m.texto), conFotos); continue; }
       if (m?.rol !== 'asistente' || !Array.isArray(m.partes)) continue;
       const msj = nuevoAsistente().el;
       for (const p of m.partes) {
@@ -2268,6 +2637,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
           parte('progreso').nodo.appendData(texto(p.texto));
         } else if (p.tipo === 'herramienta') {
           alHerramienta({ ...p, estado: ESTADOS.has(p.estado) && p.estado !== 'inicio' ? p.estado : 'error' });
+          // el gráfico que mostró (la analítica), debajo de su chip como en vivo
+          if (p.grafico) grafico(p.grafico, chips.get(texto(p.id, 100)));
         } else if (p.tipo === 'aviso') {
           nota(texto(p.texto, 600), p.nivel === 'alerta' ? 'alerta' : 'info');
         }
@@ -2418,6 +2789,337 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     if (document.hidden && e.estado === 'escuchando' && e.via === 'servidor') dictado.cancelar();
   });
 
+  // ── Fotos de planillas físicas: la bandeja del cuadro de escribir ──
+  // «Tomar foto» abre la cámara del teléfono (capture="environment"); «Elegir de la galería», varias a la vez. Cada
+  // foto se prepara (de a una), se sube (de a una) y queda «Subida · leyendo…»: la bandeja del panel la empieza a leer
+  // de fondo mientras se escribe. Se puede girar (se sube otra vez y la anterior se borra) y quitar (se borra de la
+  // bandeja si no llegó en un mensaje). Nada de las fotos va al almacenamiento del navegador.
+  const soporteFotos = typeof globalThis.createImageBitmap === 'function' && typeof HTMLCanvasElement === 'function'
+    && typeof HTMLCanvasElement.prototype.toBlob === 'function';
+  /** ¿Se ofrecen? El asistente disponible, `adjuntos` en el estado (el rol sube fotos de planillas) y un navegador que
+   * las prepara. */
+  const puedeFotos = () => !!info?.disponible && !!info.adjuntos && soporteFotos;
+  const fotoEnCurso = (f) => f.estado === 'preparando' || f.estado === 'subiendo';
+  const decirFotos = (t) => { if (estadoFotos.textContent !== t) estadoFotos.textContent = t; };
+  const borrarDeLaBandeja = (id) => { api.del(rutaFoto(id)).catch(() => {}); }; // si falla, vence sola
+
+  function aplicarFotos() {
+    const puede = puedeFotos();
+    const tenia = document.activeElement === adjuntarBtn;
+    adjuntarBtn.hidden = !puede;
+    if (!puede && !fotos.length) bandejaAbierta = false;
+    pintarBandeja();
+    if (!puede && tenia && abierto) log.focus({ preventScroll: true });
+  }
+
+  /** La bandeja a la vista (abierta con el botón de la cámara; siempre, si quedaron fotos y ya no se ofrece) y el botón
+   * con cuántas fotos lleva el mensaje. */
+  function pintarBandeja() {
+    const puede = puedeFotos();
+    const max = info?.adjuntos?.maxPorMensaje ?? 0;
+    const visible = fotos.length ? bandejaAbierta || !puede : bandejaAbierta && puede;
+    bandeja.hidden = !visible;
+    adjuntarBtn.setAttribute('aria-expanded', String(visible));
+    adjuntarN.hidden = !fotos.length;
+    adjuntarN.textContent = fotos.length ? String(fotos.length) : '';
+    const nombre = !fotos.length ? 'Adjuntar fotos de planillas'
+      : `Fotos de planillas: ${fotos.length === 1 ? '1 adjunta' : `${fotos.length} adjuntas`}`;
+    adjuntarBtn.title = nombre;
+    adjuntarBtn.setAttribute('aria-label', nombre);
+    const lleno = !puede || fotos.length >= max;
+    fotoCamaraBtn.disabled = fotoGaleriaBtn.disabled = lleno;
+    fotoGaleriaBtn.title = lleno && puede ? `Como mucho ${max} fotos por mensaje` : `Hasta ${max} fotos por mensaje`;
+    fotoCamaraBtn.title = lleno && puede ? `Como mucho ${max} fotos por mensaje` : 'Abre la cámara del teléfono';
+  }
+
+  /** Abre la bandeja con un aviso (por qué no se envió todavía, cuántas fotos entraron…). */
+  function mostrarBandeja(t) {
+    bandejaAbierta = true;
+    pintarBandeja();
+    decirFotos(t);
+  }
+
+  function botonFoto(nombreIcono, nombre, clase) {
+    const b = el('button', `btn fantasma chico agente-icono ${clase}`);
+    b.type = 'button';
+    b.append(ico(nombreIcono));
+    b.title = nombre;
+    b.setAttribute('aria-label', nombre);
+    return b;
+  }
+
+  /** Los nodos de una foto en la bandeja: la miniatura (un canvas), su estado, sus avisos y sus botones. */
+  function crearItem(f) {
+    const li = el('li', 'agente-foto');
+    const mini = document.createElement('canvas');
+    mini.className = 'agente-foto-mini';
+    mini.setAttribute('role', 'img');
+    const dpr = Math.min(3, Math.max(1, globalThis.devicePixelRatio || 1));
+    mini.width = Math.round(MINIATURA.ancho * dpr);
+    mini.height = Math.round(MINIATURA.alto * dpr);
+    const caja = el('div', 'agente-foto-texto');
+    const titulo = el('b');
+    const estado = el('span', 'agente-foto-estado');
+    const avisos = el('span', 'agente-foto-avisos');
+    caja.append(titulo, estado, avisos);
+    const botones = el('div', 'agente-foto-botones');
+    const reintentar = el('button', 'btn chico agente-foto-reintentar', 'Reintentar');
+    reintentar.type = 'button';
+    const girar = botonFoto('girar', 'Girar', 'agente-foto-girar');
+    const quitar = botonFoto('cerrar', 'Quitar', 'agente-foto-quitar');
+    botones.append(reintentar, girar, quitar);
+    li.append(mini, caja, botones);
+    reintentar.addEventListener('click', () => { if (f.estado === 'error' && f.reintentar && f.blob) subir(f); });
+    girar.addEventListener('click', () => girarFoto(f));
+    quitar.addEventListener('click', () => quitarFoto(f));
+    return { li, mini, titulo, estado, avisos, reintentar, girar, quitar };
+  }
+
+  function pintarFoto(f) {
+    const i = fotos.indexOf(f) + 1;
+    if (!i) return;
+    const it = f.item;
+    it.li.dataset.estado = f.estado;
+    it.titulo.textContent = `Foto ${i}`;
+    it.mini.setAttribute('aria-label', `Foto ${i}`);
+    const linea = {
+      preparando: f.blob ? 'Girando…' : 'Preparando…',
+      subiendo: 'Subiendo…',
+      lista: f.lectura === 'leyendo' ? 'Subida · el panel la está leyendo…' : 'Subida',
+      error: f.error || 'No se pudo subir.',
+    }[f.estado];
+    it.estado.replaceChildren(...(fotoEnCurso(f) ? [el('span', 'agente-giro')] : []), el('span', null, linea));
+    it.avisos.textContent = f.avisos.map((k) => AVISOS_FOTO[k]).filter(Boolean).join(' ');
+    it.avisos.hidden = !f.avisos.length;
+    it.reintentar.hidden = !(f.estado === 'error' && f.reintentar && f.blob);
+    it.reintentar.setAttribute('aria-label', `Reintentar la subida de la foto ${i}`);
+    it.girar.disabled = fotoEnCurso(f) || !f.blob;
+    it.girar.setAttribute('aria-label', `Girar la foto ${i} a la derecha`);
+    it.girar.title = 'Girar a la derecha';
+    it.quitar.setAttribute('aria-label', `Quitar la foto ${i}`);
+  }
+
+  /** Las fotos que eligió la persona (de la cámara o de la galería): entran las que caben en el mensaje, se preparan de
+   * a una y cada una se sube en cuanto está lista. */
+  function agregarFotos(archivos) {
+    const lim = info?.adjuntos;
+    if (!puedeFotos() || !lim || !archivos.length) return;
+    const entran = archivos.slice(0, Math.max(0, lim.maxPorMensaje - fotos.length));
+    for (const archivo of entran) {
+      const f = { estado: 'preparando', lim, blob: null, ancho: 0, alto: 0, avisos: [], id: null, lectura: null,
+        error: null, reintentar: false, enviada: false, quitada: false, control: null, item: null };
+      f.item = crearItem(f);
+      fotos.push(f);
+      listaFotos.append(f.item.li);
+      pintarFoto(f);
+      colaPreparar = colaPreparar.then(() => preparar(f, archivo));
+    }
+    const sobran = archivos.length - entran.length;
+    const cuantas = entran.length ? `Se agrega${entran.length === 1 ? '' : 'n'} ${entran.length}: ` : '';
+    mostrarBandeja(sobran ? `${cuantas}como mucho van ${lim.maxPorMensaje} fotos en un mensaje.` : '');
+  }
+
+  async function preparar(f, archivo) {
+    if (f.quitada) return;
+    try {
+      const r = await prepararImagen(archivo, f.lim, f.item.mini);
+      if (f.quitada) return;
+      Object.assign(f, { blob: r.blob, ancho: r.ancho, alto: r.alto, avisos: r.avisos });
+    } catch (e) {
+      if (f.quitada) return;
+      Object.assign(f, { estado: 'error', error: e?.mensajeFoto || 'No se pudo preparar la foto.', reintentar: false });
+      pintarFoto(f);
+      revisarEnvio();
+      return;
+    }
+    subir(f);
+  }
+
+  /** Pone la foto en la cola de subida (una a la vez). */
+  function subir(f) {
+    Object.assign(f, { estado: 'subiendo', error: null, reintentar: false });
+    pintarFoto(f);
+    colaSubir = colaSubir.then(() => subirAhora(f));
+  }
+
+  async function subirAhora(f) {
+    if (f.quitada) return;
+    f.control = new AbortController();
+    try {
+      const d = await api.subir(RUTA_FOTOS, f.blob, { cabeceras: { 'Content-Type': 'image/jpeg' },
+        timeout: ESPERA_FOTO_MS, signal: f.control.signal });
+      const id = typeof d?.id === 'string' && ID_FOTO.test(d.id) ? d.id : null;
+      if (!id) throw errorFoto('El panel respondió algo inesperado al recibir la foto. Reintente.');
+      // `repetida`: la bandeja ya tenía esa foto de esta persona (elegida otra vez, de otro mensaje o subida en
+      // Importar y exportar, quizá corregida o cargada en parte). No es de esta subida: el cuadro nunca la borra (como
+      // una que ya llegó en un mensaje) y, si ya va en este mensaje, la copia sobra
+      const repetida = d.repetida === true;
+      if (f.quitada) { if (!repetida) borrarDeLaBandeja(id); return; } // se quitó mientras subía
+      Object.assign(f, { estado: 'lista', id, lectura: texto(d.estado, 20) || null, enviada: repetida });
+      if (repetida && fotos.some((o) => o !== f && o.id === id)) {
+        const esperaba = enviarAlSubir;
+        quitarFoto(f);   // (si el envío esperaba esta subida, sale ahora y su aviso manda)
+        if (!esperaba || enviarAlSubir) decirFotos('Esa foto ya estaba adjunta.');
+        return;
+      }
+    } catch (e) {
+      if (f.quitada) return;
+      const [mensaje, reintentar] = explicarFoto(e);
+      Object.assign(f, { estado: 'error', error: mensaje, reintentar });
+      bandejaAbierta = true;
+      if (e instanceof ErrorApi && FOTOS_APAGADAS.has(e.codigo)) releerEstado();
+    } finally {
+      f.control = null;
+    }
+    pintarFoto(f);
+    pintarBandeja();
+    revisarEnvio();
+  }
+
+  /** Por qué no subió una foto, y si vale la pena reintentar: [texto, reintentar]. */
+  function explicarFoto(e) {
+    if (!(e instanceof ErrorApi)) {
+      return [e?.mensajeFoto || 'La foto no subió por un error del navegador. Reintente.', true];
+    }
+    if (e.estado === 0) return ['Sin conexión: la foto no subió. Reintente cuando haya señal.', true];
+    if (e.estado === 401) return ['La sesión terminó: ingrese de nuevo y reintente.', true];
+    if (e.estado === 413) return ['La foto pesa demasiado para el panel.', false];
+    const propio = e.message && e.message !== 'Error inesperado' ? texto(e.message, 300) : '';
+    if (e.estado === 409) return [propio || 'Esa foto ya se cargó.', false];
+    if (e.estado === 429) return [propio || 'Subió muchas fotos seguidas: espere un rato y reintente.', true];
+    if ([403, 404, 415, 422].includes(e.estado)) return [propio || 'El panel no aceptó la foto.', false];
+    return [propio || `El panel no pudo recibir la foto (error ${e.estado}). Reintente en un momento.`, true];
+  }
+
+  /** Gira la foto 90° a la derecha. Ya subida, se sube la girada y la anterior se borra de la bandeja (si no llegó en
+   * un mensaje). */
+  function girarFoto(f) {
+    if (fotoEnCurso(f) || !f.blob || f.quitada) return;
+    const antes = { estado: f.estado, error: f.error, reintentar: f.reintentar };
+    Object.assign(f, { estado: 'preparando', error: null });
+    pintarFoto(f);
+    colaPreparar = colaPreparar.then(async () => {
+      if (f.quitada) return;
+      let r;
+      try {
+        r = await girarImagen(f.blob, info?.adjuntos || f.lim, f.item.mini);
+      } catch {
+        if (f.quitada) return;
+        Object.assign(f, antes);
+        decirFotos('No se pudo girar la foto: sigue como estaba.');
+        pintarFoto(f);
+        revisarEnvio();
+        return;
+      }
+      if (f.quitada) return;
+      if (f.id && !f.enviada) borrarDeLaBandeja(f.id);
+      Object.assign(f, { blob: r.blob, ancho: r.ancho, alto: r.alto, id: null, lectura: null, enviada: false });
+      subir(f);
+    });
+  }
+
+  function quitarFoto(f) {
+    const i = fotos.indexOf(f);
+    if (i < 0) return;
+    const tenia = f.item.li.contains(document.activeElement);
+    f.quitada = true;
+    f.control?.abort();
+    fotos.splice(i, 1);
+    f.item.li.remove();
+    if (f.id && !f.enviada) borrarDeLaBandeja(f.id);
+    f.blob = null;
+    fotos.forEach(pintarFoto);
+    pintarBandeja();
+    decirFotos(`Se quitó la foto ${i + 1}.`);
+    if (tenia) {
+      const sigue = fotos[Math.min(i, fotos.length - 1)]?.item.quitar;
+      (sigue || (fotoCamaraBtn.disabled || bandeja.hidden ? entrada : fotoCamaraBtn)).focus({ preventScroll: true });
+    }
+    revisarEnvio();
+  }
+
+  /** Se pidió enviar mientras subían fotos: sale cuando terminan todas; si una falló, no (se dice por qué). */
+  function revisarEnvio() {
+    if (!enviarAlSubir) return;
+    if (fotos.some((f) => f.estado === 'error')) {
+      enviarAlSubir = null;
+      mostrarBandeja('Una foto no subió: reinténtela o quítela, y vuelva a enviar.');
+      return;
+    }
+    if (fotos.some(fotoEnCurso)) return;
+    const { voz } = enviarAlSubir;
+    enviarAlSubir = null;
+    // Mientras tanto empezó otro turno (una sugerencia, «Continuar») o se está trayendo una conversación: no se pisa
+    if (turno || cargando) {
+      decirFotos('Las fotos ya subieron: envíe el mensaje cuando termine la respuesta.');
+      return;
+    }
+    vozEntregando = voz;  // una pregunta dictada sigue siendo dictada (su respuesta se oye)
+    try { enviarDelCompositor(); } finally { vozEntregando = false; }
+  }
+
+  /** Las fotos que salen con un mensaje dejan la bandeja (siguen en el turno). Si el foco estaba en ella (un envío que
+   * esperaba la subida), pasa a la conversación: en <body>, Escape ya no cerraría el panel. */
+  function soltarFotos(lista) {
+    const tenia = bandeja.contains(document.activeElement);
+    let alguna = false;
+    for (const f of lista) {
+      const i = fotos.indexOf(f);
+      if (i < 0) continue;
+      fotos.splice(i, 1);
+      f.item.li.remove();
+      alguna = true;
+    }
+    if (!alguna) return;
+    bandejaAbierta = false;
+    enviarAlSubir = null;
+    decirFotos('');
+    pintarBandeja();
+    if (tenia && abierto) log.focus({ preventScroll: true });
+  }
+
+  /** «Nueva conversación» trae de vuelta las fotos del mensaje que no llegó, ya subidas, para mandarlas ahí. */
+  function devolverFotos(lista) {
+    const lim = info?.adjuntos;
+    if (!lista?.length || !puedeFotos() || !lim) return;
+    for (const f of lista) {
+      if (f.quitada || !f.blob || fotos.includes(f) || fotos.length >= lim.maxPorMensaje) continue;
+      fotos.push(f);
+      listaFotos.append(f.item.li);
+    }
+    fotos.forEach(pintarFoto);
+    mostrarBandeja('');
+  }
+
+  /** Sin asistente (la cuenta quedó pendiente, el rol ya no lo usa): las fotos salen de la memoria. */
+  function vaciarFotos() {
+    for (const f of fotos.splice(0)) {
+      f.quitada = true;
+      f.control?.abort();
+      f.item.li.remove();
+      f.blob = null;
+    }
+    enviarAlSubir = null;
+    bandejaAbierta = false;
+    decirFotos('');
+    pintarBandeja();
+  }
+
+  adjuntarBtn.addEventListener('click', () => {
+    bandejaAbierta = bandeja.hidden;
+    pintarBandeja();
+    if (bandejaAbierta && !fotoCamaraBtn.disabled) fotoCamaraBtn.focus({ preventScroll: true });
+  });
+  fotoCamaraBtn.addEventListener('click', () => fotoCamaraIn.click());
+  fotoGaleriaBtn.addEventListener('click', () => fotoGaleriaIn.click());
+  for (const entradaFoto of [fotoCamaraIn, fotoGaleriaIn]) {
+    entradaFoto.addEventListener('change', () => {
+      const archivos = [...(entradaFoto.files || [])];
+      entradaFoto.value = '';   // la misma foto se puede volver a elegir
+      agregarFotos(archivos);
+    });
+  }
+
   // ── Eventos ──
   boton.addEventListener('click', () => abrir());
   cerrarBtn.addEventListener('click', () => cerrar({ foco: true }));
@@ -2447,10 +3149,21 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     const t = entrada.value;
     // Lo escrito se queda en el cuadro mientras no se puede enviar (un turno en curso, o se está trayendo una
     // conversación del historial): se manda con otro Enter
-    if (!t.trim() || turno || cargando || !info?.disponible) return;
+    if ((!t.trim() && !fotos.length) || turno || cargando || !info?.disponible) return;
+    // Con fotos, todas tienen que estar subidas. Con una que falló no se envía (el mensaje saldría sin ella sin que se
+    // note): hay que reintentarla o quitarla. Las que se preparan o suben se esperan: el mensaje sale solo al terminar
+    if (fotos.some((f) => f.estado === 'error')) {
+      mostrarBandeja('Una foto no subió: reinténtela o quítela antes de enviar.');
+      return;
+    }
+    if (fotos.some(fotoEnCurso)) {
+      enviarAlSubir = { voz: vozEntregando };
+      mostrarBandeja('Se envía cuando terminen de subir las fotos…');
+      return;
+    }
     entrada.value = '';
     autoAltura();
-    enviar(t);
+    enviar(t, { fotos: fotos.slice() });
   }
   form.addEventListener('submit', (e) => { e.preventDefault(); enviarDelCompositor(); });
   entrada.addEventListener('keydown', (e) => {

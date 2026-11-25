@@ -14,7 +14,9 @@ llama con `run_in_threadpool`.
 * `agente_mensajes`: un documento por mensaje, con `seq` creciente; nunca se edita lo guardado (append-only). Los
   bloques van como texto JSON (`contenido`): vuelven idénticos al reenviarlos y aceptan cualquier clave que escriba el
   modelo (también «$x» o «a.b»). `replay` dice si el mensaje se le reenvía al modelo (un rechazo o un aviso, no). La
-  respuesta inmediata de un turno (`adelanto.py`) es un mensaje `adelanto` con su `texto`, que nunca se reenvía.
+  respuesta inmediata de un turno (`adelanto.py`) es un mensaje `adelanto` con su `texto`, que nunca se reenvía. Un
+  mensaje de la persona con fotos de planillas físicas guarda sus ids y medidas (`adjuntos`), nunca la imagen: las
+  fotos son de la bandeja de planillas del panel (`app/planillas.py`), con su propia retención.
 * `agente_uso`: mensajes, tokens y (con Mnemo) créditos por persona y día (hora de Colombia), para el tope diario y
   para ver el gasto.
 * `agente_olvidos`: quién dejó de autorizar en la última hora (`persona_id` y `ts`, nada más; lo anota
@@ -35,6 +37,7 @@ from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
 
 from .. import modelo
+from . import grafico
 from .llm import CENTINELA
 
 CONVERSACIONES, MENSAJES, USO, OLVIDOS = "agente_conversaciones", "agente_mensajes", "agente_uso", "agente_olvidos"
@@ -182,11 +185,25 @@ def sumar_personas(db: Database, cid: int, ids: set[int]) -> None:
 
 
 def tiene_personas(db: Database, cid: Any) -> bool:
-    """¿El modelo ya recibió en esta conversación datos de alguna persona (`personas` no está vacía)? Lo que escribe en
-    ella no se proyecta ante una sala (la guarda de la herramienta `presentacion`). Sin conversación, no."""
+    """¿El modelo ya recibió en esta conversación datos de alguna persona (`personas` no está vacía, o `con_datos`: lo
+    leído de una planilla física, que trae personas que aún no tienen ficha)? Lo que escribe en ella no se proyecta ante
+    una sala (la guarda de la herramienta `presentacion`) ni se dice con la voz clonada. Sin conversación, no."""
     if not isinstance(cid, int) or isinstance(cid, bool):
         return False
-    return db[CONVERSACIONES].find_one({"_id": cid, "personas.0": {"$exists": True}}, {"_id": 1}) is not None
+    return db[CONVERSACIONES].find_one({"_id": cid, "$or": [{"personas.0": {"$exists": True}}, {"con_datos": True}]},
+                                       {"_id": 1}) is not None
+
+
+def con_datos(conv: dict | None) -> bool:
+    """La misma pregunta que `tiene_personas` sobre un documento de conversación ya leído."""
+    return bool((conv or {}).get("personas")) or (conv or {}).get("con_datos") is True
+
+
+def marcar_datos(db: Database, cid: Any) -> None:
+    """Marca que el modelo recibió en esta conversación datos de personas que no se pueden anotar por su id (las filas
+    de una planilla física leída): desde ahí cuenta como `tiene_personas`."""
+    if isinstance(cid, int) and not isinstance(cid, bool):
+        db[CONVERSACIONES].update_one({"_id": cid}, {"$set": {"con_datos": True}})
 
 
 def suprimidas(db: Database, ids: set[int]) -> list[int]:
@@ -276,8 +293,18 @@ def mensajes_de(db: Database, cid: int) -> list[dict]:
     return list(db[MENSAJES].find({"conversacion": cid}).sort("seq", 1))
 
 
+def _adjuntos(v: Any) -> list[dict]:
+    """Las fotos de planillas que trajo un mensaje, como se guardaron (`bucle.Turno._fotos`): id y medidas."""
+    out = []
+    for a in v if isinstance(v, list) else []:
+        if isinstance(a, dict) and isinstance(a.get("id"), str):
+            out.append({"id": a["id"], **{k: a[k] for k in ("ancho", "alto") if isinstance(a.get(k), int)}})
+    return out
+
+
 def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> dict:
-    """La conversación como la pinta el widget: `mensajes` de la persona (su texto, sin el contexto del panel) y del
+    """La conversación como la pinta el widget: `mensajes` de la persona (su texto, sin el contexto del panel, y las
+    fotos de planillas que adjuntó, `adjuntos`: id y medidas, solo si trajo; nunca la imagen) y del
     asistente (partes: texto, notas de progreso, herramientas con su estado y avisos; y, la primera, la respuesta
     inmediata del turno, `{"tipo": "adelanto", "texto"}`, aunque se haya guardado después de otras), lo que espera
     aprobación (con `vieja` si su tarjeta la guardó una versión anterior del panel, que no mostraba los valores enteros)
@@ -301,13 +328,20 @@ def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> di
             p = partes.get(h.get("id")) if isinstance(h, dict) else None
             if p is not None:
                 p["estado"], p["resumen"] = h.get("estado") or p["estado"], h.get("resumen") or ""
+                g = grafico.validar(h.get("grafico")) if h.get("grafico") is not None else None
+                if g is not None:
+                    p["grafico"] = g
 
     for d in docs:
         rol = d.get("rol")
         if rol == "user":
             estado(d.get("herramientas"))
             if isinstance(d.get("texto"), str):
-                mensajes.append({"rol": "usuario", "texto": d["texto"]})
+                m = {"rol": "usuario", "texto": d["texto"]}
+                fotos = _adjuntos(d.get("adjuntos"))
+                if fotos:  # solo si las trae: un mensaje sin fotos queda igual que siempre
+                    m["adjuntos"] = fotos
+                mensajes.append(m)
                 actual = None
         elif rol == "assistant" and d.get("replay"):
             for b in de_json(d.get("contenido"), []):

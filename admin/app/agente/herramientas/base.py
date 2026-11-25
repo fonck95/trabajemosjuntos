@@ -89,10 +89,16 @@ class Resultado:
 
 @dataclass
 class Confirmacion:
-    """La tarjeta que el panel muestra antes de una escritura: qué se va a hacer, con los valores exactos."""
+    """La tarjeta que el panel muestra antes de una escritura: qué se va a hacer, con los valores exactos.
+
+    `personas`: los ids de las personas cuyos datos muestra la tarjeta aunque la entrada no los nombre con
+    `persona_id`/`persona_ids` (un conflicto, una solicitud, un grupo de duplicados, las filas de una planilla). El bucle
+    (y las propuestas por MCP) las anotan junto con las de la entrada: si alguna se suprime o dice «no», se borra lo que
+    las guarda. No va a la interfaz."""
     titulo: str
     detalle: list[tuple[str, str]] = field(default_factory=list)
     aviso: str | None = None
+    personas: set[int] = field(default_factory=set)
 
     def para_interfaz(self) -> dict:
         return {"titulo": self.titulo, "detalle": [[str(k), str(v)] for k, v in self.detalle], "aviso": self.aviso}
@@ -121,11 +127,43 @@ class Contexto:
     emitir: Callable[[dict], None] | None = None
     # Cuándo empezó la herramienta: el bucle arma el contexto justo antes de correrla
     inicio: float = field(default_factory=time.monotonic)
+    # El plazo de esta herramienta (`Herramienta.plazo` o el de siempre): una carga de planilla o una unión en lote
+    # tienen más que los 60 s de siempre, y sus escrituras deben poder usarlo
+    plazo: float = PLAZO_HERRAMIENTA_S
+    # Por dónde llega la llamada: «chat» (el asistente del panel) o «mcp» (un agente externo con la clave de la
+    # persona, `api/mcp.py`). Las herramientas pueden ser más estrictas por MCP (páginas más chicas, sin filas de quien
+    # no autorizó)
+    via: str = "chat"
+    # En el chat, ¿la conversación se creó con las herramientas políticas (`sistema.HERRAMIENTAS_POLITICAS`)? Sus
+    # instrucciones y su lista de herramientas quedan fijas al crearla: una que empezó con el ajuste apagado no trae las
+    # reglas de los datos políticos y no los recibe aunque después se encienda (hay que abrir una nueva). Por MCP no
+    # aplica (cada llamada lee el ajuste)
+    politicos_conversacion: bool = True
+
+    def politicos(self) -> bool:
+        """¿Esta llamada recibe los datos políticos que el panel le muestra al rol (`agente_politicos`: `asistente`
+        en el chat, `mcp` por MCP)? Solo enciende la vía: qué ve cada rol lo sigue decidiendo la API (A y K, todo; P,
+        el tipo y el «Liderado por» de su zona, `proyeccion.tipo_visible`; C, nada)."""
+        from .. import politica  # aquí: politica importa el proveedor del modelo
+        return self.politicos_conversacion and politica.usa_politicos(self.ajustes, self.via)
 
     def plazo_escritura(self) -> float:
         """Los segundos que le quedan a una escritura del panel para terminar antes de que el bucle corte la
         herramienta, con margen para avisar que pudo quedar hecha (`interno.ApiInterna.pedir`)."""
-        return self.inicio + PLAZO_HERRAMIENTA_S - MARGEN_PLAZO_S - time.monotonic()
+        return self.inicio + self.plazo - MARGEN_PLAZO_S - time.monotonic()
+
+
+def via_de(quien: Any) -> str:
+    """La vía de una persona fuera de una llamada (al decidir qué herramientas se le ofrecen): «mcp» si su sesión es la
+    interna de un agente externo (`acceso.Quien.via`), «chat» si no."""
+    return "mcp" if getattr(quien, "via", None) == "mcp" else "chat"
+
+
+def politicos_ofrecidos(quien: Any, ajustes: dict) -> bool:
+    """`disponible_ajustes` de las herramientas que solo tratan datos políticos (la lista de líderes, marcar un tipo,
+    asignar un líder): `agente_politicos` encendido para la vía de `quien`."""
+    from .. import politica  # aquí: politica importa el proveedor del modelo
+    return politica.usa_politicos(ajustes, via_de(quien))
 
 
 Ejecutar = Callable[[Contexto, Any], Awaitable[Resultado]]
@@ -150,10 +188,26 @@ class Herramienta:
     nombre_remoto: str | None = None
     # Su plazo en el bucle, si no es el de siempre (`PLAZO_HERRAMIENTA_S`): la presentación escribe un plan en flujo
     plazo: float | None = None
+    # Por MCP (`api/mcp.py`): el alcance de clave que la ofrece («lectura», «analitica» o «escritura»). None = nunca
+    # por MCP: cada herramienta que sale del panel hacia un agente externo se decide una por una (una prueba fija los
+    # nombres por alcance)
+    mcp: str | None = None
+    # Condición extra que depende de los ajustes de primer nivel del panel (`politica.leer`: `agente_planillas`,
+    # `agente_mcp`…), no solo de los del asistente: (quien, ajustes) -> bool. Sin ajustes se evalúa con los de defecto
+    disponible_ajustes: Callable[[Any, dict], bool] | None = None
 
     def __post_init__(self) -> None:
         if self.tipo == "escritura" and self.confirmar is None:
             raise ValueError(f"La herramienta de escritura {self.nombre} necesita `confirmar`")
+
+    def alcance_mcp(self) -> str | None:
+        """El alcance de clave MCP que ofrece esta herramienta, o None si no se ofrece por MCP (lo de siempre: hay
+        que marcarla). Nunca las de Mnemo ni las de interfaz (mueven el navegador del panel)."""
+        if self.nombre_remoto or self.tipo == "interfaz" or self.mcp not in ("lectura", "analitica", "escritura"):
+            return None
+        if (self.mcp == "escritura") != (self.tipo == "escritura"):
+            return None
+        return self.mcp
 
     def permitida(self, quien: Any) -> bool:
         return all(quien.puede(p) for p in self.permisos)

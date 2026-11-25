@@ -5,11 +5,16 @@ Se aplica DESPUÉS de la proyección por rol de la API: solo quita y enmascara (
 ya mandó, nunca de la base), así que un planillero o un consultor nunca recibe más que en la interfaz. Reglas:
 
 * Lista blanca de campos. Fuera siempre: datos sensibles (`sensibles*`, `regimen_salud`, las etiquetas y los campos
-  propios marcados como sensibles), `listas`, el tipo de persona y el «Liderado por» (`lider`, `votante`, `concejal`,
-  `lideres`; tampoco como nombres en `editables` ni `faltan`), `origen`, `procedencia`, `historial`, `alternos`,
-  `fuentes` y `cedula_origen` (la fuente «cedulas» revela una base política), `coincidencias` (nombres de otras
-  personas), `punto`/`lat`/`lon`, `correo`, el número de ficha, la fecha de nacimiento exacta, los teléfonos completos
-  y los trámites. De quien registró o tomó algo (`uid`, `usuario`) no sale nada: no hace falta para la tarea.
+  propios marcados como sensibles), `origen`, `procedencia`, `historial`, `alternos`, `coincidencias` (nombres de
+  otras personas), `punto`/`lat`/`lon`, `correo`, el número de ficha, la fecha de nacimiento exacta, los teléfonos
+  completos y los trámites. De quien registró o tomó algo (`uid`, `usuario`) no sale nada: no hace falta para la tarea.
+* Los datos políticos (el tipo de persona: `lider`, `votante`, `concejal`; el «Liderado por»: `lideres`, `lideres_n`,
+  `traidas`; las `listas` de origen; las `fuentes` y la `cedula_origen`, que nombran las bases «cedulas» y
+  «general») salen solo con `Politicos` (`agente_politicos` encendido para la vía de la llamada,
+  `Contexto.politicos`) y solo los que la API ya le mandó al rol: A y K, todos; P, el tipo y el «Liderado por» de las
+  personas de su zona o que registró (`proyeccion.tipo_visible`); C, ninguno. Sin `Politicos` (el ajuste apagado)
+  no salen, tampoco como nombres en `editables` ni `faltan`. Un líder que no autorizó el tratamiento nunca se nombra
+  en el «Liderado por» de otra persona (`Politicos.no_autorizaron`): que lidera es un dato suyo.
 * La cédula sale enmascarada («···123») también para el administrador; los teléfonos, con su estado y su `indice` (el
   que pide `registrar_acercamiento`) y el número enmascarado («···2233»).
 * De quien no autorizó el tratamiento («No autorizó») solo sale quién es, que no autorizó y su barrio o vereda si es
@@ -51,8 +56,12 @@ CAMPOS_FICHA = (
     "consentimiento_canales", "contacto_habilitado", "mayor_declarado", "reclamo_en_tramite", "faltan", "editables",
     "avisos", "completitud", "ultimo_contacto", "creado_en", "actualizado_en",
 )
-# El tipo de persona y el «Liderado por» (datos políticos): ni como valor ni como nombre en `editables` o `faltan`
+# El tipo de persona y el «Liderado por» (datos políticos): sin `Politicos`, ni como valor ni como nombre en
+# `editables` o `faltan`
 POLITICOS = frozenset({*modelo.TIPOS_PERSONA, "lideres"})
+TIPOS = tuple(modelo.TIPOS_PERSONA)
+LISTA_MAX = 120     # el nombre de una lista de origen
+LIDERES_MAX = 10    # como `api.lideres.MAX_LIDERES`
 # Textos libres de la ficha que pasan, recortados y enmascarados
 TEXTOS_FICHA = ("direccion", "lugar_texto", "observaciones")
 CLAVES_ABORDAJE = ("estado", "n", "efectivos", "intentos_sin_exito", "ultimo_fecha", "ultimo_canal", "ultimo_resultado",
@@ -78,6 +87,16 @@ _FECHAS = re.compile(
     rf"|(?P<d2>\d{{1,2}}){_E}(?P<s2>[-./\u2010-\u2015]){_E}(?P<m2>\d{{1,2}}){_E}(?P=s2){_E}(?P<a2>\d{{4}})"
     rf"|(?P<desde>(?:19|20)\d\d){_E}[-/\u2010-\u2015]{_E}(?P<hasta>(?:19|20)\d\d))(?!\d)")
 _CORREOS = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+
+
+@dataclass(frozen=True)
+class Politicos:
+    """Que la respuesta lleve los datos políticos que la API ya le dio al rol (`agente_politicos` encendido para la
+    vía de la llamada). `no_autorizaron`: los líderes de las personas de la respuesta que no autorizaron el
+    tratamiento (no se nombran). `traidas`: lo que trajo la persona de la ficha, contado sin quienes no autorizaron
+    (lo pone la herramienta: la API cuenta a todos); sin él, la ficha va sin `traidas`."""
+    no_autorizaron: frozenset[int] = field(default_factory=frozenset)
+    traidas: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -172,16 +191,67 @@ def _barrio_o_vereda(d: dict, lugares: Container[str] | None) -> str | None:
     return texto_libre(lugar, LUGAR_MAX) if isinstance(lugar, str) and lugar else None
 
 
+def ids_lideres(docs: Iterable[Any]) -> set[int]:
+    """Los ids de los líderes que nombran las filas o fichas de la API (su «Liderado por»): para saber cuáles no
+    autorizaron antes de minimizar (`Politicos.no_autorizaron`)."""
+    out: set[int] = set()
+    for d in docs or []:
+        for l in (d.get("lideres") if isinstance(d, dict) and isinstance(d.get("lideres"), list) else []):
+            i = l.get("id") if isinstance(l, dict) else None
+            if isinstance(i, int) and not isinstance(i, bool):
+                out.add(i)
+    return out
+
+
+def lideres(v: Any, politicos: Politicos) -> list[dict]:
+    """El «Liderado por» de una fila o ficha: quién la lidera (id, nombre y si es líder o concejal; en la ficha, si
+    sigue marcado), sin quién lo asignó y sin los líderes que no autorizaron."""
+    out = []
+    for l in v if isinstance(v, list) else []:
+        i = l.get("id") if isinstance(l, dict) else None
+        if not isinstance(i, int) or isinstance(i, bool) or i in politicos.no_autorizaron:
+            continue
+        x = {"id": i, "nombre": l.get("nombre"), "tipo": l.get("tipo")}
+        if isinstance(l.get("marcado"), bool):
+            x["marcado"] = l["marcado"]
+        out.append(x)
+    return out[:LIDERES_MAX]
+
+
+def _listas(v: Any) -> list[str]:
+    return [texto_libre(x, LISTA_MAX) for x in v if isinstance(x, str) and x.strip()] if isinstance(v, list) else []
+
+
+def _fuentes(v: Any) -> list[str]:
+    return [x for x in v if isinstance(x, str)] if isinstance(v, list) else []
+
+
+def _politicos_fila(f: dict, out: dict, politicos: Politicos) -> None:
+    """Los datos políticos de una fila que la API ya trae para el rol (A y K: el tipo, el «Liderado por» y las
+    fuentes; P y C no los reciben en sus filas)."""
+    for t in TIPOS:
+        if t in f:
+            out[t] = f[t] is True
+    if isinstance(f.get("lideres"), list):
+        out["lideres"] = lideres(f["lideres"], politicos)
+        out["lideres_n"] = len(out["lideres"])
+    elif isinstance(f.get("lideres_n"), int) and not isinstance(f.get("lideres_n"), bool):
+        out["lideres_n"] = f["lideres_n"]
+    if "fuentes" in f:
+        out["fuentes"] = _fuentes(f["fuentes"])
+
+
 def no_autorizo(d: dict, lugares: Container[str] | None = None) -> dict:
     """De quien no autorizó el tratamiento: quién es, que no autorizó y su barrio o vereda del nomenclátor."""
     return {"id": d.get("id"), "nombre": d.get("nombre"), "lugar": _barrio_o_vereda(d, lugares),
             "consentimiento": "no", "aviso": AVISO_NO_AUTORIZO}
 
 
-def fila(f: dict, lugares: Container[str] | None = None) -> dict:
+def fila(f: dict, lugares: Container[str] | None = None, politicos: Politicos | None = None) -> dict:
     """Una fila de Habitantes, de la búsqueda, de las parecidas, de una cola o de una lista de asistentes, ya
     proyectada por rol. `lugar` puede ser el texto libre de la ficha: pasa por las máscaras. `lugares`
-    (`lugares_de`), si se tiene, reconoce el barrio o vereda de quien no autorizó en las filas que no lo dicen."""
+    (`lugares_de`), si se tiene, reconoce el barrio o vereda de quien no autorizó en las filas que no lo dicen.
+    `politicos`: con los datos políticos que la fila ya trae para el rol (sin él, ninguno)."""
     if not isinstance(f, dict):
         return {}
     if f.get("consentimiento") == "no":
@@ -199,11 +269,14 @@ def fila(f: dict, lugares: Container[str] | None = None) -> dict:
         out["situacion"] = _situacion(out["situacion"])
     if "requiere_actualizacion" in out:
         out["requiere_actualizacion"] = _requiere(out["requiere_actualizacion"])
+    if politicos is not None:
+        _politicos_fila(f, out, politicos)
     return out
 
 
-def filas(fs: Iterable[dict], lugares: Container[str] | None = None) -> list[dict]:
-    return [fila(f, lugares) for f in fs or [] if isinstance(f, dict)]
+def filas(fs: Iterable[dict], lugares: Container[str] | None = None,
+          politicos: Politicos | None = None) -> list[dict]:
+    return [fila(f, lugares, politicos) for f in fs or [] if isinstance(f, dict)]
 
 
 def _telefonos(ts: Any) -> list[dict]:
@@ -234,21 +307,38 @@ def _lista(d: dict, clave: str) -> list[dict] | None:
     return [x for x in v if isinstance(x, dict)] if isinstance(v, list) else None
 
 
-def ficha(d: dict, sensibles: Sensibles | None = None, lugares: Container[str] | None = None) -> dict:
+def ficha(d: dict, sensibles: Sensibles | None = None, lugares: Container[str] | None = None,
+          politicos: Politicos | None = None) -> dict:
     """La ficha de `GET /api/personas/{id}` (o la que devuelve una escritura), proyectada por rol, reducida a lo que el
     modelo necesita. Las listas de la API llegan de la más reciente a la más vieja: se toman las primeras. `lugares`,
     como en `fila`: la ficha de quien no autorizó, para planilleros y consultores, no dice si `lugar` es del
-    nomenclátor."""
+    nomenclátor. `politicos`: con los datos políticos que la ficha ya trae para el rol (sin él, ninguno)."""
     if not isinstance(d, dict):
         return {}
     if d.get("consentimiento") == "no":
         return no_autorizo(d, lugares)
     out = {k: d[k] for k in CAMPOS_FICHA if k in d}
-    # Ni el tipo de persona ni el «Liderado por» en las listas que pasan tal cual: los `editables` de P traen solo los
-    # tipos que la persona todavía no tiene (P solo suma), así que cambian de una persona a otra y dirían su tipo
-    for k in ("editables", "faltan"):
-        if isinstance(out.get(k), list):
-            out[k] = [x for x in out[k] if x not in POLITICOS]
+    # Sin `politicos`, ni el tipo de persona ni el «Liderado por» en las listas que pasan tal cual: los `editables` de P
+    # traen solo los tipos que la persona todavía no tiene (P solo suma), así que cambian de una persona a otra y
+    # dirían su tipo. Con `politicos`, P ya recibe el tipo de esas mismas personas (`tipo_visible`): pasan como están
+    if politicos is None:
+        for k in ("editables", "faltan"):
+            if isinstance(out.get(k), list):
+                out[k] = [x for x in out[k] if x not in POLITICOS]
+    else:
+        for t in TIPOS:
+            if t in d:
+                out[t] = d[t] is True
+        if isinstance(d.get("lideres"), list):
+            out["lideres"] = lideres(d["lideres"], politicos)
+        if "listas" in d:
+            out["listas"] = _listas(d["listas"])
+        if "fuentes" in d:
+            out["fuentes"] = _fuentes(d["fuentes"])
+        if isinstance(d.get("cedula_origen"), str):
+            out["cedula_origen"] = d["cedula_origen"]
+        if d.get("traidas") is not None and isinstance(politicos.traidas, dict):
+            out["traidas"] = dict(politicos.traidas)
     if d.get("cedula"):
         out["cedula_ult3"] = acceso.enmascarar_cedula(d["cedula"])
     if "cedula" in d or "cedula_ult3" in d:

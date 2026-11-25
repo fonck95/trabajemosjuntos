@@ -211,15 +211,17 @@ def test_definiciones_son_json_schema_validos_para_la_messages_api():
         assert (h.tipo == "escritura") == (h.confirmar is not None) == (h.nombre in ESCRITURAS), h.nombre
         assert h.tipo == ("lectura" if h.nombre in LECTURAS else "escritura" if h.nombre in ESCRITURAS
                           else "interfaz"), h.nombre
-    # Los filtros nunca ofrecen búsqueda por texto, listas, líderes, régimen de salud ni la base con cédula
+    # Los filtros nunca ofrecen búsqueda por texto, régimen de salud, ids ni polígonos. Los políticos (lista, tipo,
+    # líder, la base con cédula) están, pero solo valen para A y K con `agente_politicos` (tests/test_politicos_*.py)
     filtros = H["indicadores"].definicion()["input_schema"]["properties"]["filtros"]["properties"]
-    assert not {"q", "lista", "lider", "regimen_salud", "ids", "poligono", "mios"} & set(filtros)
-    assert "cedulas" not in filtros["fuente"]["enum"] and "ambas" not in filtros["fuente"]["enum"]
+    assert not {"q", "lider", "regimen_salud", "ids", "poligono", "mios"} & set(filtros)
+    assert {"lista", "tipo", "lider_id", "varios_lideres", "sin_lider"} <= set(filtros)
+    assert {"cedulas", "general", "ambas"} <= set(filtros["fuente"]["enum"])
 
 
 @pytest.mark.parametrize("filtros", [
-    {"lista": "Lista A"}, {"lider": True}, {"q": "ana"}, {"q": "93000777"}, {"fuente": "cedulas"},
-    {"fuente": "ambas"}, {"regimen_salud": "Subsidiado"}, {"ids": "1,2"}, {"poligono": "1,2;3,4;5,6"}, {"mios": True},
+    {"lista": ""}, {"lider": True}, {"q": "ana"}, {"q": "93000777"}, {"fuente": "otra_base"},
+    {"tipo": "candidato"}, {"regimen_salud": "Subsidiado"}, {"ids": "1,2"}, {"poligono": "1,2;3,4;5,6"}, {"mios": True},
     {"zona": "marte"}, {"edad_min": 50, "edad_max": 20}, {"lugar": "La Paz", "lugar_id": 74}, {"tipo_lugar": "vereda"},
     {"sexo": "X"}, {"lugar_id": True}, {"estrato": 9}, {"faltan": ["dientes"]}, {"etiqueta": 0},
     {"requiere_actualizacion": True, "motivos_actualizacion": ["no_contesta"]}, {"sin_cedula": 1},
@@ -255,7 +257,10 @@ def test_indicadores_compactos_sin_listas_sensibles_ni_actividad(sesion, ctx_de)
     assert {"listas", "sensibles", "actividad", "fuentes", "demografia"} <= set(crudo)  # la API sí los trae
     assert crudo["actividad"] and crudo["listas"] and crudo["kpi"]["lideres"] == 1
     for cli in (sesion, coordinador(app, db)):
-        r = _ej(sesion, ctx_de(cli), "indicadores", {})
+        # Con los datos políticos apagados (`agente_politicos`); encendidos, A y K reciben los líderes, las listas y
+        # las fuentes (tests/test_politicos_herramientas.py)
+        r = _ej(sesion, ctx_de(cli, ajustes={"agente_politicos": {"asistente": False, "mcp": False}}),
+                "indicadores", {})
         c = r.contenido
         assert c["kpi"]["personas"] == 4 and c["alcance"] == "tablero" and c["filtros"] == {}
         assert not {"lideres", "en_ambas_bases"} & set(c["kpi"])

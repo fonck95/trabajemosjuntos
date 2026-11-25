@@ -231,12 +231,16 @@ ESPERA_S = (2, 60)   # reintentos de crear el panel o de conectarlo a MongoDB: e
 CUPOS_PANEL = 16     # peticiones de la API del panel atendidas a la vez (anyio presta 40 hilos a todo el servidor)
 CUPOS_AGENTE = 4     # turnos del asistente en flujo a la vez: cupos propios, para no quitárselos a la API
 CUPOS_VOZ = 6        # frases de la voz clonada en flujo a la vez: cupos propios (no se los quita al chat ni a la API)
+CUPOS_SUBIDA = 4     # fotos de planillas subiendo a la vez: cupos propios (una foto por una red lenta tarda)
 ESPERA_CUPO_S = 2    # sin cupo en este tiempo, 503
 # Las respuestas en flujo del asistente (app/api/agente.py): retienen la conexión todo el turno (hasta minutos)
 RUTAS_AGENTE = frozenset({"/api/agente/mensajes", "/api/agente/confirmaciones"})
 # El audio de la voz clonada (app/agente/voz.py): retiene la conexión mientras Mnemo dice la frase (segundos), y el
 # navegador pide la que suena y la siguiente a la vez
 RUTAS_VOZ = frozenset({"/api/agente/voz"})
+# La foto de una planilla física (app/api/planillas.py, hasta 1,5 MB): desde el campo puede tardar un minuto en llegar.
+# La ruta la lee ella misma, con su tope y su plazo, después de revisar la sesión y el permiso (sin cuerpo leído antes)
+RUTAS_SUBIDA = frozenset({"/api/planillas/fotos"})
 PLAZO_CUERPO_S = 10  # el cuerpo del ingreso o de un turno del asistente llega entero en este tiempo, o 408
 SIN_CACHE = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex", "X-Content-Type-Options": "nosniff"}
 
@@ -340,14 +344,20 @@ class LimitePanel:
 
     La voz clonada (`RUTAS_VOZ`), igual, con sus propios `cupos_voz`: cada frase retiene su conexión mientras Mnemo la
     dice y el navegador pide la que suena y la siguiente; no compite con el turno que está leyendo en voz alta ni con la
-    API (16 + 4 + 6 caben en los 40 hilos: un flujo no retiene ninguno mientras espera)."""
+    API (16 + 4 + 6 caben en los 40 hilos: un flujo no retiene ninguno mientras espera).
+
+    La subida de una foto de planilla (`RUTAS_SUBIDA`) también tiene sus `cupos_subida`: por la red de una vereda la
+    foto tarda en llegar, y unos planilleros subiendo no deben dejar la API en 503. Su cuerpo no se lee antes (pasa de
+    `limite`): lo lee la ruta con su propio tope y plazo, después de revisar la sesión y el permiso (sin sesión, la
+    guardia responde 401 sin leerlo). Ninguna subida retiene un hilo mientras llega."""
 
     def __init__(self, app, cupos: int, espera_s: float, sin_sesion=frozenset(), limite: int = 0,
-                 plazo_s: float = PLAZO_CUERPO_S, *, cupos_agente: int = CUPOS_AGENTE, cupos_voz: int = CUPOS_VOZ):
+                 plazo_s: float = PLAZO_CUERPO_S, *, cupos_agente: int = CUPOS_AGENTE, cupos_voz: int = CUPOS_VOZ,
+                 cupos_subida: int = CUPOS_SUBIDA):
         self.app, self.cupos, self.espera_s = app, cupos, espera_s
         self.sin_sesion, self.limite, self.plazo_s = frozenset(sin_sesion), limite, plazo_s
-        self.cupos_agente, self.cupos_voz = cupos_agente, cupos_voz
-        self._bucle = self._semaforo = self._semaforo_agente = self._semaforo_voz = None
+        self.cupos_agente, self.cupos_voz, self.cupos_subida = cupos_agente, cupos_voz, cupos_subida
+        self._bucle = self._semaforo = self._semaforo_agente = self._semaforo_voz = self._semaforo_subida = None
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -369,7 +379,9 @@ class LimitePanel:
             self._bucle, self._semaforo = bucle, asyncio.Semaphore(self.cupos)
             self._semaforo_agente = asyncio.Semaphore(self.cupos_agente)
             self._semaforo_voz = asyncio.Semaphore(self.cupos_voz)
+            self._semaforo_subida = asyncio.Semaphore(self.cupos_subida)
         semaforo = (self._semaforo_agente if ruta in RUTAS_AGENTE else self._semaforo_voz if ruta in RUTAS_VOZ
+                    else self._semaforo_subida if ruta in RUTAS_SUBIDA
                     else self._semaforo)
         try:
             await asyncio.wait_for(semaforo.acquire(), self.espera_s)
@@ -466,7 +478,7 @@ def crear_servidor(cfg=None, sitio: Path | None = None) -> Starlette:
         Route("/health", salud),
         Route(PREFIJO, al_panel),
         Mount(PREFIJO, app=LimitePanel(montaje, CUPOS_PANEL, ESPERA_CUPO_S, *reglas_del_panel(), PLAZO_CUERPO_S,
-                                       cupos_agente=CUPOS_AGENTE, cupos_voz=CUPOS_VOZ)),
+                                       cupos_agente=CUPOS_AGENTE, cupos_voz=CUPOS_VOZ, cupos_subida=CUPOS_SUBIDA)),
         Mount("/", app=sitio_publico(sitio)),
     ]
     app = Starlette(routes=rutas, lifespan=ciclo)

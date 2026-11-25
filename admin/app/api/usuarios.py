@@ -244,9 +244,13 @@ def indicadores(db: Database, uids: list[int], d: date, h: date, ts_desde: str, 
     return out
 
 
-def serie(db: Database, uid: int, ts_desde: str, ts_hasta: str, agrupar: str = "dia") -> list[dict]:
+def serie(db: Database, uid: int, ts_desde: str, ts_hasta: str, agrupar: str = "dia",
+          tratables: bool = False) -> list[dict]:
     """Serie del periodo por día, semana o mes: fichas creadas, personas actualizadas y acercamientos. Cuenta personas
-    distintas en cada periodo: no suma al total."""
+    distintas en cada periodo: no suma al total. Con `tratables` (la analítica y el asistente), sin lo hecho con
+    quienes no autorizaron, como `indicadores`; lo anonimizado por una supresión sigue contando (ya no es de nadie y
+    es trabajo del usuario)."""
+    sin = _no_autorizaron(db) if tratables else []
     fecha = {"$dateToString": {"format": AGRUPAR[agrupar], "timezone": "-05:00", "onNull": None, "date": {
         "$cond": [{"$eq": [{"$type": "$ts"}, "date"]}, "$ts",
                   {"$dateFromString": {"dateString": {"$toString": "$ts"}, "onError": None, "onNull": None}}]}}}
@@ -255,7 +259,7 @@ def serie(db: Database, uid: int, ts_desde: str, ts_hasta: str, agrupar: str = "
     def fila(f: str) -> dict:
         return filas.setdefault(f, {"fecha": f, "creadas": 0, "actualizadas": 0, "acercamientos": 0})
 
-    for x in db.auditoria.aggregate(_base_auditoria([uid], ts_desde, ts_hasta) + [
+    for x in db.auditoria.aggregate(_base_auditoria([uid], ts_desde, ts_hasta, sin) + [
             {"$set": {"_f": fecha}},
             {"$group": {"_id": {"f": "$_f", "p": "$entidad_id"}, "creadas": _cuenta({"$eq": ["$accion", "crear"]}),
                         "edito": {"$max": {"$and": [{"$in": ["$accion", list(modelo.ACCIONES_EDICION)]},
@@ -263,7 +267,7 @@ def serie(db: Database, uid: int, ts_desde: str, ts_hasta: str, agrupar: str = "
             {"$group": {"_id": "$_id.f", "creadas": {"$sum": "$creadas"}, "actualizadas": _cuenta("$edito")}}]):
         if x["_id"]:
             fila(x["_id"]).update(creadas=x["creadas"], actualizadas=x["actualizadas"])
-    for x in db.acercamientos.aggregate([_base_acercamientos([uid], ts_desde, ts_hasta), {"$set": {"_f": fecha}},
+    for x in db.acercamientos.aggregate([_base_acercamientos([uid], ts_desde, ts_hasta, sin), {"$set": {"_f": fecha}},
                                          {"$group": {"_id": "$_f", "n": {"$sum": 1}}}]):
         if x["_id"]:
             fila(x["_id"])["acercamientos"] = x["n"]
@@ -397,9 +401,11 @@ def _usuario(db: Database, uid: int) -> dict:
 def _detalle(db: Database, u: dict) -> dict:
     est = _estado(db, [u])
     nh = next(iter(est["por_h"]))
+    # Sin las sesiones internas (`via`: la de un agente externo por MCP mientras corre una llamada, minutos): no son de
+    # un navegador ni se cierran desde aquí (cerrar las sesiones del usuario también las corta)
     sesiones = [{"creada": s.get("creada"), "ultima_actividad": s.get("ultima_actividad"), "expira": s.get("expira"),
                  "ip": s.get("ip"), "agente": s.get("agente")}
-                for s in db.sesiones.find({"uid": u["_id"]}).sort("creada", -1)]
+                for s in db.sesiones.find({"uid": u["_id"], "via": {"$exists": False}}).sort("creada", -1)]
     intentos = [{"ts": x.get("ts"), "ip": x.get("ip")}
                 for x in db.intentos.find({"nombre_h": nh, "ok": False}).sort("ts", -1).limit(20)]
     return {**_fila(u, est), "sesiones": sesiones, "intentos_recientes": intentos}

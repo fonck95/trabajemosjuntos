@@ -299,8 +299,11 @@ def test_homonimos_e_inexistentes_no_mueven_nada(sesion, ctx_de):
 
 
 @pytest.mark.parametrize("accion", [
-    {"tipo": "filtros", "valores": {"lista": "Lista A"}}, {"tipo": "filtros", "valores": {"q": "ana"}},
-    {"tipo": "filtros", "valores": {"fuente": "cedulas"}}, {"tipo": "filtros", "valores": {"regimen_salud": "Ninguno"}},
+    # La lista, el tipo, el líder y las bases políticas son filtros válidos: solo A y K con `agente_politicos` (los
+    # rechaza la herramienta, tests/test_politicos_herramientas.py); aquí, valores que no existen
+    {"tipo": "filtros", "valores": {"lista": ""}}, {"tipo": "filtros", "valores": {"q": "ana"}},
+    {"tipo": "filtros", "valores": {"fuente": "otra_base"}},
+    {"tipo": "filtros", "valores": {"regimen_salud": "Ninguno"}},
     {"tipo": "filtros", "valores": {"ids": "1,2"}}, {"tipo": "filtros", "valores": {"area_id": 1}},
     {"tipo": "filtros", "valores": {"poligono": "1,2;3,4;5,6"}}, {"tipo": "filtros", "valores": {"mios": True}},
     {"tipo": "filtros", "valores": {"lider": True}}, {"tipo": "filtros", "valores": {"zona": "marte"}},
@@ -430,7 +433,7 @@ def test_abrir_vista_rutas_por_rol(sesion, como, ctx_de):
     {"vista": "ficha"}, {"vista": "reunion"}, {"vista": "panel", "id": 3}, {"vista": "reuniones", "filtros": {}},
     {"vista": "reuniones", "q": "ana"}, {"vista": "mapa", "q": "ana"}, {"vista": "mapa", "ids": [1]},
     {"vista": "calidad", "pestana": "otra"}, {"vista": "habitantes", "pestana": "solicitudes"},
-    {"vista": "exportar"}, {"vista": "habitantes", "orden": "edad"}, {"vista": "habitantes", "filtros": {"lista": "A"}},
+    {"vista": "exportar"}, {"vista": "habitantes", "orden": "edad"}, {"vista": "habitantes", "filtros": {"lista": ""}},
     {"vista": "habitantes", "ruta": "https://ejemplo.invalid"}, {"vista": "ficha", "id": True},
     {"vista": "habitantes", "ids": list(range(1, 502))}, {"vista": "trabajo", "id": 3},
 ])

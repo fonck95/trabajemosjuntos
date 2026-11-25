@@ -34,9 +34,11 @@ const NAV = [
   ['importar', 'Importar y exportar', '/importar', 'importar'], ['usuarios', 'Usuarios', '/usuarios', 'usuarios.gestionar'],
   ['ajustes', 'Ajustes', '/ajustes', 'ajustes.gestionar'], ['cuenta', 'Mi cuenta', '/cuenta', 'cuenta'],
 ];
-// Insignias del menú: { nav: clave de /api/insignias }
-const INSIGNIAS = { calidad: 'calidad', trabajo: 'trabajo' };
-const TITULOS_INSIGNIA = { calidad: 'Personas con coincidencias por revisar', trabajo: 'Pendientes de su trabajo' };
+// Insignias del menú: { nav: clave de /api/insignias }. En «Mi cuenta», los cambios que un agente externo propuso por
+// MCP con la clave de la persona y esperan que ella los apruebe (vencen a las 48 h: sin el aviso pasaban sin verse)
+const INSIGNIAS = { calidad: 'calidad', trabajo: 'trabajo', cuenta: 'propuestas_mcp' };
+const TITULOS_INSIGNIA = { calidad: 'Personas con coincidencias por revisar', trabajo: 'Pendientes de su trabajo',
+  cuenta: 'Cambios propuestos por un agente MCP que esperan su aprobación' };
 
 let limpiarVista = null;
 let generacion = 0;

@@ -11,6 +11,10 @@
   conexión no se puede pegar en otra.
 * `descifrar` da None si el texto no es de esta clave (cambiaron `ADMIN` o `password`), si lo alteraron o si no tiene
   la forma: quien lo llama decide qué hacer (la conexión queda «caida», motivo «clave», y hay que volver a conectar).
+* `cifrar_bytes` y `descifrar_bytes` son la variante para datos binarios grandes (la foto de una planilla física y lo
+  que se leyó de ella, `app/planillas.py`): el mismo formato (versión, nonce y lo cifrado con su etiqueta), sin base64
+  (va a MongoDB como binario) y con un tope propio (`MAX_BYTES`), porque `MAX_TEXTO` es para dos tokens. La llave es
+  otra (la de las planillas, con su propia etiqueta) y el contexto ata lo cifrado a su documento.
 """
 from __future__ import annotations
 
@@ -64,3 +68,32 @@ def descifrar(llave: bytes, texto: Any, contexto: str) -> dict | None:
     except (ValueError, RecursionError):
         return None
     return datos if isinstance(datos, dict) else None
+
+
+# Lo cifrado de una foto de planilla (hasta 1,5 MB) o de su lectura cabe de sobra; más es un documento que no es nuestro
+MAX_BYTES = 8 * 1024 * 1024
+
+
+def cifrar_bytes(llave: bytes, datos: bytes, contexto: str) -> bytes:
+    """`datos` (bytes) cifrados con `llave` y atados a `contexto`: versión + nonce + lo cifrado con su etiqueta, en
+    binario. Lanza ValueError si `datos` pasa de `MAX_BYTES` (quien llama ya acotó lo que guarda)."""
+    if not isinstance(datos, (bytes, bytearray)):
+        raise TypeError("cifrar_bytes recibe bytes")
+    if len(datos) > MAX_BYTES:
+        raise ValueError("Demasiados datos para cifrar")
+    nonce = secrets.token_bytes(NONCE)
+    return VERSION + nonce + _aes(llave).encrypt(nonce, bytes(datos), contexto.encode())
+
+
+def descifrar_bytes(llave: bytes, crudo: Any, contexto: str) -> bytes | None:
+    """Lo que guardó `cifrar_bytes`, o None si no es de esta clave o de este contexto, si lo alteraron o si no tiene la
+    forma (nunca lanza por el dato: viene de la base, donde un `Binary` llega como bytes)."""
+    if not isinstance(crudo, (bytes, bytearray)) or len(crudo) > MAX_BYTES + 1 + NONCE + ETIQUETA:
+        return None
+    crudo = bytes(crudo)
+    if len(crudo) < 1 + NONCE + ETIQUETA or crudo[:1] != VERSION:
+        return None
+    try:
+        return _aes(llave).decrypt(crudo[1:1 + NONCE], crudo[1 + NONCE:], contexto.encode())
+    except InvalidTag:
+        return None

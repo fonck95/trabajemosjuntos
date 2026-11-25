@@ -26,7 +26,14 @@ from app.agente.herramientas.base import Confirmacion, ErrorHerramienta, Resulta
 
 H = {h.nombre: h for h in hp.HERRAMIENTAS}
 MIAS = set(H)
-LECTURAS = {"buscar_personas", "ver_persona", "personas_parecidas"}
+LECTURAS = {"buscar_personas", "ver_persona", "personas_parecidas", "lideres"}
+# Las lecturas de estas pruebas fijan lo de siempre con los datos políticos apagados (`agente_politicos`): encendidos
+# (lo de por defecto), A y K reciben el tipo, el «Liderado por», las listas y las fuentes (tests/test_politicos_*.py)
+SIN_POLITICOS = {"agente_politicos": {"asistente": False, "mcp": False}}
+
+
+def _contexto(app, cli, **kw):
+    return aa.contexto(app, cli, ajustes=SIN_POLITICOS, **kw)
 DEL_CONSULTOR = {"buscar_personas", "ver_persona", "registrar_acercamiento", "registrar_autorizacion",
                  "agregar_telefono"}
 
@@ -177,7 +184,7 @@ def _objetos(s):
 
 
 def test_definiciones_son_json_schema_validos_para_la_messages_api():
-    assert len(H) == len(hp.HERRAMIENTAS) == 10
+    assert len(H) == len(hp.HERRAMIENTAS) == 13
     for h in hp.HERRAMIENTAS:
         d = h.definicion()
         assert set(d) == {"name", "description", "input_schema", "eager_input_streaming"}, h.nombre
@@ -208,7 +215,7 @@ def test_administrador_y_coordinador_reciben_todo_minimizado(sesion):
     pid = _rica(db)
     k = coordinador(app, db)
     for cli in (sesion, k):
-        ctx = aa.contexto(app, cli)
+        ctx = _contexto(app, cli)
         rapida = _ejecutar(sesion, ctx, "buscar_personas", {"q": "eustaquia"})
         assert rapida.contenido["tipo"] == "busqueda_rapida" and rapida.personas == {pid}
         fila = rapida.contenido["filas"][0]
@@ -247,7 +254,7 @@ def test_planillero_lista_su_zona_y_busca_en_toda_la_base(sesion, como):
     ajena = persona(db, nombre="FILOMENA INVENTADA AJENA", lugar_id=l2, cedula="92000123")
     rica = _rica(db, lugar_id=l1)
     p = como("planillero", asignacion={"lugares": [l1], "areas": []})
-    ctx = aa.contexto(app, p)
+    ctx = _contexto(app, p)
     lista = _ejecutar(sesion, ctx, "buscar_personas", {"q": "filomena", "orden": "nombre"})
     assert lista.contenido["total"] == 3 and {f["id"] for f in lista.contenido["filas"]} == set(suyas)
     assert lista.personas == set(suyas) and "zona" in lista.contenido["alcance"]
@@ -278,7 +285,7 @@ def test_el_planillero_busca_sin_tope_diario(sesion, como):
                        upsert=True)
     insertar_personas(db, [{"nombre": f"PRESUPUESTO INVENTADO {i}", "consentimiento": "pendiente"} for i in range(6)])
     p = como("planillero")
-    ctx = aa.contexto(app, p)
+    ctx = _contexto(app, p)
     r = _ejecutar(sesion, ctx, "buscar_personas", {"q": "presupuesto", "orden": "nombre"})
     assert len(r.personas) == 6
     assert db.lecturas.count_documents({"uid": p.uid}) == 6
@@ -290,7 +297,7 @@ def test_consultor_busca_por_nombre_o_numero_y_ve_solo_su_trabajo(sesion, como):
     app, db = sesion.app, sesion.app.state.db
     pid = _rica(db)
     c = como("consultor")
-    ctx = aa.contexto(app, c)
+    ctx = _contexto(app, c)
     r = _ejecutar(sesion, ctx, "buscar_personas", {"q": "eustaquia"})
     assert r.contenido["filas"] == [{"id": pid, "nombre": "EUSTAQUIA INVENTADA RICA", "lugar": None,
                                      "abordaje_estado": "sin_abordar", "contactable": True}]
@@ -338,7 +345,7 @@ def test_quien_no_autorizo_sale_minimo_y_no_se_escribe(sesion, como):
     db.personas.update_one({"_id": pid}, {"$set": {"consentimiento": "no", "contacto_habilitado": False}})
     p = como("planillero")
     for cli in (sesion, p):
-        ctx = aa.contexto(app, cli)
+        ctx = _contexto(app, cli)
         f = _ejecutar(sesion, ctx, "ver_persona", {"persona_id": pid})
         assert set(f.contenido) == {"id", "nombre", "lugar", "consentimiento", "aviso"} and f.personas == {pid}
         assert f.contenido["consentimiento"] == "no" and "no autorizó" in f.resumen
@@ -353,7 +360,7 @@ def test_quien_no_autorizo_sale_minimo_y_no_se_escribe(sesion, como):
                                 ("ubicar_persona", {"persona_id": pid, "automatica": True})):
             e = _error_confirmar(sesion, ctx, nombre, entrada)
             assert e.codigo == "no_contactable" and e.detalle == {"motivo": "no_autorizo"}, nombre
-    ctx = aa.contexto(app, p)
+    ctx = _contexto(app, p)
     entrada = {"persona_id": pid, "estado": "si", "medio": "escrito", "canales": ["llamada"],
                "evidencia": "Planilla inventada, folio 3", "mayor_declarado": True}
     tarjeta = _confirmar(sesion, ctx, "registrar_autorizacion", entrada)
@@ -368,7 +375,7 @@ def test_parecidas_minimizadas(sesion, como):
     pid = _rica(db)
     otra = persona(db, nombre="EUSTAQUIA INVENTADA RICAS", telefono=TEL, cedula="91000888")
     for cli in (sesion, como("planillero")):
-        ctx = aa.contexto(app, cli)
+        ctx = _contexto(app, cli)
         r = _ejecutar(sesion, ctx, "personas_parecidas", {"persona_id": pid})
         assert r.personas == {pid, otra} and [f["id"] for f in r.contenido["parecidas"]] == [otra]
         f = r.contenido["parecidas"][0]
@@ -404,7 +411,7 @@ def test_nota_telefono_acercamiento_y_autorizacion_son_idempotentes(sesion):
     app, db = sesion.app, sesion.app.state.db
     pid = _rica(db)
     db.reuniones.insert_one({"_id": 77, "titulo": "Reunión inventada", "fecha": "2026-11-01", "creado_por_uid": 0})
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_nota_1")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_nota_1")
     tarjeta, r, _ = _escribe_una_vez(sesion, ctx, "agregar_nota", {"persona_id": pid, "texto": "Pidió volver el lunes",
                                                                    "reunion_id": 77}, pid, {"notas": 1, "auditoria": 1})
     assert tarjeta.titulo == f"Agregar una nota a EUSTAQUIA INVENTADA RICA (#{pid})"
@@ -412,7 +419,7 @@ def test_nota_telefono_acercamiento_y_autorizacion_son_idempotentes(sesion):
         in tarjeta.detalle
     assert r.contenido["guardada"] and r.contenido["persona"]["id"] == pid and r.acciones == [{"tipo": "recargar"}]
 
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_tel_1")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_tel_1")
     tarjeta, r, _ = _escribe_una_vez(sesion, ctx, "agregar_telefono", {"persona_id": pid, "numero": "320 111 2233",
                                                                        "whatsapp": True}, pid,
                                      {"telefonos": 1, "auditoria": 1})
@@ -420,7 +427,7 @@ def test_nota_telefono_acercamiento_y_autorizacion_son_idempotentes(sesion):
     assert "···2233" in [t["numero"] for t in r.contenido["telefonos"]]
     sin_datos(_modelo(r), "3201112233")
 
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_ac_1")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_ac_1")
     entrada = {"persona_id": pid, "canal": "llamada", "resultado": "volver_llamar", "telefono_indice": 0,
                "proximo": modelo.hoy_local().isoformat(), "proximo_franja": "tarde"}
     tarjeta, r, r2 = _escribe_una_vez(sesion, ctx, "registrar_acercamiento", entrada, pid,
@@ -430,7 +437,7 @@ def test_nota_telefono_acercamiento_y_autorizacion_son_idempotentes(sesion):
     assert r.contenido["acercamiento_id"] == r2.contenido["acercamiento_id"]  # la respuesta guardada
     assert {"tipo": "insignias"} in r.acciones
 
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_aut_1")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_aut_1")
     entrada = {"persona_id": pid, "estado": "revocada", "nota": "Lo pidió por teléfono"}
     tarjeta, r, _ = _escribe_una_vez(sesion, ctx, "registrar_autorizacion", entrada, pid,
                                      {"autorizaciones": 1, "auditoria": 1})
@@ -444,13 +451,13 @@ def test_repetir_una_escritura_que_cambia_el_estado_devuelve_la_respuesta_guarda
     app, db = sesion.app, sesion.app.state.db
     pid = contactable(db, "TEOFILA INVENTADA REPETIDA", "3158889900")
     p = como("planillero")
-    ctx = aa.contexto(app, p, tool_use_id="toolu_no_1")
+    ctx = _contexto(app, p, tool_use_id="toolu_no_1")
     _escribe_una_vez(sesion, ctx, "registrar_autorizacion", {"persona_id": pid, "estado": "no",
                                                              "nota": "Lo dijo en la visita"}, pid,
                      {"autorizaciones": 1, "auditoria": 1})
     assert db.personas.find_one({"_id": pid})["consentimiento"] == "no"
     otra = contactable(db, "TEOFILO INVENTADO REPETIDO", "3159990011")
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_no_2")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_no_2")
     _escribe_una_vez(sesion, ctx, "registrar_acercamiento", {"persona_id": otra, "canal": "llamada",
                                                              "telefono_indice": 0, "resultado": "no_contactar",
                                                              "alcance": "persona"}, otra,
@@ -464,7 +471,7 @@ def test_ejecutar_repite_las_comprobaciones_de_la_entrada(sesion):
     app, db = sesion.app, sesion.app.state.db
     lider = db.etiquetas.find_one({"nombre": "Líder comunitario"})["_id"]
     n = db.personas.count_documents({})
-    e = _error_ejecutar(sesion, aa.contexto(app, sesion), "crear_persona", {"nombre": "Ana Inventada Etiquetada",
+    e = _error_ejecutar(sesion, _contexto(app, sesion), "crear_persona", {"nombre": "Ana Inventada Etiquetada",
                                                                             "etiquetas": [lider], "forzar": True})
     assert e.codigo == "permiso" and db.personas.count_documents({}) == n
 
@@ -472,7 +479,7 @@ def test_ejecutar_repite_las_comprobaciones_de_la_entrada(sesion):
 def test_crear_persona_con_parecidas_y_forzar(sesion):
     app, db = sesion.app, sesion.app.state.db
     pid = _rica(db)
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_crear_1")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_crear_1")
     entrada = {"nombre": "Eustaquia Inventada Rica", "telefonos": [TEL], "sexo": "F"}
     n = db.personas.count_documents({})
     tarjeta = _confirmar(sesion, ctx, "crear_persona", entrada)
@@ -487,7 +494,7 @@ def test_crear_persona_con_parecidas_y_forzar(sesion):
     sin_datos(_modelo(r))
     assert db.personas.count_documents({}) == n
     # Con forzar (otra persona, ya revisado): se crea una sola vez aunque se repita el mismo tool_use
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_crear_2")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_crear_2")
     entrada = {**entrada, "forzar": True, "cedula": "92.000.555", "lugar_id": db.lugares.find_one()["_id"]}
     tarjeta = _confirmar(sesion, ctx, "crear_persona", entrada)
     assert ("Documento", "CC 92000555") in tarjeta.detalle and "aunque haya" in tarjeta.aviso
@@ -502,7 +509,7 @@ def test_crear_persona_con_parecidas_y_forzar(sesion):
 def test_crear_persona_reglas_del_planillero(sesion, como):
     app = sesion.app
     p = como("planillero")
-    ctx = aa.contexto(app, p)
+    ctx = _contexto(app, p)
     for entrada in ({"nombre": "Menor Inventado De Prueba", "edad": 15},
                     {"nombre": "Menor Inventado De Prueba", "tipo_documento": "TI", "cedula": "1012345678"}):
         assert _error_confirmar(sesion, ctx, "crear_persona", entrada).codigo == "invalido"
@@ -521,7 +528,7 @@ def test_editar_persona_antes_y_despues_e_idempotencia(sesion):
     pid = _rica(db)
     vivienda = db.etiquetas.find_one({"nombre": "Vivienda"})["_id"]
     empleo = db.etiquetas.find_one({"nombre": "Empleo"})["_id"]
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_editar_1")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_editar_1")
     entrada = {"persona_id": pid, "cambios": {"ocupacion": "Pescadora", "estrato": 2, "etiquetas_agregar": [empleo],
                                               "etiquetas_quitar": [vivienda]}}
     tarjeta, r, r2 = _escribe_una_vez(sesion, ctx, "editar_persona", entrada, pid, {"auditoria": 1})
@@ -537,7 +544,7 @@ def test_editar_persona_antes_y_despues_e_idempotencia(sesion):
                                                                                          "etiquetas"}
     assert r2.contenido.get("sin_cambios") is True
     # Completar no pisa lo que ya hay: lo dice la tarjeta y queda como alterno
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_editar_2")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_editar_2")
     tarjeta = _confirmar(sesion, ctx, "editar_persona", {"persona_id": pid, "cambios": {"ocupacion": "Agricultora"}})
     assert ("Ocupación", "Pescadora (se conserva; «Agricultora» queda como dato alterno)") in tarjeta.detalle
     # Reemplazar sí corrige; la cédula de antes no se repite completa en la tarjeta y el cambio exige motivo
@@ -557,7 +564,7 @@ def test_editar_persona_antes_y_despues_e_idempotencia(sesion):
 def test_editar_detecta_cambios_entre_la_tarjeta_y_la_aprobacion(sesion):
     app, db = sesion.app, sesion.app.state.db
     pid = _rica(db)
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_cambiada")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_cambiada")
     h = H["editar_persona"]
     args = h.validar({"persona_id": pid, "cambios": {"ocupacion": "Pescadora"}})
     aa.correr(sesion, h.confirmar, ctx, args)
@@ -592,7 +599,7 @@ def test_editar_compara_como_la_api(sesion):
     app, db = sesion.app, sesion.app.state.db
     pid = persona(db, nombre="PETRONILA INVENTADA EXTRANJERA", tipo_documento="PA", edad=40.0, estrato=2)
     otra = persona(db, nombre="PETRONIO INVENTADO NACIONAL", tipo_documento="CC")
-    ctx = aa.contexto(app, sesion)
+    ctx = _contexto(app, sesion)
     e = _error_confirmar(sesion, ctx, "editar_persona", {"persona_id": pid, "cambios": {"edad": 40, "estrato": 2}})
     assert e.codigo == "sin_cambios"
     tarjeta = _confirmar(sesion, ctx, "editar_persona", {"persona_id": pid, "cambios": {"cedula": "ab-12345"}})
@@ -607,7 +614,7 @@ def test_editar_reglas_del_planillero(sesion, como):
     app, db = sesion.app, sesion.app.state.db
     pid = _rica(db)
     p = como("planillero")
-    ctx = aa.contexto(app, p)
+    ctx = _contexto(app, p)
     e = _error_confirmar(sesion, ctx, "editar_persona", {"persona_id": pid, "modo": "reemplazar",
                                                          "cambios": {"cedula": "91000999"},
                                                          "motivo_cambio_cedula": "Corrección"})
@@ -624,7 +631,7 @@ def test_ubicar_persona_en_lugar_punto_o_automatica(sesion):
     app, db = sesion.app, sesion.app.state.db
     pid = _rica(db)
     lugar = db.lugares.find_one({}, sort=[("_id", -1)])
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_ubicar_1")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_ubicar_1")
     tarjeta, r, _ = _escribe_una_vez(sesion, ctx, "ubicar_persona", {"persona_id": pid, "lugar_id": lugar["_id"]},
                                      pid, {"auditoria": 1})
     assert tarjeta.titulo == f"Ubicar a EUSTAQUIA INVENTADA RICA (#{pid})"
@@ -632,14 +639,14 @@ def test_ubicar_persona_en_lugar_punto_o_automatica(sesion):
     assert db.personas.find_one({"_id": pid})["lugar_id"] == lugar["_id"] and r.contenido["persona"]["lugar_nombre"]
     e = _error_confirmar(sesion, ctx, "ubicar_persona", {"persona_id": pid, "lugar_id": lugar["_id"]})
     assert e.codigo == "sin_cambios"
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_ubicar_2")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_ubicar_2")
     tarjeta, r, _ = _escribe_una_vez(sesion, ctx, "ubicar_persona", {"persona_id": pid, "lat": 7.01, "lon": -73.92},
                                      pid, {"auditoria": 1})
     assert ("Punto en el mapa", "7.010000, -73.920000") in tarjeta.detalle
     p = db.personas.find_one({"_id": pid})
     assert (p["lat"], p["lon"], p["geo_manual"]) == (7.01, -73.92, "punto")
     sin_datos(_modelo(r), "7.01", "-73.92")
-    ctx = aa.contexto(app, sesion, tool_use_id="toolu_ubicar_3")
+    ctx = _contexto(app, sesion, tool_use_id="toolu_ubicar_3")
     _escribe_una_vez(sesion, ctx, "ubicar_persona", {"persona_id": pid, "automatica": True}, pid, {"auditoria": 1})
     assert not db.personas.find_one({"_id": pid})["geo_manual"]
     # Si otra persona cambia el barrio entre la tarjeta y la aprobación, no se pisa
@@ -657,7 +664,7 @@ def test_autorizacion_reglas_por_rol(sesion, como):
     app, db = sesion.app, sesion.app.state.db
     pid = persona(db, nombre="TEODOSIA INVENTADA PENDIENTE", telefono="3156667788")
     p, c = como("planillero"), como("consultor")
-    ctx = aa.contexto(app, p)
+    ctx = _contexto(app, p)
     n = db.autorizaciones.count_documents({})
     # El «sí» del planillero va sin más pasos: sin evidencia ni «mayor de 18» la tarjeta se arma
     tarjeta = _confirmar(sesion, ctx, "registrar_autorizacion", {"persona_id": pid, "estado": "si",
@@ -680,7 +687,7 @@ def test_autorizacion_reglas_por_rol(sesion, como):
     assert db.autorizaciones.count_documents({}) == n
     cid = contactable(db, "TEODORO INVENTADO CONSULTADO", "3157778899")
     tomar(c, cid)
-    ctx = aa.contexto(app, c)
+    ctx = _contexto(app, c)
     entrada = {"persona_id": cid, "estado": "si", "medio": "verbal_telefono", "canales": ["llamada", "whatsapp"],
                "evidencia": "Llamada del 7 de noviembre", "mayor_declarado": True}
     tarjeta = _confirmar(sesion, ctx, "registrar_autorizacion", entrada)
@@ -694,7 +701,7 @@ def test_errores_de_la_api_llegan_limpios_al_modelo(sesion):
     app, db = sesion.app, sesion.app.state.db
     pid = _rica(db)
     otra = persona(db, nombre="OTRA PERSONA INVENTADA", cedula="93000444")
-    ctx = aa.contexto(app, sesion)
+    ctx = _contexto(app, sesion)
     # La cédula de otra ficha: el 409 de la API trae su nombre y su lugar; al modelo solo le llega el id
     e = _error_ejecutar(sesion, ctx, "editar_persona", {"persona_id": otra, "modo": "reemplazar",
                                                         "cambios": {"cedula": CEDULA},
@@ -734,6 +741,7 @@ def test_de_punta_a_punta_por_el_bucle(sesion):
         pytest.skip("el núcleo del asistente todavía no está")
     db = sesion.app.state.db
     pid = _rica(db)
+    db.meta.update_one({"_id": "ajustes"}, {"$set": SIN_POLITICOS}, upsert=True)  # el bucle lee los guardados
     api = aa.encender(sesion.app,
                       aa.sse(aa.TU("toolu_v", "ver_persona", {"persona_id": pid}), stop="tool_use"),
                       aa.sse(aa.TU("toolu_e", "editar_persona", {"persona_id": pid,
@@ -771,9 +779,9 @@ def test_de_punta_a_punta_por_el_bucle(sesion):
     ("buscar_personas", {"por_pagina": 5}), ("buscar_personas", {"por_pagina": 200}),
     ("buscar_personas", {"pagina": 0}),
     ("buscar_personas", {"orden": "edad"}), ("buscar_personas", {"filtros": {"zona": "marte"}}),
-    ("buscar_personas", {"filtros": {"lider": 1}}), ("buscar_personas", {"filtros": {"lista": "Lista A"}}),
+    ("buscar_personas", {"filtros": {"lider": 1}}), ("buscar_personas", {"filtros": {"lista": ""}}),
     ("buscar_personas", {"filtros": {"poligono": "1,2;3,4;5,6"}}), ("buscar_personas", {"filtros": {"ids": "1,2"}}),
-    ("buscar_personas", {"filtros": {"fuente": "cedulas"}}), ("buscar_personas", {"filtros": {"edad_min": 200}}),
+    ("buscar_personas", {"filtros": {"fuente": "otra_base"}}), ("buscar_personas", {"filtros": {"edad_min": 200}}),
     ("buscar_personas", {"filtros": {"edad_min": 60, "edad_max": 20}}),
     ("buscar_personas", {"filtros": {"faltan": ["nada"]}}), ("buscar_personas", {"filtros": {"etiqueta": True}}),
     ("buscar_personas", {"filtros": {"regimen_salud": "Subsidiado"}}),

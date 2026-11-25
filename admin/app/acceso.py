@@ -98,6 +98,9 @@ class Quien:
     asignacion: dict | None = None  # {lugares: [int], areas: [int]} de P y C; None para A y K (sin límite)
     # La reunión en cuya pantalla se hizo la petición (cabecera X-Reunion del modo reunión; ver app/trazas.py)
     reunion: int | None = None
+    # Por dónde llegó la petición si no es el navegador: «mcp», un agente externo con la clave de la persona (la sesión
+    # interna de `app/sesion_interna.py`). La auditoría lo guarda (`db.auditar`); None en el panel
+    via: str | None = None
 
     def puede(self, permiso: str) -> bool:
         """¿Tiene el permiso? Lo de `SOLO_ADMIN` es solo de A, aunque otro rol tenga «*»."""
@@ -126,24 +129,48 @@ def quien_admin(cfg, ip: str | None = None) -> Quien:
     return Quien(uid=0, usuario=cfg.usuario, nombre=cfg.usuario, rol="admin", ip=ip, permisos=PERMISOS["admin"])
 
 
+# Las vías de las sesiones internas (`app/sesion_interna.py`): otro valor guardado en una sesión no se toma
+VIAS = frozenset({"mcp"})
+
+
+def _quien_de_usuario(u: dict | None, uid: int, ip: str | None, via: str | None) -> Quien | None:
+    """El `Quien` de un usuario de la base ya leído, o None si está inactivo, borrado o con un rol inválido."""
+    rol = (u or {}).get("rol")
+    if not (u or {}).get("activo") or rol not in ROLES_USUARIO:  # inactivo, borrado o rol inválido: falla cerrada
+        return None
+    asignacion = u.get("asignacion") or {}
+    return Quien(uid=uid, usuario=u.get("usuario"), nombre=u.get("nombre"), rol=rol, ip=ip,
+                 permisos=PERMISOS.get(rol, frozenset()),
+                 asignacion=None if rol in ROLES_ADMIN else {"lugares": list(asignacion.get("lugares") or []),
+                                                             "areas": list(asignacion.get("areas") or [])},
+                 via=via)
+
+
 def _quien_de(db: Database, request: Request, s: dict) -> Quien:
     cfg = request.app.state.cfg
     uid = s.get("uid")
+    via = s.get("via") if s.get("via") in VIAS else None
     if uid in (None, 0):
         # El rol de administrador sale solo de una sesión sin uid (o con 0) firmada con la credencial vigente de .env
         if not hmac.compare_digest(str(s.get("huella") or ""), huella(cfg)):
             raise HTTPException(401, "Inicie sesión")
         return Quien(uid=0, usuario=s.get("usuario"), nombre=s.get("usuario"), rol="admin", ip=ip_de(request),
-                     permisos=PERMISOS["admin"])
+                     permisos=PERMISOS["admin"], via=via)
     u = s.get("_usuario") or db.usuarios.find_one({"_id": uid, "activo": True}, {"clave": 0})
-    rol = (u or {}).get("rol")
-    if not (u or {}).get("activo") or rol not in ROLES_USUARIO:  # inactivo, borrado o rol inválido: falla cerrada
+    quien = _quien_de_usuario(u, uid, ip_de(request), via)
+    if quien is None:
         raise HTTPException(401, "Inicie sesión")
-    asignacion = u.get("asignacion") or {}
-    return Quien(uid=uid, usuario=u.get("usuario"), nombre=u.get("nombre"), rol=rol, ip=ip_de(request),
-                 permisos=PERMISOS.get(rol, frozenset()),
-                 asignacion=None if rol in ROLES_ADMIN else {"lugares": list(asignacion.get("lugares") or []),
-                                                             "areas": list(asignacion.get("areas") or [])})
+    return quien
+
+
+def quien_de_uid(db: Database, cfg, uid: int, ip: str | None = None, via: str | None = None) -> Quien | None:
+    """El `Quien` de `uid` (0: el administrador de `.env`) sin una petición con sesión: lo que arma `requiere`, para
+    lo que se decide antes de abrir una (qué herramientas ofrece una clave MCP). None si la cuenta ya no vale.
+    No revisa la cuenta al día (`rechazo_de_cuenta`): eso lo hace quien llama."""
+    if uid in (None, 0):
+        return Quien(uid=0, usuario=cfg.usuario, nombre=cfg.usuario, rol="admin", ip=ip, permisos=PERMISOS["admin"],
+                     via=via)
+    return _quien_de_usuario(db.usuarios.find_one({"_id": uid, "activo": True}, {"clave": 0}), uid, ip, via)
 
 
 def reunion_de(request: Request) -> int | None:
@@ -209,6 +236,13 @@ AJUSTES_DE_PERMISOS = frozenset({
     # clonada es la de la cuenta de Mnemo de A (un dato biométrico suyo) y gasta sus créditos. Y la respuesta
     # inmediata: una llamada más al modelo por pregunta (gasto)
     "agente", "agente_mensajes_diarios", "agente_voz", "agente_adelanto",
+    # Las fotos de planillas físicas (traen cédulas y teléfonos completos al modelo) y los datos por MCP (salen del
+    # panel hacia el cliente MCP de cada persona)
+    "agente_planillas", "agente_mcp",
+    # Si el asistente y los agentes por MCP reciben los datos políticos (tipo de persona, «Liderado por», listas y
+    # fuentes políticas) que el panel ya muestra a cada rol: la orientación política es un dato sensible (Ley 1581,
+    # art. 5) que sale hacia el proveedor del modelo o hacia el cliente MCP
+    "agente_politicos",
 })
 
 
@@ -517,7 +551,10 @@ def _soltar_idempotencia(db: Database, request: Request) -> None:
 
 # ───────────────────────────── Compromiso de confidencialidad ─────────────────────────────
 
-# Texto versionado (3.5). Lo valida un abogado antes de desplegar (riesgo R-E); una versión nueva va en Ajustes
+# Texto versionado (3.5). Una versión nueva se agrega aquí y se elige en Ajustes → Datos sensibles y compromiso
+# (`compromiso_version`): cada usuario la acepta de nuevo en su siguiente petición. La 2026-11-v1 prohíbe toda foto
+# de los datos; la 2026-11-v2 (la de defecto, `modelo.AJUSTES_POR_DEFECTO`) deja fotografiar las planillas físicas
+# solo para subirlas por el panel (Planillas físicas por foto, que usan el administrador y los coordinadores)
 COMPROMISOS = {
     "2026-11-v1": [
         "Guardaré la confidencialidad de los datos personales que conozca en este panel, también después de terminar "
@@ -527,9 +564,39 @@ COMPROMISOS = {
         "No contactaré a quien no autorizó el tratamiento de sus datos ni a quien pidió no ser contactado.",
         "Sé que las fichas que consulto, los cambios que hago y mis indicadores de trabajo quedan registrados.",
     ],
+    "2026-11-v2": [
+        "Guardaré la confidencialidad de los datos personales que conozca en este panel, también después de terminar "
+        "mi relación con el equipo (Ley 1581 de 2012, art. 4, literal h).",
+        "Usaré los datos solo para la finalidad informada al titular. No los copiaré, exportaré ni compartiré, ni "
+        "haré capturas de pantalla. Solo fotografiaré planillas físicas, y únicamente para subirlas por el panel "
+        "cuando mi rol lo permita (la cámara del asistente o Importar y exportar → Planillas por foto); nunca cédulas "
+        "ni otros documentos. Borraré la foto del teléfono después de subirla.",
+        "No contactaré a quien no autorizó el tratamiento de sus datos ni a quien pidió no ser contactado.",
+        "Sé que las fichas que consulto, los cambios que hago y mis indicadores de trabajo quedan registrados.",
+    ],
 }
+# Las versiones cuyo texto deja fotografiar planillas físicas para subirlas por el panel (`compromiso_permite_fotos`).
+# Una versión nueva que lo siga permitiendo se agrega también aquí
+COMPROMISOS_CON_FOTOS = frozenset({"2026-11-v2"})
+
+
+def _version_del_texto(version: str | None) -> str:
+    """La versión cuyo texto rige para `version`: la misma si tiene texto propio; si no, la más reciente."""
+    return version if version in COMPROMISOS else max(COMPROMISOS)
 
 
 def texto_compromiso(version: str | None) -> list[str]:
     """Los puntos del compromiso de esa versión (o los de la más reciente, si la versión no tiene texto propio)."""
-    return list(COMPROMISOS.get(version or "") or COMPROMISOS[max(COMPROMISOS)])
+    return list(COMPROMISOS[_version_del_texto(version)])
+
+
+def compromiso_permite_fotos(version: str | None) -> bool:
+    """¿El texto del compromiso que rige para esa versión (el de `texto_compromiso`) deja fotografiar planillas físicas
+    para subirlas por el panel? Con False, POST /api/planillas/fotos responde 409 `compromiso_fotos` y el chat no
+    ofrece la cámara: nadie fotografía lo que el compromiso que aceptó le prohíbe."""
+    return _version_del_texto(version) in COMPROMISOS_CON_FOTOS
+
+
+def compromiso_con_fotos() -> str:
+    """La versión más reciente que deja fotografiar planillas físicas: la que Ajustes ofrece poner como vigente."""
+    return max(COMPROMISOS_CON_FOTOS)

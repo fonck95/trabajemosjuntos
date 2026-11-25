@@ -11,8 +11,10 @@
 * GET /api/agente/conversaciones, GET y DELETE /api/agente/conversaciones/{cid} — las conversaciones propias: solo
   su dueño las ve o las borra (de otra persona es un 404, como si no existiera).
 * POST /api/agente/mensajes y POST /api/agente/confirmaciones — un turno en flujo (NDJSON, `bucle.py`). Lo que impide
-  el turno sale antes como JSON normal (503, 403, 404, 409, 429); entre ellos, 409 `proveedor` si la conversación es
-  de un proveedor del modelo que ya no está.
+  el turno sale antes como JSON normal (503, 403, 404, 409, 422, 429); entre ellos, 409 `proveedor` si la conversación
+  es de un proveedor del modelo que ya no está. Un mensaje puede traer fotos de planillas físicas (`adjuntos`: ids de
+  la bandeja de planillas de quien escribe, como mucho 4; con ellas el texto puede ir vacío; solo A y K): 403
+  `planillas_apagado` si su rol no sube fotos, 422 `fotos` si alguna no es suya o ya no está.
 * POST /api/agente/transcribir — una pregunta por voz: el cuerpo es el audio crudo que grabó el panel y la respuesta,
   su texto (`agente/dictado.py`, que se lo pide a la cuenta de Mnemo conectada). No guarda nada.
 * GET /api/agente/voces — las voces clonadas de la cuenta de Mnemo conectada que se pueden usar desde el panel (solo
@@ -25,13 +27,14 @@ herramienta cargue, y una herramienta rota deja sin asistente, no sin panel."""
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, field_validator, model_validator
 from pymongo.database import Database
 
+from .. import planillas as bandeja
 from .. import recorrido as rec
 from ..acceso import Quien, requiere
 from ..agente import conversaciones as conv_db
@@ -47,16 +50,25 @@ NO_EXISTE = {"codigo": "no_existe", "mensaje": "No existe esa conversación."}
 
 class MensajeIn(BaseModel):
     conversacion: int | None = Field(None, ge=1, le=ID_MAX)
-    texto: str = Field(..., min_length=1, max_length=4000)
+    # Vacío solo si el mensaje trae fotos (`adjuntos`): el modelo recibe entonces un texto fijo, nunca uno vacío
+    texto: str = Field("", max_length=4000)
     # La vista, la ficha abierta, los filtros y el mapa: una pista que se limpia y se acota en `sistema.py`
     contexto: dict[str, Any] | None = None
+    # Fotos de planillas físicas: ids de la bandeja de quien escribe (`POST /api/planillas/fotos`), como mucho 4; el
+    # bucle comprueba que sean suyas (`bucle.abrir_mensaje`)
+    adjuntos: list[Annotated[str, Field(pattern=r"^[0-9a-f]{32}$")]] = Field(default_factory=list,
+                                                                          max_length=bandeja.MAX_POR_MENSAJE)
 
-    @field_validator("texto")
+    @field_validator("adjuntos")
     @classmethod
-    def _con_texto(cls, v: str) -> str:
-        if not v.strip():
+    def _sin_repetir(cls, v: list[str]) -> list[str]:
+        return list(dict.fromkeys(v))
+
+    @model_validator(mode="after")
+    def _con_texto(self):
+        if not self.texto.strip() and not self.adjuntos:
             raise ValueError("el mensaje está vacío")
-        return v
+        return self
 
 
 class DecisionIn(BaseModel):
@@ -186,7 +198,12 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
     "respuestas": bool (la voz lee las respuestas del asistente), "automatica": bool (narra también la presentación
     automática)}`; sin ella, la voz del navegador. `adelanto`:
     True si cada pregunta de esta persona recibe la respuesta inmediata mientras se prepara la completa (el asistente
-    está disponible para ella y `agente_adelanto` está encendido en Ajustes)."""
+    está disponible para ella y `agente_adelanto` está encendido en Ajustes). `adjuntos`: si puede adjuntar fotos de
+    planillas físicas al chat, los topes con que el navegador las prepara (`planillas.estado_adjuntos`:
+    `{max_por_mensaje: 4, lado_max: 2000 con Mnemo o 2576 en modo directo, calidad: 0.8, max_bytes: 1500000}`); None si
+    el asistente no está disponible para ella, no es A ni K (`importar`), su rol no está en `agente_planillas.roles`, el
+    compromiso de confidencialidad vigente no deja fotografiar planillas (`politica.fotos_permitidas`) o no hay
+    modelo."""
     cfg = request.app.state.cfg
     ajustes, agente = politica.leer(db)
     sesion = (request.scope.get("state") or {}).get("sesion")
@@ -197,13 +214,20 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
     mnemo: dict[str, Any] = {"activo": activo, "origen": politica.origen_mnemo(conexion.get("url")) if activo else None}
     if quien.administra:
         mnemo["conexion"] = conexion if quien.es_admin else {**conexion, "cuenta": None, "url_sugerida": None}
+    # Las fotos de planillas: solo si el asistente está disponible para esta persona, es A o K con su rol en
+    # `agente_planillas.roles` (nunca P ni C), el compromiso vigente deja fotografiarlas y hay modelo; el lado mayor
+    # depende del proveedor (Mnemo lee hasta 2000 px)
+    adjuntos = (bandeja.estado_adjuntos(proveedor) if motivo is None and quien.puede("importar")
+                and politica.usa_planillas(quien, ajustes) and politica.fotos_permitidas(ajustes) else None)
     return {"disponible": motivo is None, "motivo": motivo, "configurado": proveedor is not None,
             "proveedor": proveedor, "es_admin": quien.es_admin, "escritura": agente["escritura"],
             "limite": {"usados": conv_db.uso_de(db, quien.uid), "maximo": politica.mensajes_diarios(ajustes, quien.rol)},
             "mnemo": mnemo, "dictado": _dictado(request.app, conexion),
             "voz": _voz(request.app, db, quien, ajustes, conexion),
-            "adelanto": motivo is None and ajustes["agente_adelanto"],
-            "sugerencias": politica.sugerencias(quien.rol) if motivo is None else []}
+            "adelanto": motivo is None and ajustes["agente_adelanto"], "adjuntos": adjuntos,
+            "sugerencias": (politica.sugerencias(quien.rol, ajustes, planillas=quien.puede("importar")
+                                                 and politica.usa_planillas(quien, ajustes))
+                            if motivo is None else [])}
 
 
 @r.get("/agente/conversaciones")
@@ -242,7 +266,8 @@ def borrar_conversacion(request: Request, cid: int = Path(..., ge=1, le=ID_MAX),
 @r.post("/agente/mensajes")
 async def mensajes(cuerpo: MensajeIn, request: Request, quien: Quien = Depends(requiere("agente.usar"))):
     from ..agente import bucle
-    return await bucle.abrir_mensaje(request, quien, cuerpo.conversacion, cuerpo.texto, cuerpo.contexto)
+    return await bucle.abrir_mensaje(request, quien, cuerpo.conversacion, cuerpo.texto, cuerpo.contexto,
+                                     adjuntos=cuerpo.adjuntos)
 
 
 @r.post("/agente/confirmaciones")

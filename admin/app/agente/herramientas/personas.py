@@ -1,5 +1,7 @@
 """Herramientas del asistente sobre personas: buscar, ver la ficha y las parecidas (lectura), y crear, editar, agregar
-una nota, registrar un acercamiento o una autorización, ubicar y agregar un teléfono (escritura, con aprobación).
+una nota, registrar un acercamiento o una autorización, ubicar y agregar un teléfono (escritura, con aprobación). Con
+los datos políticos habilitados (`agente_politicos`), además la lista de líderes y su buscador (lectura), y marcar el
+tipo de una persona y asignarle un líder (escritura).
 
 Por qué está hecho así:
 
@@ -8,10 +10,17 @@ Por qué está hecho así:
   auditoría son los del panel. Las comprobaciones previas adelantan, con un mensaje claro para el modelo, lo que la
   API rechazaría después de que la persona aprobara la tarjeta (o lo que la interfaz no ofrecería, como una reunión
   ajena), y usan las mismas reglas del panel cuando las hay.
-* Lo que llega al modelo pasa por `minimizar` (sin datos sensibles, listas, cédulas ni teléfonos completos, correos ni
-  coordenadas) y cada persona servida va en `Resultado.personas` (la conversación se borra si alguna se suprime). Los
-  errores de la API también se limpian (`_seguro`): un 409 puede traer la cédula, el teléfono o el nombre de otra
-  persona.
+* Lo que llega al modelo pasa por `minimizar` (sin datos sensibles, cédulas ni teléfonos completos, correos ni
+  coordenadas) y cada persona servida va en `Resultado.personas` (la conversación se borra si alguna se suprime),
+  también los líderes que nombra un «Liderado por». Los errores de la API también se limpian (`_seguro`): un 409 puede
+  traer la cédula, el teléfono o el nombre de otra persona.
+* Los datos políticos (el tipo de persona, el «Liderado por», las listas y las bases «cedulas» y «general») llegan
+  solo con `agente_politicos` encendido para la vía (`Contexto.politicos`: el chat o MCP) y solo los que la API ya le
+  da al rol, como en el panel: A y K, todos, con sus filtros y la lista de líderes con sus conteos; P, el tipo y el
+  «Liderado por» de las personas de su zona o que registró (`proyeccion.tipo_visible`), y solo suma: marca un tipo y
+  asigna un líder, nunca los quita; C, nada. De quien no autorizó, nada político: ni su tipo, ni que lidera a alguien
+  (un líder que no autorizó no se nombra, no se filtra por él ni se asigna), y los conteos no lo cuentan. Con el
+  ajuste apagado, todo eso queda fuera como antes y estas herramientas no se ofrecen.
 * Escrituras: `confirmar` lee la ficha (nombre, autorización y los valores de antes) y arma la tarjeta, sin escribir
   nada. `ejecutar` escribe una sola vez: manda la `Idempotency-Key` del `tool_use` (las rutas POST devuelven la
   respuesta guardada si se repite) y, en las que no la tienen (PATCH, PUT, DELETE), vuelve a leer la ficha y no
@@ -36,6 +45,7 @@ import hmac
 import json
 import math
 import re
+from collections import Counter
 from dataclasses import dataclass
 from datetime import date
 from typing import Annotated, Any, Literal
@@ -48,7 +58,7 @@ from ... import acceso, modelo
 from ... import db as bd
 from ...pipeline import texto as tx
 from .. import minimizar
-from .base import Confirmacion, Contexto, ErrorHerramienta, Herramienta, Resultado
+from .base import Confirmacion, Contexto, ErrorHerramienta, Herramienta, Resultado, politicos_ofrecidos
 
 MAX_ID = 2_000_000_000
 TIPOS_DOCUMENTO = tuple(modelo.TIPOS_DOCUMENTO)
@@ -400,17 +410,125 @@ async def _nombres_etiquetas(ctx: Contexto, ids: list[int]) -> list[str]:
     return [str(encontradas[i].get("nombre")) for i in ids]
 
 
+# ───────────────────────────── Datos políticos ─────────────────────────────
+
+POLITICOS_APAGADOS = ("Los datos políticos (tipo de persona, «Liderado por», listas y bases de cédulas y general) no "
+                      "están habilitados en Ajustes para esta vía (el asistente del panel o los agentes por MCP): el "
+                      "administrador los habilita. Se consultan en el panel.")
+ROL_SIN_POLITICOS = ("Su rol no filtra ni cuenta por datos políticos (tipo de persona, líderes, listas o las bases de "
+                     "cédulas y general): eso es del administrador y el coordinador.")
+LIDER_NO_USABLE = ("No hay un líder o concejal con ese id que el asistente pueda usar: búsquelo con lideres (los que "
+                   "no autorizaron el tratamiento de sus datos no salen).")
+
+
+def filtros_politicos(f: Any) -> list[str]:
+    """Los filtros políticos que trae una entrada de filtros (también una fuente política)."""
+    if f is None:
+        return []
+    datos = f.model_dump(exclude_none=True)
+    usados = [k for k in FILTROS_POLITICOS if k in datos and not (k in _SOLO_SI and datos[k] is False)]
+    if datos.get("fuente") in FUENTES_POLITICAS:
+        usados.append("fuente")
+    return usados
+
+
+def _lider_usable(db: Any, lid: int) -> bool:
+    """¿`lid` es una ficha activa que autorizó y que lidera (marcada como líder o concejal, o que figura como líder de
+    alguien, como la lista de líderes)?"""
+    l = db.personas.find_one({"_id": lid, **bd.ACTIVA, "consentimiento": {"$ne": "no"}},
+                             {t: 1 for t in modelo.TIPOS_LIDERAN})
+    if l is None:
+        return False
+    return modelo.lidera(l) or db.personas.count_documents({**bd.ACTIVA, "lideres.id": lid}, limit=1) > 0
+
+
+async def exigir_politicos(ctx: Contexto) -> None:
+    """403 si los datos políticos no llegan por esta vía (`agente_politicos` apagado)."""
+    if not ctx.politicos():
+        raise ErrorHerramienta(POLITICOS_APAGADOS, "permiso", estado=403)
+
+
+async def exigir_filtros_politicos(ctx: Contexto, usados: list[str], lider_id: int | None = None) -> None:
+    """Los filtros políticos, como en Habitantes: solo A y K (la API se los veda a P y C, `filtros.VEDADOS`), con
+    `agente_politicos` encendido, y nunca por un líder que no autorizó (contar a quienes trajo diría que lidera; el
+    mensaje es el mismo para todo id que no sirve: no dice si existe)."""
+    if not usados:
+        return
+    await exigir_politicos(ctx)
+    if not ctx.quien.administra:
+        raise ErrorHerramienta(ROL_SIN_POLITICOS, "permiso", estado=403, detalle={"campos": usados})
+    if lider_id is not None and not await run_in_threadpool(_lider_usable, ctx.db, lider_id):
+        raise ErrorHerramienta(LIDER_NO_USABLE, "invalido", estado=422, detalle={"campo": "lider_id"})
+
+
+def _no_autorizaron(db: Any, ids: set[int]) -> frozenset[int]:
+    if not ids:
+        return frozenset()
+    return frozenset(x["_id"] for x in db.personas.find({"_id": {"$in": sorted(ids)}, "consentimiento": "no"},
+                                                        {"_id": 1}))
+
+
+def traidas_tratables(db: Any, pid: int) -> dict:
+    """Lo que trajo el líder `pid` (`{total, compartidas}`, como `api.lideres.traidas_de`) sin quienes no autorizaron
+    y sin contar como compartida a la persona cuyo otro líder no autorizó."""
+    total = compartidas = 0
+    filas = list(db.personas.find({**bd.ACTIVA, "lideres.id": pid, "consentimiento": {"$ne": "no"}},
+                                  {"lideres.id": 1}))
+    otros = {l.get("id") for x in filas for l in x.get("lideres") or [] if isinstance(l, dict)} - {pid}
+    ocultos = _no_autorizaron(db, {i for i in otros if isinstance(i, int)})
+    for x in filas:
+        total += 1
+        compartidas += len({l.get("id") for l in x.get("lideres") or [] if isinstance(l, dict)} - ocultos) > 1
+    return {"total": total, "compartidas": compartidas}
+
+
+async def politicos_de(ctx: Contexto, docs: list[Any], traidas: int | None = None) -> minimizar.Politicos | None:
+    """El `minimizar.Politicos` de una respuesta de la API (filas o fichas), o None si los datos políticos no llegan
+    por esta vía: los líderes que nombran y no autorizaron (no se nombran) y, con `traidas` (el id de una ficha que
+    trae `traidas`), lo que trajo contado sin quienes no autorizaron."""
+    if not ctx.politicos():
+        return None
+    ids = minimizar.ids_lideres(docs)
+    no = await run_in_threadpool(_no_autorizaron, ctx.db, ids) if ids else frozenset()
+    cuenta = await run_in_threadpool(traidas_tratables, ctx.db, traidas) if traidas is not None else None
+    return minimizar.Politicos(no_autorizaron=no, traidas=cuenta)
+
+
+def ids_mostrados(fs: list[Any]) -> set[int]:
+    """Las personas de unas filas o fichas ya minimizadas, con los líderes que nombra su «Liderado por»."""
+    return minimizar.ids_de(fs) | minimizar.ids_lideres(fs)
+
+
 # ───────────────────────────── buscar_personas ─────────────────────────────
+
+# Los filtros políticos de Habitantes (`filtros.VEDADOS` para P y C): solo A y K, con `agente_politicos` encendido
+FILTROS_POLITICOS = ("tipo", "lider_id", "varios_lideres", "sin_lider", "lista")
+FUENTES = ("tramites", "reunion", "manual", "planilla")
+FUENTES_POLITICAS = ("cedulas", "general", "ambas")  # «ambas»: trámites y cédulas
+TIPOS_FILTRO = (*modelo.TIPOS_PERSONA, "sin_tipo")
+D_TIPO = ("Tipo de persona: concejal, lider, votante o sin_tipo (ninguno). Dato político: solo administrador y "
+          "coordinador, si están habilitados")
+D_LIDER_ID = "Las que trajo ese líder o concejal (id de lideres). Dato político: solo administrador y coordinador"
+D_LISTA = "Lista de origen, con su nombre exacto (de indicadores). Dato político: solo administrador y coordinador"
+D_FUENTE = ("De dónde llegó; cedulas, general y ambas (trámites y cédulas) son bases políticas: solo administrador y "
+            "coordinador, si están habilitados")
+
 
 class FiltrosEntrada(_Entrada):
     """Los filtros de Habitantes (`filtros.Filtros`) que el asistente puede usar, con los valores que acepta la API.
-    Fuera: `poligono` e `ids` (para el mapa), `lista`, `lider`, `tipo`, la fuente «cedulas» y `regimen_salud` (revelan
-    datos políticos o de salud) y las etiquetas sensibles."""
+    Fuera: `poligono` e `ids` (para el mapa), `regimen_salud` (salud) y las etiquetas sensibles. Los políticos (`tipo`,
+    `lider_id`, `varios_lideres`, `sin_lider`, `lista` y las fuentes «cedulas», «general» y «ambas»), solo para A y K y
+    con `agente_politicos` encendido (`exigir_filtros_politicos`)."""
     zona: Literal["urbana", "rural", "sin"] | None = Field(None, description="urbana, rural o sin (sin zona)")
     lugar_id: int | None = Field(None, ge=0, le=MAX_ID, description="Barrio o vereda (id de buscar_lugar); 0 = sin "
                                                                      "barrio ni vereda reconocidos")
     area_id: Id | None = Field(None, description="Área de trabajo dibujada en el mapa (el planillero, solo las suyas)")
-    fuente: Literal["tramites", "reunion", "manual", "planilla"] | None = Field(None, description="De dónde llegó")
+    fuente: Literal[(*FUENTES, *FUENTES_POLITICAS)] | None = Field(None, description=D_FUENTE)
+    tipo: Literal[TIPOS_FILTRO] | None = Field(None, description=D_TIPO)
+    lider_id: Id | None = Field(None, description=D_LIDER_ID)
+    varios_lideres: bool | None = Field(None, description="true: las que trae más de un líder (dato político)")
+    sin_lider: bool | None = Field(None, description="true: las que nadie lidera (dato político)")
+    lista: str | None = Field(None, min_length=1, max_length=120, description=D_LISTA)
     etiqueta: Id | None = Field(None, description="Necesidad, interés o rol (id de catalogos; no las sensibles)")
     con_cedula: bool | None = None
     con_telefono: bool | None = Field(None, description="Con algún teléfono usable")
@@ -479,7 +597,7 @@ class FiltrosEntrada(_Entrada):
 # Banderas que la API lee como 0/1 en los dos sentidos, y las que solo valen con 1
 _BANDERAS = ("con_cedula", "con_telefono", "asistio", "cedula_verificada", "con_puesto", "con_mesa", "abordado",
              "contactado", "varios_telefonos", "menor")
-_SOLO_SI = ("tratables", "proximo_vencido", "mios")
+_SOLO_SI = ("tratables", "proximo_vencido", "mios", "varios_lideres", "sin_lider")
 
 
 def params_filtros(f: FiltrosEntrada | None) -> dict[str, Any]:
@@ -610,6 +728,7 @@ async def _buscar(ctx: Contexto, a: BuscarEntrada) -> Resultado:
             raise ErrorHerramienta(
                 "Su rol no lista ni filtra la base: busque por nombre (3 letras o más) o por el número completo de 10 "
                 "dígitos, o trabaje su cola en Mi trabajo.", "permiso", estado=403)
+        await exigir_filtros_politicos(ctx, filtros_politicos(a.filtros), a.filtros.lider_id if a.filtros else None)
         sin_ellos = por_numero or revela_datos(campos_de(a.filtros), a.orden)
         if sin_ellos and a.filtros is not None and a.filtros.consentimiento == "no":
             raise ErrorHerramienta(NO_AUTORIZO_CON_FILTROS, "invalido", estado=422)
@@ -619,7 +738,9 @@ async def _buscar(ctx: Contexto, a: BuscarEntrada) -> Resultado:
             params["tratables"] = 1
         d = await _pedir(ctx, "GET", "/api/personas", params=params)
         d = d if isinstance(d, dict) else {}
-        fs, numerica = _sin_digitos_enmascarados(minimizar.filas(d.get("filas") or [], await _lugares(ctx)), q)
+        crudas = d.get("filas") or []
+        pol = await politicos_de(ctx, crudas)
+        fs, numerica = _sin_digitos_enmascarados(minimizar.filas(crudas, await _lugares(ctx), pol), q)
         total, pp = int(d.get("total") or 0), int(d.get("por_pagina") or a.por_pagina)
         paginas = max(1, math.ceil(total / pp)) if pp else 1
         contenido = {"tipo": "lista", "total": total, "pagina": d.get("pagina", a.pagina), "por_pagina": pp,
@@ -632,9 +753,11 @@ async def _buscar(ctx: Contexto, a: BuscarEntrada) -> Resultado:
             contenido["nota_autorizacion"] = SIN_NO_AUTORIZARON
         if not quien.administra:
             contenido["alcance"] = "Solo personas de su zona asignada (si tiene una)."
-        return Resultado(contenido, _resumen_conteo(total, contenido["pagina"], paginas), personas=minimizar.ids_de(fs))
+        return Resultado(contenido, _resumen_conteo(total, contenido["pagina"], paginas), personas=ids_mostrados(fs))
     d = await _pedir(ctx, "GET", "/api/buscar", params={"q": q, "estricta": 1})
-    fs, numerica = _sin_digitos_enmascarados(minimizar.filas(d if isinstance(d, list) else [], await _lugares(ctx)), q)
+    crudas = d if isinstance(d, list) else []
+    pol = await politicos_de(ctx, crudas)
+    fs, numerica = _sin_digitos_enmascarados(minimizar.filas(crudas, await _lugares(ctx), pol), q)
     contenido = {"tipo": "busqueda_rapida", "total": len(fs), "pagina": 1, "filas": fs}
     if numerica:
         contenido["nota"] = SIN_DIGITOS_ENMASCARADOS
@@ -653,29 +776,30 @@ async def _buscar(ctx: Contexto, a: BuscarEntrada) -> Resultado:
         contenido["aviso"] = "El consultor busca con 3 letras o más del nombre, o con el número completo de 10 dígitos."
     elif not fs and len((a.q or "").strip()) < 2:
         contenido["aviso"] = "Escriba al menos 2 caracteres."
-    return Resultado(contenido, _resumen_conteo(len(fs)), personas=minimizar.ids_de(fs))
+    return Resultado(contenido, _resumen_conteo(len(fs)), personas=ids_mostrados(fs))
 
 
 BUSCAR = Herramienta(
     nombre="buscar_personas",
     descripcion=(
-        "Busca habitantes en la base. Úsala para encontrar a una persona por su nombre o por su cédula o teléfono "
-        "completos, o para listar y contar personas con filtros (barrio o vereda, autorización, abordaje, datos que "
-        "faltan, edad, votación…). No la uses para ver el detalle de una persona (ver_persona) ni para indicadores "
-        "del tablero. `q` busca las palabras solo en el nombre y un número solo entero, nunca una parte.\n"
-        "- Solo `q`: búsqueda rápida en toda la base; hasta 12 coincidencias, por nombre (el consultor: hasta 10 "
-        "por nombre de 3 letras o más, o 3 por un número completo de 10 dígitos; no usa filtros).\n"
+        "Busca habitantes: una persona por su nombre o por su cédula o teléfono completos, o listas y conteos con "
+        "filtros (barrio o vereda, autorización, abordaje, datos que faltan, edad, votación…). No es para el detalle "
+        "de una persona (ver_persona) ni para indicadores. `q` busca las palabras solo en el nombre y un "
+        "número solo entero, nunca una parte.\n"
+        "- Solo `q`: búsqueda rápida en toda la base; hasta 12 coincidencias (el consultor: hasta 10 por nombre de 3 "
+        "letras o más, o 3 por un número completo de 10 dígitos; no usa filtros).\n"
         "- Con `filtros`, `orden`, `pagina` o `por_pagina` (administrador, coordinador y planillero): lista paginada "
         "con el `total`; el planillero solo ve su zona asignada.\n"
-        "Devuelve {tipo, total, pagina, filas}. Cada fila trae id, nombre, lugar, autorización, abordaje, completitud "
-        "y lo que le falta; cédula y teléfono enmascarados («···123», «···2233»): no intentes reconstruirlos. De quien "
-        "no autorizó solo sale que no autorizó: con un número, con filtros (salvo barrio o vereda) o con un orden que "
-        "no sea por nombre, la lista no lo trae ni lo cuenta; para saber quiénes no autorizaron, filtra solo por "
-        "`consentimiento: no` (y su barrio o vereda). `por_pagina` de 10 a 50. Cada persona mostrada cuenta "
-        "en el tope diario de consultas del planillero y del consultor: pide solo lo necesario y, para saber cuántas "
-        "son, usa el total de la primera página en vez de recorrerlas."),
+        "Cada fila trae id, nombre, lugar, autorización, abordaje, completitud y lo que le falta; cédula y teléfono "
+        "enmascarados («···123», «···2233»): no intentes reconstruirlos. Con los datos políticos habilitados, al "
+        "administrador y al coordinador les trae el tipo (lider, votante, concejal), el «Liderado por» y las fuentes, "
+        "y filtran por tipo, lider_id, varios_lideres, sin_lider, lista y las fuentes cedulas, general o ambas. De "
+        "quien no autorizó solo sale que no autorizó: con un número, con filtros (salvo barrio o vereda) o con un "
+        "orden que no sea por nombre, la lista no lo trae ni lo cuenta; para saber quiénes no autorizaron, filtra "
+        "solo por `consentimiento: no`. `por_pagina` de 10 a 50. Cada persona mostrada cuenta en el tope diario de "
+        "P y C: para contar, usa el total de la primera página."),
     entrada=BuscarEntrada, tipo="lectura", permisos=("personas.buscar",), etiqueta="Buscando habitantes",
-    ejecutar=_buscar, esquema=esquema(BuscarEntrada))
+    ejecutar=_buscar, esquema=esquema(BuscarEntrada), mcp="lectura")
 
 
 # ───────────────────────────── ver_persona ─────────────────────────────
@@ -686,9 +810,11 @@ class VerEntrada(_Entrada):
 
 async def _ver(ctx: Contexto, a: VerEntrada) -> Resultado:
     d = await _ficha(ctx, a.persona_id)
-    f = minimizar.ficha(d, await _sensibles(ctx), await _lugares(ctx))
+    pol = None if d.get("consentimiento") == "no" else await politicos_de(
+        ctx, [d], traidas=a.persona_id if d.get("traidas") is not None else None)
+    f = minimizar.ficha(d, await _sensibles(ctx), await _lugares(ctx), pol)
     resumen = f"#{f.get('id')}: no autorizó" if f.get("consentimiento") == "no" else _persona(f)
-    return Resultado(f, resumen, personas={a.persona_id} | minimizar.ids_de([f]))
+    return Resultado(f, resumen, personas={a.persona_id} | ids_mostrados([f]))
 
 
 VER = Herramienta(
@@ -696,12 +822,15 @@ VER = Herramienta(
     descripcion=(
         "Abre la ficha de una persona por su id. Úsala cuando necesites su detalle: autorización y canales, abordaje y "
         "últimos acercamientos, notas recientes, votación, lo que le falta y qué campos se pueden editar. Devuelve la "
-        "ficha reducida: sin datos sensibles ni listas, con la cédula enmascarada y cada teléfono con su estado, su "
-        "número enmascarado y su `indice` (el que pide registrar_acercamiento). De quien no autorizó solo sale que no "
+        "ficha reducida: sin datos sensibles, con la cédula enmascarada y cada teléfono con su estado, su "
+        "número enmascarado y su `indice` (el que pide registrar_acercamiento). Si los datos políticos están "
+        "habilitados trae también lo que el panel le muestra a su rol: el tipo de persona, el «Liderado por» y, al "
+        "administrador y al coordinador, las listas, las fuentes y lo que trajo si es líder. De quien no autorizó solo "
+        "sale que no "
         "autorizó. Cuenta en el tope diario del planillero y del consultor. El consultor solo abre fichas de su "
         "trabajo (tomadas de su cola o con un acercamiento suyo reciente), nunca de menores."),
     entrada=VerEntrada, tipo="lectura", permisos=("personas.ver",), etiqueta="Consultando la ficha", ejecutar=_ver,
-    esquema=esquema(VerEntrada))
+    esquema=esquema(VerEntrada), mcp="lectura")
 
 
 # ───────────────────────────── personas_parecidas ─────────────────────────────
@@ -731,12 +860,13 @@ async def _parecidas(ctx: Contexto, a: ParecidasEntrada) -> Resultado:
     else:
         d = await _pedir(ctx, "GET", "/api/parecidas", params={"nombre": a.nombre, "cedula": a.cedula,
                                                                 "telefono": a.telefono, "estricta": 1})
-    fs = minimizar.filas(d if isinstance(d, list) else [], await _lugares(ctx))
+    crudas = d if isinstance(d, list) else []
+    fs = minimizar.filas(crudas, await _lugares(ctx), await politicos_de(ctx, crudas))
     contenido = {"total": len(fs), "parecidas": fs,
                  "nota": "parecido va de 0 a 100; cedula_distinta: true quiere decir que son personas distintas."}
     n = len(fs)
     resumen = "Sin fichas parecidas" if not n else "1 ficha parecida" if n == 1 else f"{n} fichas parecidas"
-    personas = minimizar.ids_de(fs) | ({a.persona_id} if a.persona_id else set())
+    personas = ids_mostrados(fs) | ({a.persona_id} if a.persona_id else set())
     return Resultado(contenido, resumen, personas=personas)
 
 
@@ -750,7 +880,7 @@ PARECIDAS = Herramienta(
         "si no estás seguro de que la persona no exista. Unir fichas no se hace aquí: es del administrador, en "
         "Calidad."),
     entrada=ParecidasEntrada, tipo="lectura", permisos=("personas.parecidas",), etiqueta="Buscando fichas parecidas",
-    ejecutar=_parecidas, esquema=esquema(ParecidasEntrada))
+    ejecutar=_parecidas, esquema=esquema(ParecidasEntrada), mcp="lectura")
 
 
 # ───────────────────────────── crear_persona ─────────────────────────────
@@ -887,7 +1017,8 @@ async def _crear(ctx: Contexto, a: CrearEntrada) -> Resultado:
         # coincidir en un número: que saliera diría que ese número es suyo. Como en personas_parecidas, de ella solo
         # cuenta un nombre muy parecido; la que salió por el número no se muestra y la persona del equipo la revisa
         ocultas = [c for c in candidatas if c.get("consentimiento") == "no" and not _por_el_nombre(c)]
-        fs = minimizar.filas([c for c in candidatas if c not in ocultas], await _lugares(ctx))
+        visibles = [c for c in candidatas if c not in ocultas]
+        fs = minimizar.filas(visibles, await _lugares(ctx), await politicos_de(ctx, visibles))
         contenido = {"creada": False, "codigo": "parecidas", "parecidas": fs, "mensaje": (
             "No se creó: ya hay fichas parecidas. Muéstrelas y pregunte si es alguna de ellas; solo si la persona del "
             "equipo confirma que es otra persona, proponga crearla de nuevo con forzar: true." if fs else
@@ -897,7 +1028,7 @@ async def _crear(ctx: Contexto, a: CrearEntrada) -> Resultado:
         n = len(fs)
         resumen = (f"No se creó: {n} ficha{'s' if n != 1 else ''} parecida{'s' if n != 1 else ''}" if n else
                    "No se creó: hay una ficha parecida")
-        return Resultado(contenido, resumen, personas=minimizar.ids_de(fs))
+        return Resultado(contenido, resumen, personas=ids_mostrados(fs))
     if not isinstance(d, dict) or not isinstance(d.get("id"), int):
         raise ErrorHerramienta("La API del panel no devolvió la ficha creada.", "error")
     return Resultado({"creada": True, "persona": _breve(d)}, f"Ficha creada (#{d['id']})", list(ACCIONES_ESCRITURA),
@@ -914,7 +1045,7 @@ CREAR = Herramienta(
         "cédulas, teléfonos ni otros datos. El planillero no registra menores de edad. La autorización de datos se "
         "registra después con registrar_autorizacion. Devuelve el id y lo que le falta a la ficha creada."),
     entrada=CrearEntrada, tipo="escritura", permisos=("personas.crear",), etiqueta="Creando la ficha",
-    ejecutar=_crear, confirmar=_confirmar_crear, esquema=esquema(CrearEntrada))
+    ejecutar=_crear, confirmar=_confirmar_crear, esquema=esquema(CrearEntrada), mcp="escritura")
 
 
 # ───────────────────────────── editar_persona ─────────────────────────────
@@ -1283,7 +1414,7 @@ EDITAR = Herramienta(
         "coordinador, con `motivo_cambio_cedula`. Si otra persona cambió la ficha entre la tarjeta y la aprobación, "
         "falla con «cambiada»: vuelve a leerla y propón de nuevo. Usa solo valores dictados, nunca supuestos."),
     entrada=EditarEntrada, tipo="escritura", permisos=("personas.editar",), etiqueta="Editando la ficha",
-    ejecutar=_editar, confirmar=_confirmar_editar, esquema=esquema(EditarEntrada))
+    ejecutar=_editar, confirmar=_confirmar_editar, esquema=esquema(EditarEntrada), mcp="escritura")
 
 
 # ───────────────────────────── agregar_nota ─────────────────────────────
@@ -1336,7 +1467,7 @@ NOTA = Herramienta(
         "registrar; no pongas datos sensibles (salud, etnia, discapacidad, condición de víctima, afiliación política) "
         "ni cédulas o teléfonos completos. Para un contacto con la persona usa registrar_acercamiento."),
     entrada=NotaEntrada, tipo="escritura", permisos=("personas.notas",), etiqueta="Agregando una nota",
-    ejecutar=_nota, confirmar=_confirmar_nota, esquema=esquema(NotaEntrada))
+    ejecutar=_nota, confirmar=_confirmar_nota, esquema=esquema(NotaEntrada), mcp="escritura")
 
 
 # ───────────────────────────── registrar_acercamiento ─────────────────────────────
@@ -1514,7 +1645,7 @@ ACERCAMIENTO = Herramienta(
         "agregar_nota. Devuelve el abordaje actualizado."),
     entrada=AcercamientoEntrada, tipo="escritura", permisos=("acercamientos.registrar",),
     etiqueta="Registrando el acercamiento", ejecutar=_acercamiento, confirmar=_confirmar_acercamiento,
-    esquema=esquema(AcercamientoEntrada))
+    esquema=esquema(AcercamientoEntrada), mcp="escritura")
 
 
 # ───────────────────────────── registrar_autorizacion ─────────────────────────────
@@ -1744,7 +1875,7 @@ UBICAR = Herramienta(
         "automática por su dirección (`automatica: true`). Usa exactamente una de las tres. Se guarda solo si la "
         "persona del equipo lo aprueba. No inventes coordenadas: usa solo las que te den."),
     entrada=UbicarEntrada, tipo="escritura", permisos=("personas.ubicar",), etiqueta="Ubicando a la persona",
-    ejecutar=_ubicar, confirmar=_confirmar_ubicar, esquema=esquema(UbicarEntrada))
+    ejecutar=_ubicar, confirmar=_confirmar_ubicar, esquema=esquema(UbicarEntrada), mcp="escritura")
 
 
 # ───────────────────────────── agregar_telefono ─────────────────────────────
@@ -1798,8 +1929,300 @@ TELEFONO = Herramienta(
         "estaba, solo se actualizan sus marcas. Lo que agrega el consultor queda confirmado. Se guarda solo si la "
         "persona del equipo lo aprueba. No inventes números ni los completes."),
     entrada=TelefonoEntrada, tipo="escritura", permisos=("personas.telefonos",), etiqueta="Agregando un teléfono",
-    ejecutar=_telefono, confirmar=_confirmar_telefono, esquema=esquema(TelefonoEntrada))
+    ejecutar=_telefono, confirmar=_confirmar_telefono, esquema=esquema(TelefonoEntrada), mcp="escritura")
+
+
+# ───────────────────────────── lideres ─────────────────────────────
+
+TIPOS_LIDER = {"concejal": "Concejal", "lider": "Líder"}
+NOTA_LIDERES = ("Los conteos no cuentan a quienes no autorizaron el tratamiento de sus datos, y los líderes que no "
+                "autorizaron no salen: por eso pueden diferir de la lista de líderes del panel. traidas: cuántas "
+                "personas trajo; votantes: cuántas de ellas son votantes; compartidas: cuántas trae también otro "
+                "líder.")
+
+
+class LideresEntrada(_Entrada):
+    q: str | None = Field(None, min_length=3, max_length=120,
+                          description="Buscar un líder o concejal por nombre (3 letras o más) o por su cédula "
+                                      "completa. Sin q: la lista de líderes con sus conteos (administrador y "
+                                      "coordinador)")
+    pagina: int = Field(1, ge=1, le=1000)
+    por_pagina: int = Field(30, ge=5, le=100)
+
+
+def _conteos_lideres(db: Any, visibles: set[int]) -> tuple[Counter, Counter, Counter, int]:
+    """(traidas, votantes, compartidas, personas con varios líderes) como `api.lideres.listar`, sin quienes no
+    autorizaron y contando solo los líderes `visibles` (los que autorizaron)."""
+    traidas, votantes, compartidas = Counter(), Counter(), Counter()
+    varias = 0
+    for x in db.personas.find({**bd.ACTIVA, "lideres.0": {"$exists": True}, "consentimiento": {"$ne": "no"}},
+                              {"lideres.id": 1, "votante": 1}):
+        ids = {l.get("id") for l in x.get("lideres") or [] if isinstance(l, dict)} & visibles
+        varias += len(ids) > 1
+        for i in ids:
+            traidas[i] += 1
+            compartidas[i] += len(ids) > 1
+            votantes[i] += x.get("votante") is True
+    return traidas, votantes, compartidas, varias
+
+
+def _fila_lider(l: dict) -> dict:
+    out = {"id": l.get("id"), "nombre": l.get("nombre"), "tipo": l.get("tipo"),
+           "lugar": minimizar.texto_libre(l.get("lugar"), minimizar.LUGAR_MAX) if l.get("lugar") else None,
+           "cedula_ult3": l.get("cedula_ult3") or acceso.enmascarar_cedula(l.get("cedula"))}
+    if isinstance(l.get("marcado"), bool):
+        out["marcado"] = l["marcado"]
+    return {k: v for k, v in out.items() if v is not None}
+
+
+async def _lideres(ctx: Contexto, a: LideresEntrada) -> Resultado:
+    await exigir_politicos(ctx)
+    if a.q:
+        q, por_numero = _q_del_asistente(a.q)
+        d = await _pedir(ctx, "GET", "/api/lideres/candidatos", params={"q": q})
+        crudas = [x for x in (d.get("lideres") if isinstance(d, dict) else None) or [] if isinstance(x, dict)]
+        # A y K reciben también a los que no autorizaron (P no): que lideran es un dato suyo
+        ocultos = await run_in_threadpool(_no_autorizaron, ctx.db, {x.get("id") for x in crudas
+                                                                     if isinstance(x.get("id"), int)})
+        filas = [_fila_lider(x) for x in crudas if x.get("id") not in ocultos]
+        if por_numero:
+            filas = [{k: v for k, v in f.items() if k != "cedula_ult3"} for f in filas]
+        contenido = {"tipo": "busqueda_lideres", "total": len(filas), "lideres": filas,
+                     "nota": "Para asignar uno: asignar_lider con su id. Los que no autorizaron no salen."}
+        if not filas:
+            contenido["aviso"] = ("Ningún líder o concejal casa con eso: busque por el nombre (3 letras o más) o la "
+                                  "cédula completa.")
+        n = len(filas)
+        return Resultado(contenido, "Sin líderes" if not n else "1 líder" if n == 1 else f"{n} líderes",
+                         personas=minimizar.ids_de(filas))
+    if not ctx.quien.puede("admin"):
+        raise ErrorHerramienta("La lista de líderes con sus conteos es del administrador y el coordinador: busque un "
+                               "líder por su nombre con q.", "permiso", estado=403)
+    d = await _pedir(ctx, "GET", "/api/lideres")
+    crudas = [x for x in (d.get("lideres") if isinstance(d, dict) else None) or [] if isinstance(x, dict)
+              and isinstance(x.get("id"), int)]
+    ocultos = await run_in_threadpool(_no_autorizaron, ctx.db, {x["id"] for x in crudas})
+    visibles = [x for x in crudas if x["id"] not in ocultos]
+    traidas, votantes, compartidas, varias = await run_in_threadpool(_conteos_lideres, ctx.db,
+                                                                     {x["id"] for x in visibles})
+    filas = [{**_fila_lider(x), "traidas": traidas[x["id"]], "votantes": votantes[x["id"]],
+              "compartidas": compartidas[x["id"]]} for x in visibles]
+    filas.sort(key=lambda f: (-f["traidas"], f.get("nombre") or ""))
+    total = len(filas)
+    paginas = max(1, math.ceil(total / a.por_pagina))
+    pagina = filas[(a.pagina - 1) * a.por_pagina:a.pagina * a.por_pagina]
+    contenido = {"tipo": "lideres", "total": total, "pagina": a.pagina, "paginas": paginas, "lideres": pagina,
+                 "personas_con_varios": varias, "nota": NOTA_LIDERES,
+                 "ruta": "/personas?varios_lideres=1"}
+    resumen = "Sin líderes" if not total else "1 líder" if total == 1 else f"{_miles(total)} líderes"
+    return Resultado(contenido, f"{resumen} · página {a.pagina} de {paginas}" if paginas > 1 else resumen,
+                     personas=minimizar.ids_de(pagina))
+
+
+LIDERES = Herramienta(
+    nombre="lideres",
+    descripcion=(
+        "Los líderes y concejales de la campaña (dato político; solo si el administrador lo habilitó en Ajustes). "
+        "Sin `q` (administrador y coordinador): la lista de líderes, cada uno con su tipo, cuántas personas trajo "
+        "(`traidas`), cuántas de ellas son votantes y cuántas trae también otro líder, más cuántas personas tienen "
+        "varios líderes; de a `por_pagina`. Con `q` (también el planillero): busca un líder o concejal por nombre (3 "
+        "letras o más) o por la cédula completa, para asignarlo con asignar_lider. Los conteos no cuentan a quienes no "
+        "autorizaron el tratamiento de sus datos y los líderes que no autorizaron no salen. Para ver a quiénes trajo "
+        "uno, usa buscar_personas con filtros.lider_id. Cada líder mostrado cuenta en el tope diario del planillero."),
+    entrada=LideresEntrada, tipo="lectura", permisos=("lideres.asignar",), etiqueta="Consultando los líderes",
+    ejecutar=_lideres, esquema=esquema(LideresEntrada), mcp="lectura", disponible_ajustes=politicos_ofrecidos)
+
+
+# ───────────────────────────── marcar_tipo ─────────────────────────────
+
+ETIQUETAS_TIPO = dict(modelo.TIPOS_PERSONA)
+SOLO_SUMA = "Su rol solo marca un tipo: quitarlo lo hace el administrador o el coordinador."
+FUERA_DE_ZONA = ("Esta persona no es de su zona: su tipo y su «Liderado por» los marcan el administrador, el "
+                 "coordinador o quien la tiene asignada.")
+
+
+class MarcarTipoEntrada(_Entrada):
+    persona_id: Id
+    tipos: list[Literal[tuple(modelo.TIPOS_PERSONA)]] = Field(..., min_length=1, max_length=len(modelo.TIPOS_PERSONA),
+                                                              description="concejal, lider o votante")
+    quitar: bool = Field(False, description="true: quitar esos tipos (solo administrador y coordinador)")
+
+    @field_validator("tipos")
+    @classmethod
+    def _t(cls, v):
+        return _sin_repetidos(v)
+
+
+def _exigir_tipo_visible(ctx: Contexto, d: dict) -> None:
+    """La ficha de P trae el tipo solo si es de su zona o la registró él (`proyeccion.tipo_visible`): sin él, la API
+    respondería 403 `fuera_de_zona` después de aprobar."""
+    if not ctx.quien.administra and any(t not in d for t in modelo.TIPOS_PERSONA):
+        raise ErrorHerramienta(FUERA_DE_ZONA, "fuera_de_zona", estado=403)
+
+
+def _tipos_que_cambian(d: dict, a: MarcarTipoEntrada) -> list[str]:
+    return [t for t in a.tipos if (d.get(t) is True) == a.quitar]
+
+
+async def _revisar_tipo(ctx: Contexto, a: MarcarTipoEntrada) -> tuple[dict, list[str]]:
+    await exigir_politicos(ctx)
+    if a.quitar and not ctx.quien.administra:
+        raise ErrorHerramienta(SOLO_SUMA, "permiso", estado=403)
+    d = await _ficha(ctx, a.persona_id)
+    _exigir_tratable(d)
+    _exigir_tipo_visible(ctx, d)
+    return d, _tipos_que_cambian(d, a)
+
+
+def _nombres_tipos(tipos: list[str]) -> str:
+    return ", ".join(ETIQUETAS_TIPO[t] for t in tipos)
+
+
+async def _confirmar_tipo(ctx: Contexto, a: MarcarTipoEntrada) -> Confirmacion:
+    d, cambian = await _revisar_tipo(ctx, a)
+    if not cambian:
+        raise ErrorHerramienta("La ficha ya " + ("no tiene" if a.quitar else "tiene") + " ese tipo: no hay nada que "
+                               "guardar.", "sin_cambios")
+    iguales = [t for t in a.tipos if t not in cambian]
+    accion = "Quitar" if a.quitar else "Marcar"
+    detalle = [("Persona", _persona(d)), ("Tipo", f"{'−' if a.quitar else '+'} {_nombres_tipos(cambian)}")]
+    aviso = f"Sin cambio (ya {'no ' if a.quitar else ''}lo tenía): {_nombres_tipos(iguales)}." if iguales else None
+    return Confirmacion(f"{accion} el tipo de {_persona(d)}", detalle, aviso)
+
+
+def _politico_breve(d: dict) -> dict:
+    """Lo que el modelo recibe de una ficha después de marcar un tipo o asignar un líder: quién es y su tipo."""
+    out = _breve(d)
+    for t in modelo.TIPOS_PERSONA:
+        if t in d:
+            out[t] = d[t] is True
+    return out
+
+
+async def _marcar_tipo(ctx: Contexto, a: MarcarTipoEntrada) -> Resultado:
+    # PATCH no respeta la Idempotency-Key: se vuelve a leer y no se escribe lo que ya quedó como se pidió
+    d, cambian = await _revisar_tipo(ctx, a)
+    if cambian:
+        d = await _pedir(ctx, "PATCH", f"/api/personas/{a.persona_id}", cuerpo={t: not a.quitar for t in cambian})
+        d = d if isinstance(d, dict) else {}
+    contenido = {"guardado": bool(cambian), "persona": _politico_breve(d) or {"id": a.persona_id}}
+    if not cambian:
+        contenido["nota"] = "Ya estaba así: no se cambió nada."
+    accion = "quitado" if a.quitar else "marcado"
+    return Resultado(contenido, f"Tipo {accion} en la ficha #{a.persona_id}", list(ACCIONES_ESCRITURA),
+                     personas={a.persona_id})
+
+
+MARCAR_TIPO = Herramienta(
+    nombre="marcar_tipo",
+    descripcion=(
+        "Propone marcar el tipo de una persona: concejal, lider o votante (dato político; solo si el administrador lo "
+        "habilitó en Ajustes). El planillero solo marca, nunca quita, y solo en las personas de su zona o que "
+        "registró (las que le muestran su tipo en la ficha); el administrador y el coordinador también quitan un tipo "
+        "con `quitar: true`. No se marca nada a quien no autorizó el tratamiento de sus datos. Se guarda solo si la "
+        "persona del equipo lo aprueba. Marca solo lo que te dijeron: no deduzcas el tipo de nadie."),
+    entrada=MarcarTipoEntrada, tipo="escritura", permisos=("personas.editar", "personas.tipo"),
+    etiqueta="Marcando el tipo", ejecutar=_marcar_tipo, confirmar=_confirmar_tipo, esquema=esquema(MarcarTipoEntrada),
+    mcp="escritura", disponible_ajustes=politicos_ofrecidos)
+
+
+# ───────────────────────────── asignar_lider ─────────────────────────────
+
+MAX_LIDERES = 10  # como `api.lideres.MAX_LIDERES`
+
+
+class AsignarLiderEntrada(_Entrada):
+    persona_id: Id = Field(..., description="La persona a la que trajo el líder")
+    lider_id: Id = Field(..., description="El líder o concejal (id de lideres)")
+
+    @model_validator(mode="after")
+    def _distintos(self):
+        if self.persona_id == self.lider_id:
+            raise ValueError("Una persona no puede ser su propio líder")
+        return self
+
+
+def _lider(db: Any, lid: int) -> dict | None:
+    """El líder o concejal `lid` que se puede asignar desde el asistente: activo, marcado como líder o concejal y que
+    autorizó el tratamiento (a quien no autorizó, ni A ni K lo asignan desde aquí: sería tratar su dato político)."""
+    l = db.personas.find_one({"_id": lid, **bd.ACTIVA, "consentimiento": {"$ne": "no"}},
+                             {"nombre": 1, **{t: 1 for t in modelo.TIPOS_LIDERAN}})
+    return l if l is not None and modelo.lidera(l) else None
+
+
+def _ids_lideres(d: dict) -> list[int]:
+    return [l.get("id") for l in d.get("lideres") or [] if isinstance(l, dict) and isinstance(l.get("id"), int)]
+
+
+async def _revisar_lider(ctx: Contexto, a: AsignarLiderEntrada) -> tuple[dict, dict, bool]:
+    """(ficha, líder, ya lo tenía). Lo que la API rechazaría después de aprobar, antes: la persona no autorizó, no es de
+    la zona del planillero, el líder no sirve (el mismo mensaje para todo motivo: no dice si el id existe) o ya tiene
+    el tope de líderes."""
+    await exigir_politicos(ctx)
+    d = await _ficha(ctx, a.persona_id)
+    _exigir_tratable(d)
+    if not ctx.quien.administra and "lideres" not in d:
+        raise ErrorHerramienta(FUERA_DE_ZONA, "fuera_de_zona", estado=403)
+    l = await run_in_threadpool(_lider, ctx.db, a.lider_id)
+    if l is None:
+        raise ErrorHerramienta(LIDER_NO_USABLE, "invalido", estado=422, detalle={"campo": "lider_id"})
+    actuales = _ids_lideres(d)
+    ya = a.lider_id in actuales
+    if not ya and len(actuales) >= MAX_LIDERES:
+        raise ErrorHerramienta(f"Una persona puede tener hasta {MAX_LIDERES} líderes.", "invalido", estado=422)
+    return d, l, ya
+
+
+def _lider_texto(l: dict) -> str:
+    tipo = next((TIPOS_LIDER[t] for t in modelo.TIPOS_LIDERAN if l.get(t) is True), "Líder")
+    return f"{l.get('nombre') or 'Persona sin nombre'} ({tipo}) #{l['_id']}"
+
+
+async def _confirmar_lider(ctx: Contexto, a: AsignarLiderEntrada) -> Confirmacion:
+    d, l, ya = await _revisar_lider(ctx, a)
+    if ya:
+        raise ErrorHerramienta("Ese líder ya figura en su «Liderado por»: no hay nada que guardar.", "sin_cambios")
+    if not ctx.quien.administra:
+        # El nombre del líder sale en la tarjeta: cuenta en el presupuesto del planillero, como en el buscador del panel
+        await run_in_threadpool(acceso.registrar_lecturas, ctx.db, ctx.quien, [a.lider_id])
+    detalle = [("Persona", _persona(d)), ("Liderado por", f"+ {_lider_texto(l)}")]
+    otros = len(_ids_lideres(d))
+    aviso = (f"Ya tiene {otros} líder{'es' if otros != 1 else ''}: quedará con varios (otro también la está "
+             "captando)." if otros else None)
+    return Confirmacion(f"Asignar un líder a {_persona(d)}", detalle, aviso, personas={a.lider_id})
+
+
+async def _asignar_lider(ctx: Contexto, a: AsignarLiderEntrada) -> Resultado:
+    # La ruta no respeta la Idempotency-Key, pero asignar dos veces el mismo líder no cambia nada (la API lo devuelve
+    # igual): se vuelve a leer y no se escribe si ya quedó
+    d, _, ya = await _revisar_lider(ctx, a)
+    if not ya:
+        d = await _pedir(ctx, "POST", f"/api/personas/{a.persona_id}/lideres", cuerpo={"lider_id": a.lider_id},
+                         clave=_clave(ctx))
+        d = d if isinstance(d, dict) else {}
+    pol = await politicos_de(ctx, [d])
+    f = minimizar.ficha(d, lugares=await _lugares(ctx), politicos=pol)
+    contenido = {"guardado": not ya, "persona": {**_politico_breve(d), **({"lideres": f["lideres"]}
+                                                                         if "lideres" in f else {})}}
+    if ya:
+        contenido["nota"] = "Ya lo tenía: no se cambió nada."
+    return Resultado(contenido, f"Líder asignado a la ficha #{a.persona_id}", list(ACCIONES_ESCRITURA),
+                     personas={a.persona_id, a.lider_id} | ids_mostrados([f]))
+
+
+ASIGNAR_LIDER = Herramienta(
+    nombre="asignar_lider",
+    descripcion=(
+        "Propone asignarle a una persona el líder o concejal que la trajo (su «Liderado por»; dato político, solo si "
+        "el administrador lo habilitó en Ajustes). Busca antes el líder con lideres (con q) y usa su id. El planillero "
+        "solo asigna en las personas de su zona o que registró; quitar un líder es del administrador o el "
+        "coordinador, en el panel. Una persona puede tener varios líderes (hasta 10). No se asigna a quien no "
+        "autorizó el tratamiento de sus datos ni un líder que no autorizó. Se guarda solo si la persona del equipo lo "
+        "aprueba."),
+    entrada=AsignarLiderEntrada, tipo="escritura", permisos=("lideres.asignar",), etiqueta="Asignando el líder",
+    ejecutar=_asignar_lider, confirmar=_confirmar_lider, esquema=esquema(AsignarLiderEntrada), mcp="escritura",
+    disponible_ajustes=politicos_ofrecidos)
 
 
 HERRAMIENTAS: list[Herramienta] = [BUSCAR, VER, PARECIDAS, CREAR, EDITAR, NOTA, ACERCAMIENTO, AUTORIZACION, UBICAR,
-                                   TELEFONO]
+                                   TELEFONO, LIDERES, MARCAR_TIPO, ASIGNAR_LIDER]

@@ -1,0 +1,173 @@
+/* Importar y exportar → Planillas por foto (web/js/vistas/importar.js): subir, la bandeja y la planilla abierta con la
+   foto al lado de la grilla. Solo con los tokens de app.css (siguen el tema claro y oscuro); lo dudoso, lo ilegible y
+   lo corregido llevan además un signo (?, ✕, ✓): el color nunca es la única señal. Capas por debajo del velo (29) y
+   del menú (30) del celular. */
+
+/* ── Subir ── */
+.planillas-foto .pf-intro { margin: 0 0 14px; }
+.pf-subir { border: 2px dashed var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 12px;
+  transition: border-color .15s, background .15s; }
+.pf-subir.encima { border-color: var(--accent); background: var(--accent-soft); }
+.pf-botones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pf-soltar { font-size: 13px; }
+.pf-opciones { margin: 0; }
+.pf-aviso, .pf-sin-subida { margin: 0; }
+.pf-privacidad { margin: 0; font-size: 13px; }
+.pf-subidas { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.pf-subidas:empty { display: none; }
+.pf-subida { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+.pf-subida-icono { flex: none; display: inline-flex; width: 18px; height: 18px; margin-top: 2px; color: var(--muted); }
+.pf-subida-icono svg { width: 18px; height: 18px; }
+.pf-subida-icono[data-estado="ok"] { color: var(--ok-text); }
+.pf-subida-icono[data-estado="error"] { color: var(--accent-text); }
+.pf-subida-avisos { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.pf-subida-avisos .chip { white-space: normal; text-align: left; }
+.pf-subida > span { min-width: 0; }
+
+/* ── La bandeja ── */
+.pf-filtros { margin: 16px 0 10px; max-width: 640px; flex-wrap: wrap; }
+.pf-cargando { display: flex; gap: 10px; align-items: center; color: var(--muted); padding: 8px 0; }
+.pf-vacia { margin: 6px 0; }
+.pf-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); }
+.pf-item { border: 1px solid var(--line-soft); border-radius: var(--r-s); padding: 10px 12px; display: grid; gap: 6px;
+  background: var(--raised); min-width: 0; }
+.pf-item.abierta { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.pf-item-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.pf-item-datos { font-size: 13px; }
+.pf-item-nota { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
+.pf-item-error { font-size: 13px; color: var(--accent-text); overflow-wrap: anywhere; }
+.pf-item-acciones { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pf-item-acciones .peligro { margin-left: auto; }
+
+/* ── La planilla abierta ── */
+.planilla-abierta { display: grid; gap: 12px; }
+.pf-abierta-cab { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.pf-abierta-cab h2 { font-size: 17px; font-weight: 750; }
+.pf-abierta-cab .sec { font-size: 13px; margin-top: 4px; overflow-wrap: anywhere; }
+.pf-abierta-cab .acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.pf-leyendo { display: flex; gap: 10px; align-items: center; color: var(--ink-2); }
+.pf-encabezado { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; overflow-wrap: anywhere; }
+.pf-revision { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.pf-revision > * { min-width: 0; }
+
+/* La foto: un canvas a su tamaño dentro de un marco con barras; el zoom es su ancho */
+.pf-foto { display: grid; gap: 8px; min-width: 0; }
+.pf-foto-barra { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pf-zoom-valor { min-width: 5.5em; text-align: center; font-size: 13px; font-weight: 650; color: var(--ink-2); }
+.pf-foto-marco { overflow: auto; max-height: 60vh; border: 1px solid var(--line-soft); border-radius: var(--r-s);
+  background: var(--sunken); cursor: grab; overscroll-behavior: contain; }
+.pf-foto-marco:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.pf-foto-marco.arrastrando { cursor: grabbing; user-select: none; }
+.pf-foto-marco canvas { display: block; max-width: none; height: auto; }
+.pf-foto-mensaje { margin: 0; padding: 24px 16px; text-align: center; }
+@media (min-width: 1200px) {
+  .pf-revision:not(.sin-foto) { grid-template-columns: minmax(320px, 5fr) minmax(0, 7fr); }
+  .pf-foto { position: sticky; top: 12px; }
+  .pf-foto-marco { max-height: calc(100vh - 110px); }
+}
+
+/* La grilla: 20 columnas que se desplazan dentro de su caja; la casilla y el número de fila quedan fijos a la izquierda */
+.pf-grilla { display: grid; gap: 10px; min-width: 0; }
+.pf-grilla-barra { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 14px;
+  font-size: 13px; color: var(--muted); }
+.pf-leyenda { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.pf-elegir { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; }
+.pf-marca { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 5px;
+  font-size: 11px; font-weight: 800; }
+.pf-marca[data-marca="dudoso"], .pf-celda[data-marca="dudoso"] { background: color-mix(in srgb, var(--warn) 24%, transparent); }
+.pf-marca[data-marca="ilegible"], .pf-celda[data-marca="ilegible"] { background: var(--accent-soft); }
+.pf-marca[data-marca="corregido"] { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok-text); }
+.pf-marca[data-marca="dudoso"] { color: color-mix(in srgb, var(--warn) 45%, var(--ink)); }
+.pf-marca[data-marca="ilegible"] { color: var(--accent-text); }
+.pf-tabla-env { max-width: 100%; }
+.pf-tabla { font-size: 14px; }
+.pf-tabla tbody tr { cursor: default; }
+.pf-tabla th { white-space: nowrap; }
+.pf-tabla thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); }
+.pf-tabla .pf-sel, .pf-tabla .pf-n { position: sticky; z-index: 1; background: var(--surface); }
+.pf-tabla .pf-sel { left: 0; width: 38px; min-width: 38px; padding: 6px 4px 6px 10px; }
+.pf-tabla .pf-n { left: 38px; min-width: 44px; padding: 6px 8px; text-align: right; font-variant-numeric: tabular-nums;
+  color: var(--ink-2); box-shadow: 1px 0 0 var(--line-soft); }
+.pf-tabla thead .pf-sel, .pf-tabla thead .pf-n { z-index: 3; }
+.pf-tabla .pf-sel input { width: 18px; height: 18px; margin: 0; accent-color: var(--ink); }
+.pf-tabla td, .pf-tabla tbody th { vertical-align: top; }
+.pf-tabla tbody .pf-sel { padding-top: 11px; }
+.pf-tabla tbody .pf-n { padding-top: 10px; }
+.pf-tabla .pf-estado-celda { min-width: 240px; max-width: 320px; white-space: normal; }
+.pf-tabla td.pf-estado-celda { padding: 6px 8px; }
+.pf-estado-celda > * { margin: 0 4px 4px 0; vertical-align: middle; }
+.pf-estado-celda .btn { padding: 2px 6px; }
+.pf-firma { display: inline-block; font-size: 12px; color: var(--muted); }
+.pf-firma[data-firma="ausente"], .pf-firma[data-firma="dudosa"] { color: color-mix(in srgb, var(--warn) 45%, var(--ink)); }
+.pf-ficha { font-size: 13px; font-weight: 650; }
+.pf-cotejo { display: inline-block; vertical-align: top; max-width: 100%; }
+.pf-cotejo summary { cursor: pointer; list-style: none; display: inline; }
+.pf-cotejo summary::-webkit-details-marker { display: none; }
+.pf-cotejo summary .chip::after { content: " ▾"; }
+.pf-cotejo[open] summary .chip::after { content: " ▴"; }
+.pf-cotejo ul { margin: 4px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--ink-2); }
+.pf-tabla td.pf-celda { position: relative; padding: 3px 4px; vertical-align: top; }
+.pf-celda::before { position: absolute; top: 1px; right: 3px; font-size: 10px; font-weight: 800; line-height: 1;
+  pointer-events: none; }
+.pf-celda[data-marca="dudoso"]::before { content: "?"; color: color-mix(in srgb, var(--warn) 45%, var(--ink)); }
+.pf-celda[data-marca="ilegible"]::before { content: "✕"; color: var(--accent-text); }
+.pf-celda[data-marca="corregido"]::before { content: "✓"; color: var(--ok-text); }
+.pf-entrada { width: 100%; min-width: 7.5em; border: 1px solid transparent; border-radius: 6px; background: transparent;
+  padding: 6px 8px; font: inherit; color: var(--ink); }
+@media (hover: hover) { .pf-entrada:hover:not(:disabled) { border-color: var(--line); } }
+.pf-entrada:focus { outline: none; border-color: var(--ink); background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 10%, transparent); }
+.pf-entrada:disabled { color: var(--muted); }
+.pf-celda.cambiada .pf-entrada { border-color: var(--s1); border-style: dashed; }
+.pf-celda[data-campo="nombre"] .pf-entrada, .pf-celda[data-campo="direccion"] .pf-entrada { min-width: 15em; }
+.pf-celda[data-campo="observaciones"] .pf-entrada { min-width: 18em; }
+.pf-celda[data-campo="barrio"] .pf-entrada, .pf-celda[data-campo="puesto"] .pf-entrada { min-width: 11em; }
+.pf-celda[data-campo="edad"] .pf-entrada, .pf-celda[data-campo="mesa"] .pf-entrada,
+.pf-celda[data-campo="sexo"] .pf-entrada, .pf-celda[data-campo="mayor_18"] .pf-entrada,
+.pf-celda[data-campo="tipo_documento"] .pf-entrada { min-width: 4.5em; }
+.pf-fila[data-estado="descartada"] td:not(.pf-estado-celda), .pf-fila[data-estado="cargada"] td,
+.pf-fila[data-estado="no_se_carga"] td { color: var(--muted); }
+.pf-fila[data-estado="descartada"] .pf-entrada { text-decoration: line-through; }
+.pf-fila[data-estado="no_autoriza"] .pf-n { color: var(--accent-text); }
+.pf-fija { font-size: 13.5px; }
+.pf-fija-texto { position: sticky; left: 92px; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px;
+  max-width: min(520px, calc(100vw - 180px)); }
+
+/* Cotejar y cargar */
+.pf-acciones { display: grid; gap: 10px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
+.pf-carga { margin: 0; }
+.pf-carga-nota { margin: 0; font-size: 13px; }
+.pf-botones-carga { display: flex; flex-wrap: wrap; gap: 8px; }
+.pf-cotejo-resumen:empty { display: none; }
+.pf-cotejo-resumen p { margin: 6px 0 0; font-size: 13px; }
+.pf-cotejo-titulo { font-size: 13px; margin-right: 4px; align-self: center; }
+.pf-resultado:empty { display: none; }
+.pf-resultado-caja { border: 1px solid var(--line-soft); border-radius: var(--r-s); padding: 14px 16px; display: grid;
+  gap: 10px; background: var(--raised); }
+.pf-resultado-caja h3 { font-size: 15px; }
+.pf-resultado-caja .kpis { margin: 0; }
+.pf-resultado-filas { margin: 0; padding-left: 18px; font-size: 14px; display: grid; gap: 2px; }
+.pf-confirmar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+
+/* En el computador la grilla tiene su propio alto (el encabezado queda a la vista); en el celular se desplaza con la
+   página, sin dos desplazamientos verticales uno dentro del otro */
+@media (min-width: 901px) {
+  .pf-tabla-env { max-height: 72vh; overflow: auto; }
+}
+@media (max-width: 640px) {
+  .pf-subir { padding: 12px; }
+  .pf-botones .btn { flex: 1 1 140px; }
+  .pf-item-acciones .btn { min-height: 40px; }
+  .pf-abierta-cab .acciones { width: 100%; }
+  .pf-botones-carga .btn { flex: 1 1 100%; }
+  .pf-tabla .pf-estado-celda { min-width: 130px; }
+}
+@media (pointer: coarse) {
+  .pf-tabla .pf-sel input { width: 22px; height: 22px; }
+  .pf-entrada { padding: 9px 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-subir { transition: none; }
+  .pf-leyendo .giro, .pf-cargando .giro { animation-duration: 2.4s; }
+}
