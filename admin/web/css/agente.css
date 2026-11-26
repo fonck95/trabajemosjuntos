@@ -265,7 +265,7 @@ body:has(#franja-llamada) .agente-panel {
 .agente-pie span:empty { display: none; }
 @media (pointer: coarse) { .agente-ayuda { display: none; } }
 
-/* ───────── Fotos de planillas físicas (agente.js): el botón de la cámara y la bandeja del cuadro de escribir ─────────
+/* ───────── Fotos adjuntas (agente.js): el botón de la cámara y la bandeja del cuadro de escribir ─────────
    El botón, a la izquierda del cuadro, con cuántas fotos lleva el mensaje. La bandeja, encima: el aviso fijo (qué se
    fotografía y qué no), «Tomar foto» y «Elegir de la galería», y cada foto con su miniatura (un canvas), su estado, sus
    avisos y sus botones (reintentar, girar, quitar). */

@@ -34,8 +34,13 @@ Privacidad (Ley 1581):
   el modelo de una conversación las recibe enmascaradas (`fila_enmascarada` y, la descripción,
   `minimizar.enmascarar_descripcion`). El planillero que llenó el papel queda como «capturado por» de lo cargado.
 * La descripción puede nombrar a alguien: va cifrada como las filas, se borra con la foto al cargar la hoja entera y
-  deja de mostrarse en cuanto una supresión marca filas de esa planilla (`lectura_de`). La bandeja, en claro, solo
-  dice si la hay (`con_descripcion`).
+  deja de mostrarse en cuanto una supresión marca filas de esa planilla (`lectura_de`). Las cédulas que trae dejan sus
+  huellas como una «fila» más (`N_DESCRIPCION`, `_huellas_descripcion`): la supresión de esa persona encuentra también
+  una foto sin filas (un volante, una captura), y una descripción con la cédula de alguien ya suprimido no se guarda.
+  La bandeja, en claro, solo dice si la hay (`con_descripcion`).
+* Una foto que el código de antes rechazó por no ser la planilla de campo (`formato`, con el ajuste retirado
+  `otros_formatos` apagado) no bloquea la misma foto: subida otra vez se lee (`RECHAZOS_VIGENTES`), y su rechazo se
+  explica con el mensaje de ahora (`error_de`). Una cédula rechazada sigue siendo la misma foto y no vuelve al modelo.
 
 Concurrencia: las lecturas de fondo tienen un cupo por proceso (`A_LA_VEZ`: 1 con Mnemo, que comparte sus cuatro
 llamadas con el chat y el dictado; 2 con Anthropic) y esperan su turno en cola; sobreviven a que el navegador se vaya.
@@ -154,6 +159,15 @@ MENSAJES = {
     "interrumpida": "La lectura se interrumpió (el panel se reinició). Vuelva a leerla.",
     "error": "La lectura falló. Vuelva a intentarlo.",
 }
+# Los rechazos que siguen en pie (`_fallar(..., rechazada=True)`): una foto rechazada con otro código (`formato`, de
+# cuando solo se leían planillas de campo con `agente_planillas.otros_formatos` apagado) no cuenta como la misma foto
+# al subirla otra vez (`guardar_subida`), y la bandeja y el asistente no la explican con el mensaje de entonces
+# (`error_de`)
+RECHAZOS_VIGENTES = ("documento_identidad",)
+RECHAZO_RETIRADO = ("Se rechazó con una regla que ya no existe (solo se leían planillas de campo) y la foto se borró: "
+                    "vuelva a subirla y se leerá.")
+# La «fila» de las huellas de la descripción (`_huellas`): las filas de una hoja empiezan en 1
+N_DESCRIPCION = 0
 # `simular` y `cargar` de una foto leída sin ninguna fila (422 `sin_filas`)
 FOTO_SIN_FILAS = ("Esta foto no tiene filas de personas leídas: no hay filas que cotejar ni cargar. Si es una hoja, "
                   "vuelva a leerla o tome otra foto.")
@@ -503,11 +517,14 @@ def _respuesta_subida(doc: dict) -> dict:
 def guardar_subida(db: Database, cfg: Any, quien: Any, imagen: Imagen, *, nota: str | None, formato: str,
                    horas: int) -> tuple[dict, bool]:
     """Guarda la foto (cifrada) como una planilla «leyendo» y devuelve (respuesta, ¿es nueva?). Si la misma persona ya
-    subió esa foto (mismo SHA-256) y sigue en la bandeja, es esa misma (sin otra lectura ni otro cupo); si ya se cargó
-    en una importación, 409 `ya_cargada` con su número. Anota la subida (topes) y la audita (sin datos de personas)."""
+    subió esa foto (mismo SHA-256) y sigue en la bandeja, es esa misma (sin otra lectura ni otro cupo), salvo una
+    rechazada por una regla que ya no existe (`RECHAZOS_VIGENTES`: la de «solo planillas de campo», `formato`, que
+    borró la foto): esa se sube y se lee de nuevo. Si ya se cargó en una importación, 409 `ya_cargada` con su número.
+    Anota la subida (topes) y la audita (sin datos de personas)."""
     sha = hashlib.sha256(imagen.datos).hexdigest()
-    previa = db.planillas.find_one({"uid": quien.uid, "sha256": sha, "estado": {"$ne": "cargada"}},
-                                   sort=[("ts", -1)])
+    previa = db.planillas.find_one({"uid": quien.uid, "sha256": sha, "$nor": [
+        {"estado": "cargada"}, {"estado": "rechazada", "error.codigo": {"$nin": list(RECHAZOS_VIGENTES)}}]},
+        sort=[("ts", -1)])
     if previa is not None:
         return _respuesta_subida(vigente(db, previa)), False
     cargada = db.importaciones.find_one({"fotos_sha256": sha}, {"_id": 1, "ts": 1}, sort=[("_id", -1)])
@@ -685,9 +702,11 @@ def _guardar_lectura(db: Database, cfg: Any, doc: dict, lectura: lector.Lectura,
     """Guarda lo leído (cifrado) y deja la planilla «leida», aunque no tenga ninguna fila (una foto cualquiera: queda su
     descripción). Releída desde una fila, se juntan las filas de antes con las nuevas (y, si la nueva lectura no trajo
     descripción, queda la de antes). Las filas ya cargadas no vuelven a guardar datos. `datos_personales` queda
-    encendido también si la descripción trae un número largo o un correo (`minimizar.enmascarar_descripcion` la
-    cambia), lo diga o no el lector; `aviso` («sin_filas»), solo si al final no quedó ninguna fila."""
-    from .agente.minimizar import enmascarar_descripcion
+    encendido también si la descripción trae un correo o un número de 5 o más dígitos que no es un valor en pesos (una
+    cédula, un teléfono: `minimizar.descripcion_con_datos`), lo diga o no el lector; `aviso` («sin_filas»), solo si al
+    final no quedó ninguna fila. Una descripción con la cédula de alguien que pidió la supresión (sus huellas,
+    `_huellas_descripcion`) no se guarda: queda vacía, como la fila de esa persona (`_reducir`)."""
+    from .agente.minimizar import descripcion_con_datos
     filas = [copy.deepcopy(f) for f in lectura.filas]
     descripcion, personales = lectura.descripcion, lectura.datos_personales
     if desde_fila is not None:
@@ -699,7 +718,10 @@ def _guardar_lectura(db: Database, cfg: Any, doc: dict, lectura: lector.Lectura,
     cargadas = {int(n) for n in (doc.get("cargadas") or {})}
     filas = [{"n": f["n"], "cargada": True} if f["n"] in cargadas else f for f in filas]
     filas = _reducir(db, filas)
-    personales = bool(personales or enmascarar_descripcion(descripcion) != descripcion)
+    personales = bool(personales or descripcion_con_datos(descripcion))
+    clave = bd.clave_supresion(db)
+    if descripcion and db.suprimidos.find_one({"_id": {"$in": _huellas_descripcion(clave, descripcion)}}, {"_id": 1}):
+        descripcion = ""
     aviso = lectura.aviso if not filas else None
     datos = {"tipo_formato": lectura.tipo_formato, "descripcion": descripcion, "datos_personales": personales,
              "aviso": aviso, "filas_visibles": lectura.filas_visibles, "encabezado": lectura.encabezado,
@@ -710,7 +732,7 @@ def _guardar_lectura(db: Database, cfg: Any, doc: dict, lectura: lector.Lectura,
     hecho = db.planillas.update_one({"_id": doc["_id"], "estado": "leyendo", "actualizada": doc.get("actualizada")},
                                     {"$set": {
         "estado": "leida", "lectura": _cifrar_lectura(cfg, doc["_id"], doc.get("uid"), datos), "resumen": resumen,
-        "huellas": _huellas(db, filas), "error": None, "actualizada": _ahora(), "filas_suprimidas": []}})
+        "huellas": _huellas(db, filas, descripcion), "error": None, "actualizada": _ahora(), "filas_suprimidas": []}})
     if hecho.matched_count:
         _auditar_lectura(db, doc, {"filas": resumen["filas"], "dudosas": resumen["dudosas"],
                                    "tipo_formato": lectura.tipo_formato, "incompleta": lectura.incompleta,
@@ -757,11 +779,26 @@ def _huellas_fila(clave: bytes, valores: dict) -> list[str]:
     return list(dict.fromkeys(h for h in hs if h))
 
 
-def _huellas(db: Database, filas: list[dict]) -> list[dict]:
+def _huellas_descripcion(clave: bytes, descripcion: str | None) -> list[str]:
+    """Las huellas de cédula (HMAC, como las de `suprimidos`) de cada número de 5 a 11 dígitos de la descripción
+    (`minimizar.numeros_de_descripcion`, normalizado como una cédula: `texto.cedula`). Un teléfono o un valor también
+    dan una, que no coincide con ninguna cédula suprimida: no se sabe cuál es cuál y no hace falta."""
+    from .agente.minimizar import numeros_de_descripcion
+    cedulas = sorted({c for d, _ in numeros_de_descripcion(descripcion or "") if (c := tx.cedula(d))})
+    return [h for c in cedulas if (h := bd.huella(clave, "cedula", c))]
+
+
+def _huellas(db: Database, filas: list[dict], descripcion: str | None = None) -> list[dict]:
     """Por fila con datos, las huellas (HMAC, como las de `suprimidos`) de su cédula y de su nombre con cada teléfono:
-    con ellas la supresión de una persona encuentra sus filas sin abrir lo cifrado (`db.vaciar_planillas`)."""
+    con ellas la supresión de una persona encuentra sus filas sin abrir lo cifrado (`db.vaciar_planillas`). Las de la
+    descripción (`_huellas_descripcion`) van como la «fila» `N_DESCRIPCION` (0): una foto que muestra la cédula de
+    alguien sin listarla en filas (un volante, una captura) también la encuentra la supresión, que entonces borra la
+    foto y marca esa «fila» (y `lectura_de` deja de mostrar la descripción)."""
     clave = bd.clave_supresion(db)
     out = []
+    desc = _huellas_descripcion(clave, descripcion)
+    if desc:
+        out.append({"n": N_DESCRIPCION, "h": desc})
     for f in filas:
         hs = _huellas_fila(clave, f.get("valores") or {})
         if hs:
@@ -852,11 +889,23 @@ def _subida_por(doc: dict) -> dict:
     return {"uid": doc.get("uid"), "usuario": doc.get("usuario"), "nombre": doc.get("nombre")}
 
 
+def error_de(doc: dict) -> dict | None:
+    """El error de una planilla como lo ve quien la abre (`{codigo, mensaje}`, o None): el guardado, salvo el de un
+    rechazo que ya no existe (ver `RECHAZOS_VIGENTES`), que se explica con `RECHAZO_RETIRADO` (el de entonces mandaba a
+    un ajuste que ya no está)."""
+    error = doc.get("error") if isinstance(doc.get("error"), dict) else None
+    if error and doc.get("estado") == "rechazada" and error.get("codigo") not in RECHAZOS_VIGENTES:
+        return {"codigo": error.get("codigo"), "mensaje": RECHAZO_RETIRADO}
+    return error
+
+
 def en_bandeja(doc: dict) -> dict:
     """Una planilla en la bandeja, sin datos de personas: lo que se ve en la lista. De lo leído, solo conteos y marcas:
     `aviso` («sin_filas» o None), `con_descripcion` (si hay una descripción que ver en `detalle`; no después de
-    cargarla entera ni de una supresión) y `datos_personales` (si la foto muestra datos de personas aparte de las
-    filas). Una foto leída sin filas tiene `filas: 0` y `pendientes: 0`."""
+    cargarla entera ni de una supresión), `datos_personales` (si la foto muestra datos de personas aparte de las
+    filas) y `filas_visibles` (cuántas filas de personas dijo ver el lector: una foto sin filas leídas pero con filas
+    visibles, o `incompleta`, es una hoja que no se pudo leer, no una imagen que no lista personas). Una foto leída sin
+    filas tiene `filas: 0` y `pendientes: 0`. El error, con `error_de`."""
     from .agente.minimizar import texto_libre
     r = doc.get("resumen") or {}
     con_lectura = doc.get("estado") not in ("cargada", "rechazada")
@@ -864,8 +913,9 @@ def en_bandeja(doc: dict) -> dict:
             "expira": _iso(doc.get("expira")), "formato": doc.get("formato"), "tipo_formato": r.get("tipo_formato"),
             "filas": r.get("filas"), "dudosas": r.get("dudosas"), "pendientes": r.get("pendientes"),
             "cargadas": len(doc.get("cargadas") or {}), "incompleta": bool(r.get("incompleta")),
+            "filas_visibles": r.get("filas_visibles") if con_lectura else None,
             "importacion_id": doc.get("importacion_id"), "nota": texto_libre(doc.get("nota"), NOTA_MAX),
-            "error": doc.get("error"), "ancho": doc.get("ancho"), "alto": doc.get("alto"), "bytes": doc.get("bytes"),
+            "error": error_de(doc), "ancho": doc.get("ancho"), "alto": doc.get("alto"), "bytes": doc.get("bytes"),
             "lecturas": doc.get("lecturas") or 0,
             "con_foto": doc["con_foto"] if "con_foto" in doc else bool(doc.get("foto")),
             "progreso": _PROGRESO.get(doc["_id"]) if doc.get("estado") == "leyendo" else None,
@@ -1053,7 +1103,8 @@ def _guardar_filas(db: Database, cfg: Any, doc: dict, lectura: dict, **mas) -> d
     nuevo = db.planillas.find_one_and_update(
         {"_id": doc["_id"], "estado": "leida", "actualizada": doc.get("actualizada")},
         {"$set": {"lectura": _cifrar_lectura(cfg, doc["_id"], doc.get("uid"), lectura), "resumen": resumen,
-                  "huellas": _huellas(db, lectura["filas"]), "actualizada": _ahora(), "filas_suprimidas": [],
+                  "huellas": _huellas(db, lectura["filas"], lectura.get("descripcion")), "actualizada": _ahora(),
+                  "filas_suprimidas": [],
                   **mas}},
         return_document=ReturnDocument.AFTER)
     if nuevo is None:
@@ -1277,7 +1328,7 @@ def cargar(db: Database, cfg: Any, quien: Any, doc: dict, pedidas: list[int] | N
         else:
             cambios.update(lectura=_cifrar_lectura(cfg, doc["_id"], doc.get("uid"), lectura),
                            resumen={**(doc.get("resumen") or {}), **resumen_lectura},
-                           huellas=_huellas(db, lectura["filas"]), filas_suprimidas=[])
+                           huellas=_huellas(db, lectura["filas"], lectura.get("descripcion")), filas_suprimidas=[])
         hecho = db.planillas.update_one({"_id": doc["_id"], "actualizada": doc.get("actualizada")},
                                         {"$set": cambios, "$push": {"importaciones": imp_id}})
         if not hecho.matched_count:

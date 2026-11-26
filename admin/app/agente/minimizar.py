@@ -27,10 +27,14 @@ ya mandó, nunca de la base), así que un planillero o un consultor nunca recibe
   periodos («2018-2022», «07 / 11 / 2026») quedan como están.
 * Las etiquetas y los campos propios se filtran con `Sensibles` (lo que la base marca como sensible). Sin ese dato la
   ficha sale sin etiquetas ni campos propios: ante la duda, no se manda.
+* La descripción de una foto (`enmascarar_descripcion`), más estricta: la escribe el lector de fotos copiando el texto
+  de la imagen tal cual, así que tapa desde 5 dígitos y une los grupos de más formas (ver el comentario de esa parte).
+  `descripcion_con_datos` y `numeros_de_descripcion` le dicen a la bandeja si trae datos de alguien y qué cédulas.
 """
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from typing import Any, Container, Iterable
 
@@ -159,24 +163,79 @@ def texto_libre(v: Any, n: int = TEXTO_MAX) -> Any:
 
 # La descripción de una foto de la bandeja (`lector_planillas.descripcion_de`), como la recibe el modelo de una
 # conversación (`planillas.detalle` con `enmascarada=1`): más estricta que `texto_libre`, porque la escribe otro modelo
-# mirando una imagen que puede traer documentos, listas o carteles. Cualquier número de 5 o más dígitos, también escrito
-# por grupos separados por un espacio, un punto o un guion («1.234.567», «310 123 4567», «90-000-101»), queda en «…» y
-# sus 3 últimos dígitos; de un correo quedan su primer carácter y el dominio («a…@dominio.com»). Las fechas válidas
-# (02-11-2026, 2026.11.02) quedan como están, como en `texto_libre` (el lector las pide como DD/MM/AAAA, que no se
-# toca: la barra no une grupos).
+# mirando una imagen que puede traer documentos, listas o carteles, y copia su texto tal cual. Cualquier número de 5 o
+# más dígitos queda en «…» y sus 3 últimos dígitos, también escrito por grupos («1.234.567», «310 123 4567»,
+# «90-000-101», «(604) 832-1234», «1,234,567,890»). Une los grupos lo mismo que en `texto_libre` y algo más, porque
+# aquí se tapa desde 5 dígitos y el texto viene de una imagen: hasta 3 espacios, o un punto, un guion (también el
+# signo menos, el de ancho completo o el bajo), una raya, un punto medio o una barra con hasta 3 espacios alrededor,
+# una coma pegada, un paréntesis o un salto de línea («310 123\n4567»). Un número largo seguido de otro
+# («3101234567/3209876543», «3101234567 3209876543») se tapa por partes si cada una tiene 5 o más dígitos; si no, entero
+# (`_tapar_digitos`). De un correo quedan su primer carácter y el dominio («a…@dominio.com»). Las fechas válidas
+# (02/11/2026, 2026-11-30, 30 / 11 / 2026) y los periodos (2018-2022) quedan como están, como en `texto_libre`.
+# Un valor en pesos («$ 10.000») también se tapa (no se distingue con certeza de un número de alguien), pero no cuenta
+# como dato de una persona (`descripcion_con_datos`).
 DESCRIPCION_DIGITOS_MIN = 5
 DESCRIPCION_MASCARA = "…"
-_DESCRIPCION_NUMEROS = re.compile(r"(?<!\d)\d+(?:[ \t   .\-‐-―]\d+)*")
+_D_UNE = r"[.\-‐-―−﹘﹣－．·‧・_]"
+_D_CORTE = r"[/／]"
+_D_SEP = (rf"(?:{_ESPACIO}{{0,3}}(?:{_D_UNE}|{_D_CORTE}){_ESPACIO}{{0,3}}|{_ESPACIO}{{0,3}}\n{_ESPACIO}{{0,3}}"
+          rf"|{_ESPACIO}{{1,3}}|[,，])")
+_DESCRIPCION_NUMEROS = re.compile(rf"(?<!\d)(?:\(\d+\)|\d+)(?:{_D_SEP}?\(\d+\)|{_D_SEP}\d+|(?<=\))\d+)*")
+_D_GRUPO = re.compile(r"\(?\d+\)?")
+_D_CORTES = re.compile(rf"[,，]|{_D_CORTE}")
+_D_MONEDA_ANTES = re.compile(r"(?:\$|\bCOP|\bUSD|\bUS\$)[ \t ]?$", re.I)
+_D_MONEDA_DESPUES = re.compile(r"^[ \t ]?(?:pesos\b|COP\b|millones\b|mil\b)", re.I)
+
+
+def _digitos(t: str) -> str:
+    """Los dígitos de `t`, en ASCII (un dígito de ancho completo cuenta igual)."""
+    return "".join(str(unicodedata.digit(ch)) for ch in t if ch.isdecimal())
+
+
+def _partes_numero(t: str) -> list[tuple[int, int]]:
+    """Dónde empieza y termina cada parte de un número por grupos (un acierto de `_DESCRIPCION_NUMEROS`) que se tapa
+    sola: cada grupo, si todos tienen 5 o más dígitos («3101234567 3209876543»); si no, lo que separan las comas y las
+    barras, si cada parte los tiene («300 111 22 33 / 310 444 55 66»); si no, el número entero («310 / 123 / 4567»)."""
+    grupos = list(_D_GRUPO.finditer(t))
+    if not grupos:
+        return []
+    if len(grupos) > 1 and all(len(_digitos(g.group(0))) >= DESCRIPCION_DIGITOS_MIN for g in grupos):
+        return [(g.start(), g.end()) for g in grupos]
+    partes, desde = [], grupos[0].start()
+    for a, b in zip(grupos, grupos[1:]):
+        if _D_CORTES.search(t[a.end():b.start()]):
+            partes.append((desde, a.end()))
+            desde = b.start()
+    partes.append((desde, grupos[-1].end()))
+    if len(partes) > 1 and all(len(_digitos(t[x:y])) >= DESCRIPCION_DIGITOS_MIN for x, y in partes):
+        return partes
+    return [(grupos[0].start(), grupos[-1].end())]
 
 
 def _tapar_digitos(m: re.Match) -> str:
-    digitos = re.sub(r"\D", "", m.group(0))
-    return f"{DESCRIPCION_MASCARA}{digitos[-3:]}" if len(digitos) >= DESCRIPCION_DIGITOS_MIN else m.group(0)
+    t, out, desde = m.group(0), [], 0
+    for x, y in _partes_numero(t):
+        digitos = _digitos(t[x:y])
+        out += [t[desde:x], f"{DESCRIPCION_MASCARA}{digitos[-3:]}" if len(digitos) >= DESCRIPCION_DIGITOS_MIN
+                else t[x:y]]
+        desde = y
+    return "".join(out) + t[desde:]
 
 
 def _tapar_correo(m: re.Match) -> str:
     usuario, dominio = m.group(0).split("@", 1)
     return f"{usuario[:1]}{DESCRIPCION_MASCARA}@{dominio}"
+
+
+def _fuera_de_fechas(t: str) -> list[tuple[int, str]]:
+    """Los trozos de `t` (con dónde empiezan) que no son una fecha o un periodo válidos."""
+    trozos, desde = [], 0
+    for f in _FECHAS.finditer(t):
+        if _es_fecha(f):
+            trozos.append((desde, t[desde:f.start()]))
+            desde = f.end()
+    trozos.append((desde, t[desde:]))
+    return trozos
 
 
 def enmascarar_descripcion(v: Any) -> str:
@@ -187,12 +246,38 @@ def enmascarar_descripcion(v: Any) -> str:
         return ""
     t = _CORREOS.sub(_tapar_correo, v)  # primero los correos: los dígitos de uno no dejan su comienzo
     partes, desde = [], 0
-    for f in _FECHAS.finditer(t):
-        if _es_fecha(f):
-            partes += [_DESCRIPCION_NUMEROS.sub(_tapar_digitos, t[desde:f.start()]), f.group(0)]
-            desde = f.end()
-    partes.append(_DESCRIPCION_NUMEROS.sub(_tapar_digitos, t[desde:]))
-    return "".join(partes)
+    for inicio, trozo in _fuera_de_fechas(t):
+        partes += [t[desde:inicio], _DESCRIPCION_NUMEROS.sub(_tapar_digitos, trozo)]
+        desde = inicio + len(trozo)
+    return "".join(partes) + t[desde:]
+
+
+def numeros_de_descripcion(v: Any) -> list[tuple[str, bool]]:
+    """Los números que `enmascarar_descripcion` tapa, como (sus dígitos en ASCII, ¿es un valor en pesos?): un número
+    con «$», «COP» o «USD» antes, o «pesos», «mil» o «millones» después. Con ellos la bandeja decide si la descripción
+    trae datos de alguien (`descripcion_con_datos`) y calcula sus huellas (las de una cédula, para la supresión)."""
+    if not isinstance(v, str):
+        return []
+    t, out = _CORREOS.sub("", v), []
+    for _, trozo in _fuera_de_fechas(t):
+        for m in _DESCRIPCION_NUMEROS.finditer(trozo):
+            for x, y in _partes_numero(m.group(0)):
+                digitos = _digitos(m.group(0)[x:y])
+                if len(digitos) < DESCRIPCION_DIGITOS_MIN:
+                    continue
+                antes, despues = trozo[:m.start() + x], trozo[m.start() + y:]
+                monto = bool(_D_MONEDA_ANTES.search(antes[-6:]) or _D_MONEDA_DESPUES.search(despues[:12]))
+                out.append((digitos, monto))
+    return out
+
+
+def descripcion_con_datos(v: Any) -> bool:
+    """Si la descripción trae un dato de alguien aunque el lector no lo haya dicho (`datos_personales`): un correo o
+    un número de 5 o más dígitos que no es un valor en pesos (una cédula, un teléfono). La bandeja enciende con esto
+    `datos_personales` (`planillas._guardar_lectura`)."""
+    if not isinstance(v, str):
+        return False
+    return bool(_CORREOS.search(v)) or any(not monto for _, monto in numeros_de_descripcion(v))
 
 
 def _abordaje(v: Any) -> Any:

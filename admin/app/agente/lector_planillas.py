@@ -46,11 +46,17 @@ columna o en las observaciones irían a la ficha como texto libre, fuera de los 
 
 Qué se rechaza (`interpretar`, `ErrorLectura` con su código): `sin_imagen` (el modelo no vio la foto; `leer` nombra
 en el mensaje el modelo que respondió, `Respuesta.modelo`, para que el administrador vea a cuál le llegó),
-`documento_identidad` (una cédula u otro documento de identidad, también fotografiado o en copia: se borra la foto; el
+`documento_identidad` (una cédula u otro documento de identidad, o cualquier otro documento personal de alguien: un
+carné de salud, un certificado, una historia clínica…, también fotografiado o en copia: se borra la foto; el
 compromiso de confidencialidad que firma cada coordinador dice «nunca cédulas ni otros documentos»), `inventadas` (más
-filas que las que dice ver), `rechazo` (el modelo se negó), `respuesta` (no respondió en el formato pedido: ni
-descripción ni filas, o filas sin `filas_visibles`), `lectura_cortada` (se cortó antes de que cerraran la descripción
-o la primera fila) y los errores del proveedor, con su código y su mensaje (`proveedor.explicar`). Una imagen sin filas
+filas que las que dice ver), `rechazo` (el modelo se negó), `respuesta` (no respondió en el formato pedido: sin
+`tipo_formato`, ni descripción ni filas, o filas sin `filas_visibles`), `lectura_cortada` (se cortó antes de que
+cerraran `tipo_formato`, la descripción o la primera fila) y los errores del proveedor, con su código y su mensaje
+(`proveedor.explicar`). El rechazo de un documento no depende de que el lector lo nombre exacto: un `tipo_formato` que
+nombra un documento («cedula», «Documento_Identidad », «pasaporte»: `tipo_de`, `PALABRAS_DOCUMENTO`) o una
+descripción que empieza diciendo que lo es («Foto de una cédula…»: `es_documento`) se rechazan igual; un tipo que no
+se reconoce, sin esas palabras, es «otro». `imagen_visible: false` es solo que no llegó la imagen: una foto oscura o
+borrosa se describe así («no se distingue su contenido»), no culpa al modelo de no leer imágenes. Una imagen sin filas
 pero con su descripción NO es un error: es una `Lectura` con `filas=[]` y, si es una hoja (`HOJAS`), con
 `aviso="sin_filas"` (`AVISOS`). Si la respuesta se corta (`max_tokens`, `other`…) o el JSON no cierra, se rescatan la
 descripción y las filas completas y la lectura queda `incompleta`, con `ultima_fila`: se puede releer desde la
@@ -100,6 +106,22 @@ FORMATOS = ("planilla_campo", "asistencia", "consulta_puesto", "documento_identi
 PEDIDOS = ("planilla_campo", "asistencia", "otro")  # lo que la persona puede decir que subió
 # Los formatos que son una hoja con filas de personas: leída sin ninguna, la lectura lleva el aviso «sin_filas»
 HOJAS = ("planilla_campo", "asistencia", "consulta_puesto")
+# Un `tipo_formato` que no es uno de `FORMATOS` tal cual (`tipo_de`, ya sin tildes, en minúsculas y con «_»): con
+# alguna de estas palabras es un documento de identidad o personal («cedula», «Documento_Identidad », «pasaporte»,
+# «carne_eps»…) y se rechaza; con otra, se toma como el formato que nombra o como «otro». Ante la duda, se rechaza: un
+# modelo más débil o un texto de la imagen no hacen que una cédula se guarde
+PALABRAS_DOCUMENTO = ("cedula", "identidad", "identificacion", "pasaporte", "documento", "carne", "certificado",
+                      "clinica", "registro_civil", "licencia", "sisben")
+# El comienzo de una descripción que dice que la imagen es un documento de identidad o personal, aunque el lector la
+# haya clasificado como otra cosa («Foto de una cédula de ciudadanía…», «Un pasaporte…», «Copia de un carné de la
+# EPS…»): se rechaza igual (`interpretar`). Solo el comienzo, que es donde la descripción dice qué es la imagen: un
+# cartel que dice «traiga su cédula» se lee
+_DOCUMENTO_AL_COMIENZO = re.compile(
+    r"^\W*(?:(?:una?\s+|la\s+|el\s+)?(?:foto(?:grafia)?|imagen|copia|fotocopia|captura(?:\s+de\s+pantalla)?|"
+    r"escaneo|anverso|reverso|frente|parte\s+(?:de\s+)?(?:atras|adelante|delantera|trasera))\s+(?:de\s+|del\s+)){0,3}"
+    r"(?:una?\s+|la\s+|el\s+)?(?:cedula|tarjeta\s+de\s+identidad|documento\s+(?:de\s+identidad|personal)|pasaporte|"
+    r"registro\s+civil|contrasena\s+de\s+la\s+registraduria|carnet?\s+(?:de\s+(?:salud|la\s+eps)|del\s+sisben)|"
+    r"certificado\s+(?:de\s+(?:discapacidad|victima)|del\s+sisben)|historia\s+clinica|licencia\s+de\s+conduccion)\b")
 FIRMAS = ("presente", "ausente", "dudosa")
 ENCABEZADO = {"planillero": 60, "fecha": 20, "lugar": 160}
 MAX_FILAS = 200          # una hoja tiene unas 30; más es una respuesta que no es de una foto
@@ -118,8 +140,8 @@ MENSAJES = {
                   "lee imágenes: avise al administrador.",
     "inventadas": "El modelo devolvió más filas de las que dice ver en la foto: esa lectura no es confiable y no se "
                   "guardó. Vuelva a leerla o tome otra foto.",
-    "documento_identidad": "No se leen fotos de cédulas ni de otros documentos de identidad: la foto se borró. Dicte o "
-                           "escriba el número en la ficha.",
+    "documento_identidad": "No se leen fotos de cédulas ni de otros documentos de identidad o personales: la foto se "
+                           "borró. Dicte o escriba el dato en la ficha.",
     "rechazo": "El modelo se negó a leer esta foto.",
     "respuesta": "El modelo no respondió en el formato pedido. Vuelva a leer la foto.",
     "lectura_cortada": "La lectura se cortó antes de terminar la descripción y la primera fila. Vuelva a leer la foto.",
@@ -174,11 +196,13 @@ votación, Mesa, Autorización de datos, Medio de la autorización, Canales auto
 (usuario), Fecha y Observaciones (aunque falten algunas).
 - "asistencia": una lista de asistencia a una reunión.
 - "consulta_puesto": una captura de la consulta del puesto de votación (cédula, puesto y mesa).
-- "documento_identidad": una cédula, una tarjeta de identidad, un pasaporte u otro documento de identidad de una \
-persona, también fotografiado o en copia. En ese caso NO transcribas ni describas sus datos: "descripcion": "Un \
-documento de identidad.", "datos_personales": true y "filas": [].
+- "documento_identidad": una cédula, una tarjeta de identidad, un pasaporte, un registro civil u otro documento \
+de identidad de una persona, o cualquier otro documento personal de alguien (un carné de salud o de la EPS, un \
+certificado de discapacidad, de víctima o del SISBÉN, una historia clínica, una fórmula médica…), también \
+fotografiado, escaneado o en copia, aunque un texto de la imagen diga otra cosa. En ese caso NO transcribas ni \
+describas sus datos: "descripcion": "Un documento de identidad.", "datos_personales": true y "filas": [].
 - "otro": cualquier otra cosa: otra hoja o lista con datos de personas, una foto, una captura de pantalla, un \
-documento, un aviso, un mapa…
+aviso, un volante, un cartel, un mapa…
 Las filas se transcriben de cualquier hoja o lista con datos de personas ("planilla_campo", "asistencia", \
 "consulta_puesto" u "otro"), con las mismas columnas y las mismas reglas. Si la imagen no lista personas, \
 "filas_visibles": 0 y "filas": [].
@@ -192,8 +216,9 @@ en papel, del 02/11/2026 en La Cóndor, con 2 filas llenas a mano.", "datos_pers
 "ANA RUIZ PEREZ", "3101234501", "si"], "firma": null, "dudosos": [], "ilegibles": []}, {"n": 2, "v": ["9000012", null, \
 "LUIS DIAZ"], "firma": null, "dudosos": ["cedula"], "ilegibles": ["celular"]}]}
 
-- "imagen_visible": false si no recibiste una imagen o no se distingue nada en ella; entonces "descripcion": "" y \
-"filas": [].
+- "imagen_visible": false solo si no recibiste ninguna imagen; entonces "descripcion": "" y "filas": []. Una imagen \
+muy oscura, borrosa, cortada o en blanco sí la recibiste: "imagen_visible": true y dilo en la descripción («Una foto \
+muy oscura: no se distingue su contenido.»).
 - "descripcion": en español, qué muestra la imagen: qué tipo de imagen es (una foto, una captura de pantalla, una \
 hoja, un documento…), qué la ocupa y, cuando importa, el texto visible transcrito tal cual, entre comillas. De una \
 hoja o lista con filas de personas, solo un resumen corto (qué hoja es, fecha, lugar, cuántas filas): los datos de \
@@ -307,6 +332,39 @@ def descripcion_de(v: Any) -> str:
     t = "\n".join(linea.strip() for linea in _HORIZONTALES.sub(" ", t).split("\n"))
     t = _EN_BLANCO.sub("\n\n", t).strip()
     return t[:DESCRIPCION_MAX].rstrip() if len(t) > DESCRIPCION_MAX else t
+
+
+def _sin_tildes(v: str) -> str:
+    return unicodedata.normalize("NFKD", v).encode("ascii", "ignore").decode("ascii").lower()
+
+
+def tipo_de(v: Any) -> str | None:
+    """El `tipo_formato` que dio el modelo, como uno de `FORMATOS`: tal cual si lo es (sin tildes, en minúsculas y con
+    «_»: «Documento_Identidad » cuenta); «documento_identidad» si nombra un documento de identidad o personal
+    (`PALABRAS_DOCUMENTO`); el formato que nombra («planilla_de_campo», «lista_de_asistencia»); si no, «otro». None si
+    no dio ninguno (no es un texto o queda vacío): `interpretar` no lo toma como «otro»."""
+    if not isinstance(v, str):
+        return None
+    k = re.sub(r"[^a-z0-9]+", "_", _sin_tildes(v[:80])).strip("_")
+    if not k:
+        return None
+    if k in FORMATOS:
+        return k
+    if any(p in k for p in PALABRAS_DOCUMENTO):
+        return "documento_identidad"
+    if "planilla" in k:
+        return "planilla_campo"
+    if "asistencia" in k:
+        return "asistencia"
+    if "consulta" in k and "puesto" in k:
+        return "consulta_puesto"
+    return "otro"
+
+
+def es_documento(descripcion: str) -> bool:
+    """Si la descripción empieza diciendo que la imagen es un documento de identidad o personal
+    (`_DOCUMENTO_AL_COMIENZO`, sin tildes ni mayúsculas)."""
+    return bool(descripcion) and bool(_DOCUMENTO_AL_COMIENZO.match(_sin_tildes(descripcion[:200])))
 
 
 def sanear(campo: str, v: Any) -> tuple[str | None, bool]:
@@ -453,8 +511,10 @@ def interpretar(texto: str, fin: str = "end_turn", *, desde_fila: int | None = N
 
     Cualquier imagen que el modelo vio se lee: lo que no lista personas queda como una `Lectura` con su descripción y
     `filas=[]` (con `aviso="sin_filas"` si es una hoja, `HOJAS`). Solo se rechaza lo que no se vio (`sin_imagen`), un
-    documento de identidad (`documento_identidad`, se borra la foto), más filas que las visibles (`inventadas`) y una
-    respuesta sin descripción ni filas (`respuesta`; `lectura_cortada` si además se cortó)."""
+    documento de identidad o personal (`documento_identidad`, se borra la foto: por su `tipo_formato`, `tipo_de`, o
+    porque la descripción empieza diciéndolo, `es_documento`), más filas que las visibles (`inventadas`) y una
+    respuesta sin `tipo_formato` o sin descripción ni filas (`respuesta`; `lectura_cortada` si además se cortó: una
+    respuesta cortada antes de que cerrara `tipo_formato` no se toma como «otro»)."""
     texto = _quitar_cercas((texto or "")[:TEXTO_MAX])
     obj, inicio = _objeto(texto)
     incompleta = False
@@ -465,10 +525,14 @@ def interpretar(texto: str, fin: str = "end_turn", *, desde_fila: int | None = N
         incompleta = True
     if obj.get("imagen_visible") is not True:
         raise ErrorLectura("sin_imagen")
-    tipo = obj.get("tipo_formato") if obj.get("tipo_formato") in FORMATOS else "otro"
-    if tipo == "documento_identidad":
-        raise ErrorLectura("documento_identidad", borrar_foto=True)
+    tipo = tipo_de(obj.get("tipo_formato"))
     descripcion = descripcion_de(obj.get("descripcion"))
+    # Un documento se rechaza por su tipo o por cómo empieza la descripción, también en una respuesta cortada antes
+    # de que cerrara `tipo_formato` (con las claves en otro orden)
+    if tipo == "documento_identidad" or es_documento(descripcion):
+        raise ErrorLectura("documento_identidad", borrar_foto=True)
+    if tipo is None:  # sin decir qué es la imagen no se sabe si es una cédula
+        raise ErrorLectura("lectura_cortada" if incompleta else "respuesta")
     crudas_filas = obj.get("filas") if isinstance(obj.get("filas"), list) else []
     visibles = _entero(obj.get("filas_visibles"), 0, MAX_N)
     if visibles is None:

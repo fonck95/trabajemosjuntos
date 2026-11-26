@@ -3,17 +3,23 @@
 //
 // Planillas por foto: la bandeja del panel (app/api/planillas.py), la misma que usa el asistente del chat. Solo el
 // administrador y los coordinadores (`importar`): los planilleros nunca suben ni ven fotos de planillas (el que llenó
-// el papel queda como «Capturado por»). Se toma o elige la foto de cada hoja; el navegador la reduce y la vuelve a
-// codificar (sin EXIF ni GPS) y la sube cruda a POST /api/planillas/fotos, donde se lee de fondo (la bandeja se
-// consulta cada pocos segundos mientras haya alguna «leyendo»). Al abrir una: la foto al lado de la grilla con los
-// valores completos, lo dudoso y lo ilegible marcado (con un signo, no solo con color), las celdas se corrigen (PATCH),
-// «Cotejar» da la vista previa fiel del importador por fila, y las filas elegidas se cargan con el folio del papel y
-// el planillero; el resultado enlaza a la confirmación de las autorizaciones «declaradas en planilla», que sigue
-// siendo de una persona con el papel. Si el compromiso de confidencialidad vigente no deja fotografiar planillas
-// (`compromiso_permite_fotos` de Ajustes, o 409 `compromiso_fotos` al subir), la subida se oculta con el motivo.
+// el papel queda como «Capturado por»). Se toma o elige la foto de cada hoja (o cualquier otra imagen); el navegador la
+// reduce y la vuelve a codificar (sin EXIF ni GPS) y la sube cruda a POST /api/planillas/fotos, donde se lee de fondo
+// (la bandeja se consulta cada pocos segundos mientras haya alguna «leyendo»). La lectura siempre trae una descripción
+// de la imagen y, si la foto es una hoja que lista personas (la planilla de campo, una lista de asistencia u otra),
+// sus filas. Al abrir una: la foto al lado de lo que el panel vio (la descripción, como texto plano, y la grilla con
+// los valores completos), lo dudoso y lo ilegible marcado (con un signo, no solo con color), las celdas se corrigen
+// (PATCH), «Cotejar» da la vista previa fiel del importador por fila, y las filas elegidas se cargan con el folio del
+// papel y el planillero; el resultado enlaza a la confirmación de las autorizaciones «declaradas en planilla», que
+// sigue siendo de una persona con el papel. Una foto leída sin filas (una foto cualquiera, o una hoja de la que no se
+// leyó ninguna: `aviso` «sin_filas») muestra solo su descripción: no hay nada que cotejar ni cargar (el servidor
+// responde 422 `sin_filas`), se puede volver a leer o borrar y vence como las demás. Si el compromiso de
+// confidencialidad vigente no deja fotografiar planillas (`compromiso_permite_fotos` de Ajustes, o 409
+// `compromiso_fotos` al subir), la subida se oculta con el motivo.
 //
 // Privacidad: la foto se pide con la sesión y se dibuja en un canvas (nunca en una URL ni en el almacenamiento del
-// navegador) y se suelta al cerrar la planilla o salir de la vista; los valores viven solo en la memoria de la vista.
+// navegador) y se suelta al cerrar la planilla o salir de la vista; los valores y la descripción viven solo en la
+// memoria de la vista y se pintan como texto (la plantilla `html` escapa todo: lo que escribió el modelo nunca es HTML).
 import { api, descargar, ErrorApi, nuevaClave, puede, registrarPendiente, sesion } from '../api.js';
 import { refrescarInsignias } from '../app.js';
 import { url } from '../base.js';
@@ -119,7 +125,14 @@ const LARGOS = {
   fecha_nacimiento: 20, edad: 10, direccion: 240, barrio: 160, puesto: 160, mesa: 40, autorizacion: 20, medio: 40,
   canales: 120, mayor_18: 10, planillero: 60, fecha: 20, observaciones: 1000,
 };
-const FORMATOS = { planilla_campo: 'Planilla de campo del panel', asistencia: 'Lista de asistencia', otro: 'Otro formato' };
+// Lo que la persona dice que sube (`lector_planillas.PEDIDOS`): solo una pista para el lector, que clasifica la imagen
+// por su cuenta. Los tres se aceptan siempre (el ajuste `agente_planillas.otros_formatos` se retiró)
+const FORMATOS = { planilla_campo: 'Planilla de campo del panel', asistencia: 'Lista de asistencia', otro: 'Otra hoja u otra imagen' };
+// Lo que avisa una lectura guardada (`lector_planillas.AVISOS`, el mismo texto; una prueba compara los dos lados): no
+// es un error, la foto queda «leida» con su descripción
+const AVISOS_LECTURA = {
+  sin_filas: 'La foto parece una hoja con datos de personas, pero no se leyó ninguna fila: no hay nada que cotejar ni cargar. Vuelva a leerla o tome otra foto de la hoja completa, de frente y con buena luz.',
+};
 const FILTROS = [['todas', 'Todas'], ['revisar', 'Por revisar'], ['leyendo', 'Leyendo'], ['error', 'Con error'],
   ['cargada', 'Cargadas']];
 const FIRMAS = { presente: 'firmada', ausente: 'sin firma', dudosa: 'firma dudosa' };
@@ -185,10 +198,24 @@ export function avisosFoto({ ladoOriginal, brillo }) {
   return [...(ladoOriginal < LADO_AVISO ? ['pequena'] : []), ...(brillo < BRILLO_MIN ? ['oscura'] : [])];
 }
 
-/** Las planillas de la bandeja que muestra un filtro. */
+/** ¿Es una foto leída sin ninguna fila (una foto cualquiera, o una hoja de la que no se leyó ninguna)? Solo tiene su
+ * descripción: nada que cotejar ni cargar. `p` es un elemento de la bandeja (`filas`: cuántas) o el detalle (`filas`:
+ * la lista). */
+export function sinFilas(p) {
+  return p?.estado === 'leida' && (Array.isArray(p.filas) ? p.filas.length === 0 : p.filas === 0);
+}
+
+/** ¿Es una foto leída sin filas que parece una hoja con personas (el aviso «sin_filas», filas visibles o una lectura
+ * incompleta: se puede volver a leer), y no una imagen que no lista personas? */
+export function hojaSinLeer(p) {
+  return sinFilas(p) && (p.aviso === 'sin_filas' || !!p.incompleta || (Number.isInteger(p.filas_visibles) && p.filas_visibles > 0));
+}
+
+/** Las planillas de la bandeja que muestra un filtro. «Por revisar», solo las leídas con filas: una foto sin filas no
+ * espera una carga (se ve en «Todas»). */
 export function filtrarBandeja(planillas, filtro) {
   const es = {
-    revisar: (p) => p.estado === 'leida', leyendo: (p) => p.estado === 'leyendo',
+    revisar: (p) => p.estado === 'leida' && !sinFilas(p), leyendo: (p) => p.estado === 'leyendo',
     error: (p) => p.estado === 'fallida' || p.estado === 'rechazada', cargada: (p) => p.estado === 'cargada',
   }[filtro];
   return es ? planillas.filter(es) : planillas;
@@ -209,6 +236,9 @@ export function estadoPlanilla(p) {
   switch (p.estado) {
     case 'leyendo': return { clase: 'azul', texto: p.progreso ? `Leyendo… ${num(p.progreso)} filas` : 'Leyendo…' };
     case 'leida':
+      // Sin ninguna fila: una hoja de la que no se leyó ninguna (para volver a leerla) o una foto que solo se describió
+      if (hojaSinLeer(p)) return { clase: 'ambar', texto: 'Hoja sin filas leídas' };
+      if (sinFilas(p)) return { clase: 'borde', texto: p.con_descripcion ? 'Foto descrita' : 'Sin filas leídas' };
       if (!p.pendientes) return { clase: 'borde', texto: 'Sin filas por cargar' };
       return { clase: 'ambar', texto: p.cargadas ? 'Carga parcial' : 'Por revisar' };
     case 'fallida': return { clase: 'rojo', texto: 'Falló la lectura' };
@@ -313,7 +343,7 @@ async function prepararFoto(archivo, lim) {
   let c = null;
   try {
     const ladoOriginal = Math.max(bmp.width, bmp.height);
-    if (ladoOriginal < LADO_MIN) throw errorFoto('La imagen es demasiado pequeña para leer una planilla.');
+    if (ladoOriginal < LADO_MIN) throw errorFoto('La imagen es demasiado pequeña para leerla.');
     const brillo = medirBrillo(bmp);
     const m = medidasFoto(bmp.width, bmp.height, lim.ladoMax);
     c = lienzo(m.ancho, m.alto);
@@ -331,8 +361,8 @@ async function prepararFoto(archivo, lim) {
 
 /**
  * Monta «Planillas por foto» en `caja` (la bandeja) y `cajaAbierta` (la planilla abierta), solo para A y K. `planilleros`
- * son los de «Capturado por»; `ajustes`, los del panel si se pudieron leer (retención, roles, otros formatos y si el
- * compromiso vigente deja fotografiar planillas);
+ * son los de «Capturado por»; `ajustes`, los del panel si se pudieron leer (retención, roles y si el compromiso
+ * vigente deja fotografiar planillas);
  * `inicial`, el id de `?planilla=` para abrirla al entrar; `alCargar`, lo que se refresca tras una carga (historial e
  * insignias). Devuelve la limpieza de la vista: corta las consultas y suelta la foto.
  */
@@ -365,7 +395,7 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
   const retencion = ap?.retencion_horas;
   montar(caja, html`
     <header><h2 id="pf-titulo">Planillas por foto</h2><span class="nota" id="pf-cuenta"></span></header>
-    <p class="sec pf-intro">Tome o elija la foto de cada hoja de la planilla de campo: el panel la lee de fondo mientras usted sigue con la siguiente. Luego ábrala para revisar lo leído al lado de la foto, corregir, cotejar con la base y cargar.</p>
+    <p class="sec pf-intro">Tome o elija la foto de cada hoja (la planilla de campo, una lista de asistencia u otra) o de cualquier otra imagen: el panel la lee de fondo mientras usted sigue con la siguiente. Siempre la describe y, si lista personas, transcribe sus filas: ábrala para revisar lo leído al lado de la foto, corregir, cotejar con la base y cargar.</p>
     <div class="pf-subir" id="pf-subir">
       <div class="pf-botones">
         <button type="button" class="btn primario" id="pf-camara">${icono('camara')}<span>Tomar foto</span></button>
@@ -376,7 +406,7 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
       </div>
       <div class="form pf-opciones">
         <label class="campo"><span>Nota para estas fotos (opcional)</span><input id="pf-nota" maxlength="${NOTA_MAX}" placeholder="Vereda o reunión, sin datos de personas" autocomplete="off"></label>
-        ${ap?.otros_formatos ? html`<label class="campo"><span>Formato</span><select id="pf-formato">${Object.entries(FORMATOS).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select></label>` : ''}
+        <label class="campo"><span>Qué es (una pista para leerla)</span><select id="pf-formato">${Object.entries(FORMATOS).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select></label>
       </div>
       <p class="aviso-legal pf-aviso">${AVISO_FOTOS}</p>
       <p class="sec pf-privacidad">La foto va al modelo de lenguaje solo para leerla. Se guarda cifrada y se borra al cargar la hoja o ${retencion ? `a las ${num(retencion)} horas` : 'al vencer el plazo de Ajustes'}. Las autorizaciones leídas quedan «declaradas en planilla» hasta que alguien las confirme con el papel.</p>
@@ -507,13 +537,17 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
     $('#pf-cuenta', caja).textContent = lista.length ? `${num(lista.length)} en la bandeja${porRevisar ? ` · ${num(porRevisar)} por revisar` : ''}` : '';
     for (const b of $$('[data-filtro]', caja)) b.setAttribute('aria-pressed', String(b.dataset.filtro === filtro));
     if (!vistas.length) {
-      montar($('#pf-bandeja', caja), html`<p class="sec pf-vacia">${lista.length ? 'Ninguna planilla con ese estado.' : 'Aún no hay fotos de planillas.'}</p>`);
+      montar($('#pf-bandeja', caja), html`<p class="sec pf-vacia">${lista.length ? 'Ninguna foto con ese estado.' : 'Aún no hay fotos en la bandeja.'}</p>`);
       return;
     }
     montar($('#pf-bandeja', caja), html`<ul class="pf-lista">${vistas.map((p) => {
       const e = estadoPlanilla(p);
+      const vacia = sinFilas(p);
+      // De lo leído, la bandeja solo trae conteos y marcas (nunca la descripción: se ve al abrirla)
       const datos = [
-        p.filas != null && p.estado !== 'leyendo' ? cuantas(p.filas, 'fila', 'filas') : '',
+        vacia ? 'sin filas de personas' : p.filas != null && p.estado !== 'leyendo' ? cuantas(p.filas, 'fila', 'filas') : '',
+        vacia && p.con_descripcion ? 'con su descripción' : '',
+        p.datos_personales && p.estado === 'leida' ? 'muestra datos de personas' : '',
         p.dudosas ? `${num(p.dudosas)} con dudas` : '',
         p.cargadas ? cuantas(p.cargadas, 'cargada', 'cargadas') : '',
         p.estado === 'leida' && p.pendientes ? `${num(p.pendientes)} por cargar` : '',
@@ -521,14 +555,16 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
         p.estado !== 'cargada' && p.expira ? `vence ${fecha(p.expira, true)}` : '',
       ].filter(Boolean).join(' · ');
       const quien = p.subida_por?.nombre || p.subida_por?.usuario || '';
-      const releer = p.estado === 'fallida' && p.con_foto && (p.lecturas || 0) < LECTURAS_MAX;
+      // Volver a leer, desde la bandeja: la que falló y la hoja de la que no se leyó ninguna fila
+      const releer = (p.estado === 'fallida' || hojaSinLeer(p)) && p.con_foto
+        && (p.lecturas || 0) < LECTURAS_MAX;
       return html`<li class="pf-item${abierta?.id === p.id ? ' abierta' : ''}" data-id="${p.id}">
         <div class="pf-item-cab">${chip([e.clase, e.texto])}<b>Foto del ${fecha(p.ts, true)}</b>${quien ? html`<span class="sec">· ${quien}</span>` : ''}</div>
         ${datos ? html`<div class="sec pf-item-datos">${datos}</div>` : ''}
         ${p.nota ? html`<div class="pf-item-nota">Nota: ${p.nota}</div>` : ''}
         ${p.error?.mensaje && (p.estado === 'fallida' || p.estado === 'rechazada') ? html`<div class="pf-item-error">${p.error.mensaje}</div>` : ''}
         <div class="pf-item-acciones">
-          <button type="button" class="btn chico${p.estado === 'leida' && p.pendientes ? ' oscuro' : ''}" data-abrir="${p.id}">${p.estado === 'leida' ? 'Revisar' : 'Ver'}</button>
+          <button type="button" class="btn chico${p.estado === 'leida' && p.pendientes ? ' oscuro' : ''}" data-abrir="${p.id}">${p.estado === 'leida' && !vacia ? 'Revisar' : 'Ver'}</button>
           ${releer ? html`<button type="button" class="btn chico" data-releer="${p.id}">${icono('repetir')} Volver a leer</button>` : ''}
           <button type="button" class="btn chico fantasma peligro" data-borrar="${p.id}" aria-label="Borrar la foto del ${fecha(p.ts, true)}">${icono('basura')}</button>
         </div></li>`;
@@ -607,10 +643,12 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
     if (!ID_PLANILLA.test(id)) return;
     const p = lista.find((x) => x.id === id) || (abierta?.id === id ? abierta : null);
     const cargadas = p?.cargadas ? ' Las filas que ya se cargaron siguen en la base.' : '';
-    if (!(await confirmar(`¿Borrar esta planilla? Se borran la foto y lo leído.${cargadas}`, { si: 'Borrar', peligro: true }))) return;
+    const foto = sinFilas(p);
+    const que = foto ? '¿Borrar esta foto? Se borran la foto y su descripción.' : '¿Borrar esta planilla? Se borran la foto y lo leído.';
+    if (!(await confirmar(`${que}${cargadas}`, { si: 'Borrar', peligro: true }))) return;
     try {
       await api.del(`/api/planillas/${id}`, op);
-      aviso('Planilla borrada');
+      aviso(foto ? 'Foto borrada' : 'Planilla borrada');
       if (abierta?.id === id) cerrarPlanilla();
       consultar();
     } catch (err) { if (!cancelada(err)) avisoError(err); }
@@ -736,7 +774,7 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
     if (!marco || !foto) return;
     let c = $('#pf-lienzo', marco);
     if (!c) {
-      montar(marco, html`<canvas id="pf-lienzo" role="img" aria-label="Foto de la planilla"></canvas>`);
+      montar(marco, html`<canvas id="pf-lienzo" role="img" aria-label="La foto"></canvas>`);
       c = $('#pf-lienzo', marco);
     }
     const lado = giro % 180 ? [foto.height, foto.width] : [foto.width, foto.height];
@@ -821,9 +859,14 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
     if ((d.estado === 'fallida' || d.estado === 'rechazada') && d.error?.mensaje) {
       avisos.push(html`<div class="aviso-legal">${d.error.mensaje}</div>`);
     }
-    if (d.estado === 'leida' && d.incompleta) {
+    if (d.estado === 'leida' && d.incompleta && !n) {
+      // Se cortó antes de la primera fila (quedó la descripción): se leen las filas desde la 1, conservándola
+      avisos.push(html`<div class="aviso-legal">La lectura se cortó antes de la primera fila${d.filas_visibles ? ` (en la hoja se ven ${num(d.filas_visibles)})` : ''}. ${d.puede_releer ? html`<button type="button" class="btn chico" data-releer-desde="1">Leer las filas</button>` : 'Tome otra foto de la hoja.'}</div>`);
+    } else if (d.estado === 'leida' && d.incompleta) {
       const desde = (d.ultima_fila || Math.max(0, ...(d.filas || []).map((f) => f.n))) + 1;
       avisos.push(html`<div class="aviso-legal">La lectura quedó incompleta: llegó hasta la fila ${num(desde - 1)}${d.filas_visibles ? ` de ${num(d.filas_visibles)}` : ''}. ${d.puede_releer ? html`<button type="button" class="btn chico" data-releer-desde="${desde}">Leer desde la fila ${desde}</button>` : 'Tome otra foto de las filas que faltan.'}</div>`);
+    } else if (d.estado === 'leida' && !n && d.aviso && AVISOS_LECTURA[d.aviso]) {
+      avisos.push(html`<div class="aviso-legal pf-aviso-lectura">${AVISOS_LECTURA[d.aviso]}</div>`);
     } else if (d.estado === 'leida' && d.filas_visibles && d.filas_visibles > n) {
       avisos.push(html`<div class="aviso-legal">En la hoja se ven ${num(d.filas_visibles)} filas y se leyeron ${num(n)}: revise la foto.</div>`);
     }
@@ -850,18 +893,25 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
     const enc = d.encabezado || {};
     const encabezado = [['Planillero', enc.planillero], ['Fecha', enc.fecha], ['Lugar', enc.lugar]].filter(([, v]) => v);
     const quien = d.subida_por?.nombre || d.subida_por?.usuario || '';
-    const puedeCargar = d.estado === 'leida';
+    // Una foto leída sin filas no tiene nada que cotejar ni cargar (el servidor respondería 422 `sin_filas`)
+    const vacia = sinFilas(d);
+    const puedeCargar = d.estado === 'leida' && filas.length > 0;
     const releerTodo = d.puede_releer && (d.estado === 'leida' || d.estado === 'fallida');
+    // Lo que el panel vio en la foto, entero (A y K): escrito por el modelo, se pinta solo como texto
+    const descripcion = typeof d.descripcion === 'string' ? d.descripcion.trim() : '';
+    const sinGrilla = d.estado === 'leyendo' ? 'Lo leído aparece cuando termine la lectura.'
+      : hojaSinLeer(d) ? 'No se leyó ninguna fila de la hoja.'
+        : vacia ? 'Esta foto no lista personas: no hay filas que cotejar ni cargar.' : 'No hay filas leídas.';
     cajaAbierta.hidden = false;
     montar(cajaAbierta, html`
       <header class="pf-abierta-cab">
-        <div><h2 id="pf-abierta-titulo">Planilla del ${fecha(d.ts, true)}</h2>
+        <div><h2 id="pf-abierta-titulo">${vacia ? 'Foto' : 'Planilla'} del ${fecha(d.ts, true)}</h2>
           <div class="sec">${[quien ? `Subida por ${quien}` : '', d.formato && d.formato !== 'planilla_campo' ? FORMATOS[d.formato] || d.formato : '',
             d.estado !== 'cargada' && d.expira ? `vence ${fecha(d.expira, true)}` : '', d.nota ? `Nota: ${d.nota}` : ''].filter(Boolean).join(' · ')}</div></div>
         <div class="acciones">${chip([estadoPlanilla(d).clase, estadoPlanilla(d).texto])}
           ${releerTodo ? html`<button type="button" class="btn chico" id="pf-releer">${icono('repetir')} Volver a leer</button>` : ''}
           <button type="button" class="btn chico fantasma peligro" id="pf-borrar">${icono('basura')} Borrar</button>
-          <button type="button" class="btn chico fantasma" id="pf-cerrar" aria-label="Cerrar la planilla">${icono('cerrar')}</button></div>
+          <button type="button" class="btn chico fantasma" id="pf-cerrar" aria-label="${vacia ? 'Cerrar la foto' : 'Cerrar la planilla'}">${icono('cerrar')}</button></div>
       </header>
       ${avisosLectura(d)}
       ${encabezado.length ? html`<p class="pf-encabezado">${encabezado.map(([k, v]) => html`<span><b>${k}:</b> ${v}</span>`)}</p>` : ''}
@@ -874,10 +924,15 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
             <button type="button" class="btn chico" data-zoom="0">Ajustar</button>
             <button type="button" class="btn chico" id="pf-girar" aria-label="Girar la foto a la derecha">${icono('girar')}</button>
           </div>
-          <div class="pf-foto-marco" id="pf-marco" tabindex="0" aria-label="Foto de la planilla: arrástrela o use las barras para moverse"><p class="sec pf-foto-mensaje">Abriendo la foto…</p></div>
+          <div class="pf-foto-marco" id="pf-marco" tabindex="0" aria-label="La foto: arrástrela o use las barras para moverse"><p class="sec pf-foto-mensaje">Abriendo la foto…</p></div>
         </div>` : ''}
         <div class="pf-grilla">
-          ${!filas.length ? html`<p class="sec">${d.estado === 'leyendo' ? 'Las filas aparecen cuando termine la lectura.' : 'No hay filas leídas.'}</p>`
+          ${descripcion ? html`<section class="pf-descripcion" aria-labelledby="pf-descripcion-titulo">
+            <h3 id="pf-descripcion-titulo">Lo que muestra la foto</h3>
+            <p class="pf-descripcion-texto">${descripcion}</p>
+            <p class="sec pf-descripcion-nota">La escribió el modelo al leer la foto: compárela con la imagen.${d.datos_personales ? ' Muestra datos de personas: trátela con la misma reserva que una ficha (al asistente le llega sin números largos ni correos enteros).' : ''}</p>
+          </section>` : ''}
+          ${!filas.length ? html`<p class="sec pf-sin-grilla">${sinGrilla}</p>`
             : html`
             ${d.estado === 'leida' ? html`<div class="pf-grilla-barra">
               <span class="pf-leyenda"><span class="pf-marca" data-marca="dudoso">?</span> dudoso <span class="pf-marca" data-marca="ilegible">✕</span> ilegible <span class="pf-marca" data-marca="corregido">✓</span> corregido: compárelo con la foto</span>
@@ -1202,7 +1257,7 @@ function planillasPorFoto(caja, cajaAbierta, { planilleros, ajustes, inicial, al
     if (t.closest('#pf-borrar')) { borrar(abierta?.id); return; }
     if (t.closest('#pf-releer')) {
       const quedan = LECTURAS_MAX - (abierta?.lecturas || 0);
-      const texto = abierta?.estado === 'leida'
+      const texto = abierta?.estado === 'leida' && !sinFilas(abierta)
         ? `¿Volver a leer toda la foto? Se pierde lo leído y sus correcciones (las filas cargadas siguen cargadas). Le ${quedan === 1 ? 'queda 1 lectura' : `quedan ${quedan} lecturas`} de esta foto.`
         : `¿Volver a leer la foto? Le ${quedan === 1 ? 'queda 1 lectura' : `quedan ${quedan} lecturas`} de esta foto.`;
       if (await confirmar(texto, { si: 'Volver a leer' })) releer(abierta.id, null, t.closest('button'));

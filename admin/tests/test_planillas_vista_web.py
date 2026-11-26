@@ -24,6 +24,7 @@ import pymongo
 import pytest
 import uvicorn
 
+from app.agente import lector_planillas as lector
 from ayudas_g3 import persona
 from ayudas_planillas import ProveedorFalso, encender, fila, jpeg, lectura_json
 from conftest import CLAVE_USUARIO, MONGO, URI, crear_usuario
@@ -573,3 +574,194 @@ def test_planillas_por_foto_casos_en_chromium(panel_web, cfg, tmp_path, monkeypa
     # Lo corregido sin guardar nunca llegó al servidor; la primera foto ya no está
     assert db.planillas.count_documents({}) == 1 and len(proveedor.llamadas) == 4
     assert not db.importaciones.find_one()
+
+
+GUION_SIN_FILAS = r"""const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const [base, usuario, clave, foto1, foto2] = process.argv.slice(2);
+const espera = { timeout: 25000 };
+const salida = { errores: [], csp: [], subidas: [] };
+const textoDe = (pg, sel) => pg.evaluate((s) => (document.querySelector(s)?.textContent || '').replace(/\s+/g, ' ').trim(), sel);
+// Con CAPTURAS=<carpeta> en el entorno, guarda capturas (para mirarla a ojo; la prueba no las necesita)
+const capturar = async (pg, nombre) => { if (process.env.CAPTURAS) await pg.screenshot({ path: `${process.env.CAPTURAS}/${nombre}.png`, fullPage: true }); };
+
+(async () => {
+  const nav = await chromium.launch();
+  const ctx = await nav.newContext({ viewport: { width: 1360, height: 900 } });
+  await ctx.addInitScript(() => {
+    window.__csp = [];
+    window.__alertas = 0;
+    window.alert = () => { window.__alertas += 1; };
+    document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));
+  });
+  await ctx.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, (r) => r.abort());
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => salida.errores.push(String(e)));
+  page.on('console', (m) => { if (m.type() === 'error' && !/401|Failed to load resource|fonts\.g/.test(m.text())) salida.errores.push(m.text()); });
+  page.on('request', (q) => { if (q.method() === 'POST' && new URL(q.url()).pathname.endsWith('/api/planillas/fotos')) salida.subidas.push(new URL(q.url()).search); });
+  await page.goto(base + '/', { waitUntil: 'domcontentloaded' });
+  await page.fill('#f-login [name=usuario]', usuario);
+  await page.fill('#f-login [name=clave]', clave);
+  await page.click('#f-login button[type=submit]');
+  await page.waitForSelector('#app #vista > .vista', espera);
+  // Lo que se calcula sin el navegador, desde el módulo de la vista
+  salida.puras = await page.evaluate(async () => {
+    const m = await import(new URL('vistas/importar.js', document.querySelector('script[type=module]').src).href);
+    const lista = [{ estado: 'leida', filas: 0, pendientes: 0, aviso: 'sin_filas' }, { estado: 'leida', filas: 0, pendientes: 0, con_descripcion: true },
+      { estado: 'leida', filas: 0, pendientes: 0 }, { estado: 'leida', filas: 3, pendientes: 3 }, { estado: 'leida', pendientes: 0 }];
+    // Una lista «otro» cortada antes de su primera fila, o con filas visibles: es una hoja que no se leyó
+    const hojas = [{ estado: 'leida', filas: 0, pendientes: 0, incompleta: true, con_descripcion: true },
+      { estado: 'leida', filas: 0, pendientes: 0, filas_visibles: 12, con_descripcion: true }, { estado: 'leida', filas: 0, filas_visibles: 0, con_descripcion: true }];
+    return {
+      estados: lista.map((p) => m.estadoPlanilla(p).texto),
+      hojas: hojas.map((p) => [m.estadoPlanilla(p).texto, m.hojaSinLeer(p)]),
+      sinFilas: [...lista.map(m.sinFilas), m.sinFilas({ estado: 'leida', filas: [] }), m.sinFilas({ estado: 'leida', filas: [{ n: 1 }] }),
+        m.sinFilas({ estado: 'leyendo', filas: 0 }), m.sinFilas(null)],
+      revisar: m.filtrarBandeja(lista, 'revisar').length,
+    };
+  });
+  await page.goto(base + '/importar', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('#pf-bandeja .pf-vacia', espera);
+  // El formato se elige siempre: es solo una pista para el lector
+  salida.formatos = await page.$$eval('#pf-formato option', (o) => o.map((x) => [x.value, x.textContent]));
+  salida.intro = await textoDe(page, '.pf-intro');
+
+  // 1. Una foto cualquiera (un afiche): queda «leida» sin filas, con su descripción
+  await page.selectOption('#pf-formato', 'otro');
+  await page.setInputFiles('#pf-galeria-in', foto1);
+  await page.waitForFunction(() => /Foto descrita/.test(document.querySelector('#pf-bandeja .pf-item')?.textContent || ''), null, espera);
+  salida.bandeja = { texto: await textoDe(page, '#pf-bandeja .pf-item'), boton: await textoDe(page, '#pf-bandeja .pf-item [data-abrir]'),
+    releer: await page.evaluate(() => !!document.querySelector('#pf-bandeja .pf-item [data-releer]')),
+    cuenta: await textoDe(page, '#pf-cuenta') };
+  await page.click('[data-filtro="revisar"]');
+  salida.porRevisar = await textoDe(page, '#pf-bandeja');
+  await page.click('[data-filtro="todas"]');
+  await page.click('#pf-bandeja [data-abrir]');
+  await page.waitForSelector('#planilla-abierta .pf-descripcion-texto', espera);
+  await page.waitForFunction(() => (document.querySelector('#pf-lienzo')?.width || 0) > 0, null, espera);
+  salida.abierta = await page.evaluate(() => {
+    const t = document.querySelector('.pf-descripcion-texto');
+    return {
+      titulo: document.querySelector('#pf-abierta-titulo').textContent,
+      chip: document.querySelector('.pf-abierta-cab .chip').textContent,
+      descripcion: t.textContent,
+      espacios: getComputedStyle(t).whiteSpace,
+      hijos: t.children.length,
+      sinMarcado: !document.querySelector('#planilla-abierta .pf-descripcion b, #planilla-abierta .pf-descripcion img, #planilla-abierta .pf-descripcion script'),
+      nota: document.querySelector('.pf-descripcion-nota').textContent,
+      grilla: document.querySelector('.pf-sin-grilla')?.textContent || '',
+      tabla: !!document.querySelector('.pf-tabla'),
+      acciones: ['#pf-cotejar', '#pf-cargar', '#pf-folio', '#pf-guardar'].filter((s) => document.querySelector(s)),
+      releer: !!document.querySelector('#pf-releer'),
+      cerrar: document.querySelector('#pf-cerrar').getAttribute('aria-label'),
+      url: location.search,
+    };
+  });
+  await capturar(page, 'sin-filas-1-foto-escritorio');
+  // En el celular: sin desborde horizontal con la descripción abierta
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(200);
+  salida.desborde = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+  await capturar(page, 'sin-filas-2-foto-celular');
+  await page.setViewportSize({ width: 1360, height: 900 });
+
+  // 2. Una hoja de la que no se leyó ninguna fila: el aviso «sin_filas» y «Volver a leer», nada que cargar
+  await page.selectOption('#pf-formato', 'asistencia');
+  await page.setInputFiles('#pf-galeria-in', foto2);
+  await page.waitForFunction(() => /Hoja sin filas leídas/.test(document.querySelector('#pf-bandeja .pf-item')?.textContent || ''), null, espera);
+  salida.hoja = { texto: await textoDe(page, '#pf-bandeja .pf-item'),
+    releer: await page.evaluate(() => !!document.querySelector('#pf-bandeja .pf-item [data-releer]')) };
+  await page.click('#pf-bandeja .pf-item [data-abrir]');
+  await page.waitForSelector('#planilla-abierta .pf-aviso-lectura', espera);
+  salida.hojaAbierta = { aviso: await textoDe(page, '.pf-aviso-lectura'), grilla: await textoDe(page, '.pf-sin-grilla'),
+    descripcion: await textoDe(page, '.pf-descripcion-texto'), releer: await page.evaluate(() => !!document.querySelector('#pf-releer')),
+    acciones: await page.evaluate(() => ['#pf-cotejar', '#pf-cargar'].filter((s) => document.querySelector(s))) };
+
+  await capturar(page, 'sin-filas-3-hoja-escritorio');
+
+  // 3. Borrar la primera (con confirmación: es una foto, no una planilla)
+  await page.click('#pf-bandeja .pf-item:nth-child(2) [data-borrar]');
+  await page.waitForSelector('dialog[open] [data-si]', espera);
+  salida.borrar = await textoDe(page, 'dialog[open]');
+  await page.click('dialog[open] [data-si]');
+  await page.waitForFunction(() => document.querySelectorAll('#pf-bandeja .pf-item').length === 1, null, espera);
+  salida.borrada = await page.evaluate(() => document.body.textContent.includes('Foto borrada') && !document.body.textContent.includes('Planilla borrada'));
+  salida.alertas = await page.evaluate(() => window.__alertas);
+  salida.csp = await page.evaluate(() => window.__csp);
+  console.log(JSON.stringify(salida));
+  await nav.close();
+})().catch((e) => { console.error(e); process.exit(1); });
+"""
+
+# La descripción de un afiche inventado: con saltos de línea, un teléfono inventado (entero para A y K) y marcado que
+# la vista tiene que mostrar como texto, nunca como HTML
+AFICHE = ("Foto de un afiche pegado en una pared, con letras grandes.\nTexto visible: «Reunión de la vereda el sábado» "
+          "<b>VEN</b> <img src=x onerror=alert(1)>\nTeléfono de contacto: 310 123 4567")
+
+
+@requiere_navegador
+def test_una_foto_sin_filas_se_ve_con_su_descripcion_en_chromium(panel_web, cfg, tmp_path, monkeypatch):
+    """Una foto cualquiera y una hoja de la que no se leyó ninguna fila: las dos quedan «leida» sin filas. La bandeja
+    las nombra («Foto descrita», «Hoja sin filas leídas»), no las cuenta «por revisar» y a la hoja le ofrece «Volver a
+    leer»; abiertas, muestran la descripción entera como texto plano (con sus saltos de línea, sin interpretar el
+    marcado que escribió el modelo) y ni cotejar ni cargar. El formato de la subida se elige siempre."""
+    base, panel = panel_web
+    db = panel.state.db
+    proveedor = ProveedorFalso(
+        lectura_json([], tipo="otro", visibles=0, descripcion=AFICHE, datos_personales=False),
+        lectura_json([], tipo="asistencia", visibles=12,
+                     descripcion="Lista de asistencia a mano, 12 renglones, la letra no se distingue."))
+    encender(monkeypatch, panel, proveedor, de_fondo=True)
+    foto1, foto2 = tmp_path / "afiche.jpg", tmp_path / "lista.jpg"
+    foto1.write_bytes(jpeg(1700, 1200))
+    foto2.write_bytes(jpeg(1800, 1300))
+    (tmp_path / "sin_filas.cjs").write_text(GUION_SIN_FILAS, encoding="utf-8")
+    r = subprocess.run(["node", str(tmp_path / "sin_filas.cjs"), base, cfg.usuario, cfg.clave, str(foto1), str(foto2)],
+                       capture_output=True, text=True, timeout=240)
+    assert r.returncode == 0, (r.stdout[-3000:], r.stderr[-3000:])
+    s = json.loads(r.stdout.strip().splitlines()[-1])
+    assert s["errores"] == [] and s["csp"] == [] and s["alertas"] == 0, (s["errores"], s["csp"])
+
+    # Lo puro: el estado de una foto sin filas y que no está «por revisar»
+    u = s["puras"]
+    assert u["estados"] == ["Hoja sin filas leídas", "Foto descrita", "Sin filas leídas", "Por revisar",
+                            "Sin filas por cargar"]
+    assert u["sinFilas"] == [True, True, True, False, False, True, False, False, False]
+    assert u["revisar"] == 2
+    assert u["hojas"] == [["Hoja sin filas leídas", True], ["Hoja sin filas leídas", True], ["Foto descrita", False]]
+
+    # La subida: el formato siempre se elige (una pista para el lector) y viaja en la consulta
+    assert s["formatos"] == [["planilla_campo", "Planilla de campo del panel"], ["asistencia", "Lista de asistencia"],
+                             ["otro", "Otra hoja u otra imagen"]]
+    assert "cualquier otra imagen" in s["intro"] and "Siempre la describe" in s["intro"]
+    assert s["subidas"] == ["?formato=otro", "?formato=asistencia"]
+
+    # 1. La foto cualquiera: en la bandeja, sin filas, con su descripción y marcada con datos de personas (el teléfono)
+    b = s["bandeja"]
+    for frase in ("Foto descrita", "sin filas de personas", "con su descripción"):
+        assert frase in b["texto"], frase
+    assert "muestra datos de personas" in b["texto"] and "0 filas" not in b["texto"]
+    assert b["boton"] == "Ver" and b["releer"] is False and "por revisar" not in b["cuenta"]
+    assert "Ninguna foto con ese estado" in s["porRevisar"]
+    a = s["abierta"]
+    assert a["titulo"].startswith("Foto del ") and a["chip"] == "Foto descrita" and a["cerrar"] == "Cerrar la foto"
+    assert a["descripcion"] == AFICHE  # entera (A y K), con sus saltos de línea y el marcado como texto
+    assert a["espacios"] == "pre-line" and a["hijos"] == 0 and a["sinMarcado"] is True
+    assert "La escribió el modelo" in a["nota"] and "Muestra datos de personas" in a["nota"]
+    assert a["grilla"] == "Esta foto no lista personas: no hay filas que cotejar ni cargar."
+    assert a["tabla"] is False and a["acciones"] == [] and a["releer"] is True
+    assert s["desborde"] <= 0
+
+    # 2. La hoja sin filas: el aviso del lector, «Volver a leer» y nada que cotejar ni cargar
+    h = s["hoja"]
+    assert "Hoja sin filas leídas" in h["texto"] and "sin filas de personas" in h["texto"] and h["releer"] is True
+    ha = s["hojaAbierta"]
+    assert ha["aviso"] == lector.AVISOS["sin_filas"]
+    assert ha["grilla"] == "No se leyó ninguna fila de la hoja." and ha["descripcion"].startswith("Lista de asistencia")
+    assert ha["releer"] is True and ha["acciones"] == []
+
+    # 3. Borrar la foto cualquiera: la confirmación habla de la foto
+    assert "¿Borrar esta foto?" in s["borrar"] and "planilla" not in s["borrar"] and s["borrada"] is True
+    docs = list(db.planillas.find())
+    assert len(docs) == 1 and docs[0]["estado"] == "leida" and docs[0]["formato"] == "asistencia"
+    assert docs[0]["resumen"]["filas"] == 0 and docs[0]["resumen"]["aviso"] == "sin_filas"
+    assert not db.importaciones.find_one() and len(proveedor.llamadas) == 2

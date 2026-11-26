@@ -126,6 +126,22 @@ def test_topes_como_el_servidor():
     assert re.search(r"const FIRMAS = \{[^}]*\}", VISTA) and set(_claves("FIRMAS")) == set(lector.FIRMAS)
 
 
+def test_los_avisos_de_la_lectura_y_la_descripcion():
+    """Lo que avisa una lectura guardada (`lector_planillas.AVISOS`) se dice con el mismo texto; la descripción (que
+    escribió el modelo) se pinta solo con `html`, que la escapa, y una foto sin filas no ofrece cotejar ni cargar. El
+    formato de la subida se elige siempre (el ajuste `otros_formatos` se retiró)."""
+    avisos = dict(re.findall(r"(\w+): '([^']*)'", _objeto("AVISOS_LECTURA")))
+    assert avisos == lector.AVISOS == pl.AVISOS
+    assert "otros_formatos" not in "\n".join(l for l in VISTA.splitlines() if not l.lstrip().startswith("//"))
+    assert '<select id="pf-formato">' in VISTA and "ap?.otros_formatos" not in VISTA
+    pintar = VISTA[VISTA.index("function pintarAbierta() {"):VISTA.index("function actualizarAcciones() {")]
+    assert "const descripcion = typeof d.descripcion === 'string' ? d.descripcion.trim() : '';" in pintar
+    assert '<p class="pf-descripcion-texto">${descripcion}</p>' in pintar  # dentro de un html`…`: escapada
+    assert "const puedeCargar = d.estado === 'leida' && filas.length > 0;" in pintar
+    css = _sin_comentarios(CSS.read_text(encoding="utf-8"))
+    assert re.search(r"\.pf-descripcion-texto \{[^}]*white-space: pre-line", css)
+
+
 def test_cada_estado_y_motivo_tiene_su_texto():
     # El estado de cada fila (`planillas._estado_fila`), la vista previa, lo cargado y los motivos del importador
     assert set(_claves("ESTADOS_FILA")) == {"pendiente", "no_autoriza", "no_se_carga", "descartada", "cargada"}

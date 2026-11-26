@@ -157,7 +157,8 @@ async def bandeja(request: Request, estado: str | None = Query(None, max_length=
                   quien: Quien = Depends(PLANILLAS)):
     """La bandeja: `{planillas: [{id, estado, subida_por: {uid, usuario, nombre}, ts, expira, formato, tipo_formato,
     filas, dudosas, pendientes, cargadas, incompleta, importacion_id, nota, error, ancho, alto, bytes, lecturas,
-    con_foto, progreso, aviso, con_descripcion, datos_personales}]}` (las 100 más nuevas; `?estado=` filtra)."""
+    con_foto, progreso, aviso, con_descripcion, datos_personales, filas_visibles}]}` (las 100 más nuevas; `?estado=`
+    filtra). El error de un rechazo que ya no existe sale con el mensaje de ahora (`planillas.error_de`)."""
     return {"planillas": await run_in_threadpool(pl.bandeja, request.app.state.db, quien, estado)}
 
 

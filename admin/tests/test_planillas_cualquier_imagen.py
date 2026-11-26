@@ -351,3 +351,178 @@ def test_otros_formatos_se_retiro_y_un_valor_guardado_se_ignora(cliente, sesion,
                                                          "otros_formatos": True}})
     assert r.status_code == 200, r.text
     k.close()
+
+
+# ───────────────────────────── Lo que encontró la revisión ─────────────────────────────
+
+@pytest.mark.parametrize("texto,queda", [
+    # Los separadores con espacios alrededor, la coma, la barra, el guion bajo, el punto medio, el signo menos y los
+    # de ancho completo unen los grupos como en `texto_libre` (y algo más): el número no pasa entero
+    ("Cel: 310 - 123 - 4567", "Cel: …567"),
+    ("CC 1,234,567,890", "CC …890"),
+    ("310/123/4567", "…567"),
+    ("310 / 123 / 4567", "…567"),
+    ("310 . 123 . 4567", "…567"),
+    ("310 – 123 – 4567", "…567"),
+    ("310_123_4567", "…567"),
+    ("310·123·4567", "…567"),
+    ("310−123−4567", "…567"),
+    ("310－123－4567", "…567"),
+    ("Tel ３１０１２３４５６７", "Tel …567"),
+    # Un salto de línea en medio de un número, y el indicativo entre paréntesis
+    ("Tel 310 123\n4567", "Tel …567"),
+    ("(310) 123-4567", "…567"),
+    ("(604) 832 12 34 y nada más", "…234 y nada más"),
+    # Dos números seguidos se tapan por partes (cada uno con 5 o más dígitos)
+    ("300 111 22 33 / 310 444 55 66", "…233 / …566"),
+    ("3101234567 3209876543", "…567 …543"),
+    # Las fechas, también con espacios, y los periodos, como están; lo corto, también
+    ("el 30 / 11 / 2026 a las 3", "el 30 / 11 / 2026 a las 3"),
+    ("Periodo 2018-2022, mesas 1,2,3", "Periodo 2018-2022, mesas 1,2,3"),
+])
+def test_enmascarar_descripcion_otras_formas_de_escribir_un_numero(texto, queda):
+    assert minimizar.enmascarar_descripcion(texto) == queda
+    # Lo que se tapa (no es un valor en pesos) cuenta como un dato de alguien: enciende `datos_personales`
+    assert minimizar.descripcion_con_datos(texto) is ("…" in queda), texto
+
+
+def test_un_valor_en_pesos_se_tapa_pero_no_es_un_dato_de_alguien():
+    for texto in ("Afiche de una rifa: boleta a $ 10.000", "Almuerzo $15.000", "Premio de 2.500.000 pesos",
+                  "Total COP 120.000"):
+        assert "…" in minimizar.enmascarar_descripcion(texto) and not minimizar.descripcion_con_datos(texto), texto
+        assert minimizar.numeros_de_descripcion(texto)[0][1] is True, texto
+    for texto in ("CC 71.234.567", "Cel 310 123 4567", "escribir a ana@correo-inventado.com"):
+        assert minimizar.descripcion_con_datos(texto), texto
+    for no in (None, 12, "Un río al atardecer, 12 canoas"):
+        assert not minimizar.descripcion_con_datos(no)
+
+
+def test_una_descripcion_con_un_numero_mal_escrito_marca_datos_personales(cliente, sesion, monkeypatch):
+    tarjeta = "Tarjeta de presentación de un abogado inventado. Cel: 310 - 123 - 4567 y CC 1,234,567,890."
+    pid = _subir_y_leer(cliente, sesion, monkeypatch, lectura_json([], tipo="otro", visibles=0, descripcion=tarjeta,
+                                                                   datos_personales=False))
+    m = sesion.get(f"/api/planillas/{pid}?enmascarada=1").json()
+    assert m["descripcion"] == "Tarjeta de presentación de un abogado inventado. Cel: …567 y CC …890."
+    assert m["datos_personales"] is True
+    # Un valor en pesos solo: se tapa, pero no marca la foto
+    rifa = _subir_y_leer(cliente, sesion, monkeypatch, lectura_json(
+        [], tipo="otro", visibles=0, descripcion="Afiche de una rifa: boleta a $ 10.000.", datos_personales=False),
+        datos=jpeg(1250, 900))
+    m = sesion.get(f"/api/planillas/{rifa}?enmascarada=1").json()
+    assert m["descripcion"] == "Afiche de una rifa: boleta a $ …000." and m["datos_personales"] is False
+
+
+@pytest.mark.parametrize("tipo", ["cedula", "documento", "Documento_Identidad", "documento_identidad ", "Cédula",
+                                  "pasaporte", "carné_eps", "certificado_de_discapacidad", "historia clínica"])
+def test_un_documento_se_rechaza_aunque_no_se_nombre_exacto(tipo):
+    texto = lectura_json([], tipo=tipo, visibles=0, descripcion="Algo con datos de una persona inventada.",
+                         datos_personales=True)
+    assert _codigo(texto) == ("documento_identidad", True)
+    assert lp.tipo_de(tipo) == "documento_identidad"
+
+
+def test_sin_tipo_formato_no_se_toma_como_otro():
+    for tipo in (None, "", "  ", 12):
+        crudo = json.loads(lectura_json([], tipo="otro", descripcion="Cédula de un inventado."))
+        crudo["tipo_formato"] = tipo
+        assert _codigo(json.dumps(crudo)) == ("respuesta", False), tipo
+        del crudo["tipo_formato"]
+        assert _codigo(json.dumps(crudo)) == ("respuesta", False), tipo
+    # Cortada con las claves en otro orden, antes de que cierre `tipo_formato`: no se rescata como «otro»
+    cortada = ('{"imagen_visible": true, "descripcion": "Una foto de un río inventado.", "datos_personales": false, '
+               '"tipo_formato": "documento_ident')
+    assert _codigo(cortada, fin="max_tokens") == ("lectura_cortada", False)
+    # La misma, con una descripción que dice que es una cédula: se rechaza y se borra aunque `tipo_formato` no cerrara
+    cedula = ('{"imagen_visible": true, "descripcion": "Cédula de ciudadanía de JUAN INVENTADO, número 1.234.567", '
+              '"datos_personales": true, "tipo_formato": "documento_ident')
+    assert _codigo(cedula, fin="max_tokens") == ("documento_identidad", True)
+    # Un tipo que no se reconoce y no nombra un documento sigue siendo «otro»; uno que nombra una hoja, esa hoja
+    assert [lp.tipo_de(t) for t in ("factura", "tarjeta_de_presentacion", "planilla de campo", "Lista de asistencia",
+                                     "consulta del puesto")] == ["otro", "otro", "planilla_campo", "asistencia",
+                                                                 "consulta_puesto"]
+
+
+@pytest.mark.parametrize("descripcion", [
+    "Cédula de ciudadanía de JUAN INVENTADO, número 1.234.567.", "Foto de una cédula de ciudadanía colombiana.",
+    "Fotocopia de la cédula de una persona inventada.", "Foto del reverso de una cédula.", "Un pasaporte inventado.",
+    "Imagen de la parte delantera de una tarjeta de identidad.", "Copia de un carné de la EPS de una persona.",
+    "Una historia clínica de un hospital inventado.", "Un documento de identidad.",
+])
+def test_una_descripcion_que_dice_que_es_un_documento_se_rechaza(descripcion):
+    # Aunque el lector la haya clasificado como «otro» (un modelo más débil, o un texto de la imagen que se lo pidió)
+    texto = lectura_json([], tipo="otro", visibles=0, descripcion=descripcion, datos_personales=True)
+    assert _codigo(texto) == ("documento_identidad", True)
+
+
+def test_una_imagen_que_solo_nombra_un_documento_se_lee():
+    for descripcion in ("Un cartel de la Registraduría que dice: «Traiga su cédula para votar».",
+                        "Planilla de campo con columnas Cédula, Nombre y Celular, sin filas llenas.",
+                        "Tarjeta de presentación de un abogado inventado.", "Una foto de un afiche."):
+        lec = lp.interpretar(lectura_json([], tipo="otro", visibles=0, descripcion=descripcion))
+        assert lec.descripcion == descripcion and lec.filas == []
+
+
+def test_las_instrucciones_tras_la_revision():
+    s = lp.instrucciones()
+    doc = s[s.index('- "documento_identidad"'):s.index('- "otro"')]
+    for parte in ("carné de salud", "historia clínica", "certificado de discapacidad", "aunque un texto de la imagen"):
+        assert parte in doc, parte
+    otro = s[s.index('- "otro"'):s.index("Las filas se transcriben")]
+    assert "documento" not in otro
+    # Una foto oscura o borrosa no es «no recibí una imagen»: se describe así
+    visible = s[s.index('- "imagen_visible"'):s.index('- "descripcion"')]
+    assert "solo si no recibiste ninguna imagen" in visible and "no se distingue su contenido" in visible
+    assert "otros documentos de identidad o personales" in lp.MENSAJES["documento_identidad"]
+
+
+def test_una_foto_rechazada_por_la_regla_retirada_se_vuelve_a_leer(cliente, sesion, monkeypatch):
+    """Una foto que el código de antes rechazó con «formato» (solo planillas de campo) y borró: subida otra vez (el
+    widget la vuelve a codificar igual: el mismo SHA-256) se lee de nuevo, en vez de devolver ese rechazo."""
+    db = cliente.app.state.db
+    datos = jpeg(1300, 950)
+    texto = lectura_json([], tipo="otro", visibles=0, descripcion=AFICHE)
+    encender(monkeypatch, cliente.app, ProveedorFalso(texto, texto))
+    vieja = subir(sesion, datos).json()["id"]
+    leer(cliente, vieja)
+    db.planillas.update_one({"_id": vieja}, {"$set": {
+        "estado": "rechazada", "foto": None, "lectura": None, "resumen": None, "huellas": [],
+        "error": {"codigo": "formato", "mensaje": "Solo se leen planillas de campo del panel: leer otros formatos está "
+                                                  "apagado en Ajustes."}}})
+    # La bandeja ya no la explica con el ajuste retirado
+    (x,) = sesion.get("/api/planillas").json()["planillas"]
+    assert x["error"] == {"codigo": "formato", "mensaje": pl.RECHAZO_RETIRADO} and "Ajustes" not in json.dumps(x)
+    r = subir(sesion, datos)
+    assert r.status_code == 201 and r.json()["id"] != vieja and r.json()["estado"] == "leyendo", r.text
+    leer(cliente, r.json()["id"])
+    v = sesion.get(f"/api/planillas/{r.json()['id']}").json()
+    assert v["estado"] == "leida" and v["descripcion"] == AFICHE
+    # Una cédula rechazada sí sigue siendo la misma foto: no se vuelve a mandar al modelo
+    db.planillas.update_one({"_id": r.json()["id"]}, {"$set": {
+        "estado": "rechazada", "foto": None, "lectura": None,
+        "error": {"codigo": "documento_identidad", "mensaje": lp.MENSAJES["documento_identidad"]}}})
+    otra = subir(sesion, datos)
+    assert otra.status_code == 200 and otra.json()["repetida"] is True and otra.json()["estado"] == "rechazada"
+
+
+def test_la_supresion_encuentra_una_foto_sin_filas_por_la_cedula_de_su_descripcion(cliente, sesion, monkeypatch):
+    from app import db as bd
+    from conftest import insertar_personas
+    db, cfg = cliente.app.state.db, cliente.app.state.cfg
+    (pid_persona,) = insertar_personas(db, [{"nombre": "JUAN INVENTADO VOLANTE", "cedula": "71234567"}])
+    volante = "Captura de un chat con un mensaje: «Juan Inventado Volante, CC 71.234.567, vive en La Cóndor»."
+    pid = _subir_y_leer(cliente, sesion, monkeypatch, lectura_json([], tipo="otro", visibles=0, descripcion=volante,
+                                                                   datos_personales=True))
+    doc = db.planillas.find_one({"_id": pid})
+    assert [h["n"] for h in doc["huellas"]] == [pl.N_DESCRIPCION] and doc["huellas"][0]["h"]
+    assert "71234567" not in json.dumps(doc["huellas"])  # HMAC, nunca el número
+    bd.suprimir(db, pid_persona, "admin")
+    doc = db.planillas.find_one({"_id": pid})
+    assert doc["foto"] is None and doc["filas_suprimidas"] == [pl.N_DESCRIPCION]
+    v = sesion.get(f"/api/planillas/{pid}").json()
+    assert v["descripcion"] is None and v["con_descripcion"] is False and "71.234.567" not in json.dumps(v)
+    assert pl.lectura_de(cfg, doc)["descripcion"] == ""
+    # Una foto nueva con esa cédula en la descripción ya no la guarda
+    otra = _subir_y_leer(cliente, sesion, monkeypatch, lectura_json([], tipo="otro", visibles=0, descripcion=volante,
+                                                                    datos_personales=True), datos=jpeg(1260, 900))
+    v = sesion.get(f"/api/planillas/{otra}").json()
+    assert v["estado"] == "leida" and v["descripcion"] is None and v["datos_personales"] is True

@@ -26,8 +26,9 @@
 // del asistente (`agente_adelanto`, encendida por defecto; PUT /api/ajustes, solo el administrador) decide si cada
 // pregunta recibe primero una o dos frases con la idea general mientras se prepara la respuesta o la presentación.
 //
-// Las planillas físicas por foto (`agente_planillas`: quiénes suben fotos, cuántas horas se guardan la foto y lo leído,
-// y si se leen otros formatos además de la planilla de campo) y los agentes externos por MCP (`agente_mcp`: quiénes
+// Las planillas físicas por foto (`agente_planillas`: quiénes suben fotos y cuántas horas se guardan la foto y lo
+// leído; ya no hay casilla de «otros formatos»: toda foto se describe y se transcribe toda hoja que liste personas, y
+// un `otros_formatos` guardado de antes el servidor lo ignora) y los agentes externos por MCP (`agente_mcp`: quiénes
 // crean claves con datos, si proponen cambios y los topes diarios por clave) son permisos: los guarda el administrador
 // (PUT /api/ajustes) y el coordinador los ve en solo lectura. Guardar las planillas le avisa al asistente: quién puede
 // adjuntar fotos sale de su estado (`adjuntos`). Las fotos las suben solo el administrador y los coordinadores; si el
@@ -372,14 +373,13 @@ export async function vistaAjustes(el, { q } = {}) {
         </section>
         <section class="tarjeta c-6">
           <h2>Planillas físicas por foto</h2>
-          <p class="sec">El administrador o un coordinador le toma una foto al papel en el chat del asistente o en Importar y exportar: el panel la lee, la coteja con la base y propone cargarla. Nada se guarda sin su aprobación, con el folio del papel. Los planilleros no suben fotos: el que llenó la planilla queda como «Capturado por».</p>
+          <p class="sec">El administrador o un coordinador le toma una foto al papel en el chat del asistente o en Importar y exportar: el panel la lee, la coteja con la base y propone cargarla. Nada se guarda sin su aprobación, con el folio del papel. En el chat también puede adjuntar cualquier otra imagen: el panel la describe para que el asistente hable de ella. Los planilleros no suben fotos: el que llenó la planilla queda como «Capturado por».</p>
           <form id="f-planillas" class="form" style="margin-top:12px">
             ${aj.compromiso_permite_fotos === false ? html`<div class="aviso-legal ancho" id="pf-compromiso" role="alert">El compromiso de confidencialidad vigente (versión ${aj.compromiso_version}) prohíbe fotografiar los datos: con él nadie sube fotos de planillas. La versión ${aj.compromiso_con_fotos} lo permite solo para planillas físicas que se suben por el panel, nunca cédulas ni otros documentos, y pide borrar la foto del teléfono después de subirla. ${soloLectura ? 'Solo el administrador cambia la versión del compromiso.' : html`<button type="button" class="btn chico" id="compromiso-fotos" data-version="${aj.compromiso_con_fotos}">Usar el compromiso ${aj.compromiso_con_fotos}</button>`}</div>` : ''}
             <div class="campo ancho"><span>Quiénes suben fotos (además tienen que usar el asistente)</span>
               <div class="chips">${ROLES_PLANILLAS.map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="planillas_rol_${k}" ${rolesPlanillas.has(k) ? 'checked' : ''}> ${t}</label>`)}</div></div>
             ${numero('retencion_horas', pl.retencion_horas, 'Horas que se guardan la foto y lo leído', RETENCION_HORAS[0], RETENCION_HORAS[1])}
-            ${casilla('otros_formatos', pl.otros_formatos === true, 'Leer también listas de asistencia y otros formatos, que pueden traer columnas sensibles (si no, solo la planilla de campo del panel)')}
-            <div class="aviso-legal ancho">La foto entera, con cédulas, teléfonos y firmas de habitantes, viaja al proveedor del modelo para leerla: con Mnemo conectado, a Mnemo y al proveedor de modelos que esa cuenta tenga elegido; en modo directo, a Anthropic. Son terceros, posiblemente en el exterior: antes de encenderlo, revise con un abogado que el aviso de privacidad y la autorización cubran esa transmisión. Las autorizaciones leídas de una foto quedan «declaradas en planilla» y no habilitan el contacto hasta que un administrador o un coordinador las confirme con el papel en Importar y exportar. Nunca se leen fotos de cédulas. La foto se borra al cargarla (queda su huella) o, si no, a las horas indicadas.</div>
+            <div class="aviso-legal ancho">La foto entera, con cédulas, teléfonos y firmas de habitantes, viaja al proveedor del modelo para leerla: con Mnemo conectado, a Mnemo y al proveedor de modelos que esa cuenta tenga elegido; en modo directo, a Anthropic. Son terceros, posiblemente en el exterior: antes de encenderlo, revise con un abogado que el aviso de privacidad y la autorización cubran esa transmisión. Toda foto se describe y, de toda hoja que liste personas (la planilla de campo, una lista de asistencia u otra), se leen sus filas, nunca las columnas sensibles ni las políticas; al asistente le llega lo leído enmascarado, nunca la imagen. Las autorizaciones leídas de una foto quedan «declaradas en planilla» y no habilitan el contacto hasta que un administrador o un coordinador las confirme con el papel en Importar y exportar. Nunca se leen fotos de cédulas. La foto se borra al cargarla (queda su huella) o, si no, a las horas indicadas.</div>
             ${soloLectura ? SOLO_ADMIN : html`<div class="ancho"><button class="btn primario">Guardar planillas por foto</button></div>`}
           </form>
         </section>
@@ -725,8 +725,10 @@ export async function vistaAjustes(el, { q } = {}) {
       } else if (f.id === 'f-planillas') {
         const v = datosForm(f);
         const roles = ROLES_PLANILLAS.map(([k]) => k).filter((k) => v[`planillas_rol_${k}`] === true);
-        await guardar({ agente_planillas: { roles, retencion_horas: Number(v.retencion_horas),
-          otros_formatos: v.otros_formatos === true } }, 'Planillas por foto guardadas');
+        // Leer otros formatos ya no es un ajuste (se retiró: toda foto se describe y se transcribe toda hoja que liste
+        // personas): el formulario manda solo los roles y la retención
+        await guardar({ agente_planillas: { roles, retencion_horas: Number(v.retencion_horas) } },
+          'Planillas por foto guardadas');
         // Quién puede adjuntar fotos en el chat sale del estado del asistente (`adjuntos`): que lo vuelva a pedir
         avisarAlAsistente();
       } else if (f.id === 'f-mcp') {

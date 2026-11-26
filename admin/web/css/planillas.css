@@ -67,6 +67,16 @@
   .pf-foto-marco { max-height: calc(100vh - 110px); }
 }
 
+/* Lo que el panel vio en la foto (la descripción que escribió el lector), como texto plano: los saltos de línea se
+   respetan y una palabra larga (un correo, un enlace) se parte antes de desbordar. Una foto sin filas muestra solo esto */
+.pf-descripcion { border: 1px solid var(--line-soft); border-radius: var(--r-s); padding: 12px 14px; display: grid;
+  gap: 6px; background: var(--raised); min-width: 0; }
+.pf-descripcion h3 { font-size: 14px; font-weight: 750; }
+.pf-descripcion-texto { margin: 0; font-size: 14px; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+.pf-descripcion-nota { margin: 0; font-size: 12.5px; }
+.pf-aviso-lectura { overflow-wrap: anywhere; }
+.pf-sin-grilla { margin: 0; }
+
 /* La grilla: 20 columnas que se desplazan dentro de su caja; la casilla y el número de fila quedan fijos a la izquierda */
 .pf-grilla { display: grid; gap: 10px; min-width: 0; }
 .pf-grilla-barra { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 14px;

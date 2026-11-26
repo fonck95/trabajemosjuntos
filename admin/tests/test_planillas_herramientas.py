@@ -178,7 +178,8 @@ def test_texto_de_las_fotos_de_un_mensaje():
     assert "«Hoja 2 del sábado»" in t and "No se leen fotos de cédulas." in t and "importación #12" in t
     assert f"- {'e' * 32}: ya no está en la bandeja" in t
     sin = hp.texto_de_fotos(fotos[:1], ["a" * 32], False)
-    assert "1 foto " in sin and "no tienes las herramientas de planillas" in sin and "leer_planilla con" not in sin
+    assert "1 foto " in sin and "no tienes las herramientas de fotos" in sin and "leer_planilla con" not in sin
+    assert "no lo adivines" in sin
 
 
 # ───────────────────────────── planillas y leer_planilla ─────────────────────────────
@@ -270,8 +271,9 @@ def test_leer_varias_dentro_del_tope_de_caracteres(cliente, sesion, monkeypatch,
     b = foto_leida(cliente, sesion, monkeypatch, _filas()[:2], datos=foto_distinta(2))
     m = al_modelo(_ej(cliente, ctx_de(sesion), "leer_planilla", {"ids": [a, b]}))
     assert [len(p["filas"]) for p in m["planillas"]] == [5, 2]
-    # Con un tope en el que cabe la primera entera pero no las filas de la segunda
-    monkeypatch.setattr(hp, "PRESUPUESTO", len(json.dumps(m["planillas"][0], ensure_ascii=False)) + 300)
+    # Con un tope en el que cabe todo menos las filas de la segunda (las cabezas y los avisos cuentan antes que filas)
+    monkeypatch.setattr(hp, "PRESUPUESTO", len(json.dumps(m, ensure_ascii=False)) - len(json.dumps(
+        m["planillas"][1]["filas"], ensure_ascii=False)) + 100)
     m = al_modelo(_ej(cliente, ctx_de(sesion), "leer_planilla", {"ids": [a, b]}))
     primera, segunda = m["planillas"]
     assert "filas" in primera and segunda["filas_omitidas"] == 2 and "solo con este id" in segunda["nota"]

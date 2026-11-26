@@ -67,8 +67,11 @@ def test_cada_formulario_manda_los_campos_del_modelo():
     cuerpo = planillas[planillas.index("agente_planillas: {"):planillas.index("'Planillas por foto guardadas'")]
     claves = set(re.findall(r"(\w+)(?::|,|\s*\})", cuerpo))
     assert set(api_ajustes.PlanillasAgente.model_fields) <= claves
-    assert "roles, retencion_horas: Number(v.retencion_horas)," in planillas
-    assert "otros_formatos: v.otros_formatos === true" in planillas
+    assert "agente_planillas: { roles, retencion_horas: Number(v.retencion_horas) } }" in planillas
+    # `otros_formatos` se retiró (toda foto se describe y se lee toda hoja que liste personas): ni la casilla ni el
+    # campo en lo que se manda
+    assert "otros_formatos" not in CODIGO and "otros formatos" not in CODIGO
+    assert set(api_ajustes.PlanillasAgente.model_fields) == {"roles", "retencion_horas"}
     mcp = _rama("f-mcp")
     assert ("agente_mcp: { roles, escritura: v.mcp_escritura === true,\n"
             "          llamadas_diarias: Number(v.llamadas_diarias), personas_diarias: Number(v.personas_diarias) } }"
