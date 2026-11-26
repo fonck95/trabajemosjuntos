@@ -423,7 +423,7 @@ def test_un_documento_se_rechaza_aunque_no_se_nombre_exacto(tipo):
 
 def test_sin_tipo_formato_no_se_toma_como_otro():
     for tipo in (None, "", "  ", 12):
-        crudo = json.loads(lectura_json([], tipo="otro", descripcion="Cédula de un inventado."))
+        crudo = json.loads(lectura_json([], tipo="otro", descripcion="Una foto de algo con datos de un inventado."))
         crudo["tipo_formato"] = tipo
         assert _codigo(json.dumps(crudo)) == ("respuesta", False), tipo
         del crudo["tipo_formato"]
