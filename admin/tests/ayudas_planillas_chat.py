@@ -15,7 +15,7 @@ from ayudas_planillas import ProveedorFalso, jpeg, leer, lectura_json, subir
 def roles_planillas(app, *roles: str) -> None:
     """Quiénes suben fotos (`agente_planillas.roles`)."""
     app.state.db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente_planillas": {
-        "roles": list(roles), "retencion_horas": 24, "otros_formatos": False}}}, upsert=True)
+        "roles": list(roles), "retencion_horas": 24}}}, upsert=True)
 
 
 def subir_sin_leer(c, monkeypatch, datos: bytes | None = None) -> str:

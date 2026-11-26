@@ -102,9 +102,10 @@ def test_el_coordinador_los_ve_en_solo_lectura():
 def test_lo_que_manda_el_formulario_se_guarda_y_se_ve_igual(sesion, coord):
     """El cuerpo que arma cada formulario (como en `_rama`): PUT /api/ajustes lo acepta y GET lo devuelve igual. El
     coordinador lo lee y recibe 403 al guardarlo."""
-    planillas = {"roles": ["admin", "coordinador"], "retencion_horas": 48, "otros_formatos": True}
+    planillas = {"roles": ["admin", "coordinador"], "retencion_horas": 48}
     mcp = {"roles": ["admin", "coordinador"], "escritura": False, "llamadas_diarias": 500, "personas_diarias": 50}
-    r = sesion.put("/api/ajustes", json={"agente_planillas": planillas})
+    # Un formulario de antes que todavía manda `otros_formatos` (el ajuste se retiró) se acepta: el valor no se guarda
+    r = sesion.put("/api/ajustes", json={"agente_planillas": {**planillas, "otros_formatos": True}})
     assert r.status_code == 200, r.text
     r = sesion.put("/api/ajustes", json={"agente_mcp": mcp})
     assert r.status_code == 200, r.text

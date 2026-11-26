@@ -144,11 +144,18 @@ class PlanillasAgente(BaseModel):
     """Las fotos de planillas físicas en el asistente (docs/agente.md, «Planillas físicas por foto»): quién las sube y
     cuántas horas se guardan la foto y lo leído. Los mismos roles (`agente.politica.ROLES_PLANILLAS`: solo el
     administrador y los coordinadores, nunca planilleros ni consultores) y rangos con que `ajustes_planillas` lee lo
-    guardado."""
+    guardado. `otros_formatos` se retiró (toda foto se describe y se transcribe toda hoja que liste personas): un
+    formulario de antes que lo mande no recibe un 422; el valor se descarta sin validarlo y no se guarda."""
     model_config = ConfigDict(extra="forbid")
     roles: list[Literal["admin", "coordinador"]] | None = Field(None, max_length=2)
     retencion_horas: StrictInt | None = Field(None, ge=politica.RETENCION_HORAS[0], le=politica.RETENCION_HORAS[1])
-    otros_formatos: StrictBool | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _sin_otros_formatos(cls, v):
+        if isinstance(v, dict) and "otros_formatos" in v:
+            return {k: x for k, x in v.items() if k != "otros_formatos"}
+        return v
 
     @field_validator("roles")
     @classmethod

@@ -1,15 +1,21 @@
 """La bandeja de planillas físicas por foto (docs/agente.md, «Planillas físicas por foto»): de la foto de una planilla
-de campo en papel a la importación, con la persona que la revisa en el medio.
+de campo en papel a la importación, con la persona que la revisa en el medio. También de cualquier otra foto que se
+adjunte en el chat: el panel la describe para que el asistente pueda hablar de ella.
 
 Flujo. El administrador o un coordinador (con su rol en `agente_planillas.roles`; nunca planilleros ni consultores,
-que no tienen `importar`) sube la foto del papel desde el chat o desde Importar y exportar (`POST /api/planillas/fotos`,
+que no tienen `importar`) sube la foto desde el chat o desde Importar y exportar (`POST /api/planillas/fotos`,
 `app/api/planillas.py`), si el compromiso de confidencialidad vigente lo permite (`exigir_compromiso`; la versión
 2026-11-v2 deja fotografiar planillas físicas solo para subirlas por el panel). La foto se valida y se limpia
 (`validar_imagen`), se guarda cifrada y se lee de fondo (`leer_foto`, con `agente/lector_planillas.py`): una llamada
-aparte al modelo que la transcribe. Lo leído queda cifrado en la misma planilla. A o K lo revisan (la grilla con la
-foto al lado, celdas corregibles), lo cotejan con la base (`simular`: la vista previa fiel del importador, sin
-escribir) y lo cargan (`cargar`: el importador real, como una planilla de campo). Al cargar todo se borra la foto
-(queda su SHA-256 en la importación) y de la lectura queda solo lo no personal (número de fila, estado, ficha).
+aparte al modelo que la describe y, si es una hoja que lista personas (la planilla de campo, una lista de asistencia u
+otra), transcribe sus filas. Lo leído (la descripción, `datos_personales`, el `aviso` y las filas) queda cifrado en la
+misma planilla, «leida» aunque no tenga ninguna fila. A o K lo revisan (la grilla con la foto al lado, celdas
+corregibles), lo cotejan con la base (`simular`: la vista previa fiel del importador, sin escribir) y lo cargan
+(`cargar`: el importador real, como una planilla de campo). Al cargar todo se borra la foto (queda su SHA-256 en la
+importación) y de la lectura queda solo lo no personal (número de fila, estado, ficha). Una foto leída sin filas (una
+foto cualquiera, o una hoja que no se pudo leer: `aviso` «sin_filas») no tiene nada que cotejar ni cargar (`simular` y
+`cargar` responden 422 `sin_filas`): se puede volver a leer o borrar, y vence como todo a las `retencion_horas`. No
+cuenta en el tope de `SIN_CARGAR_MAX` (no espera una carga).
 
 Privacidad (Ley 1581):
 * Al reposo, la foto y las filas van cifradas (AES-GCM, `agente/cifrado.py`, variante para bytes) con una llave que
@@ -24,8 +30,12 @@ Privacidad (Ley 1581):
 * Las autorizaciones de una foto quedan SIEMPRE «declaradas en planilla» (`importar.solo_declaradas`): no habilitan el
   contacto hasta que A o K las confirme con el papel en Importar y exportar. Una autorización «sí» dudosa o ilegible
   cuenta como sin marcar; una «no» dudosa se trata como «no» (lo que protege a quien quizá no autorizó).
-* Solo A y K usan la bandeja: ven todas las planillas, con los valores completos (`detalle`); el modelo de una
-  conversación las recibe enmascaradas. El planillero que llenó el papel queda como «capturado por» de lo cargado.
+* Solo A y K usan la bandeja: ven todas las planillas, con los valores completos y la descripción entera (`detalle`);
+  el modelo de una conversación las recibe enmascaradas (`fila_enmascarada` y, la descripción,
+  `minimizar.enmascarar_descripcion`). El planillero que llenó el papel queda como «capturado por» de lo cargado.
+* La descripción puede nombrar a alguien: va cifrada como las filas, se borra con la foto al cargar la hoja entera y
+  deja de mostrarse en cuanto una supresión marca filas de esa planilla (`lectura_de`). La bandeja, en claro, solo
+  dice si la hay (`con_descripcion`).
 
 Concurrencia: las lecturas de fondo tienen un cupo por proceso (`A_LA_VEZ`: 1 con Mnemo, que comparte sus cuatro
 llamadas con el chat y el dictado; 2 con Anthropic) y esperan su turno en cola; sobreviven a que el navegador se vaya.
@@ -90,9 +100,10 @@ ETIQUETA_LLAVE = b"planillas|fotos"
 MAX_POR_MENSAJE, CALIDAD = 4, 0.8
 LADO_DIRECTO, LADO_MNEMO = 2576, 2000
 
-# Estados de una planilla: «leyendo» (en cola o con el modelo), «leida» (lista para revisar, cotejar y cargar; también
-# tras una carga parcial), «fallida» (se puede volver a leer), «rechazada» (una cédula u otro formato: sin foto) y
-# «cargada» (todas sus filas cargadas o descartadas: sin foto ni datos)
+# Estados de una planilla: «leyendo» (en cola o con el modelo), «leida» (con su descripción y sus filas, lista para
+# revisar, cotejar y cargar; también tras una carga parcial, y sin ninguna fila si la foto no lista personas),
+# «fallida» (se puede volver a leer), «rechazada» (una cédula u otro documento de identidad: sin foto) y «cargada»
+# (todas sus filas cargadas o descartadas: sin foto ni datos)
 ESTADOS = ("leyendo", "leida", "fallida", "rechazada", "cargada")
 SIN_CARGAR = ("leyendo", "leida", "fallida")
 FORMATOS = lector.PEDIDOS
@@ -124,7 +135,7 @@ MENSAJES = {
     "lenta": "La foto tardó demasiado en llegar. Intente de nuevo cuando haya mejor señal.",
     "imagen": "El archivo no es una foto JPEG o PNG válida.",
     "dimensiones": f"La foto tiene que medir entre {LADO_MIN} y {LADO_MAX} píxeles por su lado mayor.",
-    "formato": "Solo se leen planillas de campo del panel: leer otros formatos está apagado en Ajustes.",
+    "formato": "El formato de la foto es planilla_campo, asistencia u otro.",
     "frecuencia": "Subió muchas fotos seguidas. Espere un rato y vuelva a intentarlo.",
     "pendientes": f"Tiene {SIN_CARGAR_MAX} planillas sin cargar: espere a que se carguen o borre las que no sirvan.",
     "no_existe": "No existe esa planilla (o ya venció).",
@@ -133,7 +144,7 @@ MENSAJES = {
     "leyendo": "La foto todavía se está leyendo.",
     "no_leida": "Esta planilla no tiene filas leídas para revisar.",
     "cargando": "Esta planilla se está cargando. Espere a que termine.",
-    "sin_filas": "No hay filas para cargar en esta planilla.",
+    "sin_filas": "No hay filas que cargar en esta planilla.",
     "fila": "Esa fila no está en la planilla.",
     "campo": "Esa columna no existe en la planilla.",
     "suprimida": "Esa fila no se carga: no se puede corregir.",
@@ -143,6 +154,11 @@ MENSAJES = {
     "interrumpida": "La lectura se interrumpió (el panel se reinició). Vuelva a leerla.",
     "error": "La lectura falló. Vuelva a intentarlo.",
 }
+# `simular` y `cargar` de una foto leída sin ninguna fila (422 `sin_filas`)
+FOTO_SIN_FILAS = ("Esta foto no tiene filas de personas leídas: no hay filas que cotejar ni cargar. Si es una hoja, "
+                  "vuelva a leerla o tome otra foto.")
+# Lo que avisa una lectura guardada (`lectura.aviso`, también en la bandeja): no es un error
+AVISOS = lector.AVISOS
 
 
 class ErrorPlanilla(HTTPException):
@@ -207,8 +223,10 @@ def _cifrar_lectura(cfg: Any, pid: str, uid: Any, lectura: dict) -> Binary:
 
 
 def lectura_de(cfg: Any, doc: dict) -> dict | None:
-    """Lo leído de la foto (`{tipo_formato, filas_visibles, encabezado, filas, incompleta, ultima_fila}`), o None. Las
-    filas que una supresión posterior marcó (`filas_suprimidas`) salen vacías («no se carga»)."""
+    """Lo leído de la foto (`{tipo_formato, descripcion, datos_personales, aviso, filas_visibles, encabezado, filas,
+    incompleta, ultima_fila}`; una lectura guardada antes de la descripción no trae sus tres claves), o None. Las filas
+    que una supresión posterior marcó (`filas_suprimidas`) salen vacías («no se carga») y la descripción, que puede
+    nombrar a esa persona, deja de salir (la próxima escritura la deja vacía, como la foto que la supresión borró)."""
     if not doc.get("lectura"):
         return None
     claro = cifrado.descifrar_bytes(llave(cfg), doc["lectura"], _contexto("lectura", doc["_id"], doc.get("uid")))
@@ -224,6 +242,8 @@ def lectura_de(cfg: Any, doc: dict) -> dict | None:
     if marcadas:
         lectura["filas"] = [{"n": f["n"], "reducida": "suprimida"} if f.get("n") in marcadas else f
                             for f in lectura["filas"]]
+        if lectura.get("descripcion"):
+            lectura["descripcion"] = ""
     return lectura
 
 
@@ -428,13 +448,15 @@ def exigir_compromiso(ajustes: dict) -> None:
         raise ErrorPlanilla(409, "compromiso_fotos")
 
 
-def exigir_subida(db: Database, quien: Any, ajustes: dict, formato: str, largo: str | None) -> None:
+def exigir_subida(db: Database, quien: Any, formato: str, largo: str | None) -> None:
     """Lo que impide subir, antes de leer el cuerpo (los permisos y el modelo los revisa la ruta): 413 por el
-    `Content-Length`, 422 `formato`, 429 `frecuencia` (40 por hora, 150 por día) y 409 `pendientes` (30 sin cargar).
-    Lee MongoDB: desde código asíncrono, con `run_in_threadpool`."""
+    `Content-Length`, 422 `formato` (uno que no es de `FORMATOS`: los tres se aceptan siempre, el ajuste
+    `agente_planillas.otros_formatos` se retiró), 429 `frecuencia` (40 por hora, 150 por día) y 409 `pendientes` (30 sin
+    cargar: leyendo, fallidas o leídas con filas; una leída sin filas no espera una carga y no cuenta). Lee MongoDB:
+    desde código asíncrono, con `run_in_threadpool`."""
     if largo and largo.isdigit() and int(largo) > MAX_BYTES:
         raise ErrorPlanilla(413, "pesada")
-    if formato not in FORMATOS or (formato != "planilla_campo" and not ajustes["agente_planillas"]["otros_formatos"]):
+    if formato not in FORMATOS:
         raise ErrorPlanilla(422, "formato")
     ahora = _ahora()
     hora = db.planillas_subidas.count_documents({"uid": quien.uid, "ts": {"$gte": ahora - timedelta(hours=1)}})
@@ -443,7 +465,8 @@ def exigir_subida(db: Database, quien: Any, ajustes: dict, formato: str, largo: 
     dia = db.planillas_subidas.count_documents({"uid": quien.uid, "ts": {"$gte": ahora - timedelta(days=1)}})
     if dia >= POR_DIA:
         raise ErrorPlanilla(429, "frecuencia", "Llegó al tope de fotos por hoy. Siga mañana.", espera=3600)
-    if db.planillas.count_documents({"uid": quien.uid, "estado": {"$in": list(SIN_CARGAR)}}) >= SIN_CARGAR_MAX:
+    if db.planillas.count_documents({"uid": quien.uid, "estado": {"$in": list(SIN_CARGAR)},
+                                     "$nor": [{"estado": "leida", "resumen.filas": 0}]}) >= SIN_CARGAR_MAX:
         raise ErrorPlanilla(409, "pendientes")
 
 
@@ -573,7 +596,7 @@ def _quien_de(doc: dict) -> SimpleNamespace:
 def _fallar(db: Database, pid: str, codigo: str, mensaje: str | None = None, *, rechazada: bool = False) -> None:
     cambios: dict[str, Any] = {"estado": "rechazada" if rechazada else "fallida", "actualizada": _ahora(),
                                "error": {"codigo": codigo, "mensaje": mensaje or MENSAJES.get(codigo, codigo)}}
-    if rechazada:  # una cédula u otro formato que no se lee: la foto no se guarda más
+    if rechazada:  # una cédula u otro documento de identidad: la foto no se guarda más
         cambios.update(foto=None, lectura=None, huellas=[])
     db.planillas.update_one({"_id": pid, "estado": "leyendo"}, {"$set": cambios})
 
@@ -581,9 +604,9 @@ def _fallar(db: Database, pid: str, codigo: str, mensaje: str | None = None, *, 
 async def leer_foto(app: Any, pid: str, *, desde_fila: int | None = None) -> None:
     """La lectura de fondo de una planilla «leyendo» (ver el docstring del módulo): espera su cupo, le pide la lectura
     al proveedor del modelo (`lector_planillas.leer`), suma el uso al día de quien subió la foto, sanea y reduce las
-    filas (`_reducir`) y guarda todo cifrado («leida»), o deja el error («fallida», o «rechazada» sin la foto). Nunca
-    lanza: lo que falle queda en la planilla. Una planilla con su lectura ya en curso en este proceso (en cola o con el
-    modelo) no se lee dos veces."""
+    filas (`_reducir`) y guarda todo cifrado («leida», con o sin filas), o deja el error («fallida», o «rechazada» sin
+    la foto: un documento de identidad). Nunca lanza: lo que falle queda en la planilla. Una planilla con su lectura ya
+    en curso en este proceso (en cola o con el modelo) no se lee dos veces."""
     db, cfg = app.state.db, app.state.cfg
     with _candado:
         if pid in _EN_CURSO:
@@ -593,13 +616,11 @@ async def leer_foto(app: Any, pid: str, *, desde_fila: int | None = None) -> Non
         doc = await run_in_threadpool(db.planillas.find_one, {"_id": pid, "estado": "leyendo"})
         if doc is None:
             return
-        from .agente import politica, proveedores
+        from .agente import proveedores
         proveedor = await run_in_threadpool(proveedores.para_nueva, app, cfg, db)
         if proveedor is None:
             await run_in_threadpool(_fallar, db, pid, "sin_configurar")
             return
-        ajustes, _ = await run_in_threadpool(politica.leer, db)
-        otros = ajustes["agente_planillas"]["otros_formatos"]
         async with _cupo(db, pid, proveedor.clave):
             doc = await run_in_threadpool(
                 db.planillas.find_one_and_update, {"_id": pid, "estado": "leyendo"},
@@ -614,7 +635,7 @@ async def leer_foto(app: Any, pid: str, *, desde_fila: int | None = None) -> Non
             latido = asyncio.ensure_future(_latiendo(db, pid))
             try:
                 lectura = await lector.leer(proveedor, imagen, doc["media_type"], formato=doc.get("formato") or
-                                            "planilla_campo", otros_formatos=otros, desde_fila=desde_fila,
+                                            "planilla_campo", desde_fila=desde_fila,
                                             progreso=lambda n: _PROGRESO.__setitem__(pid, n))
             except lector.ErrorLectura as e:
                 await run_in_threadpool(_sumar_uso, db, doc, e.uso)
@@ -661,19 +682,28 @@ def _auditar_lectura(db: Database, doc: dict, detalle: dict) -> None:
 
 def _guardar_lectura(db: Database, cfg: Any, doc: dict, lectura: lector.Lectura, desde_fila: int | None,
                      proveedor: str) -> None:
-    """Guarda lo leído (cifrado) y deja la planilla «leida». Releída desde una fila, se juntan las filas de antes con
-    las nuevas. Las filas ya cargadas no vuelven a guardar datos."""
+    """Guarda lo leído (cifrado) y deja la planilla «leida», aunque no tenga ninguna fila (una foto cualquiera: queda su
+    descripción). Releída desde una fila, se juntan las filas de antes con las nuevas (y, si la nueva lectura no trajo
+    descripción, queda la de antes). Las filas ya cargadas no vuelven a guardar datos. `datos_personales` queda
+    encendido también si la descripción trae un número largo o un correo (`minimizar.enmascarar_descripcion` la
+    cambia), lo diga o no el lector; `aviso` («sin_filas»), solo si al final no quedó ninguna fila."""
+    from .agente.minimizar import enmascarar_descripcion
     filas = [copy.deepcopy(f) for f in lectura.filas]
+    descripcion, personales = lectura.descripcion, lectura.datos_personales
     if desde_fila is not None:
         previa = lectura_de(cfg, doc) or {}
         antes = [f for f in previa.get("filas") or [] if f.get("n", 0) < desde_fila]
         filas = antes + [f for f in filas if f["n"] >= desde_fila]
+        descripcion = descripcion or previa.get("descripcion") or ""
+        personales = personales or bool(previa.get("datos_personales"))
     cargadas = {int(n) for n in (doc.get("cargadas") or {})}
     filas = [{"n": f["n"], "cargada": True} if f["n"] in cargadas else f for f in filas]
     filas = _reducir(db, filas)
-    datos = {"tipo_formato": lectura.tipo_formato, "filas_visibles": lectura.filas_visibles,
-             "encabezado": lectura.encabezado, "filas": filas, "incompleta": lectura.incompleta,
-             "ultima_fila": lectura.ultima_fila}
+    personales = bool(personales or enmascarar_descripcion(descripcion) != descripcion)
+    aviso = lectura.aviso if not filas else None
+    datos = {"tipo_formato": lectura.tipo_formato, "descripcion": descripcion, "datos_personales": personales,
+             "aviso": aviso, "filas_visibles": lectura.filas_visibles, "encabezado": lectura.encabezado,
+             "filas": filas, "incompleta": lectura.incompleta, "ultima_fila": lectura.ultima_fila}
     resumen = _resumen(datos)
     resumen.update(proveedor=proveedor, modelo=(lectura.modelo or "")[:80] or None)
     # Solo si nada la tocó mientras se leía (una supresión borra la foto y marca filas: lo leído antes no se guarda)
@@ -684,19 +714,23 @@ def _guardar_lectura(db: Database, cfg: Any, doc: dict, lectura: lector.Lectura,
     if hecho.matched_count:
         _auditar_lectura(db, doc, {"filas": resumen["filas"], "dudosas": resumen["dudosas"],
                                    "tipo_formato": lectura.tipo_formato, "incompleta": lectura.incompleta,
-                                   "proveedor": proveedor})
+                                   "con_descripcion": bool(descripcion), "datos_personales": personales,
+                                   "aviso": aviso, "proveedor": proveedor})
     else:
         _fallar(db, doc["_id"], "interrumpida")
 
 
 def _resumen(lectura: dict) -> dict:
-    """Lo no personal de una lectura, en claro (para la bandeja): cuántas filas, cuántas dudosas, cuántas pendientes."""
+    """Lo no personal de una lectura, en claro (para la bandeja): cuántas filas, cuántas dudosas, cuántas pendientes,
+    el aviso, si hay descripción (nunca su texto) y si la foto muestra datos de personas."""
     filas = lectura.get("filas") or []
     con_datos = [f for f in filas if f.get("valores")]
     return {"tipo_formato": lectura.get("tipo_formato"), "filas_visibles": lectura.get("filas_visibles"),
             "filas": len(filas), "dudosas": sum(1 for f in con_datos if f.get("dudosos") or f.get("ilegibles")),
             "pendientes": sum(1 for f in con_datos if not f.get("descartada") and not f.get("cargada")),
-            "incompleta": bool(lectura.get("incompleta")), "ultima_fila": lectura.get("ultima_fila")}
+            "incompleta": bool(lectura.get("incompleta")), "ultima_fila": lectura.get("ultima_fila"),
+            "aviso": lectura.get("aviso"), "con_descripcion": bool(lectura.get("descripcion")),
+            "datos_personales": bool(lectura.get("datos_personales"))}
 
 
 # ───────────────────────────── Privacidad de las filas ─────────────────────────────
@@ -819,9 +853,13 @@ def _subida_por(doc: dict) -> dict:
 
 
 def en_bandeja(doc: dict) -> dict:
-    """Una planilla en la bandeja, sin datos de personas: lo que se ve en la lista."""
+    """Una planilla en la bandeja, sin datos de personas: lo que se ve en la lista. De lo leído, solo conteos y marcas:
+    `aviso` («sin_filas» o None), `con_descripcion` (si hay una descripción que ver en `detalle`; no después de
+    cargarla entera ni de una supresión) y `datos_personales` (si la foto muestra datos de personas aparte de las
+    filas). Una foto leída sin filas tiene `filas: 0` y `pendientes: 0`."""
     from .agente.minimizar import texto_libre
     r = doc.get("resumen") or {}
+    con_lectura = doc.get("estado") not in ("cargada", "rechazada")
     return {"id": doc["_id"], "estado": doc.get("estado"), "subida_por": _subida_por(doc), "ts": _iso(doc.get("ts")),
             "expira": _iso(doc.get("expira")), "formato": doc.get("formato"), "tipo_formato": r.get("tipo_formato"),
             "filas": r.get("filas"), "dudosas": r.get("dudosas"), "pendientes": r.get("pendientes"),
@@ -830,7 +868,10 @@ def en_bandeja(doc: dict) -> dict:
             "error": doc.get("error"), "ancho": doc.get("ancho"), "alto": doc.get("alto"), "bytes": doc.get("bytes"),
             "lecturas": doc.get("lecturas") or 0,
             "con_foto": doc["con_foto"] if "con_foto" in doc else bool(doc.get("foto")),
-            "progreso": _PROGRESO.get(doc["_id"]) if doc.get("estado") == "leyendo" else None}
+            "progreso": _PROGRESO.get(doc["_id"]) if doc.get("estado") == "leyendo" else None,
+            "aviso": r.get("aviso") if con_lectura else None,
+            "con_descripcion": bool(con_lectura and r.get("con_descripcion") and not doc.get("filas_suprimidas")),
+            "datos_personales": bool(con_lectura and r.get("datos_personales"))}
 
 
 def _sin_binarios(db: Database, filtro: dict, limite: int = BANDEJA_MAX) -> list[dict]:
@@ -922,19 +963,26 @@ def _estado_fila(f: dict, doc: dict) -> str:
 
 
 def detalle(cfg: Any, doc: dict, *, completa: bool) -> dict:
-    """Una planilla abierta: lo de la bandeja más el encabezado y las filas. `completa` (A y K) trae los valores tal
-    como se leyeron (con lo corregido); si no, enmascarados (`fila_enmascarada`). Cada fila lleva su `estado`
-    («pendiente», «no_autoriza», «no_se_carga», «descartada» o «cargada») y, si está cargada, la ficha."""
+    """Una planilla abierta: lo de la bandeja más la descripción, el encabezado y las filas. `completa` (A y K) trae la
+    descripción entera y los valores tal como se leyeron (con lo corregido); si no, enmascarados (la descripción con
+    `minimizar.enmascarar_descripcion`, las filas con `fila_enmascarada`). `descripcion` es None sin lectura o sin
+    descripción; `datos_personales` y `aviso`, los de la lectura (False y None sin ella). Cada fila lleva su `estado`
+    («pendiente», «no_autoriza», «no_se_carga», «descartada» o «cargada») y, si está cargada, la ficha. Una foto
+    leída sin filas trae `filas: []`."""
     out = en_bandeja(doc)
     out.update(media_type=doc.get("media_type"), sha256=doc.get("sha256"), columnas=list(COLUMNAS),
                puede_releer=_puede_releer(doc), importaciones=list(doc.get("importaciones") or []),
-               encabezado=None, filas_visibles=None, ultima_fila=None, filas=[])
+               descripcion=None, datos_personales=False, aviso=None, encabezado=None, filas_visibles=None,
+               ultima_fila=None, filas=[])
     lectura = lectura_de(cfg, doc) if doc.get("lectura") else None
     cargadas = doc.get("cargadas") or {}
     if lectura is not None:
-        from .agente.minimizar import texto_libre
+        from .agente.minimizar import enmascarar_descripcion, texto_libre
         enc = lectura.get("encabezado") or {}
-        out.update(encabezado=enc if completa else {k: texto_libre(x, 160) for k, x in enc.items()},
+        descripcion = lectura.get("descripcion") if isinstance(lectura.get("descripcion"), str) else ""
+        out.update(descripcion=(descripcion if completa else enmascarar_descripcion(descripcion)) or None,
+                   datos_personales=bool(lectura.get("datos_personales")), aviso=lectura.get("aviso"),
+                   encabezado=enc if completa else {k: texto_libre(x, 160) for k, x in enc.items()},
                    filas_visibles=lectura.get("filas_visibles"), ultima_fila=lectura.get("ultima_fila"))
         for f in lectura.get("filas") or []:
             if completa:
@@ -1145,8 +1193,11 @@ def simular(db: Database, cfg: Any, quien: Any, doc: dict, pedidas: list[int] | 
             capturado_por: int | None = None) -> dict:
     """La vista previa fiel de cargar las filas (`importar.simular_registros`, sin escribir nada): por fila `{n,
     estado, persona_id, llenaria, distintos, motivo}` y cuántas hay de cada estado. Anota las lecturas de las fichas
-    que encontró (`acceso.registrar_lecturas`: quien coteja las ve)."""
+    que encontró (`acceso.registrar_lecturas`: quien coteja las ve). Una foto leída sin ninguna fila: 422 `sin_filas`
+    (`FOTO_SIN_FILAS`)."""
     lectura = _lectura_editable(cfg, doc)
+    if not lectura.get("filas"):
+        raise ErrorPlanilla(422, "sin_filas", FOTO_SIN_FILAS)
     van, fuera = _filas_pedidas(lectura, doc, pedidas)
     registros, sin_nombre = _registros(van, lectura, None)
     res = imp.simular_registros(db, registros, quien=quien, capturado_por=capturado_por) if registros else {}
@@ -1189,12 +1240,15 @@ def cargar(db: Database, cfg: Any, quien: Any, doc: dict, pedidas: list[int] | N
     declaradas). Devuelve `{importacion_id, resumen, filas: {n: {persona_id, estado, motivo}}}`. Las filas cargadas
     pierden sus datos en la lectura (queda número, estado y ficha); cuando no queda ninguna pendiente, se borran la foto
     y lo leído y la planilla queda «cargada». Sin el planillero, el «capturado por» es quien subió la foto si es
-    planillero (una foto subida antes de que las planillas por foto quedaran solo para A y K)."""
+    planillero (una foto subida antes de que las planillas por foto quedaran solo para A y K). Una foto leída sin
+    ninguna fila: 422 `sin_filas` (`FOTO_SIN_FILAS`), sin tocar nada."""
     doc = _tomar(db, doc)
     try:
         lectura = lectura_de(cfg, doc)
         if lectura is None:
             raise ErrorPlanilla(409, "no_leida")
+        if not lectura.get("filas"):
+            raise ErrorPlanilla(422, "sin_filas", FOTO_SIN_FILAS)
         van, fuera = _filas_pedidas(lectura, doc, pedidas)
         registros, sin_nombre = _registros(van, lectura, folio)
         if not registros:

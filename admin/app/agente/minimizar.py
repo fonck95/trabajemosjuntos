@@ -157,6 +157,44 @@ def texto_libre(v: Any, n: int = TEXTO_MAX) -> Any:
     return t[:n] + "…" if len(t) > n else t
 
 
+# La descripción de una foto de la bandeja (`lector_planillas.descripcion_de`), como la recibe el modelo de una
+# conversación (`planillas.detalle` con `enmascarada=1`): más estricta que `texto_libre`, porque la escribe otro modelo
+# mirando una imagen que puede traer documentos, listas o carteles. Cualquier número de 5 o más dígitos, también escrito
+# por grupos separados por un espacio, un punto o un guion («1.234.567», «310 123 4567», «90-000-101»), queda en «…» y
+# sus 3 últimos dígitos; de un correo quedan su primer carácter y el dominio («a…@dominio.com»). Las fechas válidas
+# (02-11-2026, 2026.11.02) quedan como están, como en `texto_libre` (el lector las pide como DD/MM/AAAA, que no se
+# toca: la barra no une grupos).
+DESCRIPCION_DIGITOS_MIN = 5
+DESCRIPCION_MASCARA = "…"
+_DESCRIPCION_NUMEROS = re.compile(r"(?<!\d)\d+(?:[ \t   .\-‐-―]\d+)*")
+
+
+def _tapar_digitos(m: re.Match) -> str:
+    digitos = re.sub(r"\D", "", m.group(0))
+    return f"{DESCRIPCION_MASCARA}{digitos[-3:]}" if len(digitos) >= DESCRIPCION_DIGITOS_MIN else m.group(0)
+
+
+def _tapar_correo(m: re.Match) -> str:
+    usuario, dominio = m.group(0).split("@", 1)
+    return f"{usuario[:1]}{DESCRIPCION_MASCARA}@{dominio}"
+
+
+def enmascarar_descripcion(v: Any) -> str:
+    """La descripción de una foto como la puede recibir el modelo de una conversación (ver arriba): sin números de 5 o
+    más dígitos (quedan «…» y sus 3 últimos) ni correos enteros («a…@dominio.com»), con las fechas como están. Los
+    saltos de línea y lo demás no cambian. «» si no es un texto."""
+    if not isinstance(v, str):
+        return ""
+    t = _CORREOS.sub(_tapar_correo, v)  # primero los correos: los dígitos de uno no dejan su comienzo
+    partes, desde = [], 0
+    for f in _FECHAS.finditer(t):
+        if _es_fecha(f):
+            partes += [_DESCRIPCION_NUMEROS.sub(_tapar_digitos, t[desde:f.start()]), f.group(0)]
+            desde = f.end()
+    partes.append(_DESCRIPCION_NUMEROS.sub(_tapar_digitos, t[desde:]))
+    return "".join(partes)
+
+
 def _abordaje(v: Any) -> Any:
     if isinstance(v, dict):
         return {k: v[k] for k in CLAVES_ABORDAJE if k in v}

@@ -109,11 +109,19 @@ def fila(n: int, *, firma=None, dudosos=(), ilegibles=(), **valores) -> dict:
 
 
 def lectura_json(filas: list[dict], *, visibles: int | None = None, tipo: str = "planilla_campo",
-                 imagen_visible: bool = True, encabezado: dict | None = None, columnas: list[str] | None = None) -> str:
-    return json.dumps({"imagen_visible": imagen_visible, "tipo_formato": tipo,
-                       "filas_visibles": len(filas) if visibles is None else visibles,
-                       "encabezado": encabezado or {"planillero": None, "fecha": "02/11/2026", "lugar": None},
-                       "columnas": columnas or COLUMNAS, "filas": filas}, ensure_ascii=False)
+                 imagen_visible: bool = True, encabezado: dict | None = None, columnas: list[str] | None = None,
+                 descripcion: str | None = None, datos_personales: bool | None = None) -> str:
+    """La respuesta del lector, con las claves en el orden que se le piden. Sin `descripcion` ni `datos_personales`,
+    como respondería un lector de antes (sin esas claves): así las pruebas de las filas siguen igual."""
+    obj: dict[str, Any] = {"imagen_visible": imagen_visible, "tipo_formato": tipo}
+    if descripcion is not None:
+        obj["descripcion"] = descripcion
+    if datos_personales is not None:
+        obj["datos_personales"] = datos_personales
+    obj.update({"filas_visibles": len(filas) if visibles is None else visibles,
+                "encabezado": encabezado or {"planillero": None, "fecha": "02/11/2026", "lugar": None},
+                "columnas": columnas or COLUMNAS, "filas": filas})
+    return json.dumps(obj, ensure_ascii=False)
 
 
 class ProveedorFalso:
@@ -157,7 +165,7 @@ class ProveedorFalso:
 # ───────────────────────────── La API ─────────────────────────────
 
 def encender(monkeypatch, app, proveedor: ProveedorFalso, *, roles=("admin", "coordinador", "planillero"),
-             horas: int = 24, otros: bool = False, de_fondo: bool = False) -> list:
+             horas: int = 24, de_fondo: bool = False) -> list:
     """Deja la bandeja lista en `app`: el proveedor falso para leer, los roles que suben fotos y la retención. Sin
     `de_fondo`, la lectura no se encola sola (la prueba la corre con `leer`): devuelve la lista de las encoladas."""
     from app import planillas as pl
@@ -165,7 +173,7 @@ def encender(monkeypatch, app, proveedor: ProveedorFalso, *, roles=("admin", "co
     monkeypatch.setattr(proveedores, "clave_para_nueva", lambda cfg, db: proveedor.clave)
     monkeypatch.setattr(proveedores, "para_nueva", lambda app_, cfg, db: proveedor)
     app.state.db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente_planillas": {
-        "roles": list(roles), "retencion_horas": horas, "otros_formatos": otros}}}, upsert=True)
+        "roles": list(roles), "retencion_horas": horas}}}, upsert=True)
     encoladas: list = []
     if not de_fondo:
         monkeypatch.setattr(pl, "programar", lambda app_, pid, desde_fila=None: encoladas.append((pid, desde_fila)))
