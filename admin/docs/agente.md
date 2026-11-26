@@ -3,9 +3,10 @@
 El panel tiene un **asistente**: un agente de IA que, una vez se ingresa, aparece en un botón flotante. Se le escribe
 en español y responde con datos de la base: busca personas, resume los indicadores, hace [análisis
 avanzados](#análisis-avanzados) con su gráfico en el chat (y un diagnóstico de qué priorizar), revisa los pendientes
-y las colas de [calidad de datos](#registros-de-cada-persona-y-calidad-de-datos), lee las [planillas físicas que se
-fotografían](#planillas-físicas-por-foto) y las coteja con la base, prepara reuniones, muestra cosas en el mapa, abre
-vistas y fichas, presenta y explica la propuesta 2028–2031 (en la vista **Presentación** o en un proyector) y propone
+y las colas de [calidad de datos](#registros-de-cada-persona-y-calidad-de-datos), ve lo que muestran las [fotos que
+se le adjuntan](#planillas-físicas-por-foto) (cualquier imagen) y, si son planillas físicas u otras listas de
+personas, lee sus filas y las coteja con la base, prepara reuniones, muestra cosas en el mapa, abre vistas y fichas,
+presenta y explica la propuesta 2028–2031 (en la vista **Presentación** o en un proyector) y propone
 cambios (una nota, un acercamiento, una ficha nueva, la carga de una planilla fotografiada, la unión de dos fichas
 duplicadas…) que la persona aprueba antes de que se guarden. Un agente externo (Claude Desktop u otro cliente MCP)
 también puede trabajar con los datos del panel con una [clave de datos](#agentes-por-mcp-con-datos): lo que propone
@@ -27,9 +28,10 @@ Tres ideas lo resumen:
   discapacidad, víctima), los [datos políticos](#datos-políticos) solo como el panel se los muestra a cada rol y si el
   administrador no los apaga, y nada de quien no autorizó el tratamiento (ver
   [Privacidad](#privacidad-y-protección-de-datos-ley-1581-de-2012)). Con una
-  excepción documentada: la foto de una planilla física la ve entera el modelo, pero solo en una llamada de lectura
-  aparte, sin herramientas ni conversación; al asistente le llega lo leído, enmascarado ([La excepción de las fotos de
-  planillas](#la-excepción-de-las-fotos-de-planillas)).
+  excepción documentada: la foto que se le adjunta (una planilla física o cualquier otra imagen) la ve entera un
+  modelo, pero solo en una llamada de lectura aparte, sin herramientas ni conversación; al asistente le llega lo leído
+  (una descripción de la imagen y, si es una hoja que lista personas, sus filas), enmascarado, nunca la imagen ([La
+  excepción de las fotos de planillas](#la-excepción-de-las-fotos-de-planillas)).
 
 ## Qué puede hacer
 
@@ -38,7 +40,7 @@ en **Ajustes → Asistente**.
 
 | Rol | Qué le puede pedir |
 |---|---|
-| Administrador y coordinador | Indicadores del tablero (también de una zona o con filtros), [análisis avanzados](#análisis-avanzados) con su gráfico (tablas, series, embudo, cobertura por puesto y ritmo a una meta, barrios desatendidos, el equipo, horas que más contestan, intentos, calidad de captura, cambios entre periodos, efecto de las reuniones) y el **diagnóstico** de qué priorizar, buscar y ver habitantes, los [datos políticos](#datos-políticos) que ven en el panel (tipo de persona, «Liderado por», listas, la lista de líderes con sus conteos; filtros y análisis por tipo, líder o lista), si el administrador no los apaga, fichas parecidas, el historial de acercamientos y de autorizaciones de una persona, reuniones (listar, ver, crear, editar, agregar y quitar asistentes), pendientes y colas de calidad (coincidencias, conflictos de cédula, situaciones, solicitudes de los titulares sin decir de quién son, importaciones, lugares escritos sin reconocer), los puestos con el censo, su trabajo y el de cada usuario, el equipo (lo que hizo cada usuario, alertas, asignación y el avance de cada zona, sin sesiones ni IP), barrios y veredas, catálogos, el mapa, la presentación de la propuesta y cualquier vista. Lee las [planillas físicas por foto](#planillas-físicas-por-foto) y las coteja con la base. Propone crear y editar fichas, notas, acercamientos, autorizaciones, ubicación y teléfonos (y su estado), cargar planillas fotografiadas, unir o separar fichas duplicadas, resolver conflictos de cédula, reportar y confirmar situaciones, registrar y actualizar solicitudes de los titulares, reportar duplicados, marcar datos no disponibles, pedir la actualización de una ficha, anular acercamientos, agregar alias a un barrio o vereda, marcar o quitar el tipo de persona y asignar un líder. Con Mnemo, el administrador (y el coordinador, si se le permite): documentos, calendario, formularios y memoria |
+| Administrador y coordinador | Indicadores del tablero (también de una zona o con filtros), [análisis avanzados](#análisis-avanzados) con su gráfico (tablas, series, embudo, cobertura por puesto y ritmo a una meta, barrios desatendidos, el equipo, horas que más contestan, intentos, calidad de captura, cambios entre periodos, efecto de las reuniones) y el **diagnóstico** de qué priorizar, buscar y ver habitantes, los [datos políticos](#datos-políticos) que ven en el panel (tipo de persona, «Liderado por», listas, la lista de líderes con sus conteos; filtros y análisis por tipo, líder o lista), si el administrador no los apaga, fichas parecidas, el historial de acercamientos y de autorizaciones de una persona, reuniones (listar, ver, crear, editar, agregar y quitar asistentes), pendientes y colas de calidad (coincidencias, conflictos de cédula, situaciones, solicitudes de los titulares sin decir de quién son, importaciones, lugares escritos sin reconocer), los puestos con el censo, su trabajo y el de cada usuario, el equipo (lo que hizo cada usuario, alertas, asignación y el avance de cada zona, sin sesiones ni IP), barrios y veredas, catálogos, el mapa, la presentación de la propuesta y cualquier vista. Ve lo que muestran las [fotos que se le adjuntan](#planillas-físicas-por-foto), cualquier imagen (la describe si se le pide), y de las planillas físicas y otras listas de personas lee las filas y las coteja con la base. Propone crear y editar fichas, notas, acercamientos, autorizaciones, ubicación y teléfonos (y su estado), cargar planillas fotografiadas, unir o separar fichas duplicadas, resolver conflictos de cédula, reportar y confirmar situaciones, registrar y actualizar solicitudes de los titulares, reportar duplicados, marcar datos no disponibles, pedir la actualización de una ficha, anular acercamientos, agregar alias a un barrio o vereda, marcar o quitar el tipo de persona y asignar un líder. Con Mnemo, el administrador (y el coordinador, si se le permite): documentos, calendario, formularios y memoria |
 | Planillero | Buscar y ver habitantes (en su zona y con su presupuesto diario), parecidas, el historial de acercamientos de una persona, sus reuniones y las abiertas al equipo, su trabajo y sus pendientes, los puestos, barrios y veredas, catálogos, la presentación de la propuesta y sus vistas. Propone crear y editar fichas, notas, acercamientos (visita o reunión), autorizaciones, ubicación, teléfonos (y su estado), reuniones (y editar las suyas), asistentes (agregar y quitar), reportar una situación o un duplicado, registrar una solicitud del titular, marcar un dato como no disponible, marcar la ficha como atendida y anular sus acercamientos de las últimas 24 horas. Con los [datos políticos](#datos-políticos) encendidos, ve el tipo y el «Liderado por» en la ficha de las personas de su zona o que registró y propone marcar un tipo o asignar un líder (solo suma: nunca quita ni filtra). Nunca las planillas por foto (son de administrador y coordinador). Sin tablero, análisis, mapa ni equipo |
 | Consultor | Su cola de llamadas y su trabajo, buscar por nombre (3 letras o más) o por un número completo de 10 dígitos, ver las fichas de las personas que tiene en curso, su historial de acercamientos, los puestos (código y nombre) y la presentación de la propuesta. Propone acercamientos (llamada, WhatsApp, SMS…), autorizaciones, teléfonos y su estado (equivocado, WhatsApp, no contactar…), reportar una situación, registrar una solicitud del titular, marcar como no disponibles la cédula, el puesto o la mesa y anular sus acercamientos de las últimas 24 horas. Nada político |
 
@@ -104,15 +106,15 @@ persona y calidad de datos](#registros-de-cada-persona-y-calidad-de-datos)):
 | `lugares_sin_reconocer` | lectura | A, K | Lugares escritos sin barrio o vereda reconocido, con cuántas personas y hasta 3 lugares parecidos |
 | `agregar_alias_lugar` | escritura | A, K | Un alias para un barrio o vereda (`POST /api/lugares/{lid}/alias`): reubica solo a las personas con ese lugar escrito. Plazo de 160 s |
 
-Las [planillas físicas por foto](#planillas-físicas-por-foto) (`planillas.py`) y los [análisis
+Las [fotos adjuntas y las planillas físicas por foto](#planillas-físicas-por-foto) (`planillas.py`) y los [análisis
 avanzados](#análisis-avanzados) (`analisis.py`):
 
 | Herramienta | Tipo | Quién | Qué hace |
 |---|---|---|---|
-| `planillas` | lectura | A, K (`importar`, con su rol en `agente_planillas.roles`) | La bandeja de fotos de planillas: id, estado (leyendo, leida, fallida, rechazada, cargada), quién la subió y cuándo, filas, dudosas, pendientes y el error. Sin datos de personas. Ven toda la bandeja. Como mucho 40 |
-| `leer_planilla` | lectura | A, K (`importar`, con su rol) | Lo que el panel leyó de 1 a 4 fotos, **enmascarado**: el encabezado y cada fila con la cédula y los teléfonos con sus últimos dígitos (ninguno de un menor), la edad en vez de la fecha de nacimiento, si hay observaciones (no su texto), lo dudoso y lo ilegible; de quien dijo «No autoriza», solo nombre y barrio. Espera hasta ~55 s a las que se están leyendo. Plazo de 80 s |
-| `cotejar_planilla` | lectura | A, K (`importar`) | La vista previa fiel del importador, sin escribir: por fila, qué pasaría (ficha nueva, completa una que existe, igual, revoca su autorización, conflicto de cédula, por revisar, no autorizó, otra elección, sin nombre, ya cargada, no se carga), la ficha encontrada (minimizada) y lo que llenaría o es distinto (enmascarado). De las filas en «no», ninguna ficha. Plazo de 120 s |
-| `cargar_planilla` | escritura | A, K (`importar`) | La carga con el importador real, como una planilla de campo: hasta 30 personas por tarjeta, cada una en una línea con sus valores enteros; `folio`, `capturado_por`, `correcciones` (nunca la autorización, el medio, los canales, «mayor de 18» ni las observaciones), `reemplazar` (sexo, edad, dirección o puesto; nunca la cédula) y `reunion_id`. Las filas en «no» van solas en otra tarjeta. Plazo de 170 s |
+| `planillas` | lectura | A, K (`importar`, con su rol en `agente_planillas.roles`) | La bandeja de fotos (planillas o cualquier otra imagen): id, estado (leyendo, leida, fallida, rechazada, cargada), quién la subió y cuándo, filas (0 si la foto no lista personas), dudosas, pendientes, si tiene descripción, si muestra datos de personas, el aviso (`sin_filas`) y el error. Sin datos de personas (nunca el texto de la descripción). Ven toda la bandeja. Como mucho 40 |
+| `leer_planilla` | lectura | A, K (`importar`, con su rol) | Lo que el panel vio en 1 a 4 fotos, sean planillas o cualquier otra imagen, **enmascarado**: la descripción de la imagen (sin números de 5 o más dígitos ni correos enteros), si muestra datos de personas (`datos_personales`), el aviso con su explicación (`sin_filas`: una hoja de la que no se leyó ninguna fila) y, si es una hoja que lista personas, el encabezado y cada fila con la cédula y los teléfonos con sus últimos dígitos (ninguno de un menor), la edad en vez de la fecha de nacimiento, si hay observaciones (no su texto), lo dudoso y lo ilegible; de quien dijo «No autoriza», solo nombre y barrio. Espera hasta ~55 s a las que se están leyendo. Su marca en el chat dice «Leyendo las fotos» y su resumen, por ejemplo, «Fotos: 1 leída · 4 filas». Plazo de 80 s |
+| `cotejar_planilla` | lectura | A, K (`importar`) | La vista previa fiel del importador, sin escribir: por fila, qué pasaría (ficha nueva, completa una que existe, igual, revoca su autorización, conflicto de cédula, por revisar, no autorizó, otra elección, sin nombre, ya cargada, no se carga), la ficha encontrada (minimizada) y lo que llenaría o es distinto (enmascarado). De las filas en «no», ninguna ficha. Una foto sin filas no se coteja (422 `sin_filas`). Plazo de 120 s |
+| `cargar_planilla` | escritura | A, K (`importar`) | La carga con el importador real, como una planilla de campo: hasta 30 personas por tarjeta, cada una en una línea con sus valores enteros; `folio`, `capturado_por`, `correcciones` (nunca la autorización, el medio, los canales, «mayor de 18» ni las observaciones), `reemplazar` (sexo, edad, dirección o puesto; nunca la cédula) y `reunion_id`. Las filas en «no» van solas en otra tarjeta. Una foto sin filas no se carga (`sin_filas`, sin tarjeta). Plazo de 170 s |
 | `analizar` | lectura | A, K (`analitica.ver`) | Un análisis agregado (tabla, serie, embudo, cobertura, ritmo, brechas, equipo, calidad, anomalías, cohortes, franjas, intentos, captura, comparar, efecto de las reuniones) con su gráfico en el chat; con los datos políticos, también por tipo, líder o lista. Nunca personas (salvo los líderes con 10 o más personas que nombra una tabla por `lider`, que van en `Resultado.personas`; por MCP, solo con `lectura`): las cifras pequeñas salen «<5» |
 | `diagnostico` | lectura | A, K (`analitica.ver`) | Los hallazgos de la base ordenados por urgencia, cada uno con su evidencia, por qué importa, la acción y, si se puede, el enlace a Habitantes con los filtros exactos. Plazo de 120 s |
 
@@ -206,15 +208,18 @@ otro campo de texto. Sin esas herramientas, dicen que no le llegan.
   consultor, su trabajo, la ficha abierta, su historial de acercamientos y, al consultor, marcar un número
   equivocado). Son fijas por rol: con los datos políticos apagados, la de los líderes se ofrece igual y el asistente
   responde que no están habilitados.
-- **Fotos de planillas.** El administrador y los coordinadores con su rol en **Ajustes → Planillas físicas por foto**
-  (nunca planilleros ni consultores), y con un compromiso de confidencialidad vigente que lo permita (la versión
-  2026-11-v2), ven una cámara a la izquierda del cuadro de escribir: **Tomar foto** o **Elegir de la galería**, como
-  mucho 4 por mensaje, con el aviso fijo «Solo planillas o listas. No fotografíe cédulas. Tape columnas de salud,
+- **Fotos.** El administrador y los coordinadores con su rol en **Ajustes → Planillas físicas por foto** (nunca
+  planilleros ni consultores), y con un compromiso de confidencialidad vigente que lo permita (la versión 2026-11-v2),
+  ven una cámara a la izquierda del cuadro de escribir («Adjuntar fotos»): **Tomar foto** o **Elegir de la galería**,
+  como mucho 4 por mensaje, con el aviso fijo «Solo planillas o listas. No fotografíe cédulas. Tape columnas de salud,
   etnia, víctima o políticas. Borre la foto del teléfono.». Si una subida se rechaza por el rol, los ajustes o el
   compromiso (`permiso`, `planillas_apagado`, `compromiso_fotos`), el panel del chat vuelve a leer su estado y la
   cámara se oculta. Cada foto se prepara en el navegador, se sube a la bandeja del panel y el panel la empieza a leer
-  de fondo mientras se escribe; el mensaje puede ir solo con fotos. El asistente revisa lo leído, pregunta lo dudoso, coteja y
-  propone la carga en una tarjeta (ver [Planillas físicas por foto](#planillas-físicas-por-foto)).
+  de fondo mientras se escribe; el mensaje puede ir solo con fotos. El panel lee **cualquier imagen**: siempre la
+  describe y, si es una hoja que lista personas (la planilla de campo, una lista de asistencia u otra), transcribe sus
+  filas. El asistente responde con lo que el panel vio (la describe si se le pide; nunca dice que no ve las fotos) y,
+  si tiene filas, pregunta lo dudoso, las coteja con la base y propone la carga en una tarjeta (ver [Planillas físicas
+  por foto](#planillas-físicas-por-foto)).
 - **Gráficos.** Cuando un análisis trae un gráfico, se dibuja debajo de la marca de esa herramienta (barras, columnas,
   una barra apilada o una serie en el tiempo), con su título, su unidad y su nota (por ejemplo, qué grupos se ocultaron
   por ser pocos). Al volver a abrir la conversación se ve en el mismo lugar.
@@ -508,11 +513,64 @@ respuesta completa (o el plan) llega después, como siempre.
 
 Cuando una planilla de campo no se pudo llenar en el panel (sin señal, sin celular, en una vereda), el planillero
 entrega el papel y el administrador o un coordinador le toma una foto y la sube a la **bandeja de planillas** del
-panel (`app/planillas.py`, rutas en `app/api/planillas.py`). El panel la lee de fondo con una llamada aparte al
-modelo, guarda la foto y lo leído cifrados y, con una persona del equipo, lo coteja con la base y lo carga como una
-planilla de campo, con la foto como evidencia. El chat y la vista **Importar y exportar → Planillas por foto** usan
-las mismas rutas, con la sesión de quien los usa: la vista sirve para revisar muchas hojas con la foto al lado; el
-chat, para hacerlo conversando.
+panel (`app/planillas.py`, rutas en `app/api/planillas.py`). El panel la lee de fondo con una llamada aparte a un
+modelo que ve imágenes, guarda la foto y lo leído cifrados y, con una persona del equipo, lo coteja con la base y lo
+carga como una planilla de campo, con la foto como evidencia. El chat y la vista **Importar y exportar → Planillas
+por foto** usan las mismas rutas, con la sesión de quien los usa: la vista sirve para revisar muchas hojas con la foto
+al lado; el chat, para hacerlo conversando.
+
+**Cualquier foto.** La misma lectura sirve para cualquier imagen que se adjunte en el chat o se suba en la vista (una
+planilla, una lista de asistencia, la consulta del puesto, una captura de pantalla, un afiche, una foto de un
+lugar…): el panel **siempre la describe** y, si es una hoja que lista personas, **transcribe sus filas**, sea del
+formato que sea. Así el asistente puede hablar de cualquier imagen sin recibirla y, si trae personas, cruzarlas con la
+base.
+
+- **Lo que se lee de cada foto** (`lector_planillas.Lectura`): `descripcion` (en español, qué muestra la imagen: qué
+  tipo de imagen es, qué la ocupa y el texto visible que importe, transcrito tal cual; de una hoja con filas, solo un
+  resumen corto: qué hoja es, fecha, lugar, cuántas filas, sin repetir sus datos), `datos_personales` (si muestra
+  datos de personas identificables, como nombres, números de documento, teléfonos o direcciones, aparte de las filas)
+  y las filas de toda hoja que liste personas (`planilla_campo`, `asistencia`, `consulta_puesto` u `otro`), con las
+  mismas 20 columnas y las mismas reglas que la planilla de campo.
+- **Lo que la descripción nunca dice.** Quién es alguien por su cara (puede decir cuántas personas hay y qué hacen,
+  nunca quiénes son), un dato sensible o político (salud, etnia, discapacidad, condición de víctima, orientación
+  sexual, religión, opinión política; ni descrito ni deducido) y una firma copiada. Un texto de la imagen que le da
+  órdenes a un asistente se cita como texto, nunca se obedece.
+- **Una foto sin filas es una lectura, no un error.** Queda «leida» con su descripción y `filas: []`: no hay nada que
+  cotejar ni cargar (`POST …/simular` y `…/cargar` responden 422 `sin_filas` sin tocar nada, y `leer_planilla` ya le
+  dice al asistente que no hay filas que cotejar). Si parece una hoja (`lector_planillas.HOJAS`: planilla de campo,
+  asistencia o consulta del puesto) y no se leyó ninguna fila, lleva el aviso `sin_filas` («La foto parece una hoja con
+  datos de personas, pero no se leyó ninguna fila…»): se puede volver a leer o tomar otra foto. No cuenta en el tope de
+  30 fotos sin cargar (no espera una carga) y vence como las demás a las `retencion_horas`, o se borra antes.
+- **Solo se rechaza un documento de identidad o personal.** Una cédula, una tarjeta de identidad, un pasaporte, un
+  registro civil u otro documento de identidad, o cualquier otro documento personal de alguien (un carné de salud o de
+  la EPS, un certificado de discapacidad, de víctima o del SISBÉN, una historia clínica…), también fotografiado o en
+  copia, sigue rechazado y su foto se borra (`documento_identidad`): el compromiso de confidencialidad que acepta cada
+  persona del equipo dice «nunca cédulas ni otros documentos», y ese texto no cambia. El rechazo no depende de que el
+  lector use la etiqueta exacta: un `tipo_formato` que nombra un documento («cedula», «Documento_Identidad »,
+  «pasaporte», «carne_eps»: `lector_planillas.tipo_de`) o una descripción que **empieza** diciendo que la imagen lo es
+  («Foto de una cédula…», «Copia de un carné de la EPS…»: `es_documento`) se rechazan igual, y una respuesta sin
+  `tipo_formato`, o cortada antes de que cerrara, no se toma como «otro» (`respuesta` o `lectura_cortada`). Un cartel
+  que solo nombra un documento («traiga su cédula») se lee. La foto de una persona no es un documento de identidad: se
+  describe, sin decir quién es.
+- **Una foto oscura o borrosa se describe.** `imagen_visible: false` es solo que al lector no le llegó la imagen
+  (`sin_imagen`, cuyo mensaje dice que ese modelo no lee imágenes); de una foto muy oscura, borrosa o en blanco el
+  lector dice eso en la descripción («no se distingue su contenido») y la foto queda «leida».
+- **Leer otros formatos ya no es un ajuste.** `agente_planillas.otros_formatos`, que apagado rechazaba y borraba toda
+  foto que no fuera la planilla de campo del panel, se retiró: un valor guardado se ignora y un `PUT /api/ajustes` que
+  lo traiga (un formulario de antes) lo descarta sin error. El formato que se elige al subir (`planilla_campo`,
+  `asistencia` u `otro`) se acepta siempre y es solo una pista para el lector, que clasifica la imagen por su cuenta
+  (el chat sube sin elegirlo). Una foto que se rechazó con la regla retirada (código `formato`) no cuenta como «la
+  misma foto» al subirla otra vez: se guarda y se lee de nuevo (`planillas.RECHAZOS_VIGENTES`; una cédula rechazada sí
+  sigue siendo la misma y no vuelve al modelo), y la bandeja y el asistente explican ese rechazo viejo con un mensaje de
+  ahora (`planillas.error_de`), no con el ajuste que ya no está.
+- **Lo que llega al asistente** es lo mismo que a la vista, enmascarado: la descripción sin números de 5 o más dígitos
+  ni correos enteros (`minimizar.enmascarar_descripcion`; ver **En el chat**, abajo) y las filas como siempre. La
+  imagen nunca le llega.
+- **La supresión también la encuentra.** Los números de la descripción dejan sus huellas de cédula (HMAC, como las
+  filas: `planillas._huellas_descripcion`, en la «fila» 0, `N_DESCRIPCION`): si la foto de un volante o de una captura
+  muestra la cédula de alguien que después pide la supresión, la foto se borra y la descripción deja de mostrarse, como
+  una fila suya. Una descripción con la cédula de alguien ya suprimido no se guarda (queda vacía). Un nombre o un
+  teléfono sueltos en la descripción no dejan huella (las de nombre con teléfono son de una fila).
 
 **Quién.**
 
@@ -554,10 +612,12 @@ vigente no lo permite (`acceso.compromiso_permite_fotos`; por ejemplo, la 2026-1
 1. **Subir** (`POST /api/planillas/fotos`): el navegador rehace la foto (derecha, reducida, JPEG nuevo sin EXIF ni
    GPS) y la sube cruda; el servidor la valida, le quita los metadatos, la guarda cifrada y la deja «leyendo».
 2. **Leer de fondo** (`planillas.leer_foto` con `agente/lector_planillas.py`): una llamada aparte al modelo, sin
-   herramientas ni historial, transcribe la hoja a JSON. Corre aunque el navegador se vaya (se bloquea la pantalla, se
-   pierde la señal). Lo leído se sanea, se aplican las reglas de privacidad por fila y se guarda cifrado («leida»).
-3. **Revisar**: el asistente lo lee enmascarado (`leer_planilla`) y pregunta lo dudoso; en la vista, A y K ven la foto
-   al lado de la grilla con los valores completos, corrigen celdas (`PATCH`) y descartan filas.
+   herramientas ni historial, describe la imagen y, si es una hoja que lista personas, transcribe sus filas, todo en
+   un JSON. Corre aunque el navegador se vaya (se bloquea la pantalla, se pierde la señal). Lo leído se sanea, se
+   aplican las reglas de privacidad por fila y se guarda cifrado («leida», también sin ninguna fila).
+3. **Revisar**: el asistente lo lee enmascarado (`leer_planilla`), responde sobre la imagen y pregunta lo dudoso; en
+   la vista, A y K ven la foto al lado de la descripción y de la grilla con los valores completos, corrigen celdas
+   (`PATCH`) y descartan filas. Una foto sin filas se queda aquí: no hay nada que cotejar ni cargar.
 4. **Cotejar** (`POST …/simular`): la vista previa fiel del importador, fila por fila, sin escribir nada.
 5. **Cargar** (`POST …/cargar`): el importador real, como una planilla de campo (fuente «planilla», archivo «Foto de
    planilla física», el SHA-256 de la foto como evidencia y el folio del papel). Al cargar la hoja entera, la foto se
@@ -574,17 +634,39 @@ vigente no lo permite (`acceso.compromiso_permite_fotos`; por ejemplo, la 2026-1
   envía; si se envía mientras alguna todavía sube, sale sola cuando termina. **Reintentar** y **Nueva conversación**
   conservan las fotos, y la conversación muestra el chip «n fotos adjuntas» (al volver a abrirla, solo el chip: las
   imágenes nunca vuelven al navegador).
-- **El modelo nunca recibe la imagen.** Después del contexto del panel le llega un bloque `<fotos_adjuntas>` con cada
-  id y en qué va (leyendo, leída con cuántas filas y dudas, rechazada con su motivo, ya cargada…), leído al empezar el
-  turno, y la indicación de usar `leer_planilla`. Un mensaje con solo fotos le llega como «(Envié fotos sin texto.)»
-  (nunca un bloque de texto vacío, que la API rechaza) y se guarda con el texto vacío; la conversación que empieza así
-  se titula «Fotos de planillas». En una conversación anterior, sin estas herramientas, el bloque dice que se revisen
-  en la vista o en una conversación nueva.
+- **El modelo nunca recibe la imagen.** Después del contexto del panel le llega un bloque `<fotos_adjuntas>` que le
+  dice que la foto puede ser cualquier imagen, no solo una planilla, con cada id y en qué va (se está leyendo; leída
+  con descripción, con cuántas filas, dudas y por cargar; leída sin filas, de una hoja que no se pudo leer o de una
+  imagen que no lista personas; si muestra datos de personas; rechazada o con la lectura fallida, con su motivo; una
+  planilla ya cargada…), leído al empezar el turno, y la indicación de usar `leer_planilla` con cada una y de
+  responder con lo que el panel vio en ella, **nunca que no puede ver las fotos**. Un mensaje con solo fotos le llega
+  como «(Envié fotos sin texto.)» (nunca un bloque de texto vacío, que la API rechaza) y se guarda con el texto vacío;
+  la conversación que empieza así se titula «Fotos» (`bucle.TITULO_FOTOS`). En una conversación anterior, sin estas
+  herramientas, el bloque le dice que no sabe qué muestran y que no lo adivine: que se revisen en una conversación
+  nueva o en la vista.
+- **Lo que el panel vio.** `leer_planilla` le da por foto su estado, la descripción enmascarada, `datos_personales`,
+  el aviso con su explicación (`sin_filas`) y, si las hay, las filas enmascaradas, con lo que sigue según el estado.
+  La descripción pasa por `minimizar.enmascarar_descripcion` (también en la herramienta, aunque la API ya la mande
+  así): cualquier número de 5 o más dígitos, también escrito por grupos, queda en «…» y sus 3 últimos dígitos
+  («1.234.567», «310 123 4567», «310 - 123 - 4567», «1,234,567,890», «310/123/4567», «(310) 123-4567», «310 123» y
+  «4567» en la línea siguiente → «…567» o «…890»). Une los grupos con hasta 3 espacios, o con un punto, un guion (también
+  el signo menos, el de ancho completo o el bajo), una raya, un punto medio o una barra con hasta 3 espacios alrededor,
+  una coma pegada, un paréntesis o un salto de línea; dos números largos seguidos se tapan por partes («…567 / …543»).
+  De un correo quedan su primer carácter y el dominio («a…@dominio.com»); las fechas, los periodos y los saltos de
+  línea quedan como están. Un valor en pesos («$ 10.000») también se tapa, pero no cuenta como dato de alguien. Con eso el
+  asistente responde sobre la imagen (la describe si se lo piden) y, si tiene filas, ofrece cruzarlas con la base. Si
+  le preguntan, dice que ve las fotos a través de lo que el panel leyó de ellas; si la lectura falló, dice el motivo.
+  Nunca dice quién es alguien por su cara (ni lo adivina, aunque se lo pidan) ni completa un número o un correo
+  enmascarado. Lo dicen sus instrucciones, en la sección «Fotos adjuntas y planillas físicas» (`sistema.PLANILLAS`,
+  solo si la conversación tiene estas herramientas), y la descripción de `leer_planilla`. En el chat, la marca de la
+  herramienta dice «Leyendo las fotos» y su resumen cuenta las fotos por estado y las filas: «Fotos: 1 leída · 4 filas»
+  o «Fotos: 1 rechazada».
 - Antes de abrir el turno, el servidor comprueba que el rol sube fotos (403 `planillas_apagado`: solo A y K) y que
   cada foto es de quien escribe y sigue en la bandeja (422 `fotos`: una de otra persona responde igual que una que no
   existe). Nada se cuenta ni se reserva antes de eso.
-- El asistente sigue el flujo **leer → preguntar lo dudoso → cotejar → cargar**. Lo que la persona confirma con el papel
-  va en `correcciones` (nunca la autorización, el medio, los canales, «mayor de 18» ni las observaciones: el esquema no
+- Para cruzar con la base las filas de una foto, el asistente sigue el flujo **leer → preguntar lo dudoso → cotejar →
+  cargar** (una foto sin filas no se coteja ni se carga: `sin_filas`). Lo que la persona confirma con el papel va en
+  `correcciones` (nunca la autorización, el medio, los canales, «mayor de 18» ni las observaciones: el esquema no
   los admite). Carga primero las filas limpias (hasta 30 por tarjeta) y deja para el final, **en su propia tarjeta**,
   las filas en «no» (revocaria, no_autorizo, nueva_sin_autorizacion): mezclarlas da el error `separar`. Si alguna retira
   una autorización que ya se había dado, la tarjeta avisa que **esta conversación se borrará al cargarlas**, y se borra
@@ -607,24 +689,32 @@ vigente no lo permite (`acceso.compromiso_permite_fotos`; por ejemplo, la 2026-1
   reunión, sin quien quedó en «no» (clave `….as{persona}`). Al modelo le vuelve el número de importación, por fila el
   estado en pasado y la ficha (salvo las filas en «no»), el resumen en conteos, lo corregido y en qué quedó la planilla.
 - La conversación queda **marcada con datos** (`conversaciones.marcar_datos`) en cuanto recibe filas de una planilla
-  (muchas son de personas sin ficha, sin id que anotar): no se proyecta ante una sala y el turno deja de hablar con la
-  voz clonada.
+  (muchas son de personas sin ficha, sin id que anotar) o una foto que muestra datos de personas (`datos_personales`:
+  su descripción, aunque enmascarada, es de alguien sin id que anotar): no se proyecta ante una sala y el turno deja de
+  hablar con la voz clonada. Una foto sin datos de nadie (un paisaje, un afiche sin nombres ni teléfonos) no la marca.
 
 **En la vista Importar y exportar → Planillas por foto** (`web/js/vistas/importar.js`, `web/css/planillas.css`):
 
 - **Subir**: «Tomar foto» (la cámara trasera) o «Elegir fotos» (hasta 10 por vez; en el computador también se
   arrastran), con el mismo aviso fijo del chat y lo que pasa con la foto (va al modelo solo para leerla, se guarda
   cifrada y se borra al cargar la hoja o a las `retencion_horas`). Cada foto se prepara de a una, como en el chat, y se
-  sube con una nota opcional (y el formato, si `agente_planillas.otros_formatos` está encendido). Los topes del
-  servidor detienen el resto de la tanda con su mensaje.
-- **Bandeja**: cada foto con su estado (Leyendo… n filas, Por revisar, Carga parcial, Falló la lectura con su motivo,
-  Rechazada, Cargada · importación #N), filas, dudas, vencimiento, nota y quién la subió; filtros (todas, por revisar,
-  leyendo, con error, cargadas). Mientras alguna se lee, la bandeja se consulta sola cada 3 s (no con la pestaña
-  oculta). «Volver a leer» en una que falló; borrar con confirmación.
+  sube con una nota opcional y «Qué es (una pista para leerla)»: planilla de campo del panel, lista de asistencia u
+  otra hoja u otra imagen (siempre: el lector la clasifica igual). Los topes del servidor detienen el resto de la
+  tanda con su mensaje.
+- **Bandeja**: cada foto con su estado (Leyendo… n filas, Por revisar, Carga parcial, Foto descrita, Hoja sin filas
+  leídas, Falló la lectura con su motivo, Rechazada, Cargada · importación #N), filas (o «sin filas de personas», «con
+  su descripción», «muestra datos de personas»), dudas, vencimiento, nota y quién la subió; nunca el texto de la
+  descripción. Filtros: todas, por revisar (las leídas con filas: una foto sin filas se ve en «todas»), leyendo, con
+  error, cargadas. Mientras alguna se lee, la bandeja se consulta sola cada 3 s (no con la pestaña oculta). «Volver a
+  leer» en una que falló o en una hoja sin filas leídas; borrar con confirmación.
 - **Revisar** (A y K): al abrir una, la dirección queda `/importar?planilla=<id>` (sirve de enlace directo, también el
   que da el asistente). La foto se pide con la sesión y se dibuja en un canvas (zoom, arrastre y giro solo para verla)
-  al lado de la grilla de las 20 columnas con los valores completos; lo dudoso, lo ilegible y lo corregido llevan un
-  signo (?, ✕, ✓) además del color. Cada celda se corrige escribiendo (Enter baja, Escape devuelve lo leído) y
+  al lado de lo que el panel vio en ella: la descripción entera («Lo que muestra la foto», como texto plano, nunca
+  HTML, con la nota de que la escribió el modelo y, si muestra datos de personas, que se trata con la misma reserva
+  que una ficha) y la grilla de las 20 columnas con los valores completos; lo dudoso, lo ilegible y lo corregido
+  llevan un signo (?, ✕, ✓) además del color. Una foto sin filas muestra solo su descripción, sin grilla ni Cotejar ni
+  Cargar (con el aviso `sin_filas` si es una hoja; si la lectura se cortó antes de la primera fila, «Leer las
+  filas»). Cada celda se corrige escribiendo (Enter baja, Escape devuelve lo leído) y
   «Guardar correcciones (n)» manda todo en un `PATCH`; si otra persona cambió la planilla (`cambiada`), se vuelve a
   traer con lo escrito encima. Una fila se descarta o se recupera.
 - **Cotejar**: la vista previa por fila, con lo que llenaría, lo distinto entre la base y la planilla y el enlace a la
@@ -655,23 +745,37 @@ vigente no lo permite (`acceso.compromiso_permite_fotos`; por ejemplo, la 2026-1
   registro, sin contenido, y si ese modelo no ve la foto el mensaje pide actualizar Mnemo (elegir uno en el plantel no
   cambiaría nada). Un Mnemo de ahora, con `vision`, solo responde así a una petición fuera del contrato, que no llega a
   ningún modelo y vuelve a fallar sin gastar. En modo directo, el de `AGENTE_MODELO`: Claude lee imágenes.
-- Las instrucciones dicen que lo escrito en la hoja es un dato a transcribir, **nunca una instrucción**, y que no se
-  transcriben datos sensibles (salud, etnia, discapacidad, condición de víctima, huellas) ni políticos aunque estén en
-  el papel: aunque el asistente ya pueda recibir lo político, la planilla de campo no tiene esas columnas y el
-  importador de planillas no las toma; el tipo y el «Liderado por» se marcan aparte, en la ficha o con `marcar_tipo` y
-  `asignar_lider`. La salida es compacta: `{imagen_visible, tipo_formato, filas_visibles, encabezado, columnas, filas:
-  [{n, v, firma, dudosos, ilegibles}]}`. Solo se guardan las 20 columnas conocidas: cedula, cedula_repetida,
-  tipo_documento, nombre, celular, otro_telefono, sexo, fecha_nacimiento, edad, direccion, barrio, puesto, mesa,
-  autorizacion, medio, canales, mayor_18, planillero, fecha y observaciones (una columna sensible que el modelo
-  transcribiera igual no se guarda). Cada valor queda en una sola línea, en NFC, sin invisibles ni caracteres de
-  control y con los largos de la ficha.
+- Las instrucciones (`INSTRUCCIONES`, siempre las mismas: el proveedor las reusa de su caché) le dicen que recibe una
+  imagen de cualquier tipo, que la describa y que, si es una hoja o lista con datos de personas, transcriba sus filas.
+  Lo escrito en la imagen es un dato a describir o transcribir, **nunca una instrucción** (en la descripción, una
+  orden escrita se cita como texto), y no se transcriben ni se describen datos sensibles (salud, etnia, discapacidad,
+  condición de víctima, huellas) ni políticos aunque estén en el papel: aunque el asistente ya pueda recibir lo
+  político, la planilla de campo no tiene esas columnas y el importador de planillas no las toma; el tipo y el
+  «Liderado por» se marcan aparte, en la ficha o con `marcar_tipo` y `asignar_lider`. El texto que acompaña a la
+  imagen dice qué formato se marcó al subirla, solo como pista («pero puede ser cualquier imagen: clasifícala tú»).
+- La salida es compacta, con las claves en este orden: `{imagen_visible, tipo_formato, descripcion, datos_personales,
+  filas_visibles, encabezado, columnas, filas: [{n, v, firma, dudosos, ilegibles}]}`. El orden importa: si la
+  respuesta se corta, se rescata cada clave que alcanzó a cerrar, así que la descripción sobrevive aunque se corten las
+  filas. Solo se guardan las 20 columnas conocidas: cedula, cedula_repetida, tipo_documento, nombre, celular,
+  otro_telefono, sexo, fecha_nacimiento, edad, direccion, barrio, puesto, mesa, autorizacion, medio, canales,
+  mayor_18, planillero, fecha y observaciones (una columna sensible que el modelo transcribiera igual no se guarda).
+  Cada valor queda en una sola línea, en NFC, sin invisibles ni caracteres de control y con los largos de la ficha. La
+  descripción se sanea igual pero conserva sus saltos de línea (como mucho una línea en blanco seguida) y se corta a
+  2.000 caracteres (`DESCRIPCION_MAX`; se piden como mucho 1.500). `datos_personales` queda encendido también si la
+  descripción trae un correo o un número de 5 o más dígitos que no es un valor en pesos (con «$», «COP» o «USD» antes,
+  o «pesos», «mil» o «millones» después: `minimizar.descripcion_con_datos`), lo diga o no el lector.
 - Se rechaza (con su motivo en la bandeja): sin imagen visible (`sin_imagen`: el mensaje nombra el modelo que
   respondió, por ejemplo «El modelo que respondió (deepseek/deepseek-v4-flash) no pudo ver la foto…», y con Mnemo
-  dónde se elige el que lee imágenes; si se repite, ese modelo no las lee), sin filas, más filas que las visibles
-  (`inventadas`), **una foto de un documento de identidad** (se borra la foto: «No se leen fotos de cédulas»), otro
-  formato con `otros_formatos` apagado (se borra la foto), un rechazo del modelo, una respuesta que no se entiende, el
-  plazo y los errores del proveedor. Si la respuesta se corta, se rescatan las filas completas y la lectura queda
-  `incompleta`: se puede volver a leer desde la fila siguiente (`desde_fila`), conservando lo anterior.
+  dónde se elige el que lee imágenes; si se repite, ese modelo no las lee), más filas que las visibles
+  (`inventadas`), **una foto de un documento de identidad o personal** (`documento_identidad`, se borra la foto: «No
+  se leen fotos de cédulas…»; también con otra etiqueta o si la descripción empieza diciéndolo, ver arriba), un
+  rechazo del modelo (`rechazo`), una respuesta sin `tipo_formato`, sin descripción ni filas o que no se entiende
+  (`respuesta`), el plazo y los errores del proveedor. Ya no se rechaza un formato que no sea la planilla de campo
+  (el código `formato` de la lectura desapareció con `otros_formatos`) ni una foto sin filas (`sin_filas` ya no es un
+  error: es el aviso de una lectura guardada). Si la respuesta se corta, se rescatan la descripción y las filas
+  completas y la lectura queda `incompleta`: se puede volver a leer desde la fila siguiente (`desde_fila`),
+  conservando lo anterior (también la descripción, si la nueva lectura no trae otra); si no alcanzó a cerrar ni la
+  descripción ni una fila, falla con `lectura_cortada`.
 - Como mucho **2 lecturas por foto** (la primera y una relectura); la misma foto subida otra vez por la misma persona es
   la misma (no vuelve al modelo, salvo que su lectura hubiera fallado) y una ya cargada responde 409 `ya_cargada` con la
   importación. Lecturas a la vez en el proceso: 1 con Mnemo y 2 con Anthropic (las demás esperan en cola). Una lectura
@@ -683,18 +787,19 @@ antes de leer el cuerpo: P y C reciben 403 `permiso`):
 
 | Ruta | Permiso | Qué |
 |---|---|---|
-| `POST /api/planillas/fotos?nota=&formato=` | `importar` + rol en `agente_planillas.roles` + modelo + compromiso que lo permita | Cuerpo crudo `image/jpeg` o `image/png` (≤ 1,5 MB). 201 `{id, estado: "leyendo", bytes, ancho, alto, expira}` y la lectura de fondo encolada; 200 con `repetida: true` si es la misma foto de la misma persona; 409 `ya_cargada`, `pendientes`, `compromiso_fotos`; 403 `permiso`, `planillas_apagado`; 503 `sin_configurar`; 413, 415, 422 y 429 `frecuencia` |
-| `GET /api/planillas?estado=` | `importar` | La bandeja, sin datos de personas: todas (las 100 más nuevas) |
-| `GET /api/planillas/{id}?enmascarada=1` | `importar` | La planilla con su encabezado y sus filas completas (enmascaradas con `enmascarada=1`, como las pide el asistente) |
+| `POST /api/planillas/fotos?nota=&formato=` | `importar` + rol en `agente_planillas.roles` + modelo + compromiso que lo permita | Cuerpo crudo `image/jpeg` o `image/png` (≤ 1,5 MB): una planilla o cualquier otra imagen. `formato`: `planilla_campo` (por defecto), `asistencia` u `otro`, siempre (solo una pista para el lector; otro valor, 422 `formato`). 201 `{id, estado: "leyendo", bytes, ancho, alto, expira}` y la lectura de fondo encolada; 200 con `repetida: true` si es la misma foto de la misma persona; 409 `ya_cargada`, `pendientes`, `compromiso_fotos`; 403 `permiso`, `planillas_apagado`; 503 `sin_configurar`; 413, 415, 422 y 429 `frecuencia` |
+| `GET /api/planillas?estado=` | `importar` | La bandeja, sin datos de personas: todas (las 100 más nuevas). De lo leído, solo conteos y marcas: `filas` (0 en una foto sin filas), `dudosas`, `pendientes`, `aviso` (`sin_filas` o null), `con_descripcion`, `datos_personales` y `filas_visibles` (con filas visibles o `incompleta`, una foto sin filas leídas es una hoja que se puede volver a leer, no una imagen sin personas); nunca el texto de la descripción. Un rechazo de antes (`formato`) sale con el mensaje de ahora |
+| `GET /api/planillas/{id}?enmascarada=1` | `importar` | La foto con su descripción (`descripcion`, null si no hay; `datos_personales`; `aviso`), su encabezado y sus filas completas (`filas: []` en una foto sin filas). Con `enmascarada=1`, como las pide el asistente: las filas enmascaradas y la descripción con `minimizar.enmascarar_descripcion` (sin números de 5 o más dígitos ni correos enteros). Después de una supresión que marcó filas de esa foto, sin descripción |
 | `GET /api/planillas/{id}/foto` | `importar` | La foto limpia: `Content-Type` real, `nosniff`, `no-store`, `Content-Disposition: attachment`, `Cross-Origin-Resource-Policy: same-origin`. 404 `sin_foto` si ya se borró |
 | `PATCH /api/planillas/{id}` | `importar` | `{filas?: [{n, campo, valor}], descartar?: [n], restaurar?: [n]}`: corrige celdas y descarta filas; las reglas de privacidad por fila se vuelven a aplicar |
 | `POST /api/planillas/{id}/leer` | `importar` + rol + modelo | Volver a leer (`{desde_fila?}` si quedó incompleta). 409 `max_lecturas` |
 | `DELETE /api/planillas/{id}` | `importar` | Borra la foto y lo leído |
-| `POST /api/planillas/{id}/simular` | `importar` | La vista previa por fila: `{n, estado, persona_id, llenaria, distintos, motivo}`. No escribe; anota las lecturas de las fichas encontradas |
-| `POST /api/planillas/{id}/cargar` | `importar`, idempotente | `{filas?, folio?, capturado_por?}` → `{importacion_id, resumen, filas: {n: {persona_id, estado, motivo}}}` |
+| `POST /api/planillas/{id}/simular` | `importar` | La vista previa por fila: `{n, estado, persona_id, llenaria, distintos, motivo}`. No escribe; anota las lecturas de las fichas encontradas. Una foto leída sin filas: 422 `sin_filas` («Esta foto no tiene filas de personas leídas…») |
+| `POST /api/planillas/{id}/cargar` | `importar`, idempotente | `{filas?, folio?, capturado_por?}` → `{importacion_id, resumen, filas: {n: {persona_id, estado, motivo}}}`. Una foto leída sin filas, o sin ninguna fila que cargar: 422 `sin_filas`, sin tocar nada |
 
-**Estados.** De la foto: `leyendo`, `leida` (también tras una carga parcial), `fallida` (se puede volver a leer),
-`rechazada` (una cédula u otro formato: sin foto) y `cargada`. De cada fila: `pendiente`, `no_autoriza`, `no_se_carga`,
+**Estados.** De la foto: `leyendo`, `leida` (con su descripción y, si lista personas, sus filas; también tras una
+carga parcial, y sin ninguna fila si la foto no lista personas), `fallida` (se puede volver a leer), `rechazada` (una
+cédula u otro documento de identidad: sin foto) y `cargada`. De cada fila: `pendiente`, `no_autoriza`, `no_se_carga`,
 `descartada` y `cargada`. Del cotejo: `nueva`, `nueva_sin_autorizacion`, `completaria`, `igual`, `revocaria` (la ficha
 decía «sí» y el papel «no»), `conflicto_cedula`, `revision` (posible duplicado o digitación), `no_autorizo`,
 `otra_eleccion` (su puesto guardado es de otra elección), `sin_nombre`, `ya_cargada` y `no_se_carga` (sin motivo ni
@@ -1753,7 +1858,6 @@ ve en solo lectura y el servidor le responde 403), cada una con su aviso legal:
 |---|---|---|
 | **Planillas físicas por foto** · Quiénes suben fotos (`agente_planillas.roles`) | Administrador y coordinadores | Cuál de los dos ve la cámara en el chat y sube fotos en Importar y exportar (además tiene que usar el asistente para hacerlo en el chat). Solo admite administrador y coordinador: nunca planilleros ni consultores (un `planillero` en el `PUT` responde 422, y uno guardado de antes se ignora). Sin ningún rol marcado, apagado. Además hace falta un compromiso de confidencialidad que deje fotografiar planillas (la 2026-11-v2, la de defecto): si no, la sección lo avisa y el administrador tiene **Usar el compromiso 2026-11-v2**. Ver [la excepción de las fotos](#la-excepción-de-las-fotos-de-planillas) |
 | Horas que se guardan la foto y lo leído (`agente_planillas.retencion_horas`) | 24 | De 1 a 168. Al cargar la hoja entera la foto y lo leído se borran antes (queda el SHA-256 de la foto en la importación) |
-| Leer también listas de asistencia y otros formatos (`agente_planillas.otros_formatos`) | No | Si además de la planilla de campo del panel se leen otros formatos, que pueden traer columnas sensibles. Apagado, una foto de otro formato se rechaza y se borra |
 | **Agentes externos por MCP** · Quiénes crean claves de datos (`agente_mcp.roles`) | Administrador | Administrador o coordinadores. Leer personas por MCP es solo del administrador (puede exportar); el coordinador, analítica y propuestas |
 | Proponer cambios en la base (`agente_mcp.escritura`) | Sí | Si una clave de datos puede proponer escrituras (cada propuesta espera la aprobación de la persona en Mi cuenta) |
 | Llamadas por clave y día (`agente_mcp.llamadas_diarias`) | 2.000 | De 10 a 20.000 |
@@ -1772,6 +1876,13 @@ mensaje o la siguiente llamada por MCP. Las instrucciones y las herramientas de 
 abiertas, y encenderlo vale solo para las conversaciones nuevas (una creada con el ajuste apagado sigue sin recibirlo,
 porque sus instrucciones no traen las reglas de lo político: `Contexto.politicos_conversacion`). La bienvenida no
 sugiere preguntas políticas con el ajuste apagado ni de planillas por foto a quien no puede subirlas.
+
+La casilla «Leer también listas de asistencia y otros formatos» ya no está: ese ajuste
+(`agente_planillas.otros_formatos`, apagado por defecto, que rechazaba y borraba toda foto que no fuera la planilla de
+campo del panel) se retiró, porque el panel describe cualquier foto y transcribe las filas de toda hoja que liste
+personas (ver [Planillas físicas por foto](#planillas-físicas-por-foto)). Un valor guardado de antes se ignora (ni
+`GET /api/ajustes` ni el estado del asistente lo devuelven) y un `PUT /api/ajustes` que lo traiga (un formulario de
+antes) lo descarta sin error y sin guardarlo.
 
 ## Conectar con Mnemo
 
@@ -1845,12 +1956,13 @@ los modelos de Mnemo al instante.
   Ajustes avisa que ese Mnemo no ofrece sus modelos.
 - Que la cuenta pueda responder: un plan que incluya el chat o una clave propia de un proveedor de modelos configurada
   en Mnemo, y créditos. Si no, el asistente lo dice al responder (sin plan, sin créditos o sin un modelo disponible).
-- Para las [planillas físicas por foto](#planillas-físicas-por-foto): un modelo de la cuenta que lea imágenes. Si el
-  principal no las lee, elíjalo en Mnemo, en **Ajustes → Modelos → Plantel**, «leer imágenes» (o use como principal
-  uno que las lea), con una versión de Mnemo que acepte el modelo `vision` en `mnemo_model_complete`: con una
-  anterior, la foto va al modelo de siempre, y si ese no la ve el mensaje pide actualizar Mnemo. Si no, la lectura
-  falla con «Ningún modelo de la cuenta de Mnemo conectada lee imágenes…» (`mnemo_sin_vision`) o, si llegó a un modelo
-  que no las lee, «El modelo que respondió (…) no pudo ver la foto…», con el nombre de ese modelo.
+- Para las [fotos](#planillas-físicas-por-foto) (las planillas físicas y cualquier otra imagen que se adjunte): un
+  modelo de la cuenta que lea imágenes. Si el principal no las lee, elíjalo en Mnemo, en **Ajustes → Modelos →
+  Plantel**, «leer imágenes» (o use como principal uno que las lea), con una versión de Mnemo que acepte el modelo
+  `vision` en `mnemo_model_complete`: con una anterior, la foto va al modelo de siempre, y si ese no la ve el mensaje
+  pide actualizar Mnemo. Si no, la lectura falla con «Ningún modelo de la cuenta de Mnemo conectada lee imágenes…»
+  (`mnemo_sin_vision`) o, si llegó a un modelo que no las lee, «El modelo que respondió (…) no pudo ver la foto…», con
+  el nombre de ese modelo.
 - Para la [voz clonada](#la-voz-clonada-de-mnemo) (opcional): una versión con `mnemo_speak` y `mnemo_list_voices` y el
   permiso `mnemo:voice`, un plan que incluya las voces clonadas, créditos y al menos una voz marcada **Disponible
   para apps conectadas**. Sin eso, el panel sigue con la voz del navegador.
@@ -1860,7 +1972,7 @@ los modelos de Mnemo al instante.
 | Variable | Valor |
 |---|---|
 | `MNEMO_MCP_URL` | La dirección MCP de Mnemo que Ajustes sugiere al conectar: `https://<su Mnemo>/mcp` (en local también `http://127.0.0.1` o `http://localhost`). Otra cosa se ignora con un aviso en el registro. No es secreta y no conecta nada por sí sola |
-| `MNEMO_MODELO` | Qué modelo de la cuenta usa el asistente: `principal` (el que la cuenta tiene por defecto), `ligero` (su modelo rápido; si no tiene, el principal) o `<proveedor>/<modelo>` (uno concreto que la cuenta tenga). Vacía, el que la cuenta tenga por defecto. Otro valor se ignora con un aviso en el registro. No vale para leer las fotos de planillas: esas van al modelo de la cuenta para leer imágenes, salvo con un Mnemo anterior que no acepta ese modelo (ver [Planillas físicas por foto](#planillas-físicas-por-foto)) |
+| `MNEMO_MODELO` | Qué modelo de la cuenta usa el asistente: `principal` (el que la cuenta tiene por defecto), `ligero` (su modelo rápido; si no tiene, el principal) o `<proveedor>/<modelo>` (uno concreto que la cuenta tenga). Vacía, el que la cuenta tenga por defecto. Otro valor se ignora con un aviso en el registro. No vale para leer las fotos (planillas o cualquier otra imagen): esas van al modelo de la cuenta para leer imágenes, salvo con un Mnemo anterior que no acepta ese modelo (ver [Planillas físicas por foto](#planillas-físicas-por-foto)) |
 | `MNEMO_HERRAMIENTAS` | Vacía, la lista por defecto: `search`, `fetch`, `mnemo_get_briefing`, `mnemo_list_items`, `mnemo_view_image`, `mnemo_list_events`, `mnemo_create_event`, `mnemo_update_event`, `mnemo_query_forms`, `mnemo_save_form_draft`, `mnemo_create_document`, `mnemo_update_document`, `mnemo_export_document`, `mnemo_save_memory`, `mnemo_list_shared_with_me`, `mnemo_request_publish`, `mnemo_request_share`, `mnemo_check_approval` y `mnemo_get_job`. Se cambia por nombres separados por comas, o `*` para todas las que permita la conexión (las 30 pesan mucho en cada mensaje). Decide también qué permisos se piden al conectar |
 
 `MNEMO_TOKEN` ya no se usa: si sigue definida, el panel la ignora y lo avisa en el registro. Bórrela de Railway y
@@ -1952,13 +2064,15 @@ proyección por rol de la API (`app/agente/minimizar.py`).
   políticos, los líderes de 10 o más personas que nombra una tabla por `lider`), las cifras de 1 a 4 como «<5» y otras
   ocultas para que no se deduzcan, nada de quien no autorizó, nada sensible y lo político (tipo, líder, lista) solo con
   el ajuste y con la misma supresión.
-- De las [planillas por foto](#planillas-físicas-por-foto), el bloque `<fotos_adjuntas>` (ids y estado) y lo leído,
-  **enmascarado**: cédula con sus 3 últimos dígitos y si coincide con su repetición, teléfonos con sus 4 últimos
-  (ninguno de un menor), la edad en vez de la fecha de nacimiento, si hay observaciones (no su texto), los textos con
-  `texto_libre`; de quien dijo «No autoriza» o ya está en «no», solo nombre y barrio; de quien pidió la supresión, solo
-  que la fila no se carga. Del cotejo, las fichas encontradas con `minimizar.fila` y lo distinto enmascarado; de las
-  filas en «no», ninguna ficha. La imagen nunca va al modelo de la conversación: va entera solo en la llamada de
-  lectura aparte ([la excepción](#la-excepción-de-las-fotos-de-planillas)).
+- De las [fotos adjuntas y las planillas por foto](#planillas-físicas-por-foto), el bloque `<fotos_adjuntas>` (ids y
+  estado, sin datos de personas) y lo leído, **enmascarado**: la descripción de la imagen sin números de 5 o más dígitos
+  (quedan «…» y sus 3 últimos) ni correos enteros (su primer carácter y el dominio), si muestra datos de personas y, de
+  las filas, cédula con sus 3 últimos dígitos y si coincide con su repetición, teléfonos con sus 4 últimos (ninguno de
+  un menor), la edad en vez de la fecha de nacimiento, si hay observaciones (no su texto), los textos con `texto_libre`;
+  de quien dijo «No autoriza» o ya está en «no», solo nombre y barrio; de quien pidió la supresión, solo que la fila no
+  se carga. Del cotejo, las fichas encontradas con `minimizar.fila` y lo distinto enmascarado; de las filas en «no»,
+  ninguna ficha. La imagen nunca va al modelo de la conversación: va entera solo en la llamada de lectura aparte ([la
+  excepción](#la-excepción-de-las-fotos-de-planillas)).
 - De las colas de calidad y los registros de cada persona, lo de la lista blanca de cada herramienta ([Registros de cada
   persona y calidad de datos](#registros-de-cada-persona-y-calidad-de-datos)).
 - Con la [respuesta inmediata](#la-respuesta-inmediata), una petición más al mismo proveedor con el texto de los
@@ -2002,8 +2116,9 @@ deja en memoria el audio de la narración, y al registro van solo códigos.
   y las importaciones, las fuentes que no son trámites ni planilla (con los datos políticos apagados); de los
   acercamientos, el teléfono marcado y lo
   dictado; de las autorizaciones, las categorías sensibles autorizadas, la evidencia escrita y la fila de la planilla.
-- De una planilla por foto: la imagen, la cédula y los teléfonos completos, la fecha de nacimiento exacta, el texto de
-  las observaciones y por qué una fila no se carga.
+- De una foto (una planilla o cualquier otra imagen): la imagen, la cédula y los teléfonos completos (tampoco en la
+  descripción, ni un correo entero), la fecha de nacimiento exacta, el texto de las observaciones y por qué una fila no
+  se carga.
 - La clave de Anthropic, los tokens de la conexión con Mnemo, las claves de los usuarios, las claves MCP, las sesiones
   (también las internas de MCP) ni las IP.
 
@@ -2018,9 +2133,10 @@ de privacidad cubra esa transmisión.
 **Retención.** Las conversaciones se guardan en MongoDB (`agente_conversaciones` y `agente_mensajes`) y se borran
 solas a los días de **Ajustes** desde su último mensaje (30 por defecto). Bajar ese plazo acorta también las que ya
 existen: las que ya lo pasaron se borran en cuanto MongoDB lo revisa (cada minuto). Su dueño las puede borrar antes.
-El uso (`agente_uso`: mensajes, tokens y créditos por persona y día, sin contenido) se guarda 180 días. Las fotos de
-planillas y lo leído (`planillas`, cifrados) vencen a las `agente_planillas.retencion_horas` (24 por defecto) o se
-borran al cargar la hoja entera; el registro de subidas que cuenta los topes (`planillas_subidas`: quién y cuándo), a
+El uso (`agente_uso`: mensajes, tokens y créditos por persona y día, sin contenido) se guarda 180 días. Las fotos
+(planillas o cualquier otra imagen) y lo leído (la descripción y las filas: `planillas`, cifrados) vencen a las
+`agente_planillas.retencion_horas` (24 por defecto) o se borran al cargar la hoja entera (una foto sin filas no se
+carga: vence o se borra a mano); el registro de subidas que cuenta los topes (`planillas_subidas`: quién y cuándo), a
 las 26 horas. Las propuestas por MCP (`mcp_propuestas`) vencen a las 48 horas y, decididas, pierden la tarjeta y se
 borran a los 7 días; las claves de datos, a los 30 días; el registro de entregas por MCP (`mcp_entregas`: solo ids), a
 los 90 días, como `lecturas`.
@@ -2037,8 +2153,14 @@ dejó de autorizar, sin ningún otro dato). Al cambiarle el rol o la zona a un u
 desactivarlo, se borran sus conversaciones. La supresión y el «no» borran también las propuestas por MCP que muestran a
 esa persona (`db.borrar_propuestas_mcp`). Al **suprimir**, sus filas en las planillas por foto (las que el cotejo o la
 carga le asignaron, o las que casan con las huellas de su cédula o de su nombre con un teléfono) quedan marcadas y nunca
-vuelven a salir, la próxima escritura las deja vacías en lo cifrado y la foto, que también la muestra, se borra
-(`db.vaciar_planillas`); una lectura o una carga que estaba en curso no las vuelve a escribir. `mcp_entregas` y
+vuelven a salir, la próxima escritura las deja vacías en lo cifrado, la descripción de esa foto (que puede nombrar a
+esa persona) deja de mostrarse y la próxima escritura la vacía, y la foto, que también la muestra, se borra
+(`db.vaciar_planillas`); una lectura o una carga que estaba en curso no las vuelve a escribir. La descripción también
+deja las huellas de las cédulas que trae (la «fila» 0, `planillas.N_DESCRIPCION`): una foto sin filas que muestra la
+cédula de esa persona (un volante, una captura) se encuentra igual, se borra su foto y su descripción deja de
+mostrarse. **Límite conocido**: una descripción que solo nombra a alguien, o trae solo su teléfono, no deja huella (las
+de nombre con teléfono son de una fila): esa foto se va con la foto, a las `retencion_horas` o al borrarla en la
+bandeja. `mcp_entregas` y
 `lecturas` se conservan (solo ids: dicen a quién se entregó, para responder un reclamo).
 
 **Transferencia al proveedor del modelo.** Mandar datos personales a Mnemo y al proveedor de modelos de esa cuenta
@@ -2055,10 +2177,10 @@ el equipo con datos reales:
    fecha de este documento, sus términos comerciales dicen que no entrena modelos con los datos de la API).
 3. Empiece con el administrador y los coordinadores (lo que viene por defecto) y habilite a planilleros y consultores
    después de la revisión y de explicarles qué se le puede pedir.
-4. Las **fotos de planillas** son una transmisión más amplia (la imagen entera, no lo mínimo): antes de usarlas con
-   datos reales, la revisión del aviso (ver [La excepción de las fotos de
-   planillas](#la-excepción-de-las-fotos-de-planillas)). El compromiso de confidencialidad ya lo permite desde la
-   versión 2026-11-v2, la de defecto. Las **claves de datos por MCP** sacan datos hacia el cliente que elige cada
+4. Las **fotos de planillas** son una transmisión más amplia (la imagen entera, no lo mínimo; y lo mismo cualquier otra
+   imagen que se adjunte en el chat): antes de usarlas con datos reales, la revisión del aviso (ver [La excepción de las
+   fotos de planillas](#la-excepción-de-las-fotos-de-planillas)). El compromiso de confidencialidad ya lo permite desde
+   la versión 2026-11-v2, la de defecto. Las **claves de datos por MCP** sacan datos hacia el cliente que elige cada
    persona: el aviso también tiene que cubrirlo antes de dar una con `lectura`.
 5. Los **datos políticos** (afiliación política, un dato sensible: Ley 1581, art. 5) van también a esos terceros con
    `agente_politicos` encendido (por defecto, en el asistente y por MCP): entran en la revisión del punto 1. Para que no
@@ -2072,42 +2194,58 @@ también a través del asistente.
 El principio de «al modelo le llega lo mínimo» tiene **una excepción documentada**: la foto de una planilla física
 (con nombres, cédulas, teléfonos, fechas de nacimiento, direcciones y firmas de las personas de la hoja) **va entera
 al proveedor del modelo** (Mnemo y su proveedor, o Anthropic en modo directo), en una llamada de lectura aparte, sin
-herramientas ni conversación, para transcribirla. Lo leído queda en el servidor y al modelo de la conversación le
-llega enmascarado. Es lo que permite cargar lo que no se pudo hacer de forma digital, y por eso:
+herramientas ni conversación, para describirla y transcribir sus filas. Lo mismo cualquier otra imagen que se adjunte
+en el chat o se suba en la vista: esa llamada la describe (y, si lista personas, transcribe sus filas). Lo leído
+queda en el servidor y al modelo de la conversación le llega enmascarado, nunca la imagen. Es lo que permite cargar lo
+que no se pudo hacer de forma digital y hablar de una imagen sin dársela al asistente, y por eso:
 
-- **Revisión jurídica antes de encenderlo.** `agente_planillas` viene encendido para administrador y coordinadores en
-  el código, pero no se debe usar con datos reales hasta que un abogado revise el aviso de privacidad y la
-  autorización: tienen que informar que las imágenes completas de las planillas van a proveedores tecnológicos,
-  posiblemente en el exterior (Ley 1581, art. 26; Decreto 1377 de 2013), además de lo que ya informan para el
-  asistente (ver **Transferencia al proveedor del modelo**, arriba). Mientras tanto, apague la sección en
-  **Ajustes**.
+- **Revisión jurídica antes de encenderlo.** `agente_planillas` viene encendido para administrador y coordinadores en el
+  código, pero no se debe usar con datos reales hasta que un abogado revise el aviso de privacidad y la autorización:
+  tienen que informar que las imágenes completas de las planillas (y de cualquier otra foto que se adjunte, que puede
+  mostrar a personas o sus datos) van a proveedores tecnológicos, posiblemente en el exterior (Ley 1581, art. 26;
+  Decreto 1377 de 2013), además de lo que ya informan para el asistente (ver **Transferencia al proveedor del modelo**,
+  arriba). Mientras tanto, apague la sección en **Ajustes**.
 - **El compromiso de confidencialidad lo permite.** La versión 2026-11-v2 de `acceso.COMPROMISOS` (la de defecto en
   `compromiso_version`) deja fotografiar planillas físicas solo para subirlas por el panel (la cámara del asistente o
   Importar y exportar → Planillas por foto), nunca cédulas ni otros documentos, y pide borrar la foto del teléfono
   después de subirla; la 2026-11-v1 lo prohibía. Con un compromiso vigente que no lo permite, nadie sube fotos (409
-  `compromiso_fotos`; ver [Planillas físicas por foto](#planillas-físicas-por-foto)).
+  `compromiso_fotos`; ver [Planillas físicas por foto](#planillas-físicas-por-foto)). Su texto no cambió cuando el
+  panel empezó a leer cualquier foto: por eso un documento de identidad se sigue rechazando y borrando, y una imagen
+  que no es una planilla pero muestra datos de personas entra en la revisión jurídica del punto anterior.
 - **Solo el administrador y los coordinadores.** Toman y suben las fotos solo A y K (`importar`); los planilleros
   entregan el papel y quedan como «Capturado por».
-- **Solo lo que hace falta en la foto.** Por defecto solo se lee la planilla de campo del panel, que no tiene columnas
-  sensibles (`otros_formatos` apagado). El aviso fijo junto a la cámara pide no fotografiar cédulas, tapar las
-  columnas de salud, etnia, víctima o políticas y borrar la foto del teléfono (las políticas también: el lector no
-  las transcribe, así que en la foto solo llegarían al proveedor, también con `agente_politicos` apagado; el tipo y el
-  líder se marcan aparte, con el papel a la vista). Una foto de un documento de identidad se rechaza y se borra. Las
-  instrucciones del lector prohíben transcribir datos sensibles (salud, etnia, discapacidad, condición de víctima,
-  huellas) o políticos, y el servidor solo guarda las 20 columnas de la planilla: aun así, lo que está en la imagen
-  **llega al proveedor**, que es por lo que hay que taparlo en el papel.
+- **Solo lo que hace falta en la foto.** Se lee cualquier foto (el ajuste que dejaba leer solo la planilla de campo
+  del panel, `otros_formatos`, se retiró): de toda hoja que liste personas (la planilla de campo, una lista de
+  asistencia u otra) se transcriben solo las 20 columnas de la planilla, y de cualquier imagen, una descripción que no
+  dice quién es alguien por su cara, no describe ni deduce datos sensibles o políticos y nunca copia una firma. El
+  aviso fijo junto a la cámara pide no fotografiar cédulas, tapar las columnas de salud, etnia, víctima o políticas y
+  borrar la foto del teléfono (las políticas también: el lector no las transcribe, así que en la foto solo llegarían
+  al proveedor, también con `agente_politicos` apagado; el tipo y el líder se marcan aparte, con el papel a la vista).
+  Una foto de un documento de identidad (una cédula, también fotografiada o en copia) se sigue rechazando y se borra:
+  el compromiso dice «nunca cédulas ni otros documentos». Las instrucciones del lector prohíben transcribir o describir
+  datos sensibles (salud, etnia, discapacidad, condición de víctima, huellas) o políticos, y el servidor solo guarda
+  las 20 columnas de la planilla y una descripción saneada de hasta 2.000 caracteres: aun así, lo que está en la
+  imagen **llega al proveedor**, que es por lo que hay que taparlo en el papel (y no adjuntar imágenes con datos que no
+  hacen falta).
 - **El teléfono de quien toma la foto.** Lo que se toma con la cámara o se elige de la galería queda en el teléfono (y
   en su copia en la nube, si la tiene), fuera del control del panel: el aviso pide borrarla. El navegador rehace la foto
   antes de subirla (derecha, reducida y como un JPEG nuevo: sin EXIF, GPS ni el modelo del teléfono), no la guarda en
   `localStorage`, `sessionStorage` ni IndexedDB y la muestra solo en un canvas (nunca en una dirección `blob:` o
   `.src`).
-- **Lo que se guarda y cuánto.** La foto limpia (el servidor vuelve a quitar metadatos y lo que venga después del fin
-  de la imagen) y lo leído se guardan **cifrados** con AES-GCM (`agente/cifrado.py`, `cifrar_bytes`), con una llave
-  derivada de la credencial del administrador con una etiqueta propia (no está en la base) y atados a su planilla y a
-  quien la subió: un respaldo de la base no los abre, y si cambian `ADMIN` o `password` ya no abren (se vuelve a
-  subir). Todo vence a las `agente_planillas.retencion_horas` (24 por defecto, índice TTL) y, al cargar la hoja entera,
-  la foto y lo leído se borran antes: queda en la importación el SHA-256 de la foto, el folio que escribió la persona
-  (dónde queda el papel) y, por fila, solo número, estado y ficha.
+- **Lo que se guarda y cuánto.** La foto limpia (el servidor vuelve a quitar metadatos y lo que venga después del fin de
+  la imagen) y lo leído (la descripción, `datos_personales`, el aviso y las filas) se guardan **cifrados** con AES-GCM
+  (`agente/cifrado.py`, `cifrar_bytes`), con una llave derivada de la credencial del administrador con una etiqueta
+  propia (no está en la base) y atados a su planilla y a quien la subió: un respaldo de la base no los abre, y si
+  cambian `ADMIN` o `password` ya no abren (se vuelve a subir). Todo vence a las `agente_planillas.retencion_horas` (24
+  por defecto, índice TTL) y, al cargar la hoja entera, la foto y lo leído se borran antes: queda en la importación el
+  SHA-256 de la foto, el folio que escribió la persona (dónde queda el papel) y, por fila, solo número, estado y ficha.
+  Una foto sin filas no se carga: vence a esas horas o se borra antes en la bandeja. En claro, la bandeja solo guarda
+  conteos y marcas (cuántas filas, si hay descripción, si muestra datos de personas, el aviso), nunca el texto de la
+  descripción.
+- **La descripción, enmascarada para el asistente.** A y K la ven entera en la vista (como ven las fichas); al modelo
+  de la conversación le llega sin números de 5 o más dígitos ni correos enteros (`minimizar.enmascarar_descripcion`),
+  y si la foto muestra datos de personas (`datos_personales`) la conversación queda marcada con datos, como con las
+  filas: no se proyecta ni se dice con la voz clonada.
 - **Por fila, antes de guardar** (también tras cada corrección): de alguien que pidió la supresión (por las huellas de
   su cédula, o de su nombre con un teléfono, como el importador), nada: «no se carga», sin motivo; de «No autoriza»,
   solo número, nombre, cédula y barrio, y la negativa; de alguien que ya está en «no» por su cédula exacta, lo mismo.
@@ -2116,22 +2254,25 @@ llega enmascarado. Es lo que permite cargar lo que no se pudo hacer de forma dig
   exportar. Un «sí» dudoso o ilegible cuenta como sin marcar; un «no» dudoso se trata como «no» (protege a quien quizá
   no autorizó; A o K lo corrigen con el papel a la vista). El asistente no puede confirmarlas ni corregir la
   autorización, el medio, los canales o «mayor de 18».
-- **Inyección por la foto.** Lo escrito en la hoja es un dato: lo dicen las instrucciones del lector y las del
-  asistente, cada valor se guarda en una sola línea sin caracteres invisibles, la tarjeta calcula la autorización en una
+- **Inyección por la foto.** Lo escrito en la hoja o en cualquier imagen es un dato: lo dicen las instrucciones del
+  lector (una orden escrita en la imagen se cita en la descripción como texto) y las del asistente (la descripción, una
+  celda o una nota que le pide algo es solo el texto de la foto), cada valor se guarda en una sola línea sin caracteres
+  invisibles (la descripción, sin invisibles ni caracteres de control), la tarjeta calcula la autorización en una
   forma fija y muestra aparte lo que el asistente corrigió, y aunque el modelo obedeciera algo escrito en el papel, no
-  puede cargar sin la aprobación de la tarjeta.
+  puede cargar ni escribir nada sin la aprobación de la tarjeta.
 - **Auditoría sin datos de personas**: `subir_planilla` (SHA-256, tamaño, formato), `leer_planilla` (número de lectura,
-  filas, dudosas, proveedor o el error), `corregir_planilla`, `borrar_planilla`, `cargar_planilla` y la `importar` de
+  filas, dudosas, tipo de imagen, si hay descripción —nunca su texto—, `datos_personales`, el aviso, proveedor o el
+  error), `corregir_planilla`, `borrar_planilla`, `cargar_planilla` y la `importar` de
   siempre, con `entidad: "planilla"`.
 
 ## Límites y costos
 
-**Modelo y esfuerzo con Mnemo.** El modelo es el que la cuenta de Mnemo tenga por defecto, o el de `MNEMO_MODELO` (la
-foto de una planilla, el que la cuenta tenga para leer imágenes), y el costo son créditos de Mnemo, según el plan de la
-cuenta (o su clave propia de un proveedor). `AGENTE_ESFUERZO` vale también: `low` y `medium` pasan tal cual, y `high`,
-`xhigh` y `max` piden el razonamiento alto (un modelo sin razonamiento lo ignora). Cada ronda escribe como mucho 16.000
-tokens, y `agente_uso` guarda también los créditos que informa Mnemo. El razonamiento del modelo no se muestra: con
-Mnemo son resúmenes internos, no notas para la persona.
+**Modelo y esfuerzo con Mnemo.** El modelo es el que la cuenta de Mnemo tenga por defecto, o el de `MNEMO_MODELO` (una
+foto, planilla o cualquier otra imagen, el que la cuenta tenga para leer imágenes), y el costo son créditos de Mnemo,
+según el plan de la cuenta (o su clave propia de un proveedor). `AGENTE_ESFUERZO` vale también: `low` y `medium` pasan
+tal cual, y `high`, `xhigh` y `max` piden el razonamiento alto (un modelo sin razonamiento lo ignora). Cada ronda
+escribe como mucho 16.000 tokens, y `agente_uso` guarda también los créditos que informa Mnemo. El razonamiento del
+modelo no se muestra: con Mnemo son resúmenes internos, no notas para la persona.
 
 **Modelo y esfuerzo en modo directo.** Por defecto usa `claude-opus-5-5` (Claude Opus 5.5) con esfuerzo `medium`.
 `AGENTE_MODELO` cambia el modelo (por ejemplo `claude-sonnet-5-5`, más barato y rápido, o `claude-fable-5-1`, el más
@@ -2186,9 +2327,10 @@ una ronda cortada con **Detener**, aunque Anthropic o Mnemo cobren lo que alcanz
 consola de Anthropic o en Mnemo. Para ahorrarla, se apaga en **Ajustes → Asistente** o, en modo directo, se le pone
 un modelo más barato en `AGENTE_MODELO_ADELANTO`.
 
-**Las [fotos de planillas](#planillas-físicas-por-foto)** cuestan una petición más al modelo por foto (y por cada
-relectura, como mucho una): la imagen (unos miles de tokens de entrada) y, de salida, el JSON compacto de las filas
-(pocos miles de tokens; como mucho 16.000 con Mnemo y 24.000 en modo directo, con esfuerzo `medium`). Se suma al día
+**Las [fotos](#planillas-físicas-por-foto)** (planillas o cualquier otra imagen) cuestan una petición más al modelo
+por foto (y por cada relectura, como mucho una): la imagen (unos miles de tokens de entrada) y, de salida, la
+descripción (como mucho unos 1.500 caracteres) y el JSON compacto de las filas, si las hay (pocos miles de tokens;
+como mucho 16.000 con Mnemo y 24.000 en modo directo, con esfuerzo `medium`). Se suma al día
 de quien subió la foto en `agente_uso`, también si la lectura falla, pero no cuenta en su tope de mensajes. La misma
 foto subida otra vez no se vuelve a leer, y una lectura cortada se retoma desde la fila siguiente, no desde el
 principio. Con Mnemo, cada lectura ocupa una de las llamadas al modelo a la vez de la conexión: por eso el proceso lee
@@ -2234,7 +2376,7 @@ resultado (acotado a 40.000 caracteres).
   300 por defecto), 120 peticiones por minuto y 30 propuestas pendientes (ver [Agentes por MCP con
   datos](#agentes-por-mcp-con-datos)).
 
-Las planillas por foto:
+Las fotos y las planillas por foto:
 
 | Qué | Cuánto | Dónde |
 |---|---|---|
@@ -2242,13 +2384,14 @@ Las planillas por foto:
 | Foto subida | JPEG o PNG de 1,5 MB como mucho (la guardia corta a 1,5 MB + 64 KiB), lado mayor de 200 a 2.600 px y menor de 100 o más | `planillas.MAX_BYTES`, `LADO_MIN`, `LADO_MAX`, `seguridad.LIMITE_FOTO` |
 | Lo que prepara el navegador | Lado mayor 2.576 px en modo directo y 2.000 con Mnemo, JPEG 0,8 (bajando hasta 0,5 y luego achicando si pasa del peso) | `adjuntos` de `GET /api/agente/estado` (`planillas.estado_adjuntos`) |
 | Subidas por persona | 40 por hora y 150 por día (en `planillas_subidas`: borrar fotos no reinicia los topes) | `POR_HORA`, `POR_DIA` |
-| Fotos sin cargar a la vez por persona | 30 (leyendo, leídas o fallidas: 409 `pendientes`) | `SIN_CARGAR_MAX` |
+| Fotos sin cargar a la vez por persona | 30 (leyendo, fallidas o leídas con filas: 409 `pendientes`; una leída sin filas no espera una carga y no cuenta) | `SIN_CARGAR_MAX` |
+| Descripción de una foto | 2.000 caracteres (se piden como mucho 1.500) | `lector_planillas.DESCRIPCION_MAX` |
 | Lecturas por foto | 2 | `LECTURAS_MAX` |
 | Lecturas a la vez en el proceso | 1 con Mnemo, 2 con Anthropic | `A_LA_VEZ` |
 | Plazo de la subida | 90 s en total y 20 s sin datos; 4 cupos propios en el servicio único (no le quitan cupos a la API) | `PLAZO_SUBIDA_S`, `servidor.CUPOS_SUBIDA` |
 | Una lectura | 150 s por llamada, 270 s con un reintento; «leyendo» sin latido por 5 minutos se da por fallida | `lector_planillas`, `VIVA_S` |
 | Espera de `leer_planilla` a las que se leen | ~55 s (sondeo cada 2 s), dentro de su plazo de 80 s | `ESPERA_S` |
-| Lo leído por llamada de `leer_planilla` | 36.000 caracteres: las fotos que no caben vuelven sin filas; una hoja que ni sola cabe devuelve las primeras filas que caben, con `filas_omitidas` (cotejar y cargar siguen viendo todas) | `PRESUPUESTO` |
+| Lo leído por llamada de `leer_planilla` | 36.000 caracteres, con los avisos de privacidad y la cabeza de cada foto (su descripción incluida) contados antes que las filas: las fotos cuyas filas no caben vuelven sin filas; una hoja que ni sola cabe devuelve las primeras filas que caben, con `filas_omitidas` (cotejar y cargar siguen viendo todas). Los avisos van antes que las fotos | `PRESUPUESTO` |
 | Bandeja en `planillas` | Las 40 más nuevas | `BANDEJA_MAX` |
 | Tarjeta de carga | 30 personas más hasta 6 líneas fijas; 30 correcciones | `TARJETA_PERSONAS`, `TARJETA_FIJAS`, `MAX_CORRECCIONES` |
 | Nota y folio | 300 y 120 caracteres | `NOTA_MAX`, `FOLIO_MAX` |
@@ -2262,7 +2405,7 @@ El asistente no necesita ninguna variable: se conecta con Mnemo desde **Ajustes 
 | Variable | Valor |
 |---|---|
 | `MNEMO_MCP_URL` | La dirección MCP de Mnemo que se sugiere al conectar (ver [Conectar con Mnemo](#conectar-con-mnemo)) |
-| `MNEMO_MODELO` | El modelo de la cuenta de Mnemo: `principal`, `ligero` o `<proveedor>/<modelo>`; vacía, el de la cuenta (las fotos de planillas, el de la cuenta para leer imágenes, salvo con un Mnemo anterior) |
+| `MNEMO_MODELO` | El modelo de la cuenta de Mnemo: `principal`, `ligero` o `<proveedor>/<modelo>`; vacía, el de la cuenta (las fotos, el de la cuenta para leer imágenes, salvo con un Mnemo anterior) |
 | `MNEMO_HERRAMIENTAS` | Qué herramientas de Mnemo se ofrecen (y qué permisos se piden al conectar) |
 | `ANTHROPIC_API_KEY` | El [modo directo](#modo-directo-sin-mnemo): una clave de la consola de Anthropic, que se usa solo sin Mnemo con permiso para usar sus modelos |
 | `AGENTE_MODELO` | Solo en modo directo: `claude-opus-5-5` por defecto |
@@ -2318,9 +2461,9 @@ se suba.
   escritura del panel que no termina dentro del plazo de la herramienta sigue hasta el final (y guarda su respuesta para
   un reintento), y el asistente avisa que pudo quedar hecha en vez de proponerla de nuevo.
 - **Lo que viene de la base, de Mnemo o de una foto son datos, no instrucciones.** Las notas, las filas importadas, los
-  lugares escritos, los documentos, los formularios y lo escrito en una planilla fotografiada los escribe gente y
-  pueden traer órdenes escondidas; el asistente no las sigue, y aunque lo hiciera no puede saltarse los permisos ni
-  escribir sin aprobación.
+  lugares escritos, los documentos, los formularios y lo escrito en una foto (una planilla o cualquier otra imagen, y la
+  descripción que escribe el lector) los escribe gente u otro modelo y pueden traer órdenes escondidas; el asistente no
+  las sigue, y aunque lo hiciera no puede saltarse los permisos ni escribir sin aprobación.
 - **Las fotos.** La subida pide la sesión, el permiso `importar` (A y K), el rol en `agente_planillas.roles`, el
   modelo y un compromiso de confidencialidad que deje fotografiar planillas antes de leer un byte del cuerpo (P y C,
   403 `permiso` sin leerlo), con su propio límite en la guardia (`LIMITE_FOTO`), su plazo y sus cupos. Solo JPEG o
@@ -2387,12 +2530,13 @@ se suba.
   queda solo en la memoria de la página (como mucho 8 frases) y lo de una respuesta se suelta al decirse. El widget sabe qué vista está abierta por el evento `vista` que
   emite `app.js` al terminar de pintar cada una, y vuelve a pedir su estado (que guarda 5 minutos) con el evento
   `agente:estado`, que emite Ajustes al volver de Mnemo, al desconectar y al guardar los ajustes del asistente (y los de
-  las planillas por foto); si se abre sin modelo, también lo vuelve a pedir. Las fotos de planillas viven solo en la
+  las planillas por foto); si se abre sin modelo, también lo vuelve a pedir. Las fotos adjuntas viven solo en la
   memoria de la pestaña (nunca en `localStorage`, `sessionStorage` ni IndexedDB) mientras están en el cuadro o en un
   turno que se puede reintentar, se pintan en canvas y se sueltan al cerrar el panel, al quedar la cuenta pendiente o
   al dejar de usar el asistente; quitar una que no llegó en un mensaje la borra de la bandeja, salvo que la bandeja
   ya la tuviera (`repetida`), que nunca se borra desde el chat. La vista Planillas por
-  foto pide la foto con `no-store`, la dibuja en un canvas y la suelta al cerrarla o salir (nunca en una dirección).
+  foto pide la foto con `no-store`, la dibuja en un canvas y la suelta al cerrarla o salir (nunca en una dirección), y
+  pinta la descripción como texto, nunca como HTML.
 
 ## Arquitectura
 
@@ -2404,17 +2548,17 @@ se suba.
 | `app/agente/proveedores.py` | De dónde sale el modelo: Mnemo si está conectado con `mnemo:model`; si no, Anthropic si hay clave. Queda fijo en cada conversación |
 | `app/agente/modelo_mnemo.py` | El modelo de Mnemo: cada ronda por `mnemo_model_complete`, con el texto por partes |
 | `app/agente/llm.py` | El modelo de Anthropic en modo directo: el cliente (se crea al primer uso) y la forma de cada petición |
-| `app/agente/mnemo_conexion.py`, `app/agente/cifrado.py` | OAuth con Mnemo, los tokens cifrados y su renovación; en `cifrado.py`, también la variante para bytes (`cifrar_bytes`, `descifrar_bytes`) de las fotos de planillas y lo leído |
+| `app/agente/mnemo_conexion.py`, `app/agente/cifrado.py` | OAuth con Mnemo, los tokens cifrados y su renovación; en `cifrado.py`, también la variante para bytes (`cifrar_bytes`, `descifrar_bytes`) de las fotos y lo leído |
 | `app/agente/sistema.py` | Las instrucciones del asistente (fijas por conversación, con las secciones de cada grupo de herramientas solo si las tiene: `secciones`) y el contexto de la vista de cada mensaje |
-| `app/agente/conversaciones.py` | Conversaciones, mensajes (solo se agregan, nunca se editan) y uso diario en MongoDB; `para_interfaz` (con las fotos de un mensaje y el gráfico de cada herramienta) y `marcar_datos` (una conversación con datos sin id, como las filas de una planilla) |
+| `app/agente/conversaciones.py` | Conversaciones, mensajes (solo se agregan, nunca se editan) y uso diario en MongoDB; `para_interfaz` (con las fotos de un mensaje y el gráfico de cada herramienta) y `marcar_datos` (una conversación con datos sin id, como las filas de una planilla o una foto que muestra datos de personas) |
 | `app/agente/politica.py` | Quién lo usa y con qué: los ajustes con valores de respaldo (también `agente_planillas` y `agente_mcp`), `ofrecida` y las sugerencias de la bienvenida (`SUGERENCIAS`) |
 | `app/agente/interno.py` | Las llamadas a la API del panel con la sesión de quien conversa |
-| `app/agente/minimizar.py` | Lo mínimo de cada persona que llega al modelo |
-| `app/agente/herramientas/` | `base.py` (contratos: `Herramienta.mcp`, `plazo`, `disponible_ajustes`, `Confirmacion.personas`), `personas.py`, `fichas.py` (los registros de cada persona y las reuniones), `calidad.py` (las colas de Calidad y los catálogos), `planillas.py` (las planillas por foto y el bloque `<fotos_adjuntas>`), `analisis.py` (`analizar`, `diagnostico`), `gestion.py`, `interfaz.py` y `mnemo.py` |
+| `app/agente/minimizar.py` | Lo mínimo de cada persona que llega al modelo; también `enmascarar_descripcion`, la descripción de una foto sin números de 5 o más dígitos ni correos enteros |
+| `app/agente/herramientas/` | `base.py` (contratos: `Herramienta.mcp`, `plazo`, `disponible_ajustes`, `Confirmacion.personas`), `personas.py`, `fichas.py` (los registros de cada persona y las reuniones), `calidad.py` (las colas de Calidad y los catálogos), `planillas.py` (las fotos adjuntas, las planillas por foto y el bloque `<fotos_adjuntas>`), `analisis.py` (`analizar`, `diagnostico`), `gestion.py`, `interfaz.py` y `mnemo.py` |
 | `app/agente/grafico.py`, `web/js/agente-graficos.js` | El contrato del gráfico del chat (`validar`: clases barras, columnas, apilada y serie, hasta 60 ítems) y su dibujo en el navegador (`pintarGrafico`, con `web/js/graficos.js`; agente.js lo carga con el primer gráfico) |
 | `app/analitica.py`, `app/api/analitica.py` | Los [análisis avanzados](#análisis-avanzados): la validación (`Consulta`), la lectura compartida, la privacidad de las cifras (`proteger`, `fijadas`…), un análisis por tipo, el diagnóstico y el catálogo; `GET /api/analitica?consulta=` y `GET /api/analitica/catalogo` (`analitica.ver`) |
-| `app/planillas.py`, `app/api/planillas.py` | La [bandeja de planillas por foto](#planillas-físicas-por-foto): validación y limpieza de la imagen, subida con sus topes, lectura de fondo (cupo, latido, uso), reglas de privacidad por fila, correcciones, vista previa y carga; `fotos_de` y `estado_adjuntos` para el chat; las rutas `/api/planillas…` |
-| `app/agente/lector_planillas.py` | La lectura de una foto: las instrucciones, la llamada aparte al modelo (`leer`), la interpretación de la respuesta y el saneo |
+| `app/planillas.py`, `app/api/planillas.py` | La [bandeja de planillas por foto](#planillas-físicas-por-foto), también de cualquier otra foto que se adjunte: validación y limpieza de la imagen, subida con sus topes, lectura de fondo (cupo, latido, uso), lo leído cifrado (la descripción y las filas), reglas de privacidad por fila, correcciones, vista previa y carga (una foto sin filas: 422 `sin_filas`); `fotos_de` y `estado_adjuntos` para el chat; las rutas `/api/planillas…` |
+| `app/agente/lector_planillas.py` | La lectura de una foto, de cualquier imagen: las instrucciones, la llamada aparte al modelo (`leer`), la interpretación de la respuesta (la descripción, `datos_personales`, las filas y el aviso `sin_filas`; el rescate de una respuesta cortada) y el saneo |
 | `app/pipeline/importar.py`, `app/pipeline/lectores.py` | `importar_registros` y `simular_registros` (la carga y la vista previa de una planilla por foto, con el mismo importador del Excel) y `registro_planilla` (la misma fila da el mismo registro en el Excel y en la foto) |
 | `app/api/calidad.py` | (además de Calidad de datos) `POST /api/lugares/{lid}/alias`, el alias de un barrio o vereda con su reubicación acotada |
 | `app/sesion_interna.py` | La sesión interna de cada llamada de un agente por MCP con datos (`via: "mcp"`, 5 minutos, cerrada siempre) |
@@ -2440,14 +2584,14 @@ se suba.
 | `app/api/mcp.py` | El servidor MCP (`POST /api/mcp`): el de la presentación (la herramienta `presentacion`) y el de [datos](#agentes-por-mcp-con-datos) (las herramientas por alcance, la sesión interna por llamada, sin quien no autorizó, los topes, las propuestas y `estado_propuesta`), y las rutas de Mi cuenta `GET /api/mcp/propuestas` y `POST /api/mcp/propuestas/{id}` |
 | `web/js/vistas/cuenta.js` | Mi cuenta, con **Agentes por MCP**: la dirección del servidor, las dos claves (la de datos con sus alcances, el motivo de los que no se tienen y el aviso) y las propuestas con su tarjeta entera, **Aprobar** y **Rechazar** |
 | `web/js/app.js` | (en el asistente) la insignia de «Mi cuenta» con las propuestas por MCP que esperan (`INSIGNIAS.cuenta`, `propuestas_mcp` de `/api/insignias`) |
-| `web/js/vistas/importar.js`, `web/css/planillas.css` | La vista **Importar y exportar → Planillas por foto**: subir, la bandeja, la revisión con la foto al lado de la grilla, cotejar, cargar y confirmar las autorizaciones con el papel |
+| `web/js/vistas/importar.js`, `web/css/planillas.css` | La vista **Importar y exportar → Planillas por foto**: subir, la bandeja, la revisión con la foto al lado de su descripción y de la grilla, cotejar, cargar y confirmar las autorizaciones con el papel |
 | `web/js/api.js` (`flujo`) | Lee la respuesta NDJSON con el CSRF de la sesión |
 | `app/api/ajustes.py`, `web/js/vistas/ajustes.js` | Los ajustes del asistente y, en la vista, la conexión con Mnemo (conectar, la vuelta y desconectar), el bloque **Voz del asistente** (las voces de `GET /api/agente/voces`, `agente_voz` y **Probar voz**) y los formularios **Planillas físicas por foto** (`agente_planillas`) y **Agentes externos por MCP** (`agente_mcp`) |
 
 **Un turno, paso a paso.**
 
-1. El navegador manda `POST /api/agente/mensajes` con `{conversacion, texto, contexto}` y, si lleva fotos de
-   planillas, `adjuntos` (sus ids en la bandeja, como mucho 4; el texto puede ir vacío).
+1. El navegador manda `POST /api/agente/mensajes` con `{conversacion, texto, contexto}` y, si lleva fotos
+   (planillas o cualquier otra imagen), `adjuntos` (sus ids en la bandeja, como mucho 4; el texto puede ir vacío).
 2. Antes de abrir el flujo, el servidor responde con JSON normal lo que impide el turno: 503 `sin_configurar` (no hay
    modelo: ni Mnemo conectado con permiso para usar sus modelos ni clave de Anthropic) o `saturado` (ya hay 4 turnos en
    este proceso; trae `Retry-After`), 403 `agente_apagado` (su rol no está habilitado), 429 `volumen` (tope diario), 403
@@ -2515,7 +2659,7 @@ cuenta no incluye el chat, o no incluye el modelo elegido en `MNEMO_MODELO`), `m
 `mnemo_sin_modelo` (la cuenta no tiene un modelo disponible ahora, o la conexión no tiene permiso para usar sus
 modelos), `larga` (la conversación no cabe en la ventana del modelo) y `llm_peticion` (otro rechazo de la petición).
 `mnemo_sin_vision` (ningún modelo de la cuenta lee imágenes, el de leerlas no se puede usar ahora o su proveedor
-rechazó la foto) no llega en un turno: es el error de leer la foto de una planilla y queda en la bandeja, con su
+rechazó la foto) no llega en un turno: es el error de leer una foto y queda en la bandeja, con su
 mensaje (ver [Planillas físicas por foto](#planillas-físicas-por-foto)).
 El texto de una ronda puede llegar en un solo trozo largo (con Mnemo, si el proveedor de la cuenta no responde por
 partes): el widget lo pinta entero, con el mismo tope que `texto_ronda`.
@@ -2525,11 +2669,11 @@ herramientas congeladas, personas vistas, lo pendiente de aprobar y lo que no se
 mandadas, candado del turno y fecha de borrado), `agente_mensajes` (un documento por mensaje, con su número de orden),
 `agente_uso` (mensajes, tokens y créditos por persona y día), `agente_olvidos` (quién dejó de autorizar en la última
 hora: solo el número de la ficha y la hora) y, en `meta`, `mnemo_conexion` (la conexión con Mnemo, con los tokens
-cifrados). Además, de las herramientas nuevas: `planillas` (la bandeja: la foto y lo leído cifrados, el estado y las
-huellas de cada fila para la supresión; TTL en `expira`), `planillas_subidas` (quién subió y cuándo, para los topes:
-26 horas), `importaciones.fotos_sha256` (las fotos ya cargadas), `claves_mcp` (las dos claves de cada persona: solo
-su SHA-256; la de datos con TTL en `expira`), `mcp_propuestas` (48 horas; decididas, 7 días) y `mcp_entregas` (90
-días). Los índices TTL borran lo vencido.
+cifrados). Además, de las herramientas nuevas: `planillas` (la bandeja: la foto y lo leído cifrados, el estado, el
+resumen en claro sin datos de personas y las huellas de cada fila para la supresión; TTL en `expira`),
+`planillas_subidas` (quién subió y cuándo, para los topes: 26 horas), `importaciones.fotos_sha256` (las fotos ya
+cargadas), `claves_mcp` (las dos claves de cada persona: solo su SHA-256; la de datos con TTL en `expira`),
+`mcp_propuestas` (48 horas; decididas, 7 días) y `mcp_entregas` (90 días). Los índices TTL borran lo vencido.
 
 ## Probar en local
 
@@ -2598,8 +2742,11 @@ prueba; nunca se versionan fotos):
 - **Planillas por foto**: `tests/test_planillas_imagen.py`, `test_planillas_lector.py`, `test_planillas_importar.py`,
   `test_planillas_api.py`, `test_planillas_carga.py` y `test_planillas_fondo.py` (el servidor: la imagen, el lector con
   un proveedor falso, el importador, las rutas, la supresión y la Messages API simulada de punta a punta), con
-  `tests/ayudas_planillas.py`; `test_planillas_herramientas.py` y `test_planillas_chat.py` (el chat: lo que el modelo
-  nunca recibe entero, leer → cotejar → cargar), con `tests/ayudas_planillas_chat.py`; `test_planillas_vista.py` y
+  `tests/ayudas_planillas.py`; `test_planillas_cualquier_imagen.py` (cualquier foto: la descripción, la foto sin filas
+  y su 422 `sin_filas`, la cédula que se sigue borrando, `minimizar.enmascarar_descripcion` y el ajuste retirado);
+  `test_planillas_herramientas.py`, `test_planillas_chat.py` y `test_planillas_fotos_chat.py` (el chat: lo que el
+  modelo nunca recibe entero, leer → cotejar → cargar, la descripción enmascarada, la marca de datos y que nunca dice
+  que no ve las fotos), con `tests/ayudas_planillas_chat.py`; `test_planillas_vista.py` y
   `test_planillas_vista_web.py` (la vista en Chromium).
 - **Widget**: `tests/test_widget_fotos.py`, `test_widget_graficos.py`, `test_widget_ajustes.py` y
   `test_widget_navegador.py` (Chromium: la cámara, la galería, los gráficos en vivo y al repintar).

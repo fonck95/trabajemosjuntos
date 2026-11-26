@@ -94,7 +94,7 @@ def test_el_planillero_con_el_ajuste_ve_solo_lo_de_su_zona_y_solo_suma():
     assert f"\n\n{sistema.POLITICOS_TITULO}\n{sistema.POLITICOS_P}\n" in p
     assert all(linea in p for linea in (*sistema.POLITICOS_REGLAS, sistema.POLITICOS_MARCAR))
     assert sistema.POLITICOS_AK not in p and sistema.SIN_POLITICOS not in p
-    assert "Análisis de la base" not in p and "Planillas físicas por foto" not in p
+    assert "Análisis de la base" not in p and sistema.PLANILLAS[0] not in p
     for parte in ("solo en la ficha de las personas de su zona o que registró", "no en búsquedas ni listas",
                   "no filtras por ellos", "Solo sumas", "`lideres`", "quitarlos es del administrador o el coordinador",
                   "Las listas de origen y los conteos por líder no los ves"):

@@ -115,8 +115,8 @@ def test_un_mensaje_con_solo_fotos(cliente, sesion, monkeypatch):
     r, ev = _enviar(sesion, "", [pid, pid])  # repetida: una sola
     assert r.status_code == 200, r.text
     inicio = _de(ev, "inicio")[0]
-    assert inicio["titulo"] == "Fotos de planillas" and ev[-1] == {"tipo": "fin", "motivo": "listo",
-                                                                   "limite": ev[-1]["limite"]}
+    assert inicio["titulo"] == bucle.TITULO_FOTOS == "Fotos" and ev[-1] == {"tipo": "fin", "motivo": "listo",
+                                                                            "limite": ev[-1]["limite"]}
     contenido = api.peticiones[0]["json"]["messages"][0]["content"]
     assert [b["type"] for b in contenido] == ["text", "text", "text"]
     assert contenido[0]["text"].startswith("<contexto_del_panel>")

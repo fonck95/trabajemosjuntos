@@ -58,7 +58,7 @@ def test_fotos_en_una_conversacion_creada_sin_las_herramientas_de_planillas(clie
     fotos = peticion["messages"][-1]["content"][1]["text"]
     # No se le pide usar una herramienta que no tiene: se le dice que no la tiene
     assert fotos.startswith("<fotos_adjuntas>") and pid in fotos
-    assert "no tienes las herramientas de planillas" in fotos and "usa leer_planilla" not in fotos
+    assert "no tienes las herramientas de fotos" in fotos and "leer_planilla" not in fotos
 
 
 def test_una_fila_sin_nombre_ni_cedula_tambien_marca_la_conversacion(cliente, sesion, monkeypatch, ctx_de):

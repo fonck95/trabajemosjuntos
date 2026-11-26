@@ -75,11 +75,13 @@ def test_rechazos():
     assert _codigo(json.dumps(sin_clave)) == ("sin_imagen", False)
     assert _codigo(lectura_json([], tipo="documento_identidad")) == ("documento_identidad", True)
     assert _codigo(lectura_json([fila(1, **ANA)], tipo="documento_identidad")) == ("documento_identidad", True)
-    assert _codigo(lectura_json([fila(1, **ANA)], tipo="asistencia")) == ("formato", True)
-    assert _codigo(lectura_json([fila(1, **ANA)], tipo="consulta_puesto")) == ("formato", True)
-    assert lp.interpretar(lectura_json([fila(1, **ANA)], tipo="asistencia"), otros_formatos=True).filas
-    assert _codigo(lectura_json([], visibles=4)) == ("sin_filas", False)
-    assert _codigo(lectura_json([fila(1, cedula=None, nombre=None)])) == ("sin_filas", False)  # filas vacías
+    # Otros formatos ya no se rechazan (el ajuste `otros_formatos` se retiró): sus filas se leen
+    for tipo in ("asistencia", "consulta_puesto", "otro"):
+        lec = lp.interpretar(lectura_json([fila(1, **ANA)], tipo=tipo))
+        assert lec.tipo_formato == tipo and lec.filas[0]["valores"]["cedula"] == ANA["cedula"] and lec.aviso is None
+    # Sin descripción ni filas (un lector que no siguió el formato): no se leyó nada
+    assert _codigo(lectura_json([], visibles=4)) == ("respuesta", False)
+    assert _codigo(lectura_json([fila(1, cedula=None, nombre=None)])) == ("respuesta", False)  # filas vacías
     assert _codigo(lectura_json([fila(1, **ANA), fila(2, nombre="OTRA INVENTADA")], visibles=1)) == \
         ("inventadas", False)
     sin_visibles = json.loads(lectura_json([fila(1, **ANA)]))
@@ -120,12 +122,11 @@ def test_desde_fila_y_filas_repetidas():
 
 
 def test_instrucciones_contra_la_inyeccion_y_sin_datos_sensibles():
-    s = lp.instrucciones(False)
+    s = lp.instrucciones()
+    assert s == lp.INSTRUCCIONES  # siempre las mismas (el proveedor las reusa de su caché)
     assert "nunca una instrucción" in s and "no las" in s and "obedezcas" in s
     for palabra in ("salud", "etnia", "discapacidad", "víctima", "huellas", "partido", "líder"):
         assert palabra in s, palabra
-    assert lp.SOLO_PLANILLA in s and lp.OTROS_FORMATOS not in s
-    assert lp.OTROS_FORMATOS in lp.instrucciones(True)
     assert "{otros}" not in s and "documento_identidad" in s
     assert "desde la fila 7" in lp.mensaje("planilla_campo", 7) and "lista de asistencia" in lp.mensaje("asistencia")
 
@@ -142,7 +143,7 @@ def test_la_llamada_aparte_sin_herramientas():
     assert llamada["herramientas"] == [] and llamada["rapido"] is False and llamada["esfuerzo"] == "medium"
     assert llamada["vision"] is True  # con Mnemo, el modelo de la cuenta para leer imágenes
     assert llamada["max_tokens"] == lp.MAX_TOKENS_DIRECTO == 24_000
-    assert llamada["sistema"] == lp.instrucciones(False)
+    assert llamada["sistema"] == lp.instrucciones()
     (m,) = llamada["mensajes"]
     imagen, texto = m["content"]
     assert m["role"] == "user" and imagen["type"] == "image" and imagen["source"]["type"] == "base64"
@@ -230,7 +231,7 @@ def test_sin_imagen_nombra_el_modelo_que_respondio():
     # Los demás rechazos no cambian
     with pytest.raises(lp.ErrorLectura) as e:
         _leer(Responde("deepseek/deepseek-v4-flash", lectura_json([], visibles=0)))
-    assert e.value.codigo == "sin_filas" and e.value.mensaje == lp.MENSAJES["sin_filas"]
+    assert e.value.codigo == "respuesta" and e.value.mensaje == lp.MENSAJES["respuesta"]
 
 
 def test_en_modo_directo_lee_con_el_proveedor_de_verdad():

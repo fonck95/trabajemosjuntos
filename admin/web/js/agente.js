@@ -15,13 +15,16 @@
 // navegador); la respuesta sigue escrita. Vive en document.body, fuera de #raiz y de #vista: sobrevive a cada cambio
 // de vista.
 //
-// Fotos de planillas físicas (docs/agente.md, «Planillas físicas por foto»): si el estado trae `adjuntos` (el rol está
-// en `agente_planillas.roles` y hay modelo), el cuadro de escribir ofrece la cámara (input con capture="environment") y
-// la galería (con `multiple`), como mucho `max_por_mensaje` fotos. Cada foto se prepara en el navegador, de a una (la
-// memoria de un celular económico no da para varias de 12 MP a la vez): se reduce a `lado_max`, se vuelve a codificar
-// como JPEG (sin EXIF ni GPS) con `calidad`, bajándola si pasa de `max_bytes`, se avisa si es pequeña, oscura o movida,
-// se puede girar, y su miniatura se dibuja en un canvas (nunca con `.src =`). Se sube cruda a POST /api/planillas/fotos
-// (la bandeja de planillas del panel, que empieza a leerla de fondo) y el mensaje lleva sus ids en `adjuntos`.
+// Fotos adjuntas (docs/agente.md, «Planillas físicas por foto»): si el estado trae `adjuntos` (el rol está en
+// `agente_planillas.roles` y hay modelo), el cuadro de escribir ofrece la cámara (input con capture="environment") y
+// la galería (con `multiple`), como mucho `max_por_mensaje` fotos: una planilla o cualquier otra imagen. Cada foto se
+// prepara en el navegador, de a una (la memoria de un celular económico no da para varias de 12 MP a la vez): se reduce
+// a `lado_max`, se vuelve a codificar como JPEG (sin EXIF ni GPS) con `calidad`, bajándola si pasa de `max_bytes`, se
+// avisa si es pequeña, oscura o movida, se puede girar, y su miniatura se dibuja en un canvas (nunca con `.src =`). Se
+// sube cruda a POST /api/planillas/fotos (la bandeja del panel, que empieza a leerla de fondo: la describe y, si es una
+// hoja que lista personas, transcribe sus filas) y el mensaje lleva sus ids en `adjuntos`. El modelo de la
+// conversación nunca recibe la imagen: le llega lo que el panel leyó, enmascarado (`leer_planilla`), y lo que dice de
+// cada foto mientras la lee (la etiqueta y el resumen de esa herramienta) lo escribe el servidor.
 // «Reintentar» y «Nueva conversación» conservan las fotos (en memoria, nunca en el almacenamiento del navegador). Los
 // gráficos de la analítica (acción `grafico`, y la parte `grafico` de una herramienta al repintar) los dibuja
 // agente-graficos.js.
@@ -107,7 +110,7 @@ const CAIDA_MNEMO = {
   alterada: 'Sus datos en la base del panel no coinciden con los que se guardaron cifrados (o se guardó con una versión anterior del panel): por seguridad, dejó de usarse.',
   error: 'Mnemo respondió algo inesperado al renovarla.',
 };
-// Las fotos de planillas físicas: la bandeja del panel (app/api/planillas.py). La subida lleva la foto tal cual como
+// Las fotos adjuntas: la bandeja del panel (app/api/planillas.py). La subida lleva la foto tal cual como
 // cuerpo (como el audio del dictado) y quitar una foto que no se llegó a mandar la borra de la bandeja (es de quien la
 // subió)
 const RUTA_FOTOS = '/api/planillas/fotos';
@@ -280,7 +283,7 @@ export function bloqueoTarjeta(ev) {
   return null;
 }
 
-// ───────── Fotos de planillas: lo que se calcula sin el navegador ─────────
+// ───────── Fotos adjuntas: lo que se calcula sin el navegador ─────────
 
 /** Los topes de las fotos que da el estado (`adjuntos`: {max_por_mensaje, lado_max, calidad, max_bytes}), o null si
  * no llegan o no tienen la forma esperada: sin ellos la cámara no se ofrece. */
@@ -345,7 +348,7 @@ export function avisosFoto({ ladoOriginal, brillo, nitidez }) {
   return avisos;
 }
 
-// ───────── Fotos de planillas: prepararlas en el navegador ─────────
+// ───────── Fotos adjuntas: prepararlas en el navegador ─────────
 // Todo pasa por un canvas: la foto se abre con su orientación (EXIF), se dibuja al tamaño de subida y se vuelve a
 // codificar como JPEG, así que no sale nada de lo que traía el archivo (EXIF, GPS, el modelo del teléfono). Los lienzos
 // grandes se sueltan en cuanto dejan de servir (ancho 0) y la imagen abierta, con close(): una foto a la vez.
@@ -458,7 +461,7 @@ async function prepararImagen(archivo, lim, mini) {
   let c = null;
   try {
     const ladoOriginal = Math.max(bmp.width, bmp.height);
-    if (ladoOriginal < LADO_MIN_FOTO) throw errorFoto('La imagen es demasiado pequeña para leer una planilla.');
+    if (ladoOriginal < LADO_MIN_FOTO) throw errorFoto('La imagen es demasiado pequeña para leerla.');
     const luz = medirLuz(bmp);
     const m = medidasFoto(bmp.width, bmp.height, lim.ladoMax);
     c = lienzo(m.ancho, m.alto);
@@ -935,7 +938,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
         </div>
         <div class="agente-fila">
           <label class="sr" for="agente-texto">Mensaje para el asistente</label>
-          <button type="button" class="btn agente-adjuntar" id="agente-adjuntar" aria-label="Adjuntar fotos de planillas" title="Adjuntar fotos de planillas" aria-expanded="false" aria-controls="agente-fotos" hidden>${icono('camara')}<span class="agente-adjuntar-n" aria-hidden="true" hidden></span></button>
+          <button type="button" class="btn agente-adjuntar" id="agente-adjuntar" aria-label="Adjuntar fotos" title="Adjuntar fotos" aria-expanded="false" aria-controls="agente-fotos" hidden>${icono('camara')}<span class="agente-adjuntar-n" aria-hidden="true" hidden></span></button>
           <textarea id="agente-texto" rows="1" maxlength="4000" placeholder="Escriba su pregunta…" enterkeyhint="send" autocomplete="off" spellcheck="true"></textarea>
           <button type="button" class="btn agente-voz" id="agente-voz" aria-label="Preguntar por voz" title="Preguntar por voz" aria-pressed="false" hidden>${icono('microfono')}</button>
           <button type="submit" class="btn primario agente-enviar" id="agente-enviar" aria-label="Enviar" title="Enviar">${icono('enviar')}</button>
@@ -960,7 +963,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   // turno y lo de adentro no se anuncia hasta que termina; esta región, fuera de ella, la anuncia en cuanto termina
   const adelantoVivo = $('#agente-adelanto-vivo');
   const ayuda = $('.agente-ayuda');
-  // Las fotos de planillas: el botón del cuadro de escribir, la bandeja con el aviso, los dos selectores y la lista
+  // Las fotos adjuntas: el botón del cuadro de escribir, la bandeja con el aviso, los dos selectores y la lista
   const adjuntarBtn = $('#agente-adjuntar'), adjuntarN = $('.agente-adjuntar-n'), bandeja = $('#agente-fotos');
   const fotoCamaraBtn = $('#agente-foto-camara'), fotoGaleriaBtn = $('#agente-foto-galeria');
   const fotoCamaraIn = $('#agente-foto-camara-in'), fotoGaleriaIn = $('#agente-foto-galeria-in');
@@ -997,7 +1000,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   const chips = new Map();    // id del tool_use → chip
   const tarjetas = new Map(); // id del tool_use → tarjeta de aprobación
   let ultimoOk = null;        // el chip de la última herramienta que terminó: su gráfico va debajo
-  // Las fotos de planillas del cuadro de escribir, en orden. Viven en memoria (nunca en el almacenamiento del
+  // Las fotos adjuntas del cuadro de escribir, en orden. Viven en memoria (nunca en el almacenamiento del
   // navegador) y se van con el mensaje; el turno las guarda para «Reintentar» y «Nueva conversación». Cada una: {estado
   // ('preparando' | 'subiendo' | 'lista' | 'error'), lim (los topes con que se preparó), blob, ancho, alto, avisos, id
   // (de la bandeja), lectura (el estado que dio la bandeja), error, reintentar, enviada (llegó en un mensaje: quitarla
@@ -1088,7 +1091,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
           ofreceModelo: c.ofrece_modelo !== false } : null,
       sugerencias: (Array.isArray(o.sugerencias) ? o.sugerencias : []).map((s) => texto(s, 200).trim()).filter(Boolean)
         .slice(0, 6),
-      // ¿Puede adjuntar fotos de planillas físicas, y con qué topes? (null: la cámara no se ofrece)
+      // ¿Puede adjuntar fotos (planillas o cualquier otra imagen), y con qué topes? (null: la cámara no se ofrece)
       adjuntos: limitesFotos(o.adjuntos),
     };
   }
@@ -2159,7 +2162,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     }
   }
 
-  /** Manda un mensaje: `t` y, en `fotos`, las fotos de planillas ya subidas que van con él (un mensaje puede ser solo
+  /** Manda un mensaje: `t` y, en `fotos`, las fotos ya subidas que van con él (un mensaje puede ser solo
    * fotos). `reusar`: la burbuja de un mensaje que no llegó, que «Reintentar» vuelve a mandar. */
   async function enviar(t, { reusar = null, fotos: adjuntas = [] } = {}) {
     if (turno || cargando || !info?.disponible) return;
@@ -2789,14 +2792,14 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     if (document.hidden && e.estado === 'escuchando' && e.via === 'servidor') dictado.cancelar();
   });
 
-  // ── Fotos de planillas físicas: la bandeja del cuadro de escribir ──
+  // ── Fotos adjuntas (planillas o cualquier otra imagen): la bandeja del cuadro de escribir ──
   // «Tomar foto» abre la cámara del teléfono (capture="environment"); «Elegir de la galería», varias a la vez. Cada
   // foto se prepara (de a una), se sube (de a una) y queda «Subida · leyendo…»: la bandeja del panel la empieza a leer
   // de fondo mientras se escribe. Se puede girar (se sube otra vez y la anterior se borra) y quitar (se borra de la
   // bandeja si no llegó en un mensaje). Nada de las fotos va al almacenamiento del navegador.
   const soporteFotos = typeof globalThis.createImageBitmap === 'function' && typeof HTMLCanvasElement === 'function'
     && typeof HTMLCanvasElement.prototype.toBlob === 'function';
-  /** ¿Se ofrecen? El asistente disponible, `adjuntos` en el estado (el rol sube fotos de planillas) y un navegador que
+  /** ¿Se ofrecen? El asistente disponible, `adjuntos` en el estado (el rol sube fotos) y un navegador que
    * las prepara. */
   const puedeFotos = () => !!info?.disponible && !!info.adjuntos && soporteFotos;
   const fotoEnCurso = (f) => f.estado === 'preparando' || f.estado === 'subiendo';
@@ -2822,8 +2825,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     adjuntarBtn.setAttribute('aria-expanded', String(visible));
     adjuntarN.hidden = !fotos.length;
     adjuntarN.textContent = fotos.length ? String(fotos.length) : '';
-    const nombre = !fotos.length ? 'Adjuntar fotos de planillas'
-      : `Fotos de planillas: ${fotos.length === 1 ? '1 adjunta' : `${fotos.length} adjuntas`}`;
+    const nombre = !fotos.length ? 'Adjuntar fotos'
+      : `Fotos: ${fotos.length === 1 ? '1 adjunta' : `${fotos.length} adjuntas`}`;
     adjuntarBtn.title = nombre;
     adjuntarBtn.setAttribute('aria-label', nombre);
     const lleno = !puede || fotos.length >= max;

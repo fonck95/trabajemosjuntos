@@ -142,7 +142,7 @@ def test_los_ajustes_nuevos_estan_con_su_valor_por_defecto():
         assert f"`agente_mcp.{clave}`" in ajustes, clave
     fila = lambda clave: next(x for x in ajustes.split("\n") if clave in x and x.startswith("|"))  # noqa: E731
     assert f"| {politica.PLANILLAS_POR_DEFECTO['retencion_horas']} |" in fila("agente_planillas.retencion_horas")
-    assert "| No |" in fila("agente_planillas.otros_formatos") and not politica.PLANILLAS_POR_DEFECTO["otros_formatos"]
+    assert "otros_formatos" not in politica.PLANILLAS_POR_DEFECTO  # retirado: toda foto se describe y se lee
     assert "| Sí |" in fila("agente_mcp.escritura") and politica.MCP_POR_DEFECTO["escritura"] is True
     assert "| 2.000 |" in fila("agente_mcp.llamadas_diarias") and politica.MCP_POR_DEFECTO["llamadas_diarias"] == 2000
     assert "| 300 |" in fila("agente_mcp.personas_diarias") and politica.MCP_POR_DEFECTO["personas_diarias"] == 300

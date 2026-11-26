@@ -45,11 +45,12 @@ ADELANTO_POR_DEFECTO = True
 # defecto que `modelo.AJUSTES_POR_DEFECTO` y los mismos rangos que acepta `api/ajustes.py` (una prueba compara los lados)
 # Las fotos de planillas las suben, leen, cotejan y cargan solo A y K (las rutas exigen `importar`): nunca el
 # planillero ni el consultor, aunque un ajuste guardado de antes los nombre (`ajustes_planillas` los quita). Las claves
-# MCP con datos, solo A y K (y leer personas por MCP, solo quien puede exportar: A)
+# MCP con datos, solo A y K (y leer personas por MCP, solo quien puede exportar: A). `otros_formatos` (si además de la
+# planilla de campo se leían otros formatos) se retiró: el lector describe cualquier foto y transcribe las filas de
+# toda hoja que liste personas; un valor guardado de antes se ignora (`ajustes_planillas` no lo devuelve)
 ROLES_PLANILLAS = ("admin", "coordinador")
 ROLES_MCP = ("admin", "coordinador")
-PLANILLAS_POR_DEFECTO: dict[str, Any] = {"roles": ["admin", "coordinador"], "retencion_horas": 24,
-                                         "otros_formatos": False}
+PLANILLAS_POR_DEFECTO: dict[str, Any] = {"roles": ["admin", "coordinador"], "retencion_horas": 24}
 RETENCION_HORAS = (1, 168)
 MCP_POR_DEFECTO: dict[str, Any] = {"roles": ["admin"], "escritura": True, "llamadas_diarias": 2000,
                                    "personas_diarias": 300}
@@ -162,16 +163,14 @@ def _roles(v: Any, por_defecto: list[str], validos: tuple[str, ...] = ROLES) -> 
 
 def ajustes_planillas(ajustes: dict | None) -> dict:
     """Los ajustes `agente_planillas` vigentes, completos y validados (una copia nueva en cada llamada): `roles` (quién
-    sube fotos de planillas físicas: admin o coordinador; un «planillero» guardado de antes se quita),
-    `retencion_horas` (cuánto se guardan la foto y lo leído) y `otros_formatos` (si además de la planilla de campo del
-    panel se leen listas de asistencia u otros formatos, que pueden traer columnas sensibles: apagado por defecto)."""
+    sube fotos de planillas físicas: admin o coordinador; un «planillero» guardado de antes se quita) y
+    `retencion_horas` (cuánto se guardan la foto y lo leído). Un `otros_formatos` guardado de antes (el ajuste se
+    retiró: toda foto se describe y se transcribe toda hoja que liste personas) se ignora y no sale."""
     crudo = (ajustes or {}).get("agente_planillas")
     crudo = crudo if isinstance(crudo, dict) else {}
     horas = _entero(crudo.get("retencion_horas"), RETENCION_HORAS)
-    otros = crudo.get("otros_formatos")
     return {"roles": _roles(crudo.get("roles"), PLANILLAS_POR_DEFECTO["roles"], ROLES_PLANILLAS),
-            "retencion_horas": horas if horas is not None else PLANILLAS_POR_DEFECTO["retencion_horas"],
-            "otros_formatos": otros if isinstance(otros, bool) else PLANILLAS_POR_DEFECTO["otros_formatos"]}
+            "retencion_horas": horas if horas is not None else PLANILLAS_POR_DEFECTO["retencion_horas"]}
 
 
 def ajustes_mcp(ajustes: dict | None) -> dict:

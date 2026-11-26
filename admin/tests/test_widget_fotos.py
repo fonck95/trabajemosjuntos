@@ -143,10 +143,15 @@ def test_camara_galeria_y_aviso_fijo():
     galeria = re.search(r'<input type="file" id="agente-foto-galeria-in"[^>]*>', plantilla).group(0)
     assert 'capture="environment"' in camara and 'accept="image/*"' in camara and "multiple" not in camara
     assert "multiple" in galeria and 'accept="image/*"' in galeria and "capture" not in galeria
-    # Los botones: el de la cámara del cuadro de escribir (oculto hasta que el estado lo ofrezca) y los de la bandeja
-    assert ('<button type="button" class="btn agente-adjuntar" id="agente-adjuntar" aria-label="Adjuntar fotos de '
-            'planillas" title="Adjuntar fotos de planillas" aria-expanded="false" aria-controls="agente-fotos" hidden>'
+    # Los botones: el de la cámara del cuadro de escribir (oculto hasta que el estado lo ofrezca) y los de la bandeja.
+    # Su nombre no dice «planillas»: se adjunta cualquier imagen (el panel la describe y, si lista personas, la lee)
+    assert ('<button type="button" class="btn agente-adjuntar" id="agente-adjuntar" aria-label="Adjuntar fotos" '
+            'title="Adjuntar fotos" aria-expanded="false" aria-controls="agente-fotos" hidden>'
             "${icono('camara')}") in plantilla
+    bandeja = _funcion(CODIGO, "pintarBandeja")
+    assert "const nombre = !fotos.length ? 'Adjuntar fotos'" in bandeja
+    assert "`Fotos: ${fotos.length === 1 ? '1 adjunta' : `${fotos.length} adjuntas`}`" in bandeja
+    assert "fotos de planillas" not in CODIGO.lower() and "leer una planilla" not in CODIGO
     assert "${icono('camara')}<span>Tomar foto</span>" in plantilla
     assert "${icono('galeria')}<span>Elegir de la galería</span>" in plantilla
     for nombre in ("camara", "galeria", "girar"):

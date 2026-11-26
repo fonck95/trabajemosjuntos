@@ -222,10 +222,12 @@ AJUSTES_POR_DEFECTO: dict[str, Any] = {
     # booleano aparte, de un nivel: solo lo cambia el administrador (gasta del mismo modelo)
     "agente_adelanto": True,
     # Las planillas físicas fotografiadas (docs/agente.md, «Planillas físicas por foto»): quién sube fotos al asistente
-    # para que las lea, las coteje con la base y proponga cargarlas, y cuántas horas se guardan la foto y lo leído (traen
-    # cédulas y teléfonos completos de habitantes). Solo el administrador y los coordinadores (`importar`): nunca
-    # planilleros ni consultores. De un nivel y de permisos, como `agente`: solo lo cambia el administrador
-    "agente_planillas": {"roles": ["admin", "coordinador"], "retencion_horas": 24, "otros_formatos": False},
+    # para que las lea (cualquier foto se describe; de una hoja que lista personas se transcriben las filas), las coteje
+    # con la base y proponga cargarlas, y cuántas horas se guardan la foto y lo leído (traen cédulas y teléfonos
+    # completos de habitantes). Solo el administrador y los coordinadores (`importar`): nunca planilleros ni
+    # consultores. De un nivel y de permisos, como `agente`: solo lo cambia el administrador. `otros_formatos` se
+    # retiró: un valor guardado de antes se ignora (`politica.ajustes_planillas`)
+    "agente_planillas": {"roles": ["admin", "coordinador"], "retencion_horas": 24},
     # Los datos por MCP (docs/agente.md, «Pantalla en off y agentes por MCP»): qué roles pueden crear claves que leen
     # datos, piden análisis o proponen cambios (los cambios siempre esperan la aprobación de la persona en el panel),
     # si se pueden proponer escrituras, cuántas llamadas por día admite cada clave y a cuántas personas distintas por

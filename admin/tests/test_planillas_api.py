@@ -182,7 +182,7 @@ def test_subir_otra_vez_una_que_fallo_la_vuelve_a_leer(cliente, sesion, monkeypa
     d = subir(sesion, datos).json()
     leer(cliente, d["id"])
     v = sesion.get(f"/api/planillas/{d['id']}").json()
-    assert v["estado"] == "fallida" and v["error"]["codigo"] == "sin_filas" and v["puede_releer"] is True
+    assert v["estado"] == "fallida" and v["error"]["codigo"] == "respuesta" and v["puede_releer"] is True
     r = subir(sesion, datos)
     assert r.status_code == 200 and r.json()["estado"] == "leyendo" and len(encoladas) == 2
     leer(cliente, d["id"])
@@ -259,13 +259,16 @@ def test_fotos_que_no_se_aceptan(cliente, sesion, monkeypatch, datos, tipo, codi
     assert cliente.app.state.db.planillas.count_documents({}) == 0
 
 
-def test_formatos_que_no_sean_la_planilla_solo_si_el_ajuste_lo_permite(cliente, sesion, monkeypatch):
+def test_cualquier_formato_de_la_lista_se_sube_siempre(cliente, sesion, monkeypatch):
+    """El ajuste `otros_formatos` se retiró: los tres formatos se aceptan siempre, también con un `otros_formatos:
+    false` guardado de antes; uno que no es de la lista, 422 `formato`."""
     encender(monkeypatch, cliente.app, _proveedor())
-    r = subir(sesion, jpeg(), formato="asistencia")
+    cliente.app.state.db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente_planillas.otros_formatos": False}})
+    for i, formato in enumerate(("asistencia", "otro", "planilla_campo")):
+        r = subir(sesion, jpeg(1200 + i, 900), formato=formato)
+        assert r.status_code == 201, (formato, r.text)
+    r = subir(sesion, jpeg(1300, 900), formato="cualquiera")
     assert r.status_code == 422 and r.json()["detail"]["codigo"] == "formato"
-    assert subir(sesion, jpeg(), formato="cualquiera").status_code == 422
-    encender(monkeypatch, cliente.app, _proveedor(), otros=True)
-    assert subir(sesion, jpeg(), formato="asistencia").status_code == 201
 
 
 def test_topes_por_persona(cliente, como, monkeypatch):

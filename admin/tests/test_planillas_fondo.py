@@ -133,11 +133,11 @@ def test_de_punta_a_punta_con_la_messages_api_simulada(cliente, sesion, monkeypa
     (peticion,) = api.peticiones
     j = peticion["json"]
     assert j["max_tokens"] == lp.MAX_TOKENS_DIRECTO and "tools" not in j and j["stream"] is True
-    assert j["system"][0]["text"] == lp.instrucciones(False)
+    assert j["system"][0]["text"] == lp.instrucciones()
     imagen, texto = j["messages"][0]["content"]
     assert imagen == {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg",
                                                   "data": imagen["source"]["data"]}}
-    assert texto["type"] == "text" and "Transcribe" in texto["text"]
+    assert texto["type"] == "text" and "descríbela" in texto["text"] and "transcribe sus filas" in texto["text"]
     v = sesion.get(f"/api/planillas/{d['id']}").json()
     assert v["estado"] == "leida" and v["filas"][0]["valores"]["nombre"] == "PUNTA INVENTADA"
     uso = cliente.app.state.db.agente_uso.find_one({"uid": 0})
