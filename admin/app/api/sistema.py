@@ -225,8 +225,22 @@ COLUMNAS = [
     ("consentimiento", "Autorización de datos"), ("abordaje", "Abordaje"), ("ultimo_acercamiento", "Último acercamiento"),
     ("situacion", "Situación"), ("completitud", "Completitud %"), ("fuentes", "Fuentes"),
     ("ultimo_contacto", "Último contacto"), ("creado_por", "Creado por"), ("actualizado_por", "Actualizado por"),
+    ("creado_en", "Creada el"), ("actualizado_en", "Última actualización"),
 ]
 MOTIVO_POR_DEFECTO = "operacion_interna"
+
+
+def hora_local(v) -> str | None:
+    """Un instante guardado en UTC ISO como «AAAA-MM-DD HH:MM» en la hora de Colombia (lo que no se lee, tal cual)."""
+    if not isinstance(v, str) or not v:
+        return None
+    try:
+        t = datetime.fromisoformat(v.replace("Z", "+00:00"))
+    except ValueError:
+        return v
+    if t.tzinfo is None:
+        t = t.replace(tzinfo=timezone.utc)
+    return t.astimezone(modelo.ZONA).strftime("%Y-%m-%d %H:%M")
 
 
 def celda(v):
@@ -327,6 +341,7 @@ def exportar(f: Filtros = Depends(filtros_query), incluir_sin_autorizacion: int 
             "situacion": modelo.SITUACIONES.get((p.get("situacion") or {}).get("estado"), (p.get("situacion") or {}).get("estado")),
             "creado_por": (p.get("creado_por") or {}).get("usuario") if isinstance(p.get("creado_por"), dict) else None,
             "actualizado_por": (p.get("actualizado_por") or {}).get("usuario") if isinstance(p.get("actualizado_por"), dict) else None,
+            "creado_en": hora_local(p.get("creado_en")), "actualizado_en": hora_local(p.get("actualizado_en")),
         }
         extra = p.get("extra") or {}
         sens = p.get("sensibles") if isinstance(p.get("sensibles"), dict) else {}

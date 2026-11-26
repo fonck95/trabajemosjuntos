@@ -218,6 +218,9 @@ button.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
    filtros» (votación, abordaje, autorización…) va plegado en su propia línea, debajo de los datos principales */
 .filtros .campo-filtro { display: block; flex: 0 1 180px; min-width: 150px; }
 .filtros .campo-filtro .entrada { width: 100%; }
+/* Habitantes: creadas o modificadas entre dos días (qué cambió, desde, hasta), juntas en una sola línea */
+.filtros .f-cambio { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; flex: 1 1 100%; grid-column: 1 / -1; }
+.filtros .f-cambio .entrada[type=date] { width: auto; flex: 0 1 170px; min-width: 150px; }
 .filtros-secundarios { flex: 1 1 100%; }
 .filtros-secundarios > summary { display: inline-flex; align-items: center; min-height: 36px; cursor: pointer; font-weight: 650;
   color: var(--muted); list-style: none; }

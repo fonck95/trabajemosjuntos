@@ -27,7 +27,8 @@ const FILTROS = ['q', 'zona', 'lugar_id', 'fuente', 'lista', 'etiqueta', 'con_ce
   'sin_acercamiento_dias', 'proximo_vencido', 'canal_autorizado', 'requiere_actualizacion', 'situacion', 'creado_por',
   'actualizado_por', 'menor', 'area_id', 'poligono', 'tipo_documento', 'cedula_verificada', 'telefono_estado', 'estado_civil',
   'nivel_educativo', 'situacion_laboral', 'estrato', 'tenencia_vivienda', 'regimen_salud', 'lider_id', 'varios_lideres',
-  'intervenida_en', 'tipo', 'jefe_hogar', 'ocupacion', 'perfil_profesional', 'con_correo',
+  'intervenida_en', 'tipo', 'jefe_hogar', 'ocupacion', 'perfil_profesional', 'con_correo', 'cambio_tipo', 'cambio_desde',
+  'cambio_hasta',
   ...['cedula', 'telefono', 'sexo', 'edad', 'lugar', 'puesto', 'mesa', 'direccion', 'correo', 'estado_civil', 'ocupacion',
     'perfil_profesional', 'jefe_hogar', 'lider'].map((c) => `sin_${c}`)];
 // Filtros con control propio (el resto se muestra como chip para verlo y quitarlo)
@@ -35,16 +36,16 @@ const CON_CONTROL = new Set(['q', 'zona', 'lugar_id', 'fuente', 'lista', 'etique
   'consentimiento', 'sexo', 'puesto_id', 'votacion_estado', 'donde', 'con_mesa', 'abordaje_estado', 'requiere_actualizacion',
   'situacion', 'creado_por', 'actualizado_por', 'menor', 'tipo', 'varios_lideres', 'precision', 'asistio', 'ids_total',
   'con_correo', 'sin_correo', 'sin_direccion', 'estado_civil', 'jefe_hogar', 'sin_jefe_hogar', 'ocupacion', 'perfil_profesional',
-  'lider_id', 'sin_lider']);
+  'lider_id', 'sin_lider', 'cambio_tipo', 'cambio_desde', 'cambio_hasta']);
 // Lo que el servidor no deja usar a P y C (`filtros.VEDADOS`, y las fuentes que revelan una base política): si llega
 // por un enlace, se quita al abrir la vista con un aviso (si no, la API responde 403 y la vista entera queda en «Sin
 // acceso»). tests/test_datos_principales.py compara esta lista con la del servidor
 const VEDADOS_P = ['poligono', 'ids', 'ids_total', 'lista', 'lider', 'tipo', 'lider_id', 'varios_lideres', 'sin_lider',
-  'intervenida_en', 'creado_por', 'actualizado_por', 'menor'];
+  'intervenida_en', 'creado_por', 'actualizado_por', 'menor', 'cambio_tipo', 'cambio_desde', 'cambio_hasta'];
 const FUENTES_VEDADAS_P = ['cedulas', 'general', 'ambas'];
 // Los que tienen control solo para A y K: para P, si llegan por un enlace, se ven como chip y se pueden quitar
 const SOLO_ADM = new Set(['tipo', 'lider_id', 'sin_lider', 'fuente', 'lista', 'creado_por', 'actualizado_por', 'menor',
-  'varios_lideres', 'precision', 'asistio']);
+  'varios_lideres', 'precision', 'asistio', 'cambio_tipo', 'cambio_desde', 'cambio_hasta']);
 const PARAMS_PUESTO = ['puesto_id', 'votacion_estado', 'donde'];
 const PARAMS_TELEFONO = ['con_telefono', 'varios_telefonos'];
 const PARAMS_CORREO = ['con_correo', 'sin_correo'];
@@ -53,7 +54,7 @@ const PARAMS_LIDER = ['lider_id', 'sin_lider'];
 // Los filtros que van plegados en «Más filtros» (votación, abordaje, autorización…): si alguno está puesto, se abre
 const SECUNDARIOS = ['puesto_id', 'votacion_estado', 'donde', 'con_puesto', 'con_mesa', 'abordaje_estado', 'consentimiento',
   'requiere_actualizacion', 'situacion', 'etiqueta', 'fuente', 'lista', 'creado_por', 'actualizado_por', 'menor', 'varios_lideres',
-  'precision', 'asistio'];
+  'precision', 'asistio', 'cambio_desde', 'cambio_hasta'];
 
 // Etiquetas de los chips de filtros que llegan por enlace
 const OCULTOS = {
@@ -172,6 +173,11 @@ export async function vistaPersonas(el, { q, ir }) {
               ${(cat.listas || []).length ? html`<select class="entrada" data-f="lista" aria-label="Lista">${opciones([['', 'Lista'], ...cat.listas.map((l) => [l, l])], f.lista)}</select>` : ''}
               ${usuarios.length ? html`<select class="entrada" data-f="creado_por" aria-label="Creado por">${opciones([['', 'Creado por'], ...usuarios], f.creado_por)}</select>
                 <select class="entrada" data-f="actualizado_por" aria-label="Actualizado por">${opciones([['', 'Actualizado por'], ...usuarios], f.actualizado_por)}</select>` : ''}
+              <span class="f-cambio" role="group" aria-label="Fecha de creación o modificación">
+                <select class="entrada" data-f="cambio_tipo" aria-label="Qué cambió en esas fechas">${opciones([['', 'Creadas o modificadas'], ['creado', 'Creadas'], ['actualizado', 'Modificadas']], f.cambio_tipo)}</select>
+                <input class="entrada" type="date" data-f="cambio_desde" aria-label="Desde el día" title="Desde el día (incluido)" value="${f.cambio_desde || ''}" max="${f.cambio_hasta || ''}">
+                <input class="entrada" type="date" data-f="cambio_hasta" aria-label="Hasta el día" title="Hasta el día (incluido). Para un solo día, ponga el mismo en las dos" value="${f.cambio_hasta || ''}" min="${f.cambio_desde || ''}">
+              </span>
               <select class="entrada" data-f="menor" aria-label="Menores">${opciones([['', 'Edad legal'], ['1', 'Menores de edad'], ['0', 'Sin menores']], f.menor)}</select>
               <select class="entrada" data-f="varios_lideres" aria-label="Captación">${opciones([['', 'Captación'], ['1', 'Lideradas por más de uno']], f.varios_lideres)}</select>
               <select class="entrada" data-f="precision" aria-label="Ubicación">${opciones([['', 'Ubicación'], ['exacta', 'Dirección exacta'], ['aproximada', 'Aproximada'], ['ubicada', 'Con ubicación'], ['sin', 'Sin ubicar']], f.precision)}</select>
