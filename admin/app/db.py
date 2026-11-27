@@ -153,7 +153,7 @@ def _indices() -> dict[str, list[IndexModel]]:
         "campos": [i("clave", unique=True)],
         "auditoria": [i([("entidad", ASCENDING), ("entidad_id", ASCENDING)]),
                       *(i([(c, ASCENDING), ("ts", ASCENDING)]) for c in ("uid", "capturado_por", "accion",
-                                                                         "reuniones"))],
+                                                                         "reuniones", "entidad"))],
         "sesiones": [i("expira", expireAfterSeconds=0), i("uid")],
         "intentos": [i("ts", expireAfterSeconds=24 * 3600), i([("ip", ASCENDING), ("ts", ASCENDING)]),
                      i([("nombre_h", ASCENDING), ("ts", ASCENDING)]),

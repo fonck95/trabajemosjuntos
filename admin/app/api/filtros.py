@@ -9,6 +9,12 @@ MongoDB, y el alcance de cada usuario.
   asignación (toda la base, con el presupuesto diario).
 * `estricta=1` (`Filtros._estricta`, lo pone la ruta) es la búsqueda del asistente (`q_estricta`): las palabras de `q`
   casan solo con el nombre y un número, solo entero. La interfaz no lo manda y busca como siempre.
+* `cambio_desde` / `cambio_hasta` (días AAAA-MM-DD, hora de Colombia, los dos incluidos) con `cambio_tipo`: las fichas
+  creadas (`creado`: `creado_en`), modificadas (`actualizado`: `actualizado_en`, o cualquier cambio que quedó en la
+  auditoría ese día: una asistencia, un acercamiento, un teléfono, una nota…) o las dos cosas (`cualquiera`, el de
+  defecto). Con solo `cambio_desde`, hasta hoy; con solo `cambio_hasta`, desde siempre. Sirve para exportar en Excel
+  lo que cambió en un día. `preparar` resuelve las fichas de la auditoría (con la ficha en que quedó la que después se
+  unió con otra); las lecturas no cuentan (`LECTURAS_AUDITADAS`).
 """
 from __future__ import annotations
 
@@ -30,7 +36,11 @@ SIN_CAMPOS = ("cedula", "telefono", "sexo", "edad", "lugar", "puesto", "mesa", "
               "ocupacion", "perfil_profesional", "jefe_hogar")
 # Parámetros que P y C no pueden usar (3.6): darían listas políticas, de menores o de la actividad de otros
 VEDADOS = ("poligono", "ids", "lista", "lider", "tipo", "lider_id", "varios_lideres", "sin_lider", "intervenida_en",
-           "creado_por", "actualizado_por", "menor")
+           "creado_por", "actualizado_por", "menor", "cambio_tipo", "cambio_desde", "cambio_hasta")
+# `cambio_tipo`: qué cuenta como cambio en `cambio_desde`/`cambio_hasta`
+CAMBIO_TIPOS = ("cualquiera", "creado", "actualizado")
+# Entradas de la auditoría sobre una persona que no la cambian (verla no es modificarla)
+LECTURAS_AUDITADAS = ("ver_sensibles",)
 PERMISO = {"mensaje": "Su rol no permite usar este filtro", "codigo": "permiso"}
 
 
@@ -79,6 +89,10 @@ class Filtros(BaseModel):
     creado_por: int | None = None
     actualizado_por: int | None = None
     menor: int | None = None
+    # Creadas o modificadas entre dos días (ver el docstring del módulo)
+    cambio_tipo: str | None = None
+    cambio_desde: str | None = None
+    cambio_hasta: str | None = None
     requiere_actualizacion: str | None = None
     varios_telefonos: int | None = None
     telefono_estado: str | None = None
@@ -121,6 +135,8 @@ class Filtros(BaseModel):
     _uid: int | None = PrivateAttr(default=None)
     _estricta: bool = PrivateAttr(default=False)  # `q` como la busca el asistente (`q_estricta`)
     _intervenidas: list = PrivateAttr(default_factory=list)  # ids de `intervenida_en` (los resuelve `preparar`)
+    _cambio: tuple | None = PrivateAttr(default=None)  # (desde, hasta) en UTC ISO, `hasta` excluido
+    _cambiadas: list = PrivateAttr(default_factory=list)  # fichas con un cambio auditado en ese rango
 
 
 def geometria_de_area(a: dict | None) -> dict | None:
@@ -149,7 +165,37 @@ def preparar(db: Database, f: Filtros) -> Filtros:
                                                    "accion": {"$nin": trazas.SOLO_ASISTENCIA}})
         # Con la ficha en que quedó la que después se unió con otra
         f._intervenidas = ids + [r for r, _ in _raices_activas(db, ids).values()]
+    if f.cambio_desde or f.cambio_hasta:
+        f._cambio = rango_cambio(f.cambio_desde, f.cambio_hasta)
+        if (f.cambio_tipo or "cualquiera") != "creado":
+            from ..db import _raices_activas
+            ids = db.auditoria.distinct("entidad_id", {
+                "entidad": "persona", "ts": {"$gte": f._cambio[0], "$lt": f._cambio[1]},
+                "accion": {"$nin": list(LECTURAS_AUDITADAS)}})
+            ids = [i for i in ids if isinstance(i, int)]
+            f._cambiadas = ids + [r for r, _ in _raices_activas(db, ids).values()]
     return f
+
+
+def _dia(v: str | None, nombre: str) -> date | None:
+    if not v:
+        return None
+    try:
+        return date.fromisoformat(v)
+    except ValueError:
+        raise HTTPException(422, f"{nombre}: use una fecha AAAA-MM-DD") from None
+
+
+def rango_cambio(desde: str | None, hasta: str | None, hoy: date | None = None) -> tuple[str, str]:
+    """(desde, hasta) en UTC ISO, `hasta` excluido, para los días `desde` y `hasta` (incluidos, hora de Colombia).
+    Sin `desde`, desde siempre; sin `hasta`, hasta hoy. 422 si una fecha no es AAAA-MM-DD o `desde` va después."""
+    d, h = _dia(desde, "Desde"), _dia(hasta, "Hasta")
+    if d and h and d > h:
+        raise HTTPException(422, "La fecha «desde» va después de la fecha «hasta»")
+    h = h or max(hoy or modelo.hoy_local(), d or date.min)
+    ini = datetime.combine(d, datetime.min.time(), modelo.ZONA).astimezone(timezone.utc).isoformat() if d else ""
+    fin = datetime.combine(h + timedelta(days=1), datetime.min.time(), modelo.ZONA).astimezone(timezone.utc).isoformat()
+    return ini, fin
 
 
 def filtros_query(
@@ -169,6 +215,8 @@ def filtros_query(
     sin_acercamiento_dias: int | None = Query(None, ge=0, le=3650), proximo_vencido: int | None = None,
     canal_autorizado: str | None = None, situacion: str | None = None, creado_por: int | None = None,
     actualizado_por: int | None = None, menor: int | None = None,
+    cambio_tipo: str | None = Query(None, max_length=12), cambio_desde: str | None = Query(None, max_length=10),
+    cambio_hasta: str | None = Query(None, max_length=10),
     requiere_actualizacion: str | None = Query(None, max_length=120), varios_telefonos: int | None = None,
     telefono_estado: str | None = None, estado_civil: str | None = Query(None, max_length=60),
     jefe_hogar: str | None = Query(None, max_length=3), ocupacion: str | None = Query(None, max_length=120),
@@ -425,6 +473,15 @@ def filtro(f: Filtros, hoy: date | None = None) -> dict:
         y.append({"actualizado_por.uid": f.actualizado_por})
     if f.menor is not None:
         y.append(modelo.filtro_menor(hoy) if f.menor else {"$nor": [modelo.filtro_menor(hoy)]})
+    if f._cambio is not None:
+        rango = {"$gte": f._cambio[0], "$lt": f._cambio[1]}
+        tipo = f.cambio_tipo if f.cambio_tipo in CAMBIO_TIPOS else "cualquiera"
+        o = []
+        if tipo != "actualizado":
+            o.append({"creado_en": rango})
+        if tipo != "creado":
+            o += [{"actualizado_en": rango}, {"_id": {"$in": f._cambiadas}}]
+        y.append({"$or": o})
     if f.requiere_actualizacion not in (None, ""):
         v = f.requiere_actualizacion
         if v == "1":
